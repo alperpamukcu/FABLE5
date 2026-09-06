@@ -33,6 +33,27 @@ is a tint or an alpha of a token, and it must say why on the line above it.
 
 **Grid:** `UITheme.Grid` is 4. Rects sit on whole units; sizes and positions are integers.
 
+## 0c. Two shapes, two meanings (2026-09-06)
+
+The author: *"konuşurlarken kafalarının üstündeki baloncuğun şekli değişmeli böylece
+oyuncular kafasının üstünde yazanın ne zaman bilgi ne zaman sohbet için olduğunu anlar
+... klasik pixel beyaz mavi çerçeveli bulut şeklinde konuşma balonu."*
+
+A **straight plate** is a READOUT — the ticket over a head, up for as long as somebody is
+on the stool, and everything on it is a fact about the order. A **lobed cloud** is a
+VOICE — it arrives when somebody says something and it goes when they stop. One glance
+tells the player which they are looking at, which is the whole point.
+
+`ChromeArt.CloudBubble` draws it: a 24×24 sheet with 8-pixel borders whose edge strips
+carry one half-round bump each, drawn TILED so a wide balloon is that bump repeated
+rather than one stretched blob. `CloudTail` is three shrinking puffs. Both are drawn in
+code, like every other piece of chrome in this game — the cloud is arithmetic, not a
+picture somebody found.
+
+The balloon MEASURES its copy (`LayOutSay` asks the text generator for the wrapped
+height): three sentences that each wrap on their own defeat any estimate, and a balloon
+that guesses hangs half a drinker's verdict over their head.
+
 ## 0b. The room answers the pointer (2026-09-06)
 
 The author: *"Ana sahnede, mahzen sahnesinde, kokteyl yapma sahnesinde seçilebilir bir

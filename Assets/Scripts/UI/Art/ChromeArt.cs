@@ -2416,6 +2416,84 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, S, S, Vector4.zero);
         }
 
+        /// <summary>
+        /// THE SPEECH CLOUD (2026-09-06, the author: "konuşurlarken kafalarının üstündeki
+        /// baloncuğun şekli değişmeli böylece oyuncular kafasının üstünde yazanın ne zaman
+        /// bilgi ne zaman sohbet için olduğunu anlar ... klasik pixel beyaz mavi çerçeveli
+        /// bulut şeklinde konuşma balonu").
+        ///
+        /// The ticket over a head is a READOUT and this is a VOICE, so they may not be the
+        /// same shape: the readout keeps its straight plate, and everything said out loud
+        /// comes up in a lobed cloud. Drawn, not fetched — chrome in this game is procedural
+        /// (GDD 16), so the lobes are arithmetic: a 24x24 sheet with 8-pixel borders whose
+        /// edge strips carry one half-round bump each, TILED, so a cloud of any width is the
+        /// same bump repeated and never a stretched blob.
+        /// </summary>
+        public static Sprite CloudBubble(BubbleTone tone = BubbleTone.Drink)
+        {
+            string key = "cloud:plate:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 24, B = 8;
+            var edge = EdgeOf(tone);
+            var fill = new Color32(0xF2, 0xE8, 0xD5, 255);
+            var px = new Color32[S * S];
+            float c = (S - 1) * 0.5f;
+
+            bool Inside(float x, float y)
+            {
+                // The body: a rounded box that reaches the middle of every edge...
+                if (x >= B - 1 && x <= S - B && y >= B - 1 && y <= S - B) return true;
+                // ...plus one lobe per side, centred on that edge, so the tiled runs read as
+                // a row of bumps however long the cloud gets.
+                float r = 5.2f;
+                if (Blob(x, y, c, B - 3f, r) || Blob(x, y, c, S - B + 2f, r)) return true;
+                if (Blob(x, y, B - 3f, c, r) || Blob(x, y, S - B + 2f, c, r)) return true;
+                return false;
+            }
+
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    if (!Inside(x, y)) continue;
+                    bool rim = !Inside(x - 1, y) || !Inside(x + 1, y)
+                            || !Inside(x, y - 1) || !Inside(x, y + 1);
+                    px[y * S + x] = rim ? edge : fill;
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(B, B, B, B));
+        }
+
+        private static bool Blob(float x, float y, float cx, float cy, float r)
+        {
+            float dx = x - cx, dy = y - cy;
+            return dx * dx + dy * dy <= r * r;
+        }
+
+        /// <summary>The cloud's own tail: three shrinking puffs, the way a comic says this is
+        /// being SAID rather than thought at.</summary>
+        public static Sprite CloudTail(BubbleTone tone = BubbleTone.Drink)
+        {
+            string key = "cloud:tail:" + tone;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 11, H = 11;
+            var edge = EdgeOf(tone);
+            var fill = new Color32(0xF2, 0xE8, 0xD5, 255);
+            var px = new Color32[W * H];
+            (float x, float y, float r)[] puffs = { (6f, 8.5f, 3.2f), (3.5f, 4.5f, 2.2f), (1.5f, 1.2f, 1.3f) };
+            bool In(float x, float y)
+            {
+                foreach (var p in puffs) if (Blob(x, y, p.x, p.y, p.r)) return true;
+                return false;
+            }
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    if (!In(x, y)) continue;
+                    bool rim = !In(x - 1, y) || !In(x + 1, y) || !In(x, y - 1) || !In(x, y + 1);
+                    px[(H - 1 - y) * W + x] = rim ? edge : fill;
+                }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

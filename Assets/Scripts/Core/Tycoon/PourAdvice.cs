@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -103,6 +104,83 @@ namespace LastCall.Core
         /// alkolü söyledikten sonra ... bu garnishleri de sipariş etmiştim eksik kalmış") —
         /// and it is said by EVERY customer, including the ones whose drink has no ratios to
         /// coach at all. A pint poured without its ice is still a pint without its ice.</param>
+        /// <summary>
+        /// WHAT THEY SAY OVER THREE SIPS (2026-09-06, the author: "müşteriler toplam 3 yudum
+        /// alıyor, her yudumda yeni bir cümle ekleyecekler ... 1. yudumdan sonra içkideki en
+        /// büyük problemi söyleyecekler ... daha az problem olan unsuru en sonunda").
+        ///
+        /// The same reading as <see cref="For"/> — one ingredient, one direction, no numbers —
+        /// but the whole ORDER of it, worst miss first, down to as many as
+        /// <paramref name="max"/> sips. A drink with one thing wrong says one thing and then
+        /// nothing: a drinker who keeps finding new faults in a glass that only had one is a
+        /// drinker nobody believes. The missing-garnish line always goes LAST, because it is
+        /// about what never arrived rather than about the pour, and a flawless glass says the
+        /// one flawless line.
+        /// </summary>
+        public static IReadOnlyList<string> Lines(RecipeDefinition recipe, GlassContents glass,
+            Func<string, IngredientCard> lookup, ServingSpec spec = null, int max = 3)
+        {
+            var said = new List<string>();
+            if (glass == null || max <= 0) return said;
+            string missing = MissingLine(spec, glass);
+
+            // Beer has one band and it is the head; it says its piece and stops.
+            if (glass.HasPreparation(Preparations.Draught.Id))
+            {
+                var head = Head(glass, missing);
+                if (!head.Silent) said.Add(head.Sentence);
+                return said;
+            }
+
+            if (recipe != null && lookup != null && recipe.HasAuthoredRatios)
+            {
+                var bands = recipe.RatioRequirements;
+                var perfect = recipe.Perfect;
+                var shares = RatioRecipeMatcher.SharesFor(recipe, glass, lookup);
+                if (perfect.Length > 0 && shares.Length == perfect.Length
+                    && bands.Count == perfect.Length)
+                {
+                    // Every band that missed its window, ordered by how far it moved the
+                    // glass — the same "biggest correction in the hand" reading For() takes,
+                    // laid out rather than reduced to one.
+                    var order = new List<int>();
+                    for (int i = 0; i < perfect.Length; i++)
+                    {
+                        double miss = Math.Abs(shares[i] - perfect[i]);
+                        if (miss <= ServiceJudge.PerfectWindow) continue;
+                        order.Add(i);
+                    }
+                    order.Sort((a, b) =>
+                    {
+                        double ma = Math.Abs(shares[a] - perfect[a]);
+                        double mb = Math.Abs(shares[b] - perfect[b]);
+                        if (Math.Abs(ma - mb) > TieWindow) return mb.CompareTo(ma);
+                        return perfect[b].CompareTo(perfect[a]);   // ties: the bigger band first
+                    });
+                    foreach (int i in order)
+                    {
+                        if (said.Count >= max - (missing != null ? 1 : 0)) break;
+                        string name = NameOf(bands[i]);
+                        if (string.IsNullOrEmpty(name)) continue;
+                        double d = shares[i] - perfect[i];
+                        double miss = Math.Abs(d);
+                        string degree = miss <= TouchMiss ? "A touch"
+                            : miss <= LittleMiss ? "A little" : "A lot";
+                        said.Add(degree + " " + (d > 0 ? "less" : "more") + " " + name + " next time.");
+                    }
+                    if (said.Count == 0 && missing == null) said.Add(FlawlessLine);
+                }
+            }
+            if (said.Count == 0 && missing == null)
+            {
+                // Nothing to coach — no authored bands. Silence is the honest answer, and
+                // the caller shows nothing rather than inventing praise.
+                return said;
+            }
+            if (missing != null && said.Count < max) said.Add(missing);
+            return said;
+        }
+
         public static PourNote For(RecipeDefinition recipe, GlassContents glass,
             Func<string, IngredientCard> lookup, ServingSpec spec = null)
         {

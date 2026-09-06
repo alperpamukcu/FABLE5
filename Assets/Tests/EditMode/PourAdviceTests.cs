@@ -78,6 +78,60 @@ namespace LastCall.Tests
             IReadOnlyList<IngredientCard> cards) =>
             PourAdvice.For(recipe, glass, id => cards.FirstOrDefault(c => c.Id == id));
 
+        // ── what they say over three sips (2026-09-06) ──────────────────────────
+
+        [Test]
+        public void ThreeSips_SayTheWorstThingFirst_AndStopWhenThereIsNothingLeft()
+        {
+            // The author: "1. yudumdan sonra içkideki en büyük problemi söyleyecekler ...
+            // daha az problem olan unsuru en sonunda". The lines are ordered by how far each
+            // band moved the glass, so the first sip is the correction worth making.
+            var cards = Cards();
+            var sour = Recipe("gin_sour");
+            int gin = BandOf(sour, "gin");
+            var glass = Pour(sour, cards, gin, +0.12);
+            var lines = PourAdvice.Lines(sour, glass, id => cards.FirstOrDefault(c => c.Id == id));
+
+            Assert.That(lines.Count, Is.GreaterThanOrEqualTo(1), "a glass a tenth out said nothing");
+            Assert.That(lines.Count, Is.LessThanOrEqualTo(3), "three sips is three lines at most");
+            StringAssert.Contains("less gin", lines[0],
+                "the worst thing in the glass was not the first thing said");
+            // Every line is a different band: a drinker who says the same thing twice has
+            // nothing to say the second time.
+            CollectionAssert.AllItemsAreUnique(lines);
+        }
+
+        [Test]
+        public void APerfectPour_SaysOneGoodThing_AndNothingElse()
+        {
+            var cards = Cards();
+            var sour = Recipe("gin_sour");
+            var lines = PourAdvice.Lines(sour, Pour(sour, cards), id => cards.FirstOrDefault(c => c.Id == id));
+
+            Assert.That(lines.Count, Is.EqualTo(1), "a flawless glass makes one remark, not three");
+            Assert.That(lines[0], Is.EqualTo(PourAdvice.For(sour, Pour(sour, cards),
+                id => cards.FirstOrDefault(c => c.Id == id)).Sentence),
+                "the flawless line is the same one the single note gives");
+        }
+
+        [Test]
+        public void WhatNeverArrived_IsSaidLast()
+        {
+            // The garnish that was ordered and did not come is about the SERVICE rather than
+            // the pour, so it waits until everything about the drink itself has been said.
+            var cards = Cards();
+            var sour = Recipe("gin_sour");
+            var glass = Pour(sour, cards, BandOf(sour, "gin"), +0.12);
+            var spec = new ServingSpec(new[] { Preparations.LemonTwist });
+            var lines = PourAdvice.Lines(sour, glass, id => cards.FirstOrDefault(c => c.Id == id), spec);
+
+            Assert.That(lines.Count, Is.GreaterThanOrEqualTo(2), "the missing twist was never mentioned");
+            StringAssert.Contains("less gin", lines[0]);
+            Assert.That(lines[lines.Count - 1], Is.Not.EqualTo(lines[0]));
+            StringAssert.DoesNotContain("next time", lines[lines.Count - 1],
+                "the last word was another pour note, not the thing that never arrived");
+        }
+
         [Test]
         public void TooMuchOfAnIngredient_AsksForLessOfThatIngredient()
         {

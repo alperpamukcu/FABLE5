@@ -421,17 +421,20 @@ namespace LastCall.UI
                 seat.Say.sizeDelta = new Vector2(TagMinW, 40f);
                 seat.Say.anchoredPosition = new Vector2(0, CharWinH + TagLift);
                 seat.SayBg = seat.Say.gameObject.AddComponent<Image>();
-                seat.SayBg.sprite = ChromeArt.Bubble(ChromeArt.BubbleTone.Drink);
-                seat.SayBg.type = Image.Type.Sliced;
+                // A CLOUD, so speech never reads as a readout (2026-09-06, GDD 16 §0c).
+                // Tiled rather than sliced: the lobes on the edge runs are meant to REPEAT
+                // along a wide balloon, and a sliced edge would stretch one bump into a bar.
+                seat.SayBg.sprite = ChromeArt.CloudBubble(ChromeArt.BubbleTone.Drink);
+                seat.SayBg.type = Image.Type.Tiled;
                 seat.SayBg.raycastTarget = false;
 
                 var sayTail = NewRect("Tail", seat.Say);
-                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.5f, 0);
+                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.35f, 0);
                 sayTail.pivot = new Vector2(0.5f, 1);
-                sayTail.sizeDelta = new Vector2(11f, 9f);
-                sayTail.anchoredPosition = new Vector2(0, 3f);
+                sayTail.sizeDelta = new Vector2(11f, 11f);
+                sayTail.anchoredPosition = new Vector2(0, 2f);
                 seat.SayTail = sayTail.gameObject.AddComponent<Image>();
-                seat.SayTail.sprite = ChromeArt.BubbleTail(ChromeArt.BubbleTone.Drink);
+                seat.SayTail.sprite = ChromeArt.CloudTail(ChromeArt.BubbleTone.Drink);
                 seat.SayTail.raycastTarget = false;
 
                 // The ticket's own face and size, because it is the same mouth talking.

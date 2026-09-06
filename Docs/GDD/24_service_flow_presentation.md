@@ -14,6 +14,27 @@ the counter; clicking it opens the **drink menu UI** — the player's current bo
 readable list (name, style colour, price, remaining volume). This declutters the stage for
 the seats and makes the shelf feel like *stock*, not UI.
 
+## Three sips, three sentences (2026-09-06)
+
+The author: *"müşteriler toplam 3 yudum alıyor, her yudumda yeni bir cümle ekleyecekler.
+Örneğin: 1. yudumdan sonra içkideki en büyük problemi söyleyecekler ... 2. cümleye
+geçerken 1. cümle silinmeyecek ... daha az problem olan unsuru en sonunda."*
+
+The pour note used to be ONE line said once, over the glass as it landed. A drinker now
+takes three sips over their savour and says one thing at each — worst first — and the
+lines STAY, so what builds up over the drink is a short verdict rather than three
+flashes of text.
+
+- **Core orders them** (`PourAdvice.Lines`): every band that missed its window, sorted
+  by how far it moved the glass, then the garnish that never arrived LAST, because that
+  is about the service rather than the pour. A flawless glass says its one good line and
+  nothing else — a drinker who keeps finding new faults in a glass that had one is a
+  drinker nobody believes.
+- **The room paces them** (`StepSips`): the first at 1.6s, then every 3.4s, each typed
+  out at the room's own speech rate and handed over whole under `Motion.Reduced`.
+- **The balloon is the cloud** (GDD 16 §0c) and it is up for the whole drink; the
+  ticket stands down while it is, one thing over one head.
+
 ## The one slow move (2026-09-06)
 
 The author: *"Shaker->Bardak sahne geçiş animasyonunda geçiş daha yavaş olmalı, UI ve butonlar değişmiyorsa sabit kalmalı. Yeni gelen shaker ve bardak kayma animasyonunun momentumu ile hareket etsin yani tam durduğu sırada ani fren etkisi yaşasın."*

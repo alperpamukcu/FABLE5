@@ -244,6 +244,67 @@ namespace LastCall.UI
             LayOutSay(view);
         }
 
+        /// <summary>How many sips a drinker takes, and so how many things they can say.</summary>
+        private const int SipsPerDrink = 3;
+
+        /// <summary>How long after the glass lands before the first sip.</summary>
+        private const float FirstSipAfter = 1.6f;
+
+        /// <summary>And the gap between them. Three sips and a beat to read each: a savour is
+        /// 13 seconds, so the last line lands with a third of the drink still to go.</summary>
+        private const float SipEvery = 3.4f;
+
+        /// <summary>
+        /// THE DRINK, ONE SIP AT A TIME (2026-09-06, the author: "her yudumda yeni bir cümle
+        /// ekleyecekler ... 2. cümleye geçerken 1. cümle silinmeyecek"). Each sip appends the
+        /// next line to the balloon and types it out; the lines already said stay above it, so
+        /// what builds up is a short verdict rather than three flashes of text. The balloon
+        /// stays up while there is anything left to say and goes down when they do.
+        /// </summary>
+        private void StepSips(SeatView view, CustomerVisit visit)
+        {
+            if (view.SayLines == null || view.SayLines.Count == 0) return;
+            if (visit == null || visit.State != VisitState.Drinking)
+            {
+                // Gone, or back to waiting with another order in hand: either way the glass
+                // they were talking about is finished with, so the balloon comes down.
+                view.SayLines = null;
+                view.SaidLines = 0;
+                if (view.SayUntil > 0f) HushSeat(view);
+                return;
+            }
+            float now = Time.unscaledTime;
+            if (view.SaidLines < view.SayLines.Count && now >= view.SayNextAt)
+            {
+                view.SaidLines++;
+                view.SayTypeFrom = now;
+                view.SayNextAt = now + SipEvery;
+                Sfx.Play("hover", 0.12f);          // the glass going down again
+                view.Say.gameObject.SetActive(true);
+            }
+            if (view.SaidLines == 0) return;
+
+            // Everything said so far, and the line in progress typed out letter by letter —
+            // the room's own speech rate (SpeakCps), and handed over whole under Reduced.
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < view.SaidLines - 1; i++)
+            {
+                sb.Append(view.SayLines[i].ToUpperInvariant());
+                sb.Append('\n');
+            }
+            string last = view.SayLines[view.SaidLines - 1].ToUpperInvariant();
+            int shown = Motion.Reduced ? last.Length
+                : Mathf.Clamp(Mathf.FloorToInt((now - view.SayTypeFrom) * SpeakCps), 0, last.Length);
+            sb.Append(last.Substring(0, shown));
+            string line = sb.ToString();
+            if (view.SayText.text != line)
+            {
+                view.SayText.text = line;
+                LayOutSay(view);
+            }
+            view.SayUntil = now + SaySeconds;      // never times out mid-drink
+        }
+
         /// <summary>Takes a balloon down and forgets what was in it.</summary>
         private static void HushSeat(SeatView view)
         {
@@ -266,10 +327,19 @@ namespace LastCall.UI
             float widest = text.preferredWidth;
             float cardW = Mathf.Clamp(widest + TagPad * 2f, TagMinW, SayMaxW);
             float textW = cardW - TagPad * 2f;
-            int lines = text.text.Length == 0 ? 0
-                : Mathf.Max(1, Mathf.CeilToInt(widest / Mathf.Max(1f, textW)));
-            view.Say.sizeDelta = new Vector2(cardW,
-                lines * view.SayLineH + TagPad * 2f + TagFoot);
+            // MEASURED, NOT ESTIMATED (2026-09-06). Dividing the widest line by the card's
+            // width guesses the row count, and a balloon that now holds THREE sentences —
+            // each of which wraps on its own — was guessing two rows for six and hanging the
+            // last of them over the drinker's head. The generator wraps exactly the way the
+            // label will, so it is asked instead.
+            float tall = view.SayLineH;
+            if (text.text.Length > 0)
+            {
+                var settings = text.GetGenerationSettings(new Vector2(textW, 0f));
+                tall = text.cachedTextGeneratorForLayout.GetPreferredHeight(text.text, settings)
+                     / Mathf.Max(0.0001f, text.pixelsPerUnit);
+            }
+            view.Say.sizeDelta = new Vector2(cardW, tall + TagPad * 2f + TagFoot);
         }
 
         /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
@@ -301,11 +371,20 @@ namespace LastCall.UI
             // legal here because ServeSeat has already refused an unread card.
             _seats[index].Note = PourAdvice.For(asked, run.ServingGlass,
                 id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec);
+            // ...AND THE WHOLE ORDER OF IT, one line a sip (2026-09-06, the author: "müşteriler
+            // toplam 3 yudum alıyor, her yudumda yeni bir cümle ekleyecekler"). Read here for
+            // the same reason the note is: ServeTo empties the serving glass, so this is the
+            // last frame the pour can be looked at.
+            _seats[index].SayLines = new System.Collections.Generic.List<string>(
+                PourAdvice.Lines(asked, run.ServingGlass,
+                    id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec, SipsPerDrink));
+            _seats[index].SaidLines = 0;
+            _seats[index].SayNextAt = Time.unscaledTime + FirstSipAfter;
             // …and they SAY it, now, over the glass they were just handed — not when they
             // start drinking. An extra round never enters Drinking at all (CustomerVisit
             // .Resolve refreshes the order and stays Waiting), and the drink they are
             // commenting on is the one that just landed either way.
-            SayIt(_seats[index], _seats[index].Note.Sentence);
+            HushSeat(_seats[index]);   // the first line comes with the first sip, not now
 
             var verdict = run.ServeTo(visit);
             CloseId();
@@ -2811,7 +2890,9 @@ namespace LastCall.UI
                 // THE BALLOON'S OWN CLOCK, read before the ticket's, because the ticket
                 // stands down while somebody is talking.
                 bool saying = view.Say != null && view.Say.gameObject.activeSelf;
-                if (saying && Time.unscaledTime >= view.SayUntil) { HushSeat(view); saying = false; }
+                StepSips(view, visit);
+                bool timed = view.SayLines == null || view.SayLines.Count == 0;
+                if (saying && timed && Time.unscaledTime >= view.SayUntil) { HushSeat(view); saying = false; }
                 if (saying && (!atTheStool || CellarOpen)) { HushSeat(view); saying = false; }
 
                 // ONE THING OVER ONE HEAD (2026-09-04, the author: "kafalarının üstündeki

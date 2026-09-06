@@ -569,6 +569,12 @@ namespace LastCall.UI
             /// read off the pour at the moment of the serve and kept, so the line cannot
             /// change under them while they drink it. Default (silent) until served.</summary>
             public PourNote Note;
+            /// <summary>What they have to say about the drink, worst first — one a sip
+            /// (2026-09-06). Cleared when they get up.</summary>
+            public System.Collections.Generic.List<string> SayLines;
+            public int SaidLines;            // how many are already up
+            public float SayTypeFrom;        // when the line being typed started
+            public float SayNextAt;          // when the next sip is due
             public float ReactLeft;          // remaining departure-reaction one-shot time
             public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
             public PatronLook Look;          // who is sitting here, and how tall they are
