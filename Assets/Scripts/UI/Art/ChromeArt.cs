@@ -2439,22 +2439,26 @@ namespace LastCall.UI
         /// </summary>
         public static Sprite SpeechBox(BubbleTone tone = BubbleTone.Drink)
         {
+            // ROUNDED (2026-09-06, the author: "konuşma balonları köşeli olmasın"). A rectangle
+            // with its corners clipped by a pixel still read as a box; this is a real
+            // rounded rectangle — a five-pixel radius on a 17-pixel tile — with a two-pixel
+            // ink rim, sliced at seven so the arc stays an arc at any size.
             string key = "speech:box:" + tone;
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
-            const int S = 15, B = 6;
+            const int S = 17, B = 7;
+            const float R = 5.5f;
             var ink = EdgeOf(tone);
             var paper = new Color32(0xFF, 0xFF, 0xFF, 255);
-            var shade = new Color32(0xC9, 0xBC, 0xA8, 255);      // Cream[3], the inner line
             var px = new Color32[S * S];
             for (int y = 0; y < S; y++)
                 for (int x = 0; x < S; x++)
                 {
-                    int edge = Mathf.Min(Mathf.Min(x, S - 1 - x), Mathf.Min(y, S - 1 - y));
-                    // The corners are clipped by one pixel, which is all a pixel balloon needs
-                    // to stop reading as a spreadsheet cell.
-                    bool corner = (x == 0 || x == S - 1) && (y == 0 || y == S - 1);
-                    px[y * S + x] = corner ? new Color32(0, 0, 0, 0)
-                        : edge < 3 ? ink : edge == 3 ? shade : paper;
+                    // How far INSIDE the rounded edge this pixel's centre is.
+                    float cx = x + 0.5f, cy = y + 0.5f;
+                    float qx = Mathf.Clamp(cx, R, S - R), qy = Mathf.Clamp(cy, R, S - R);
+                    float inset = R - Mathf.Sqrt((cx - qx) * (cx - qx) + (cy - qy) * (cy - qy));
+                    px[y * S + x] = inset <= 0f ? new Color32(0, 0, 0, 0)
+                        : inset < 2f ? ink : paper;
                 }
             return Cache[key] = Make(px, S, S, new Vector4(B, B, B, B));
         }

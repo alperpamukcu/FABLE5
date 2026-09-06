@@ -415,3 +415,33 @@ $132 income against $125 expenses, day 1 always green, red days climbing from da
 35% by day 15 — an unimproved bar slowly sinks, which is the whole tycoon argument.
 Storm-offs 22% (floor bot; players triage by the clock), extra orders 14% of serves.
 Numbers live in `TycoonConfig` (code) and this module — change both.
+
+## The star economy (2026-09-06)
+
+The author: *"Ekonomik gelişim sürekli katlanarak artmalı. Örneğin 0 yıldızda her şeyin fiyatı
+(geliştirmeler, tarifler, müşterilerin kokteyllere ödediği ücretler) x iken, 1 yıldız aşamasındaki
+nesnelerde bu 2x, 2 yıldız aşamasında 3x diye gitmeli, oyuncu sürekli gelişiyor hissi verilmeli."*
+
+One rule, `StarEconomy.TierMultiplier(stars) = 1 + ⌊stars⌋` (held to five), read two ways:
+
+- **A thing costs the stage it belongs to.** A recipe is priced at its star gate
+  (`RecipePrice` × the gate's stage), a fitting at its star requirement (`TycoonRun.FixturePrice`
+  — the walls' top rung, wanted at two stars, is three times its sheet: the biggest, dearest
+  thing in the catalogue, as asked), a bottle at the rung the market sells it on
+  (`Market.RungPrice`; the split at `FirstRungPrice` still reads the sheet's figure).
+- **A night pays the stage the bar has reached.** What a drinker pays for a drink
+  (`PriceOf` × the standing's stage, after the crowd's ×0.75/1/1.25) and what the landlord asks
+  (`Rent(day)` × the same stage) both follow `Rating.Average`, so the two sides of the book climb
+  together and climbing stays a climb rather than a jackpot.
+
+The sheet's figures — `fixtures.json`, the rank curve in `RecipePrice`, `Market.StockPrice` — are
+the stage-zero "x" and are never edited to fit; the multiplier is applied where money moves,
+never stored. The glass ladder's rungs and the stools are not star-gated and are not scaled. The dev presets' tills
+are at their stage's scale (`DevPreset`: 160 → 480 at 2.6★, 600 → 3600 at 5★), since a preset that
+pays a tripled rent from a flat-economy till cannot refill two bottles.
+
+**Measured (200 runs, the same bot, the bare-room start of GDD 27 §3):** bankruptcies 34% → **9%**,
+income/expenses a day $111/$113 → **$232/$224**, final till (median) $10 → **$261**, the standing
+1.82 → **2.13**, the 2.0★ rung reached by 50% → **89%** of runs and 2.5★ by 0% → **59%**. The
+opening (stage zero) is unchanged by construction; the growth is what the multiplier adds.
+`StarEconomyTests` pins the rule and the three doors.

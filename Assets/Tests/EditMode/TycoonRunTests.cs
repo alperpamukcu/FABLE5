@@ -163,10 +163,15 @@ namespace LastCall.Tests
                 made.Tick(5);
             }
 
-            // A rank-2 drink is $4 on the menu.
+            // A rank-2 drink is $4 on the menu — to high rollers ×1.25, and at the stage the
+            // bar's standing has reached ×(1 + whole stars) (StarEconomy, 2026-09-06). The
+            // standing after that capped night is read rather than assumed: it slid under
+            // the 4.9 it was set to.
             made.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
-            Assert.AreEqual(5, made.Floor.Seated[0].Order.Price,
-                "the $4 rank-2 drink sells for $5 to high rollers (×1.25)");
+            int stage = (int)Math.Round(4 * 1.25 * StarEconomy.TierMultiplier(made.Rating.Average),
+                MidpointRounding.AwayFromZero);
+            Assert.AreEqual(stage, made.Floor.Seated[0].Order.Price,
+                $"the $4 rank-2 drink sells for $5 to high rollers (×1.25), times the stage ({made.Rating.Average:0.00} stars)");
         }
 
         [Test]

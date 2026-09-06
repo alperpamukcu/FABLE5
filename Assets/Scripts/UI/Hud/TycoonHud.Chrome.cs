@@ -152,6 +152,7 @@ namespace LastCall.UI
         private RectTransform _propTip;
         private Text _propTipText, _propTipDetail;
         private Image _propTipIcon;
+        private System.Func<string> _propTipDetailFn;   // a line re-read each frame (the beam's readings)
         private CanvasGroup _propTipGroup;
         private RectTransform _propTipOver;
         private const float PropTipFade = 0.12f;
@@ -198,10 +199,12 @@ namespace LastCall.UI
         }
 
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
-        internal void ShowPropTip(RectTransform over, string word, Sprite icon = null, string detail = null)
+        internal void ShowPropTip(RectTransform over, string word, Sprite icon = null, string detail = null,
+            System.Func<string> detailFn = null)
         {
             if (_propTip == null || over == null || string.IsNullOrEmpty(word)) return;
             _propTipOver = over;
+            _propTipDetailFn = detailFn;
             _propTipText.text = word;
             bool rich = icon != null || !string.IsNullOrEmpty(detail);
             // Two rows and as wide as its longer line when it carries a mark or a detail;
@@ -237,6 +240,11 @@ namespace LastCall.UI
             _propTipGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _propTipGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
             if (!up || _propTipGroup.alpha <= 0f) return;
+            if (_propTipDetailFn != null && _propTipDetail != null)
+            {
+                string now = _propTipDetailFn();
+                if (now != _propTipDetail.text) _propTipDetail.text = now;
+            }
 
             // THROUGH THE SCREEN, because the prop may not be on this canvas. The sink and
             // the beer font are hit plates on the stage's own overlay; a straight read of
@@ -337,8 +345,8 @@ namespace LastCall.UI
             if (_tabletTill != null) _tabletTill.text = "$" + shown;
             if (_beamTill != null)
             {
-                _beamTill.text = "$" + shown;
-                _beamTill.color = shown < 0 ? UITheme.ViceRed[3] : UITheme.Cyan[4];
+                _beamTill.Show(shown);
+                _beamTill.SetHue(shown < 0 ? UITheme.ViceRed[3] : UITheme.Cyan[4]);
             }
         }
 
@@ -802,6 +810,10 @@ namespace LastCall.UI
             bool show = job != null && job.RunsOn(run.Day);
             if (_jobIcon != null && _jobIcon.gameObject.activeSelf != show)
                 _jobIcon.gameObject.SetActive(show);
+            // The plate is a notice; an empty plate is a hole in the screen (photographed
+            // the week it went up). The whole row goes with the job.
+            if (_jobStripRow != null && _jobStripRow.gameObject.activeSelf != show)
+                _jobStripRow.gameObject.SetActive(show);
             if (!show) { _jobStrip.text = ""; return; }
             // THE ICON SAYS WHAT KIND OF WEEK IT IS (2026-09-06, the author: "bildirimlerde
             // alkollerin nesnelerin paranın yıldızın ... ikonlarından faydalan"): the drink
@@ -827,9 +839,28 @@ namespace LastCall.UI
                 _jobIcon.enabled = art != null;
                 _jobIcon.color = job.IsDone ? UITheme.Lime[3] : Color.white;
             }
+            // THE COUNT, ON A PLATE (2026-09-06, the author: "Ecenin görev bildirimleri daha
+            // dikkat çekici olmalı arkaplanda yok oluyor bir plaka olmalı onun üstünde yazmalı
+            // ve kaçta kaç olduğu yazmalı"). What is asked, as a fraction of the week —
+            // "2/5" — beside the giver's name, and the plate behind the row is cut to the
+            // line so the notice is a THING on the screen rather than words over the room.
+            string what;
+            switch (job.Kind)
+            {
+                case JobKind.Perfect: what = "PERFECT POURS"; break;
+                case JobKind.Clean: what = "CLEAN NIGHTS"; break;
+                default: what = (job.RecipeName ?? "").ToUpperInvariant(); break;
+            }
             _jobStrip.text = job.IsDone
-                ? $"<color=#6FCC4B>{job.Who} · DONE · +${job.Reward}</color>"
-                : $"<color=#E84DA6>{job.Who}</color> · {job.Owed()}";
+                ? $"<color=#6FCC4B>{job.Who} · {job.Target}/{job.Target} · DONE · +${job.Reward}</color>"
+                : $"<color=#E84DA6>{job.Who}</color> · <color=#F2E8D5>{job.Served}/{job.Target}</color> · {what}";
+            if (_jobPlate != null)
+            {
+                _jobStripRow.sizeDelta = new Vector2(28f + _jobStrip.preferredWidth + 14f, 26f);
+                _jobPlate.color = job.IsDone
+                    ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.96f)
+                    : new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
+            }
         }
 
         /// <summary>
@@ -852,7 +883,7 @@ namespace LastCall.UI
             // Busy behind it: the counter is up (the cellar is open) or a bench is over the
             // room. Both are the moments the corner has something else to say.
             bool busy = CellarOpen || (_flow != null && _flow.IsOpen);
-            float want = under ? 1f : busy ? 0.35f : 0.85f;
+            float want = under ? 1f : busy ? 0.35f : 1f;
             _jobStripGroup.alpha = Motion.Reduced ? want
                 : Mathf.MoveTowards(_jobStripGroup.alpha, want, Time.unscaledDeltaTime * 3.5f);
         }
@@ -875,12 +906,25 @@ namespace LastCall.UI
             // One row, so the icon and the line fade together and can be asked whether the
             // pointer is on THEM rather than on the text's own overflowing rect.
             _jobStripRow = NewRect("WeekJobRow", root);
-            Place(_jobStripRow, new Vector2(0, 1), new Vector2(320, 20), new Vector2(60, -66));
+            Place(_jobStripRow, new Vector2(0, 1), new Vector2(320, 26), new Vector2(60, -66));
             _jobStripRow.pivot = new Vector2(0, 0.5f);
             _jobStripGroup = _jobStripRow.gameObject.AddComponent<CanvasGroup>();
             _jobStripGroup.blocksRaycasts = false;
+            // The plate (2026-09-06): the house card, cut to the line by RefreshJobStrip, with
+            // the aisle sign's pip at its head so it reads as a notice and not as a caption.
+            _jobPlate = _jobStripRow.gameObject.AddComponent<Image>();
+            _jobPlate.sprite = ChromeArt.Card();
+            _jobPlate.type = Image.Type.Sliced;
+            _jobPlate.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
+            _jobPlate.raycastTarget = false;
+            var jobPip = NewRect("Pip", _jobStripRow);
+            Place(jobPip, new Vector2(0, 0.5f), new Vector2(3, 16), new Vector2(0, 0));
+            jobPip.pivot = new Vector2(0, 0.5f);
+            var pipImg = jobPip.gameObject.AddComponent<Image>();
+            pipImg.color = UITheme.Magenta[3];
+            pipImg.raycastTarget = false;
             var iconRt = NewRect("Icon", _jobStripRow);
-            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(8, 0));
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(9, 0));
             _jobIcon = iconRt.gameObject.AddComponent<Image>();
             _jobIcon.preserveAspect = true;
             _jobIcon.raycastTarget = false;
@@ -889,7 +933,7 @@ namespace LastCall.UI
             _jobStrip = NewText("WeekJob", _jobStripRow, _display, 8, TextAnchor.MiddleLeft,
                 UITheme.Cream[3]);
             Place(_jobStrip.rectTransform, new Vector2(0, 0.5f), new Vector2(292, 20),
-                new Vector2(28, 0));
+                new Vector2(30, 0));
             _jobStrip.rectTransform.pivot = new Vector2(0, 0.5f);
             _jobStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
             _jobStrip.verticalOverflow = VerticalWrapMode.Truncate;

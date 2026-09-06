@@ -1366,3 +1366,35 @@ Yazarın altıncı düzeltme listesi. Hepsi kodda ve fotoğrafla doğrulandı.
   tuval, duvar 3→5 px, taban 6→10, duvar silindir gibi taranmış (uzak kenar koyu, ışık çizgisi, gövde, iç kenar gölge), tüm boşluğun
   üstüne %26 cam tonu ("daha az şeffaf"): içki camın İÇİNDEN görünür. Boyutlar aynı (bardak sahnesi 260, tezgâh 92, boşlar 52);
   kalın duvar 92'de bile ~3 birim kalır, eski 3 px 1.5'e iniyordu.
+
+### 9.36 · Yedinci liste: tutuş, ağız, lavaboya giren bardak, mat fikstür, altın madalyon, kiriş rakamı, kimlik v3.1, yuvarlak balon, görev plakası, market rafı, yıldız ekonomisi (2026-09-06)
+
+Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
+
+- **Kaşık tutulduğu yerden tutulur** (`_spoonGrabOffset`); **dolu tin** artık sıvıyı ağzının içinde gösterir
+  (`BrimInset = 7`); **müşterinin bardağı lavaboya BARDAKLA gider**: bırakma testi imleç VEYA taşınan resmin merkezi
+  (`ScreenOf`), ve lavaboya giren şey yok olmaz, 0.28 s'de aşağı süzülüp solar (`SinkFade`, tin dâhil; Reduced'da anında).
+- **Çerez matı odanın fikstürü:** `prep_mat` (slot 258/69, tezgâhın üstünde düz, `startsInTheRoom`), odanın ışığıyla
+  aydınlanır; HUD'daki kopya ve elle boyama gitti. `FixtureTests` verilenler listesi altı parça.
+- **Madalyon altın** (Amber disk, Malt jant; `Tools/medallion_icon.py`). **Yıldız/kalp/madalyon ipuçları sayı söyler**
+  (her kare okunur): SERVİS x/5, ODA x/5, YILDIZ "gecede bir adım, ikisinin küçüğüne: SERVİS a · KONFOR b = GECE min".
+- **Kasa rakamı saatin elinde:** `SegmentFigure` — altı hücre (işaret, dolar, dört rakam), sağa yaslı, boş hücreler
+  hayalet; coin ve yazı gitti.
+- **Kimlik v3.1:** satırlar 24 (27'den), band 22 (24'ten), hücreler 24 (26'dan), kart 144 (148'den); mühür bandın tam
+  ortasında; KICK ev anahtarı (88×36, ViceRed). NEW ARDEN = kurgusal şehir/yargı alanı (yalnız bir ad; `BuildIdCard`).
+- **Balonlar:** gerçek yuvarlak dikdörtgen (yarıçap 5.5, 2 px mürekkep), gövde yüzü 16 normal ağırlık, sola yaslı;
+  `SeparateSays` her kare başların üstünden başlar, çakışanları yarı yarıya iter, satırı ekranda tutar, kuyruğu konuşanın
+  üstüne geri koyar.
+- **Ece'nin görevi plakada:** ev kartı satıra göre kesilir, magenta pip, "ECE · 2/5 · PERFECT POURS", tam opak; görev yoksa
+  satır hiç yok.
+- **Market:** ürünler kutunun boyuna sığar (ölçek 3x altında tabanlanmaz); "+1.25 COMFORT" başında madalyon
+  (`TileSpec.MetaIcon`); sandık yeniden çizildi (`Tools/restock_icon.py`); THE WALLS (sıva merdiveni) ve ON THE WALL
+  (triptik, ekran — `wall_art` grubu) iki raf; ON THE WALL'un ikonu `up_wall_art`.
+- **Yıldız ekonomisi (GDD 23):** `StarEconomy.TierMultiplier = 1 + ⌊yıldız⌋`. Tarif kapısının, fikstür gereksiniminin,
+  şişe basamağının kademesi fiyatı çarpar (`RecipePrice`, `FixturePrice`, `Market.RungPrice`); barın kademesi içki
+  bedelini VE kirayı çarpar (`PriceOf`, `Rent`). Duvar merdiveni $45 · $260 · $600 — katalogdaki en pahalı şey.
+  **Sim (200 koşu):** iflas %34 → **%9**, gelir/gider $111/$113 → **$232/$224**, kasa medyanı $10 → **$261**, puan 1.82 →
+  **2.13**, 2.0★'a %89, 2.5★'a %59 ulaşıyor (önce %50 / %0). Açılış (kademe 0) tanım gereği aynı. `DevPreset` kasası da kademeyle ölçekli (orta oyun 160→480, son oyun 600→3600) — aksi hâlde 12. gün ön ayarı tek kira sonrası iki şişeyi dolduramıyordu (PlayMode restock testi bulmuştu). 497 EditMode (StarEconomyTests dâhil).
+- **3D bardak seti (PixelLab, `Tools/glass3d_gen.py` → `glass3d_ship.py`):** beş boş, kalın duvarlı, buzlu cam; oyuk
+  (`_fill`) elle ölçülen üç sayıyla kesilir ve duvar yarı saydam bırakılır (GLASS_ALPHA 118) — bkz. GDD 21 ve bu turun
+  kapanış notu.

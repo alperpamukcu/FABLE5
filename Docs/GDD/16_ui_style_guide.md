@@ -204,6 +204,31 @@ its cog at exactly 2×, amber. **Every reading explains itself under the pointer
 hangs UNDER a prop that lives at the top of the screen, where a caption raised above it would
 be off the picture.
 
+**The till reads in the hour's own hand (second pass, 2026-09-06):** the coin-and-caption well
+was sent back; the figure is `SegmentFigure` — the clock's seven-bar machine, six cells (a sign, a
+dollar, four digits), right-aligned, the unused leading cells ghosted — in a matching well. The
+readings' tips carry their numbers, re-read every frame the tip is up (`ShowPropTip` with a
+`Func<string>`): SERVICE "tonight's drinks: 2.4 of 5", COMFORT "the room now: 1.3 of 5", and the
+stars "a step a night toward the lower of — SERVICE 2.4 · COMFORT 1.3 = TONIGHT 1.3". The
+comfort medallion is GOLD (Tools/medallion_icon.py, the Amber disc over a Malt rim).
+
+**Speech (2026-09-06):** the balloon is a real rounded rectangle (`SpeechBox`, a 5.5-pixel radius,
+a two-pixel ink rim), set in the body face at 16, REGULAR and ragged-right — never bold, never
+centred. Balloons never overlap: `SeparateSays` stands each over its own head every frame, walks
+the row and pushes any two that touch apart by half the overlap each, keeps the row inside the
+picture, and then puts each TAIL back over its speaker (clamped to the balloon's rim), so a balloon
+may be shoved aside but its pointer never is.
+
+**The week's job is a notice on a plate (2026-09-06):** the house card cut to the line, a
+magenta pip at its head, the count as a fraction of the week ("ECE · 2/5 · PERFECT POURS"), at
+full opacity — and the whole row goes with the job, since an empty plate is a hole in the screen.
+
+**The market's shelf (2026-09-06):** every product fills its box's height at whatever scale that
+takes (`PlaceProduct` no longer floors the scale under 3x — a 60-row drawing stood at 1x beside a
+48-row one at 2x); a comfort figure on an upgrade tile is led by the medal (`TileSpec.MetaIcon`,
+"+1.25 COMFORT"); the restock crate is drawn (Tools/restock_icon.py); THE WALLS (the plaster
+ladder) and ON THE WALL (the picture, the screen) are two shelves.
+
 **The settings are a WINDOW, not a list (2026-09-06):** a scrim, a titled plate in the centre
 (`ChromeArt.Card`, a band with the cog and the neon under it), the settings as rows — the name
 at the left, the control at the right, a note under a name that needs one — grouped AUDIO /

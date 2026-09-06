@@ -902,10 +902,10 @@ namespace LastCall.EditorTools
                             if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
                             if (f.Level > 0 && !run.CanBuyRung(f)) continue;
                             if (run.Rating.Average < f.Stars) continue;
-                            double value = f.Comfort / f.Price;
+                            double value = f.Comfort / run.FixturePrice(f);
                             if (first == null || value > firstValue) { first = f; firstValue = value; }
                         }
-                        if (first != null && run.Money >= first.Price + 10)
+                        if (first != null && run.Money >= run.FixturePrice(first) + 10)
                         {
                             run.BuyFixture(first.Id);
                             stats.RecordRung(first.Slot);
@@ -1072,10 +1072,10 @@ namespace LastCall.EditorTools
                             if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
                             if (f.Level > 0 && !run.CanBuyRung(f)) continue;
                             if (run.Rating.Average < f.Stars) continue;
-                            double value = f.Comfort / f.Price;
+                            double value = f.Comfort / run.FixturePrice(f);
                             if (bestPiece == null || value > bestValue) { bestPiece = f; bestValue = value; }
                         }
-                        if (bestPiece != null && run.Money >= bestPiece.Price + 60)
+                        if (bestPiece != null && run.Money >= run.FixturePrice(bestPiece) + 60)
                         {
                             run.BuyFixture(bestPiece.Id);
                             stats.RecordRung(bestPiece.Slot);

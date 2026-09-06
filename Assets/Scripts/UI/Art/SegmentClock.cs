@@ -47,16 +47,23 @@ namespace LastCall.UI
             new[] { ".#########.", "###########", "##.......##", "##.......##", "##.......##", "##.......##", "###########", ".##########", ".........##", ".........##", ".........##", ".........##", "###########", ".#########." },
         };
 
-        private const int MaskW = 11, MaskH = 14, Pad = 1;          // cell 13×16
-        private const int Scale = 2;                                 // drawn at 26×32
-        private const float CellPitch = 26f;                         // digit advance
+        // THE SIGN AND THE DOLLAR (2026-09-06), for the till's figure: a bar across the
+        // middle, and the 5's own S with a stroke down its spine.
+        internal static readonly string[] MinusMask =
+            { "...........", "...........", "...........", "...........", "...........", "...........", "###########", "###########", "...........", "...........", "...........", "...........", "...........", "..........." };
+        internal static readonly string[] DollarMask =
+            { ".....#.....", ".#########.", "###########", "##...#.....", "##...#.....", "##...#.....", "##########.", ".##########", ".....#...##", ".....#...##", ".....#...##", "###########", ".#########.", ".....#....." };
+
+        internal const int MaskW = 11, MaskH = 14, Pad = 1;         // cell 13×16
+        internal const int Scale = 2;                                // drawn at 26×32
+        internal const float CellPitch = 26f;                        // digit advance
         private const float ColonW = 6f;                             // lamp block width
 
         // The ghost is the author's own tuning (2026-08-14, four tries down to 0.025:
         // "koyu mavi dijital izleri daha silik yap") — proof there is a machine behind
         // the glass, and nothing you have to read past to get the hour.
-        private const float GhostAlpha = 0.025f;
-        private const float HaloAlpha = 0.13f;
+        internal const float GhostAlpha = 0.025f;
+        internal const float HaloAlpha = 0.13f;
 
         // ── sprites, built once from the masks ──────────────────────────────────
         private static Sprite[] _digitSprites, _haloSprites;
@@ -160,7 +167,11 @@ namespace LastCall.UI
         /// <summary>The mask sprites, cached for the domain's life. `!= null` and not a
         /// bool: with domain reload off a leftover static can hold destroyed sprites
         /// (the ChromeArt precedent).</summary>
-        private static void EnsureSprites()
+        internal static Sprite DigitSprite(int d) { EnsureSprites(); return _digitSprites[d]; }
+        internal static Sprite HaloSprite(int d) { EnsureSprites(); return _haloSprites[d]; }
+        internal static Sprite GhostSprite() { EnsureSprites(); return _ghostSprite; }
+
+        internal static void EnsureSprites()
         {
             if (_digitSprites != null && _digitSprites[0] != null) return;
             _digitSprites = new Sprite[10];
@@ -175,7 +186,7 @@ namespace LastCall.UI
 
         /// <summary>One 13×16 sprite off an 11×14 mask: the numeral itself, or (halo)
         /// the one-pixel ring around it — white, tinted by the Image that wears it.</summary>
-        private static Sprite MaskSprite(string[] rows, bool halo)
+        internal static Sprite MaskSprite(string[] rows, bool halo)
         {
             int w = MaskW + Pad * 2, h = MaskH + Pad * 2;
             var on = new bool[w, h];
@@ -210,7 +221,7 @@ namespace LastCall.UI
                 100f, 0, SpriteMeshType.FullRect);
         }
 
-        private static RectTransform NewRect(RectTransform parent, string name, Vector2 size, Vector2 pos)
+        internal static RectTransform NewRect(RectTransform parent, string name, Vector2 size, Vector2 pos)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -222,7 +233,7 @@ namespace LastCall.UI
             return rt;
         }
 
-        private static Image NewImage(RectTransform cell, string name, Sprite sprite, Color c)
+        internal static Image NewImage(RectTransform cell, string name, Sprite sprite, Color c)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(cell, false);
@@ -235,5 +246,90 @@ namespace LastCall.UI
             img.raycastTarget = false;
             return img;
         }
+    }
+
+    /// <summary>
+    /// THE TILL'S FIGURE, IN THE HOUR'S OWN HAND (2026-09-06, the author: "üst barda bu para
+    /// göstergesini beğenmedim bunu değiştirelim"). The first return of the till to the beam
+    /// was a coin and a word in the display face — a caption again, beside an instrument.
+    /// This is the same seven-bar machine the clock is: six cells, a sign, a dollar and four
+    /// digits, right-aligned, the unused leading cells ghosted the way the clock's unlit bars
+    /// are, so the two readouts on the beam are one kind of thing.
+    /// </summary>
+    public sealed class SegmentFigure
+    {
+        public const int Cells = 6;
+        public static float Width => Cells * SegmentClock.CellPitch;
+
+        private readonly Image[] _ghost = new Image[Cells];
+        private readonly Image[] _halo = new Image[Cells];
+        private readonly Image[] _digit = new Image[Cells];
+        private readonly char[] _shown = new char[Cells];
+        private static Sprite _minus, _minusHalo, _dollar, _dollarHalo;
+        private Color _lit;
+
+        public SegmentFigure(RectTransform host, Color lit)
+        {
+            _lit = lit;
+            SegmentClock.EnsureSprites();
+            if (_minus == null)
+            {
+                _minus = SegmentClock.MaskSprite(SegmentClock.MinusMask, halo: false);
+                _minusHalo = SegmentClock.MaskSprite(SegmentClock.MinusMask, halo: true);
+                _dollar = SegmentClock.MaskSprite(SegmentClock.DollarMask, halo: false);
+                _dollarHalo = SegmentClock.MaskSprite(SegmentClock.DollarMask, halo: true);
+            }
+            float x = 0f;
+            int s = SegmentClock.Scale, p = SegmentClock.Pad;
+            for (int d = 0; d < Cells; d++)
+            {
+                var cell = SegmentClock.NewRect(host, "F" + d,
+                    new Vector2(SegmentClock.MaskW * s + p * 2 * s, SegmentClock.MaskH * s + p * 2 * s),
+                    new Vector2(x - p * s, 0));
+                _ghost[d] = SegmentClock.NewImage(cell, "Ghost", SegmentClock.GhostSprite(), Faded(SegmentClock.GhostAlpha));
+                _halo[d] = SegmentClock.NewImage(cell, "Halo", null, Faded(0f));
+                _digit[d] = SegmentClock.NewImage(cell, "Lit", null, Faded(0f));
+                _shown[d] = '\0';
+                x += SegmentClock.CellPitch;
+            }
+        }
+
+        /// <summary>Shows a whole-dollar amount: "$1240", "-$96", right-aligned.</summary>
+        public void Show(int amount)
+        {
+            string s = (amount < 0 ? "-$" : "$") + Mathf.Abs(amount).ToString();
+            if (s.Length > Cells) s = s.Substring(s.Length - Cells);
+            s = s.PadLeft(Cells, ' ');
+            for (int i = 0; i < Cells; i++) Paint(i, s[i]);
+        }
+
+        public void SetHue(Color lit)
+        {
+            if (lit == _lit) return;
+            _lit = lit;
+            for (int i = 0; i < Cells; i++)
+            {
+                _ghost[i].color = Faded(SegmentClock.GhostAlpha);
+                char c = _shown[i];
+                _shown[i] = '\0';
+                Paint(i, c == '\0' ? ' ' : c);
+            }
+        }
+
+        private void Paint(int slot, char c)
+        {
+            if (_shown[slot] == c) return;
+            _shown[slot] = c;
+            Sprite lit = null, halo = null;
+            if (c >= '0' && c <= '9') { lit = SegmentClock.DigitSprite(c - '0'); halo = SegmentClock.HaloSprite(c - '0'); }
+            else if (c == '-') { lit = _minus; halo = _minusHalo; }
+            else if (c == '$') { lit = _dollar; halo = _dollarHalo; }
+            _digit[slot].sprite = lit;
+            _digit[slot].color = lit != null ? _lit : Faded(0f);
+            _halo[slot].sprite = halo;
+            _halo[slot].color = halo != null ? Faded(SegmentClock.HaloAlpha) : Faded(0f);
+        }
+
+        private Color Faded(float a) => new Color(_lit.r, _lit.g, _lit.b, a);
     }
 }

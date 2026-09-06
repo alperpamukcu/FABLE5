@@ -158,8 +158,19 @@ def glass():
     return arrow(im)
 
 
+def wall_art():
+    """A picture on the wall: a frame around a little sunset (2026-09-06, ON THE WALL)."""
+    im = canvas(); d = ImageDraw.Draw(im)
+    box(d, 2, 4, 17, 19, AMBER[2])                                       # the frame
+    box(d, 4, 6, 15, 17, CYAN[1], ink=AMBER[1])                          # the glass, a sky
+    d.rectangle([5, 13, 14, 16], fill=AMBER[3])                          # the ground
+    d.ellipse([8, 8, 12, 12], fill=AMBER[4])                             # the sun
+    d.line([(5, 8), (7, 10)], fill=CYAN[2])                              # a cloud's edge
+    return arrow(im)
+
+
 ICONS = {
-    'walls': walls, 'light': light, 'furniture': furniture, 'greenery': greenery,
+    'walls': walls, 'wall_art': wall_art, 'light': light, 'furniture': furniture, 'greenery': greenery,
     'counter': counter, 'seats': seats, 'bar': bar, 'glass': glass,
 }
 

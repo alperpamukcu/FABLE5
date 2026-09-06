@@ -346,6 +346,57 @@ namespace LastCall.UI
             view.Say.sizeDelta = new Vector2(cardW, tall + TagPad * 2f + TagFoot);
         }
 
+        /// <summary>
+        /// NO TWO BALLOONS OVER EACH OTHER (2026-09-06, the author: "konuşma balonları üst
+        /// üste binmemeli üst üste binecek şekilde sıkışırsa düzgün bir biçimde ayrılmalı.
+        /// Balonun oku hep karakteri hedef almalı"). Every frame the balloons are stood back
+        /// over their own heads, then walked left to right and any two that touch are pushed
+        /// apart by half the overlap each, and the whole row is kept inside the picture.
+        /// The TAIL is then set back over the head — the balloon may be shoved aside, the
+        /// pointer is not — and clamped to the balloon's own rim so it never hangs in air.
+        /// </summary>
+        private void SeparateSays()
+        {
+            if (_seats == null) return;
+            const float Gap = 8f, TailInset = 14f;
+            float halfRoom = _hudRoot != null ? _hudRoot.rect.width * 0.5f : 640f;
+            // Stand each over its head first, so a balloon that was pushed last frame relaxes
+            // the moment its neighbour goes quiet.
+            var live = new System.Collections.Generic.List<SeatView>();
+            foreach (var v in _seats)
+            {
+                if (v?.Say == null || !v.Say.gameObject.activeInHierarchy) continue;
+                v.Say.anchoredPosition = new Vector2(0f, v.Say.anchoredPosition.y);
+                live.Add(v);
+            }
+            live.Sort((a, b) => a.Root.anchoredPosition.x.CompareTo(b.Root.anchoredPosition.x));
+            for (int i = 1; i < live.Count; i++)
+            {
+                var l = live[i - 1]; var r = live[i];
+                float lRight = l.Root.anchoredPosition.x + l.Say.anchoredPosition.x + l.Say.sizeDelta.x * 0.5f;
+                float rLeft = r.Root.anchoredPosition.x + r.Say.anchoredPosition.x - r.Say.sizeDelta.x * 0.5f;
+                float overlap = lRight + Gap - rLeft;
+                if (overlap <= 0f) continue;
+                l.Say.anchoredPosition += new Vector2(-overlap * 0.5f, 0f);
+                r.Say.anchoredPosition += new Vector2(overlap * 0.5f, 0f);
+            }
+            foreach (var v in live)
+            {
+                // Inside the picture: the room is the HUD's width, centred.
+                float half = v.Say.sizeDelta.x * 0.5f;
+                float centre = v.Root.anchoredPosition.x + v.Say.anchoredPosition.x;
+                float shove = 0f;
+                if (centre - half < -halfRoom + 4f) shove = (-halfRoom + 4f) - (centre - half);
+                else if (centre + half > halfRoom - 4f) shove = (halfRoom - 4f) - (centre + half);
+                if (shove != 0f) v.Say.anchoredPosition += new Vector2(shove, 0f);
+                // The tail: over the head, on the balloon's underside.
+                var tail = v.SayTail != null ? v.SayTail.rectTransform : null;
+                if (tail == null) continue;
+                float tailX = Mathf.Clamp(-v.Say.anchoredPosition.x, -half + TailInset, half - TailInset);
+                tail.anchoredPosition = new Vector2(tailX, tail.anchoredPosition.y);
+            }
+        }
+
         /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
         /// onto them). Returns true if it was served.</summary>
         private bool ServeSeat(int index)
@@ -807,39 +858,13 @@ namespace LastCall.UI
                 ("sugar_rim", "counter_sugar", Preparations.SugarRim,
                  null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
             };
-            // THE MAT UNDER THE GARNISHES (2026-09-06, the author: "cerez_paspasi.png'yi
-            // garnishlerin altina hizala ve yeni garnish eklendiginde onlarin da altina
-            // gelecek sekilde ortalansin"). Built BEFORE the dishes so they stand on it,
-            // and sized off the rail's own arithmetic rather than by hand: the dishes sit
-            // at PrepRailX0 + i*PrepRailGap, so the mat is centred on that span and reaches
-            // half a box past the first and last of them. Add a seventh dish and the mat
-            // grows and re-centres on its own.
-            {
-                float span = (rail.Length - 1) * PrepRailGap;
-                var mat = NewRect("PrepMat", _prepRail);
-                var matArt = ItemArt.Load("prep_mat");
-                float matH = matArt != null ? matArt.rect.height * StageToHud : 26f;
-                Place(mat, new Vector2(0.5f, 0.5f),
-                    new Vector2(span + PrepDishBox, matH),
-                    new Vector2(PrepRailX0 + span * 0.5f, CounterFootY + matH * 0.5f - MatSink));
-                var matImg = mat.gameObject.AddComponent<Image>();
-                matImg.sprite = matArt;
-                // Nine-sliced, so a wider rail REPEATS the mat's ribs instead of smearing
-                // them — the counter's own law (2026-08-19). The borders are set on import.
-                matImg.type = Image.Type.Tiled;
-                // ONE MAT, AT THE COUNTER'S GRAIN (2026-09-06, the author: "çerezlerin
-                // altında 2 adet matı üst üste koymuşsun, 1 matı gerçek boyutunda kullan").
-                // It was two, and neither of them was put there: the rect is the art at the
-                // room's 2x and the tile was being drawn at 1x, so it repeated once ACROSS
-                // and twice DOWN. Halving the pixels-per-unit makes one tile exactly the
-                // height of the rect — the height the author asked to leave alone — and the
-                // repeat happens only along the rail, which is the only way it may grow.
-                matImg.pixelsPerUnitMultiplier = 1f / StageToHud;
-                matImg.raycastTarget = false;
-                matImg.enabled = matArt != null;
-                _prepMat = mat;
-                _prepMatImg = matImg;
-            }
+            // THE MAT IS THE ROOM'S (2026-09-06, the author: "çerez paspası tezgah, oda,
+            // musluk, bira paspası, bira musluğunun olduğu sahneye koyulsun ve 2 pixel
+            // yukarı alınsın"). It was a canvas picture under the dishes here, tinted by hand
+            // to look lit; it is a FIXTURE now (`prep_mat`, given with the room like the drip
+            // mat), stood on the counter by DiegeticStage at its own size and lit by the
+            // room's lights like everything else on the wood. The dishes still stand on it —
+            // the HUD is over the stage — at the same rail they always had.
 
             for (int i = 0; i < rail.Length; i++)
             {
@@ -1335,6 +1360,7 @@ namespace LastCall.UI
             }
             _glassCarryImg.sprite = art;
             _glassCarryImg.color = art != null ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.8f, 0.9f, 0.95f, 0.5f);
+            if (_sinkFadeRt == _glassCarry) { _sinkFadeRt = null; _sinkFadeImg = null; }   // picked up mid-sink
             _glassCarrying = true;
             _glassCarry.gameObject.SetActive(true);
             _glassCarry.SetAsLastSibling();
@@ -1361,13 +1387,17 @@ namespace LastCall.UI
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
                 _glassCarry.anchoredPosition = at + _emptyGrabOffset;
             if (mouse.leftButton.isPressed) return;
-            EndGlassCarry(stage != null && stage.PointerOverDrain(screen));
+            // BY THE GLASS, NOT ONLY THE FINGER (2026-09-06, the author: "müşterilerin
+            // içtiği bardak lavaboya sürüklenmiyor"). Since the hand keeps its grip, the
+            // picture can be over the basin while the pointer is a rim's width off it —
+            // and the player is watching the picture. Either counts.
+            EndGlassCarry(stage != null && (stage.PointerOverDrain(screen)
+                                            || stage.PointerOverDrain(ScreenOf(_glassCarry))));
         }
 
         private void EndGlassCarry(bool intoTheSink)
         {
             _glassCarrying = false;
-            if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
             var view = _carriedEmpty;
             _carriedEmpty = null;
             var run = Run;
@@ -1376,18 +1406,70 @@ namespace LastCall.UI
             {
                 // Back on the counter it goes, exactly as it was. The prop is drawn from the
                 // mess every frame, so there is nothing to put back by hand.
+                if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
                 if (view != null) Toast("PUT BACK — CARRY IT TO THE SINK", UITheme.Cream[3]);
                 return;
             }
-            if (run.SinkBusy) { Toast("THE TAP IS RUNNING"); return; }
+            if (run.SinkBusy)
+            {
+                if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
+                Toast("THE TAP IS RUNNING");
+                return;
+            }
             try
             {
                 run.CollectGlass(view.Dirty);
                 run.WashGlasses();
             }
-            catch (System.InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); return; }
+            catch (System.InvalidOperationException e)
+            {
+                if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
+                Toast(e.Message.ToUpperInvariant());
+                return;
+            }
+            // INTO THE BASIN, not into thin air (the author: "bardağın lavaboya girdiği bir
+            // fade animasyonu gösterilsin bardak direkt yok olmasın").
+            SinkFade(_glassCarry, _glassCarryImg);
             Sfx.Play("drain", 0.5f);
             Toast("WASHING UP", UITheme.Cyan[4]);
+        }
+
+        /// <summary>The screen point under a carried thing's centre: where the PICTURE is,
+        /// which is what the player is aiming with.</summary>
+        private static Vector2 ScreenOf(RectTransform rt) =>
+            rt == null ? new Vector2(-1000f, -1000f)
+                : (Vector2)RectTransformUtility.WorldToScreenPoint(null, rt.TransformPoint(rt.rect.center));
+
+        // ── the basin swallows what is dropped in it ─────────────────────────────
+        private RectTransform _sinkFadeRt;
+        private Image _sinkFadeImg;
+        private float _sinkFadeT;
+        private const float SinkFadeSeconds = 0.28f, SinkFadeDrop = 70f;
+
+        /// <summary>Starts a carried picture sinking: down into the basin and gone, over a
+        /// quarter of a second. Under reduced motion it is simply put away.</summary>
+        private void SinkFade(RectTransform rt, Image img)
+        {
+            if (rt == null || img == null) return;
+            if (Motion.Reduced) { rt.gameObject.SetActive(false); return; }
+            _sinkFadeRt = rt; _sinkFadeImg = img; _sinkFadeT = 0f;
+        }
+
+        private void StepSinkFade()
+        {
+            if (_sinkFadeRt == null) return;
+            float dt = Time.unscaledDeltaTime;
+            _sinkFadeT += dt / SinkFadeSeconds;
+            var p = _sinkFadeRt.anchoredPosition;
+            p.y -= SinkFadeDrop * dt;
+            _sinkFadeRt.anchoredPosition = p;
+            var c = _sinkFadeImg.color;
+            c.a = Mathf.Clamp01(1f - _sinkFadeT);
+            _sinkFadeImg.color = c;
+            if (_sinkFadeT < 1f) return;
+            _sinkFadeRt.gameObject.SetActive(false);
+            c.a = 1f; _sinkFadeImg.color = c;
+            _sinkFadeRt = null; _sinkFadeImg = null;
         }
 
         /// <summary>The sink's click: wash what the hand holds. The one free verb on the
@@ -1461,7 +1543,11 @@ namespace LastCall.UI
             if (_sinkClock == null && busy) BuildSinkClock();
             if (_sinkClock != null)
             {
-                if (_sinkClock.gameObject.activeSelf != busy) _sinkClock.gameObject.SetActive(busy);
+                // Only over the ROOM: a bench over the counter draws its own scene and the
+                // pie, placed for the basin's spot on the counter, was floating on the wall
+                // behind the tin (photographed 2026-09-06).
+                bool showPie = busy && (_flow == null || !_flow.IsOpen);
+                if (_sinkClock.gameObject.activeSelf != showPie) _sinkClock.gameObject.SetActive(showPie);
                 if (busy)
                 {
                     _sinkClock.anchoredPosition = new Vector2(280f, 137f + 70f + 30f + CounterLift);
@@ -1793,24 +1879,10 @@ namespace LastCall.UI
             // as jars go unstocked and opens out as they are bought, so the mat is measured
             // from what is actually STANDING there this frame — not from the six slots the
             // rail could hold — and re-centred on that span.
-            if (_prepMat != null)
-            {
-                // IN THE ROOM'S LIGHT (2026-09-06, the author: "çerez matı ortam
-                // ışıklandırmasından etkilenmiyor etkilenmesi lazım"). The mat is a canvas
-                // picture and no light in the world touches it, so it sat at the brightness
-                // it was drawn at while the counter around it went through an evening. It
-                // wears the same wash the back bar wears.
-                if (_prepMatImg != null && stage != null) _prepMatImg.color = stage.RoomWashLight;
-                bool anyDish = slot > 0;
-                if (_prepMat.gameObject.activeSelf != anyDish) _prepMat.gameObject.SetActive(anyDish);
-                if (anyDish)
-                {
-                    float span = (slot - 1) * PrepRailGap;
-                    _prepMat.sizeDelta = new Vector2(span + PrepDishBox, _prepMat.sizeDelta.y);
-                    _prepMat.anchoredPosition =
-                        new Vector2(PrepRailX0 + span * 0.5f, _prepMat.anchoredPosition.y);
-                }
-            }
+            // (The mat under them is a fixture of the room since 2026-09-06 — see the rail's
+            // builder — so nothing here measures or moves it.)
+            StepSinkFade();
+            SeparateSays();
             StepPrepCarry(run);
             StepGrains();
             StepCloth(run);
@@ -2200,7 +2272,8 @@ namespace LastCall.UI
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
                 _tinCarry.anchoredPosition = at + _tinGrabOffset;
             if (mouse.leftButton.isPressed) return;
-            EndTinCarry(stage != null && stage.PointerOverDrain(screen));
+            EndTinCarry(stage != null && (stage.PointerOverDrain(screen)
+                                          || stage.PointerOverDrain(ScreenOf(_tinCarry))));
         }
 
         private void BeginTinCarry()
@@ -2217,6 +2290,7 @@ namespace LastCall.UI
             }
             _tinCarryImg.sprite = _shakerPropImg.sprite;
             _tinCarryImg.color = new Color(1f, 1f, 1f, 0.95f);
+            if (_sinkFadeRt == _tinCarry) { _sinkFadeRt = null; _sinkFadeImg = null; }   // picked up mid-sink
             _tinCarrying = true;
             _tinPressed = false;
             _tinCarry.gameObject.SetActive(true);
@@ -2240,13 +2314,21 @@ namespace LastCall.UI
         private void EndTinCarry(bool intoTheSink)
         {
             _tinCarrying = false;
-            if (_tinCarry != null) _tinCarry.gameObject.SetActive(false);
-            if (!intoTheSink) return;
             var run = Run;
-            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            if (!intoTheSink || run == null || run.Phase != TycoonPhase.DayOpen)
+            {
+                if (_tinCarry != null) _tinCarry.gameObject.SetActive(false);
+                return;
+            }
             int fee;
             try { fee = run.PourAwayAtSink(); }
-            catch (InvalidOperationException) { Toast("THE TAP IS RUNNING"); return; }
+            catch (InvalidOperationException)
+            {
+                if (_tinCarry != null) _tinCarry.gameObject.SetActive(false);
+                Toast("THE TAP IS RUNNING");
+                return;
+            }
+            SinkFade(_tinCarry, _tinCarryImg);
             Sfx.Play("drain", 0.9f);
             Toast(fee > 0 ? "TIPPED OUT · -$" + fee : "TIPPED OUT");
             if (fee > 0) LogService("<color=#F27D8A>TIPPED OUT</color> a half-built drink · -$" + fee);
@@ -2344,7 +2426,8 @@ namespace LastCall.UI
                     // asked FIRST: the sink is at the far end of the bar from every stool,
                     // so a drop that is over the basin was never also over a drinker.
                     if (stage != null && mouse != null
-                        && stage.PointerOverDrain(mouse.position.ReadValue()))
+                        && (stage.PointerOverDrain(mouse.position.ReadValue())
+                            || stage.PointerOverDrain(ScreenOf(_drinkGlass))))
                     {
                         OnDrainClicked();
                         if (!_glassShown) return;

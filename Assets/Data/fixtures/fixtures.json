@@ -91,6 +91,13 @@
       "flat": true
     },
     {
+      "id": "prep_mat",
+      "x": 258,
+      "y": 69,
+      "onCounter": true,
+      "flat": true
+    },
+    {
       "id": "wall_tv",
       "x": 532,
       "y": 190,
@@ -466,7 +473,7 @@
       "stars": 0,
       "flavor": "The coast in three frames. The flamingo stays past closing.",
       "sprite": "fx_triptych",
-      "group": "walls",
+      "group": "wall_art",
       "comfort": 0.2,
       "level": 1
     },
@@ -531,7 +538,7 @@
       "lightB": 1.0,
       "lightIntensity": 0.45,
       "lightRadius": 58,
-      "group": "walls",
+      "group": "wall_art",
       "comfort": 0.2
     },
     {
@@ -542,6 +549,17 @@
       "stars": 0,
       "flavor": "Black rubber under the font. It catches what the glass does not.",
       "sprite": "fx_beer_mat",
+      "startsInTheRoom": true,
+      "group": "counter"
+    },
+    {
+      "id": "prep_mat",
+      "name": "Snack Mat",
+      "slot": "prep_mat",
+      "price": 15,
+      "stars": 0,
+      "flavor": "Cork under the dishes. It has never once been washed.",
+      "sprite": "fx_prep_mat",
       "startsInTheRoom": true,
       "group": "counter"
     },

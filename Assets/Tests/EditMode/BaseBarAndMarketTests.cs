@@ -346,9 +346,13 @@ namespace LastCall.Tests
             RunDayToClose(run);
 
             int money = run.Money;
+            // THE RUNG'S PRICE (StarEconomy, 2026-09-06): a $6 tier-2 bottle sells on the
+            // one-star rung, so its tag is twice the sheet.
+            int tag = run.MarketOffers[0].Price;
+            Assert.AreEqual(12, tag, "the sheet's $6, on the one-star rung");
             run.BuyBrand(0);
 
-            Assert.AreEqual(money - 6, run.Money);
+            Assert.AreEqual(money - tag, run.Money);
             Assert.IsNotNull(run.Shelf.Find("vodka_a"), "the well brand STAYS on the shelf");
             var reserve = run.Shelf.Find("vodka_b");
             Assert.IsNotNull(reserve, "the better brand stands beside it");

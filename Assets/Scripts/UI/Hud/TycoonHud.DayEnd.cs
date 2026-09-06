@@ -2298,12 +2298,13 @@ namespace LastCall.UI
                             // is the thing it is bought for, so a piece that carries comfort
                             // says how much, in the room's own word.
                             Meta = f.IsTap ? f.TapLevel + "-line tower"
-                                 : f.Comfort > 0 ? "COMFORT +" + f.Comfort.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture)
+                                 : f.Comfort > 0 ? "+" + f.Comfort.ToString("0.0#", System.Globalization.CultureInfo.InvariantCulture) + " COMFORT"
                                  : f.Level > 0
                                  ? (f.HasLight ? "House light · mark " : "Fitting · mark ")
                                    + f.Level
                                  : f.HasLight ? "Dressing · lit" : "Dressing",
                             Art = UpgradeIcon(f.Group),
+                            MetaIcon = f.IsTap ? null : f.Comfort > 0 ? ItemArt.Medal(true, 16f) : null,
                             CardArt = FixtureArt(f.Swatch ?? f.Sprite),
                             ArtH = IconH,
                             Identity = f.Name.ToUpperInvariant(),
@@ -2363,7 +2364,7 @@ namespace LastCall.UI
                                 : "Fit mark " + next + " first · these are mark "
                                   + run.LadderLevel(f.Slot));
                         }
-                        else DressBuyable(spec, f.Price, "fx:" + f.Id, false,
+                        else DressBuyable(spec, run.FixturePrice(f), "fx:" + f.Id, false,
                             () => run.BuyFixture(f.Id));
                         AddTile(spec); raised++;
                     }

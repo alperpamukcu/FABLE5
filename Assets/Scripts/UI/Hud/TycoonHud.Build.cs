@@ -170,26 +170,20 @@ namespace LastCall.UI
             // since. A well like the clock's, between the hour and the week: the coin the
             // shop already draws for money, the figure in the display's own cyan, red when
             // the bar is under water. RunTheTill moves it the way it moved the register.
+            // IN THE HOUR'S OWN HAND (second pass, the author: "bu para göstergesini
+            // beğenmedim"): the coin and the caption went; the figure is the clock's
+            // seven-bar machine in a matching well — see SegmentFigure.
             var tillWell = NewRect("Till", top);
-            Place(tillWell, new Vector2(0, 0.5f), new Vector2(150, 40), new Vector2(166, 0));
+            Place(tillWell, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width + 24f, 40), new Vector2(166, 0));
             var tillImg = tillWell.gameObject.AddComponent<Image>();
             tillImg.sprite = ChromeArt.Well();
             tillImg.type = Image.Type.Sliced;
             tillImg.raycastTarget = true;
-            var coin = NewRect("Coin", tillWell);
-            Place(coin, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(8, 0));   // the 16px coin at 2x
-            coin.pivot = new Vector2(0, 0.5f);
-            var coinImg = coin.gameObject.AddComponent<Image>();
-            coinImg.sprite = ItemArt.Load("sh_b_coin");
-            coinImg.preserveAspect = true; coinImg.raycastTarget = false;
-            coinImg.enabled = coinImg.sprite != null;
-            _beamTill = NewText("Figure", tillWell, _display, 16, TextAnchor.MiddleRight, UITheme.Cyan[4]);
-            Place(_beamTill.rectTransform, new Vector2(1, 0.5f), new Vector2(110, 20), new Vector2(-12, 0));
-            _beamTill.rectTransform.pivot = new Vector2(1, 0.5f);
-            _beamTill.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _beamTill.raycastTarget = false;
-            _beamTill.text = "$0";
-            HoverTip(tillWell, coinImg.sprite, "THE TILL", "WHAT THE BAR HAS TONIGHT");
+            var figure = NewRect("Figure", tillWell);
+            Place(figure, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width, 28), new Vector2(12, 0));
+            _beamTill = new SegmentFigure(figure, UITheme.Cyan[4]);
+            _beamTill.Show(0);
+            HoverTip(tillWell, ItemArt.Load("sh_b_coin"), "THE TILL", "WHAT THE BAR HAS TONIGHT");
 
             // ── the standing, right: the stars and who they brought in ─────────
             // NO PLATE UNDER THEM (2026-08-14, the author: "yıldızlar hala üst barda kutu
@@ -275,12 +269,31 @@ namespace LastCall.UI
             // with one line saying what it measures.
             StripCaption(house, "SERVICE", RowY - 9f);
             StripCaption(house, "COMFORT", RowY + 9f);
+            // WITH THEIR NUMBERS (second pass, the author: "yıldızın nelere bağlı
+            // arttığını servis ve konforun ne kadar etkilediğini ... üstüne gelerek
+            // öğrenebilmeliyiz"): the lines are read off the run every frame the tip is up.
             HoverTip(house.Find("Service") as RectTransform, ItemArt.Heart(true, 16f),
-                "SERVICE", "WHAT TONIGHT'S DRINKS ARE WORTH");
+                "SERVICE", () =>
+                {
+                    var r = Run;
+                    return r == null ? "WHAT TONIGHT'S DRINKS ARE WORTH"
+                        : $"TONIGHT'S DRINKS: {r.ServiceTonight:0.0} OF 5";
+                });
             HoverTip(house.Find("Comfort") as RectTransform, ItemArt.Medal(true, 16f),
-                "COMFORT", "WHAT THE ROOM IS WORTH: WALLS, LIGHT, FURNITURE");
+                "COMFORT", () =>
+                {
+                    var r = Run;
+                    return r == null ? "WHAT THE ROOM IS WORTH: WALLS, LIGHT, FURNITURE"
+                        : $"THE ROOM NOW: {r.ComfortNow:0.0} OF 5 - WALLS, LIGHT, FURNITURE";
+                });
             HoverTip(starsRow, ItemArt.Star(true, 16f),
-                "STANDING", "THE BAR'S NAME. A NIGHT FILES THE LOWER OF THE TWO");
+                "STANDING - A STEP A NIGHT TOWARD THE LOWER OF", () =>
+                {
+                    var r = Run;
+                    if (r == null) return "SERVICE AND COMFORT";
+                    double lower = System.Math.Min(r.ServiceTonight, r.ComfortNow);
+                    return $"SERVICE {r.ServiceTonight:0.0}  ·  COMFORT {r.ComfortNow:0.0}  =  TONIGHT {lower:0.0}";
+                });
 
             // Centred over the block it belongs to, not right-aligned to one edge of it.
             _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
@@ -488,8 +501,10 @@ namespace LastCall.UI
                 seat.SayBg.type = Image.Type.Sliced;
                 seat.SayBg.raycastTarget = false;
 
+                // The tail hangs from the balloon's MIDDLE and is moved by SeparateSays
+                // to stay over the head whenever the balloon itself has been pushed aside.
                 var sayTail = NewRect("Tail", seat.Say);
-                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.32f, 0);
+                sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.5f, 0);
                 sayTail.pivot = new Vector2(0.5f, 1);
                 sayTail.sizeDelta = new Vector2(13f, 12f);
                 sayTail.anchoredPosition = new Vector2(0, 3f);
@@ -504,8 +519,11 @@ namespace LastCall.UI
                 // read as a hairline. This is Silkscreen BOLD at 16: the shop's own face, one
                 // of the two pixel faces the game ships, double-struck so it holds up against
                 // a white ground, and narrow enough that three sentences still fit over a head.
-                seat.SayText = NewText("Line", seat.Say, _shop != null ? _shop : _display, 16,
-                    TextAnchor.UpperCenter, UITheme.Night[0]);
+                // REGULAR, AND SET LEFT (2026-09-06, the author: "metinler kalın şekilde
+                // yazmasın ... metinler ortaya sabitlenmesin normal metin düzeninde olsun"):
+                // the body face at its 16, ragged right, the way a line of speech is set.
+                seat.SayText = NewText("Line", seat.Say, _body, 16,
+                    TextAnchor.UpperLeft, UITheme.Night[0]);
                 Stretch(seat.SayText.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(TagPad, 0), new Vector2(-TagPad, -TagPad));
                 seat.SayText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -1519,6 +1537,21 @@ namespace LastCall.UI
         /// size, for the house's two symbols (GDD 27 §4.4).</summary>
         /// <summary>A hover caption with an icon and a line, on anything: the rect is given
         /// an invisible plate if it has no graphic to catch the pointer with.</summary>
+        /// <summary>The same, with a line that is re-read every frame the tip is up.</summary>
+        private void HoverTip(RectTransform over, Sprite icon, string title, System.Func<string> line)
+        {
+            if (over == null) return;
+            if (over.GetComponent<Graphic>() == null)
+            {
+                var plate = over.gameObject.AddComponent<Image>();
+                plate.color = new Color(0f, 0f, 0f, 0.004f);
+                plate.raycastTarget = true;
+            }
+            var relay = over.GetComponent<HoverRelay>() ?? over.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => ShowPropTip(over, title, icon, line(), line);
+            relay.Exited = () => HidePropTip(over);
+        }
+
         private void HoverTip(RectTransform over, Sprite icon, string title, string line)
         {
             if (over == null) return;
@@ -1667,8 +1700,14 @@ namespace LastCall.UI
             // that fills its sheet, which is most of it, this is the same arithmetic as before.
             var m = VesselArt.Of(s);
             float w = s.rect.width, h = s.rect.height;
+            // ONE SIZE ON THE SHELF (2026-09-06, the author: "markette her nesnenin boyutu
+            // aynı olsun"). Flooring the scale to whole steps stood a 60-row drawing at 1x
+            // beside a 48-row drawing at 2x — the tonic a third the height of the cola on
+            // the same shelf. Every drawing fills the box's height now (or its width, when
+            // it is wider than tall), at whatever scale that takes; whole steps are kept
+            // only for the small pictograms, which are drawn to be shown at exact multiples.
             float k = Mathf.Min(ContentW / m.Drawing.width, boxH / m.Drawing.height);
-            if (k >= 1f) k = Mathf.Floor(k);
+            if (k >= 3f) k = Mathf.Floor(k);
             Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k),
                 new Vector2((w * 0.5f - m.Drawing.center.x) * k, ProductFootY - m.Drawing.y * k));
         }

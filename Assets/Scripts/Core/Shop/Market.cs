@@ -143,9 +143,12 @@ namespace LastCall.Core
                 if (!newByStyle.TryGetValue(style, out var best) || candidate.Info.Tier < best.Info.Tier)
                     newByStyle[style] = candidate;
             }
+            // PRICED AT THE RUNG IT SELLS ON (StarEconomy, 2026-09-06): the split at
+            // FirstRungPrice still reads the sheet's figure, the tag the customer sees is
+            // that figure times the rung's stage.
             foreach (var card in newByStyle.Values)
                 if (ForSale(card, stars, state))
-                    offers.Add(new MarketOffer(card, isNewStock: true, StockPrice(card)));
+                    offers.Add(new MarketOffer(card, isNewStock: true, RungPrice(card)));
 
             // Better bottles: unowned brands of a stocked style, gated by the stars.
             foreach (var candidate in catalogue)
@@ -155,9 +158,19 @@ namespace LastCall.Core
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
                 if (ForSale(candidate, stars, state))
-                    offers.Add(new MarketOffer(candidate, isNewStock: false, StockPrice(candidate)));
+                    offers.Add(new MarketOffer(candidate, isNewStock: false, RungPrice(candidate)));
             }
             return offers;
+        }
+
+        /// <summary>The sheet's price at the stage of the rung the bottle is sold on.</summary>
+        public static int RungPrice(IngredientCard card)
+        {
+            int sheet = StockPrice(card);
+            double rung = card.Info?.Unlock != null
+                ? (double.IsNaN(card.Info.Unlock.StarsWanted) ? 0.0 : card.Info.Unlock.StarsWanted)
+                : RequiredStars(card.Info?.Tier ?? 1, sheet);
+            return StarEconomy.PriceAt(sheet, rung);
         }
 
         /// <summary>

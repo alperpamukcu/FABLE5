@@ -1,0 +1,22 @@
+{
+ "rocks": {
+  "job_id": "3d5ac665-148a-43e4-b5d7-337a900799ec",
+  "png": "AssetPipeline/staging/glass3d/rocks.png"
+ },
+ "pint": {
+  "job_id": "72af18a6-ffd0-4e24-a0b9-8f54c054fe66",
+  "png": "AssetPipeline/staging/glass3d/pint.png"
+ },
+ "highball": {
+  "job_id": "48318517-3757-4973-a457-3ee3cbf8ac92",
+  "png": "AssetPipeline/staging/glass3d/highball.png"
+ },
+ "martini": {
+  "job_id": "b99333ce-f526-413f-b5dd-639209a2e4b4",
+  "png": "AssetPipeline/staging/glass3d/martini.png"
+ },
+ "coupe": {
+  "job_id": "6a5d6caf-2dda-43e9-ab49-79d790b17505",
+  "png": "AssetPipeline/staging/glass3d/coupe.png"
+ }
+}

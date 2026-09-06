@@ -789,7 +789,10 @@ namespace LastCall.UI
         // each says. Anything that names no group, or one nobody titled, goes under THE ROOM
         // at the end rather than vanishing — a piece the shop cannot shelve is a content bug
         // that should be SEEN.
-        private static readonly string[] UpgradeGroups = { "walls", "light", "furniture", "greenery", "counter" };
+        // THE WALL AND WHAT HANGS ON IT ARE TWO SHELVES (2026-09-06, the author: "duvar
+        // geliştirmeleri ile duvara yapılan geliştirmeler ayrı olmalı"): the plaster ladder
+        // is THE WALLS; the picture and the screen are ON THE WALL, right after it.
+        private static readonly string[] UpgradeGroups = { "walls", "wall_art", "light", "furniture", "greenery", "counter" };
 
         private static int GroupOrder(string group)
         {
@@ -802,6 +805,7 @@ namespace LastCall.UI
             switch (group)
             {
                 case "walls": return "THE WALLS";
+                case "wall_art": return "ON THE WALL";
                 case "light": return "THE LIGHT";
                 case "furniture": return "FURNITURE & FLOOR";
                 case "greenery": return "GREENERY";
@@ -1339,9 +1343,22 @@ namespace LastCall.UI
             }
             else if (!string.IsNullOrEmpty(spec.Meta) && state != TileState.Sealed)
             {
+                // A MARK BEFORE THE WORD (2026-09-06, the author: "geliştirmelerin
+                // açıklamalarında iconlardan yararlanılsın"): the medal for a figure of
+                // comfort, so the line reads as the beam's own reading rather than a caption.
+                float lead = 0f;
+                if (spec.MetaIcon != null)
+                {
+                    var mi = NewRect("MetaIcon", rt);
+                    Place(mi, new Vector2(0, 1), new Vector2(16, 16),
+                        new Vector2(TilePad, -TileMetaTop - (TileMetaH - 16f) * 0.5f));
+                    var miImg = mi.gameObject.AddComponent<Image>();
+                    miImg.sprite = spec.MetaIcon; miImg.preserveAspect = true; miImg.raycastTarget = false;
+                    lead = 20f;
+                }
                 var meta = NewText("Meta", rt, _body, 8, TextAnchor.MiddleLeft, TileMetaInk);
-                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW, TileMetaH),
-                    new Vector2(TilePad, -TileMetaTop));
+                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW - lead, TileMetaH),
+                    new Vector2(TilePad + lead, -TileMetaTop));
                 meta.horizontalOverflow = HorizontalWrapMode.Wrap;
                 meta.verticalOverflow = VerticalWrapMode.Truncate;
                 meta.text = spec.Meta;

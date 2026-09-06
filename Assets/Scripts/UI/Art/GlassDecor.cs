@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using LastCall.Core;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -140,29 +141,24 @@ namespace LastCall.UI
             // catches the light. Nothing about it is random — see Speckles.
             if (glass.HasPreparation("salt_rim") || glass.HasPreparation("sugar_rim"))
             {
+                // A RING OF GRAINS ROUND THE MOUTH (2026-09-06, the author: "çok küçük tuz
+                // ve şeker taneleri bardağın ağzını saracak şekilde"). The new glasses are
+                // seen a little from above, so the mouth is an ellipse; the crust is drawn
+                // ALONG it — one-pixel grains scattered on that ellipse, denser where the
+                // near arc catches the light — at the exact size the glass is shown at, so
+                // no grain is ever scaled. A flat band across the rim was a stripe.
                 bool salt = glass.HasPreparation("salt_rim");
                 float mouthW = _piece.InteriorWidthAt(_piece.RimY) * w;
                 if (mouthW < 4f) mouthW = interiorW * 2f;
                 var tone = salt ? new Color(0.95f, 0.96f, 0.97f) : new Color(0.94f, 0.89f, 0.77f);
-
-                var seat = NewChild("CrustSeat", new Vector2(mouthW + 10f, 4f),
-                    new Vector2(0, rimYLocal - 5f));
-                var seatImg = seat.gameObject.AddComponent<Image>();
-                seatImg.color = new Color(0f, 0f, 0f, 0.30f);
-                seatImg.raycastTarget = false;
-
-                var band = NewChild("Crust", new Vector2(mouthW + 12f, 14f),
-                    new Vector2(0, rimYLocal + 1f));
-                var img = band.gameObject.AddComponent<Image>();
-                img.sprite = salt ? SaltBand() : SugarBand();
+                int ringW = Mathf.Max(12, Mathf.RoundToInt(mouthW + 10f));
+                int ringH = Mathf.Max(6, Mathf.RoundToInt(h * 0.085f));
+                var ring = NewChild("Crust", new Vector2(ringW, ringH),
+                    new Vector2(0, rimYLocal + ringH * 0.5f - 1f));
+                var img = ring.gameObject.AddComponent<Image>();
+                img.sprite = RimRing(ringW, ringH, salt);
                 img.color = tone;
                 img.raycastTarget = false;
-
-                var lip = NewChild("CrustLip", new Vector2(mouthW + 12f, 3f),
-                    new Vector2(0, rimYLocal + 7f));
-                var lipImg = lip.gameObject.AddComponent<Image>();
-                lipImg.color = new Color(tone.r, tone.g, tone.b, 0.9f);
-                lipImg.raycastTarget = false;
             }
 
             // THE WEDGE STRADDLES THE GLASS (2026-08-26, the author: "bardagin camina
@@ -174,20 +170,18 @@ namespace LastCall.UI
             // the glass rect and everything parented to it moves and leans with the drink.
             if (glass.HasPreparation("lemon_twist"))
             {
+                // A HALF SLICE ON THE RIM (2026-09-06, the author: "yarım limon dilimi"): a
+                // half wheel, cut side down, straddling the rim at its right-hand end —
+                // rind, pith, five segments — drawn at the size the glass is shown at.
                 float mouthHalf = _piece.InteriorWidthAt(_piece.RimY) * w * 0.5f;
                 if (mouthHalf < 2f) mouthHalf = interiorW * 0.5f;
-                var wedge = NewChild("Wedge", new Vector2(34f, 34f),
-                    new Vector2(mouthHalf - 4f, rimYLocal + 2f));
+                int d = Mathf.Max(10, Mathf.RoundToInt(Mathf.Clamp(mouthW_(w), 20f, 200f) * 0.34f));
+                var wedge = NewChild("Wedge", new Vector2(d, d * 0.5f + 2f),
+                    new Vector2(mouthHalf - d * 0.30f, rimYLocal + d * 0.22f));
                 var img = wedge.gameObject.AddComponent<Image>();
-                // A WEDGE, not a wheel (2026-08-26). prep_lemon is a slice seen face on -
-                // a cross-section lying on a plate - and hooking one over a rim drew a coin
-                // balanced on the glass. glass_lemon is cut from a lemon.
-                img.sprite = ItemArt.Load("glass_lemon_rim") ?? ItemArt.Load("glass_lemon");
-                img.preserveAspect = true; img.raycastTarget = false;
-                if (img.sprite == null) img.color = UITheme.Amber[3];
-                // Barely leaned: a wedge cut to sit on a rim sits square on it. The old
-                // -18 was propping a WHEEL against the glass.
-                wedge.localRotation = Quaternion.Euler(0, 0, -6f);
+                img.sprite = HalfSlice(d);
+                img.raycastTarget = false;
+                wedge.localRotation = Quaternion.Euler(0, 0, -4f);
             }
 
             if (glass.HasPreparation("ice"))
@@ -302,6 +296,109 @@ namespace LastCall.UI
 
         private static Sprite SugarBand() => _sugarBand != null ? _sugarBand
             : _sugarBand = Speckles(new Color32(0xF0, 0xE2, 0xC4, 0xFF));
+
+        private float mouthW_(float w)
+        {
+            float m = _piece.InteriorWidthAt(_piece.RimY) * w;
+            return m < 4f ? _piece.InteriorHalf * w * 2f : m;
+        }
+
+        private static readonly Dictionary<string, Sprite> _rings = new Dictionary<string, Sprite>();
+        private static readonly Dictionary<int, Sprite> _slices = new Dictionary<int, Sprite>();
+
+        /// <summary>Grains on the mouth's ellipse, drawn at the glass's own size: the ring
+        /// is the ellipse inscribed in the sprite, two pixels thick, seeded by a hash so it
+        /// is the same crust every time (the house rule on randomness). White, tinted by
+        /// the caller; sugar is a touch sparser and its grains clump.</summary>
+        private static Sprite RimRing(int w, int h, bool salt)
+        {
+            string key = w + "x" + h + (salt ? "s" : "g");
+            if (_rings.TryGetValue(key, out var got) && got != null) return got;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[w * h];
+            var clear = new Color32(0, 0, 0, 0);
+            var grain = new Color32(255, 255, 255, 255);
+            var dim = new Color32(255, 255, 255, 150);
+            // A SEAT under the grains: the ellipse a pixel lower in a dark wash, so white
+            // grains still read on a pale frosted rim (photographed without it: invisible).
+            var seat = new Color32(20, 16, 28, 96);
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            float a = (w - 1) * 0.5f, b = (h - 1) * 0.5f;
+            float ringOut = 1f, ringIn = 1f - 2.4f / Mathf.Max(1f, Mathf.Min(a, b) * 1.6f);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = (x - a) / Mathf.Max(1f, a), dy = (y - 1 - b) / Mathf.Max(1f, b);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (r <= ringOut && r >= ringIn) px[y * w + x] = seat;
+                }
+            uint hash = 2166136261;
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = (x - a) / Mathf.Max(1f, a), dy = (y - b) / Mathf.Max(1f, b);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    // The band: from the ellipse's own line to two pixels inside it.
+                    if (r > ringOut || r < ringIn) continue;
+                    hash = (hash ^ (uint)(x * 31 + y * 7 + w * 3)) * 16777619;
+                    // Denser on the near (lower) arc, which is the one the light and the
+                    // eye land on; the far arc thins so the ring reads as going round.
+                    int chance = y < b ? (salt ? 3 : 4) : (salt ? 2 : 3);
+                    if ((hash >> 8) % (uint)chance != 0) continue;
+                    px[y * w + x] = grain;
+                    if (!salt && (hash >> 20) % 3 == 0 && x + 1 < w) px[y * w + x + 1] = dim;
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            var sp = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f);
+            sp.hideFlags = HideFlags.DontSave;
+            return _rings[key] = sp;
+        }
+
+        /// <summary>A half wheel of lemon, cut side down, at diameter <paramref name="d"/>:
+        /// a two-pixel rind, a pale pith, the flesh in five segments.</summary>
+        private static Sprite HalfSlice(int d)
+        {
+            if (_slices.TryGetValue(d, out var got) && got != null) return got;
+            int h = d / 2 + 2;
+            var tex = new Texture2D(d, h, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[d * h];
+            var clear = new Color32(0, 0, 0, 0);
+            var rind = new Color32(0xE8, 0xA3, 0x3D, 255);      // Amber[3]
+            var rindDark = new Color32(0xC9, 0x82, 0x2B, 255);  // Amber[2]
+            var pith = new Color32(0xF5, 0xEE, 0xC8, 255);
+            var flesh = new Color32(0xF5, 0xE0, 0x6A, 255);
+            var seam = new Color32(0xFA, 0xF3, 0xB0, 255);
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            float cx = (d - 1) * 0.5f, R = (d - 1) * 0.5f;
+            float rindW = Mathf.Max(1.5f, d * 0.08f), pithW = Mathf.Max(1f, d * 0.05f);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < d; x++)
+                {
+                    float dx = x - cx, dy = y - 1.5f;      // the flat cut is the top rows
+                    if (dy < 0f) continue;
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (r > R) continue;
+                    Color32 c;
+                    if (r > R - rindW) c = y > h * 0.7f ? rindDark : rind;
+                    else if (r > R - rindW - pithW) c = pith;
+                    else
+                    {
+                        // five segments: seams every 36 degrees, from the centre out
+                        float ang = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;   // 0..180
+                        float m = ang % 36f;
+                        c = (m < 2.5f || m > 33.5f) && r > pithW + 1f ? seam : flesh;
+                    }
+                    px[(h - 1 - y) * d + x] = c;
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            var sp = Sprite.Create(tex, new Rect(0, 0, d, h), new Vector2(0.5f, 0.5f), 1f);
+            sp.hideFlags = HideFlags.DontSave;
+            return _slices[d] = sp;
+        }
 
         /// <summary>
         /// The crust along a rim, as GRAINS (2026-09-06, the author: "aynı şekilde tuz ve

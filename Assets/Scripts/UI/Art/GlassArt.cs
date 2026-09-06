@@ -251,7 +251,8 @@ namespace LastCall.UI
             (s.Rim + Wall) - (s.Stem ? 0 : s.Floor - Base);
 
         /// <summary>True: the drawn v2 set; false: the generated glass3d_* plates.</summary>
-        private const bool PreferDrawn = true;
+        // FALSE again since the 2026-09-06 set landed: the generated glasses are the base set.
+        private const bool PreferDrawn = false;
 
         public static Piece For(GlasswareDefinition glass) => For(glass, 1);
 
@@ -339,11 +340,18 @@ namespace LastCall.UI
             // The pint's number is also the tap's; a pulled pint rises with it, and its
             // head rides SurfaceY rather than a nominal line, so the foam still sits on
             // the beer. Checked in play after the change.
-            ["pint"] = new Gen3D(0.083f, 0.958f, 0.905f, 1.02f),       // 42x72, gap 38px @ row 8
-            ["highball"] = new Gen3D(0.079f, 0.952f, 0.875f, 1.02f),   // 32x63, gap 28px @ row 7
-            ["rocks"] = new Gen3D(0.214f, 0.946f, 0.913f, 0.95f),      // 46x56, gap 42px, floor on the ledge
-            ["martini"] = new Gen3D(0.576f, 0.955f, 0.917f, 0.78f),    // 48x66, gap 44px @ row 8
-            ["coupe"] = new Gen3D(0.552f, 0.955f, 0.913f, 0.78f),      // 46x67, gap 42px @ row 8
+            // THE 2026-09-06 SET (Tools/glass3d_gen.py + glass3d_ship.py): five frosted, thick-walled
+            // glasses off PixelLab, the cavity cut by hand-read rows and the wall left translucent, so
+            // the drink shows THROUGH the glass. Fractions are the ship script's own print-out; the
+            // densities are the old set's until SurfaceY is re-read in play.
+            ["pint"] = new Gen3D(0.250f, 0.802f, 0.661f, 1.02f),       // 56x96, cavity rows 19..72, wall 5
+            ["highball"] = new Gen3D(0.188f, 0.781f, 0.591f, 1.02f),   // 44x96, cavity rows 21..78, wall 4
+            // A full glass reads 0.87 of the cavity at 0.95 AND at 1.09 (2026-09-06): the surface
+            // stops at the pool ceiling (PoolCeilingArtPx under the rim) by design, so the density
+            // is not what that number is about, and the old bench stands.
+            ["rocks"] = new Gen3D(0.347f, 0.792f, 0.562f, 0.95f),      // 64x72, cavity rows 15..47, wall 5
+            ["martini"] = new Gen3D(0.545f, 0.795f, 0.514f, 0.78f),    // 72x88, cavity rows 18..40, wall 4
+            ["coupe"] = new Gen3D(0.557f, 0.784f, 0.588f, 0.78f),      // 68x88, cavity rows 19..39, wall 4
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)

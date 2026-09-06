@@ -474,7 +474,11 @@ namespace LastCall.UI
         // face for a sixteen-pixel word, so the word stood taller than the key it was on.
         // 52 is the height the cap was drawn at, and the band is 72: it fits, with the word
         // on its face and the throw under it.
-        private const float KickW = 100f, KickH = 52f;
+        // THE HOUSE KEY (v3.1, 2026-09-06, the author: "kick butonu değiştirilsin"). Two
+        // arcade caps were sent back; this is the ONE key every other press in the game is
+        // (GDD 16 §2, KeyPlate) in the door's red, the word on its face at the body face's
+        // 16 — a key you already know how to press, in the colour that says what it does.
+        private const float KickW = 88f, KickH = 36f;
         private RectTransform _idKick;
 
         /// <summary>
@@ -711,9 +715,11 @@ namespace LastCall.UI
             // 16x11 flag at six times, cut to a disc 22 art pixels across — the flag's own
             // height, so it shows top to bottom and the disc trims only its ends — hung on
             // the band's lower edge in a ring of ink, the way a medallion hangs on a ribbon.
+            // CENTRED IN THE BAND (v3.1, the author: "ülke bayrakları tam üstteki farklı
+            // renk şeritin yükseklik bakımından orta konumuna getirilsin"): the band is 22
+            // art pixels tall and so is the seal, so it fills the band's height exactly.
             const float Roundel = 22f * LicScale, FlagW = 16f * 6f, FlagH = 11f * 6f;
-            var sealAt = new Vector2(-(LicPad + Roundel * 0.5f),
-                LicHeaderY - LicHeaderH + Roundel * 0.35f);
+            var sealAt = new Vector2(-(LicPad + Roundel * 0.5f), bandMid);
             var seal = NewRect("Seal", card);
             Place(seal, new Vector2(1, 1), new Vector2(Roundel, Roundel), sealAt);
             seal.pivot = new Vector2(0.5f, 0.5f);
@@ -746,29 +752,15 @@ namespace LastCall.UI
             // grid keeps (2026-09-06): the key is furniture on this card, not a floating button.
             Place(kick, new Vector2(1, 1), new Vector2(KickW, KickH),
                 new Vector2(-(LicPad + Roundel + 12f), bandMid + KickH * 0.5f));
-            var kickImg = kick.gameObject.AddComponent<Image>();
-            kickImg.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "kick");
-            kickImg.type = Image.Type.Sliced;
             var kickBtn = kick.gameObject.AddComponent<Button>();
-            kickBtn.targetGraphic = kickImg;
-            kickBtn.transition = Selectable.Transition.SpriteSwap;
-            var ks = kickBtn.spriteState;
-            ks.pressedSprite = ChromeArt.KeyCap(UITheme.ViceRed, true, "kick");
-            ks.selectedSprite = kickImg.sprite;
-            kickBtn.spriteState = ks;
             var kickFace = NewRect("Face", kick);
-            Stretch(kickFace, Vector2.zero, Vector2.one, Vector2.zero,
-                new Vector2(0, -ChromeArt.KeyCapFaceUp));
-            // Cream on the red cap, not the ramp's deepest step: at this key's height the
-            // bench's dark-on-red word read as a smear in play (2026-09-05, photographed).
+            Stretch(kickFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            KeyPlate.Dress(kick, UITheme.ViceRed[2], kickBtn, kickFace);
             var kickWord = NewText("L", kickFace, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(kickWord.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Stretch(kickWord.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
             kickWord.text = "KICK";
             kickWord.raycastTarget = false;
-            var kickTravel = kickFace.gameObject.AddComponent<KeyFaceTravel>();
-            kickTravel.Button = kickBtn;
-            kickTravel.Up = -ChromeArt.KeyCapFaceUp;
-            kickTravel.Down = -ChromeArt.KeyCapFaceDown;
             kickBtn.onClick.AddListener(KickTheOneOnTheCard);
             _idKick = kick;
 

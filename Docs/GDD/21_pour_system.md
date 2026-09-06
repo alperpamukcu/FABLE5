@@ -519,3 +519,11 @@ The exact edges, decided rather than discovered later:
   the spoon.
 - **Bench cards opt out.** Null-`Info` test cards carry no category and cannot be called
   alcoholic; the exemption is pinned by test so a type-fallback cannot arrive by accident.
+
+### The brimful tin shows its drink in the mouth, never over it (2026-09-06)
+
+The author: *"shaker tamamen doluyken yanlış gözüküyor sıvı dış yüzeyinin üstünde gözüküyor."* The
+pool's top edge sat at the cavity's rim row, and a metaball surface stands a few pixels proud of
+the band it is given, so a brimful tin drew its drink above the steel. `PushShakerPool` drops the
+band by `BrimInset` (7 surface px): the drink shows inside the mouth's ellipse and never over the
+lip. The spoon, like everything else carried, is held where it was taken (`_spoonGrabOffset`).

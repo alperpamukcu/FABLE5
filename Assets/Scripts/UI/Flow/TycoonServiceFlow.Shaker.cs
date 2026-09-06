@@ -89,6 +89,7 @@ namespace LastCall.UI
         private RectTransform _spoonRt;
         private Vector2 _spoonRest;
         private bool _spoonHeld;
+        private Vector2 _spoonGrabOffset;   // the hand keeps its grip (2026-09-06, the seventh list)
         private double _stirEnergy;
         private float _stirPrevAngle;
         private bool _stirHasPrev;
@@ -1010,8 +1011,14 @@ namespace LastCall.UI
             // the bench is where the level is read instead.
             if (fill < BrimFill) { _shakerFluid.ClearPool(); return; }
             float band = Mathf.Min(innerH * 0.10f, 22f);   // the last of it, at the rim
+            // UNDER THE LIP (2026-09-06, the author: "shaker tamamen doluyken yanlış
+            // gözüküyor sıvı dış yüzeyinin üstünde gözüküyor"). The pool's top edge sat at
+            // the cavity's rim row, and a metaball surface stands a few pixels proud of the
+            // band it is given — so a brimful tin drew its drink above the steel. The band
+            // is dropped by that overshoot: the drink shows in the mouth, never over it.
+            const float BrimInset = 7f;
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
-            _shakerFluid.SetPool(minX, maxX, rimY - band + bob, rimY + bob, 1f, rad);
+            _shakerFluid.SetPool(minX, maxX, rimY - BrimInset - band + bob, rimY - BrimInset + bob, 1f, rad);
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
         }
@@ -1248,7 +1255,7 @@ namespace LastCall.UI
             // 30 -> 60: the spoon is a light thing held in the fingers, so it is the one
             // that should sit nearest the cursor of the three.
             _spoonRt.anchoredPosition = Vector2.Lerp(
-                _spoonRt.anchoredPosition, local, 1f - Mathf.Exp(-60f * dt));
+                _spoonRt.anchoredPosition, local + _spoonGrabOffset, 1f - Mathf.Exp(-60f * dt));
 
             // The swept angle, taken about the tin's centre and only while the spoon is
             // actually over the tin — circling the bench does not stir the drink.
@@ -1957,7 +1964,17 @@ namespace LastCall.UI
             {
                 // The spoon works an OPEN tin only — the cap hands the stage to the shake.
                 if (!_capped && Run != null && Run.Phase == TycoonPhase.DayOpen)
-                { _spoonHeld = true; _stirHasPrev = false; Sfx.Play("tap_handle", 0.5f); }
+                {
+                    _spoonHeld = true; _stirHasPrev = false;
+                    // Held where it was taken (the author: "kaşık neresinden tutulursa
+                    // ordan tutulsun"): the spoon's pivot is its grip, so grabbing the bowl
+                    // used to snap the grip to the finger.
+                    _spoonGrabOffset = Vector2.zero;
+                    if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                            _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
+                        _spoonGrabOffset = _spoonRt.anchoredPosition - held;
+                    Sfx.Play("tap_handle", 0.5f);
+                }
             });
             _spoonRt.gameObject.AddComponent<EventTrigger>().triggers.Add(spoonGrab);
             _benchProps.Add(_spoonRt.gameObject.AddComponent<CanvasGroup>());

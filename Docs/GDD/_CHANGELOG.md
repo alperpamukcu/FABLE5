@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The seventh list (2026-09-06):** the spoon keeps its grip and the brimful tin keeps its drink
+  under the lip (GDD 21); a customer's glass goes to the sink by the GLASS and sinks into it; the
+  snack mat is a fixture of the room; the comfort medallion is gold and the beam's readings say
+  their numbers, the till in the hour's own segment hand (GDD 16); licence v3.1 — rows closed up,
+  the seal centred, the kick as the house key (GDD 28); balloons rounded, regular, ragged-right,
+  never overlapping, tails on their speakers; the week's job on a plate with its fraction; the
+  market's products at one size, the wall's two shelves, the medal before a comfort figure, a
+  drawn crate (GDD 16, 27); and THE STAR ECONOMY — everything at a stage costs and pays
+  (1 + whole stars) times (GDD 23, measured: bankruptcies 34% → 9%). GDD_MEVCUT §9.36.
+
 - **The sixth list (2026-09-06):** the basin's wait fills a pie clockwise; every carried thing
   keeps the grip it was taken by; the snack mat wears the room's light; **the room opens worth
   NOTHING** (`FreeBase` 2.0 → 0) and the walls carry it (+1.25 / +2.25 / +3.25 at 0 / 1 / 2★,

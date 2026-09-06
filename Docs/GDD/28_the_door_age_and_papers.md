@@ -55,10 +55,13 @@ a page of facts. It is drawn now:
   numbered fields in four rows of one pitch. The endorsement chips stand IN the fifth row,
   right of the caption, instead of hanging under the last rule (where they left the paper).
 - **The band carries the actions**: the jurisdiction over the class at the left; at the right
-  the KICK key — the cap at its drawn height of 52, since the sliced cap's 24 units of border
-  left a 30-tall key six units of face for a sixteen-pixel word — and the **seal**: the 16×11
-  flag at six times, cut to a 22-art-pixel disc (`ChromeArt.Roundel` under a `Mask`, the ring
-  `RoundelRing` over it), hung on the band's lower edge like a medallion on a ribbon.
+  the KICK key and the **seal**: the 16×11 flag at six times, cut to a 22-art-pixel disc
+  (`ChromeArt.Roundel` under a `Mask`, the ring `RoundelRing` over it). **v3.1 (2026-09-06):**
+  the band is 22 art pixels tall and so is the seal, centred in it; the kick is the HOUSE KEY
+  (`KeyPlate`, 88×36, ViceRed, the word at the body face's 16) after two arcade caps were sent
+  back; the field rows are 24 art pixels (from 27), the header 22 (from 24), the rail's cells 24
+  (from 26) — 144 tall from 148. NEW ARDEN is the fictional jurisdiction the licence is issued in
+  (the game's city); it is a name, not a rule, and can be renamed in `BuildIdCard`.
 
 ## 2. The law
 

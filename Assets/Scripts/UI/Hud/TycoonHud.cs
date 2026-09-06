@@ -678,8 +678,6 @@ namespace LastCall.UI
         /// <summary>The mat the garnish dishes stand on (2026-09-06). Sized and centred off
         /// the rail's own span, so it follows the dishes rather than being placed beside
         /// them.</summary>
-        private RectTransform _prepMat;
-        private Image _prepMatImg;          // tinted by the room's light each frame
 
         /// <summary>How far the mat lies BELOW the counter's foot line. A mat does not
         /// stand, it lies: the dishes' lowest pixels are on the line and the mat's own
@@ -1235,6 +1233,7 @@ namespace LastCall.UI
         {
             public string Name = "";
             public string Meta;              // one contextual token on the tile
+            public Sprite MetaIcon;          // a 16px mark before it (2026-09-06: the medal for comfort)
             public string Money;             // "$38", "+$105", "3.0★"
             /// <summary>What a SEALED tile's tag says under its number. Null = "STARS TO
             /// OPEN", which is what every lock in the shop was until the draught tower
@@ -1319,6 +1318,7 @@ namespace LastCall.UI
         private Text _jobStrip;
         private RectTransform _jobStripRow;   // icon + line, so they fade as one
         private CanvasGroup _jobStripGroup;
+        private Image _jobPlate;             // the notice's plate, cut to its line (2026-09-06)
         private Image _jobIcon;
 
 
@@ -2172,7 +2172,7 @@ namespace LastCall.UI
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 
         private RectTransform _settingsPanel;
-        private Text _beamTill;             // the till's figure, back on the beam (2026-09-06)
+        private SegmentFigure _beamTill;    // the till's figure, in the hour's own hand (2026-09-06)
         private Image[] _settingsMeter;     // the volume, five blocks
 
         private Text _settingsVolume, _settingsMute, _settingsMotion;
@@ -2317,7 +2317,10 @@ namespace LastCall.UI
         // alanları hesaba katarak daha dar bir kimlik oluştur"): the grid is sized to what
         // is printed in it — a twenty-letter drink at the display face's 16 is 320 units,
         // the widest thing on the card, and the grid is 348 — instead of to the paper.
-        private const float LicW = 196f * LicScale, LicH = 148f * LicScale;
+        // CLOSED UP (v3.1, 2026-09-06, the author: "metinler arasındaki boşluklar azaltılsın
+        // yukarıdan ve aşağıdan sıkıştırılsın"): the header two art pixels shorter, the
+        // field rows three shorter, the rail's two cells two shorter — 144 tall from 148.
+        private const float LicW = 196f * LicScale, LicH = 144f * LicScale;
 
         /// <summary>The margin from the paper's edge to anything printed on it.</summary>
         private const float LicPad = 8f * LicScale;
@@ -2331,7 +2334,7 @@ namespace LastCall.UI
 
         /// <summary>Row pitch in the field grid — four rows, each a caption over a value on
         /// a rule.</summary>
-        private const float LicRowH = 27f * LicScale;
+        private const float LicRowH = 24f * LicScale;
 
         //
         // A DRIVING-LICENCE STRUCTURE (2026-08-10, the author: "sürücü belgelerine benzer
@@ -2351,10 +2354,10 @@ namespace LastCall.UI
         // of the paper and dropped the endorsement cells clean off the bottom of it —
         // which every rect measurement passed, because they were all still inside the
         // CARD RECT. Only a screenshot could show it, and did.
-        private static readonly Rect LicPortrait = new Rect(LicPad, -(32f * LicScale),
+        private static readonly Rect LicPortrait = new Rect(LicPad, -(30f * LicScale),
             LicRailW, LicRailW);
 
-        private const float LicHeaderH = 24f * LicScale;
+        private const float LicHeaderH = 22f * LicScale;
 
         private const float LicHeaderY = -(2f * LicScale);
 
@@ -2366,22 +2369,22 @@ namespace LastCall.UI
         /// header, then a row apiece. Drawn AND written to from here.</summary>
         private static readonly float[] LicLines =
         {
-            32f * LicScale + LicRowH,
-            32f * LicScale + LicRowH * 2f,
-            32f * LicScale + LicRowH * 3f,
-            32f * LicScale + LicRowH * 4f,
+            28f * LicScale + LicRowH,
+            28f * LicScale + LicRowH * 2f,
+            28f * LicScale + LicRowH * 3f,
+            28f * LicScale + LicRowH * 4f,
         };
 
         // The rail's two data cells and the rule the licence number is printed on, at the
         // art's own coordinates — the boxes are drawn on the stock, not by the UI.
         private const float LicCellX = LicPad, LicCellW = LicRailW;
 
-        private const float LicCellH = 26f * LicScale;
+        private const float LicCellH = 24f * LicScale;
 
         /// <summary>The two data cells under the photograph, top edges, from the paper's top.</summary>
-        private static readonly float[] LicCells = { 92f * LicScale, 120f * LicScale };
+        private static readonly float[] LicCells = { 88f * LicScale, 113f * LicScale };
 
-        private const float LicNumRule = 146f * LicScale;
+        private const float LicNumRule = 140f * LicScale;
 
         // ── the week, as an instrument (2026-08-19, the author: "Haftalık takvim
         // göstergesi daha profesyonelce olmalı") ────────────────────────────────

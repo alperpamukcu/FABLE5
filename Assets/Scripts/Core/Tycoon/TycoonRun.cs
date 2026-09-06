@@ -404,7 +404,9 @@ namespace LastCall.Core
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>
         public int RecipePrice(RecipeDefinition recipe) =>
-            Math.Max(9, 5 + (5 * (recipe.Rank - 2)) / 2);
+            // ...times the stage its gate puts it on (StarEconomy, 2026-09-06): the one-star
+            // pages cost twice the curve, the two-star pages three times.
+            StarEconomy.PriceAt(Math.Max(9, 5 + (5 * (recipe.Rank - 2)) / 2), RecipeStarGate(recipe));
 
         /// <summary>Stars the room must say about this bar before the recipe sells (C6).
         /// Lowered under the caps they unlock (2026-08-02): with the menu cap in play, a
@@ -662,7 +664,10 @@ namespace LastCall.Core
         {
             if (stage <= 0) return;
             bool late = stage >= 2;
-            Money = late ? 600 : 160;
+            // AT THE STAGE'S OWN SCALE (StarEconomy, 2026-09-06): a 2.6-star bar's rent and
+            // drinks are three times the sheet, so its till is too — 160 at the old flat
+            // economy left a day-12 preset unable to refill two bottles after one rent.
+            Money = StarEconomy.PriceAt(late ? 600 : 160, late ? 5.0 : 2.6);
             Rating.DevSet(late ? 5.0 : 2.6);
             foreach (var g in _glassware)
                 _glassTiers[g.Id] = late ? MaxGlassTier
@@ -950,7 +955,10 @@ namespace LastCall.Core
                     Money += thanks;
                     DayBonus += thanks;
                 }
-                int rent = _config.Rent(Day);
+                // THE LANDLORD READS THE STARS TOO (StarEconomy, 2026-09-06): the room is
+                // let at the stage the bar has reached, so the night's take and the night's
+                // rent climb together and the climb stays a climb.
+                int rent = StarEconomy.PriceAt(_config.Rent(Day), Rating.Average);
                 Money -= rent;
                 DayRent += rent;
                 RollMarket();
@@ -1328,7 +1336,10 @@ namespace LastCall.Core
         /// premium spirits on the shelf earn it, scaled by the crowd. No dice anywhere in it,
         /// which is why the scripted last call is priced through the same line as the crowd.</summary>
         private int PriceOf(RecipeDefinition recipe) => Math.Max(1, (int)Math.Round(
-            (DrinkOrder.MenuPrice(recipe) + PremiumFor(recipe)) * _config.PriceMultiplier(CrowdToday),
+            (DrinkOrder.MenuPrice(recipe) + PremiumFor(recipe)) * _config.PriceMultiplier(CrowdToday)
+            // ...and the STAGE the bar has reached (StarEconomy, 2026-09-06): a one-star bar's
+            // drinkers pay twice the menu, a two-star bar's three times.
+            * StarEconomy.TierMultiplier(Rating.Average),
             MidpointRounding.AwayFromZero));
 
         /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
@@ -2388,15 +2399,23 @@ namespace LastCall.Core
                       $"{LadderLevel(def.Slot)}. A tower is fitted one line at a time."
                     : $"{def.Name} is rung {def.Level} of its ladder; the bar stands on " +
                       $"rung {LadderLevel(def.Slot)}. It climbs one rung at a time.");
-            Spend(def.Price);
+            int price = FixturePrice(def);
+            Spend(price);
             _fixtures.Add(fixtureId);
             // A fitted basin changes how long the tap runs, and the counter is told at once
             // rather than at the next day's open — the night it is bought is a night it works.
             if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
             _todayPurchases.Add(new DayPurchase(
-                DayPurchase.Kind.Fixture, fixtureId, def.Name, def.Price));
-            return def.Price;
+                DayPurchase.Kind.Fixture, fixtureId, def.Name, price));
+            return price;
         }
+
+        /// <summary>What a fitting costs tonight: the sheet's figure at the stage its star
+        /// requirement puts it on (StarEconomy, 2026-09-06). The walls' top rung, wanted at
+        /// two stars, is three times its sheet — the biggest, dearest thing in the catalogue,
+        /// which is what the author asked the walls to be.</summary>
+        public int FixturePrice(FixtureDefinition def) =>
+            def == null ? 0 : StarEconomy.PriceAt(def.Price, def.Stars);
 
         /// <summary>
         /// ONE fitting a night (the author, 2026-08-07: "1 gecede maksimum 1 upgrade
