@@ -30,9 +30,10 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            // 51 since the tenth list (2026-09-07): ten low-profile regulars joined the bar.
-            Assert.That(cast.All.Count, Is.EqualTo(51),
-                "the bar has 50 drinkers and Ece behind it; if that changed on purpose, change it here too");
+            // 51 since the tenth list (2026-09-07): ten low-profile regulars joined the bar;
+            // 56 since the eleventh, the same night: five young Japanese customers.
+            Assert.That(cast.All.Count, Is.EqualTo(56),
+                "the bar has 55 drinkers and Ece behind it; if that changed on purpose, change it here too");
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]

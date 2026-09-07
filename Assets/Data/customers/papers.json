@@ -239,6 +239,11 @@
     { "slug": "rider", "name": "Yeferson Mora", "age": 24, "country": "United States", "iso": "us" },
     { "slug": "cleaner", "name": "Rosa Mendieta", "age": 46, "country": "United States", "iso": "us" },
     { "slug": "retiree", "name": "Walt Petersen", "age": 72, "country": "United States", "iso": "us" },
-    { "slug": "guard", "name": "Andrés Vargas", "age": 33, "country": "United States", "iso": "us" }
+    { "slug": "guard", "name": "Andrés Vargas", "age": 33, "country": "United States", "iso": "us" },
+    { "slug": "salaryman", "name": "Hiroshi Nakamura", "age": 34, "country": "Japan", "iso": "jp" },
+    { "slug": "driftgirl", "name": "Aiko Tanaka", "age": 23, "country": "Japan", "iso": "jp" },
+    { "slug": "harajuku", "name": "Yui Kobayashi", "age": 22, "country": "Japan", "iso": "jp" },
+    { "slug": "racerboy", "name": "Kenji Sato", "age": 26, "country": "Japan", "iso": "jp" },
+    { "slug": "mechanic", "name": "Takeshi Mori", "age": 47, "country": "Japan", "iso": "jp" }
   ]
 }

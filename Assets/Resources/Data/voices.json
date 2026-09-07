@@ -196,6 +196,21 @@
       "sip": ["Dobrze, but {advice_l}", "Listen, {advice_l}", "Hm, {advice_l}"],
       "leaving": ["Enough. I'm going.", "Nie, nie. Too long.", "Do widzenia."],
       "kicked": ["Serio? Okay.", "Fine. Do widzenia.", "Co? Okay, I go."]
+    },
+    {
+      "id": "japanese",
+      "name": "Japanese",
+      "isos": ["jp"],
+      "people": ["driftgirl", "racerboy", "salaryman", "harajuku", "mechanic"],
+      "order": ["Sumimasen, a {drink}.", "One {drink}, onegai.", "{drink}, please. Arigatou.", "Etto… a {drink}."],
+      "perfect": ["Oishii!", "Sugoi, perfect!", "Kanpai!"],
+      "another": ["Mou ippai!", "One more, kanpai!", "Again, onegai!"],
+      "close": ["Hai, okay.", "Maa maa.", "Not bad, ne."],
+      "wrong": ["Chotto… no.", "Eh? Not this.", "Chigau, sorry."],
+      "praise": ["Oishii. Truly, this is the one.", "Sugoi. You are a pro, ne.", "Kanpai. This is perfect."],
+      "sip": ["Etto, {advice_l}", "Ne, {advice_l}", "Sumimasen, but {advice_l}"],
+      "leaving": ["Sumimasen, I cannot wait more.", "Mou ii. I go.", "Shikata nai. Goodbye."],
+      "kicked": ["Eh?! Really?", "Hidoi. Okay, I go.", "Wakatta. Sayonara."]
     }
   ]
 }

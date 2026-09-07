@@ -429,6 +429,38 @@ FIGURE_OPTIONS = {
         "Miami neighbourhood bar, short dark hair, clean shaven, "
         "a light grey security uniform shirt with shoulder tabs, dark olive trousers, "
         "no logo, no pattern, no hat, nothing black"),
+
+    # -- the eleventh list (2026-09-07): "5 adet daha karakter uret ... hepsi Japon olsun,
+    # yaslari 50'yi gecmemeli ... stili pastelman'e benzesin, 1 karakter Tokyo Drift
+    # karakterlerine benzesin". Five young Japanese customers in the pastelman language:
+    # slim builds, one pastel garment each, clean lines, nothing black (hair is very dark
+    # brown, not black, for the same reason the whole cast's is).
+    "driftgirl": (
+        "a young Japanese woman in her early twenties, slim and long limbed, bar customer "
+        "in a Miami club, long straight light brown hair past the shoulders with a centre "
+        "parting, small silver hoop earrings, a lilac cropped tank top with a thin red "
+        "trim, low rise dark blue jeans, a street racing night look, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "racerboy": (
+        "a Japanese man in his twenties, slim and narrow, bar customer in a Miami club, "
+        "short spiky very dark brown hair with bleached tips, clean shaven, "
+        "a pale orange bomber jacket over a white t-shirt, dark grey trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    "salaryman": (
+        "a Japanese man in his thirties, slim, bar customer in a Miami club, neat short "
+        "very dark brown hair, thin rimmed glasses, "
+        "a pale pink short sleeved shirt with a loosened grey tie, grey trousers, "
+        "no logo, no pattern, no hat, no jacket, nothing black"),
+    "harajuku": (
+        "a petite Japanese woman in her twenties, bar customer in a Miami club, a very dark "
+        "brown bob with straight bangs, small round earrings, "
+        "a mint green pastel hoodie dress, white sneakers, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "mechanic": (
+        "a lean Japanese man in his forties, bar customer in a Miami club, cropped very "
+        "dark brown hair with grey at the temples, a short goatee, "
+        "a sky blue work jumpsuit tied at the waist over a white vest, "
+        "no logo, no pattern, no hat, no cap, nothing black"),
 }
 
 HAND_ANCHOR_NOTE = """\

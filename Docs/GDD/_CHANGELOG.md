@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eleventh list (2026-09-07):** five young Japanese customers in the pastelman language,
+  one of them the street-racing girl of the author's picture; a Japanese voice and flag; the door
+  order salted per session; the walk-out balloon measured to leave with its drinker.
+  GDD_MEVCUT §9.40.
+
 - **The tenth list (2026-09-07):** ten new low-profile customers briefed and rolled, each with
   their own way of being annoyed; a re-inking pass that takes the black keyline off a shipped
   patron (the leopard first); the market's card laid out again and an aisle that stays put; balloons

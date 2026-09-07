@@ -206,8 +206,7 @@ KEPT = ('clubgirl', 'heavyset')
 # Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
 # stills first and animations only after approval, every time - so a new face is queued
 # here, judged, and only then added to KEPT and given clips.
-TRYING = ('guayabera', 'nurseaide', 'linecook', 'busdriver', 'fisherman',
-          'abuelita', 'rider', 'cleaner', 'retiree', 'guard')   # the tenth list, 2026-09-07
+TRYING = ('driftgirl', 'racerboy', 'salaryman', 'harajuku', 'mechanic')   # the eleventh list, 2026-09-07
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
@@ -351,6 +350,7 @@ UPSET_OF = {
     'guayabera': 'wave', 'nurseaide': 'sigh', 'linecook': 'glare', 'busdriver': 'arms',
     'fisherman': 'shake', 'abuelita': 'sigh', 'rider': 'glare', 'cleaner': 'shake',
     'retiree': 'wave', 'guard': 'arms',
+    'driftgirl': 'glare', 'racerboy': 'wave', 'salaryman': 'sigh', 'harajuku': 'shake', 'mechanic': 'arms',
 }
 
 

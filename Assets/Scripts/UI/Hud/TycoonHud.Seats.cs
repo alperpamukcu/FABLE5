@@ -3803,8 +3803,15 @@ namespace LastCall.UI
             return sprites;
         }
 
+        // A DIFFERENT DOOR ORDER EVERY SESSION (2026-09-07, the author: "karakterlerin mekana
+        // geliş sırası rastgele olmalı"). The faces stream was cut from the run's seed alone,
+        // so every run played from the scene's fixed seed sat the same faces down in the same
+        // order. Which DRAWING a person wears is cosmetic — the sim never asks — so this one
+        // stream is salted with the clock; who they are, what they order and when they walk
+        // in still come from the run's own seeded streams.
         private SeededRng FaceRng => _faceRng ?? (_faceRng =
-            new RunRng((_bootstrap != null ? _bootstrap.CurrentSeed : null) ?? "").GetStream("faces"));
+            new RunRng(((_bootstrap != null ? _bootstrap.CurrentSeed : null) ?? "")
+                       + "|faces|" + System.DateTime.UtcNow.Ticks).GetStream("faces"));
 
         /// <summary>
         /// Which face sits down. The same person is the same face every time they come back —

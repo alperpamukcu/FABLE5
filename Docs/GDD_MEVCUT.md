@@ -1457,3 +1457,14 @@ Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
   Konuşma hızı 12 karakter/sn.
 - **Mahzen:** stok aileye göre sıralı, raf altında aile adı (`StepCellarLabels`); havlu çekmece açıkken %20 alfa, isabet kutusu
   resmin alfası. **Sıvılar:** `UITheme.Vivid` (kroma ×1.35) — mahzen dolulukları ve kokteyl renkleri birlikte.
+
+### 9.40 · On birinci liste: beş Japon müşteri, rastgele kapı sırası, balon kontrolü (2026-09-07)
+
+- **Beş yeni yüz (pastelman dili, hepsi 50 altı):** driftgirl (Aiko Tanaka, 23 — Tokyo Drift görselindeki gibi: lila askılı üst,
+  kot, uzun açık kahve saç), racerboy (Kenji Sato, 26), salaryman (Hiroshi Nakamura, 34), harajuku (Yui Kobayashi, 22), mechanic
+  (Takeshi Mori, 47). Kimlikleri Japonya (`Items/fl_jp.png` 16×11 çizildi), sesleri yeni `japanese` sesi (`voices.json`, 14 ses).
+  Sinirlenme tarifleri: glare / wave / sigh / shake / arms. Aynı hat: still → judge → adopt → ship → 11 klip → ink → join.
+- **Kapı sırası:** `FaceRng` artık koşu tohumuna saat damgası ekliyor (`|faces|ticks`) — hangi çizimin hangi sırayla girdiği oturumdan
+  oturuma değişir; kim olduğu, ne istediği, ne zaman geldiği hâlâ koşunun tohumlu akışlarından.
+- **Balonlar gidince kalıyor mu:** oyunda ölçüldü — sabrı biten müşteri kalkarken balon kökle birlikte yürüyor (child), 4 sn içinde
+  iniyor (`SayUntil` + çıkış bitiminde `HushSeat`). Yeniden görülürse durum istenir.

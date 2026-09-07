@@ -46,6 +46,16 @@ namespace LastCall.EditorTools
             // kits, plus one for a file that never existed — deleted with their sprites,
             // audit 2026-08-11. A border rule without its PNG is how ghosts accumulate.)
             string file = System.IO.Path.GetFileNameWithoutExtension(p);
+            // THE MAT IS TILED (2026-09-06, it grows with the garnish rail), and a tiled sprite
+            // wants a Full Rect mesh or Unity draws the run wrong and says so in the console
+            // (2026-09-07). Same rule the counter has, for the same reason.
+            if (file == "fx_prep_mat")
+            {
+                var matSettings = new TextureImporterSettings();
+                ti.ReadTextureSettings(matSettings);
+                matSettings.spriteMeshType = SpriteMeshType.FullRect;
+                ti.SetTextureSettings(matSettings);
+            }
             // The key's corner arc is 14px and its standing lip 11px, so a 16px ring keeps both
             // out of the stretched centre (2026-07-27, art regenerated at 128x80).
             // The 2026-08-09 kit, DRAWN rather than generated, so this border is the
