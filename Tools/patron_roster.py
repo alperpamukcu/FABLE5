@@ -139,6 +139,21 @@ def check():
     for s in papers - slugs - {'', 'ece'}:
         say('%-14s has papers and is not in the roster' % s)
 
+    # THE STORY'S FACES TOO (2026-09-07). Trimming papers.json to the roster took the row the
+    # host's placeholder was borrowing, and DataLoader refuses a story character whose face has
+    # no papers - the scene came up on a FormatException and the bar did not open. papers.json
+    # answers to story.json as well as to the roster, so the check asks both.
+    story_path = os.path.join(ROOT, 'Assets', 'Data', 'story', 'story.json')
+    if os.path.exists(story_path):
+        story = json.load(io.open(story_path, encoding='utf-8'))
+        for c in story.get('characters', []):
+            for key in ('look', 'placeholderLook'):
+                face = c.get(key)
+                if face and face not in papers:
+                    say('story %s.%s is "%s", which has no papers row' % (c['id'], key, face))
+                if key == 'placeholderLook' and face and face not in drawn:
+                    say('story %s stands in as "%s", which has no art' % (c['id'], face))
+
     print('\nframe counts (drawn only, the walk should be 17 since 2026-09-07):')
     for p in people:
         if p['art'] != 'drawn':
