@@ -274,6 +274,7 @@ index'le (paylaşılan index'e dokunmadan) dilimlenerek:
 | `ec254241` | **sekizinci liste** — mahzen kartı + sallanan sıvı, maske dışı gösterge etiketleri (+ yazarın PNG kancası), kitap satırı, rayla uzayan mat, elips oyuk + büyük bardak, **kimlik v4 2:1** (zımba/yıldız şeridi) (§9.37) | yazar + bu oturum |
 | `e9bc1d20` | **dokuzuncu liste** — Malibu Club kimliği (plaj şeridi, yuvarlak köşe), gecenin kirişi, mahzen kartı v2, **tek tin = tek porsiyon** (nişan dökmez), 13 sesli müşteri defteri, ortalanmış bardak + yay taban + akış hissi, 6 basamaklı bardak giydirmesi, raydaki havlu, mürekkepli kir/halka, kitap satırı (§9.38) | yazar + bu oturum |
 | `c18334ec` | **onuncu liste** — on yeni düşük profilli müşteri (11'er klip, kişi başına farklı sinirlenme, siyah kontursuz `patron_ink`), leopar yeniden mürekkeplendi, market kartı yeniden, koridor yerinde, balonlar yığılır/kaymaz, konuşma 12 kps, mahzen aile etiketleri, şeffaf havlu, canlı sıvılar (§9.39) | yazar + bu oturum |
+| `54927186` | **on birinci liste** — beş genç Japon müşteri (Tokyo Drift kızı dahil, pastelman dili, `japanese` sesi, `fl_jp`), kapı sırası oturum başına rastgele, mat Full Rect, çıkış balonu ölçüldü (§9.40) | yazar + bu oturum |
 
 **Süpürme, ölçerek.** `Assets/Resources` altındaki her PNG oyunun kendi yükleme zincirine karşı
 ada, türetilmiş öneke VE sahne GUID'ine göre sınandı (`art_reach.py`): 41 kartın 39'unda tam v4
