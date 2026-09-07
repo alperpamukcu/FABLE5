@@ -1526,6 +1526,7 @@ namespace LastCall.UI
             UpdateDrinkGlass();
             UpdateShakerProp();   // the tin waits on the same coaster the glass does
             StepMiniPreps(run);
+            StepIdOpen();
             StepPropTip();
             StepCellarCard();
             StepCellarLabels();
@@ -1925,6 +1926,15 @@ namespace LastCall.UI
         private const float BoardW = 356f, BoardH = 460f, BoardX = 430f, BoardY = 48f;
 
         private const float BoardPad = 18f;
+        /// <summary>The standing board's row metrics (2026-09-07). ONE figure column at
+        /// StandFigW, the unit mark in its own StandUnitW gutter to the left of it, and a row
+        /// tall enough for 16px type to sit in — measured at 26 and found to be 20 units of
+        /// line for 16 units of face, which is why the readings looked crammed against their
+        /// own rules.</summary>
+        // The unit gutter is 26, not 19 (measured 2026-09-07 in the shot): at 19 the leader
+        // run ended hard against the heart and the medallion, and a dotted rule touching an
+        // icon reads as a broken icon. 26 leaves the mark clear air on both sides.
+        private const float StandRowH = 30f, StandFigW = 56f, StandUnitW = 26f;
 
         private static readonly Color BoardPlate = new Color(0.102f, 0.063f, 0.137f, 0.96f);
 
@@ -1963,7 +1973,14 @@ namespace LastCall.UI
         /// TAKE over the NET). Seven of these, a rule and a two-line foot have to finish
         /// clear of the plate's own drawn foot — its bottom border is 18 art px at 2×, and
         /// the rivets live inside it — so the rows give the foot the two units it needs.</summary>
-        private const float WeekRowH = 38f;
+        // MEASURED THREE TIMES, and this is what the plate actually holds (2026-09-07). The
+        // board grew two outgoing rows (bills, fines) and its foot rows grew from a 21 pitch
+        // to 26 to clear the coin, which is 16 screen pixels tall — and each time the ladder
+        // above had to give the space back or NET SO FAR fell off the bottom of the
+        // instrument, which is the one figure the whole board is for. Seven nights at 36
+        // leaves the foot inside the plate with room to spare. The stacked figures sit at
+        // +/-10 in it, which was the readable half of the change anyway.
+        private const float WeekRowH = 36f;
 
         /// <summary>Where a night's score starts. Far enough past the VIP mark that
         /// Saturday's promise is not read as Saturday's first star.</summary>
@@ -2402,12 +2419,19 @@ namespace LastCall.UI
         // of the paper and dropped the endorsement cells clean off the bottom of it —
         // which every rect measurement passed, because they were all still inside the
         // CARD RECT. Only a screenshot could show it, and did.
-        private static readonly Rect LicPortrait = new Rect(LicPad, -(18f * LicScale),
+        // CLEAR OF THE BAND (2026-09-07, the author: "vesikalik boxu seritin ustune geliyor,
+        // aralarinda ufak bir mesafe olmali"). The band now starts at LicPad/2 = 3 art px and
+        // is 16 tall, so it ends at 19; a portrait beginning at 18 overlapped it by a pixel
+        // and the two read as one welded block. 24 leaves five clear art pixels - a margin at
+        // the size the card is actually printed.
+        private static readonly Rect LicPortrait = new Rect(LicPad, -(24f * LicScale),
             LicRailW, LicRailW);
 
         /// <summary>The stamp strip under the photograph (v4): visits as punches, the rating
         /// as stars — top edge and height, from the paper's top.</summary>
-        private const float LicStampY = 70f * LicScale, LicStampH = 24f * LicScale;
+        // The stamp strip follows the photo down and grows for type at 16 rather than 8
+        // (2026-09-07): two captioned rows of 16-unit marks want 30 art px, not 24.
+        private const float LicStampY = 76f * LicScale, LicStampH = 30f * LicScale;
 
         // SIXTEEN (2026-09-07): the band wears the author's beach — Items/licence_band.png,
         // 200x16 art pixels, one to one at the card's own three — and reaches the portrait's

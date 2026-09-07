@@ -127,6 +127,16 @@ namespace LastCall.UI
         public static Sprite Medal(bool lit, float px) =>
             Load(Name("medal3d", lit, px));
 
+        /// <summary>MONEY'S OWN MARK (2026-09-07, the author: "2D siyah kontras yesil ic planli
+        /// dolar iconu uret ve oyunda para gosteren her yere $ yerine o iconu koy"). Every
+        /// figure that meant money used to be printed with a typed dollar sign, so the till
+        /// read in one face, the market in another and the slip in a third — three dollars for
+        /// one currency, none of them an object. This is the fourth member of the star / heart
+        /// / medallion set: same canvas, same keyline, the interior in Lime because money is
+        /// the only green thing in the chrome. Drawn at both sizes by Tools/coin_icon.py rather
+        /// than derived, because the derivation peels ink and this icon's glyph IS ink.</summary>
+        public static Sprite Coin(float px = 16f) => Load(Name("coin3d", true, px));
+
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");
 

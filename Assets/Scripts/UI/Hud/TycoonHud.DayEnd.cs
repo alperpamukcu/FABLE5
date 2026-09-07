@@ -1095,9 +1095,9 @@ namespace LastCall.UI
                 // at Cream 2 it was the dimmest thing in its own row, which is a poor way to
                 // show the figure that was asked for). Tonight's is amber, like everything
                 // else on the row the marquee is lighting.
-                WeekFigure(row, take, "", 9f,
+                WeekFigure(row, take, "", 10f,
                     tonight ? UITheme.Amber[4] : UITheme.Cream[3]);
-                WeekFigure(row, net, net >= 0 ? "+" : "-", -9f,
+                WeekFigure(row, net, net >= 0 ? "+" : "-", -10f,
                     net >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
             }
 
@@ -1109,7 +1109,11 @@ namespace LastCall.UI
             foot.sizeDelta = new Vector2(0, 1);
             foot.anchoredPosition = new Vector2(0, -y);
             var fi = foot.gameObject.AddComponent<Image>();
-            fi.color = new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.28f);
+            // 0.45, not 0.28 (2026-09-07, measured in the shot). A rule is what tells the
+            // reader that the nights above it and the totals below it are different KINDS of
+            // number; at 28% over this plate's navy it was invisible, so the board read as
+            // eleven rows in a heap. Cream[2] carries further than Cream[1] at the same alpha.
+            fi.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.45f);
             fi.raycastTarget = false;
             y += 8f;
 
@@ -1117,6 +1121,29 @@ namespace LastCall.UI
             // SO FAR" against a single net; it totals both figures now, and the labels are
             // what teach the six rows over them which of their numbers is which — the same
             // trick the slip's TOOK IN and PAID OUT blocks play on their own subtotals.
+            // TONIGHT'S OUTGOINGS, INCLUDING THE LAW'S (2026-09-07, the author: "fatura
+            // ekraninda cezalar gideri de olmali"). The slip has printed a FINES line since
+            // the door shipped and DayExpenses has always counted DayFines, so the sums were
+            // never wrong — but the week board is where a reader looks to ask what a night
+            // cost, and it only ever answered with TAKEN and NET. The fine is the one outgoing
+            // the player CHOSE, so it prints whether or not it happened: a zero here is the
+            // board saying the night was clean, which is worth reading.
+            WeekFoot(body, ref y, "TONIGHT'S BILLS",
+                run.DayRent + run.DayStock + run.DayUpgrades, "-", UITheme.Cream[3]);
+            WeekFoot(body, ref y, "TONIGHT'S FINES", run.DayFines, run.DayFines > 0 ? "-" : "",
+                run.DayFines > 0 ? UITheme.ViceRed[4] : UITheme.Cream[1]);
+
+            y += 6f;
+            var foot2 = NewRect("Foot2", body);
+            foot2.anchorMin = new Vector2(0, 1); foot2.anchorMax = new Vector2(1, 1);
+            foot2.pivot = new Vector2(0.5f, 1);
+            foot2.sizeDelta = new Vector2(0, 1);
+            foot2.anchoredPosition = new Vector2(0, -y);
+            var f2i = foot2.gameObject.AddComponent<Image>();
+            f2i.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.45f);
+            f2i.raycastTarget = false;
+            y += 8f;
+
             WeekFoot(body, ref y, "TAKEN SO FAR", weekTake, "", UITheme.Cream[3]);
             WeekFoot(body, ref y, "NET SO FAR", weekNet, weekNet >= 0 ? "+" : "-",
                 weekNet >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
@@ -1127,8 +1154,20 @@ namespace LastCall.UI
         /// <paramref name="dy"/> is its half of the row — above the middle or below it.</summary>
         private void WeekFigure(RectTransform row, int amount, string sign, float dy, Color ink)
         {
+            // A NARROWER COLUMN, so the figure is part of its row (2026-09-07). At 130 the
+            // box reached back to x190 while the stars ended at x172, and the number read as
+            // a thing pinned to the far wall rather than as this night's takings. 108 is what
+            // "-$1888" needs at 16 with its sign — measured, not guessed — and it puts the
+            // column's head at x212, a clean 40px gutter off the stars.
+            // NO COIN ON THIS ONE (2026-09-07, measured in play). The night's row stacks TWO
+            // figures inside 38 units at +/-10, and the coin has a 16-screen-pixel floor —
+            // put one on each and they touch each other, and reach back over the stars. The
+            // rule the coin actually follows is "a figure that stands alone gets the mark";
+            // these two do not stand alone, they are a pair, and the FOOT below them carries
+            // the coin for the whole column. The signs still tell them apart, which is what
+            // they were always doing.
             var money = NewText("M", row, _display, 16, TextAnchor.MiddleRight, ink);
-            Place(money.rectTransform, new Vector2(1, 0.5f), new Vector2(130, 18),
+            Place(money.rectTransform, new Vector2(1, 0.5f), new Vector2(108, 18),
                 new Vector2(-4, dy));
             money.rectTransform.pivot = new Vector2(1, 0.5f);
             money.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -1140,20 +1179,27 @@ namespace LastCall.UI
         private void WeekFoot(RectTransform body, ref float y, string caption, int amount,
             string sign, Color ink)
         {
+            // INSET OFF THE RAILS (2026-09-07). The plate is drawn with fixings down both
+            // sides; the foot's rows sit lowest on the instrument, which is exactly where
+            // those fixings are, and at x4 the labels ran into the left one.
             var label = NewText("WeekLabel", body, _body, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[2]);
-            Place(label.rectTransform, new Vector2(0, 1), new Vector2(200, 21), new Vector2(4, -y));
+            Place(label.rectTransform, new Vector2(0, 1), new Vector2(200, 21), new Vector2(12, -y));
             label.rectTransform.pivot = new Vector2(0, 1);
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = caption;
 
             var total = NewText("WeekTotal", body, _display, 16, TextAnchor.MiddleRight, ink);
-            Place(total.rectTransform, new Vector2(1, 1), new Vector2(160, 21), new Vector2(-4, -y));
+            Place(total.rectTransform, new Vector2(1, 1), new Vector2(160, 21), new Vector2(-12, -y));
             total.rectTransform.pivot = new Vector2(1, 1);
             total.horizontalOverflow = HorizontalWrapMode.Overflow;
             total.verticalOverflow = VerticalWrapMode.Overflow;
-            total.text = sign + "$" + Mathf.Abs(amount);
-            y += 21f;
+            CoinFigure(total, amount, sign);
+            // 26, not 21 (2026-09-07, measured): the coin is 16 screen pixels tall and these
+            // rows were pitched for 16-unit type alone, so consecutive foot lines had their
+            // marks overlapping diagonally. The pitch has to clear the tallest thing in the
+            // row, and the coin is now that thing.
+            y += 26f;
         }
 
         // ── the bar's own ladder ────────────────────────────────────────────────
@@ -1326,8 +1372,11 @@ namespace LastCall.UI
             foot.rectTransform.anchorMin = new Vector2(0, 1);
             foot.rectTransform.anchorMax = new Vector2(1, 1);
             foot.rectTransform.pivot = new Vector2(0.5f, 1);
-            foot.rectTransform.sizeDelta = new Vector2(-8, 44);
-            foot.rectTransform.anchoredPosition = new Vector2(0, -y);
+            // CLEAR OF THE RIVETS (2026-09-07). The plate is drawn with fixings down both
+            // side rails; a note stretched to the body's full width ran its second line
+            // straight through the left one. It is inset and given three lines of room.
+            foot.rectTransform.sizeDelta = new Vector2(-24, 54);
+            foot.rectTransform.anchoredPosition = new Vector2(0, -(y + 4f));
             foot.horizontalOverflow = HorizontalWrapMode.Wrap;
             foot.verticalOverflow = VerticalWrapMode.Overflow;
             foot.text = note;
@@ -1359,7 +1408,7 @@ namespace LastCall.UI
             var row = NewRect("R" + label, body);
             row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
             row.pivot = new Vector2(0.5f, 1);
-            row.sizeDelta = new Vector2(0, 26);
+            row.sizeDelta = new Vector2(0, StandRowH - 2f);
             row.anchoredPosition = new Vector2(0, -y);
 
             var cap = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[2]);
@@ -1368,24 +1417,52 @@ namespace LastCall.UI
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = label;
 
+            // A LEADER, from the end of the word to the head of the figure (2026-09-07, the
+            // author: "tasarimlari facia ... kusursuz sayfa duzeni"). Measured in play the
+            // same day: the caption's ink stopped at x95 and its figure began at x247 — a
+            // hundred and fifty clear pixels of plate between a label and the number that
+            // belongs to it, five rows running. No amount of colour fixes that; the eye needs
+            // something to walk along, which is what leader dots have been for since ledgers
+            // were ruled by hand. It starts where THIS word actually ends (preferredWidth,
+            // not the box) so no row's dots collide with its own caption.
+            float capEnd = 4f + cap.preferredWidth + 8f;
+            float figLeft = row.rect.width - StandFigW - (inStars ? StandUnitW : 0f) - 4f - 6f;
+            if (figLeft - capEnd >= 24f)
+            {
+                var lead = NewText("Lead", row, _body, 16, TextAnchor.MiddleLeft,
+                    new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.38f));
+                Place(lead.rectTransform, new Vector2(0, 0.5f),
+                    new Vector2(figLeft - capEnd, 22), new Vector2(capEnd, -1f));
+                lead.rectTransform.pivot = new Vector2(0, 0.5f);
+                lead.horizontalOverflow = HorizontalWrapMode.Wrap;
+                lead.verticalOverflow = VerticalWrapMode.Truncate;
+                // Enough dots to overrun the gap at any width; Wrap+Truncate cuts the rest,
+                // so the run always reaches the figure and never passes it.
+                lead.text = new string('.', Mathf.CeilToInt((figLeft - capEnd) / 4f) + 4);
+            }
+
             if (inStars)
             {
                 var unit = NewRect("U", row);
-                Place(unit, new Vector2(1, 0.5f), new Vector2(13, 13), new Vector2(-60f, 0));
+                Place(unit, new Vector2(1, 0.5f), new Vector2(13, 13),
+                    new Vector2(-(StandFigW + 4f), 0));
                 unit.pivot = new Vector2(1, 0.5f);
                 var ui = unit.gameObject.AddComponent<Image>();
                 ui.sprite = unitArt ?? ItemArt.Star(true, 13f);   // the house's own symbol, else the star
                 ui.preserveAspect = true; ui.raycastTarget = false;
             }
 
+            // ONE FIGURE COLUMN. Every number on this board is right-aligned to the same edge
+            // at the same width, so 0.0 and 10.0 land on their last digit — a column of
+            // figures is only readable if it IS a column.
             var val = NewText("V", row, _display, 16, TextAnchor.MiddleRight, ink);
-            Place(val.rectTransform, new Vector2(1, 0.5f), new Vector2(inStars ? 56 : 200, 22),
-                new Vector2(-4, 0));
+            Place(val.rectTransform, new Vector2(1, 0.5f),
+                new Vector2(inStars ? StandFigW : 200, 22), new Vector2(-4, 0));
             val.rectTransform.pivot = new Vector2(1, 0.5f);
             val.horizontalOverflow = HorizontalWrapMode.Overflow;
             val.verticalOverflow = VerticalWrapMode.Overflow;
             val.text = value;
-            return y + 28f;
+            return y + StandRowH;
         }
 
         /// <summary>The lowest star gate still shut, and how many things it holds. Read off
@@ -1889,7 +1966,9 @@ namespace LastCall.UI
                 _cartHeadLabel.text = _cart.Count == 0 ? "BASKET" : $"BASKET ({_cart.Count})";
             RebuildBasket();
             if (_cartTotal != null)
-                _cartTotal.text = _cart.Count == 0 ? "" : "$" + CartTotal();
+                // ClearCoin, not text="": a figure emptied by hand keeps its coin, and a
+                // cleared basket would sit there showing a mark with no number under it.
+                if (_cart.Count == 0) ClearCoin(_cartTotal); else CoinFigure(_cartTotal, CartTotal());
             // "TOTAL" with nothing after it is a label for a number that is not there.
             if (_cartTotalLabel != null) _cartTotalLabel.enabled = _cart.Count > 0;
             // WHAT THE NIGHT LEAVES YOU WITH (2026-09-04, the author: "sepete ürün
@@ -1901,7 +1980,7 @@ namespace LastCall.UI
             int leftInTill = run.Money - CartTotal();
             if (_cartLeft != null)
             {
-                _cartLeft.text = _cart.Count == 0 ? "" : "$" + leftInTill;
+                if (_cart.Count == 0) ClearCoin(_cartLeft); else CoinFigure(_cartLeft, leftInTill);
                 _cartLeft.color = leftInTill > 0 ? Color.white : ShopCost;
             }
             if (_cartLeftLabel != null) _cartLeftLabel.enabled = _cart.Count > 0;

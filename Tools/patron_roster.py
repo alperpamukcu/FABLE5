@@ -28,6 +28,12 @@ PROMPTS = os.path.join(HERE, 'patron_prompts.py')
 CLIPS = ('idle', 'order', 'drink', 'cheer', 'upset', 'walk', 'look_right', 'look_left')
 
 
+# GDD 26 section 8: the arc's own people. They carry papers with no art of their own yet - the
+# story draws them through placeholderLook until S6 gives them faces - so they are neither crowd
+# nor missing, and the roster check has to know that or it reports them every time it runs.
+STORY_CAST = {'execman', 'teal', 'profess'}
+
+
 def load():
     return json.load(io.open(ROSTER, encoding='utf-8'))
 
@@ -134,10 +140,16 @@ def check():
             say('%-14s is drawn and voiced %s, but voices.json does not list them' % (s, p['voice']))
     for s in drawn - slugs:
         say('%-14s is drawn and not in the roster at all' % s)
-    # The host and the fallback row are cast, not crowd: Ece is written in story.json and the
-    # empty slug is the licence's fallback, so neither belongs in a directory of customers.
-    for s in papers - slugs - {'', 'ece'}:
+    # The host, the fallback row and the ARC'S OWN CAST are cast, not crowd: Ece is written in
+    # story.json, the empty slug is the licence's fallback, and execman / teal / profess are
+    # reserved by GDD 26 section 8 for the last call itself. None of the five belongs in a
+    # directory of customers - but all five must keep their papers, which is the property this
+    # loop is really about. (Written 2026-09-07, after a trim to the roster dropped two of the
+    # arc's three faces and the suite caught it at the far end, exactly as designed.)
+    for s in papers - slugs - {'', 'ece'} - STORY_CAST:
         say('%-14s has papers and is not in the roster' % s)
+    for s in STORY_CAST - papers:
+        say('%-14s is reserved for the last-call arc (GDD 26) and has lost its papers' % s)
 
     # THE STORY'S FACES TOO (2026-09-07). Trimming papers.json to the roster took the row the
     # host's placeholder was borrowing, and DataLoader refuses a story character whose face has

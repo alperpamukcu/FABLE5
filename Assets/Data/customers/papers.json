@@ -1,47 +1,311 @@
 {
   "version": 1,
-  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on. The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove.",
+  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on. The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove. execman/profess are RESERVED for the last-call arc (GDD 26 §8) and carry papers even with no art yet — the story draws them through placeholderLook.",
   "papers": [
-    { "slug": "", "name": "Miles Corrigan", "age": 26, "country": "United States", "iso": "us" },
-    { "slug": "ember", "name": "Meredith Nolan", "age": 34, "country": "United States", "iso": "us" },
-    { "slug": "coder", "name": "Elliot Brandt", "age": 24, "country": "United States", "iso": "us" },
-    { "slug": "inked", "name": "Rowan Pike", "age": 33, "country": "United States", "iso": "us" },
-    { "slug": "violet", "name": "Sabrina Voss", "age": 24, "country": "United States", "iso": "us" },
-    { "slug": "teal", "name": "Piper Landry", "age": 23, "country": "United States", "iso": "us" },
-    { "slug": "gothgirl", "name": "Marissa Vogel", "age": 24, "country": "United States", "iso": "us" },
-    { "slug": "ece", "name": "Ece Toprak", "age": 31, "country": "Turkey", "iso": "tr" },
-    { "slug": "clubgirl", "young": true, "name": "Nina Delgado", "age": 23, "country": "United States", "iso": "us" },
-    { "slug": "silkwoman", "name": "Isabel Navarro", "age": 28, "country": "Philippines", "iso": "ph" },
-    { "slug": "pastelman", "young": true, "name": "Matteo Ferrante", "age": 22, "country": "Italy", "iso": "it" },
-    { "slug": "shaved", "name": "Emre Kayhan", "age": 39, "country": "Turkey", "iso": "tr" },
-    { "slug": "afrowoman", "name": "Simone Baptiste", "age": 31, "country": "United States", "iso": "us" },
-    { "slug": "eastasianman", "young": true, "name": "Daniel Yoon", "age": 26, "country": "United States", "iso": "us" },
-    { "slug": "leopard", "young": true, "name": "Talia Reyes", "age": 27, "country": "United States", "iso": "us" },
-    { "slug": "rider", "name": "Yeferson Mora", "age": 24, "country": "United States", "iso": "us" },
-    { "slug": "guard", "name": "Andrés Vargas", "age": 33, "country": "United States", "iso": "us" },
-    { "slug": "salaryman", "name": "Hiroshi Nakamura", "age": 34, "country": "Japan", "iso": "jp" },
-    { "slug": "driftgirl", "name": "Aiko Tanaka", "age": 23, "country": "Japan", "iso": "jp" },
-    { "slug": "harajuku", "name": "Yui Kobayashi", "age": 22, "country": "Japan", "iso": "jp" },
-    { "slug": "racerboy", "name": "Kenji Sato", "age": 26, "country": "Japan", "iso": "jp" },
-    { "slug": "atelier", "name": "Camille Rieu", "age": 29, "country": "France", "iso": "fr" },
-    { "slug": "florist", "name": "Marta Kowal", "age": 27, "country": "Poland", "iso": "pl" },
-    { "slug": "barista", "name": "Matteo Riva", "age": 26, "country": "Italy", "iso": "it" },
-    { "slug": "archivist", "name": "Nils Berger", "age": 31, "country": "Germany", "iso": "de" },
-    { "slug": "gallerist", "name": "Sofia Marchetti", "age": 34, "country": "Italy", "iso": "it" },
-    { "slug": "trainee", "name": "Emma Lindqvist", "age": 24, "country": "Sweden", "iso": "se" },
-    { "slug": "skater", "name": "Luca Brandt", "age": 22, "country": "Netherlands", "iso": "nl" },
-    { "slug": "junior", "name": "Tomas Ferreira", "age": 25, "country": "Portugal", "iso": "pt" },
-    { "slug": "busker", "name": "Aoife Quinn", "age": 23, "country": "Ireland", "iso": "ie" },
-    { "slug": "couriereu", "name": "Andrei Popa", "age": 28, "country": "Romania", "iso": "ro" },
-    { "slug": "tokyodj", "name": "Sora Ito", "age": 25, "country": "Japan", "iso": "jp" },
-    { "slug": "shanghai", "name": "Wei Zhang", "age": 27, "country": "China", "iso": "cn" },
-    { "slug": "chengdu", "name": "Lin Xu", "age": 24, "country": "China", "iso": "cn" },
-    { "slug": "canton", "name": "Jiahao Lam", "age": 29, "country": "China", "iso": "cn" },
-    { "slug": "idoljp", "name": "Nanami Yoshida", "age": 21, "country": "Japan", "iso": "jp" },
-    { "slug": "beijing", "name": "Yuxi Chen", "age": 26, "country": "China", "iso": "cn" },
-    { "slug": "seoulgirl", "name": "Jiwoo Han", "age": 23, "country": "South Korea", "iso": "kr" },
-    { "slug": "kdance", "name": "Hyunwoo Lim", "age": 26, "country": "South Korea", "iso": "kr" },
-    { "slug": "kstudent", "name": "Yerin Cho", "age": 22, "country": "South Korea", "iso": "kr" },
-    { "slug": "seoulboy", "name": "Minjun Park", "age": 24, "country": "South Korea", "iso": "kr" }
+    {
+      "slug": "",
+      "name": "Miles Corrigan",
+      "age": 26,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "ember",
+      "name": "Meredith Nolan",
+      "age": 34,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "coder",
+      "name": "Elliot Brandt",
+      "age": 24,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "inked",
+      "name": "Rowan Pike",
+      "age": 33,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "violet",
+      "name": "Sabrina Voss",
+      "age": 24,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "teal",
+      "name": "Piper Landry",
+      "age": 23,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "gothgirl",
+      "name": "Marissa Vogel",
+      "age": 24,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "ece",
+      "name": "Ece Toprak",
+      "age": 31,
+      "country": "Turkey",
+      "iso": "tr"
+    },
+    {
+      "slug": "clubgirl",
+      "young": true,
+      "name": "Nina Delgado",
+      "age": 23,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "silkwoman",
+      "name": "Isabel Navarro",
+      "age": 28,
+      "country": "Philippines",
+      "iso": "ph"
+    },
+    {
+      "slug": "pastelman",
+      "young": true,
+      "name": "Matteo Ferrante",
+      "age": 22,
+      "country": "Italy",
+      "iso": "it"
+    },
+    {
+      "slug": "shaved",
+      "name": "Emre Kayhan",
+      "age": 39,
+      "country": "Turkey",
+      "iso": "tr"
+    },
+    {
+      "slug": "afrowoman",
+      "name": "Simone Baptiste",
+      "age": 31,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "eastasianman",
+      "young": true,
+      "name": "Daniel Yoon",
+      "age": 26,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "leopard",
+      "young": true,
+      "name": "Talia Reyes",
+      "age": 27,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "rider",
+      "name": "Yeferson Mora",
+      "age": 24,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "guard",
+      "name": "Andrés Vargas",
+      "age": 33,
+      "country": "United States",
+      "iso": "us"
+    },
+    {
+      "slug": "salaryman",
+      "name": "Hiroshi Nakamura",
+      "age": 34,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "driftgirl",
+      "name": "Aiko Tanaka",
+      "age": 23,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "harajuku",
+      "name": "Yui Kobayashi",
+      "age": 22,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "racerboy",
+      "name": "Kenji Sato",
+      "age": 26,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "atelier",
+      "name": "Camille Rieu",
+      "age": 29,
+      "country": "France",
+      "iso": "fr"
+    },
+    {
+      "slug": "florist",
+      "name": "Marta Kowal",
+      "age": 27,
+      "country": "Poland",
+      "iso": "pl"
+    },
+    {
+      "slug": "barista",
+      "name": "Matteo Riva",
+      "age": 26,
+      "country": "Italy",
+      "iso": "it"
+    },
+    {
+      "slug": "archivist",
+      "name": "Nils Berger",
+      "age": 31,
+      "country": "Germany",
+      "iso": "de"
+    },
+    {
+      "slug": "gallerist",
+      "name": "Sofia Marchetti",
+      "age": 34,
+      "country": "Italy",
+      "iso": "it"
+    },
+    {
+      "slug": "trainee",
+      "name": "Emma Lindqvist",
+      "age": 24,
+      "country": "Sweden",
+      "iso": "se"
+    },
+    {
+      "slug": "skater",
+      "name": "Luca Brandt",
+      "age": 22,
+      "country": "Netherlands",
+      "iso": "nl"
+    },
+    {
+      "slug": "junior",
+      "name": "Tomas Ferreira",
+      "age": 25,
+      "country": "Portugal",
+      "iso": "pt"
+    },
+    {
+      "slug": "busker",
+      "name": "Aoife Quinn",
+      "age": 23,
+      "country": "Ireland",
+      "iso": "ie"
+    },
+    {
+      "slug": "couriereu",
+      "name": "Andrei Popa",
+      "age": 28,
+      "country": "Romania",
+      "iso": "ro"
+    },
+    {
+      "slug": "tokyodj",
+      "name": "Sora Ito",
+      "age": 25,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "shanghai",
+      "name": "Wei Zhang",
+      "age": 27,
+      "country": "China",
+      "iso": "cn"
+    },
+    {
+      "slug": "chengdu",
+      "name": "Lin Xu",
+      "age": 24,
+      "country": "China",
+      "iso": "cn"
+    },
+    {
+      "slug": "canton",
+      "name": "Jiahao Lam",
+      "age": 29,
+      "country": "China",
+      "iso": "cn"
+    },
+    {
+      "slug": "idoljp",
+      "name": "Nanami Yoshida",
+      "age": 21,
+      "country": "Japan",
+      "iso": "jp"
+    },
+    {
+      "slug": "beijing",
+      "name": "Yuxi Chen",
+      "age": 26,
+      "country": "China",
+      "iso": "cn"
+    },
+    {
+      "slug": "seoulgirl",
+      "name": "Jiwoo Han",
+      "age": 23,
+      "country": "South Korea",
+      "iso": "kr"
+    },
+    {
+      "slug": "kdance",
+      "name": "Hyunwoo Lim",
+      "age": 26,
+      "country": "South Korea",
+      "iso": "kr"
+    },
+    {
+      "slug": "kstudent",
+      "name": "Yerin Cho",
+      "age": 22,
+      "country": "South Korea",
+      "iso": "kr"
+    },
+    {
+      "slug": "seoulboy",
+      "name": "Minjun Park",
+      "age": 24,
+      "country": "South Korea",
+      "iso": "kr"
+    },
+    {
+      "slug": "profess",
+      "name": "Ulrich Brenner",
+      "age": 66,
+      "country": "Germany",
+      "iso": "de"
+    },
+    {
+      "slug": "execman",
+      "name": "Graham Sedgwick",
+      "age": 54,
+      "country": "United Kingdom",
+      "iso": "gb"
+    }
   ]
 }

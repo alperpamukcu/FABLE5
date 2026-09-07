@@ -437,13 +437,101 @@ namespace LastCall.UI
             //  only money the shift is asked to watch.)
 
             int shown = Mathf.RoundToInt(_tillShown);
-            if (_tabletTill != null) _tabletTill.text = "$" + shown;
+            // The till wears the coin rather than a typed $ (2026-09-07). It is also the one
+            // figure in the game that COUNTS, so the coin is re-placed as the digits change
+            // width — $99 to $100 moves the mark a whole glyph.
+            CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "");
             if (_beamTill != null)
             {
                 _beamTill.Show(shown);
                 _beamTill.SetHue(shown < 0 ? UITheme.ViceRed[3] : UITheme.Cyan[4]);
             }
         }
+
+        /// <summary>Stands the house coin in front of a figure and writes the digits
+        /// (2026-09-07, the author: "oyunda para gosteren her yere $ yerine o iconu koy").
+        ///
+        /// The coin is a CHILD of the figure's own Text and is placed by MEASURING the digits
+        /// rather than by reserving a column — the same thing the slip's own marks have done
+        /// since 2026-09-04, and for the same reason: a fixed slot is either too wide for a
+        /// two-digit night or too narrow for a four-digit one. The sign stays in the type,
+        /// because it belongs to the arithmetic and not to the coin.
+        ///
+        /// The figure must be RIGHT-aligned; every money readout in the chrome already is.</summary>
+        private void CoinFigure(Text figure, int amount, string sign = "")
+        {
+            if (figure == null) return;
+            figure.text = sign + Mathf.Abs(amount);
+            var rt = figure.rectTransform;
+            // One coin per figure, kept and re-placed rather than rebuilt every frame — these
+            // are stepped readouts (the till counts up) and a new Image per frame is garbage.
+            var coin = rt.Find("Coin") as RectTransform;
+            if (coin == null)
+            {
+                coin = NewRect("Coin", rt);
+                coin.pivot = new Vector2(1f, 0.5f);
+                coin.anchorMin = coin.anchorMax = new Vector2(1f, 0.5f);
+                var img = coin.gameObject.AddComponent<Image>();
+                img.sprite = ItemArt.Coin(CoinPx);
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+            }
+            if (!coin.gameObject.activeSelf) coin.gameObject.SetActive(true);
+            // SIZED AGAINST THE SCREEN, not against the layout (2026-09-07, measured). The
+            // day-end panel is laid out large and scaled to fit — lossyScale 0.45 on this
+            // machine — so a 16-unit coin showing the 16px drawing came out about seven
+            // SCREEN pixels: a green smudge with no disc and no glyph in it. That is the
+            // bottle lesson again (PLAN_bottle_art_v4 §9.18): at a size the art was not drawn
+            // for, you pick the drawing that WAS. The rect is set so the icon lands on a
+            // whole multiple of its 16px master after the panel's scale is applied, and the
+            // accessor is handed that same screen size so it picks the right master.
+            // The target is whole SCREEN pixels, not whole layout units: the drawing is 16px
+            // and it must land on exactly 16 of them after the panel's scale, or its keyline
+            // falls between pixels and the disc silts up (the first cut of this sized the
+            // rect in layout units and rendered a seven-pixel green smudge; measured).
+            //
+            // ONE COIN PER FIGURE, AND IT HAS A FLOOR. The coin is 16 SCREEN pixels and no
+            // smaller: its meaning is interior detail (a glyph inside a disc), unlike the
+            // star and the heart whose silhouettes carry theirs, so it cannot be shrunk the
+            // way they can — an 8px coin was drawn, measured and thrown away on 2026-09-07,
+            // and it came back a blob. Sixteen against a 16pt figure whose ink is ~7 screen
+            // pixels makes the mark taller than its digits, which is why it is held back to
+            // 92% alpha: the FIGURE is what the eye should land on, the coin only says what
+            // kind of number it is (16 §5).
+            float scale = coin.lossyScale.x;
+            float px = CoinPx;
+            if (scale > 0.01f) px = 16f / scale;      // 16 screen pixels: the drawn size
+            coin.sizeDelta = new Vector2(px, px);
+            var cimg = coin.GetComponent<Image>();
+            if (cimg != null)
+            {
+                cimg.sprite = ItemArt.Coin(px * scale);
+                // Its own colour, held a little back so the FIGURE is what is read first
+                // (16 §5: money is the number, the mark only says which number it is).
+                cimg.color = new Color(1f, 1f, 1f, 0.92f);
+            }
+            // Clear of the digits by a whole screen pixel or three, measured off the type
+            // rather than guessed: preferredWidth is the ink, and the gap is added to it.
+            coin.anchoredPosition = new Vector2(
+                -(figure.preferredWidth + CoinGap + px * 0.10f), 0f);
+        }
+
+        /// <summary>Empties a money figure AND takes its coin down with it. A figure blanked
+        /// by writing "" keeps the coin this helper hung on it, which is a mark floating over
+        /// nothing (the shop's basket, cleared).</summary>
+        private void ClearCoin(Text figure)
+        {
+            if (figure == null) return;
+            figure.text = "";
+            var coin = figure.rectTransform.Find("Coin");
+            if (coin != null) coin.gameObject.SetActive(false);
+        }
+
+        /// <summary>The coin's drawn size in the chrome, and its gap off the digits. 16
+        /// because that is one of the two sizes it is DRAWN at (Tools/coin_icon.py) and the
+        /// figures beside it are set at 16 — a mark and a cap that match. The gap is in the
+        /// figure's own layout units and is scaled with it.</summary>
+        private const float CoinPx = 16f, CoinGap = 10f;
 
         private void WatchFixtures()
         {
@@ -726,6 +814,11 @@ namespace LastCall.UI
                 Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, 0f));
                 t.horizontalOverflow = HorizontalWrapMode.Overflow;
                 t.raycastTarget = false;
+                // The group is built HERE, once, rather than hunted for every frame while the
+                // cellar is open.
+                var pg = plate.gameObject.AddComponent<CanvasGroup>();
+                pg.blocksRaycasts = false;
+                pg.interactable = false;
                 plate.transform.SetAsFirstSibling();
                 _cellarLabels.Add(t);
             }
@@ -748,9 +841,12 @@ namespace LastCall.UI
                 float w = Mathf.Max(48f, t.preferredWidth + 16f);
                 plate.sizeDelta = new Vector2(w, 18f);
                 plate.anchoredPosition = ToCentre(new Vector2(cx, y));
-                var group = plate.GetComponent<CanvasGroup>() ?? plate.gameObject.AddComponent<CanvasGroup>();
-                group.alpha = phase;
-                group.blocksRaycasts = false;
+                // The plate's group is built with the plate (see above), so this is a read,
+                // not a hunt. It was `GetComponent<CanvasGroup>() ?? Add...` for one afternoon
+                // and threw MissingComponentException every frame the cellar was open: a
+                // missing UnityEngine.Object is FAKE null — a live C# reference with an
+                // overloaded ==, which `??` hands straight back.
+                if (plate.TryGetComponent<CanvasGroup>(out var group)) group.alpha = phase;
             }
         }
 

@@ -138,20 +138,104 @@ def ship(slug, clip, frames):
     print('  %-6s %d frames -> Resources/Patron/%s/%s/' % (clip, len(frames), slug, clip))
 
 
-def make_face(slug, idle0):
-    """The licence portrait: a square crop around the head, out of the first idle frame.
+# THE PORTRAIT FRAME (2026-09-07, the author: "tum karakterlerin vesikaliklari omuz dahil omuz
+# hizasindan olacak, farkli sekillerde olmamali"). One frame for the whole cast, specified the
+# way a passport photograph is: a fixed size, the head a fixed fraction of it, the crown a fixed
+# distance below the top edge. Everything else follows.
+FACE_PX = 64            # every portrait, the same square - the licence window scales one number
+FACE_HEAD_F = 0.52      # how much of the frame's height the head fills
+FACE_CROWN_F = 0.10     # clear air above the crown
 
-    The head is the top of the figure; a square the width of the shoulders reads as a
-    portrait, and the card scales it itself.
+
+def head_span(im):
+    """(crown row, chin row) of the figure in `im`, measured off its own silhouette.
+
+    The crown is the topmost opaque row. The chin is where the silhouette stops being a head
+    and starts being shoulders: scanning down, the first row whose width jumps past 1.6x the
+    narrowest row under the crown - which is the neck. Falls back to a third of the figure,
+    which is roughly where a head ends on any of these rigs.
     """
+    w, h = im.size
+    px = im.load()
+    rows = []
+    for y in range(h):
+        n = sum(1 for x in range(w) if px[x, y][3] > 40)
+        rows.append(n)
+    opaque = [y for y, n in enumerate(rows) if n > 0]
+    if not opaque:
+        return 0, h // 3
+    crown, bottom = opaque[0], opaque[-1]
+    figure = bottom - crown
+
+    # THE NECK, FOUND ON THE FIGURE'S OWN CENTRE LINE - not on the full silhouette width.
+    # Measured 2026-09-07 and drawn over the frames to check: on the full width, the
+    # narrowest row in the upper figure is the WAIST, because these rigs stand with the arms
+    # hanging clear of the body, so the shoulders-and-arms span stays wide right down to the
+    # hips. Every portrait cut that way took in the whole torso.
+    #
+    # A column the width of the head, centred on the head, sees only head-neck-shoulders: it
+    # widens to the cheekbones, pinches at the neck, then fills edge to edge at the shoulders.
+    # That pinch is the chin line, and it is what "omuz hizasindan" is measured from.
+    head_band = list(range(crown, min(h, crown + max(6, int(figure * 0.22)))))
+    if len(head_band) < 5:
+        return crown, crown + max(6, figure // 5)
+    widest = max(head_band, key=lambda y: rows[y])
+    head_w = max(4, rows[widest])
+    # the centre of the head, and a column just wider than it
+    ys = [x for x in range(w) if px[x, widest][3] > 40]
+    cx = (ys[0] + ys[-1]) // 2 if ys else w // 2
+    half = max(3, int(head_w * 0.60))
+    col = []
+    for y in range(crown, min(h, crown + max(10, int(figure * 0.40)))):
+        col.append(sum(1 for x in range(max(0, cx - half), min(w, cx + half + 1))
+                       if px[x, y][3] > 40))
+    # scan below the widest head row for the pinch
+    start = widest - crown + 1
+    tail = [(i, n) for i, n in enumerate(col) if i > start and n > 0]
+    if not tail:
+        return crown, crown + max(6, figure // 5)
+    ni, nw = min(tail, key=lambda t: t[1])
+    if nw > head_w * 0.85:
+        # no pinch to find (a hood, a scarf, a collar to the jaw): take the proportion
+        return crown, crown + max(6, figure // 5)
+    return crown, crown + ni
+
+
+def make_face(slug, idle0):
+    """The licence portrait: ONE frame for every face, head-and-shoulders (2026-09-07).
+
+    It used to size itself off the figure - side = shoulder_width * 0.78 - so the cast shipped
+    crops from 42px (driftgirl) to 75px (idoljp), a 1.79x spread. Every one of them is then
+    drawn into the SAME square window on the card with preserveAspect, so that spread became a
+    magnification difference: the narrow crops came out as a head filling the frame and the wide
+    ones as a distant head-and-chest. Sizing the frame by the subject is backwards; a portrait
+    frame is fixed and the SUBJECT is placed in it, which is what this does.
+    """
+    from PIL import Image
+    crown, chin = head_span(idle0)
+    head_h = max(4, chin - crown)
+    # The scale that makes this head FACE_HEAD_F of the frame - the one number that makes every
+    # portrait the same portrait.
+    scale = (FACE_PX * FACE_HEAD_F) / float(head_h)
+    src_side = max(8, int(round(FACE_PX / scale)))
+
     b = bbox(idle0)
-    x0, y0, x1, y1 = b
-    side = max(34, int((x1 - x0) * 0.78))
-    cx = (x0 + x1) // 2
-    top = max(0, y0 - 2)
-    crop = idle0.crop((cx - side // 2, top, cx - side // 2 + side, top + side))
+    cx = (b[0] + b[2]) // 2
+    # The crown sits FACE_CROWN_F down the frame; in source pixels that is this far above it.
+    top = int(round(crown - src_side * FACE_CROWN_F))
+    left = cx - src_side // 2
+
+    # Crop with the canvas padded rather than clamped, or a face near an edge is shifted off
+    # its own centre line - which would be the old fault in a new place.
+    pad = Image.new('RGBA', (idle0.width + src_side * 2, idle0.height + src_side * 2), (0, 0, 0, 0))
+    pad.paste(idle0, (src_side, src_side))
+    crop = pad.crop((left + src_side, top + src_side,
+                     left + src_side + src_side, top + src_side + src_side))
+    # NEAREST: these are pixel drawings, and a smooth resample of one is mud.
+    crop = crop.resize((FACE_PX, FACE_PX), Image.NEAREST)
     crop.save(os.path.join(PATRON, slug, 'face.png'))
-    print('  face   %dx%d -> Resources/Patron/%s/face.png' % (side, side, slug))
+    print('  face   %dx%d head %d -> Resources/Patron/%s/face.png'
+          % (FACE_PX, FACE_PX, head_h, slug))
 
 
 def download_zip(character_id, url, timeout=600):

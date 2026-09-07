@@ -78,6 +78,22 @@ namespace LastCall.UI
 
         // ── the licence: read the customer (GDD 24 §5) ───────────────────────────
 
+        /// <summary>The licence's open beat: the card comes up from this fraction of its size
+        /// over this long, on the unscaled clock (2026-09-07).</summary>
+        private const float IdOpenFrom = 0.86f, IdOpenSeconds = 0.14f;
+        private RectTransform _idCardRt;
+        private float _idOpenAt = -1f;
+
+        /// <summary>Steps the card's arrival. Called every frame the HUD is stepped; costs a
+        /// compare once the beat is over.</summary>
+        private void StepIdOpen()
+        {
+            if (_idCardRt == null || _idOpenAt < 0f) return;
+            float k = Mathf.Clamp01((Time.unscaledTime - _idOpenAt) / IdOpenSeconds);
+            _idCardRt.localScale = Vector3.one * Mathf.Lerp(IdOpenFrom, 1f, Tweening.OutCubic(k));
+            if (k >= 1f) _idOpenAt = -1f;
+        }
+
         private void ShowId(CustomerVisit visit)
         {
             if (visit?.Regular == null) return;
@@ -91,6 +107,13 @@ namespace LastCall.UI
 
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
             _idRoot.gameObject.SetActive(true);
+            // IT ARRIVES (2026-09-07, the author: "kimligin acilma animasyonu olsun"). A card
+            // slid across the bar should not simply be there; it comes up to size over
+            // IdOpenSeconds on the unscaled clock, which is the same stepper every other
+            // panel in this HUD uses, and snaps under Motion.Reduced.
+            _idOpenAt = Time.unscaledTime;
+            if (_idCardRt != null)
+                _idCardRt.localScale = Motion.Reduced ? Vector3.one : Vector3.one * IdOpenFrom;
             // THE PHOTO IS THIS DRINKER (the author, 2026-08-09). It used to be the
             // ARCHETYPE's portrait — one picture for everyone off the late shift — while
             // eleven different people sit on the stool. Reading a customer is the game;
@@ -696,7 +719,7 @@ namespace LastCall.UI
             scrimBtn.transition = Selectable.Transition.None;
             scrimBtn.onClick.AddListener(CloseId);
 
-            var card = NewRect("Card", _idRoot);
+            var card = _idCardRt = NewRect("Card", _idRoot);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(LicW, LicH), new Vector2(0, 10));
             var shell = card.gameObject.AddComponent<Image>();
             // THE PAPER IS DRAWN (2026-09-06). The generated shell carried its band, wells and
@@ -839,31 +862,40 @@ namespace LastCall.UI
             // what they make of the place, five small stars filled to their average, with
             // the figure beside them. Two captions, one word each.
             float stripTop = -LicStampY;
-            _idRelLabel = NewText("C_VISITS", card, _body, 8, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
-            Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(70, 12),
+            // AT SIXTEEN (2026-09-07, the author: "sol altta visit rate us fontlari hem
+            // okunakli degil"). The body face is drawn on an 8px grid: at 8 it is half its
+            // design size and every stroke lands between pixels, which is the hairline the
+            // balloon was cured of on 2026-09-06 and this card still had.
+            _idRelLabel = NewText("C_VISITS", card, _body, 16, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
+            Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(90, 16),
                 new Vector2(LicPad + 4f, stripTop - 3f));
             _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRelLabel.text = "VISITS";
-            _idRatesLabel = NewText("C_RATES", card, _body, 8, TextAnchor.UpperRight, UITheme.ClubBlue[2]);
-            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(70, 12),
-                new Vector2(LicPad + LicRailW - 74f, stripTop - 3f));
+            _idRatesLabel = NewText("C_RATES", card, _body, 16, TextAnchor.UpperRight, UITheme.ClubBlue[2]);
+            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(90, 16),
+                new Vector2(LicPad + LicRailW - 94f, stripTop - 3f));
             _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRatesLabel.text = "RATES US";
 
-            const float PunchPx = 12f, PunchGap = 2f;
+            // ON THE GRID (2026-09-07, the author: "ikonografi hd durmuyor, yamuk pixelli
+            // duruyor"). ChromeArt.Punch is drawn at 6x6, so it may be shown at 6, 12, 18 -
+            // whole multiples, the same law the pixel faces keep. It was at 12 next to
+            // 16-unit hearts and stars, which is a mark two thirds their size AND on a
+            // different grid; 18 is 3x its drawing and stands with them.
+            const float PunchPx = 18f, PunchGap = 3f;
             _idPunches = new Image[5];
             for (int i = 0; i < 5; i++)
             {
                 var p = NewRect("Punch" + i, card);
                 Place(p, new Vector2(0, 1), new Vector2(PunchPx, PunchPx), new Vector2(
-                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - 18f));
+                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - 24f));
                 _idPunches[i] = p.gameObject.AddComponent<Image>();
                 _idPunches[i].sprite = ChromeArt.Punch();
                 _idPunches[i].preserveAspect = true; _idPunches[i].raycastTarget = false;
             }
-            _idVisitMore = NewText("More", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[3]);
-            Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(30, 12), new Vector2(
-                LicPad + 4f + 5f * (PunchPx + PunchGap) + 2f, stripTop - 18f));
+            _idVisitMore = NewText("More", card, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[3]);
+            Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(40, 18), new Vector2(
+                LicPad + 4f + 5f * (PunchPx + PunchGap) + 4f, stripTop - 24f));
             _idVisitMore.horizontalOverflow = HorizontalWrapMode.Overflow;
             // The count itself is kept off the card (the punches are the count); it feeds
             // nothing now but is still written, so the old readers stay honest.
@@ -880,7 +912,7 @@ namespace LastCall.UI
             {
                 var b = NewRect("Bond" + i, card);
                 Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
-                    LicPad + LicRailW - 4f - (3 - i) * (BondPx + BondGap) + BondGap, stripTop - 16f));
+                    LicPad + LicRailW - 4f - (3 - i) * (BondPx + BondGap) + BondGap, stripTop - 25f));
                 var bs = b.gameObject.AddComponent<Image>();
                 bs.sprite = ItemArt.Heart(false, BondPx);
                 bs.preserveAspect = true; bs.raycastTarget = false;

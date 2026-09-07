@@ -3284,11 +3284,13 @@ namespace LastCall.UI
                     // business. The patience bar goes with it (2026-08-20): their clock
                     // stopped when they left the stool, and a gauge crossing the room is a
                     // countdown on somebody who is no longer waiting for anything.
-                    // The one exception is the parting line (2026-09-07): a walk-out says
-                    // its piece as it goes, on the balloon's own clock, and then that too
-                    // comes down.
-                    if (view.Say != null && view.Say.gameObject.activeSelf
-                        && Time.unscaledTime >= view.SayUntil) HushSeat(view);
+                    // The parting line rides them all the way out (2026-09-07, the author:
+                    // "musteriler giderken soyledikleri kafalarinin ustunde devam etmeli
+                    // sahnenin sonuna kadar"). It used to come down on the balloon's own
+                    // four-second clock while its drinker was still crossing the room, so the
+                    // last thing they said vanished over a walking figure. The balloon is a
+                    // child of the seat, so it travels with them; AdvanceExit takes it down
+                    // when they are off the screen.
                     if (view.Tag.gameObject.activeSelf) view.Tag.gameObject.SetActive(false);
                     if (view.Gauge != null && view.Gauge.gameObject.activeSelf)
                         view.Gauge.gameObject.SetActive(false);
@@ -3591,7 +3593,13 @@ namespace LastCall.UI
                 }
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
-                view.Group.alpha = Mathf.Clamp01(view.WalkT * 4f);
+                // NO FADE (2026-09-07, the author: "musterilerin sahneye girisi ve cikisinda
+                // fade olmamali, tam olarak sahnenin sonuna normal hizlarinda yuruyup
+                // ekrandan disari cikmalilar"). They used to fade up over the first quarter
+                // of the walk, which reads as a person materialising in the middle of the
+                // room rather than coming in through a door. They walk in solid; entryX is
+                // already off the frame, so there is nothing to hide.
+                view.Group.alpha = 1f;
             }
             else
             {
@@ -3636,8 +3644,9 @@ namespace LastCall.UI
                 view.ExitT + Time.deltaTime * WalkSpeed * pace / dist);
             view.Root.anchoredPosition = new Vector2(
                 Mathf.Lerp(view.SeatX, exitX, view.ExitT), SeatLineY);
-            // The entrance fades up over its first quarter; leaving fades down over the last.
-            view.Group.alpha = Mathf.Clamp01((1f - view.ExitT) * 4f);
+            // Solid the whole way out, for the same reason they walk in solid: exitX is past
+            // the frame's edge by OffscreenMargin, so they leave by leaving.
+            view.Group.alpha = 1f;
 
             // Mirror the walk so they face the way they are leaving (to the right).
             UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);

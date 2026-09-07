@@ -303,7 +303,7 @@ namespace LastCall.Tests
         {
             var two = Refused(Wrap(GoodBeat, @"
                 { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
-                { ""id"": ""other"", ""look"": ""glam"", ""role"": ""host"" },
+                { ""id"": ""other"", ""look"": ""teal"", ""role"": ""host"" },
                 { ""id"": ""guest"", ""look"": ""execman"", ""role"": ""guest"" }"));
             Assert.That(two.Message, Does.Contain("2 hosts"));
 

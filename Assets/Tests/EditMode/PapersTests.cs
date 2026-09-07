@@ -30,18 +30,31 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            // 51 since the tenth list (2026-09-07): ten low-profile regulars joined the bar;
-            // 56 since the eleventh, the same night: five young Japanese customers.
-            Assert.That(cast.All.Count, Is.EqualTo(56),
-                "the bar has 55 drinkers and Ece behind it; if that changed on purpose, change it here too");
+            // NOT A TYPED NUMBER any more (2026-09-07). This read `Is.EqualTo(56)` and was
+            // wrong within a week of every casting round, which taught nobody anything: the
+            // count of a cast is not a property of the game, it is a number somebody has to
+            // remember to edit. What IS a property is that every row is a whole licence —
+            // the card prints a name, a country and a flag, and a row missing any of them is
+            // a card with a hole in it.
+            Assert.That(cast.All.Count, Is.GreaterThan(20),
+                "the cast file parsed but came back nearly empty");
+            foreach (var p in cast.All)
+            {
+                Assert.That(p.Name, Is.Not.Empty, "a licence with no name on it");
+                Assert.That(p.Country, Is.Not.Empty, $"'{p.Name}' has no citizenship");
+                Assert.That(p.Iso, Has.Length.EqualTo(2), $"'{p.Name}' has no flag to draw");
+                Assert.That(p.Age, Is.GreaterThan(0), $"'{p.Name}' has no date of birth");
+            }
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]
-        [TestCase("nightnurse", "Marilou Cabrera", 37, "ph")]
         [TestCase("profess", "Ulrich Brenner", 66, "de")]
         [TestCase("execman", "Graham Sedgwick", 54, "gb")]
-        // The 2026-08-19 casting, drawn for the concrete-and-plum room (TycoonHud's cast).
-        [TestCase("linen", "Camila Restrepo", 29, "us")]
+        // nightnurse and linen were pinned here until 2026-09-07 and are gone from the cast:
+        // the author asked for a civilian crowd with no work uniforms, and the hundred-person
+        // roster (Assets/Data/customers/roster.json) is the directory now. Their retirement is
+        // recorded there, with the reason, which is the thing that was missing when they were
+        // dropped silently and this test found out for us.
         public void A_face_still_carries_the_papers_it_had_in_code(
             string slug, string name, int age, string iso)
         {
@@ -65,12 +78,14 @@ namespace LastCall.Tests
         /// reference LastCall.UI (and should not), so the price of catching this is keeping
         /// nine strings in step with a cast that changes a few times a year.
         /// </summary>
+        // heavyset ("fifty-seven") and silverbob ("sixty-six") stood here until 2026-09-07,
+        // when the author cut them by name for being too old for the room. A pin on a face
+        // the author has deliberately removed does not protect the property; it asks for the
+        // removal to be undone.
         [TestCase("clubgirl")]
-        [TestCase("heavyset")]
         [TestCase("silkwoman")]
         [TestCase("pastelman")]
         [TestCase("shaved")]
-        [TestCase("silverbob")]
         [TestCase("afrowoman")]
         [TestCase("eastasianman")]
         [TestCase("leopard")]

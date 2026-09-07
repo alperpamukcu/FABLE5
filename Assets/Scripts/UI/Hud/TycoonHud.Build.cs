@@ -529,7 +529,19 @@ namespace LastCall.UI
                 // REGULAR, AND SET LEFT (2026-09-06, the author: "metinler kalın şekilde
                 // yazmasın ... metinler ortaya sabitlenmesin normal metin düzeninde olsun"):
                 // the body face at its 16, ragged right, the way a line of speech is set.
-                seat.SayText = NewText("Line", seat.Say, _body, 16,
+                // AND THE BOLD CUT OF IT (2026-09-07, the author: "diyalog fontu degissin
+                // daha okunakli keskin siyah bir font kullanilsin, pixel art oyunlarda
+                // sohbetler icin kullanilan font neyse"). Yesterday's fix was the SIZE - the
+                // balloon had been the display face at 8, half its design size, all hairline.
+                // What is left is the FACE: Silkscreen Regular is single-struck, so at 16 a
+                // stem is one pixel with a lit pixel either side, and that is the softness
+                // being pointed at. Silkscreen BOLD is the same face double-struck - IDENTICAL
+                // advance widths, so not one balloon changes size and not one line re-wraps,
+                // and the 236-unit stool cap measured on 2026-08-20 still holds. It is also
+                // the shop's face, so speech borrows a voice the game already has rather than
+                // introducing a fourth. The ink is unchanged: Night[0] is #0D0813, and there
+                // is no blacker ink in the palette to move to.
+                seat.SayText = NewText("Line", seat.Say, _shop, 16,
                     TextAnchor.UpperLeft, UITheme.Night[0]);
                 Stretch(seat.SayText.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(TagPad, 0), new Vector2(-TagPad, -TagPad));

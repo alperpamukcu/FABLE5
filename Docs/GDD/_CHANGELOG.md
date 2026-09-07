@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The fifteenth list (2026-09-07):** the licence opens rather than appears, its photo clears
+  the band and its small type is set at the size it is drawn; the flags are redrawn at 48x33 with
+  real geometry; customers walk on and off solid at full pace and their parting line rides out
+  with them; speech is set in the bold cut; every licence portrait is one 64px frame with the
+  head at a fixed proportion and the cut at the shoulders (they ranged 42px to 75px, so the same
+  window magnified each face differently); the night's boards are typeset — leader dots from
+  label to figure, one figure column, the ladder trimmed to fit its plate — and the week board
+  now names the night's bills and its FINES; a green house coin (Tools/coin_icon.py) stands in
+  for the typed $ wherever a figure has room for it. GDD_MEVCUT §9.45.
+
 - **The fourteenth list (2026-09-07):** the cloth hangs in front of the shutter, on a nail at
   its top middle, and swings with the hand; the licence loses 24 art pixels off its right and
   its band sits inside the paper; a garnish is one drawing on the ticket, the licence and the
