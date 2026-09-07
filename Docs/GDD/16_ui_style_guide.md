@@ -229,6 +229,30 @@ takes (`PlaceProduct` no longer floors the scale under 3x — a 60-row drawing s
 "+1.25 COMFORT"); the restock crate is drawn (Tools/restock_icon.py); THE WALLS (the plaster
 ladder) and ON THE WALL (the picture, the screen) are two shelves.
 
+**The market's card, laid out again (2026-09-07, the author: "marketteki ürün kartlarının
+düzenini en başından tekrar tasarla"):** five bands, every card the same — the picture in a
+recess the card's width; its rung as a row of five small stars along the recess's foot (the
+ladder down the side is gone); the name on its dark plate; one line of fact — the stock as a bar
+read left to right with its figure, or the meta word with its mark; the state row, then the foot
+with the price tag and the key. The aisle keeps its place in PIXELS across a basket rebuild
+(`_shopScrollPx`, restored after a forced layout pass) — the normalised figure was restored
+against a height the nested grids had not measured yet.
+
+**Balloons stack, they do not drift (2026-09-07, the author: "konuşma balonları gereksiz
+kayabiliyor … dikey ve yatay olarak esnek"):** the row of balloons is solved once per set of
+balloons and sizes (`_saysSig`) and left alone until that set changes; a balloon may slide up to
+48 units along its row to clear a neighbour, and past that it climbs a storey above the balloon it
+would have covered, its tail lengthening to keep pointing at its own drinker. Speech types at 12
+characters a second (was 20).
+
+**The cellar says its groups (2026-09-07, the author: "içeceklerin hangi grupta olduğu
+anlaşılsın, mouse ile üzerine gelmeden"):** the stock stands by family — gin, vodka, rum, whisky,
+tequila, liqueurs, then bitters, syrups, juices, soda & tonic, mixers (`CellarGroup` /
+`CellarGroupOrder`) — and the family's name is written on the shelf under each run
+(`StepCellarLabels`, riding the drawer). The towel fades to a fifth while the cellar is open and
+is hit only where its picture is (`alphaHitTestMinimumThreshold`). Liquids are one step louder
+everywhere (`UITheme.Vivid`, chroma ×1.35 on the measured table).
+
 **The beam reads the night (2026-09-07, the author: "üst bar düzenini en baştan düzenle …
 haftayı görmeye artık gerek yok sadece günü görsek yeter, para yazısıyla saat yakın olmamalı, yıldız
 konfor kalp kısmını hizalı"):** the week instrument left the beam (the day card still mounts it);

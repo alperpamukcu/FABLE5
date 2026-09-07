@@ -1421,6 +1421,20 @@ namespace LastCall.UI
             return true;
         }
 
+        /// <summary>Where cellar slot <paramref name="i"/> stands — the bottle's foot centre in
+        /// stage units with the room at rest (2026-09-07, for the shelf's group captions).</summary>
+        public bool CellarSlotStage(int i, out Vector2 stage)
+        {
+            stage = default;
+            if (i < 0 || i >= _cellarSlotX.Count) return false;
+            float counterTop = CounterRestY + CounterSurfaceInset;
+            stage = new Vector2(Reference.x * 0.5f + _cellarSlotX[i] - _counterNative.x * 0.5f,
+                                counterTop - _cellarSlotFoot[i]);
+            return true;
+        }
+
+        public int CellarSlotCount => _cellarSlotX.Count;
+
         public bool ShelfCell(int index, out float centerX, out float floorY, out float height)
         {
             centerX = 0f; floorY = 0f; height = 0f;

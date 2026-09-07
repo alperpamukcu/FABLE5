@@ -346,8 +346,22 @@ namespace LastCall.UI
         /// never so pale they vanish (see <see cref="VisibleLiquid"/>).
         /// Falls back to a soft body tone of the ingredient type when the style is unmapped.</summary>
         public static Color LiquidColor(string style, IngredientType fallbackType) =>
-            VisibleLiquid(style != null && LiquidColors.TryGetValue(style, out var c)
-                ? c : TypeRamp[fallbackType][3]);
+            Vivid(VisibleLiquid(style != null && LiquidColors.TryGetValue(style, out var c)
+                ? c : TypeRamp[fallbackType][3]));
+
+        /// <summary>LOUDER (2026-09-07, the author: "içki renkleri gerçekçi ve ilgi çekici
+        /// gelmiyor, daha canlı renkler denenebilir; kokteyl renkleri de"). The table's hues
+        /// and their spacing stand — they were measured apart — and every liquid is pushed
+        /// the same step up in chroma, so nothing that was tellable apart stops being so.</summary>
+        public static Color Vivid(Color c)
+        {
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            s = Mathf.Clamp01(s * VividChroma + 0.03f);
+            v = Mathf.Clamp01(v * 1.03f);
+            var o = Color.HSVToRGB(h, s, v);
+            return new Color(o.r, o.g, o.b, c.a);
+        }
+        private const float VividChroma = 1.35f;
 
         /// <summary>
         /// How much COLOUR a liquid actually carries — its pigment, as opposed to its share.

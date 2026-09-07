@@ -517,6 +517,11 @@ namespace LastCall.UI
             if (stage == null) return;
             var art = new List<Sprite>(DiegeticStage.CellarSlots);
             _cellarCards.Clear();
+            // GROUPED (2026-09-07, the author: "mahzen sahnesinde en azından içeceklerin hangi
+            // grupta olduğu anlaşılsın, mouse ile üzerine gelmeden"): the stock stands by
+            // family — gins together, then vodkas, whiskies… the mixers last — and the
+            // family's name is written on the shelf under each run (StepCellarLabels).
+            var stock = new List<IngredientCard>();
             if (run != null)
                 foreach (var b in run.Shelf.Bottles)
                 {
@@ -524,12 +529,22 @@ namespace LastCall.UI
                     if (card == null) continue;
                     if (card.Type == IngredientType.Garnish || card.Type == IngredientType.Beer)
                         continue;
-                    var sprite = ItemArt.Bottle(card);
-                    if (sprite == null) continue;
-                    art.Add(sprite);
-                    _cellarCards.Add(card);          // the SAME order the plates are indexed by
-                    if (art.Count >= DiegeticStage.CellarSlots) break;
+                    stock.Add(card);
                 }
+            stock.Sort((a, b) =>
+            {
+                int ga = CellarGroupOrder(a), gb = CellarGroupOrder(b);
+                if (ga != gb) return ga.CompareTo(gb);
+                return string.CompareOrdinal(a.Name, b.Name);
+            });
+            foreach (var card in stock)
+            {
+                var sprite = ItemArt.Bottle(card);
+                if (sprite == null) continue;
+                art.Add(sprite);
+                _cellarCards.Add(card);          // the SAME order the plates are indexed by
+                if (art.Count >= DiegeticStage.CellarSlots) break;
+            }
             var ids = new List<string>(_cellarCards.Count);
             foreach (var c in _cellarCards) ids.Add(c.Id);
             stage.SetCellar(art, ids);
@@ -606,6 +621,103 @@ namespace LastCall.UI
             float h = 52f + usesRows * 12f + (fizzy ? 22f : 8f);
             _cellarCard.sizeDelta = new Vector2(CellarCardW, h);
             _cellarCardOver = plate;
+        }
+
+        // ── the shelf captions (2026-09-07) ───────────────────────────────────────
+        private static readonly string[] CellarGroupRank =
+            { "gin", "vodka", "rum", "whiskey", "tequila", "liqueur", "bitters", "syrup", "juice", "soda", "mixer" };
+
+        /// <summary>The family a bottle stands with: the category for the spirits, the
+        /// type's plain word for the rest.</summary>
+        private static string CellarGroup(IngredientCard card)
+        {
+            string cat = card?.Info?.Category;
+            if (!string.IsNullOrEmpty(cat) && cat != IngredientCategories.Mixer && cat != IngredientCategories.Juice)
+                return cat;
+            switch (card?.Type ?? IngredientType.Spirit)
+            {
+                case IngredientType.Bubbly: return "soda";
+                case IngredientType.Sour: return cat == IngredientCategories.Juice ? "juice" : "sour";
+                case IngredientType.Sweet: return cat == IngredientCategories.Juice ? "juice" : "syrup";
+                case IngredientType.Bitter: return "bitters";
+                default: return cat ?? "mixer";
+            }
+        }
+
+        private static int CellarGroupOrder(IngredientCard card)
+        {
+            string g = CellarGroup(card);
+            int i = System.Array.IndexOf(CellarGroupRank, g);
+            return i < 0 ? CellarGroupRank.Length : i;
+        }
+
+        private static string CellarGroupWord(string group)
+        {
+            switch (group)
+            {
+                case "whiskey": return "WHISKY";
+                case "soda": return "SODA & TONIC";
+                case "syrup": return "SYRUPS";
+                case "juice": return "JUICES";
+                case "liqueur": return "LIQUEURS";
+                case "mixer": return "MIXERS";
+                default: return group.ToUpperInvariant();
+            }
+        }
+
+        private readonly List<Text> _cellarLabels = new List<Text>();
+
+        /// <summary>The family names under each run of bottles, in the HUD over the room and
+        /// riding the drawer with it. Rebuilt whenever the cellar is; placed every frame.</summary>
+        private void StepCellarLabels()
+        {
+            if (stage == null || _hudRoot == null) return;
+            float phase = stage.DrawerPhase;
+            int need = 0;
+            // The runs: one caption per family per shelf row.
+            var runs = new List<(string group, int first, int last)>();
+            for (int i = 0; i < _cellarCards.Count && i < stage.CellarSlotCount; i++)
+            {
+                string g = CellarGroup(_cellarCards[i]);
+                stage.CellarSlotStage(i, out var here);
+                if (runs.Count > 0 && runs[runs.Count - 1].group == g)
+                {
+                    stage.CellarSlotStage(runs[runs.Count - 1].last, out var prev);
+                    if (Mathf.Abs(prev.y - here.y) < 1f)
+                    {
+                        runs[runs.Count - 1] = (g, runs[runs.Count - 1].first, i);
+                        continue;
+                    }
+                }
+                runs.Add((g, i, i));
+            }
+            while (_cellarLabels.Count < runs.Count)
+            {
+                var t = NewText("CellarLabel" + _cellarLabels.Count, _hudRoot, _body, 8,
+                    TextAnchor.MiddleCenter, UITheme.Cream[3]);
+                t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                t.rectTransform.pivot = new Vector2(0.5f, 1f);
+                t.rectTransform.sizeDelta = new Vector2(160f, 12f);
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.raycastTarget = false;
+                t.transform.SetAsFirstSibling();
+                _cellarLabels.Add(t);
+            }
+            for (int i = 0; i < _cellarLabels.Count; i++)
+            {
+                var t = _cellarLabels[i];
+                bool on = i < runs.Count && phase > 0.02f;
+                if (t.gameObject.activeSelf != on) t.gameObject.SetActive(on);
+                if (!on) continue;
+                var r = runs[i];
+                stage.CellarSlotStage(r.first, out var a);
+                stage.CellarSlotStage(r.last, out var b);
+                float cx = (a.x + b.x) * 0.5f * StageToHud;
+                float y = a.y * StageToHud - 8f + CounterLift;
+                t.rectTransform.anchoredPosition = ToCentre(new Vector2(cx, y));
+                t.text = CellarGroupWord(r.group);
+                t.color = new Color(UITheme.Cream[3].r, UITheme.Cream[3].g, UITheme.Cream[3].b, phase);
+            }
         }
 
         private List<float> CellarFills(TycoonRun run)

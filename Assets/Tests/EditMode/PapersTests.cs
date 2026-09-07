@@ -30,8 +30,9 @@ namespace LastCall.Tests
         public void The_cast_file_parses_and_holds_the_whole_bar()
         {
             var cast = Load();
-            Assert.That(cast.All.Count, Is.EqualTo(41),
-                "the bar has 40 drinkers and Ece behind it; if that changed on purpose, change it here too");
+            // 51 since the tenth list (2026-09-07): ten low-profile regulars joined the bar.
+            Assert.That(cast.All.Count, Is.EqualTo(51),
+                "the bar has 50 drinkers and Ece behind it; if that changed on purpose, change it here too");
         }
 
         [TestCase("", "Miles Corrigan", 26, "us")]

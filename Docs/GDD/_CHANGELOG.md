@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The tenth list (2026-09-07):** ten new low-profile customers briefed and rolled, each with
+  their own way of being annoyed; a re-inking pass that takes the black keyline off a shipped
+  patron (the leopard first); the market's card laid out again and an aisle that stays put; balloons
+  that stack instead of drifting and speech at reading pace; the cellar's stock grouped by family
+  with the family written on the shelf; the towel see-through with the cellar open; louder liquids.
+  GDD_MEVCUT §9.39.
+
 - **The ninth list (2026-09-07):** the licence is the Malibu Club's, Miami, with a beach on its
   band and rounded corners; the beam reads the night instead of the week, the till stands away
   from the hour and the three readings share one line; the cellar's bottle gets a real card; ONE

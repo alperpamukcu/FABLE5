@@ -206,7 +206,8 @@ KEPT = ('clubgirl', 'heavyset')
 # Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
 # stills first and animations only after approval, every time - so a new face is queued
 # here, judged, and only then added to KEPT and given clips.
-TRYING = ('greybeard', 'braidwoman', 'topknot', 'abuela')   # round four, 2026-08-20
+TRYING = ('guayabera', 'nurseaide', 'linecook', 'busdriver', 'fisherman',
+          'abuelita', 'rider', 'cleaner', 'retiree', 'guard')   # the tenth list, 2026-09-07
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
@@ -314,6 +315,42 @@ CUSTOM = {
 
     'walk': ('walking forward with small short steps at a calm unhurried pace, '
              'the feet stay close to the ground, the arms swing very little, ' + CALM),
+}
+
+# DIFFERENT WAYS OF BEING ANNOYED (2026-09-07, the author: "sinirlenme animasyonunda ...
+# kaslari catip kafayi sallayabilirler, bu tarz farkli sinirlenme animasyonlari
+# gostersinler"). One displeasure per person, so ten customers do not all frown the same
+# frown: each is a pair - half A into the reaction, half B settling back - and animate()
+# takes the pair over CUSTOM['upset_a'/'upset_b'] when the name has one.
+UPSET_STYLES = {
+    'shake': (('a clearly displeased reaction, a deep frown, the brows pull together, the '
+               'head shakes slowly from side to side two or three times, the chin lowers, '
+               'the arms stay down at the sides, ' + CALM),
+              ('settling back from the head shake, the head comes level and forward again, '
+               'still frowning, the arms stay down, ' + CALM)),
+    'arms': (('a clearly displeased reaction, a frown, both arms come up and fold across the '
+              'chest, the head turns a little away, the chin lifts, ' + CALM),
+             ('the folded arms come down again to the sides and the head turns back to the '
+              'front, still displeased, ' + CALM)),
+    'sigh': (('a tired displeased reaction, the eyes close, a heavy sigh, the head drops '
+              'forward and the shoulders slump, the arms stay down at the sides, ' + CALM),
+             ('lifting the head again after the sigh, the eyes open, the shoulders come back '
+              'up, still unhappy, the arms stay down, ' + CALM)),
+    'glare': (('a hard displeased glare, the brows knit tight, the jaw sets, the head tilts '
+               'down a little and stares straight ahead without moving, the arms stay down '
+               'at the sides, ' + CALM),
+              ('the glare eases, the head comes level again, the brows relax a little, '
+               'still unhappy, the arms stay down, ' + CALM)),
+    'wave': (('a dismissive displeased reaction, a frown, the right hand lifts to chest '
+              'height and waves the thing away once, the head turns aside, the left arm '
+              'stays down, ' + CALM),
+             ('the right hand drops back to the side and the head turns forward again, '
+              'still frowning, ' + CALM)),
+}
+UPSET_OF = {
+    'guayabera': 'wave', 'nurseaide': 'sigh', 'linecook': 'glare', 'busdriver': 'arms',
+    'fisherman': 'shake', 'abuelita': 'sigh', 'rider': 'glare', 'cleaner': 'shake',
+    'retiree': 'wave', 'guard': 'arms',
 }
 
 
@@ -653,8 +690,12 @@ def animate(clip, names=None):
             args.update(mode='template', template_animation_id=spec['template'],
                         ai_freedom=0)
         else:
+            action = CUSTOM[clip]
+            style = UPSET_OF.get(name)
+            if style and clip in ('upset_a', 'upset_b'):
+                action = UPSET_STYLES[style][0 if clip == 'upset_a' else 1]
             args.update(mode='v3', frame_count=spec.get('frames', FRAMES),
-                        action_description=CUSTOM[clip])
+                        action_description=action)
             # Start from another clip's HELD frame rather than from the standing rotation,
             # so a seated customer's arms do not jump back to their sides every time the
             # clip changes. The frame is read off what has already shipped, which means a

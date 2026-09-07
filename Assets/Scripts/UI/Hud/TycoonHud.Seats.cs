@@ -397,42 +397,90 @@ namespace LastCall.UI
         private void SeparateSays()
         {
             if (_seats == null) return;
-            const float Gap = 8f, TailInset = 14f;
+            const float Gap = 8f, TailInset = 14f, MaxSlide = 48f;
             float halfRoom = _hudRoot != null ? _hudRoot.rect.width * 0.5f : 640f;
-            // Stand each over its head first, so a balloon that was pushed last frame relaxes
-            // the moment its neighbour goes quiet.
             var live = new System.Collections.Generic.List<SeatView>();
+            var sig = new System.Text.StringBuilder();
             foreach (var v in _seats)
             {
                 if (v?.Say == null || !v.Say.gameObject.activeInHierarchy) continue;
-                v.Say.anchoredPosition = new Vector2(0f, v.Say.anchoredPosition.y);
                 live.Add(v);
+                sig.Append(Mathf.RoundToInt(v.Root.anchoredPosition.x)).Append(':')
+                   .Append(Mathf.RoundToInt(v.Say.sizeDelta.x)).Append('x')
+                   .Append(Mathf.RoundToInt(v.Say.sizeDelta.y)).Append(';');
             }
+            // SETTLED ROWS STAY SETTLED (2026-09-07, the author: "konuşma balonları gereksiz
+            // kayabiliyor"). The row was re-solved every frame from scratch, so a balloon
+            // slid whenever a neighbour's line grew by a letter. It is solved once for a
+            // given set of balloons and sizes, and left alone until that set changes.
+            string now = sig.ToString();
+            if (now == _saysSig) return;
+            _saysSig = now;
+
             live.Sort((a, b) => a.Root.anchoredPosition.x.CompareTo(b.Root.anchoredPosition.x));
-            for (int i = 1; i < live.Count; i++)
-            {
-                var l = live[i - 1]; var r = live[i];
-                float lRight = l.Root.anchoredPosition.x + l.Say.anchoredPosition.x + l.Say.sizeDelta.x * 0.5f;
-                float rLeft = r.Root.anchoredPosition.x + r.Say.anchoredPosition.x - r.Say.sizeDelta.x * 0.5f;
-                float overlap = lRight + Gap - rLeft;
-                if (overlap <= 0f) continue;
-                l.Say.anchoredPosition += new Vector2(-overlap * 0.5f, 0f);
-                r.Say.anchoredPosition += new Vector2(overlap * 0.5f, 0f);
-            }
+            // Each balloon's home: over its own head, on its own row. It may SLIDE a little
+            // along the row to clear a neighbour, and if that is not enough it goes UP a
+            // storey above the balloon it would have covered — never sideways over the
+            // next drinker's head (the author: "karakter görsellerinin üstüne gelmeyecek
+            // şekilde, dikey ve yatay olarak esnek").
+            var placed = new System.Collections.Generic.List<Rect>();
             foreach (var v in live)
             {
-                // Inside the picture: the room is the HUD's width, centred.
-                float half = v.Say.sizeDelta.x * 0.5f;
-                float centre = v.Root.anchoredPosition.x + v.Say.anchoredPosition.x;
-                float shove = 0f;
-                if (centre - half < -halfRoom + 4f) shove = (-halfRoom + 4f) - (centre - half);
-                else if (centre + half > halfRoom - 4f) shove = (halfRoom - 4f) - (centre + half);
-                if (shove != 0f) v.Say.anchoredPosition += new Vector2(shove, 0f);
-                // The tail: over the head, on the balloon's underside.
+                float w = v.Say.sizeDelta.x, h = v.Say.sizeDelta.y;
+                float rootX = v.Root.anchoredPosition.x;
+                float homeY = v.Say.anchoredPosition.y;   // the row it stands on
+                float baseY = CharWinH + TagLift;
+                if (homeY < baseY - 0.5f || homeY > baseY + 400f) homeY = baseY;
+                homeY = baseY;
+                float dx = 0f, dy = 0f;
+                // Inside the picture first.
+                float left = rootX - w * 0.5f, right = rootX + w * 0.5f;
+                if (left < -halfRoom + 4f) dx = (-halfRoom + 4f) - left;
+                else if (right > halfRoom - 4f) dx = (halfRoom - 4f) - right;
+                for (int storey = 0; storey < 4; storey++)
+                {
+                    var mine = new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h);
+                    float push = 0f;
+                    bool clear = true;
+                    foreach (var p in placed)
+                    {
+                        if (mine.yMax + Gap <= p.yMin || mine.yMin >= p.yMax + Gap) continue;
+                        float overlap = (p.xMax + Gap) - mine.xMin;
+                        if (overlap <= 0f) continue;
+                        clear = false;
+                        push = Mathf.Max(push, overlap);
+                    }
+                    if (clear) break;
+                    // A small slide along the row is allowed; a big one is a balloon over
+                    // somebody else's head, so it climbs instead.
+                    if (dx + push <= MaxSlide && rootX + dx + push + w * 0.5f <= halfRoom - 4f)
+                    {
+                        dx += push;
+                        var again = new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h);
+                        bool ok = true;
+                        foreach (var p in placed)
+                            if (!(again.yMax + Gap <= p.yMin || again.yMin >= p.yMax + Gap)
+                                && !(again.xMax + Gap <= p.xMin || again.xMin >= p.xMax + Gap)) ok = false;
+                        if (ok) break;
+                        dx -= push;
+                    }
+                    float top = float.MinValue;
+                    foreach (var p in placed)
+                        if (!(mine.xMax + Gap <= p.xMin || mine.xMin >= p.xMax + Gap))
+                            top = Mathf.Max(top, p.yMax);
+                    if (top == float.MinValue) break;
+                    dy = top + Gap - homeY;
+                }
+                v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
+                placed.Add(new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h));
+                // The tail: over the head, on the balloon's underside — and as long as the
+                // climb, so a raised balloon still points at its own drinker.
                 var tail = v.SayTail != null ? v.SayTail.rectTransform : null;
                 if (tail == null) continue;
-                float tailX = Mathf.Clamp(-v.Say.anchoredPosition.x, -half + TailInset, half - TailInset);
-                tail.anchoredPosition = new Vector2(tailX, tail.anchoredPosition.y);
+                float half = w * 0.5f;
+                float tailX = Mathf.Clamp(-dx, -half + TailInset, half - TailInset);
+                tail.anchoredPosition = new Vector2(tailX, 3f);
+                tail.sizeDelta = new Vector2(13f, 12f + Mathf.Max(0f, dy));
             }
         }
 
@@ -1149,6 +1197,11 @@ namespace LastCall.UI
             _clothImg = _clothRt.gameObject.AddComponent<Image>();
             _clothImg.sprite = ItemArt.Load("towel_on_bar") ?? ChromeArt.Cloth();
             _clothImg.preserveAspect = true;
+            // HIT BY ITS OWN PICTURE (2026-09-07, the author: "cloth'un hitbox'unu
+            // towel_on_bar görseline göre ayarla"): the pointer is on the towel where the
+            // towel is drawn, not in the transparent corners of its rect. The Items
+            // importer keeps these textures readable, which is what this needs.
+            try { _clothImg.alphaHitTestMinimumThreshold = 0.5f; } catch (System.Exception) { }
             var glow = _clothRt.gameObject.AddComponent<HoverGlow>();
             glow.Graphics = new Graphic[] { _clothImg };
             glow.Rise = 4f; glow.Sway = 1.4f; glow.Grow = 1.07f;
@@ -1269,8 +1322,14 @@ namespace LastCall.UI
             {
                 _clothRt.anchoredPosition = home;
                 _clothImg.raycastTarget = !CellarOpen;
+                // SEE-THROUGH WHILE THE CELLAR IS OPEN (2026-09-07, the author: "mahzen
+                // açıldığında towel şeffaf olmalı"): the rail rides up with the room and
+                // the towel would hang over the shelves you are reading.
+                float phase = stage != null ? stage.DrawerPhase : 0f;
+                _clothImg.color = new Color(1f, 1f, 1f, 1f - 0.8f * phase);
                 return;
             }
+            _clothImg.color = Color.white;
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.isPressed || CellarOpen) { DropCloth(); return; }
             var screen = mouse.position.ReadValue();

@@ -1438,3 +1438,22 @@ Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
   (`Tools/ninth_art_gen.py`; sayfa: `Tools/glass3d_tiers_preview.png`).
 - **Havlu:** `Items/towel_on_bar.png` rayda (`CounterArtPoint(599, 57)`), elde `towel.png`, kuyruk hareket yönüne bakar, silme kutusu
   havlunun kendi rect'i. Kir ve tuz/şeker halkasında koyu kontur.
+
+### 9.39 · Onuncu liste: on yeni müşteri, market kartı, balon yığını, mahzen grupları, canlı sıvılar, mürekkep (2026-09-07)
+
+- **Yeni kadro:** `Tools/patron_prompts.FIGURE_OPTIONS`'a on düşük profilli Miami müşterisi (guayabera, nurseaide, linecook,
+  busdriver, fisherman, abuelita, rider, cleaner, retiree, guard); `patron_trial_gen.TRYING` bu on. Sinirlenme klibi kişi başına
+  farklı (`UPSET_STYLES` / `UPSET_OF`: shake, arms, sigh, glare, wave). Klipler iki yarım × 8–9 kare (sunucu tavanı 16), hattın
+  bildiği yol: still → `patron_ship` (idle) → A yarıları → `pull` → B yarıları → `pull` → `peaks` → `patron_ship` → kadro satırı.
+  Oyundaki on: guayabera (Osvaldo Reyes, miami), linecook (Ramiro Cortés, miami), abuelita (Carmen Ortiz, miami), nurseaide
+  (Marie Joseph, miami), busdriver (Leroy Banks, southern), fisherman (Desmond Clarke, default), rider (Yeferson Mora, miami),
+  cleaner (Rosa Mendieta, miami), retiree (Walt Petersen, midwest), guard (Andrés Vargas, miami) — hepsi 0★, kimlikleri ABD;
+  `Tools/patron_join.py` kadro satırını, kimlik kaydını ve sesi tek seferde yazar. Kadro 19 yüz (PapersTests 51 kişi).
+- **Siyah kontur yok:** `Tools/patron_ink.py <slug>` — saf siyah pikseller komşu renklerin koyultulmuş tonuna çevrilir (leopar
+  yeniden mürekkeplendi; 96 karede 97 bin piksel). Modelin "lineless" isteğine rağmen çizdiği konturlar bu geçitten geçer.
+- **Market kartı:** beş bant (resim girintisi, yıldız satırı, isim plakası, gerçek satırı — stok yatay çubuk —, durum + ayak);
+  sepet değişince koridor piksel ofsetiyle yerinde kalıyor (`_shopScrollPx`).
+- **Balonlar:** set/boyut imzasıyla bir kez çözülür (`_saysSig`); 48 birime kadar kayar, sonra bir kat yukarı çıkar, kuyruk uzar.
+  Konuşma hızı 12 karakter/sn.
+- **Mahzen:** stok aileye göre sıralı, raf altında aile adı (`StepCellarLabels`); havlu çekmece açıkken %20 alfa, isabet kutusu
+  resmin alfası. **Sıvılar:** `UITheme.Vivid` (kroma ×1.35) — mahzen dolulukları ve kokteyl renkleri birlikte.

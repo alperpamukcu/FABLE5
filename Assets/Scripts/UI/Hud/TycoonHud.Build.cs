@@ -1104,7 +1104,7 @@ namespace LastCall.UI
                 {
                     if (_shopTab != tab)
                     {
-                        _justOrdered.Clear(); _shopScrollAt = 1f;
+                        _justOrdered.Clear(); _shopScrollAt = 1f; _shopScrollPx = -1f;
                         Sfx.Play("key_press", 0.55f);
                     }
                     _shopTab = tab;

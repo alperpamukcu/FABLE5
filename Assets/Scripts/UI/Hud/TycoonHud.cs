@@ -278,7 +278,9 @@ namespace LastCall.UI
         /// konuşma metni gibi harf harf gelecek"). 20 puts SEX ON THE BEACH on the ticket in
         /// eight tenths of a second — long enough to read as speech, short enough that a busy
         /// bar never waits on it.</summary>
-        private const float SpeakCps = 20f;
+        // TWELVE, not twenty (2026-09-07, the author: "konuşma metinleri daha yavaş
+        // ilerlemeli"): a line that arrives at reading pace rather than at typing pace.
+        private const float SpeakCps = 12f;
 
         /// <summary>Walk-in speed, in HUD units a second, and the number the whole gait
         /// hangs off. MEASURED off the drawing, twice — and the first measurement was wrong
@@ -493,6 +495,16 @@ namespace LastCall.UI
             // should re-roll the character rather than re-ship those frames, because the
             // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
+            ("guard", 7f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            ("retiree", 12f, 0.0f, 6, 4),   // the tenth list, 2026-09-07
+            ("cleaner", 6f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            ("rider", 5f, 0.0f, 5, 6),   // the tenth list, 2026-09-07
+            ("fisherman", 4f, 0.0f, 5, 4),   // the tenth list, 2026-09-07
+            ("busdriver", 15f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            ("abuelita", 2f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            ("nurseaide", 7f, 0.0f, 6, 4),   // the tenth list, 2026-09-07
+            ("linecook", 0f, 0.0f, 6, 6),   // the tenth list, 2026-09-07
+            ("guayabera", 0f, 0.0f, 6, 6),   // the tenth list, 2026-09-07
         };
 
         private readonly List<PatronLook> _looks = new List<PatronLook>();
@@ -1182,6 +1194,13 @@ namespace LastCall.UI
         /// <summary>Where the aisle was left. Rebuilding after a pick must not throw the
         /// player back to the top of the shelf (the author, 2026-08-07).</summary>
         private float _shopScrollAt = 1f;
+        /// <summary>The aisle's scroll in PIXELS of content, or -1 to use the normalised
+        /// figure (2026-09-07). A normalised position is a share of a height the rebuild
+        /// has not measured yet, which is why every basket click slid the aisle.</summary>
+        private float _shopScrollPx = -1f;
+        /// <summary>What the balloons were laid out for last, so a settled row is not
+        /// re-solved every frame (2026-09-07: the drift).</summary>
+        private string _saysSig;
 
         /// <summary>
         /// The basket (the author, 2026-08-07: "önce ürünü seç, sepete ekle, sepeti öde").
@@ -1496,6 +1515,7 @@ namespace LastCall.UI
             StepMiniPreps(run);
             StepPropTip();
             StepCellarCard();
+            StepCellarLabels();
             UpdateEscape();
             UpdateBookKeys();
             StepStarDrop();

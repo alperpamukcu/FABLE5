@@ -393,7 +393,11 @@ namespace LastCall.UI
         /// <summary>Notes where the aisle is standing, so a rebuild can put it back.</summary>
         private void RememberScroll()
         {
-            if (_shopScroll != null) _shopScrollAt = _shopScroll.verticalNormalizedPosition;
+            if (_shopScroll != null)
+            {
+                _shopScrollAt = _shopScroll.verticalNormalizedPosition;
+                _shopScrollPx = _shopScroll.content != null ? _shopScroll.content.anchoredPosition.y : -1f;
+            }
         }
 
         /// <summary>Picks a listing up, or puts it back. Refuses what the night cannot
@@ -1079,6 +1083,31 @@ namespace LastCall.UI
             // in — a shaded back with a lit lip at the foot line — the way the bar's own
             // back shelf gives them something to be seen against. Bottles are opaque and
             // need none of it.
+            // THE CARD, LAID OUT AGAIN (2026-09-07, the author: "ürün kartlarının düzenini
+            // en başından tekrar tasarla"). Five bands, top to bottom, every card the same:
+            //   1. the PICTURE in a recess the width of the card, whatever the product —
+            //      a bottle, a glass, a fitting all stand in the same window;
+            //   2. its RUNG, a row of five small stars along the recess's foot (the ladder
+            //      down the side is gone: it read as a second gauge beside the stock strip);
+            //   3. the NAME on its dark plate;
+            //   4. one line of FACT: the stock as a bar read left to right with its figure,
+            //      or the meta word with its mark;
+            //   5. the STATE row, then the foot with the price tag and the key.
+            if (spec.Art != null && state != TileState.Sealed)
+            {
+                var recess = NewRect("Recess", rt);
+                Place(recess, new Vector2(0.5f, 1), new Vector2(TileW - 12f, TileArtH + 6f),
+                    new Vector2(0, -(TileCapH + 3f)));
+                var ri = recess.gameObject.AddComponent<Image>();
+                ri.color = state == TileState.Unaffordable || state == TileState.Held
+                    ? new Color(0.80f, 0.81f, 0.85f, 1f) : ShopAisle;
+                ri.raycastTarget = false;
+                var lip = NewRect("Lip", recess);
+                Place(lip, new Vector2(0.5f, 0), new Vector2(TileW - 12f, 2f), Vector2.zero);
+                var li = lip.gameObject.AddComponent<Image>();
+                li.color = new Color(1f, 1f, 1f, 0.55f);
+                li.raycastTarget = false;
+            }
             if (spec.Art != null && spec.ArtH == VesselH)
             {
                 var niche = NewRect("Niche", rt);
@@ -1247,7 +1276,8 @@ namespace LastCall.UI
             // can live in the one band of the tile nothing else uses — the art's left
             // margin, opposite the stock gauge, which is why neither has to move.
             if (state != TileState.Sealed && !double.IsNaN(spec.RungStars))
-                StarLadder(rt, spec.RungStars);
+                StarRow(rt, new Vector2(0.5f, 1), new Vector2(0, -(TileArtTop + TileArtH - 6f)), 12f,
+                    spec.RungStars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.14f));
 
             // 4 — ONE contextual token, or the stock meter where stock IS the fact.
             if (spec.StockFrac >= 0f)
@@ -1278,11 +1308,14 @@ namespace LastCall.UI
                 // It still clears the ADD key by construction: the strip's foot is at the
                 // product's own foot line, 68 up from the plate, and the key lives in the
                 // bottom 30.
+                // A BAR READ LEFT TO RIGHT on the fact row (2026-09-07): the level lies
+                // where the meta word would, with its figure at the row's end, so the eye
+                // reads "how much" where it reads "what" on the cards beside it.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float StripW = 12f;
-                const float StripH = TileArtH - 8f;
-                const float StripX = TileW - TilePad - StripW;
-                const float StripTop = -(TileArtTop + 4f);
+                const float StripW = ContentW - 44f;
+                const float StripH = 10f;
+                const float StripX = TilePad;
+                const float StripTop = -(TileMetaTop + 1f);
                 var surround = NewRect("Track", rt);
                 Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
                     new Vector2(StripX, StripTop));
@@ -1314,18 +1347,18 @@ namespace LastCall.UI
                 var fillImg = fill.gameObject.AddComponent<Image>();
                 if (frac < 0.25f)
                 {
-                    fill.anchorMax = new Vector2(1, 0);
-                    fill.pivot = new Vector2(0.5f, 0);
-                    fill.sizeDelta = new Vector2(0, (StripH - 4f) * frac);
+                    fill.anchorMax = new Vector2(0, 1);
+                    fill.pivot = new Vector2(0, 0.5f);
+                    fill.sizeDelta = new Vector2((StripW - 4f) * frac, 0);
                     fill.anchoredPosition = Vector2.zero;
                     fillImg.color = ShopCost;
                 }
                 else
                 {
-                    fillImg.sprite = ChromeArt.FadeStrip(horizontal: false);
+                    fillImg.sprite = ChromeArt.FadeStrip(horizontal: true);
                     fillImg.type = Image.Type.Filled;
-                    fillImg.fillMethod = Image.FillMethod.Vertical;
-                    fillImg.fillOrigin = (int)Image.OriginVertical.Bottom;
+                    fillImg.fillMethod = Image.FillMethod.Horizontal;
+                    fillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
                     fillImg.fillAmount = frac;
                 }
                 fillImg.raycastTarget = false;
@@ -1336,8 +1369,8 @@ namespace LastCall.UI
                 // about the listing all live on one line now: what it is on the left, how
                 // much of it there is on the right.
                 var pct = NewText("Pct", rt, _shop, 8, TextAnchor.MiddleRight, ShopInkSoft);
-                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(60, TileStateH),
-                    new Vector2(-TilePad, -TileStateTop));
+                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(40, TileMetaH),
+                    new Vector2(-TilePad, -TileMetaTop));
                 pct.raycastTarget = false;
                 pct.text = Mathf.RoundToInt(frac * 100f) + "%";
             }
@@ -1495,7 +1528,7 @@ namespace LastCall.UI
                 // print straight through it on the restock tab — where a full shelf and an
                 // empty wallet are exactly the two states that have most to say. 44 units
                 // is what "100%" takes in the shop face plus a space to breathe.
-                const float ReadingCol = 44f;
+                const float ReadingCol = 0f;   // the stock figure moved up to the fact row (2026-09-07)
                 Place(stateText.rectTransform, new Vector2(0, 1),
                     new Vector2(TileW - markX - TilePad - ReadingCol, TileStateH),
                     new Vector2(markX, -TileStateTop));

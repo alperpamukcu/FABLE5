@@ -870,5 +870,698 @@
    "black": 13.436
   },
   "png": "AssetPipeline\\sources\\patron_trial\\ece__r3.png"
+ },
+ "guayabera": {
+  "character_id": "7a7132ab-27df-4992-805c-263e91d42e0d",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 0.0,
+   "head": 0.157,
+   "whole": 1.738,
+   "colours": 36,
+   "body": 210,
+   "black": 4.055
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\guayabera.png",
+  "clips": {
+   "look_right": "b8169e3a-b277-41ef-9a79-f6a332972e22",
+   "look_left": "38bfce37-e5af-465f-b456-e1f32ea42823",
+   "order_a": "ca6894db-d181-4b6a-8994-00f9d1bd9789",
+   "drink_a": "284b3d7e-5fdc-450c-bf03-130a87ff5bbf",
+   "cheer_a": "a3271c18-4085-4ee8-842f-847a0ab36060",
+   "upset_a": "dac94085-ea63-4ef9-8e31-5b28727da439",
+   "walk": "6e14db0f-c4fd-4022-af91-51c0dbbdc5b3",
+   "order_b": "5501e724-08e8-43fd-a08b-473b7ad09744",
+   "drink_b": "c7d75afb-8afc-4cfa-ae6f-6adbef97071b",
+   "cheer_b": "f4292c73-1eeb-4926-80c7-e244bbdb0f24",
+   "upset_b": "cff11536-7f7b-49dc-ba93-b8a20165fdb0"
+  }
+ },
+ "nurseaide": {
+  "character_id": "ca9d3f3d-c072-401b-ac57-9982ced18325",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 69.728,
+   "head": 0.192,
+   "whole": 82.289,
+   "colours": 45,
+   "body": 203,
+   "black": 15.99
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\nurseaide.png",
+  "clips": {
+   "look_right": "f209e366-2a07-4761-98bb-8dadb3820218",
+   "look_left": "ceeeda9f-02a6-4cd8-b594-f450853149a3",
+   "order_a": "559c722e-0d80-4aea-be31-2e99f3b906d7",
+   "drink_a": "ab367b83-da4b-49e7-8ebd-c6a5b2dd698d",
+   "cheer_a": "2d791b30-7c23-4414-a68f-f5db0d6394cf",
+   "upset_a": "491decfe-d547-4e24-808c-faa5883fe6bb",
+   "walk": "7d936be2-f8b8-4370-8b03-6ae7be74cbb5",
+   "order_b": "4788ef45-5587-46f3-a764-5984c3907089",
+   "drink_b": "2c6b5653-2cab-4770-9cec-9479bb83da01",
+   "cheer_b": "117d4e31-b78c-4fb5-85f6-9d2623881f17",
+   "upset_b": "7ecce079-f797-46c2-9ede-1c5543218961"
+  },
+  "adopted_from": "nurseaide__s1",
+  "replaced": "97586f6a-8378-4c89-b507-09465b28dcd5"
+ },
+ "linecook": {
+  "character_id": "b65dfc37-b5dd-48a6-b8c6-f0e508bf46f0",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 6.982,
+   "head": 0.171,
+   "whole": 4.696,
+   "colours": 48,
+   "body": 210,
+   "black": 13.41
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\linecook.png",
+  "clips": {
+   "look_right": "6fd2d3b3-3dc7-4dce-9ebb-991937d8c970",
+   "look_left": "dc1c9bb6-4591-4bab-b4e6-bc01c5e2944c",
+   "order_a": "7c8ff7b1-1a22-4a12-80d6-9fb65e9610f6",
+   "drink_a": "12327e51-7bea-498c-adcb-85ac53f268bb",
+   "cheer_a": "53aff1f3-f407-4617-9deb-70eed2fc0bd6",
+   "upset_a": "9bc29f9e-f44d-4588-8c68-e742d9a52287",
+   "walk": "58372db5-ea62-4dd4-b15e-47facbb06fe2",
+   "order_b": "a588c048-7396-4cd1-a09b-2120449774aa",
+   "drink_b": "8dbf588d-f036-4d3e-8048-d06ca254e8e8",
+   "cheer_b": "731d81ce-04d7-4b8c-961e-89c7d7d688a4",
+   "upset_b": "8a1c4fc7-10f0-4607-8e1d-a79675d746d1"
+  },
+  "adopted_from": "linecook__r2",
+  "replaced": "ebb0d964-4fe2-4935-8226-68e411cf2628"
+ },
+ "busdriver": {
+  "character_id": "56fee7f4-52da-4cfe-a8f6-454de6803a9d",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 82.787,
+   "head": 0.144,
+   "whole": 58.373,
+   "colours": 41,
+   "body": 195,
+   "black": 29.162
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\busdriver.png",
+  "clips": {
+   "look_right": "4c46012c-8e88-46cf-ae6a-29fc18404c4c",
+   "look_left": "9755e091-a388-4916-b1a6-37aaf650b92f",
+   "order_a": "12998fbf-e94d-4857-a90e-eb3ed4990884",
+   "drink_a": "dd380cd3-dd0b-4d05-93ea-47878f4aa780",
+   "cheer_a": "1caef58a-82d7-48ba-8de1-ffbf6a06456a",
+   "upset_a": "3602e814-7cd6-42da-83c9-d929ff0e6aef",
+   "walk": "6f37aca4-d25f-4860-a56a-ff3427831774",
+   "order_b": "be25545d-55f9-4449-b318-8429e5e2b9f5",
+   "drink_b": "6a71d953-0b75-43c8-95df-aa73acc2102f",
+   "cheer_b": "577b48fd-a0c1-46eb-807e-00aad919487c",
+   "upset_b": "1fe654d2-7c8e-418f-b2f3-b01fbd66043d"
+  },
+  "adopted_from": "busdriver__s2",
+  "replaced": "ec5b6627-e9e9-4bd4-a6ba-1db1e5dc9b26"
+ },
+ "fisherman": {
+  "character_id": "1d714d76-95da-4d30-824e-658a3543822c",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 63.702,
+   "head": 0.146,
+   "whole": 46.623,
+   "colours": 30,
+   "body": 206,
+   "black": 10.822
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\fisherman.png",
+  "clips": {
+   "look_right": "8dea9803-bb9a-4ff0-a63f-ee9d7ae6a7b6",
+   "look_left": "8547d037-5e4e-4c2e-a315-caf85fdfe0c4",
+   "order_a": "ab7e2aa3-c490-46b5-b819-e84aeb6ba131",
+   "drink_a": "ba9bb905-ee6e-4747-aa56-e2c0675c882c",
+   "cheer_a": "a55c153d-537d-402d-a91b-7bddb7218f5b",
+   "upset_a": "5cde4cd6-9657-4d94-97e0-5e43de3e6a1e",
+   "walk": "400813a9-0c9a-41c7-a3c8-b09130d5f158",
+   "order_b": "c8f14e30-499b-4898-9557-41f4ab8dfea2",
+   "drink_b": "69b8db61-3f6d-45a6-aeeb-da25d2fabe67",
+   "cheer_b": "0c5c5f1a-2720-4fc4-b76a-9a9039608832",
+   "upset_b": "411ab198-371d-4c08-8871-7e46634a61be"
+  },
+  "adopted_from": "fisherman__s2",
+  "replaced": "0c140c75-1218-4667-b001-f819355c4b54"
+ },
+ "abuelita": {
+  "character_id": "ec76f51d-c09a-4f31-9b2a-8d2f5d821651",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 30.824,
+   "head": 0.212,
+   "whole": 26.434,
+   "colours": 56,
+   "body": 208,
+   "black": 1.879
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuelita.png",
+  "clips": {
+   "look_right": "a9288289-c3b5-4dd8-9861-71e6f07b1224",
+   "look_left": "37df7c59-ca09-407d-b406-720a3a6cd821",
+   "order_a": "0c2e3a0d-8534-4fd2-8a3c-6eba4a2bfc86",
+   "drink_a": "aff98106-4329-4feb-a432-e65a9ca1725c",
+   "cheer_a": "b93e313f-9baa-4cb5-ae11-b938681b3054",
+   "upset_a": "392bc62d-953e-4b2a-a88b-77dae2b36465",
+   "walk": "9453e4f5-6b2e-469a-832d-c52f7ec0d2b3",
+   "order_b": "c9531506-1a27-4234-b9f3-0eceb4710096",
+   "drink_b": "f23b5f47-7f09-43c4-807e-8a200d97021b",
+   "cheer_b": "4adb9bdd-42ed-40e4-8f7c-2b71f433639f",
+   "upset_b": "0ae4ad47-ab3a-462a-af4e-79aed42cc132"
+  },
+  "adopted_from": "abuelita__r1",
+  "replaced": "3a71ad8c-2549-4f60-a1a3-08d6da4a4ba1"
+ },
+ "rider": {
+  "character_id": "95cc0678-57e0-4ef8-bde5-e80b359d1a23",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 69.93,
+   "head": 0.137,
+   "whole": 75.393,
+   "colours": 43,
+   "body": 205,
+   "black": 22.428
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\rider.png",
+  "clips": {
+   "look_right": "5d1b2ad5-0887-4a57-b401-83f26b868bf6",
+   "look_left": "17cb1dc3-e91d-42c3-81d1-0efd5fbbaa60",
+   "order_a": "107c9707-8afc-44dd-bd83-03df218d320c",
+   "drink_a": "1d22717d-668d-42b5-a651-596c41841761",
+   "cheer_a": "f336e41e-cdde-43b3-adb2-99b741f623d8",
+   "upset_a": "8b664182-2e16-4868-bead-eb88e04d54b1",
+   "walk": "c26327fc-cf18-4488-9712-f57d21ab525e",
+   "order_b": "f11d2411-b950-4b61-a275-4dc5a6f631cc",
+   "drink_b": "634d6057-cacd-41f6-8949-a1eeca697ae9",
+   "cheer_b": "08ece7e6-a1e3-4258-b6f7-c15f068e3214",
+   "upset_b": "0a17ea68-01b0-4b59-aecc-5108c7a7a907"
+  },
+  "adopted_from": "rider__s1",
+  "replaced": "1b764501-4aed-4894-a9f8-71c0f62c9e34"
+ },
+ "cleaner": {
+  "character_id": "08ce8142-4dbe-4120-a340-4dee1306d5ba",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 72.945,
+   "head": 0.142,
+   "whole": 76.106,
+   "colours": 47,
+   "body": 204,
+   "black": 18.657
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\cleaner.png",
+  "clips": {
+   "look_right": "9e54d219-e1ab-432a-afe3-306d25608318",
+   "look_left": "aba8b93b-16ad-49e1-aad3-2ba6f402e509",
+   "order_a": "640a604c-5523-40ac-a599-2179f55dcb5d",
+   "drink_a": "46a03a5c-d257-4687-9b6c-e76495d903cf",
+   "cheer_a": "02f646c0-860b-425b-bc6b-26096033c3f8",
+   "upset_a": "8c76b69e-9219-4f81-b0a8-3bf2fd4120d9",
+   "walk": "c41f7c50-8174-4725-aa9f-28f118de5043",
+   "order_b": "e48ddcbb-e4ca-46c8-ad16-a05a48e44bcc",
+   "drink_b": "1dd4863e-81ba-4936-aefd-49198944ce28",
+   "cheer_b": "bd973713-386f-45a6-b2c6-c30c6c24fe18",
+   "upset_b": "8898389a-8a83-4b09-b4b4-f83d236bf945"
+  },
+  "adopted_from": "cleaner__r2",
+  "replaced": "9bfadd31-e753-4fc5-b547-9bfb06aefecb"
+ },
+ "retiree": {
+  "character_id": "82cdf0c3-0d6b-414f-b5a8-fe4b22e49662",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 60.383,
+   "head": 0.162,
+   "whole": 42.609,
+   "colours": 46,
+   "body": 198,
+   "black": 0.754
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\retiree.png",
+  "clips": {
+   "look_right": "da25a252-f038-44d6-bd6c-bed605642773",
+   "look_left": "db1eeb3d-be2c-424a-b002-7956d87f7092",
+   "walk": "a786be49-23c2-4c61-b787-792bd58e46c6",
+   "order_a": "0910f297-6210-4d64-915b-4030d1bf8cdb",
+   "drink_a": "b12e7519-704b-4bbe-a976-1590b8088aba",
+   "cheer_a": "8e3afe8d-ea56-4213-9c4e-325f7f10fb32",
+   "upset_a": "cc0451c5-3f15-46ce-83ef-890504ac9a7f",
+   "order_b": "cb35a329-155c-44c5-b086-92588e2e3303",
+   "drink_b": "29d51a2b-258c-47cf-89fe-bf759f06fe4f",
+   "cheer_b": "cc8db6a8-3d7d-4bd2-8a2a-b8c4950c1b21",
+   "upset_b": "5de5f095-8d6a-4aec-8aec-911a26cf5d18"
+  },
+  "adopted_from": "retiree__r2",
+  "replaced": "cedb5aa3-f8ba-41fe-b22b-3040bdf72f5b"
+ },
+ "guard": {
+  "character_id": "cecba854-4d1e-41df-8fe7-f9e334c9595d",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 68.01,
+   "head": 0.133,
+   "whole": 49.141,
+   "colours": 32,
+   "body": 203,
+   "black": 37.871
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\guard.png",
+  "clips": {
+   "look_right": "e0cc6af0-9dd6-469f-90c1-4ac74ec0f071",
+   "look_left": "fa292930-1523-45a3-938b-76d939bde9af",
+   "order_a": "c897ab73-d948-4632-8a18-0cb9726eeba6",
+   "drink_a": "b75b9890-1a05-48c8-8ecb-4b6b8211eead",
+   "cheer_a": "1b438edd-70f1-416b-9a28-8c1c79749e3a",
+   "upset_a": "c83b0037-340c-4b1a-a5be-e494565e9e83",
+   "walk": "ab1c88bd-2f96-4ece-a0c7-90190f0fb8e8",
+   "order_b": "e29440cf-0094-4887-a007-57a67a763914",
+   "drink_b": "7265abd5-7c5f-4b18-bbb0-c92eb0994844",
+   "cheer_b": "f0f6ead2-de6c-4033-a69f-2e67c948af27",
+   "upset_b": "eeb0e6fb-8d36-4e77-a4ad-3fc35d6046f8"
+  },
+  "adopted_from": "guard__r1",
+  "replaced": "046c349c-4318-493a-bf89-ba6288c9e8e3"
+ },
+ "nurseaide__r1": {
+  "character_id": "a2793762-b115-4bb7-a32c-0a39cc3fef90",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "nurseaide",
+  "measured": {
+   "outline": 71.111,
+   "head": 0.147,
+   "whole": 86.092,
+   "colours": 35,
+   "body": 211,
+   "black": 14.928
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\nurseaide__r1.png"
+ },
+ "nurseaide__r2": {
+  "character_id": "cb06e4fb-0cbf-4c9f-a40a-707163beb255",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "nurseaide",
+  "measured": {
+   "outline": 74.142,
+   "head": 0.18,
+   "whole": 63.146,
+   "colours": 29,
+   "body": 205,
+   "black": 28.533
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\nurseaide__r2.png"
+ },
+ "linecook__r1": {
+  "character_id": "35403279-3cb8-4b59-a820-628de8423609",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "linecook",
+  "measured": {
+   "outline": 15.403,
+   "head": 0.128,
+   "whole": 36.631,
+   "colours": 57,
+   "body": 196,
+   "black": 7.841
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\linecook__r1.png"
+ },
+ "linecook__r2": {
+  "character_id": "b65dfc37-b5dd-48a6-b8c6-f0e508bf46f0",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "linecook",
+  "measured": {
+   "outline": 6.982,
+   "head": 0.171,
+   "whole": 4.696,
+   "colours": 48,
+   "body": 210,
+   "black": 13.41
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\linecook__r2.png"
+ },
+ "busdriver__r1": {
+  "character_id": "ad631bfa-9ff4-4950-846b-b7c0d80f619a",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "busdriver",
+  "measured": {
+   "outline": 90.957,
+   "head": 0.133,
+   "whole": 84.075,
+   "colours": 54,
+   "body": 203,
+   "black": 15.938
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\busdriver__r1.png"
+ },
+ "busdriver__r2": {
+  "character_id": "afae77e5-358c-48d5-a602-ab351b73b4be",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "busdriver",
+  "measured": {
+   "outline": 88.187,
+   "head": 0.126,
+   "whole": 82.609,
+   "colours": 49,
+   "body": 191,
+   "black": 14.015
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\busdriver__r2.png"
+ },
+ "fisherman__r1": {
+  "character_id": "74b043af-d553-4792-a5aa-cc0aa50455c6",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "fisherman",
+  "measured": {
+   "outline": 80.292,
+   "head": 0.167,
+   "whole": 84.838,
+   "colours": 48,
+   "body": 203,
+   "black": 17.137
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\fisherman__r1.png"
+ },
+ "fisherman__r2": {
+  "character_id": "98199040-7685-41a3-a735-d634dff0058f",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "fisherman",
+  "measured": {
+   "outline": 80.153,
+   "head": 0.17,
+   "whole": 84.365,
+   "colours": 37,
+   "body": 200,
+   "black": 17.002
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\fisherman__r2.png"
+ },
+ "abuelita__r1": {
+  "character_id": "ec76f51d-c09a-4f31-9b2a-8d2f5d821651",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuelita",
+  "measured": {
+   "outline": 30.824,
+   "head": 0.212,
+   "whole": 26.434,
+   "colours": 56,
+   "body": 208,
+   "black": 1.879
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuelita__r1.png"
+ },
+ "abuelita__r2": {
+  "character_id": "7596d4db-aa9b-4df5-83cd-b4afcbef08bf",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuelita",
+  "measured": {
+   "outline": 87.072,
+   "head": 0.185,
+   "whole": 76.987,
+   "colours": 44,
+   "body": 205,
+   "black": 7.68
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuelita__r2.png"
+ },
+ "rider__r1": {
+  "character_id": "5be14aad-ae63-40fa-bbb6-7860e3a1f8cf",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "rider",
+  "measured": {
+   "outline": 79.371,
+   "head": 0.153,
+   "whole": 87.008,
+   "colours": 31,
+   "body": 203,
+   "black": 13.66
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\rider__r1.png"
+ },
+ "rider__r2": {
+  "character_id": "6f807624-428d-494d-8db0-9b99b93b9f60",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "rider",
+  "measured": {
+   "outline": 75.725,
+   "head": 0.139,
+   "whole": 84.574,
+   "colours": 39,
+   "body": 201,
+   "black": 16.721
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\rider__r2.png"
+ },
+ "cleaner__r1": {
+  "character_id": "1fd68201-3602-4118-99c2-0df9939fff54",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "cleaner",
+  "measured": {
+   "outline": 77.573,
+   "head": 0.163,
+   "whole": 80.473,
+   "colours": 45,
+   "body": 196,
+   "black": 20.064
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\cleaner__r1.png"
+ },
+ "cleaner__r2": {
+  "character_id": "08ce8142-4dbe-4120-a340-4dee1306d5ba",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "cleaner",
+  "measured": {
+   "outline": 72.945,
+   "head": 0.142,
+   "whole": 76.106,
+   "colours": 47,
+   "body": 204,
+   "black": 18.657
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\cleaner__r2.png"
+ },
+ "retiree__r1": {
+  "character_id": "b7fbf61c-decd-4d4d-b167-0a1d63f51caa",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "retiree",
+  "measured": {
+   "outline": 95.25,
+   "head": 0.145,
+   "whole": 91.339,
+   "colours": 49,
+   "body": 207,
+   "black": 13.039
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\retiree__r1.png"
+ },
+ "retiree__r2": {
+  "character_id": "82cdf0c3-0d6b-414f-b5a8-fe4b22e49662",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "retiree",
+  "measured": {
+   "outline": 60.383,
+   "head": 0.162,
+   "whole": 42.609,
+   "colours": 46,
+   "body": 198,
+   "black": 0.754
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\retiree__r2.png"
+ },
+ "guard__r1": {
+  "character_id": "cecba854-4d1e-41df-8fe7-f9e334c9595d",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "guard",
+  "measured": {
+   "outline": 68.01,
+   "head": 0.133,
+   "whole": 49.141,
+   "colours": 32,
+   "body": 203,
+   "black": 37.871
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\guard__r1.png"
+ },
+ "guard__r2": {
+  "character_id": "b202a47c-4276-4f53-a3b5-7cf37431f37e",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "guard",
+  "measured": {
+   "outline": 76.864,
+   "head": 0.119,
+   "whole": 52.5,
+   "colours": 39,
+   "body": 202,
+   "black": 43.854
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\guard__r2.png"
+ },
+ "nurseaide__s1": {
+  "character_id": "ca9d3f3d-c072-401b-ac57-9982ced18325",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "nurseaide",
+  "measured": {
+   "outline": 69.728,
+   "head": 0.192,
+   "whole": 82.289,
+   "colours": 45,
+   "body": 203,
+   "black": 15.99
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\nurseaide__s1.png"
+ },
+ "nurseaide__s2": {
+  "character_id": "45e69a72-9edf-401d-bb72-18d03d18b665",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "nurseaide",
+  "measured": {
+   "outline": 75.0,
+   "head": 0.167,
+   "whole": 84.256,
+   "colours": 30,
+   "body": 198,
+   "black": 15.515
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\nurseaide__s2.png"
+ },
+ "busdriver__s1": {
+  "character_id": "7ad65267-2969-47e3-995d-b5f2a6be658d",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "busdriver",
+  "measured": {
+   "outline": 88.674,
+   "head": 0.128,
+   "whole": 85.211,
+   "colours": 41,
+   "body": 196,
+   "black": 16.092
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\busdriver__s1.png"
+ },
+ "busdriver__s2": {
+  "character_id": "56fee7f4-52da-4cfe-a8f6-454de6803a9d",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "busdriver",
+  "measured": {
+   "outline": 82.787,
+   "head": 0.144,
+   "whole": 58.373,
+   "colours": 41,
+   "body": 195,
+   "black": 29.162
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\busdriver__s2.png"
+ },
+ "fisherman__s1": {
+  "character_id": "37d87b2e-2663-44a5-bdb4-539318f7fe5f",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "fisherman",
+  "measured": {
+   "outline": 82.716,
+   "head": 0.152,
+   "whole": 89.14,
+   "colours": 50,
+   "body": 204,
+   "black": 14.589
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\fisherman__s1.png"
+ },
+ "fisherman__s2": {
+  "character_id": "1d714d76-95da-4d30-824e-658a3543822c",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "fisherman",
+  "measured": {
+   "outline": 63.702,
+   "head": 0.146,
+   "whole": 46.623,
+   "colours": 30,
+   "body": 206,
+   "black": 10.822
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\fisherman__s2.png"
+ },
+ "abuelita__s1": {
+  "character_id": "f82d70f2-180d-4241-b178-2917bd7442b8",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuelita",
+  "measured": {
+   "outline": 94.961,
+   "head": 0.195,
+   "whole": 92.023,
+   "colours": 32,
+   "body": 200,
+   "black": 8.52
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuelita__s1.png"
+ },
+ "abuelita__s2": {
+  "character_id": "13185191-09a1-4478-8eef-604bc2255bdf",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "abuelita",
+  "measured": {
+   "outline": 86.4,
+   "head": 0.189,
+   "whole": 84.472,
+   "colours": 51,
+   "body": 196,
+   "black": 2.486
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\abuelita__s2.png"
+ },
+ "rider__s1": {
+  "character_id": "95cc0678-57e0-4ef8-bde5-e80b359d1a23",
+  "language": "lineless",
+  "size": 220,
+  "roll_of": "rider",
+  "measured": {
+   "outline": 69.93,
+   "head": 0.137,
+   "whole": 75.393,
+   "colours": 43,
+   "body": 205,
+   "black": 22.428
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\rider__s1.png"
  }
 }

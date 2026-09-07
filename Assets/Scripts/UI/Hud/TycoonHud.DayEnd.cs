@@ -2460,8 +2460,24 @@ namespace LastCall.UI
 
             // The aisle stays where it was left (the author: picking something must not
             // throw you back to the top). Switching department is what resets it.
-            Canvas.ForceUpdateCanvases();
-            if (_shopScroll != null) _shopScroll.verticalNormalizedPosition = _shopScrollAt;
+            // IN PIXELS, AFTER A REAL LAYOUT PASS (2026-09-07, the author: "market sepetine
+            // her ürün eklendiğinde market ürün ekranı aşağı kayıyor"). The normalised
+            // figure was restored against a content height the nested grids had not
+            // measured yet, so every basket click landed the aisle somewhere else. The
+            // content's own offset is what the eye was looking at; it is put back exactly.
+            if (_shopScroll != null && _shopScroll.content != null)
+            {
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(_shopScroll.content);
+                Canvas.ForceUpdateCanvases();
+                if (_shopScrollPx >= 0f)
+                {
+                    float viewH = _shopScroll.viewport != null ? _shopScroll.viewport.rect.height : 0f;
+                    float max = Mathf.Max(0f, _shopScroll.content.rect.height - viewH);
+                    var p = _shopScroll.content.anchoredPosition;
+                    _shopScroll.content.anchoredPosition = new Vector2(p.x, Mathf.Clamp(_shopScrollPx, 0f, max));
+                }
+                else _shopScroll.verticalNormalizedPosition = _shopScrollAt;
+            }
         }
 
         /// <summary>The stamp, on the CHIP. It used to be a 160-wide rotated word laid

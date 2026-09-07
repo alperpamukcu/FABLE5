@@ -373,6 +373,62 @@ FIGURE_OPTIONS = {
         "an open loose white short sleeved shirt over a plain plum t-shirt, "
         "plain dark teal trousers, "
         "no logo, no pattern, no bag, no hat, no apron, nothing black"),
+
+    # -- the tenth list (2026-09-07): "yeni 10 karakter ekle, bunlar biraz daha dusuk
+    # profil bara giden insanlar olsun, etnik kokene dikkat et, sanat olarak heavyset'e
+    # benzesin". Ten working people of a Miami neighbourhood bar: the ones who come in
+    # after a shift rather than for a scene. Same rules as the rest of the cast - flat
+    # colour, nothing black, one plain garment carrying the chroma, no logo or pattern.
+    "guayabera": (
+        "an older Cuban man in his sixties, lean and a little stooped, bar customer in a "
+        "Miami neighbourhood bar, white-grey hair combed back, a grey moustache, "
+        "a pale yellow short sleeved guayabera shirt, tan trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    "nurseaide": (
+        "a Haitian woman in her thirties, dark brown skin, medium build, bar customer in a "
+        "Miami neighbourhood bar, hair in a low bun, small stud earrings, "
+        "a lavender scrubs top, plain grey trousers, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "linecook": (
+        "a Mexican man in his thirties, stocky and short, bar customer in a Miami "
+        "neighbourhood bar, short dark hair under a plain red bandana, a thin moustache, "
+        "a plain white cook's t-shirt with a cream apron tied at the waist, dark blue trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    "busdriver": (
+        "a Black man in his fifties, broad and heavy, bar customer in a Miami neighbourhood "
+        "bar, close cropped grey hair, a grey goatee, "
+        "a sky blue short sleeved uniform shirt, navy trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    "fisherman": (
+        "a Jamaican man in his forties, wiry and weathered, bar customer in a Miami "
+        "neighbourhood bar, short locs tied back, "
+        "a faded orange t-shirt, rolled khaki trousers, "
+        "no logo, no pattern, no hat, nothing black"),
+    "abuelita": (
+        "a Puerto Rican grandmother in her seventies, short and round, bar customer in a "
+        "Miami neighbourhood bar, silver curls, small gold earrings, "
+        "a rose pink cardigan over a cream blouse, a plain grey skirt, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "rider": (
+        "a Venezuelan young man in his twenties, slim, bar customer in a Miami neighbourhood "
+        "bar, dark curly hair, a thin beard, "
+        "a mint green delivery windbreaker, dark grey shorts, "
+        "no logo, no pattern, no helmet, no bag, nothing black"),
+    "cleaner": (
+        "a Nicaraguan woman in her forties, medium build, bar customer in a Miami "
+        "neighbourhood bar, dark hair in a ponytail, tired eyes, "
+        "a teal work polo shirt, beige trousers, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "retiree": (
+        "a white man in his seventies, thin and sunburnt, bar customer in a Miami "
+        "neighbourhood bar, a white fishing cap over thin white hair, reading glasses, "
+        "a pale blue polo shirt, khaki shorts, "
+        "no logo, no pattern, nothing black"),
+    "guard": (
+        "a Colombian man in his thirties, tall and broad shouldered, bar customer in a "
+        "Miami neighbourhood bar, short dark hair, clean shaven, "
+        "a light grey security uniform shirt with shoulder tabs, dark olive trousers, "
+        "no logo, no pattern, no hat, nothing black"),
 }
 
 HAND_ANCHOR_NOTE = """\

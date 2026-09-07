@@ -229,6 +229,16 @@
     { "slug": "silverbob",    "name": "Renate Kohler",    "age": 66, "country": "Germany",       "iso": "de" },
     { "slug": "afrowoman",    "name": "Simone Baptiste",  "age": 31, "country": "United States", "iso": "us" },
     { "slug": "eastasianman", "young": true, "name": "Daniel Yoon",      "age": 26, "country": "United States", "iso": "us" },
-    { "slug": "leopard", "young": true,      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" }
+    { "slug": "leopard", "young": true,      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" },
+    { "slug": "guayabera", "name": "Osvaldo Reyes", "age": 64, "country": "United States", "iso": "us" },
+    { "slug": "linecook", "name": "Ramiro Cortés", "age": 36, "country": "United States", "iso": "us" },
+    { "slug": "nurseaide", "name": "Marie Joseph", "age": 34, "country": "United States", "iso": "us" },
+    { "slug": "abuelita", "name": "Carmen Ortiz", "age": 73, "country": "United States", "iso": "us" },
+    { "slug": "busdriver", "name": "Leroy Banks", "age": 55, "country": "United States", "iso": "us" },
+    { "slug": "fisherman", "name": "Desmond Clarke", "age": 44, "country": "United States", "iso": "us" },
+    { "slug": "rider", "name": "Yeferson Mora", "age": 24, "country": "United States", "iso": "us" },
+    { "slug": "cleaner", "name": "Rosa Mendieta", "age": 46, "country": "United States", "iso": "us" },
+    { "slug": "retiree", "name": "Walt Petersen", "age": 72, "country": "United States", "iso": "us" },
+    { "slug": "guard", "name": "Andrés Vargas", "age": 33, "country": "United States", "iso": "us" }
   ]
 }
