@@ -1148,8 +1148,21 @@ namespace LastCall.UI
         // folded towel hangs from two rows above its top so the fold wraps the bar.
         private const float RailArtX = 599f, RailArtTopY = 59f;
         /// <summary>The author's two towels, drawn at the counter's own two units a pixel:
-        /// folded over the rail (45x51) and in the hand (30x54).</summary>
+        /// folded over the rail (45x51) and in the hand (30x54). The rect is the drawing at
+        /// 2x and nothing more — see the note in BuildCloth about the alpha hit test, which
+        /// samples across the rect it is handed rather than across the drawn picture.</summary>
         private static readonly Vector2 TowelRestSize = new Vector2(90f, 102f), TowelHeldSize = new Vector2(60f, 108f);
+
+        /// <summary>Sizes the cloth's rect to the sprite it is wearing, at two units an art
+        /// pixel, so the picture fills the rect exactly. Anything else and the hit test
+        /// answers off the drawing (2026-09-07).</summary>
+        private void FitCloth(Sprite art, Vector2 fallback)
+        {
+            if (_clothRt == null) return;
+            _clothRt.sizeDelta = art != null
+                ? new Vector2(art.rect.width * 2f, art.rect.height * 2f)
+                : fallback;
+        }
         private RectTransform _clothRt;
         private Image _clothImg;
         private bool _clothHeld;
@@ -1197,11 +1210,18 @@ namespace LastCall.UI
             _clothImg = _clothRt.gameObject.AddComponent<Image>();
             _clothImg.sprite = ItemArt.Load("towel_on_bar") ?? ChromeArt.Cloth();
             _clothImg.preserveAspect = true;
-            // HIT BY ITS OWN PICTURE (2026-09-07, the author: "cloth'un hitbox'unu
-            // towel_on_bar görseline göre ayarla"): the pointer is on the towel where the
-            // towel is drawn, not in the transparent corners of its rect. The Items
-            // importer keeps these textures readable, which is what this needs.
-            try { _clothImg.alphaHitTestMinimumThreshold = 0.5f; } catch (System.Exception) { }
+            FitCloth(_clothImg.sprite, TowelRestSize);
+            // HIT BY ITS OWN PICTURE (2026-09-07, the author: "cloth çok büyük bir bölgeye
+            // sahip, hitbox'ını görselin boyutuyla orantıla").
+            //
+            // THE RECT IS THE DRAWING, and that is the half that was missing. An alpha hit
+            // test samples the sprite across the rect it is GIVEN — it knows nothing about
+            // preserveAspect's letterboxing — so a rect wider than the drawing maps the
+            // towel's alpha onto a box the towel does not fill, and the pointer answers in
+            // the air beside it. TowelSize is the art at exactly 2x (45x51 and 30x54 art
+            // px), so the rect and the picture are the same rectangle and the threshold
+            // then trims the transparent corners honestly.
+            _clothImg.alphaHitTestMinimumThreshold = 0.5f;
             var glow = _clothRt.gameObject.AddComponent<HoverGlow>();
             glow.Graphics = new Graphic[] { _clothImg };
             glow.Rise = 4f; glow.Sway = 1.4f; glow.Grow = 1.07f;
@@ -1283,7 +1303,7 @@ namespace LastCall.UI
             // In the hand it is the loose towel (the author's towel.png), and its BODY is
             // the rag the marks are rubbed with — Rub walks the rect's own corners.
             var towelHeld = ItemArt.Load("towel");
-            if (towelHeld != null) { _clothImg.sprite = towelHeld; _clothRt.sizeDelta = TowelHeldSize; }
+            if (towelHeld != null) { _clothImg.sprite = towelHeld; FitCloth(towelHeld, TowelHeldSize); }
             _clothRt.localScale = Vector3.one;
             // Taken by the corner it was taken by.
             _clothGrabOffset = Vector2.zero;
@@ -1300,7 +1320,7 @@ namespace LastCall.UI
             _clothHeld = false;
             // Back on the rail, folded.
             var rest = ItemArt.Load("towel_on_bar");
-            if (rest != null) { _clothImg.sprite = rest; _clothRt.sizeDelta = TowelRestSize; }
+            if (rest != null) { _clothImg.sprite = rest; FitCloth(rest, TowelRestSize); }
             _clothRt.localScale = Vector3.one;
             Sfx.Play("dish_down", 0.45f);
         }
@@ -3274,24 +3294,21 @@ namespace LastCall.UI
                     {
                         view.WasKnown = true;
                         view.SpeakFrom = Time.unscaledTime;
-                        view.OrderVoiced = false;
                     }
                     string wanted = known ? visit.Order.Wanted.Name.ToUpperInvariant() : "";
                     int said = Motion.Reduced ? wanted.Length
                         : Mathf.Clamp(Mathf.FloorToInt((Time.unscaledTime - view.SpeakFrom) * SpeakCps),
                                       0, wanted.Length);
                     view.Spoken = said >= wanted.Length;
-                    // THE ORDER IN THEIR OWN WORDS (2026-09-07): once the ticket has finished
-                    // typing the drink, the drinker says it the way they say things — one
-                    // balloon, once, and only for an order the card has already given up
-                    // (`known`), so nothing is said before it may be read. The guest of the
-                    // house names her drink on the plate and not here.
-                    if (view.Spoken && known && !view.OrderVoiced && !visit.OnTheHouse
-                        && (view.SayLines == null || view.SayLines.Count == 0))
-                    {
-                        view.OrderVoiced = true;
-                        SayIt(view, VoiceLine(visit, VoiceCue.Order, visit.Order.Wanted.Name));
-                    }
+                    // (THE ORDER'S BALLOON IS GONE, 2026-09-07, the author: "müşteriler
+                    // içkiyi içmeden önce sipariş verirken konuşma balonları çıkıyor,
+                    // çıkmamalı; kokteyli teslim aldıktan sonra her yudumlarında çıkmalı".
+                    // It said the drink a second time — the ticket over their head is
+                    // already typing it out letter by letter — and it put a balloon up
+                    // during the one stretch the player is reading tickets and pouring.
+                    // The balloon belongs to the DRINK now and to nothing else: one line a
+                    // sip, over a glass already handed across. The voice's Order lines stay
+                    // in voices.json; VoiceCue.Order is simply not asked for on the floor.)
 
                     if (drinking)
                     {

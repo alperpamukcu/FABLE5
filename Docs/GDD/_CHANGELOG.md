@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The twelfth list (2026-09-07):** a hundred-strong customer directory that decides every
+  person once and tracks what is drawn; the cast re-cast for a night club, eleven uniformed or
+  elderly patrons retired; reactions written as people (five ways to be pleased, five to be
+  put out, a raised finger to order); the walk drawn as two halves so the cycle closes; the
+  towel hit by its own picture; the order balloon gone. GDD_MEVCUT §9.42.
+
 - **The cast preview (2026-09-07):** LastCall > Patron Preview plays every patron's every clip
   at the game's own rate, with a frame strip, a whole-cast contact mode and an ink check;
   Tools/patron_sheet.py builds the same thing as a browser page that can be sent.

@@ -374,93 +374,312 @@ FIGURE_OPTIONS = {
         "plain dark teal trousers, "
         "no logo, no pattern, no bag, no hat, no apron, nothing black"),
 
-    # -- the tenth list (2026-09-07): "yeni 10 karakter ekle, bunlar biraz daha dusuk
-    # profil bara giden insanlar olsun, etnik kokene dikkat et, sanat olarak heavyset'e
-    # benzesin". Ten working people of a Miami neighbourhood bar: the ones who come in
-    # after a shift rather than for a scene. Same rules as the rest of the cast - flat
-    # colour, nothing black, one plain garment carrying the chroma, no logo or pattern.
-    "guayabera": (
-        "an older Cuban man in his sixties, lean and a little stooped, bar customer in a "
-        "Miami neighbourhood bar, white-grey hair combed back, a grey moustache, "
-        "a pale yellow short sleeved guayabera shirt, tan trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-    "nurseaide": (
-        "a Haitian woman in her thirties, dark brown skin, medium build, bar customer in a "
-        "Miami neighbourhood bar, hair in a low bun, small stud earrings, "
-        "a lavender scrubs top, plain grey trousers, "
+    # ==== GENERATED FROM THE ROSTER - do not edit by hand (patron_brief.py) ====
+    # One entry per person in Assets/Data/customers/roster.json, in that file's
+    # order. The roster is the decision - name, age, country, dress, look - and this
+    # is only its sentence for create_character. Re-run patron_brief.py after editing
+    # the roster; anything above the marker is hand written and is left alone.
+    "clubgirl": (
+        "a young woman in her twenties, slim and short, dark brown hair in a high ponytail, hoop earrings, a cropped magenta halter top, high-waisted black trousers, a customer in a Miami night club, dressed up for the night, "
         "no logo, no pattern, no bag, no hat, nothing black"),
-    "linecook": (
-        "a Mexican man in his thirties, stocky and short, bar customer in a Miami "
-        "neighbourhood bar, short dark hair under a plain red bandana, a thin moustache, "
-        "a plain white cook's t-shirt with a cream apron tied at the waist, dark blue trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-    "busdriver": (
-        "a Black man in his fifties, broad and heavy, bar customer in a Miami neighbourhood "
-        "bar, close cropped grey hair, a grey goatee, "
-        "a sky blue short sleeved uniform shirt, navy trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-    "fisherman": (
-        "a Jamaican man in his forties, wiry and weathered, bar customer in a Miami "
-        "neighbourhood bar, short locs tied back, "
-        "a faded orange t-shirt, rolled khaki trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-    "abuelita": (
-        "a Puerto Rican grandmother in her seventies, short and round, bar customer in a "
-        "Miami neighbourhood bar, silver curls, small gold earrings, "
-        "a rose pink cardigan over a cream blouse, a plain grey skirt, "
+    "silkwoman": (
+        "a tall woman in her thirties, slim and elegant, black hair loose to the shoulders with a centre parting, gold hoop earrings, a turquoise satin slip dress with thin straps, a customer in a Miami night club, dressed up for the night, "
         "no logo, no pattern, no bag, no hat, nothing black"),
-    "rider": (
-        "a Venezuelan young man in his twenties, slim, bar customer in a Miami neighbourhood "
-        "bar, dark curly hair, a thin beard, "
-        "a mint green delivery windbreaker, dark grey shorts, "
-        "no logo, no pattern, no helmet, no bag, nothing black"),
-    "cleaner": (
-        "a Nicaraguan woman in her forties, medium build, bar customer in a Miami "
-        "neighbourhood bar, dark hair in a ponytail, tired eyes, "
-        "a teal work polo shirt, beige trousers, "
+    "pastelman": (
+        "a slim young man in his twenties, tall and narrow, short curly dark hair, clean shaven, a thin gold chain, an open pale coral short sleeved shirt over a white vest, cream trousers, a customer in a Miami bar, in relaxed street clothes, "
         "no logo, no pattern, no bag, no hat, nothing black"),
-    "retiree": (
-        "a white man in his seventies, thin and sunburnt, bar customer in a Miami "
-        "neighbourhood bar, a white fishing cap over thin white hair, reading glasses, "
-        "a pale blue polo shirt, khaki shorts, "
-        "no logo, no pattern, nothing black"),
-    "guard": (
-        "a Colombian man in his thirties, tall and broad shouldered, bar customer in a "
-        "Miami neighbourhood bar, short dark hair, clean shaven, "
-        "a light grey security uniform shirt with shoulder tabs, dark olive trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-
-    # -- the eleventh list (2026-09-07): "5 adet daha karakter uret ... hepsi Japon olsun,
-    # yaslari 50'yi gecmemeli ... stili pastelman'e benzesin, 1 karakter Tokyo Drift
-    # karakterlerine benzesin". Five young Japanese customers in the pastelman language:
-    # slim builds, one pastel garment each, clean lines, nothing black (hair is very dark
-    # brown, not black, for the same reason the whole cast's is).
+    "shaved": (
+        "a stocky man in his thirties, heavy shoulders and thick arms, shaved head, dark stubble, a plain white sleeveless vest, dark grey trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "afrowoman": (
+        "a Black woman in her forties, warm dark brown skin, tall and full-figured, a short natural afro, large gold hoop earrings, a burnt orange wrap blouse, cream wide-legged trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "eastasianman": (
+        "an East Asian man in his thirties, slim and neat, straight black hair swept back, clean shaven, thin silver-framed glasses, a pale mint short sleeved t-shirt, light grey trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "leopard": (
+        "a woman in her twenties with almond eyes and pink lipstick, dark curly hair gathered up in a bun, large hoop earrings, an off-the-shoulder blouse in a soft tan leopard print with warm brown spots and, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
     "driftgirl": (
-        "a young Japanese woman in her early twenties, slim and long limbed, bar customer "
-        "in a Miami club, long straight light brown hair past the shoulders with a centre "
-        "parting, small silver hoop earrings, a lilac cropped tank top with a thin red "
-        "trim, low rise dark blue jeans, a street racing night look, "
+        "a young Japanese woman in her early twenties, slim and long limbed, long straight light brown hair past the shoulders with a centre parting, small silver hoop earrings, a lilac cropped tank top with a thin red trim, low rise dark blue jeans, a street racing night look, a customer in a Miami bar, in relaxed street clothes, "
         "no logo, no pattern, no bag, no hat, nothing black"),
     "racerboy": (
-        "a Japanese man in his twenties, slim and narrow, bar customer in a Miami club, "
-        "short spiky very dark brown hair with bleached tips, clean shaven, "
-        "a pale orange bomber jacket over a white t-shirt, dark grey trousers, "
-        "no logo, no pattern, no hat, nothing black"),
-    "salaryman": (
-        "a Japanese man in his thirties, slim, bar customer in a Miami club, neat short "
-        "very dark brown hair, thin rimmed glasses, "
-        "a pale pink short sleeved shirt with a loosened grey tie, grey trousers, "
-        "no logo, no pattern, no hat, no jacket, nothing black"),
-    "harajuku": (
-        "a petite Japanese woman in her twenties, bar customer in a Miami club, a very dark "
-        "brown bob with straight bangs, small round earrings, "
-        "a mint green pastel hoodie dress, white sneakers, "
+        "a Japanese man in his twenties, slim and narrow, short spiky very dark brown hair with bleached tips, clean shaven, a pale orange bomber jacket over a white t-shirt, dark grey trousers, a customer in a Miami bar, in relaxed street clothes, "
         "no logo, no pattern, no bag, no hat, nothing black"),
-    "mechanic": (
-        "a lean Japanese man in his forties, bar customer in a Miami club, cropped very "
-        "dark brown hair with grey at the temples, a short goatee, "
-        "a sky blue work jumpsuit tied at the waist over a white vest, "
-        "no logo, no pattern, no hat, no cap, nothing black"),
+    "salaryman": (
+        "a Japanese man in his thirties, slim, neat short very dark brown hair, thin rimmed glasses, a pale pink short sleeved shirt with a loosened grey tie, grey trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "harajuku": (
+        "a petite Japanese woman in her twenties, a very dark brown bob with straight bangs, small round earrings, a mint green pastel hoodie dress, white sneakers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "guard": (
+        "a Colombian man in his thirties, tall and broad shouldered, short dark hair, clean shaven, a light grey security uniform shirt with shoulder tabs, dark olive trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "rider": (
+        "a Venezuelan young man in his twenties, slim, dark curly hair, a thin beard, a mint green delivery windbreaker, dark grey shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "atelier": (
+        "a young French woman, slim, dark blonde hair in a low chignon, small gold studs, a cream silk blouse tucked into wide navy trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "barista": (
+        "a young Italian man, lean, dark wavy hair, light stubble, a sage green short sleeved shirt open over a white tee, stone chinos, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "archivist": (
+        "a German man in his early thirties, tall and slight, cropped light brown hair, thin steel glasses, a pale grey oxford shirt with the sleeves rolled, charcoal trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "gallerist": (
+        "an Italian woman in her thirties, dark hair in a blunt shoulder bob, red lipstick, a rust orange satin blouse and dark wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "trainee": (
+        "a young Swedish woman, fair hair in a ponytail, a pale blue shirt under a soft grey knit vest, navy trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "skater": (
+        "a young Dutch man, tall and narrow, sandy hair under a cream beanie, an oversized butter yellow hoodie and loose grey jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "florist": (
+        "a young Polish woman, auburn hair loose, freckles, a dusty pink cardigan over a white tee and light denim, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "junior": (
+        "a young Portuguese man, dark curls kept short, clean shaven, a white shirt with the sleeves rolled and a slate blue tie loosened, grey trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "busker": (
+        "a young Irish woman, red hair in two braids, a mustard corduroy jacket over a striped tee and dark jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "couriereu": (
+        "a Romanian man in his late twenties, close cropped dark hair, a teal quilted jacket over a plain grey tee, dark jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "tokyodj": (
+        "a young Japanese man, undercut with a bleached fringe, a shiny silver bomber over a white tee, dark slim trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "idoljp": (
+        "a petite Japanese woman, dark hair in space buns with pink clips, a cropped white puffer over a pastel blue slip dress, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "shanghai": (
+        "a young Chinese man, neat black hair, a stone grey shirt buttoned to the collar, black-free charcoal trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "chengdu": (
+        "a young Chinese woman, dark hair in a high ponytail, an oversized cream sweatshirt and wide light jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "canton": (
+        "a Chinese man in his late twenties, side-parted dark hair, a deep red silk shirt open at the collar, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "beijing": (
+        "a young Chinese woman, blunt bob with a gold clip, an emerald green halter top and dark trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "seoulboy": (
+        "a young Korean man, soft layered dark hair, an oversized pale grey hoodie under a denim jacket, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "seoulgirl": (
+        "a young Korean woman, long straight hair with a centre parting, a cropped black-free navy corset top and a mini skirt, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "kdance": (
+        "a Korean man in his mid twenties, undercut with a wolf cut, a boxy white tee and loose cargo trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "kstudent": (
+        "a young Korean woman, shoulder-length brown hair, a butter yellow sweatshirt and pleated skirt, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "londongirl": (
+        "a young British woman, blonde hair in a slick bun, gold hoops, a chocolate brown satin cami and low-rise jeans, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "mancboy": (
+        "a British man in his late twenties, buzzed hair, a navy quarter-zip over a white tee, dark jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "analyst": (
+        "a British man in his late twenties, neat fair hair, a blue oxford shirt and grey trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "bristol": (
+        "a young Black British woman, braids in a high bun, an oversized rust hoodie and wide jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "berlin": (
+        "a young German woman, short pink-tipped brown hair, a mesh-free grey crop top and wide leather-look trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "teacherde": (
+        "a German man in his thirties, neat brown hair, a pale olive shirt and dark chinos, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "hamburg": (
+        "a young German woman, ash blonde shag cut, a washed denim jacket over a white ribbed top, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "munich": (
+        "a young German man, curly brown hair, a forest green hoodie under a tan corduroy jacket, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "milano": (
+        "a young Italian woman, long dark waves, a bronze slip dress and gold jewellery, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "roma": (
+        "an Italian man in his late twenties, stubble, a cream linen shirt half-buttoned, tan trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "istanbul": (
+        "a young Turkish woman, dark hair loose with a middle parting, a rust satin blouse and dark trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "kadikoy": (
+        "a Turkish man in his late twenties, dark curls, a plain white tee under an open charcoal-free grey overshirt, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "izmir": (
+        "a young Turkish woman, dark hair in a high ponytail, a burgundy halter top and wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "ankara": (
+        "a young Turkish man, short beard, a navy sweatshirt and light jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "madrid": (
+        "a young Spanish woman, dark hair in beach waves, a scarlet halter dress, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "barcelona": (
+        "a young Spanish man, dark tousled hair, a striped ecru tee and loose beige trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "sevilla": (
+        "a young Spanish woman, curly dark hair, a cropped denim jacket over a white top, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "bilbao": (
+        "a Spanish man in his late twenties, short dark hair, a slate blue shirt with the sleeves rolled, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "sydney": (
+        "a young Australian woman, sun-lightened long hair, a white cut-out top and tan trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "melbourne": (
+        "an Australian man in his late twenties, sandy hair, a faded navy tee and olive shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "perth": (
+        "a young Australian woman, freckles, a pale green cropped hoodie and wide jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "brisbane": (
+        "a young Australian man, curly blond hair, an open teal shirt over a white vest, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "oslo": (
+        "a young Norwegian man, long fair hair tied back, a faded green flannel over a white tee, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "copenhagen": (
+        "a young Danish woman, ash blonde crop, a stone linen shirt and wide trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "helsinki": (
+        "a young Finnish woman, pale blonde hair in a low bun, an oversized grey sweatshirt and wide jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "beirut": (
+        "a young Lebanese man, dark hair styled back, a deep navy silk shirt open at the collar, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "cairo": (
+        "a young Egyptian woman, dark hair loose to the shoulders, a cream blouse and wide caramel trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "dubai": (
+        "a young Emirati man, short dark hair and a trimmed beard, a charcoal-free slate shirt and dark trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "amman": (
+        "a young Jordanian woman, dark curls, an oversized sand hoodie and light jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "lagos": (
+        "a young Nigerian man, short fade, a patterned-free emerald silk shirt and dark trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "accra": (
+        "a young Ghanaian woman, braids piled high, a gold satin wrap top and wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "nairobi": (
+        "a young Kenyan woman, short natural hair, an oversized terracotta sweatshirt and jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "joburg": (
+        "a South African man in his late twenties, short locs, a washed blue denim jacket over a white tee, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "casablanca": (
+        "a young Moroccan man, dark wavy hair, a sage linen shirt and stone trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "mumbai": (
+        "a young Indian man, thick dark hair, a pale blue shirt with the sleeves rolled, dark trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "delhi": (
+        "a young Indian woman, long dark hair, gold jhumka earrings, a wine satin cami and wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "bangkok": (
+        "a young Thai man, dark hair with a bleached streak, an oversized white tee and cargo shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "manila": (
+        "a young Filipina woman, long dark hair, a lilac corset top and dark jeans, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "jakarta": (
+        "a young Indonesian man, short dark hair, a khaki utility jacket over a white tee, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "cubanmiami": (
+        "a young Cuban-American man, faded haircut, a white open shirt over a gold chain and a vest, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "venezmiami": (
+        "a young Venezuelan-American woman, long dark waves, a hot pink halter top and dark jeans, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "colombmiami": (
+        "a young Colombian-American man, dark hair, a cream knit polo and beige trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "haitimiami": (
+        "a young Haitian-American woman, braids to the waist, a turquoise cut-out dress, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "brazilmiami": (
+        "a young Brazilian-American woman, curly dark hair, a lime green crop top and white trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "dominmiami": (
+        "a young Dominican-American man, tapered cut, a striped polo and dark shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "prmiami": (
+        "a young Puerto Rican-American woman, long waves, a lime satin slip top and wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "mexmiami": (
+        "a young Mexican-American man, dark hair pushed back, a burnt orange hoodie and jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "argmiami": (
+        "a young Argentine-American woman, dark bob, a camel blazer over a white top, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "perumiami": (
+        "a young Peruvian-American man, straight dark hair, a grey zip hoodie and cargo trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "paralegal": (
+        "a Black woman in her late twenties, box braids tied back, a sand blazer over a white shell top, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "realtor": (
+        "a Latino man in his thirties, slicked dark hair, a pale blue shirt with no tie, navy trousers, a customer in a Miami bar, in smart casual clothes after work, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "lifeguard": (
+        "a young man, sun-bleached hair, a red tank top and board shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "tattooist": (
+        "a Latina woman in her late twenties, dark hair shaved at one side, a cropped grey tee and wide jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "dj": (
+        "a young Latino man, faded haircut, a magenta open shirt over a white vest, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "photographer": (
+        "a Korean-American woman in her thirties, straight bob, an olive utility jacket over a white tee, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "runner": (
+        "a young Black woman, hair in a high puff, a coral cropped sweatshirt and joggers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "stylist": (
+        "a young Latina woman, long waves, a silver sequined top and wide trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "singer": (
+        "a Chinese-American woman in her late twenties, long straight hair, a silver slip dress, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "coder": (
+        "a young man, messy brown hair, a charcoal-free grey zip hoodie and jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "student": (
+        "a young woman, blonde hair in a claw clip, an oversized college sweatshirt and shorts, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "inked": (
+        "a tattooed person in their thirties, shaved sides, a sleeveless white tee and dark jeans, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "gothgirl": (
+        "a young woman, dyed deep purple hair, a lace-trimmed plum slip dress, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "violet": (
+        "a young woman, platinum hair, a violet mini dress and silver hoops, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "teal": (
+        "a young woman, teal-dyed shoulder hair, a cropped tee and cargo trousers, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "ember": (
+        "a woman in her late twenties, copper red hair, a black-free charcoal satin cami and leather-look trousers, a customer in a Miami night club, dressed up for the night, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "bouncerless": (
+        "a broad Black man in his thirties, short fade, a fitted navy tee and dark jeans, out for the night, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    "nyctransplant": (
+        "a young Italian-American man, dark curls, a grey hoodie under a bomber jacket, a customer in a Miami bar, in relaxed street clothes, "
+        "no logo, no pattern, no bag, no hat, nothing black"),
+    # ==== end generated ====
 }
 
 HAND_ANCHOR_NOTE = """\

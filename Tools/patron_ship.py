@@ -115,7 +115,10 @@ SHIP = {
     # frame 0, which is the pose every clip actually opens on. So a new face is shipped
     # twice, and the second shipping is what makes the joins vanish.
     'idle': (('order_a', 'still'), False, 'first', False),
-    'walk': ('walk', True, None, False),
+    # Two halves, joined at the junction frame, exactly as the one-shots are: a right step
+    # and a left step make one cycle that ends where it began (2026-09-07). Falls back to a
+    # single 'walk' group for the cast generated before the split.
+    'walk': ((['walk_a', 'walk_b'], 'walk'), True, None, False),
     'look_right': ('look_right', True, None, True),
     'look_left': ('look_left', True, None, True),
     'order': (['order_a', 'order_b'], True, None, True),
@@ -174,8 +177,14 @@ def ship(slug):
     idle_frame = None
     for folder, (source, lock, pick, anchor) in SHIP.items():
         if isinstance(source, tuple):
-            # first source that exists wins - see the bootstrap note on 'idle'
-            source = next((n for n in source if n == 'still' or groups.get(n)), source[-1])
+            # First source that exists wins - see the bootstrap note on 'idle'. An entry may
+            # itself be a LIST of halves (the walk since 2026-09-07): it counts as existing
+            # only when every half is in the zip.
+            def has(n):
+                if isinstance(n, list):
+                    return all(groups.get(part) for part in n)
+                return n == 'still' or groups.get(n)
+            source = next((n for n in source if has(n)), source[-1])
         if source == 'still':
             frames = [still]
         elif isinstance(source, list):
@@ -210,6 +219,35 @@ def ship(slug):
             head_y = patron_gen.bbox(stood[0])[1]
             idle_frame = stood[0]
             patron_gen.make_face(slug, stood[0])
+
+    # NO BLACK KEYLINE, EVER (2026-09-07, the author: "kesinlikle siyah kontras olmamali,
+    # natural kontras olmali"). The model draws one whatever the prompt says - measured
+    # across three rounds of casting - so the fix is not another take, it is this pass: every
+    # near-black pixel becomes the colour of its neighbours, darkened. Run here rather than
+    # by hand because a shipped patron that skipped it is a black outline in the room, and
+    # nobody sees it until the author does.
+    import patron_ink
+    inked = 0
+    for folder in SHIP:
+        d = os.path.join(PATRON, slug, folder)
+        if not os.path.isdir(d):
+            continue
+        for name in sorted(os.listdir(d)):
+            if not name.endswith('.png'):
+                continue
+            f = os.path.join(d, name)
+            im = Image.open(f).convert('RGBA')
+            n = patron_ink.reink(im)
+            if n:
+                im.save(f)
+                inked += n
+    face = os.path.join(PATRON, slug, 'face.png')
+    if os.path.exists(face):
+        im = Image.open(face).convert('RGBA')
+        if patron_ink.reink(im):
+            im.save(face)
+    if inked:
+        print('  %-12s re-inked %d black pixels' % ('ink', inked))
 
     # The hold frame for each glance, measured off the shipped frames rather than the raw
     # ones so the number belongs to what the game will actually play.

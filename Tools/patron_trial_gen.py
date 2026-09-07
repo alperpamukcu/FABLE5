@@ -206,7 +206,8 @@ KEPT = ('clubgirl', 'heavyset')
 # Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
 # stills first and animations only after approval, every time - so a new face is queued
 # here, judged, and only then added to KEPT and given clips.
-TRYING = ('driftgirl', 'racerboy', 'salaryman', 'harajuku', 'mechanic')   # the eleventh list, 2026-09-07
+TRYING = ('atelier', 'barista', 'archivist', 'gallerist', 'trainee',
+          'skater', 'florist', 'junior', 'busker', 'couriereu')   # the twelfth list, 2026-09-07
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
@@ -241,9 +242,16 @@ CLIPS = {
     'upset_a': dict(directions=['south'], frames=8, start='idle'),
     'upset_b': dict(directions=['south'], frames=8, start=('upset_a', 'last'), end=('upset_a', 'first')),
 
-    # The walk is a CYCLE, not a one-shot: it already ends where it begins, by being a
-    # loop. West, because the walk-in crosses the room right to left.
-    'walk': dict(directions=['west'], frames=8),
+    # THE WALK IS TWO HALVES TOO, AND IT CLOSES (2026-09-07, the author: "walk
+    # animasyonunda hepsinde problem var, son frame ile ilk frame arasinda kesinti
+    # oluyor"). Measured: neighbouring frames of the old 9-frame walk differ by ~5,000
+    # pixels and the wrap from last to first by ~7,300 - a whole missing in-between,
+    # because eight frames were being asked to carry a two-step cycle. So the cycle is
+    # drawn as the one-shots are: half A is the RIGHT step, half B is the LEFT step
+    # interpolated back to A's first frame, which is what makes the loop close. 17 frames
+    # at 12fps is 1.4s a cycle, which is a calm walk.
+    'walk_a': dict(directions=['west'], frames=8),
+    'walk_b': dict(directions=['west'], frames=8, start=('walk_a', 'last'), end=('walk_a', 'first')),
 }
 FRAMES = 8
 
@@ -312,8 +320,14 @@ CUSTOM = {
     'upset_b': ('settling back from the frown, the head comes level and forward again, '
                 'still unhappy, the arms stay down, ' + CALM),
 
-    'walk': ('walking forward with small short steps at a calm unhurried pace, '
-             'the feet stay close to the ground, the arms swing very little, ' + CALM),
+    # ONE STEP EACH, named by which leg, so the two halves are a cycle rather than two
+    # takes of the same motion.
+    'walk_a': ('walking forward, taking ONE step with the RIGHT leg: the right foot lifts, '
+               'swings forward and plants, while the left foot stays behind, the arms swing '
+               'a little in opposition, ' + CALM),
+    'walk_b': ('continuing the walk, taking ONE step with the LEFT leg: the left foot lifts, '
+               'swings forward and plants, returning to the standing pose the walk began '
+               'from, the arms swing a little in opposition, ' + CALM),
 }
 
 # DIFFERENT WAYS OF BEING ANNOYED (2026-09-07, the author: "sinirlenme animasyonunda ...
@@ -346,11 +360,162 @@ UPSET_STYLES = {
              ('the right hand drops back to the side and the head turns forward again, '
               'still frowning, ' + CALM)),
 }
+# READ AT SIXTY PIXELS OF HEAD (2026-09-07). CALM above is what the walk and the glances are
+# drawn under - a person crossing a room does not perform. A REACTION is the opposite job: it
+# is the one moment the customer answers the player, and it has to carry from across the
+# screen. So the reactions are written large: the whole body takes part, the face changes,
+# and the gesture is one a real person makes when a drink lands well or badly.
+BIG = ('a clear readable gesture, the whole upper body takes part, expressive but human, '
+       'not a cartoon, no props, no objects')
+
+# ── five ways to be pleased (2026-09-07) ────────────────────────────────────
+# The author's own list: "basparmak kaldirabilir, ellerini havaya kaldirabilir, seni parmakla
+# gosterip kafa sallayabilir, gulumseyebilir, sevinip kahkaha atabilir".
+CHEER_STYLES = {
+    'thumb': (('a delighted reaction: a broad smile spreads, the right hand comes up in front '
+               'of the chest with the THUMB UP, the head nods once, the eyebrows lift, ' + BIG),
+              ('the thumb-up hand lowers back to the side, the smile settles into a pleased '
+               'half smile, the head comes level, ' + BIG)),
+    'hands': (('a delighted reaction: both arms lift up and out beside the head, palms open, '
+               'the head tilts back a little, the mouth opens in a happy shout, ' + BIG),
+              ('both arms come down again to the sides, the head levels, still smiling '
+               'broadly, ' + BIG)),
+    'point': (('a delighted reaction: the right hand comes up and POINTS FORWARD at the person '
+               'opposite, the head nods twice in approval, a wide grin, the eyebrows raised, ' + BIG),
+              ('the pointing hand drops back to the side and the nodding stops, the grin eases '
+               'into a warm smile, ' + BIG)),
+    'smile': (('a quietly delighted reaction: a slow warm smile spreads across the face, the '
+               'eyes narrow with it, the head tips slightly to one side, the shoulders relax, '
+               'the arms stay down, ' + BIG),
+              ('the smile softens and the head comes upright again, still clearly pleased, ' + BIG)),
+    'laugh': (('a delighted reaction: the head tips back and the mouth opens in a real laugh, '
+               'the shoulders shake with it, one hand comes up towards the chest, ' + BIG),
+              ('the laugh subsides, the head comes forward and level again, the hand lowers, '
+               'a grin remaining, ' + BIG)),
+}
+CHEER_OF = {
+    'accra': 'smile', 'afrowoman': 'laugh', 'amman': 'hands', 'analyst': 'thumb',
+    'ankara': 'hands', 'archivist': 'thumb', 'argmiami': 'thumb', 'atelier': 'smile',
+    'bangkok': 'laugh', 'barcelona': 'smile', 'barista': 'laugh', 'beijing': 'smile',
+    'beirut': 'smile', 'berlin': 'point', 'bilbao': 'thumb', 'bouncerless': 'smile',
+    'brazilmiami': 'hands', 'brisbane': 'laugh', 'bristol': 'hands', 'busker': 'hands',
+    'cairo': 'laugh', 'canton': 'point', 'casablanca': 'hands', 'chengdu': 'hands',
+    'clubgirl': 'thumb', 'coder': 'hands', 'colombmiami': 'laugh', 'copenhagen': 'hands',
+    'couriereu': 'point', 'cubanmiami': 'point', 'delhi': 'smile', 'dj': 'hands',
+    'dominmiami': 'point', 'driftgirl': 'point', 'dubai': 'thumb', 'eastasianman': 'thumb',
+    'ember': 'point', 'florist': 'laugh', 'gallerist': 'hands', 'gothgirl': 'laugh',
+    'guard': 'hands', 'haitimiami': 'thumb', 'hamburg': 'laugh', 'harajuku': 'thumb',
+    'helsinki': 'point', 'idoljp': 'laugh', 'inked': 'smile', 'istanbul': 'smile',
+    'izmir': 'thumb', 'jakarta': 'hands', 'joburg': 'thumb', 'junior': 'thumb',
+    'kadikoy': 'laugh', 'kdance': 'hands', 'kstudent': 'point', 'lagos': 'point',
+    'leopard': 'hands', 'lifeguard': 'laugh', 'londongirl': 'smile', 'madrid': 'point',
+    'mancboy': 'laugh', 'manila': 'thumb', 'melbourne': 'point', 'mexmiami': 'laugh',
+    'milano': 'hands', 'mumbai': 'point', 'munich': 'thumb', 'nairobi': 'laugh',
+    'nyctransplant': 'laugh', 'oslo': 'thumb', 'paralegal': 'point', 'pastelman': 'point',
+    'perth': 'smile', 'perumiami': 'hands', 'photographer': 'point', 'prmiami': 'smile',
+    'racerboy': 'smile', 'realtor': 'smile', 'rider': 'point', 'roma': 'point',
+    'runner': 'smile', 'salaryman': 'laugh', 'seoulboy': 'laugh', 'seoulgirl': 'thumb',
+    'sevilla': 'laugh', 'shanghai': 'thumb', 'shaved': 'smile', 'silkwoman': 'hands',
+    'singer': 'thumb', 'skater': 'smile', 'student': 'point', 'stylist': 'laugh',
+    'sydney': 'hands', 'tattooist': 'thumb', 'teacherde': 'smile', 'teal': 'hands',
+    'tokyodj': 'smile', 'trainee': 'point', 'venezmiami': 'smile', 'violet': 'thumb',
+}
+
+# ── and the displeasure, bigger (2026-09-07) ────────────────────────────────
+# The same five moods the tenth list gave them, rewritten as theatre rather than restraint:
+# a real person sending a drink back is not subtle about it.
+UPSET_BIG = {
+    'shake': (('a displeased reaction: the brows pull hard together, the head shakes slowly '
+               'from side to side three times, the chin drops, the mouth turns down, ' + BIG),
+              ('the head shakes stop and come level, the frown remains, the shoulders stay '
+               'dropped, ' + BIG)),
+    'arms': (('a displeased reaction: the mouth sets hard, both arms come up and FOLD ACROSS '
+              'THE CHEST, the chin lifts, the head turns a little to the side, ' + BIG),
+             ('the folded arms come down again to the sides and the head turns back to the '
+              'front, still unimpressed, ' + BIG)),
+    'sigh': (('a weary displeased reaction: the eyes close, the head drops forward, a heavy '
+              'sigh empties the chest and the shoulders slump right down, one hand comes up '
+              'to the forehead, ' + BIG),
+             ('the hand lowers, the head lifts again and the eyes open, the shoulders come '
+              'part way back up, still unhappy, ' + BIG)),
+    'glare': (('a displeased reaction: the brows knit tight, the jaw sets, the head lowers and '
+               'tilts forward into a hard stare straight ahead, the shoulders square, ' + BIG),
+              ('the stare eases, the head comes level and the brows relax a little, the face '
+               'still cold, ' + BIG)),
+    'wave': (('a dismissive displeased reaction: the face sours, the right hand lifts and '
+              'WAVES THE THING AWAY twice, the head turns aside and the eyes roll, ' + BIG),
+             ('the hand drops back to the side and the head turns forward again, the mouth '
+              'still turned down, ' + BIG)),
+}
+
+# ── ordering, with or without a raised finger (2026-09-07) ──────────────────
+# "order animasyonunda parmak kaldirabilirler bazilari" - some, not all.
+ORDER_STYLES = {
+    'finger': (('beginning to order: the RIGHT INDEX FINGER lifts to about shoulder height to '
+                'catch attention, the head lifts and tilts towards the listener, the mouth '
+                'opens to speak, ' + BIG),
+               ('finishing the order: the raised hand lowers back to the side, the mouth '
+                'closes, the head comes level again, ' + BIG)),
+    'speak': (('beginning to speak, the mouth opens and the head lifts and tilts slightly '
+               'towards the listener, the chin comes up a little, the arms stay down at the '
+               'sides and do not gesture, ' + CALM),
+              ('finishing the sentence and settling, the mouth closes, the head comes level '
+               'again and the chin lowers, the arms stay down, ' + CALM)),
+}
+ORDER_OF = {
+    'accra': 'finger', 'afrowoman': 'speak', 'amman': 'speak', 'analyst': 'speak',
+    'ankara': 'speak', 'archivist': 'finger', 'argmiami': 'speak', 'atelier': 'speak',
+    'bangkok': 'finger', 'barcelona': 'finger', 'barista': 'speak', 'beijing': 'speak',
+    'beirut': 'speak', 'berlin': 'speak', 'bilbao': 'speak', 'bouncerless': 'speak',
+    'brazilmiami': 'speak', 'brisbane': 'finger', 'bristol': 'finger', 'busker': 'finger',
+    'cairo': 'speak', 'canton': 'finger', 'casablanca': 'finger', 'chengdu': 'speak',
+    'clubgirl': 'finger', 'coder': 'speak', 'colombmiami': 'speak', 'copenhagen': 'speak',
+    'couriereu': 'speak', 'cubanmiami': 'finger', 'delhi': 'speak', 'dj': 'speak',
+    'dominmiami': 'speak', 'driftgirl': 'speak', 'dubai': 'finger', 'eastasianman': 'speak',
+    'ember': 'speak', 'florist': 'speak', 'gallerist': 'speak', 'gothgirl': 'speak',
+    'guard': 'speak', 'haitimiami': 'finger', 'hamburg': 'finger', 'harajuku': 'speak',
+    'helsinki': 'finger', 'idoljp': 'finger', 'inked': 'finger', 'istanbul': 'speak',
+    'izmir': 'finger', 'jakarta': 'speak', 'joburg': 'speak', 'junior': 'speak',
+    'kadikoy': 'speak', 'kdance': 'speak', 'kstudent': 'speak', 'lagos': 'speak',
+    'leopard': 'finger', 'lifeguard': 'finger', 'londongirl': 'finger', 'madrid': 'speak',
+    'mancboy': 'speak', 'manila': 'speak', 'melbourne': 'speak', 'mexmiami': 'speak',
+    'milano': 'speak', 'mumbai': 'speak', 'munich': 'speak', 'nairobi': 'speak',
+    'nyctransplant': 'finger', 'oslo': 'speak', 'paralegal': 'speak', 'pastelman': 'speak',
+    'perth': 'speak', 'perumiami': 'finger', 'photographer': 'finger', 'prmiami': 'finger',
+    'racerboy': 'speak', 'realtor': 'speak', 'rider': 'finger', 'roma': 'finger',
+    'runner': 'speak', 'salaryman': 'finger', 'seoulboy': 'speak', 'seoulgirl': 'finger',
+    'sevilla': 'speak', 'shanghai': 'speak', 'shaved': 'finger', 'silkwoman': 'speak',
+    'singer': 'finger', 'skater': 'finger', 'student': 'speak', 'stylist': 'speak',
+    'sydney': 'finger', 'tattooist': 'speak', 'teacherde': 'speak', 'teal': 'finger',
+    'tokyodj': 'speak', 'trainee': 'speak', 'venezmiami': 'speak', 'violet': 'speak',
+}
+
 UPSET_OF = {
-    'guayabera': 'wave', 'nurseaide': 'sigh', 'linecook': 'glare', 'busdriver': 'arms',
-    'fisherman': 'shake', 'abuelita': 'sigh', 'rider': 'glare', 'cleaner': 'shake',
-    'retiree': 'wave', 'guard': 'arms',
-    'driftgirl': 'glare', 'racerboy': 'wave', 'salaryman': 'sigh', 'harajuku': 'shake', 'mechanic': 'arms',
+    'accra': 'sigh', 'afrowoman': 'wave', 'amman': 'glare', 'analyst': 'arms',
+    'ankara': 'glare', 'archivist': 'arms', 'argmiami': 'arms', 'atelier': 'sigh',
+    'bangkok': 'wave', 'barcelona': 'sigh', 'barista': 'wave', 'beijing': 'sigh',
+    'beirut': 'sigh', 'berlin': 'shake', 'bilbao': 'arms', 'bouncerless': 'sigh',
+    'brazilmiami': 'glare', 'brisbane': 'wave', 'bristol': 'glare', 'busker': 'glare',
+    'cairo': 'wave', 'canton': 'shake', 'casablanca': 'glare', 'chengdu': 'glare',
+    'clubgirl': 'arms', 'coder': 'glare', 'colombmiami': 'wave', 'copenhagen': 'glare',
+    'couriereu': 'shake', 'cubanmiami': 'shake', 'delhi': 'sigh', 'dj': 'glare',
+    'dominmiami': 'shake', 'driftgirl': 'shake', 'dubai': 'arms', 'eastasianman': 'arms',
+    'ember': 'shake', 'florist': 'wave', 'gallerist': 'glare', 'gothgirl': 'wave',
+    'guard': 'glare', 'haitimiami': 'arms', 'hamburg': 'wave', 'harajuku': 'arms',
+    'helsinki': 'shake', 'idoljp': 'wave', 'inked': 'sigh', 'istanbul': 'sigh',
+    'izmir': 'arms', 'jakarta': 'glare', 'joburg': 'arms', 'junior': 'arms',
+    'kadikoy': 'wave', 'kdance': 'glare', 'kstudent': 'shake', 'lagos': 'shake',
+    'leopard': 'glare', 'lifeguard': 'wave', 'londongirl': 'sigh', 'madrid': 'shake',
+    'mancboy': 'wave', 'manila': 'arms', 'melbourne': 'shake', 'mexmiami': 'wave',
+    'milano': 'glare', 'mumbai': 'shake', 'munich': 'arms', 'nairobi': 'wave',
+    'nyctransplant': 'wave', 'oslo': 'arms', 'paralegal': 'shake', 'pastelman': 'shake',
+    'perth': 'sigh', 'perumiami': 'glare', 'photographer': 'shake', 'prmiami': 'sigh',
+    'racerboy': 'sigh', 'realtor': 'sigh', 'rider': 'shake', 'roma': 'shake',
+    'runner': 'sigh', 'salaryman': 'wave', 'seoulboy': 'wave', 'seoulgirl': 'arms',
+    'sevilla': 'wave', 'shanghai': 'arms', 'shaved': 'sigh', 'silkwoman': 'glare',
+    'singer': 'arms', 'skater': 'sigh', 'student': 'shake', 'stylist': 'wave',
+    'sydney': 'glare', 'tattooist': 'arms', 'teacherde': 'sigh', 'teal': 'glare',
+    'tokyodj': 'sigh', 'trainee': 'shake', 'venezmiami': 'sigh', 'violet': 'arms',
 }
 
 
@@ -691,11 +856,30 @@ def animate(clip, names=None):
                         ai_freedom=0)
         else:
             action = CUSTOM[clip]
-            style = UPSET_OF.get(name)
-            if style and clip in ('upset_a', 'upset_b'):
-                action = UPSET_STYLES[style][0 if clip == 'upset_a' else 1]
+            # A PERSON'S OWN REACTIONS (2026-09-07): the three families that answer the
+            # player are chosen per customer, so a room of twenty does not cheer with one
+            # gesture and frown with one frown. A name with no entry falls back to the
+            # written CUSTOM line, which is what a newly briefed face gets until it is given
+            # a style here.
+            half = 0 if clip.endswith('_a') else 1
+            if clip in ('upset_a', 'upset_b'):
+                style = UPSET_OF.get(name)
+                if style:
+                    action = UPSET_BIG.get(style, UPSET_STYLES[style])[half]
+            elif clip in ('cheer_a', 'cheer_b'):
+                style = CHEER_OF.get(name)
+                if style:
+                    action = CHEER_STYLES[style][half]
+            elif clip in ('order_a', 'order_b'):
+                style = ORDER_OF.get(name)
+                if style:
+                    action = ORDER_STYLES[style][half]
             args.update(mode='v3', frame_count=spec.get('frames', FRAMES),
-                        action_description=action)
+                        action_description=action,
+                        # The seed pose comes back as frame 0 unless this is off, which is
+                        # why an 8-frame request shipped 9 frames and the ninth was a
+                        # near-copy of the first (2026-09-07, measured on the walk).
+                        keep_first_frame=False)
             # Start from another clip's HELD frame rather than from the standing rotation,
             # so a seated customer's arms do not jump back to their sides every time the
             # clip changes. The frame is read off what has already shipped, which means a

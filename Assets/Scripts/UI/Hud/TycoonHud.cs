@@ -465,7 +465,6 @@ namespace LastCall.UI
             // Head rows and hold frames are MEASURED by Tools/patron_ship.py off the
             // shipped frames — never typed by hand, and re-measured whenever the art moves.
             ("clubgirl", 7f, 0f, 4, 6),
-            ("heavyset", 13f, 0f, 5, 5),
             // The second pair, drawn to the same rig and MEASURED into the same bands
             // rather than eyeballed into them (Tools/patron_trial_gen.judge prints all
             // three): head-to-body inside the cast's own 0.112–0.166, silhouette under
@@ -473,7 +472,6 @@ namespace LastCall.UI
             ("silkwoman", 6f, 0f, 8, 5),
             ("pastelman", 2f, 0f, 4, 5),
             ("shaved", 7f, 0f, 5, 5),
-            ("silverbob", 11f, 0f, 6, 6),
             // 0 -> 7 (2026-08-26): her crown was CLIPPED by the rig canvas and a head row
             // of zero is what that reads as. Tools/afro_crown_fix.py slid the whole set
             // down seven rows and rebuilt the dome on the curve her own hair was already
@@ -495,21 +493,12 @@ namespace LastCall.UI
             // should re-roll the character rather than re-ship those frames, because the
             // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
-            ("mechanic", 7f, 0.0f, 4, 6),   // the eleventh list, 2026-09-07
             ("racerboy", 7f, 0.0f, 6, 6),   // the eleventh list, 2026-09-07
             ("harajuku", 2f, 0.0f, 5, 7),   // the eleventh list, 2026-09-07
             ("driftgirl", 10f, 0.0f, 5, 4),   // the eleventh list, 2026-09-07
             ("salaryman", 6f, 0.0f, 6, 7),   // the eleventh list, 2026-09-07
             ("guard", 7f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
-            ("retiree", 12f, 0.0f, 6, 4),   // the tenth list, 2026-09-07
-            ("cleaner", 6f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
             ("rider", 5f, 0.0f, 5, 6),   // the tenth list, 2026-09-07
-            ("fisherman", 4f, 0.0f, 5, 4),   // the tenth list, 2026-09-07
-            ("busdriver", 15f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
-            ("abuelita", 2f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
-            ("nurseaide", 7f, 0.0f, 6, 4),   // the tenth list, 2026-09-07
-            ("linecook", 0f, 0.0f, 6, 6),   // the tenth list, 2026-09-07
-            ("guayabera", 0f, 0.0f, 6, 6),   // the tenth list, 2026-09-07
         };
 
         private readonly List<PatronLook> _looks = new List<PatronLook>();
@@ -580,7 +569,6 @@ namespace LastCall.UI
             public bool WasKnown;            // edge-detect the licence being read
             public float SpeakFrom;          // when the order started being spoken
             public bool Spoken;              // the order has finished arriving
-            public bool OrderVoiced;         // ...and they have said it once, in their own voice (2026-09-07)
             public float OrderAnimLeft;      // remaining "placing the order" one-shot time
             public float DrinkT;             // time since they started drinking
             /// <summary>What this drinker will say about the glass they were handed —

@@ -1483,3 +1483,26 @@ Yazar: *"tüm karakterleri ve animasyonlarını inceleyebileceğim bir önizleme
 Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar bir kez oynayıp son karede (idle pozu) durur, içme
 `DrinkTicks` tablosuyla (orta kare = yudum, 5 tık) 4.4 sn'lik çevrimde. Bu iki sayı `TycoonHud`'da yaşıyor ve editör derlemesi
 `LastCall.UI`'ye bakamadığı için önizlemede yeniden yazıldı — kaydıkları gün ikisini de düzelt.
+
+### 9.42 · On ikinci liste: müşteri rehberi, gece kulübü kadrosu, gerçek tepkiler, kapanan yürüyüş (2026-09-07)
+
+- **Rehber (`Assets/Data/customers/roster.json`, 100 kişi):** bir satır bir kişi — kimlik (ad/yaş/ülke/bayrak), ses, giyim kaydı
+  (club / street casual / smart casual), promptun kurulduğu `look` cümlesi, üç tepki stili (cheer / upset / order) ve üretim durumu
+  (`art`: drawn/briefed/planned, `inGame`). `Tools/patron_roster.py` okur: `report`, `todo`, `check` (oyunla her tutarsızlık),
+  `sync`, `md`. `Tools/patron_brief.py` rehberden prompt defterini üretir — kişi bir yerde karar verilir, iki yerde yazılmaz.
+- **Kadro gece kulübüne çekildi (yazar: "ben normal sivil gece kulübü / pub / bar insanı oluşturmanı istiyorum"):** iş üniformalı
+  ve yaşlı 11 kişi emekli edildi (abuelita, busdriver, cleaner, linecook, mechanic, nurseaide, retiree, guayabera, heavyset,
+  silverbob, fisherman) — kadro satırı, kimlik kaydı, ses kaydı ve kareleri silindi; sebepleri rehberin `retired` listesinde.
+  guard ve rider yazarın çağrısıyla kaldı, gece kıyafetine geçtiler. Kalan 13 çizim, 87 kişi sırada.
+- **Ülkeler oyuncu tabanına göre:** ABD 34 (çoğu göçmen topluluk), Japonya 6, İtalya/Türkiye/Almanya 5'er, Çin/Kore/İngiltere/
+  İspanya/Avustralya 4'er, Arap dünyası 5, Afrika 4, Güney/Doğu Asya 5, Kuzey Avrupa 5. Altı yeni ses: `chinese`, `korean`,
+  `arabic`, `african`, `desi`, `aussie` (toplam 21).
+- **Tepkiler gerçek insan tepkisi (yazar: "daha gerçekçi ... biraz daha tiyatral"):** `CHEER_STYLES` beş hâl — başparmak, iki el
+  havada, parmakla gösterip başını sallama, gülümseme, kahkaha; `UPSET_BIG` beş hâl daha büyük yazıldı; `ORDER_STYLES` iki hâl,
+  üçte biri parmak kaldırarak sipariş veriyor. Her kişiye rehberden atanmış. `CALM` yalnız yürüyüş ve bakışlarda kaldı; tepkiler
+  `BIG` altında yazılıyor.
+- **Yürüyüş kapanıyor:** ölçüldü — komşu kareler ~5000 piksel, son→ilk ~7300, yani çevrim değil tek adım. Klip artık iki yarım
+  (`walk_a` sağ adım, `walk_b` sol adım + başlangıç pozuna interpolasyon), 17 kare; `keep_first_frame:false` da 8 isteyip 9 gelen
+  kopya kareyi kaldırıyor. `Tools/patron_walk_fix.py check` dikişi ölçer.
+- **Havlu:** rect artık çizimin tam ölçüsünde (`FitCloth`) — alfa isabet testi rect üzerinden örneklediği için `preserveAspect`'in
+  bıraktığı boşluk hitbox'ı şişiriyordu. **Sipariş balonu kaldırıldı:** balon yalnız içki teslim edildikten sonra, her yudumda.
