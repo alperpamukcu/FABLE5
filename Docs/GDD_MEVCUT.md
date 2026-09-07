@@ -1468,3 +1468,18 @@ Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
   oturuma değişir; kim olduğu, ne istediği, ne zaman geldiği hâlâ koşunun tohumlu akışlarından.
 - **Balonlar gidince kalıyor mu:** oyunda ölçüldü — sabrı biten müşteri kalkarken balon kökle birlikte yürüyor (child), 4 sn içinde
   iniyor (`SayUntil` + çıkış bitiminde `HushSeat`). Yeniden görülürse durum istenir.
+
+### 9.41 · Kadro önizlemesi (2026-09-07)
+
+Yazar: *"tüm karakterleri ve animasyonlarını inceleyebileceğim bir önizleme kur"*. İki kapı, aynı zamanlama:
+
+- **Oyun içi:** `LastCall → Patron Preview` (`Assets/Scripts/Editor/PatronPreview.cs`). Solda kadro (yüz + kaç klip var), sağda
+  seçili klibi oyunun kendi hızında oynatan sahne, altında her karenin şeridi (kareye tıkla = durdur ve o kareye git), üstte
+  klip/zoom/döngü ve "Whole cast" kontak modu. "Check ink" seçili kişinin idle karesindeki siyah piksel sayısını sayar —
+  `Tools/patron_ink.py` geçidinin editördeki karşılığı. Rig'in ayak çizgisi (220 tuvalde 210) sahnede çizili.
+- **Unity'siz:** `py -3 -X utf8 Tools/patron_sheet.py` → `Tools/patron_sheet.html` (116 KB sayfa) + `Tools/patron_sheet_frames/`
+  (21 MB kopya kare, ikisi de .gitignore'da). Tarayıcıda aynı kontroller; gönderilebilir.
+
+Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar bir kez oynayıp son karede (idle pozu) durur, içme
+`DrinkTicks` tablosuyla (orta kare = yudum, 5 tık) 4.4 sn'lik çevrimde. Bu iki sayı `TycoonHud`'da yaşıyor ve editör derlemesi
+`LastCall.UI`'ye bakamadığı için önizlemede yeniden yazıldı — kaydıkları gün ikisini de düzelt.

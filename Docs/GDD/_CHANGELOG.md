@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The cast preview (2026-09-07):** LastCall > Patron Preview plays every patron's every clip
+  at the game's own rate, with a frame strip, a whole-cast contact mode and an ink check;
+  Tools/patron_sheet.py builds the same thing as a browser page that can be sent.
+  GDD_MEVCUT §9.41.
+
 - **The eleventh list (2026-09-07):** five young Japanese customers in the pastelman language,
   one of them the street-racing girl of the author's picture; a Japanese voice and flag; the door
   order salted per session; the walk-out balloon measured to leave with its drinker.

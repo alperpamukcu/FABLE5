@@ -122,6 +122,10 @@ Art/pilot/
 
 # raw generator output (audit 2026-08-11)
 Tools/*_raw/
+# The patron preview sheet's frames are COPIES of Assets/Resources/Patron (2026-09-07):
+# regenerate with Tools/patron_sheet.py rather than carrying 21 MB of duplicates.
+Tools/patron_sheet_frames/
+Tools/patron_sheet.html
 Assets/.agent/
 
 # PixelLab pipeline (2026-08-17): secret + transient generation state
