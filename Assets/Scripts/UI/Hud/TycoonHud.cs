@@ -2430,8 +2430,22 @@ namespace LastCall.UI
         /// <summary>The stamp strip under the photograph (v4): visits as punches, the rating
         /// as stars — top edge and height, from the paper's top.</summary>
         // The stamp strip follows the photo down and grows for type at 16 rather than 8
-        // (2026-09-07): two captioned rows of 16-unit marks want 30 art px, not 24.
-        private const float LicStampY = 76f * LicScale, LicStampH = 30f * LicScale;
+        // (2026-09-07). TWO rows and no more: the card is LicH = 100 art px and the strip
+        // starts at 76, so 24 is every pixel there is. A four-row version (a caption over
+        // each row of marks) was built, measured and cut the same day - it ran 22 px off the
+        // bottom edge of its own card. The two captions instead go side by side over two
+        // half-width COLUMNS, punches left and stars right, which is the one arrangement
+        // that fits readable type in the space the card has.
+        private const float LicStampY = 76f * LicScale, LicStampH = 24f * LicScale;
+        /// <summary>The pitch of the stamp strip's two rows, in HUD units: a 16-unit caption,
+        /// then its marks under it.</summary>
+        private const float LicStampRow = 20f;
+        /// <summary>Where the strip's second column starts, measured from the rail's left.</summary>
+        // 82, not 76 (2026-09-07, measured in the shot): the punches end at x92 and at a
+        // 76 column the stars began at x94, so ten marks of the same size and pitch ran
+        // together as one undifferentiated row and the two counts could not be told apart.
+        // Six units of air is what separates two groups on a row this small.
+        private const float LicStampCol = 82f;
 
         // SIXTEEN (2026-09-07): the band wears the author's beach — Items/licence_band.png,
         // 200x16 art pixels, one to one at the card's own three — and reaches the portrait's

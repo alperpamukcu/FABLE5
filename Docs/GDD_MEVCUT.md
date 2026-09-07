@@ -1521,6 +1521,37 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.45 · On beşinci liste: kimlik açılıyor, vesikalıklar tek çerçevede, fatura panoları dizildi (2026-09-07)
+
+- **Kimlik açılıyor:** kart 0.86'dan tam boya `IdOpenSeconds` (0.14 sn) içinde, ölçeklenmemiş saatte; `Motion.Reduced`'da anında.
+- **Vesikalık kuyusu banttan ayrıldı:** `LicPortrait` y 18 → **24 sanat pikseli** (bant `LicPad/2`'den başlayıp 19'da bittiği için
+  18'de başlayan fotoğraf bir piksel bindiriyordu, ikisi kaynamış tek blok gibi okunuyordu).
+- **Damga şeridi iki satır, iki sütun.** Okunur 16'da `VISITS` 58, `RATES US` 89 birim mürekkep; ray 144, yani yan yana 13 birim
+  bindirip `VISITSRATES US` basıyordu. Denendi ve ölçülüp atıldı: her başlığa kendi satırı (dört satır = 46 px, kart 100 px ve
+  şerit 76'da başlıyor — kendi kartından 22 px taşıyor). Kalan düzen: sol sütun delikler (12'lik, 2x), sağ sütun yıldızlar
+  (`LicStampCol` 82, iki grubun arasında 6 birim hava), başlıklar üstlerinde, üç kalp başlık satırının sağ ucunda. Yıldızların
+  yanındaki ortalama sayısı **kaldırıldı** — yıldızlar zaten o sayı, ve sığmıyordu (sütun 68, yıldızlar 65).
+- **Bayrak mührü kendi bayrağını tutuyor:** roundel 42 birimken içindeki bayrak 64 genişti; maske bayrağı kesiyor, taşan kısmı
+  KICK tuşunun üstünde bozuk bir çizim gibi duruyordu. Mühür **56**, bayrak **48×33** (çizildiği boy, 1:1 — tam kat, çünkü 1.3x
+  bayrak bazı şeritleri iki kat kalın yapar).
+- **Vesikalıklar tek çerçeve:** her yüz **64×64**, baş karenin %52'si, tepe sabit mesafede — kesim omuzdan, geometri gereği.
+  Eskiden kare figüre göre ölçülüyordu (omuz genişliği × 0.78), yani 42–75 px arası (1.79 kat) çıkıyor ve hepsi aynı pencereye
+  `preserveAspect` ile çizildiği için o fark **büyütme farkına** dönüşüyordu. Boyun, başın kendi merkez sütununda aranıyor —
+  tüm siluette en dar satır **bel** çıkıyor, çünkü bu rigler kolları gövdeden ayrık duruyor.
+- **Gece panoları dizildi:** her okuma satırında kelimenin bittiği yerden rakamın başladığı yere **kılavuz nokta dizisi**
+  (ölçüm: başlık mürekkebi x95'te bitiyor, rakam x247'de başlıyordu — beş satır boyunca 150 boş piksel). Rakamlar tek sütunda,
+  birim ikonu kendi 26 birimlik oluğunda. Hafta panosunda gecenin **faturaları ve CEZALARI** kendi kuralının altında (fiş
+  zaten basıyordu, `DayFines` zaten `DayExpenses` içindeydi — eksik olan, gecenin ne tuttuğuna bakılan yerde yazmasıydı).
+  Merdiven 36'ya indi ki ayak plakanın içinde kalsın.
+- **Para ikonu:** `Tools/coin_icon.py` — yıldız/kalp dilinde, iç Lime, siluetin içinde tek kontür. Yazılan `$` yerine geçiyor:
+  kasa, pano toplamları, sepet. Üç ders: ikon **ekran pikseliyle** ölçülür (gün sonu paneli 0.45 ölçekte, 16 birimlik ikon 7
+  piksel çıkıyordu); 16'lık usta **elle yazılır** (okunur bir dolar 11 satır ister, 16'lık madeni parada 10 var — üretilen her
+  sürüm kendi gözlerini kapattı); ve **8'lik yok** — yıldızla kalp o boyu siluetiyle taşıyor, madeni paranın anlamı ise doğası
+  gereği iç detay. Sığmadığı yerde (gecenin üst üste iki rakamı, fişin basılı mürekkebi, marketin kehribar etiketi) rakam
+  kendi yazısını koruyor.
+- **Yürüyüş ve konuşma:** girişte/çıkışta **fade yok**, tam hızda ekranın dışına; ayrılırken söylenen söz balonun kendi
+  saatiyle inmiyor, sahneden çıkana kadar başlarının üstünde. Diyalog **Silkscreen Bold**'da (aynı metrik, çift vuruş).
+
 ### 9.44 · On dördüncü liste: bez çivide, kimlik kısaldı, garnish kartları, mahzen etiketleri (2026-09-07)
 
 - **Temizlik bezi:** kendi kanvasına alındı (sıralama 8) — kepenğin isabet plakası 6'da ve odanın enini kaplıyordu, rayın

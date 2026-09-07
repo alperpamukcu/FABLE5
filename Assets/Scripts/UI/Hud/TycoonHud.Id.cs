@@ -790,7 +790,15 @@ namespace LastCall.UI
             // art pixels tall and so is the seal, so it fills the band's height exactly.
             // v4: the band is 14 art pixels, the seal 14, the flag at FOUR times (64x44) so it
             // covers the 42-unit disc top to bottom.
-            const float Roundel = 14f * LicScale, FlagW = 16f * 4f, FlagH = 11f * 4f;
+            // THE SEAL HOLDS ITS FLAG (2026-09-07, measured). The roundel was 14 * LicScale =
+            // 42 units across and the flag inside it was 16 * 4 = 64 WIDE — a picture half as
+            // wide again as the circle masking it, so the mask cut the flag into a shape and
+            // the overspill read as a broken drawing lying across the KICK key. The flags are
+            // drawn 48 x 33 since 2026-09-07, so the seal is cut to hold one at its drawn size
+            // with a ring of air: 56 across, the flag 48 x 33 at 1:1. Whole multiples only —
+            // this is a drawing of a flag, and a flag at 1.3x is a flag with some stripes
+            // twice as thick as the others.
+            const float Roundel = 56f, FlagW = 48f, FlagH = 33f;
             var sealAt = new Vector2(-(LicPad + Roundel * 0.5f), bandMid);
             var seal = NewRect("Seal", card);
             Place(seal, new Vector2(1, 1), new Vector2(Roundel, Roundel), sealAt);
@@ -871,31 +879,52 @@ namespace LastCall.UI
                 new Vector2(LicPad + 4f, stripTop - 3f));
             _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRelLabel.text = "VISITS";
-            _idRatesLabel = NewText("C_RATES", card, _body, 16, TextAnchor.UpperRight, UITheme.ClubBlue[2]);
-            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(90, 16),
-                new Vector2(LicPad + LicRailW - 94f, stripTop - 3f));
+            // ONE CAPTION PER ROW, because two do not fit (2026-09-07, measured in play).
+            // The strip is LicRailW = 144 art px wide; at the readable 16 the two words are
+            // 59 and 89 units of ink, which is 148 before either gets a gap, so side by side
+            // they overlapped by 13 and printed "VISITSRATES US". They label two SEPARATE
+            // rows of marks — the punches and the stars — so each caption goes above its own
+            // row, which is what the rows were always for. The second one moves down with the
+            // star row it names.
+            // ...and RATED, not RATES US, at the head of the second column: the shorter word
+            // is what fits the half-rail the stars need, and it says the same thing.
+            _idRatesLabel = NewText("C_RATES", card, _body, 16, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
+            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(46, 16),
+                new Vector2(LicPad + LicStampCol, stripTop - 3f));
             _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _idRatesLabel.text = "RATES US";
+            _idRatesLabel.text = "RATED";
 
             // ON THE GRID (2026-09-07, the author: "ikonografi hd durmuyor, yamuk pixelli
             // duruyor"). ChromeArt.Punch is drawn at 6x6, so it may be shown at 6, 12, 18 -
             // whole multiples, the same law the pixel faces keep. It was at 12 next to
             // 16-unit hearts and stars, which is a mark two thirds their size AND on a
             // different grid; 18 is 3x its drawing and stands with them.
-            const float PunchPx = 18f, PunchGap = 3f;
+            // TWELVE, not eighteen (2026-09-07): 18 is a clean 3x of the 6x6 drawing but five
+            // of them plus their gaps is 105 units, and the left column is 72. 12 is a whole
+            // 2x — still on the grid, which is the rule — and five fit in 68.
+            const float PunchPx = 12f, PunchGap = 2f;
             _idPunches = new Image[5];
             for (int i = 0; i < 5; i++)
             {
                 var p = NewRect("Punch" + i, card);
                 Place(p, new Vector2(0, 1), new Vector2(PunchPx, PunchPx), new Vector2(
-                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - 24f));
+                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - LicStampRow));
                 _idPunches[i] = p.gameObject.AddComponent<Image>();
                 _idPunches[i].sprite = ChromeArt.Punch();
                 _idPunches[i].preserveAspect = true; _idPunches[i].raycastTarget = false;
             }
             _idVisitMore = NewText("More", card, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[3]);
-            Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(40, 18), new Vector2(
-                LicPad + 4f + 5f * (PunchPx + PunchGap) + 4f, stripTop - 24f));
+            // MEASURED, and it has nowhere to go (2026-09-07): the punches end at x92 and the
+            // stars' column starts at x94, so a "+N" between them landed exactly on Star0.
+            // It rides the VISITS caption instead — the caption is 58 units of ink in a
+            // 90-unit box, so there is room after the word, and "VISITS  +3" is a better
+            // sentence than a number floating over a star anyway.
+            // Under the punches' own row is the only clear spot left, and only because the
+            // punches stop at x92 while the stars begin at x94 — so the count rides the
+            // LAST punch rather than sitting after it, drawn small and dark on the card.
+            _idVisitMore.enabled = false;
+            Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(28, 16), new Vector2(
+                LicPad + 4f + 62f, stripTop - 3f));
             _idVisitMore.horizontalOverflow = HorizontalWrapMode.Overflow;
             // The count itself is kept off the card (the punches are the count); it feeds
             // nothing now but is still written, so the old readers stay honest.
@@ -906,13 +935,21 @@ namespace LastCall.UI
 
             // HOW WELL THEY KNOW YOU, IN HEARTS (2026-09-04): the bond's three, at the end of
             // the visits row, lit as far as the rank.
-            const float BondPx = 16f, BondGap = 1f;
+            const float BondPx = 12f, BondGap = 1f;
             _idBond = new Image[3];
             for (int i = 0; i < 3; i++)
             {
                 var b = NewRect("Bond" + i, card);
+                // ON THE CAPTION ROW'S RIGHT EDGE (2026-09-07, measured three times). The
+                // rail is 144 units and the strip already spends them: punches x22-92 and
+                // stars x94-158 fill both rows edge to edge, so the hearts fit on NEITHER —
+                // on the star row they landed on Star4, on the caption row they ran through
+                // RATED. What is actually free is the end of the CAPTION row, past both
+                // words: VISITS stops at x80 and RATED at x145, and the rail runs to x162.
+                // Three 12s and their gaps is 38, so they close that row from x124.
                 Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
-                    LicPad + LicRailW - 4f - (3 - i) * (BondPx + BondGap) + BondGap, stripTop - 25f));
+                    LicPad + LicRailW + 24f - (3 - i) * (BondPx + BondGap) + BondGap,
+                    stripTop - 3f));
                 var bs = b.gameObject.AddComponent<Image>();
                 bs.sprite = ItemArt.Heart(false, BondPx);
                 bs.preserveAspect = true; bs.raycastTarget = false;
@@ -926,12 +963,12 @@ namespace LastCall.UI
             // FIVE STARS, ALWAYS DRAWN, filled to the average — and the figure beside them.
             _idStars = new Image[5];
             _idStarFills = new Image[5];
-            const float StarBox = 16f, StarGap = 1f;
+            const float StarBox = 12f, StarGap = 1f;
             for (int i = 0; i < 5; i++)
             {
                 var s = NewRect("Star" + i, card);
                 Place(s, new Vector2(0, 1), new Vector2(StarBox, StarBox), new Vector2(
-                    LicPad + 4f + i * (StarBox + StarGap), stripTop - 38f));
+                    LicPad + LicStampCol + i * (StarBox + StarGap), stripTop - LicStampRow));
                 _idStars[i] = s.gameObject.AddComponent<Image>();
                 _idStars[i].sprite = ItemArt.Star(false, StarBox);
                 _idStars[i].preserveAspect = true;
@@ -949,8 +986,9 @@ namespace LastCall.UI
                 _idStarFills[i].enabled = false;
             }
             _idRates = NewText("V_RATES", card, _display, 8, TextAnchor.MiddleRight, UITheme.Night[1]);
-            Place(_idRates.rectTransform, new Vector2(0, 1), new Vector2(40, 12), new Vector2(
-                LicPad + LicRailW - 44f, stripTop - 40f));
+            Place(_idRates.rectTransform, new Vector2(0, 1), new Vector2(46, 16), new Vector2(
+                LicPad + LicStampCol, stripTop - LicStampRow));
+            _idRates.enabled = false;
             _idRates.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // ── the numbered field grid ───────────────────────────────────────────
