@@ -32,6 +32,16 @@
     { "slug": "skater", "name": "Luca Brandt", "age": 22, "country": "Netherlands", "iso": "nl" },
     { "slug": "junior", "name": "Tomas Ferreira", "age": 25, "country": "Portugal", "iso": "pt" },
     { "slug": "busker", "name": "Aoife Quinn", "age": 23, "country": "Ireland", "iso": "ie" },
-    { "slug": "couriereu", "name": "Andrei Popa", "age": 28, "country": "Romania", "iso": "ro" }
+    { "slug": "couriereu", "name": "Andrei Popa", "age": 28, "country": "Romania", "iso": "ro" },
+    { "slug": "tokyodj", "name": "Sora Ito", "age": 25, "country": "Japan", "iso": "jp" },
+    { "slug": "shanghai", "name": "Wei Zhang", "age": 27, "country": "China", "iso": "cn" },
+    { "slug": "chengdu", "name": "Lin Xu", "age": 24, "country": "China", "iso": "cn" },
+    { "slug": "canton", "name": "Jiahao Lam", "age": 29, "country": "China", "iso": "cn" },
+    { "slug": "idoljp", "name": "Nanami Yoshida", "age": 21, "country": "Japan", "iso": "jp" },
+    { "slug": "beijing", "name": "Yuxi Chen", "age": 26, "country": "China", "iso": "cn" },
+    { "slug": "seoulgirl", "name": "Jiwoo Han", "age": 23, "country": "South Korea", "iso": "kr" },
+    { "slug": "kdance", "name": "Hyunwoo Lim", "age": 26, "country": "South Korea", "iso": "kr" },
+    { "slug": "kstudent", "name": "Yerin Cho", "age": 22, "country": "South Korea", "iso": "kr" },
+    { "slug": "seoulboy", "name": "Minjun Park", "age": 24, "country": "South Korea", "iso": "kr" }
   ]
 }
