@@ -1860,191 +1860,173 @@
   "png": "AssetPipeline\\sources\\patron_trial\\mechanic__r2.png"
  },
  "atelier": {
-  "character_id": "49892c7b-aaf5-401a-8821-fd871450831e",
+  "character_id": "dc135f87-50c0-4914-8996-7f34f3b11268",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 8.824,
-   "head": 0.158,
-   "whole": 5.891,
-   "colours": 38,
-   "body": 202,
-   "black": 31.759
+   "outline": 12.955,
+   "head": 0.157,
+   "whole": 18.103,
+   "colours": 49,
+   "body": 210,
+   "black": 29.92
   },
   "png": "AssetPipeline\\sources\\patron_trial\\atelier.png",
   "clips": {
-   "look_right": "a95c40e2-b58b-4633-9886-d81da3c44f92",
-   "look_left": "45d2127d-6ad7-4c7e-98e8-4b754b14ed69",
-   "order_a": "dab1b221-19cb-4a0a-9777-f23ddaca90fd",
-   "drink_a": "0c1f78e6-cf8b-4618-84fc-2bc0636dcc4f",
-   "cheer_a": "e49c1efb-a2d3-4834-8ce9-1cad88bb605a",
-   "upset_a": "5c3eef82-8e1b-4a59-96c6-90802e2822f3",
-   "walk_a": "50354c95-fe9e-47dc-bb0e-c03b2ba90f38"
+   "look_right": "99d310be-3818-4439-ad27-d4f4f809d728",
+   "look_left": "82fb75ca-9441-45e4-9106-4c0c37d35b9b",
+   "order_a": "707ad1bf-5dbd-4bed-a753-6f315ab6b0a8",
+   "drink_a": "5d32d171-5063-4bba-b848-dfe5763217bb"
   }
  },
  "barista": {
-  "character_id": "6bee86d9-3ce1-4dd0-816f-5574dcd01f6b",
+  "character_id": "51852045-ef04-44c6-839e-dc7589214a3f",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 79.545,
-   "head": 0.139,
-   "whole": 84.306,
-   "colours": 37,
-   "body": 202,
-   "black": 19.952
+   "outline": 76.025,
+   "head": 0.156,
+   "whole": 81.294,
+   "colours": 42,
+   "body": 205,
+   "black": 17.208
   },
   "png": "AssetPipeline\\sources\\patron_trial\\barista.png",
   "clips": {
-   "look_right": "e66e267a-db0e-4484-9828-3c9fdf20d0ff",
-   "look_left": "4cd7f2a2-e9f8-4a04-94bc-67417587d93e",
-   "order_a": "3962a288-2cf9-4346-a179-809312b848f0",
-   "drink_a": "a71982b9-9cd0-4ab6-b4db-22a5054a50b7"
+   "look_right": "813bcd43-e4e3-4b35-8001-c9346c93a5a8",
+   "look_left": "2b32b8a6-815b-4dee-bc27-1bc53bc98b49",
+   "order_a": "8cebddff-b4e6-476f-96b4-d93446fb2556",
+   "drink_a": "693b383d-cc67-44ed-9646-8af12b2dffd2"
   }
  },
  "archivist": {
-  "character_id": "2d39d91e-714f-45b6-8770-cfb145e958e9",
+  "character_id": "a7462a5e-681c-4657-8f5f-92d6e406034b",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 87.234,
-   "head": 0.138,
-   "whole": 85.328,
-   "colours": 49,
-   "body": 196,
-   "black": 17.898
+   "outline": 92.573,
+   "head": 0.136,
+   "whole": 90.734,
+   "colours": 44,
+   "body": 206,
+   "black": 14.518
   },
   "png": "AssetPipeline\\sources\\patron_trial\\archivist.png",
   "clips": {
-   "look_right": "c8c8083b-71cb-45e4-a7f4-d073434534a0",
-   "look_left": "873dddc5-bae2-4e86-8387-d6fa804144da",
-   "order_a": "c19229f7-5f8b-4438-ae31-b895564c2250",
-   "drink_a": "23e87e68-676c-4681-8cf8-698d84394b9c"
+   "look_right": "3a214deb-aefb-47f5-98d1-fa936ca3186f",
+   "look_left": "a352fcfa-9783-479a-bad4-de9ddc2eabc9",
+   "order_a": "4e4186c0-aed5-4f29-b48d-e1fecf6ac540",
+   "drink_a": "28ec9e92-1df0-4442-8dfb-9741cb4d8179"
   }
  },
  "gallerist": {
-  "character_id": "23a5258f-8e95-48cc-8477-05324da48bad",
+  "character_id": "caad84f7-cdea-4fd3-bf50-0eaef68cce2d",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 47.297,
-   "head": 0.185,
-   "whole": 19.892,
-   "colours": 29,
-   "body": 195,
-   "black": 60.919
+   "outline": 15.294,
+   "head": 0.167,
+   "whole": 17.867,
+   "colours": 34,
+   "body": 192,
+   "black": 38.043
   },
   "png": "AssetPipeline\\sources\\patron_trial\\gallerist.png",
   "clips": {
-   "look_right": "543ab0ea-e6a5-4f35-b781-d6581bc6fe4b",
-   "look_left": "afd4c178-84c1-4e20-87f1-915d4e5a3cc6",
-   "order_a": "2a08b8a6-9976-4081-90ad-f10664873e7d",
-   "drink_a": "05bc35b0-872e-4fe3-b6b8-64276b33f831"
+   "look_right": "359f8a5b-86d7-484d-90dd-5bd7c5084cd0",
+   "look_left": "594545e3-3a61-4e87-b120-3eaad0b3e2f8",
+   "order_a": "5bfd555d-8288-447c-a1de-996862a7db04",
+   "drink_a": "ac051720-f9af-4ea6-af2e-de8fbe6ced5f"
   }
  },
  "trainee": {
-  "character_id": "315b1f8c-b3e4-47bd-aab9-f3504c568c4a",
+  "character_id": "eb35b6e6-6616-4311-9155-e68e649947db",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 81.496,
-   "head": 0.137,
-   "whole": 79.858,
-   "colours": 31,
+   "outline": 18.467,
+   "head": 0.142,
+   "whole": 58.237,
+   "colours": 37,
    "body": 204,
-   "black": 11.308
+   "black": 8.029
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\trainee.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\trainee.png",
+  "clips": {
+   "look_right": "afdbd1b4-071d-4d92-82bb-be4e2a920756",
+   "look_left": "0d2236b7-3767-465c-a2ce-a95bfe6e5d2c",
+   "order_a": "323a5bfd-ddf7-4f93-965b-8d683385d5f7",
+   "drink_a": "58f37001-ee63-4aff-b308-d051ae2b18e0"
+  }
  },
  "skater": {
-  "character_id": "a2aceef9-7a4b-4739-9aa3-109bb66643ee",
+  "character_id": "89232ccc-d274-48af-9485-e1d5048eb1fc",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 97.51,
-   "head": 0.143,
-   "whole": 96.423,
-   "colours": 29,
-   "body": 203,
-   "black": 7.735
+   "outline": 97.71,
+   "head": 0.152,
+   "whole": 96.341,
+   "colours": 41,
+   "body": 210,
+   "black": 10.605
   },
   "png": "AssetPipeline\\sources\\patron_trial\\skater.png"
  },
  "florist": {
-  "character_id": "d5605996-ab03-48de-b3a1-283c0bf9ea90",
+  "character_id": "aa2a39a5-0b2e-47c1-8f42-8ef177ff55f3",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 30.263,
-   "head": 0.133,
-   "whole": 61.492,
-   "colours": 31,
-   "body": 196,
-   "black": 4.848
+   "outline": 94.472,
+   "head": 0.132,
+   "whole": 95.524,
+   "colours": 43,
+   "body": 204,
+   "black": 15.876
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\florist.png",
-  "clips": {
-   "look_right": "c2c396da-15d8-41a0-8b37-05c0e48be2b6",
-   "look_left": "084b3d06-ef23-4eba-bbe2-7e690b46c187",
-   "order_a": "d679b529-c02b-4593-8d3d-92b0b1342d32",
-   "drink_a": "34a4872e-e74a-4324-93b2-b47119194709",
-   "cheer_a": "639dc853-1ed4-4066-b2fa-00fbb08f41c4",
-   "upset_a": "8bb292d7-4eee-4272-bd22-05e53d891e1c",
-   "walk_a": "82c1d68c-6303-49cc-8157-085574b3dc5d"
-  }
+  "png": "AssetPipeline\\sources\\patron_trial\\florist.png"
  },
  "junior": {
-  "character_id": "0ed705a8-b0d7-4adc-83a1-b63d570b32d5",
+  "character_id": "b3c3cbc5-0c4e-4532-b0e1-bd90fffa1000",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 76.253,
-   "head": 0.151,
-   "whole": 76.844,
-   "colours": 37,
-   "body": 205,
-   "black": 22.306
+   "outline": 8.189,
+   "head": 0.146,
+   "whole": 15.323,
+   "colours": 39,
+   "body": 198,
+   "black": 13.748
   },
   "png": "AssetPipeline\\sources\\patron_trial\\junior.png"
  },
  "busker": {
-  "character_id": "b1a8f7bb-d31a-403f-bcb5-75e787956ff9",
+  "character_id": "451f5684-9b4b-4440-aae6-992185661187",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 95.197,
-   "head": 0.115,
-   "whole": 65.63,
-   "colours": 52,
-   "body": 192,
-   "black": 27.122
+   "outline": 93.939,
+   "head": 0.178,
+   "whole": 90.139,
+   "colours": 39,
+   "body": 202,
+   "black": 12.429
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\busker.png",
-  "clips": {
-   "look_right": "02636083-c365-46a9-9c7c-b439e4d78e41",
-   "look_left": "e0752bff-a1cb-41be-b9ca-d866868a87b7",
-   "order_a": "2e4e4c3e-0758-4e15-bfdf-c5579bd49bb3",
-   "drink_a": "9b8fd231-cf96-4eb6-a00a-0fb61e659bd8"
-  }
+  "png": "AssetPipeline\\sources\\patron_trial\\busker.png"
  },
  "couriereu": {
-  "character_id": "c9483275-e00c-4bab-9acf-57e77c4d4f66",
+  "character_id": "fecec746-a782-4a14-9012-48812d2b93de",
   "language": "lineless",
   "size": 220,
   "measured": {
-   "outline": 80.153,
-   "head": 0.156,
-   "whole": 68.783,
-   "colours": 35,
-   "body": 205,
-   "black": 23.33
+   "outline": 87.173,
+   "head": 0.123,
+   "whole": 84.915,
+   "colours": 43,
+   "body": 203,
+   "black": 13.798
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\couriereu.png",
-  "clips": {
-   "look_right": "9cbd3b04-8517-480c-a393-16e75c077ab7",
-   "look_left": "be9fbc44-790a-48e9-9573-7cad4052b179",
-   "order_a": "663b4cf0-066b-4eeb-a19e-27a23cc8f0ee",
-   "drink_a": "fe5c5dfc-8552-4560-8016-6c28ed371458"
-  }
+  "png": "AssetPipeline\\sources\\patron_trial\\couriereu.png"
  }
 }

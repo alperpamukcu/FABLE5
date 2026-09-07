@@ -233,6 +233,8 @@
     { "slug": "salaryman", "name": "Hiroshi Nakamura", "age": 34, "country": "Japan", "iso": "jp" },
     { "slug": "driftgirl", "name": "Aiko Tanaka", "age": 23, "country": "Japan", "iso": "jp" },
     { "slug": "harajuku", "name": "Yui Kobayashi", "age": 22, "country": "Japan", "iso": "jp" },
-    { "slug": "racerboy", "name": "Kenji Sato", "age": 26, "country": "Japan", "iso": "jp" }
+    { "slug": "racerboy", "name": "Kenji Sato", "age": 26, "country": "Japan", "iso": "jp" },
+    { "slug": "atelier", "name": "Camille Rieu", "age": 29, "country": "France", "iso": "fr" },
+    { "slug": "florist", "name": "Marta Kowal", "age": 27, "country": "Poland", "iso": "pl" }
   ]
 }
