@@ -720,6 +720,58 @@ namespace LastCall.Core
                     _brandCatalogue.Add(card);
                     _lockedStock.RemoveAt(i);
                 }
+            // THE PERFECTED MENU (2026-09-08, the author: "endgame'de tüm perfect tarif açık
+            // tüm geliştirmeler tamam olmalı"). A drink made flawlessly reveals its REAL
+            // pour on the menu (ExactPourFor); until then the page knows only the boxes. The
+            // preset bought all 54 recipes and had perfected none of them, so the one thing
+            // the late game is for — reading the numbers you have earned — was invisible in
+            // the preset built to test it.
+            foreach (var r in _recipes)
+                if (r.HasAuthoredRatios && (late || r.Rank <= rankCap))
+                    _perfectedRecipes.Add(r.Id);
+
+            // AND THE ROOM IS FITTED. The fixture catalogue is 39 pieces in slots that
+            // ladder — taps one/two/three, walls 1..4, plants, tables, lamps, the sink, the
+            // shaker — and the preset owned none of them, so a five-star "everything is
+            // bought" bar opened with bare walls, one tap and the steel shaker. That is not
+            // a cosmetic gap: COMFORT is read off the fittings and the night files
+            // min(service, comfort) (GDD 27), so half of the late game could not be measured
+            // in the preset meant for measuring it.
+            //
+            // The ladder is walked per SLOT, taking the highest rung this bar's rating is
+            // allowed to have. The preset does not route around the star gate — it buys the
+            // best room the rules permit, which is what "everything is bought" honestly means
+            // at a given standing.
+            // A LADDER IS CLIMBED, NOT JUMPED. BuyFixture refuses rung 3 to a bar standing
+            // on rung 1 ("it climbs one rung at a time"), so a bar that really owns the
+            // triple tap owns the single and the double too — it paid for them on the way up.
+            // Taking only the top rung would leave the preset in a state the game cannot
+            // reach, which is the one thing a preset must never do.
+            // ...and the MID room is half-fitted, not fully — measured twice, because the
+            // first answer was wrong. The star gate alone is no limit here: everything up to
+            // 2.6 stars is 32 of the 39 pieces and 12.05 raw comfort against a CEILING OF 5,
+            // so the mid bar clamped to 5.00 and read identically to the endgame on the half
+            // of the night comfort decides (GDD 27). Capping at rung 2 was still 6.55 — over
+            // the ceiling, still clamped, still indistinguishable. Rung 1 is 2.60, which
+            // lands under it, so the mid preset finally reads as a room worked on and not
+            // finished. The lesson is the ceiling: a preset that clamps is a preset that
+            // cannot be told from any other clamped preset.
+            int rungCap = late ? int.MaxValue : 1;
+            foreach (var f in _fixtureCatalogue)
+            {
+                if (f.Stars > Rating.Average + 1e-9) continue;      // the gate BuyFixture keeps
+                // THE TOOLS ARE NOT THE DECOR. A rung cap set for the room's LOOK also cut
+                // the things the player WORKS with — the second tap line, the brass basin,
+                // the gold shaker — and a mid preset that cannot pull two lines is a mid
+                // preset the draught mechanic cannot be tested in. They cost 0.9 comfort
+                // between them (measured), which leaves the mid room well under its ceiling,
+                // so they are exempt from the cap and the decor is not.
+                bool tool = f.IsTap || f.IsDrain || f.Slot == "shaker";
+                if (!tool && f.Level > 0 && f.Level > rungCap) continue;
+                _fixtures.Add(f.Id);
+            }
+            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+
             RollMarket();
             Day = late ? 30 : 12;
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
