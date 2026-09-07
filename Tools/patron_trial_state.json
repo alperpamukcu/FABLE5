@@ -2418,5 +2418,280 @@
    "upset_b": "0d631a87-4135-44bb-9e21-4120a9b38c78",
    "walk_b": "a750d43a-027f-4cf1-bfa6-f01509d89f4d"
   }
+ },
+ "londongirl": {
+  "character_id": "692c0812-7cbe-4266-a629-b9545982f182",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 8.174,
+   "head": 0.16,
+   "whole": 41.321,
+   "colours": 34,
+   "body": 194,
+   "black": 9.621
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\londongirl.png",
+  "clips": {
+   "look_right": "97434432-3f77-47ac-beb7-08a63e84e71e",
+   "look_left": "ca12cd20-2fad-4253-a37d-f6979c42e278",
+   "order_a": "f0344ccc-0a75-436e-acb3-f8e4d4b5f63e",
+   "drink_a": "26ae6151-25e5-4df4-8c9f-51e544085019",
+   "order_b": "a2ebb509-ede4-4cce-8641-ffad0fdb1de9",
+   "drink_b": "fabb4946-25db-47f9-96d5-ecade1f41e7d",
+   "cheer_a": "c6ca3708-32a3-418a-bb1f-cbf7a04056a7",
+   "upset_a": "0d553709-80c9-480e-bf1e-9753815f78a8",
+   "cheer_b": "89edb2f6-b100-4104-8041-314296fda44f",
+   "upset_b": "6703cca7-2130-4f1c-8cb6-d717a3ef93cc",
+   "walk_a": "91484762-45fb-4056-8a50-12b6b4c6fbae",
+   "walk_b": "2f825d14-58c6-4e5b-a34c-e891d0ab3b04"
+  }
+ },
+ "mancboy": {
+  "character_id": "ed3d0a2d-48a1-4753-888e-2e61ad91520d",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 53.269,
+   "head": 0.124,
+   "whole": 43.743,
+   "colours": 42,
+   "body": 202,
+   "black": 24.343
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\mancboy.png",
+  "clips": {
+   "look_right": "d375d7fe-413a-4e6a-b164-c985f3a7d831",
+   "look_left": "46b29605-0487-4d2f-8874-42eb17467d41",
+   "order_a": "91d36770-9a91-4925-af5a-9a32a33368c1",
+   "drink_a": "14ad17e8-8e52-4b81-b421-8bd36fa87574",
+   "order_b": "cafdba78-384d-4791-b945-db82a0933ab9",
+   "drink_b": "64d6eb2c-38b4-4a52-9aa0-fe61d29fe269",
+   "cheer_a": "8e40f4f9-02b6-495d-9cdb-d641a2c2e6f8",
+   "upset_a": "c7e6c1f0-4bc9-4935-a589-eeb8c0124b7f",
+   "cheer_b": "58fb3874-24a7-45dd-aedc-acaa44204646",
+   "upset_b": "86ec3cbb-dcef-4bde-97fb-3087032de853",
+   "walk_a": "dedfa872-e893-489a-a9c6-08498227a27b",
+   "walk_b": "08390a52-27a4-4b80-b1d3-310d982a5576"
+  }
+ },
+ "analyst": {
+  "character_id": "0172cd3a-5543-45cd-abdb-31ece00d156d",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 81.558,
+   "head": 0.153,
+   "whole": 83.394,
+   "colours": 45,
+   "body": 203,
+   "black": 15.551
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\analyst.png",
+  "clips": {
+   "look_right": "fa8e11d0-a70c-448a-9bcb-dcaf00a27bb9",
+   "look_left": "0c1b4026-fbfd-4a1e-a79f-6d97f1cc8cd6",
+   "order_a": "955f2147-be17-40ee-ae0d-b66074ac36e5",
+   "drink_a": "db2e0adf-658c-4bdf-9c82-c6acfced6239",
+   "order_b": "d82e330a-4669-4177-908f-05c0c5dc0f89",
+   "drink_b": "b396a24f-d69f-4b56-ba41-3c4a22ea7b2e",
+   "cheer_a": "11c68cbd-8696-4feb-a1b4-b3c6f65ae065",
+   "upset_a": "e74aa1f2-446c-4797-8e95-f6722f96c8df",
+   "cheer_b": "caecdd06-4bf5-441b-ac56-c08f7812e5e4",
+   "upset_b": "26a78dd0-80b2-41f3-8ec0-ade711d771bf",
+   "walk_a": "fb8ec11e-14bb-4cf3-abc3-2b903a4bf927",
+   "walk_b": "136c8f3a-7922-4a93-a6ee-fb3c6090ab3c"
+  }
+ },
+ "bristol": {
+  "character_id": "b60c949b-2d5d-4161-bf83-d8916d5c1506",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 64.706,
+   "head": 0.14,
+   "whole": 81.954,
+   "colours": 47,
+   "body": 200,
+   "black": 17.297
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\bristol.png",
+  "clips": {
+   "look_right": "8c1a0d8d-9fd1-45f8-b126-6d8659c89f52",
+   "look_left": "3037cbe6-40cc-4482-88f7-fdd07c883509",
+   "order_a": "78c653ee-f0ee-4d4f-b21c-a3afcb72b7c0",
+   "drink_a": "442635b2-d8ca-4340-8035-554256a20f07",
+   "order_b": "2350f3a8-507f-4917-8147-3eef81698b4d",
+   "drink_b": "1d969c14-bdc4-444e-86a9-f19f14cc3e48",
+   "cheer_a": "fb59b399-8a77-458f-aec4-d24e39ecd66a",
+   "upset_a": "d5f49b55-ec32-4709-8dbf-d9a0d036d1fe",
+   "cheer_b": "dbb6a833-444e-47d2-8e65-2a7ae67fbc31",
+   "upset_b": "7fafc417-8ba3-4e56-bf48-325bb0e56cd2",
+   "walk_a": "f6075f3b-1bef-4a77-9778-14250ff6bf6b",
+   "walk_b": "61812bb9-d6f3-46ab-9228-a422edd3ae01"
+  }
+ },
+ "berlin": {
+  "character_id": "78b8fe01-3b07-4c8b-a6f6-b5953c808b49",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 78.713,
+   "head": 0.17,
+   "whole": 58.081,
+   "colours": 51,
+   "body": 194,
+   "black": 42.077
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\berlin.png",
+  "clips": {
+   "look_right": "b38c59e2-f622-4459-a827-aa6c17a2dfaf",
+   "look_left": "c513bb6e-2542-4165-b16a-29097333c48d",
+   "order_a": "5480cc8c-5259-4df6-9294-f3cb5c0cb418",
+   "drink_a": "b825df8b-a979-481a-8a2c-9a11edc51866",
+   "order_b": "8b8ca30e-a2b5-42ac-9bad-769e42985984",
+   "drink_b": "5648fd70-6791-4aca-9c95-ec0a9b9e8538",
+   "cheer_a": "cccb0684-db1b-4b35-b58f-433fe2dfa922",
+   "upset_a": "82163e9c-9a9d-44cd-bc01-f7945fe1c64f",
+   "cheer_b": "d20a329e-977a-4a3b-8520-20f4ca786a51",
+   "upset_b": "7e52d43b-ff26-4b74-af49-7c5f0b16758c",
+   "walk_a": "fe7c33ba-302d-49ff-a6b4-a10547e365e2",
+   "walk_b": "6ebe6c66-e895-4b29-bbfb-f455690dddf2"
+  }
+ },
+ "teacherde": {
+  "character_id": "cce1feb4-f6e1-4e00-98e8-ccf88c4ae50c",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 80.563,
+   "head": 0.131,
+   "whole": 58.277,
+   "colours": 31,
+   "body": 213,
+   "black": 30.863
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\teacherde.png",
+  "clips": {
+   "look_right": "17c20565-7f21-4ac3-849b-12a9abd69895",
+   "look_left": "738d8379-0d01-44cd-8c08-0d41fea491a7",
+   "order_a": "ebf4041e-edda-44b5-8794-a4c2a5769ae2",
+   "drink_a": "e0a77085-0523-4bb7-9fc6-400732a3aadd",
+   "order_b": "e2c26b90-4aaa-4738-aec5-81b5f583134b",
+   "drink_b": "cc7787fd-8a3a-4205-8bba-238a37a6de9c",
+   "cheer_a": "eee63489-0a29-4765-8c7d-5e5ee77e9345",
+   "upset_a": "c375c2b2-661f-4eac-a77b-d3f494e733f2",
+   "cheer_b": "13d52255-880b-4a6f-bdf7-eb21efdd9ba4",
+   "upset_b": "5dfba4a1-cae3-413a-9569-367ace3a894e",
+   "walk_a": "6d135432-41ef-44b5-8497-c3e1bd1aab5b"
+  }
+ },
+ "hamburg": {
+  "character_id": "795936b3-e38b-4783-ab32-2475d05df006",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 3.721,
+   "head": 0.17,
+   "whole": 1.806,
+   "colours": 33,
+   "body": 206,
+   "black": 0.112
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\hamburg.png",
+  "clips": {
+   "look_right": "52ea3d5c-3441-423c-a0cf-bf46ee65445b",
+   "look_left": "b338a799-0ee6-43c7-b9d3-5e10060e6190",
+   "order_a": "dccbdfd5-6f9c-4012-a694-34b5d338d6d9",
+   "drink_a": "c24a7d74-ac06-4320-ab04-1ab94dbd3d09",
+   "order_b": "50578c77-188b-4ea9-a183-6e96dd503852",
+   "drink_b": "bb7e6612-c21c-4655-9a81-7036990b8e3b",
+   "cheer_a": "246ce852-278d-40bd-9c29-a1c4f840d6a4",
+   "upset_a": "42fde2dd-1567-4a1d-83fa-a641011d58cb",
+   "cheer_b": "96b7b681-b8c5-4f8c-969d-25022a17bb16",
+   "upset_b": "90a7be51-cb71-4113-9299-628f1f860fbd",
+   "walk_a": "7372325e-2797-48a1-a5d8-886c77d1105a"
+  }
+ },
+ "munich": {
+  "character_id": "c7df4f8a-642a-4f7d-bedb-ff8ad9f5d0f5",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 83.529,
+   "head": 0.147,
+   "whole": 87.706,
+   "colours": 50,
+   "body": 197,
+   "black": 16.337
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\munich.png",
+  "clips": {
+   "look_right": "acd2660a-91d3-4419-89cb-fc53cf9d9eca",
+   "look_left": "1a56a30e-36b0-4add-933c-1f5909b0103a",
+   "order_a": "11ce7633-05d2-462a-90c7-16bb7b5f8e7a",
+   "drink_a": "1f2af0df-5178-439e-b60e-a30bac1259b4",
+   "order_b": "54e9caa2-b863-4177-85d9-41d338c30eb3",
+   "drink_b": "95dc085d-c137-450b-b5b7-896f4993d005",
+   "cheer_a": "12377621-de9d-4568-9bd5-187152ad41a7",
+   "upset_a": "b5fadaaa-eead-42dd-8d19-9971ce313b94",
+   "cheer_b": "38f74800-8dd3-43ce-92db-473a62655d53",
+   "upset_b": "32e72c90-7af6-4219-b270-5c10c4eb022a",
+   "walk_a": "294dcf57-0695-468b-a924-ce7ab2a2d674"
+  }
+ },
+ "milano": {
+  "character_id": "20608a52-3c9a-4923-88eb-1e87ca758589",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 71.772,
+   "head": 0.161,
+   "whole": 80.65,
+   "colours": 37,
+   "body": 199,
+   "black": 26.086
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\milano.png",
+  "clips": {
+   "look_right": "cb1c154c-2fd6-4011-92a0-f3b73ed0823c",
+   "look_left": "dfffbec9-adb3-49a5-9148-90791a2fdeda",
+   "order_a": "1121d8d1-b607-445b-8e1c-940e28988ab4",
+   "drink_a": "96690df8-8104-4ab5-ad36-7047a249869f",
+   "order_b": "101ce461-5e01-4a4d-bbc3-baf588fb4596",
+   "drink_b": "bee66881-1404-4787-a790-45cc51a168c4",
+   "cheer_a": "8eeca8ec-7a4d-47ea-acf0-206e5fa0c9f9",
+   "upset_a": "bb7405a7-059a-46d4-9c3f-6892ffcf55ee",
+   "cheer_b": "a59d81b0-96a9-467d-a283-1d59f817b522",
+   "upset_b": "bd2f0783-d154-48ab-9e1d-c6f0adb9f27e",
+   "walk_a": "dbf2372a-7ad7-471b-83a1-5c387c7c24ee"
+  }
+ },
+ "roma": {
+  "character_id": "88302e93-8989-4079-98a5-cf118b9f587b",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 13.075,
+   "head": 0.124,
+   "whole": 24.945,
+   "colours": 37,
+   "body": 209,
+   "black": 6.252
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\roma.png",
+  "clips": {
+   "look_right": "d967b954-7b58-4d1b-90b3-bf40fe3a79cf",
+   "look_left": "5b6ea57e-fdf1-4516-a5cf-311f6a8baada",
+   "order_a": "1e7b547d-a38e-4e11-9d50-275c8c9f3411",
+   "drink_a": "87457a0d-e34a-4dbc-9ccc-d57cc72e8df7",
+   "order_b": "abc9aec0-d5f1-45e3-9d78-bc2fab7a5234",
+   "drink_b": "03815dc1-b93b-4f5a-91fb-0de4f3e91882",
+   "cheer_a": "b2954263-1110-4e48-9e11-70998ce36808",
+   "upset_a": "3e77ff61-fb6c-42ee-8345-d41329ae03fe",
+   "cheer_b": "0c8ae0c6-61f4-460e-bb45-78c339d8a7f7",
+   "upset_b": "e0de9ab3-f3fd-4505-9980-a94993160b60",
+   "walk_a": "2ac93eb5-9720-4692-a544-53472bfba64a"
+  }
  }
 }

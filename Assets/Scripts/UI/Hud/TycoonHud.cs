@@ -500,6 +500,11 @@ namespace LastCall.UI
             // should re-roll the character rather than re-ship those frames, because the
             // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
+            ("berlin", 16f, 0.0f, 6, 3),   // the tenth list, 2026-09-07
+            ("bristol", 10f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
+            ("analyst", 7f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
+            ("mancboy", 6f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
+            ("londongirl", 17f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("seoulboy", 6f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
             ("kstudent", 0f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
             ("kdance", 1f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
