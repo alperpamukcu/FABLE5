@@ -160,7 +160,7 @@ namespace LastCall.UI
             // size that exists is the drawing's, and passing another would be a lie.
             _clock = new SegmentClock(digits, UITheme.Cyan[4]);
 
-            BuildWeekStrip(top);
+            BuildDayWell(top);
 
             // ── the till, back on the beam (2026-09-06, the author: "Saat/Takvim/para/
             // Madalyon/kalp/yıldız/ayarlar butonu. Bunların hepsi uygun bir layouta göre
@@ -173,8 +173,12 @@ namespace LastCall.UI
             // IN THE HOUR'S OWN HAND (second pass, the author: "bu para göstergesini
             // beğenmedim"): the coin and the caption went; the figure is the clock's
             // seven-bar machine in a matching well — see SegmentFigure.
+            // AWAY FROM THE HOUR (2026-09-07, the author: "para yazısıyla saat yakın olmamalı,
+            // 2 sayı karışıyor"). Two seven-bar readouts side by side read as one number; the
+            // till stands at the far side of the beam now, just left of the house's readings,
+            // with the night's well between it and the clock.
             var tillWell = NewRect("Till", top);
-            Place(tillWell, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width + 24f, 40), new Vector2(166, 0));
+            Place(tillWell, new Vector2(1, 0.5f), new Vector2(SegmentFigure.Width + 24f, 40), new Vector2(-470f, 0));
             var tillImg = tillWell.gameObject.AddComponent<Image>();
             tillImg.sprite = ChromeArt.Well();
             tillImg.type = Image.Type.Sliced;
@@ -204,9 +208,12 @@ namespace LastCall.UI
             Place(standing, new Vector2(1, 0.5f), new Vector2(starsW, TopBarH), new Vector2(BlockRight, 0));
             standing.pivot = new Vector2(1, 0.5f);
 
-            // Inside the block: the row sits low enough to clear its own caption and high
-            // enough to clear the neon. 32 tall centred at -5 spans -21..+11 in a 54 beam.
-            const float RowY = -5f, CapRowY = 18f;
+            // ONE CENTRE LINE (2026-09-07, the author: "yıldız konfor kalp kısmını hizalı ...
+            // bir oyun tasarımına getir"). The stars used to sit low to clear the crowd
+            // caption over them; the caption lives in the night's well now, so the star
+            // row and the two house strips share the beam's own centre — the strips at
+            // ±9 fill exactly the 32 the stars stand in.
+            const float RowY = 0f;
 
             var starsRow = NewRect("Stars", standing);
             Place(starsRow, new Vector2(0, 0.5f), new Vector2(starsW, StarSize),
@@ -295,11 +302,7 @@ namespace LastCall.UI
                     return $"SERVICE {r.ServiceTonight:0.0}  ·  COMFORT {r.ComfortNow:0.0}  =  TONIGHT {lower:0.0}";
                 });
 
-            // Centred over the block it belongs to, not right-aligned to one edge of it.
-            _crowdText = NewText("Crowd", standing, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
-            Place(_crowdText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(starsW + 90f, 12),
-                new Vector2(0, CapRowY));
-            _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // The crowd caption moved into the night's well (BuildDayWell, 2026-09-07).
 
             // ── the quiet end: one key, and nothing else that is not the night ──
             // NEW RUN went inside it (2026-08-14, the author). A button that throws away the
@@ -314,8 +317,12 @@ namespace LastCall.UI
             // 16px cog read as a smudge. A proper key now: 42 on the 54 beam, the cog at
             // exactly 2x (the key less its 5-unit inlay a side is 32 — whole multiples or
             // nothing), lit amber, and it says what it is when the pointer arrives.
+            // THE COG IS A DRAWING NOW (2026-09-07, the author: "ayarlar butonunun görseli
+            // için icon üret"): a 32-pixel gold gear in the star3d family (Items/cog3d.png),
+            // at exactly 1x in the key's 32-unit inlay. The mask is the fallback.
+            var cogArt = ItemArt.Load("cog3d");
             var cogKey = NewButton(top, "SETTINGS", new Vector2(1, 0.5f), new Vector2(42, 42),
-                new Vector2(RightEdge, 0), UITheme.Night[2], ToggleSettings, ChromeArt.Mark("cog"));
+                new Vector2(RightEdge, 0), UITheme.Night[2], ToggleSettings, cogArt ?? ChromeArt.Mark("cog"));
             Hairline(cogKey, new Vector2(0, 1), new Vector2(1, 1), UITheme.Night[3]);
             Hairline(cogKey, new Vector2(0, 0), new Vector2(1, 0), new Color(0f, 0f, 0f, 0.55f));
             HairlineV(cogKey, 0f, UITheme.Night[3]);
@@ -324,9 +331,9 @@ namespace LastCall.UI
             if (cogMark != null)
             {
                 var mi = cogMark.GetComponent<Image>();
-                if (mi != null) mi.color = UITheme.Amber[4];
+                if (mi != null) mi.color = cogArt != null ? Color.white : UITheme.Amber[4];
             }
-            HoverTip(cogKey, ChromeArt.Mark("cog"), "SETTINGS", "SOUND, MOTION, THE BOOK, A NEW RUN");
+            HoverTip(cogKey, cogArt ?? ChromeArt.Mark("cog"), "SETTINGS", "SOUND, MOTION, THE BOOK, A NEW RUN");
             BuildSettings(root);
             BuildOrderTip(root);
 
@@ -751,6 +758,7 @@ namespace LastCall.UI
             // Built LAST of the room's furniture, so the caption draws over every prop it
             // can be raised by rather than under one of them.
             BuildPropTip(root);
+            BuildCellarCard(root);
             BuildSnackRow(root);
             BuildServiceLog(root);
             BuildIdCard(root);

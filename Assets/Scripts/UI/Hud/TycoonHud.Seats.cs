@@ -242,10 +242,49 @@ namespace LastCall.UI
         {
             if (view == null || view.Say == null || view.SayText == null) return;
             if (string.IsNullOrEmpty(line)) { HushSeat(view); return; }
-            view.SayText.text = line.ToUpperInvariant();
+            // AS WRITTEN (2026-09-07, the author: "müşteri konuşmalarında büyük küçük
+            // kullanımına dikkat edelim"). The balloon shouted every line in capitals; a
+            // spoken line is sentence case, and the pop-up over a serve is the one thing
+            // up here that is allowed to shout.
+            view.SayText.text = line;
             view.SayUntil = Time.unscaledTime + SaySeconds;
             view.Say.gameObject.SetActive(true);
             LayOutSay(view);
+        }
+
+        /// <summary>
+        /// WHAT THIS DRINKER SAYS FOR THE MOMENT (2026-09-07, the author: "belli başlı
+        /// aksanlarda konuşma şekilleri, konuşmalarına karakter katalım … her müşteri aynı
+        /// cümleleri kurmaz"). The voice is the LOOK's — the person's own if the book names
+        /// them, else their flag's, else the plain one — and the line is picked on the run's
+        /// "voice" stream. Without a book (a scene with no voices file) the old fixed lines
+        /// stand, so nothing up here ever comes up empty.
+        /// </summary>
+        private string VoiceLine(CustomerVisit visit, VoiceCue cue, string drink = null, string advice = null)
+        {
+            var book = _bootstrap != null ? _bootstrap.Voices : null;
+            var run = Run;
+            if (book == null || run == null || visit == null) return PlainLine(cue, advice);
+            var look = LookFor(visit);
+            var papers = PapersFor(look);
+            var voice = book.For(look?.Slug, papers?.Iso);
+            string said = book.Say(voice, cue, run.VoiceStream, drink, advice);
+            return string.IsNullOrEmpty(said) ? PlainLine(cue, advice) : said;
+        }
+
+        /// <summary>The lines the bar said before it had voices — the fallback, never the norm.</summary>
+        private static string PlainLine(VoiceCue cue, string advice)
+        {
+            switch (cue)
+            {
+                case VoiceCue.Perfect: return "Perfect!";
+                case VoiceCue.Another: return "Another round!";
+                case VoiceCue.Close: return "Thanks.";
+                case VoiceCue.Wrong: return "Not what I asked.";
+                case VoiceCue.Praise: return "Perfect pour. Not a thing I would change.";
+                case VoiceCue.Sip: return advice ?? string.Empty;
+                default: return string.Empty;
+            }
         }
 
         /// <summary>How many sips a drinker takes, and so how many things they can say.</summary>
@@ -293,10 +332,10 @@ namespace LastCall.UI
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < view.SaidLines - 1; i++)
             {
-                sb.Append(view.SayLines[i].ToUpperInvariant());
+                sb.Append(view.SayLines[i]);
                 sb.Append('\n');
             }
-            string last = view.SayLines[view.SaidLines - 1].ToUpperInvariant();
+            string last = view.SayLines[view.SaidLines - 1];
             int shown = Motion.Reduced ? last.Length
                 : Mathf.Clamp(Mathf.FloorToInt((now - view.SayTypeFrom) * SpeakCps), 0, last.Length);
             sb.Append(last.Substring(0, shown));
@@ -433,6 +472,22 @@ namespace LastCall.UI
             _seats[index].SayLines = new System.Collections.Generic.List<string>(
                 PourAdvice.Lines(asked, run.ServingGlass,
                     id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec, SipsPerDrink));
+            // IN THEIR OWN VOICE (2026-09-07): the first sip is the one with the character in
+            // it — a flawless pour earns the voice's own praise (keeping any "I asked for…"
+            // the coaching appended), and a pour with something to fix is told the way this
+            // drinker tells things. The coaching sentence itself is PourAdvice's, untouched.
+            var sips = _seats[index].SayLines;
+            if (sips.Count > 0)
+            {
+                string first = sips[0];
+                if (_seats[index].Note.Flawless)
+                {
+                    int asked2 = first.IndexOf("I asked for", System.StringComparison.Ordinal);
+                    string tail = asked2 >= 0 ? " " + first.Substring(asked2) : "";
+                    sips[0] = VoiceLine(visit, VoiceCue.Praise) + tail;
+                }
+                else sips[0] = VoiceLine(visit, VoiceCue.Sip, advice: first);
+            }
             _seats[index].SaidLines = 0;
             _seats[index].SayNextAt = Time.unscaledTime + FirstSipAfter;
             // …and they SAY it, now, over the glass they were just handed — not when they
@@ -1038,10 +1093,19 @@ namespace LastCall.UI
         // çek"). It sat at the counter's left end, which is where the menu now stands; the
         // right end is clear past the beer font, and a cloth kept at the far end of the bar
         // from the glassware is where a bar actually keeps one.
-        private const float ClothX = 1200f;   // the counter's right end, past the font
+        private const float ClothX = 1200f;   // the counter's right end, past the font (the fallback)
+        // THE TOWEL RAIL (2026-09-07, the author: "bar tezgahına bir bar demiri çizdim,
+        // towel_on_bar tam ona oturacak şekilde düzenlendi, onu onun üstüne oturt"). The rail
+        // is drawn into the counter's right cap at art columns 566..632, rows 59..62; the
+        // folded towel hangs from two rows above its top so the fold wraps the bar.
+        private const float RailArtX = 599f, RailArtTopY = 59f;
+        /// <summary>The author's two towels, drawn at the counter's own two units a pixel:
+        /// folded over the rail (45x51) and in the hand (30x54).</summary>
+        private static readonly Vector2 TowelRestSize = new Vector2(90f, 102f), TowelHeldSize = new Vector2(60f, 108f);
         private RectTransform _clothRt;
         private Image _clothImg;
         private bool _clothHeld;
+        private float _clothLastX;        // where the hand was, for which way the tail points
         private float _rubT;              // the wipe sound's own gap, so a rub is not a rattle
         private SeatView _clothRefused;
         private RectTransform _glassCarry;
@@ -1079,10 +1143,11 @@ namespace LastCall.UI
             if (_clothRt != null) return;
             _clothRt = NewRect("Cloth", _hudRoot);
             _clothRt.anchorMin = _clothRt.anchorMax = new Vector2(0.5f, 0.5f);
-            _clothRt.pivot = new Vector2(0.5f, 0f);
-            _clothRt.sizeDelta = new Vector2(52, 32);
+            // Hung from its top: on the rail by the fold, in the hand by the corner.
+            _clothRt.pivot = new Vector2(0.5f, 1f);
+            _clothRt.sizeDelta = TowelRestSize;
             _clothImg = _clothRt.gameObject.AddComponent<Image>();
-            _clothImg.sprite = ChromeArt.Cloth();
+            _clothImg.sprite = ItemArt.Load("towel_on_bar") ?? ChromeArt.Cloth();
             _clothImg.preserveAspect = true;
             var glow = _clothRt.gameObject.AddComponent<HoverGlow>();
             glow.Graphics = new Graphic[] { _clothImg };
@@ -1162,6 +1227,11 @@ namespace LastCall.UI
             _clothHeld = true;
             _clothRefused = null;
             _clothRt.SetAsLastSibling();
+            // In the hand it is the loose towel (the author's towel.png), and its BODY is
+            // the rag the marks are rubbed with — Rub walks the rect's own corners.
+            var towelHeld = ItemArt.Load("towel");
+            if (towelHeld != null) { _clothImg.sprite = towelHeld; _clothRt.sizeDelta = TowelHeldSize; }
+            _clothRt.localScale = Vector3.one;
             // Taken by the corner it was taken by.
             _clothGrabOffset = Vector2.zero;
             var m = Mouse.current;
@@ -1175,6 +1245,10 @@ namespace LastCall.UI
         {
             if (!_clothHeld) return;
             _clothHeld = false;
+            // Back on the rail, folded.
+            var rest = ItemArt.Load("towel_on_bar");
+            if (rest != null) { _clothImg.sprite = rest; _clothRt.sizeDelta = TowelRestSize; }
+            _clothRt.localScale = Vector3.one;
             Sfx.Play("dish_down", 0.45f);
         }
 
@@ -1185,7 +1259,12 @@ namespace LastCall.UI
             bool on = run != null && run.Phase == TycoonPhase.DayOpen && (_flow == null || !_flow.IsOpen);
             if (_clothRt.gameObject.activeSelf != on) _clothRt.gameObject.SetActive(on);
             if (!on) { _clothHeld = false; return; }
-            var home = ToCentre(new Vector2(ClothX, CounterLineY - 36f + CounterLift));
+            // ON THE RAIL: the fold two art rows above the bar's top, at the bar's middle,
+            // wherever the drawn counter puts that in this window; the old right-end spot
+            // only if the room has no counter to ask.
+            Vector2 home = stage != null && stage.CounterArtPoint(RailArtX, RailArtTopY - 2f, out var rail)
+                ? ToCentre(new Vector2(rail.x * StageToHud, rail.y * StageToHud + CounterLift))
+                : ToCentre(new Vector2(ClothX, CounterLineY - 36f + CounterLift));
             if (!_clothHeld)
             {
                 _clothRt.anchoredPosition = home;
@@ -1196,7 +1275,16 @@ namespace LastCall.UI
             if (mouse == null || !mouse.leftButton.isPressed || CellarOpen) { DropCloth(); return; }
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
+            {
                 _clothRt.anchoredPosition = at + new Vector2(0f, -12f) + _clothGrabOffset;
+                // THE TAIL FOLLOWS THE HAND (the author: "towelin ucu hareket ettiği yöne
+                // doğru bakmalı"). The drawing's tail hangs to the right; moving left turns
+                // it over. A hand that has not moved keeps the towel the way it was.
+                float dx = at.x - _clothLastX;
+                if (dx > 0.5f) _clothRt.localScale = Vector3.one;
+                else if (dx < -0.5f) _clothRt.localScale = new Vector3(-1f, 1f, 1f);
+                _clothLastX = at.x;
+            }
             // WIPING IS RUBBING (GDD 27 §4.2, corrected 2026-09-06). The cloth used to erase
             // a whole mark the instant it touched any part of it, so a mess was a click with
             // extra steps. It takes the ink out of the pixels it actually passes over now, and
@@ -2557,10 +2645,13 @@ namespace LastCall.UI
             // reaction line is honest — but the bill is not on the table yet. The money and
             // the stars float up when they finish and get up (TabFloat), which is when a
             // customer actually pays.
-            string line = verdict.OrdersAgain ? "ANOTHER ROUND!"
-                : verdict.Match == OrderMatch.Exact ? "PERFECT!"
-                : verdict.Match == OrderMatch.Close ? "THANKS."
-                : "NOT WHAT I ASKED";
+            // The shout is the drinker's own (2026-09-07): the pop-up is the one line that
+            // is allowed capitals, and it takes them here, not in the book.
+            var cue = verdict.OrdersAgain ? VoiceCue.Another
+                : verdict.Match == OrderMatch.Exact ? VoiceCue.Perfect
+                : verdict.Match == OrderMatch.Close ? VoiceCue.Close
+                : VoiceCue.Wrong;
+            string line = VoiceLine(_seats[seatIndex].Visit, cue).ToUpperInvariant();
             if (verdict.OrdersAgain) Sfx.Play("another_round", 0.85f);
 
             var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
@@ -2877,6 +2968,15 @@ namespace LastCall.UI
                     if (!v.Visit.OnTheHouse && !kicked)
                         ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false,
                             perfect: !v.ExitStorm && v.Note.Flawless);
+                    // ...AND A WORD ON THE WAY OUT (2026-09-07): a walk-out and a kick each get
+                    // one line in the drinker's voice, said from the stool as they get up. The
+                    // guest of the house leaves in silence here — her lines are the story's.
+                    if (v.ExitStorm && !v.Visit.OnTheHouse)
+                    {
+                        v.SayLines = null;
+                        v.SaidLines = 0;
+                        SayIt(v, VoiceLine(v.Visit, kicked ? VoiceCue.Kicked : VoiceCue.Leaving));
+                    }
                     if (v.Visit.OnTheHouse) { }
                     else if (kicked)
                         LogService($"<color=#F27D8A>SHOWN THE DOOR</color> · " + KickReason(v.Visit)
@@ -3024,6 +3124,11 @@ namespace LastCall.UI
                     // business. The patience bar goes with it (2026-08-20): their clock
                     // stopped when they left the stool, and a gauge crossing the room is a
                     // countdown on somebody who is no longer waiting for anything.
+                    // The one exception is the parting line (2026-09-07): a walk-out says
+                    // its piece as it goes, on the balloon's own clock, and then that too
+                    // comes down.
+                    if (view.Say != null && view.Say.gameObject.activeSelf
+                        && Time.unscaledTime >= view.SayUntil) HushSeat(view);
                     if (view.Tag.gameObject.activeSelf) view.Tag.gameObject.SetActive(false);
                     if (view.Gauge != null && view.Gauge.gameObject.activeSelf)
                         view.Gauge.gameObject.SetActive(false);
@@ -3110,12 +3215,24 @@ namespace LastCall.UI
                     {
                         view.WasKnown = true;
                         view.SpeakFrom = Time.unscaledTime;
+                        view.OrderVoiced = false;
                     }
                     string wanted = known ? visit.Order.Wanted.Name.ToUpperInvariant() : "";
                     int said = Motion.Reduced ? wanted.Length
                         : Mathf.Clamp(Mathf.FloorToInt((Time.unscaledTime - view.SpeakFrom) * SpeakCps),
                                       0, wanted.Length);
                     view.Spoken = said >= wanted.Length;
+                    // THE ORDER IN THEIR OWN WORDS (2026-09-07): once the ticket has finished
+                    // typing the drink, the drinker says it the way they say things — one
+                    // balloon, once, and only for an order the card has already given up
+                    // (`known`), so nothing is said before it may be read. The guest of the
+                    // house names her drink on the plate and not here.
+                    if (view.Spoken && known && !view.OrderVoiced && !visit.OnTheHouse
+                        && (view.SayLines == null || view.SayLines.Count == 0))
+                    {
+                        view.OrderVoiced = true;
+                        SayIt(view, VoiceLine(visit, VoiceCue.Order, visit.Order.Wanted.Name));
+                    }
 
                     if (drinking)
                     {
@@ -3372,6 +3489,7 @@ namespace LastCall.UI
             if (view.ExitT >= 1f)
             {
                 view.Exiting = false;
+                HushSeat(view);        // whatever they said on the way out went out with them
                 // They are through the door: book the visit and the stars against the FACE
                 // that walked out, which is the last moment both are still in hand.
                 RecordDeparture(view.Look, view.Visit);

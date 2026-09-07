@@ -66,17 +66,48 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ASloppyServePour_SpillsHalfAndUnderfillsTheGlass()
+        public void AnOffAimPour_StillLandsWhole_NothingIsLostToAim()
         {
+            // 2026-09-06, the author: one tin is one portion, "ne shakerda artmalı ne de
+            // bardakta tam dolmama". The aim used to spill half of this; it spills nothing.
             var shaker = Glass();
             shaker.Add("gin", 0.8);
             var serving = Glass();
 
             double landed = shaker.TransferInto(serving, 0.8, accuracy: 0.5);
 
-            Assert.AreEqual(0.4, landed, 1e-9, "half missed the rim");
-            Assert.IsTrue(shaker.IsEmpty, "the full pour still drained the shaker");
-            Assert.AreEqual(0.4, serving.FillFraction, 1e-9, "a thinner drink than you built");
+            Assert.AreEqual(0.8, landed, 1e-9, "everything that left the tin landed");
+            Assert.IsTrue(shaker.IsEmpty, "the pour drained the shaker");
+            Assert.AreEqual(0.8, serving.FillFraction, 1e-9, "the drink you built is the drink in the glass");
+        }
+
+        [Test]
+        public void ATinPoursIntoASmallerGlass_ToTheSameLine_AndComesUpEmpty()
+        {
+            var shaker = Glass();                       // capacity 1
+            shaker.Add("gin", 0.75);
+            shaker.Add("lemon", 0.25);
+            var rocks = new GlassContents(0.7);
+
+            double landed = shaker.TransferInto(rocks, shaker.TotalVolume, 1.0, scale: 0.7);
+
+            Assert.AreEqual(0.7, landed, 1e-9, "a full tin is a full rocks glass");
+            Assert.IsTrue(rocks.IsFull, "the small glass is full");
+            Assert.IsTrue(shaker.IsEmpty, "and nothing is left in the tin");
+            Assert.AreEqual(0.75, rocks.RatioOf("gin"), 1e-9, "the ratio is the drink");
+        }
+
+        [Test]
+        public void ATinPoursIntoABiggerGlass_ToTheSameLine()
+        {
+            var shaker = Glass();
+            shaker.Add("gin", 0.5);                     // half a tin
+            var pint = new GlassContents(1.6);
+
+            shaker.TransferInto(pint, shaker.TotalVolume, 1.0, scale: 1.6);
+
+            Assert.AreEqual(0.5, pint.FillFraction, 1e-9, "half a tin is half a pint");
+            Assert.IsTrue(shaker.IsEmpty);
         }
 
         [Test]

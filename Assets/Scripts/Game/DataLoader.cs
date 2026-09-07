@@ -605,6 +605,47 @@ namespace LastCall.Game
         /// Customer archetypes (GDD 19 §9). Bands are addressed by emotion name rather than
         /// position so a reordered file can't silently make everyone furious.
         /// </summary>
+        /// <summary>
+        /// The crowd's voices (2026-09-06): who speaks in which, and the lines per cue.
+        /// Loud about what the book itself refuses — a voice with nothing to say for a cue, a
+        /// sip line that never says what to fix, two voices claiming one look — because every
+        /// one of those is a balloon that comes up empty or wrong over a drinker's head.
+        /// </summary>
+        public static VoiceBook ParseVoices(string json)
+        {
+            var dto = FromJson<VoicesFileDto>(json, "voices");
+            if (dto.voices == null || dto.voices.Count == 0)
+                throw new FormatException("Voices file has no voices.");
+            var voices = new List<VoiceDefinition>(dto.voices.Count);
+            foreach (var v in dto.voices)
+            {
+                var lines = new Dictionary<VoiceCue, IReadOnlyList<string>>
+                {
+                    [VoiceCue.Order] = v.order, [VoiceCue.Perfect] = v.perfect,
+                    [VoiceCue.Another] = v.another, [VoiceCue.Close] = v.close,
+                    [VoiceCue.Wrong] = v.wrong, [VoiceCue.Praise] = v.praise,
+                    [VoiceCue.Sip] = v.sip, [VoiceCue.Leaving] = v.leaving,
+                    [VoiceCue.Kicked] = v.kicked,
+                };
+                try
+                {
+                    voices.Add(new VoiceDefinition(v.id, v.name, v.isos, v.people, lines));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new FormatException("Voices file: " + e.Message);
+                }
+            }
+            try
+            {
+                return new VoiceBook(voices);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException("Voices file: " + e.Message);
+            }
+        }
+
         public static IReadOnlyList<ArchetypeDefinition> ParseArchetypes(string json)
         {
             var dto = FromJson<ArchetypesFileDto>(json, "archetypes");
@@ -795,6 +836,31 @@ namespace LastCall.Game
             public int weight;
             public List<string> names;
             public List<string> hometowns;
+        }
+
+        [Serializable]
+        private sealed class VoiceDto
+        {
+            public string id;
+            public string name;
+            public List<string> isos;
+            public List<string> people;
+            public List<string> order;
+            public List<string> perfect;
+            public List<string> another;
+            public List<string> close;
+            public List<string> wrong;
+            public List<string> praise;
+            public List<string> sip;
+            public List<string> leaving;
+            public List<string> kicked;
+        }
+
+        [Serializable]
+        private sealed class VoicesFileDto
+        {
+            public int version;
+            public List<VoiceDto> voices;
         }
 
         [Serializable]

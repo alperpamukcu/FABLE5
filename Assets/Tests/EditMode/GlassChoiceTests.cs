@@ -61,29 +61,13 @@ namespace LastCall.Tests
             return match?.Recipe;
         }
 
-        [Test]
-        public void One_confident_measure_of_a_fizzy_drink_comes_out_wrong()
-        {
-            // A TRIPWIRE, not an endorsement. If the pour system ever learns to hold the
-            // right glass through a half-built drink, THIS test is the one that should fail —
-            // delete it then, and keep the one below.
-            var run = NewBar();
-            var recipe = VodkaSoda(run);
-            var ideal = RatioRecipeMatcher.PerfectPour(recipe);   // the box rule, 2026-08-20
-            double volume = 0.98 * 1.0;   // a full highball, which is the glass this drink names
-
-            run.PourMeasure("vodka_astra", volume * ideal[0]);
-            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
-            run.PourAtGlass("soda_klara", volume * ideal[1]);
-
-            Assert.AreNotEqual("vodka_soda", Delivered(run)?.Id,
-                "the trap is gone — good news, and this test should go with it: "
-                + WhatIsInTheGlass(run));
-            Assert.AreEqual("rocks", run.ServingGlassware?.Id,
-                "the spirit arrived alone and the bar reached for a neat pour's glass: "
-                + WhatIsInTheGlass(run));
-        }
-
+        // THE TRIPWIRE FIRED (2026-09-07). One_confident_measure_of_a_fizzy_drink_comes_out_wrong
+        // stood here to prove that a single confident measure of spirit poured out alone was
+        // served in a rocks glass and never re-housed. ONE TIN IS ONE PORTION (GDD 21, the
+        // ninth list) lands that measure scaled to the neat pour's glass, the soda then crosses
+        // the shares into vodka_soda's boxes and the drink moves to its highball — the trap is
+        // gone, and the test asked to be deleted when it went. The round-by-round test below
+        // is the one that was always meant to outlive it.
         [Test]
         public void The_same_drink_poured_in_small_rounds_comes_out_right_and_full()
         {

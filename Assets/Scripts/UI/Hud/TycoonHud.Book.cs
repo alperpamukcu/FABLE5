@@ -1238,10 +1238,17 @@ namespace LastCall.UI
                     textX = box + 6f + Mathf.Max(0, pour.Count - 1) * step;
                 }
 
+                // THE NAME OWNS ITS LINE (2026-09-07, the author: "barlar ucundan kesik
+                // gözüküyor, tam oturtulmamış"). The name's box used to stop 116 units short
+                // of the row's end for a gauge 72 wide, and the five dots at 2x are 128: a
+                // long name ran under the first dot, and a name that wrapped ran over the
+                // dots. The dots stand on the row's SECOND line now (below), so the name
+                // may run to the row's end and never meets them.
                 var label = NewText("L", line, _body, 16, TextAnchor.UpperLeft,
                     ingredient ? (stocked ? ink : miss) : prepInk);
                 Place(label.rectTransform, new Vector2(0, 1),
-                    new Vector2(BkColW - textX - BkGaugeW - 14f, 20f), Vector2.zero);
+                    new Vector2(BkColW - textX - 8f, 20f), Vector2.zero);
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.rectTransform.pivot = new Vector2(0, 1);
                 label.rectTransform.anchoredPosition = new Vector2(textX, -1f);
                 label.raycastTarget = false;
@@ -1264,7 +1271,8 @@ namespace LastCall.UI
                     lockT.horizontalOverflow = HorizontalWrapMode.Overflow;
                     lockT.verticalOverflow = VerticalWrapMode.Truncate;
                     lockT.raycastTarget = false;
-                    lockT.text = "LOCKED · NOT IN THE WELL";
+                    // Short, because the dots share this line now (2026-09-07).
+                    lockT.text = "LOCKED";
                 }
 
                 if (spec.Amount.Length > 0)
@@ -1296,8 +1304,9 @@ namespace LastCall.UI
                                                       BandBoxColors, RatioBox.Count);
                     float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
                     var dots = NewRect("Dots", line);
-                    Place(dots, new Vector2(1, 0.5f), new Vector2(dw, dh), new Vector2(-6f - dw, 0));
-                    dots.pivot = new Vector2(0, 0.5f);
+                    // On the row's second line, flush right: the name's line is the name's.
+                    Place(dots, new Vector2(1, 1), new Vector2(dw, dh), new Vector2(-6f, -22f));
+                    dots.pivot = new Vector2(1, 1);
                     var dimg = dots.gameObject.AddComponent<Image>();
                     dimg.sprite = dotsArt;
                     dimg.raycastTarget = false;

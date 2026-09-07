@@ -1395,6 +1395,32 @@ namespace LastCall.UI
         /// arrive without a border, the bar falls back to its native width and these cells
         /// are the wrong ones; SetUpCounterTiling logs that case rather than letting it pass.
         /// </summary>
+        /// <summary>
+        /// Where a point of the COUNTER DRAWING stands, in stage units with the room at rest
+        /// (bottom-left origin; the drawer's lift is the caller's to add). The counter is
+        /// 9-sliced and tiled to the window, so an art pixel in the right cap is measured
+        /// from the drawn bar's right edge, not from the sprite's left. Written for the towel
+        /// rail the author drew into the counter's right cap (2026-09-07); anything else that
+        /// has to sit ON a feature of the drawing should ask this rather than type a number.
+        /// </summary>
+        public bool CounterArtPoint(float artX, float artYFromTop, out Vector2 stage)
+        {
+            stage = default;
+            if (_counterTr == null) return false;
+            var sr = _counterTr.GetComponent<SpriteRenderer>();
+            if (sr == null || sr.sprite == null) return false;
+            float drawnW = sr.drawMode == SpriteDrawMode.Tiled ? sr.size.x : _counterNative.x;
+            var border = sr.sprite.border;
+            float drawnX = border.z > 0f && artX > _counterNative.x - border.z
+                ? drawnW - (_counterNative.x - artX)
+                : artX;
+            float artTopStage = CounterRestY + CounterSurfaceInset * _counterScale;
+            stage = new Vector2(
+                Reference.x * 0.5f + (drawnX - drawnW * 0.5f) * _counterScale,
+                artTopStage - artYFromTop * _counterScale);
+            return true;
+        }
+
         public bool ShelfCell(int index, out float centerX, out float floorY, out float height)
         {
             centerX = 0f; floorY = 0f; height = 0f;

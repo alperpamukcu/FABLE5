@@ -618,12 +618,29 @@ namespace LastCall.UI
         private void LicenceFurniture(RectTransform card)
         {
             var band = NewRect("Band", card);
-            Place(band, new Vector2(0, 1), new Vector2(LicW - LicPad * 0.5f, LicHeaderH),
-                new Vector2(LicPad * 0.25f, LicHeaderY));
+            Place(band, new Vector2(0, 1), new Vector2(LicW, LicHeaderH), new Vector2(0f, LicHeaderY));
             band.pivot = new Vector2(0, 1);
             var bandImg = band.gameObject.AddComponent<Image>();
-            bandImg.color = UITheme.Night[1];
+            // THE BEACH ON THE BAND (2026-09-07, the author: "kimliğin üst şeritine uygun
+            // uzun bir görsel üret, plaj ve okyanus görseli olabilir"). A 200x16 golden-hour
+            // panorama at the card's own three, edge to edge; the card's rounded corners
+            // clip it (the card is a Mask). Without the picture the band is the old ink.
+            var beach = ItemArt.Load("licence_band");
+            bandImg.sprite = beach;
+            bandImg.color = beach != null ? Color.white : UITheme.Night[1];
             bandImg.raycastTarget = false;
+            // ...and a scrim under the type at the left, fading to the sea: the sunset is
+            // the same value as cream type, and a licence has to be read.
+            if (beach != null)
+            {
+                var scrim = NewRect("Scrim", band);
+                Stretch(scrim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                scrim.offsetMax = new Vector2(-LicW * 0.42f, 0f);
+                var scrimImg = scrim.gameObject.AddComponent<Image>();
+                scrimImg.sprite = ChromeArt.FadeRight();
+                scrimImg.color = new Color(0.05f, 0.03f, 0.08f, 0.82f);
+                scrimImg.raycastTarget = false;
+            }
 
             void Well(float x, float y, float w, float h, bool sunk)
             {
@@ -688,6 +705,10 @@ namespace LastCall.UI
             shell.type = Image.Type.Tiled;
             shell.pixelsPerUnitMultiplier = 1f / LicScale;
             shell.color = Color.white;
+            // THE CARD CLIPS TO ITS OWN CORNERS (2026-09-07): the band's picture runs edge to
+            // edge, and a rounded card with a square picture poking out of its corners is
+            // not a rounded card. The paper is the mask; everything printed on it is cut to it.
+            card.gameObject.AddComponent<Mask>().showMaskGraphic = true;
             card.gameObject.AddComponent<Button>().transition = Selectable.Transition.None; // swallow clicks
 
             LicenceFurniture(card);
@@ -700,24 +721,30 @@ namespace LastCall.UI
             // STACKED at the band's left (v3): the authority over the document's class,
             // which leaves the band's right half to the key and the seal.
             float bandMid = LicHeaderY - LicHeaderH * 0.5f;
+            // CLEAR OF THE EDGES (2026-09-07, the author: "şeritin üstündeki yazılar
+            // çizgilere çok yakın, hizala"). The house name stood with its top on the band's
+            // top rule and the class with its foot on the bottom one. The two lines are a
+            // stack centred in the band now: 18 and 12 tall, four apart, eight from either
+            // edge. THE HOUSE (the author: "mekan Miami, barın ismi Malibu Club"): the club
+            // issues its patron licences, and the city is the class line's first word.
             var authority = NewText("Authority", card, _display, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[4]);
             Place(authority.rectTransform, new Vector2(0, 1), new Vector2(240, 18),
-                new Vector2(LicPad + 4f, bandMid + 20f));
+                new Vector2(LicPad + 4f, bandMid + 8f));
             authority.horizontalOverflow = HorizontalWrapMode.Overflow;
-            authority.text = "NEW ARDEN";
+            authority.text = "MALIBU CLUB";
             var docType = NewText("DocType", card, _body, 8, TextAnchor.MiddleLeft,
-                new Color(0.62f, 0.72f, 0.88f, 1f));
-            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(130, 12),
-                new Vector2(LicPad + 4f, bandMid - 6f));
+                new Color(0.80f, 0.86f, 0.96f, 1f));
+            Place(docType.rectTransform, new Vector2(0, 1), new Vector2(170, 12),
+                new Vector2(LicPad + 4f, bandMid - 9f));
             docType.horizontalOverflow = HorizontalWrapMode.Overflow;
-            docType.text = "PATRON LICENCE  ·";
+            docType.text = "MIAMI  ·  PATRON LICENCE  ·";
             // The document number, on the band's second line (v4): the one header field
             // that differs on every card, beside the class.
             _idNumber = NewText("Num", card, _body, 8, TextAnchor.MiddleLeft,
-                new Color(0.62f, 0.72f, 0.88f, 1f));
+                new Color(0.80f, 0.86f, 0.96f, 1f));
             Place(_idNumber.rectTransform, new Vector2(0, 1), new Vector2(160, 12),
-                new Vector2(LicPad + 4f + 128f, bandMid - 6f));
+                new Vector2(LicPad + 4f + 172f, bandMid - 9f));
             _idNumber.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // The flag rides the header, where a licence puts its emblem. It is the one

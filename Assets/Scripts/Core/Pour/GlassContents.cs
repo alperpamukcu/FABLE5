@@ -155,10 +155,22 @@ namespace LastCall.Core
         /// <paramref name="volume"/> still drains from this vessel. Returns the volume that
         /// landed in the target.
         /// </summary>
-        public double TransferInto(GlassContents target, double volume, double accuracy)
+        /// <param name="scale">Glass units landed per unit leaving (2026-09-06, the author:
+        /// "1 shakerdan hangi bardak olursa olsun tam 1 porsiyon çıkmalı ne shakerda artmalı
+        /// ne de bardakta tam dolmama sorunu yaşanmalı"). ONE TIN IS ONE PORTION: the run
+        /// passes the glass's capacity over the tin's, so a full tin fills a coupe and a pint
+        /// to the same line and a tin poured out is empty whatever came down. The ratio is
+        /// what the drink is; the amount was never the craft.</param>
+        public double TransferInto(GlassContents target, double volume, double accuracy, double scale = 1.0)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
-            accuracy = accuracy < 0 ? 0 : accuracy > 1 ? 1 : accuracy;
+            if (scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale), "A pour lands at a positive scale.");
+            // NOTHING IS LOST TO AIM ANY MORE (2026-09-06, the same ruling: "ne shakerda artmalı
+            // ne de bardakta tam dolmama"). The aim used to spill a share of every pour and the
+            // player watched a full tin make two thirds of a glass. A stream that misses the
+            // glass is a stream the bench does not pour; what leaves the tin lands, whole.
+            // The parameter stays so the callers (and the sim) read as they did.
+            _ = accuracy;
 
             double leaving = Math.Min(volume, TotalVolume);
             // The pour STOPS at the brim (GDD 21 §3) — and stopping means the source stops
@@ -168,7 +180,7 @@ namespace LastCall.Core
             // through no fault of aim. A mixed drink leaves the spout mixed; found when the
             // menu redesign put a shaken drink in a 0.7 rocks glass and every one served
             // Wrong (2026-07-31).
-            if (accuracy > 0) leaving = Math.Min(leaving, target.Headroom / accuracy);
+            leaving = Math.Min(leaving, target.Headroom / scale);
             if (leaving <= 0) return 0;
 
             // Snapshot the shares before draining, then land each ingredient's portion into
@@ -177,7 +189,7 @@ namespace LastCall.Core
             foreach (var pair in new List<KeyValuePair<string, double>>(_byIngredient))
             {
                 double share = pair.Value / TotalVolume;
-                landed += target.Add(pair.Key, accuracy * leaving * share);
+                landed += target.Add(pair.Key, leaving * scale * share);
             }
 
             // The drink carries its preparation with it (fixed 2026-07-31). Ice dropped in the

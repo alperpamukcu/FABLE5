@@ -84,13 +84,20 @@ namespace LastCall.UI
             /// Null for the procedural set, whose single sprite stays the old way.</summary>
             public readonly Sprite Front, Back;
 
+            /// <summary>THE FLOOR IS AN ARC (2026-09-07, the author: "tabanı yay şeklinde
+            /// değil"): how much higher the cavity's floor stands at the walls than in the
+            /// middle, as a fraction of the rect's height — the near arc of the floor's
+            /// ellipse, which the fill mask already follows and the solver now does too
+            /// (<see cref="MetaballFluid.SetFloorArc"/>). Zero for a flat-bottomed drawing.</summary>
+            public readonly float FloorArc;
+
             public Piece(Sprite sprite, Sprite fill, float interiorHalf, float floorY, float rimY,
                 float[] profile, float aspect, float density,
-                Sprite front = null, Sprite back = null)
+                Sprite front = null, Sprite back = null, float floorArc = 0f)
             {
                 Sprite = sprite; Fill = fill; InteriorHalf = interiorHalf;
                 FloorY = floorY; RimY = rimY; Profile = profile; Aspect = aspect;
-                Density = density; Front = front; Back = back;
+                Density = density; Front = front; Back = back; FloorArc = floorArc;
             }
 
             /// <summary>
@@ -290,9 +297,9 @@ namespace LastCall.UI
         /// measured value until SurfaceY is re-read in play.</summary>
         private readonly struct Gen3D
         {
-            public readonly float FloorY, RimY, InteriorHalf, Density;
-            public Gen3D(float floorY, float rimY, float interiorHalf, float density)
-            { FloorY = floorY; RimY = rimY; InteriorHalf = interiorHalf; Density = density; }
+            public readonly float FloorY, RimY, InteriorHalf, Density, FloorArc;
+            public Gen3D(float floorY, float rimY, float interiorHalf, float density, float floorArc = 0f)
+            { FloorY = floorY; RimY = rimY; InteriorHalf = interiorHalf; Density = density; FloorArc = floorArc; }
         }
 
         // Interiors are the widest wall-to-wall gap measured off the FINAL sprites —
@@ -344,14 +351,20 @@ namespace LastCall.UI
             // glasses off PixelLab, the cavity cut by hand-read rows and the wall left translucent, so
             // the drink shows THROUGH the glass. Fractions are the ship script's own print-out; the
             // densities are the old set's until SurfaceY is re-read in play.
-            ["pint"] = new Gen3D(0.177f, 0.896f, 0.661f, 1.02f),       // 56x96, cavity rows 19..72, wall 5
-            ["highball"] = new Gen3D(0.135f, 0.896f, 0.591f, 1.02f),   // 44x96, cavity rows 21..78, wall 4
+            // CENTRED ON THE CAVITY (2026-09-07, the author: "bardakların dolum bölgeleri bozuk
+            // kaymalar var"). The takes were drawn wherever the generator liked on their canvas
+            // — the highball in columns 0..33 of 44 — and every stage centres the pool on the
+            // RECT, so the drink stood five art pixels right of its glass. The ship script now
+            // cuts each canvas so the cavity's centre IS the canvas's centre; the widths below
+            // are the cut sheets', and the fifth number is the floor's arc (FloorArc).
             // A full glass reads 0.87 of the cavity at 0.95 AND at 1.09 (2026-09-06): the surface
             // stops at the pool ceiling (PoolCeilingArtPx under the rim) by design, so the density
             // is not what that number is about, and the old bench stands.
-            ["rocks"] = new Gen3D(0.264f, 0.861f, 0.562f, 0.95f),      // 64x72, cavity rows 15..47, wall 5
-            ["martini"] = new Gen3D(0.511f, 0.909f, 0.611f, 0.78f),    // 72x88, cavity rows 18..40, wall 4
-            ["coupe"] = new Gen3D(0.534f, 0.886f, 0.588f, 0.78f),      // 68x88, cavity rows 19..39, wall 4
+            ["pint"] = new Gen3D(0.177f, 0.896f, 0.755f, 1.02f, 0.042f),   // 49x96, cut 4..53 of the take
+            ["highball"] = new Gen3D(0.135f, 0.896f, 0.722f, 1.02f, 0.042f),   // 36x96, cut 0..36 of the take
+            ["rocks"] = new Gen3D(0.264f, 0.861f, 0.750f, 0.95f, 0.035f),   // 48x72, cut 8..56 of the take
+            ["martini"] = new Gen3D(0.511f, 0.909f, 0.815f, 0.78f, 0.011f),   // 54x88, cut 7..61 of the take
+            ["coupe"] = new Gen3D(0.534f, 0.886f, 0.800f, 0.78f, 0.017f),   // 50x88, cut 7..57 of the take
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)
@@ -375,7 +388,7 @@ namespace LastCall.UI
             return new Piece(sprite, fill, g.InteriorHalf, g.FloorY, g.RimY, solverProfile,
                 sprite.rect.width / sprite.rect.height, g.Density,
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_front"),
-                ItemArt.Load($"glass3d_{glass.Id}{dress}_back"));
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc);
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

@@ -816,25 +816,34 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void ASloppyServePour_CostsTheRecipe()
+        public void AFullTin_FillsWhateverGlassComesDown_AndTheAimSpillsNothing()
         {
+            // 2026-09-06, the author: "1 shakerdan hangi bardak olursa olsun tam 1 porsiyon
+            // çıkmalı ne shakerda artmalı ne de bardakta tam dolmama sorunu yaşanmalı". The
+            // tin's line is the glass's line, whatever glass the drink calls down, and a bad
+            // aim no longer pours two thirds of a drink.
             var run = NewRun();
             int guard = 0;
             while (run.Floor.Seated.Count == 0) { Assert.Less(guard++, 100); run.Tick(5); }
-            var visit = run.Floor.Seated[0];   // day 1 orders a Spritz
 
-            // An exact spritz built in the shaker, then poured badly: 60% misses the rim,
-            // so the serving glass lands under the recipe's MinFill and the drink no longer
-            // reads as a Spritz. The aim is the skill; spilling has a price.
-            run.PourMeasure("gin", 0.35);
-            run.PourMeasure("soda", 0.35);
-            run.PourIntoServingGlass(0.7, accuracy: 0.4);
+            run.PourMeasure("gin", 0.5);
+            run.PourMeasure("soda", 0.5);
+            Assert.IsTrue(run.Glass.IsFull, "a full tin");
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 0.4);
 
-            Assert.Less(run.ServingGlass.FillFraction, 0.5, "a spilled pour under-fills the glass");
-            Assert.IsTrue(run.Glass.IsEmpty, "the shaker is spent either way");
+            Assert.IsTrue(run.ServingGlass.IsFull, "a full tin is a full glass, whatever its capacity");
+            Assert.IsTrue(run.Glass.IsEmpty, "and the tin is spent");
+            Assert.AreEqual(0.5, run.ServingGlass.RatioOf("gin"), 1e-9, "the ratio crossed over");
+        }
 
-            var verdict = run.ServeTo(visit);
-            Assert.AreNotEqual(OrderMatch.Exact, verdict.Match, "the spill lost the recipe");
+        [Test]
+        public void HalfATin_IsHalfAGlass()
+        {
+            var run = NewRun();
+            run.PourMeasure("gin", 0.5);
+            run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+            Assert.AreEqual(0.5, run.ServingGlass.FillFraction, 1e-9, "the tin's line is the glass's line");
+            Assert.IsTrue(run.Glass.IsEmpty);
         }
 
         [Test]
@@ -1137,16 +1146,20 @@ namespace LastCall.Tests
             PourOut(run);
             Assert.AreEqual("rocks", run.ServingGlassware.Id,
                 "half a drink: pure spirit reads as a neat pour, and that is a rocks glass");
+            // ONE TIN IS ONE PORTION (2026-09-06): a fifth of the tin lands as a fifth of the
+            // rocks glass, so the vodka in the glass is read back rather than assumed.
+            double vodkaInGlass = run.ServingGlass.TotalVolume;
+            Assert.AreEqual(0.2 * 0.7, vodkaInGlass, 1e-9, "a fifth of the tin is a fifth of the glass");
 
             // Enough soda to land the shares on vodka_soda's own perfect proportions —
             // the amount is derived from the page, not hard-coded.
             var pv = RatioRecipeMatcher.PerfectPour(
                 RecipeCatalog.CreateDefault().First(r => r.Id == "vodka_soda"));
-            double sodaVol = 0.2 * pv[1] / pv[0];
+            double sodaVol = vodkaInGlass * pv[1] / pv[0];
             run.PourAtGlass("soda_t", sodaVol);
             Assert.AreEqual("highball", run.ServingGlassware.Id,
                 "the soda names the drink, and the drink moves to its own glass");
-            Assert.AreEqual(0.2 + sodaVol, run.ServingGlass.TotalVolume, 1e-6,
+            Assert.AreEqual(vodkaInGlass + sodaVol, run.ServingGlass.TotalVolume, 1e-6,
                 "the re-pour spills nothing");
         }
 

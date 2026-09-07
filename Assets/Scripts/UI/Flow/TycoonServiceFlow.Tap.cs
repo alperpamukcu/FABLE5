@@ -794,6 +794,8 @@ namespace LastCall.UI
                 // frame, so the drink stays level in the world while the glass goes over.
                 float beerFrac = (float)(glass.TotalVolume / glass.Capacity);
                 float headFrac = (float)(glass.Head / glass.Capacity);
+                // The pint's floor is an arc too (2026-09-07, GlassArt.Piece.FloorArc).
+                _tapFluid.SetFloorArc(_tapPiece.Sprite != null ? _tapPiece.FloorArc * _tapGlass.rect.height : 0f);
                 _tapFluid.SetPool(centre.x - iw, centre.x + iw,
                     centre.y - innerH * 0.5f, centre.y + innerH * 0.5f, beerFrac, rad, headFrac);
                 // The beer deepens as the pint fills, like every other drink. RefreshTap sets

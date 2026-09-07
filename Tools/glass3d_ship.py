@@ -104,6 +104,31 @@ def ship(key, preview_cells):
             r, g, b, al = gp[x, y]
             gp[x, y] = (r, g, b, min(al, GLASS_ALPHA))
         widest = max(widest, x1 - x0 + 1)
+    # CENTRE THE CANVAS ON THE CAVITY (2026-09-07, the author: "bardakların dolum bölgeleri
+    # bozuk kaymalar var"). The generator draws where it likes on its canvas — the highball
+    # sat in columns 0..33 of 44 — and every stage centres the drink on the RECT, so the pool
+    # stood five art pixels right of the glass. The canvas is cut (or padded) so the cavity's
+    # centre is the canvas's centre, one clear column each side of the silhouette; the fill
+    # mask rides the same box, and the tier dress is cut with it (ninth_art_gen.py, 'crop').
+    fb = fill.getbbox()
+    sb = im.getbbox()
+    cav_cx = (fb[0] + fb[2] - 1) / 2.0
+    half = max(cav_cx - sb[0], (sb[2] - 1) - cav_cx) + 1.0
+    left = int(round(cav_cx - half))
+    right = int(round(cav_cx + half)) + 1
+    if left < 0 or right > im.width:
+        pad_l = max(0, -left)
+        pad_r = max(0, right - im.width)
+        wide = Image.new('RGBA', (im.width + pad_l + pad_r, im.height), (0, 0, 0, 0))
+        wide.alpha_composite(im, (pad_l, 0))
+        widef = Image.new('RGBA', wide.size, (0, 0, 0, 0))
+        widef.alpha_composite(fill, (pad_l, 0))
+        im, fill = wide, widef
+        left += pad_l
+        right += pad_l
+    crop = (left, 0, right, im.height)
+    im = im.crop(crop)
+    fill = fill.crop(crop)
     if '--dry' not in sys.argv:
         os.makedirs(ITEMS, exist_ok=True)
         im.save(os.path.join(ITEMS, 'glass3d_%s.png' % key))
@@ -113,9 +138,12 @@ def ship(key, preview_cells):
     floor_y = (h - floor) / h
     rim_y = (h - mouth) / h
     interior_half = widest / im.width
-    print('  %-9s shipped %dx%d  Gen3D(%.3ff, %.3ff, %.3ff, density)' % (key, im.width, h, floor_y, rim_y, interior_half))
+    floor_arc = floor_b / h          # how much higher the floor stands at the walls than mid-glass
+    print('  %-9s shipped %dx%d  Gen3D(%.3ff, %.3ff, %.3ff, %.3ff, density)  crop %s' % (
+        key, im.width, h, floor_y, rim_y, interior_half, floor_arc, crop))
     preview_cells.append((key, im, fill))
-    return (floor_y, rim_y, interior_half)
+    return {'floor_y': floor_y, 'rim_y': rim_y, 'interior_half': interior_half,
+            'floor_arc': floor_arc, 'crop': [crop[0], crop[2]], 'size': [im.width, h]}
 
 
 def main():

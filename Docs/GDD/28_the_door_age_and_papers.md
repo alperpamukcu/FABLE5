@@ -293,3 +293,14 @@ forgeries, so the fine curve is measured as money per night at each standing bef
   go through the 2026-08-19 rig and the author's HTML review, not through this module.
 - A bouncer, an inspector visit, a licence to lose. The fine is the whole of the law.
 - Kicking a drunk, a fight, a ban list beyond "the bounced do not return".
+
+### Malibu Club, Miami (2026-09-07)
+
+The author: *"New Arden nedir? Mekan Miami, barın ismi Malibu Club. Kimliğin üst şeritine uygun
+uzun bir görsel üret … şeritin üstündeki yazılar çizgilere çok yakın, hizala. Kimlik kartı çok
+köşeli olmuş, çok az köşelerde curve olsun."* The band is 16 art pixels now and wears
+`Items/licence_band.png` — a 200x16 golden-hour beach off PixelLab, one to one at the card's three
+— under a scrim that fades out from the left so the type reads; the house name is MALIBU CLUB
+over "MIAMI · PATRON LICENCE · No", the two lines a stack centred in the band with eight pixels to
+either edge. The paper's corners are a quarter circle of radius four (`ChromeArt.LicencePaper`)
+and the card is a Mask, so the picture is cut to them.

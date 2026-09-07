@@ -1866,8 +1866,17 @@ namespace LastCall.Core
             // default the way an unrecognisable mix always has.
             if (ServingGlass.IsEmpty && !Glass.IsEmpty)
                 SelectGlassFor(RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe);
-            return Glass.TransferInto(ServingGlass, volume, accuracy);
+            // ONE TIN IS ONE PORTION (2026-09-06): what leaves the tin lands scaled by the
+            // glass's capacity over the tin's, so the tin's line is the glass's line — a full
+            // tin fills any glass to the brim and a tin poured out is empty. The aim spills
+            // nothing (GlassContents.TransferInto); the bench simply does not pour past the rim.
+            double scale = Glass.Capacity > 0 ? ServingGlass.Capacity / Glass.Capacity : 1.0;
+            return Glass.TransferInto(ServingGlass, volume, accuracy, scale);
         }
+
+        /// <summary>The crowd's own stream (2026-09-06): what a customer says is picked on
+        /// it, so a seeded night says the same things twice. Named like the rest.</summary>
+        public SeededRng VoiceStream => _rng.GetStream("voice");
 
         /// <summary>Dollars per glass-unit of drink deliberately binned (2026-07-31, the
         /// author: a mistake must cost). Small on purpose — a full shaker is ~$2. First cut

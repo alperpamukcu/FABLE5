@@ -62,7 +62,7 @@ Hard rules:
   `DataLoader` with loud validation. New content = new data, not new code. `RecipeCatalog`
   (code) and `recipes.json` are kept in sync by a parity test — change both.
 - **Determinism.** All randomness flows through `RunRng` named streams ("arrivals", "orders",
-  "patience", "customer", "read", "decide"). Never use `System.Random`/`UnityEngine.Random`
+  "patience", "customer", "read", "decide", "papers", "mess", "voice"). Never use `System.Random`/`UnityEngine.Random`
   in game logic; string seeds must reproduce identical runs across platforms (custom PCG32).
 - **Hidden information stays hidden.** The order lives behind the ID card: `CustomerVisit.Order`
   throws until `InspectId()`, and only Core's `OrderTruth` sees past it. Drawing the drink, its

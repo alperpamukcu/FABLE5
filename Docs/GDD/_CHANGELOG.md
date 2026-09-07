@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The ninth list (2026-09-07):** the licence is the Malibu Club's, Miami, with a beach on its
+  band and rounded corners; the beam reads the night instead of the week, the till stands away
+  from the hour and the three readings share one line; the cellar's bottle gets a real card; ONE
+  TIN IS ONE PORTION and the aim spills nothing (GDD 21); the crowd talks in thirteen voices from
+  a data file (GDD 24 §11); the pour has girth and splash (§12); the generated glasses are centred
+  on their cavity, their floor is an arc, and they climb a six-rung dressed ladder; the towel hangs
+  on the author's rail and wipes with its body; marks and crusts are inked. GDD_MEVCUT §9.38.
+
 - **The eighth list (2026-09-06):** the cellar's bottle comes up with its card and its drink rocks
   with it; the standing gauges' captions stand outside the tin's mask (and the tin may be the
   author's PNG); a locked ingredient's tag is one small line; the snack mat grows with the rail;

@@ -62,6 +62,11 @@ namespace LastCall.Game
         /// stage slots: the licence prints it and Core never sees it.</summary>
         public PatronRoster Cast { get; private set; }
 
+        /// <summary>The crowd's voices (2026-09-06) — <c>Resources/Data/voices.json</c>, read
+        /// the way the menu's lore is, so the scene needs no new wire for it. Null when the
+        /// file is missing: the balloons then say the plain lines they always said.</summary>
+        public VoiceBook Voices { get; private set; }
+
         /// <summary>The written nights, or null for a run with no story file (GDD 26). The
         /// run holds its own progress through it; this is the content it was built from, kept
         /// so the UI can read a character's lines and borrowed face without asking Core.</summary>
@@ -133,6 +138,8 @@ namespace LastCall.Game
                                      System.Array.Empty<StageSlot>());
             StageSlots = dressing.Slots;
             Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
+            var voicesJson = Resources.Load<TextAsset>("Data/voices");
+            Voices = voicesJson != null ? DataLoader.ParseVoices(voicesJson.text) : null;
             // The arc needs the cast and the book in hand — a story character IS a face plus
             // its papers, and every ask is graded against a real recipe (GDD 26 §8/§10).
             Story = storyJson != null && Cast != null

@@ -223,9 +223,13 @@ namespace LastCall.UI
                 else if (tilt > 42f && mouth.y > opening.y - 30f)
                 {
                     // Aim: how well the mouth is centred over the glass. Within ~half the
-                    // glass width is a clean pour; beyond that it spills more the further off.
+                    // glass width is a clean pour; beyond that the stream drifts wide.
+                    // NOTHING SPILLS ANY MORE (2026-09-07, the author: "1 shakerdan hangi
+                    // bardak olursa olsun tam 1 porsiyon çıkmalı"): a stream that misses the
+                    // glass is a stream the tin does not pour — the aim GATES the pour
+                    // instead of taxing it, so a full tin is always a full glass.
                     accuracy = Mathf.Clamp01(1f - Mathf.Abs(mouth.x - opening.x) / 90f);
-                    pourNow = true;
+                    pourNow = accuracy > AimGate;
 
                     // The stream falls toward where the aim sends it: dead-on it drops into the
                     // glass and melts into the drink; off-aim it drifts wide and misses the rim,
@@ -235,7 +239,12 @@ namespace LastCall.UI
                     _serveFluid.SetStreamColor(DrinkColor(run.Glass));
                     float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
                     var streamVel = new Vector2((landX - mouth.x) * 1.8f, -225f);
-                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime);
+                    // A fatter rope the further the tin is tipped (2026-09-07): the pour
+                    // is read off the stream, and a stream that never changes is a line.
+                    float over = Mathf.Clamp01((tilt - 42f) / (MaxTilt - 42f));
+                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime,
+                        pourNow ? 0.8f + 0.7f * over : 0.6f);
+                    if (!pourNow) RefreshServeText(run, accuracy);
                 }
             }
 
@@ -297,6 +306,11 @@ namespace LastCall.UI
             // vessel keeps the proportion it was drawn with. The fluid follows: the profile,
             // floor and rim are fractions of this rect.
             _serveGlass.sizeDelta = GlassArt.BoxFor(glassware, piece.Sprite, ServeGlassHeight);
+            // ON THE BENCH, WHATEVER ITS HEIGHT (2026-09-07): the rect's centre was fixed at
+            // half the TALLEST glass above the bench line, so a rocks tumbler floated two
+            // inches over its own shadow. The foot stands on the line; the centre follows.
+            _serveGlass.anchoredPosition = new Vector2(_serveGlass.anchoredPosition.x,
+                BenchFootY + _serveGlass.sizeDelta.y * 0.5f);
             if (_serveGlassBackRt != null)
             {
                 _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
@@ -310,7 +324,7 @@ namespace LastCall.UI
                     ? Mathf.Max(0.35f, piece.Profile[0]) : 0.8f);
                 _serveGlassShadow.sizeDelta = new Vector2(foot, Mathf.Max(10f, foot * 0.22f));
                 _serveGlassShadow.anchoredPosition = new Vector2(_serveGlass.anchoredPosition.x,
-                    _serveGlass.anchoredPosition.y - ServeGlassHeight * 0.5f + 8f);
+                    BenchFootY + 8f);
             }
             _serveFluid.SetProfile(piece.Profile);
             _serveFluid.SetDensity(piece.Density);   // measured per vessel, not one number for all
@@ -337,6 +351,7 @@ namespace LastCall.UI
             float iw = w * 0.5f * piece.InteriorHalf - 0.5f * artPx;
             float floor = c.y - h * 0.5f + h * piece.FloorY;
             float rim = c.y - h * 0.5f + h * piece.RimY - GlassArt.PoolCeilingArtPx * artPx;
+            _serveFluid.SetFloorArc(piece.FloorArc * h);   // the floor's near arc, not a line
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
         }
 
@@ -400,13 +415,18 @@ namespace LastCall.UI
             FillGauge(_serveMixBar, glass, run, labelsLeft: true);
         }
 
+        /// <summary>The aim under which the tin does not pour: the stream visibly misses the
+        /// glass, and what misses the glass never leaves the tin (2026-09-07).</summary>
+        private const double AimGate = 0.35;
+
         private void RefreshServeText(TycoonRun run, double accuracy)
         {
             _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
             _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
             RefreshServeMixBar(run);
-            _aimText.text = accuracy > 0.8 ? "CLEAN POUR" : accuracy > 0.4 ? "SOME SPILL" : "SPILLING!";
+            _aimText.text = accuracy > 0.8 ? "CLEAN POUR"
+                : accuracy > AimGate ? "OVER THE GLASS — STEADY" : "MISSING THE GLASS — NOTHING POURS";
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
 

@@ -563,6 +563,7 @@ namespace LastCall.UI
             public bool WasKnown;            // edge-detect the licence being read
             public float SpeakFrom;          // when the order started being spoken
             public bool Spoken;              // the order has finished arriving
+            public bool OrderVoiced;         // ...and they have said it once, in their own voice (2026-09-07)
             public float OrderAnimLeft;      // remaining "placing the order" one-shot time
             public float DrinkT;             // time since they started drinking
             /// <summary>What this drinker will say about the glass they were handed —
@@ -1494,6 +1495,7 @@ namespace LastCall.UI
             UpdateShakerProp();   // the tin waits on the same coaster the glass does
             StepMiniPreps(run);
             StepPropTip();
+            StepCellarCard();
             UpdateEscape();
             UpdateBookKeys();
             StepStarDrop();
@@ -2368,7 +2370,10 @@ namespace LastCall.UI
         /// as stars — top edge and height, from the paper's top.</summary>
         private const float LicStampY = 70f * LicScale, LicStampH = 24f * LicScale;
 
-        private const float LicHeaderH = 14f * LicScale;
+        // SIXTEEN (2026-09-07): the band wears the author's beach — Items/licence_band.png,
+        // 200x16 art pixels, one to one at the card's own three — and reaches the portrait's
+        // top edge exactly (2 + 16 = 18).
+        private const float LicHeaderH = 16f * LicScale;
 
         private const float LicHeaderY = -(2f * LicScale);
 
@@ -2439,6 +2444,58 @@ namespace LastCall.UI
         private const float WeekDaysX = 80f;     // where the first slot begins
         private const float WeekNameY = 5f;      // the word row, upper half of the glass
         private const float WeekSignY = -9f;     // the sign under it: tube, star, shutter
+
+        private Text _dayLabel, _nightLabel;
+        private const float DayWellW = 200f;
+
+        /// <summary>
+        /// THE NIGHT, NOT THE WEEK (2026-09-07, the author: "haftayı görmeye artık gerek yok
+        /// sadece günü görsek yeter"). The seven-slot week instrument leaves the beam — the
+        /// day card still mounts it — and in its place, beside the hour, a well the same
+        /// height that says which night this is: the count on the left, the night's name and
+        /// tonight's crowd on the right. The week survives in the well's hover line.
+        /// </summary>
+        private void BuildDayWell(RectTransform top)
+        {
+            var well = NewRect("DayWell", top);
+            Place(well, new Vector2(0, 0.5f), new Vector2(DayWellW, 40f), new Vector2(166f, 0f));
+            var img = well.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.Well();
+            img.type = Image.Type.Sliced;
+            img.raycastTarget = true;
+
+            var cap = NewText("Cap", well, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
+            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12), new Vector2(WeekHeadCx, 7f));
+            cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cap.text = "NIGHT";
+            _dayLabel = NewText("Day", well, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
+            Place(_dayLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18), new Vector2(WeekHeadCx, -7f));
+            _dayLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            _dayLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            var rule = NewRect("Divide", well);
+            Place(rule, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(WeekRuleX, 0));
+            var ruleImg = rule.gameObject.AddComponent<Image>();
+            ruleImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
+            ruleImg.raycastTarget = false;
+
+            float textW = DayWellW - WeekDaysX - 10f;
+            _nightLabel = NewText("Night", well, _body, 16, TextAnchor.MiddleLeft, UITheme.Amber[4]);
+            Place(_nightLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, 18), new Vector2(WeekDaysX + 4f, 6f));
+            _nightLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // Tonight's crowd rides under the night's name: it is a fact about the night.
+            _crowdText = NewText("Crowd", well, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
+            Place(_crowdText.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, 12), new Vector2(WeekDaysX + 4f, -8f));
+            _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            HoverTip(well, ItemArt.Star(true, 16f), "TONIGHT", () =>
+            {
+                var r = Run;
+                if (r == null) return "";
+                return $"DAY {r.Day}  ·  WEEK {BarCalendar.WeekOf(r.Day)}  ·  {BarCalendar.Name(BarCalendar.NightOf(r.Day)).ToUpperInvariant()}";
+            });
+        }
 
         private void BuildWeekStrip(RectTransform top)
         {

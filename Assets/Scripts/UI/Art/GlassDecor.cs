@@ -349,7 +349,27 @@ namespace LastCall.UI
                     px[y * w + x] = grain;
                     if (!salt && (hash >> 20) % 3 == 0 && x + 1 < w) px[y * w + x + 1] = dim;
                 }
-            tex.SetPixels32(px);
+            // INKED (2026-09-07, the author: "salted rim ve sugar rim için de siyah kontürlü
+            // bir tasarım"). Every grain gets a dark pixel ring where there was nothing, so
+            // the crust reads as crystals on the glass rather than white dust on white.
+            var ink = new Color32(0x0D, 0x08, 0x13, 200);
+            var inked = (Color32[])px.Clone();
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    if (px[y * w + x].a >= 150) continue;
+                    bool touches = false;
+                    for (int dy = -1; dy <= 1 && !touches; dy++)
+                        for (int dx = -1; dx <= 1 && !touches; dx++)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                            touches = px[ny * w + nx].a >= 150;
+                        }
+                    if (touches) inked[y * w + x] = ink;
+                }
+            tex.SetPixels32(inked);
             tex.Apply();
             var sp = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f);
             sp.hideFlags = HideFlags.DontSave;

@@ -518,3 +518,32 @@ Scripted first shift with **fixed teaching customers**: one per starting drink �
 teaches "how to build it" (menu → shaker → serve) and "who it is for" (its emotion
 identity), one concept at a time. The last teacher introduces the ID/read. Then Day 1
 begins unscripted. Skippable for returning players.
+
+## 11. The crowd's voices (2026-09-07)
+
+The author: *"müşteri konuşmalarında büyük küçük kullanımına dikkat edelim … müşterilerin tepki
+sesleri, belli başlı aksanlarda konuşma şekilleri, konuşmalarına karakter katalım böyle çeşit çeşit
+konuşma setleri hazırlayalım her müşteri aynı cümleleri kurmaz böylece."*
+
+- **A voice is content.** `Resources/Data/voices.json` → `DataLoader.ParseVoices` → `VoiceBook`
+  (Core, pure). Thirteen voices: the house's Cuban Miami, New York, Southern, West Coast, Midwest,
+  London, Turkish, German, Italian, Filipino, North Sea, Polish, and the plain default. Each names
+  the people who speak in it (the papers' look slugs) and the flag codes it answers for when no
+  person claims a look; `VoiceBook.For(slug, iso)` goes person → flag → default.
+- **Nine cues.** `Order` (with `{drink}`, said once the ticket has typed the drink — never before
+  the card is read), `Perfect` / `Another` / `Close` / `Wrong` (the serve's shout, short, the
+  pop-up capitalises), `Praise` (a flawless pour's first sip), `Sip` (wraps PourAdvice's coaching
+  sentence as `{advice}` / `{advice_l}`), `Leaving` (the walk-out) and `Kicked`.
+- **Picked on the run's "voice" stream** (`TycoonRun.VoiceStream`), never the same line twice
+  running for one voice and cue. The story's guest never asks the book.
+- **Case rule.** Lines are sentence case and the balloon shows them as written (`SayIt` and
+  `StepSips` no longer shout); only the serve pop-up prints capitals.
+
+## 12. The pour, felt (2026-09-07)
+
+The author: *"sıvı hissiyatını güncelleyip geliştirebilir miyiz? akışkanlığı ve dökülme
+hissiyatını."* The stream has a girth now (`EmitStream(..., width)`: fatter the further the tin is
+tipped, thinner when the aim is off), a drop lands on the DRAWN surface (`SurfaceLocalY`) rather
+than the nominal line, and it splashes and punches the surface harder the further it has fallen.
+The serving glass stands on the bench line whatever its height (a rocks tumbler used to float at
+the tall glass's centre).

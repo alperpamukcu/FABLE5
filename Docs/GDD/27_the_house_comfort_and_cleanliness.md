@@ -472,3 +472,13 @@ ServiceTonight), `ComfortBase by day p25/p50/p75`, `rungs bought by slot`, `Brok
 - A comfort standing with its own inertia (D1).
 - Paintings/sink rung 3 ART: specified here, shipped only when drawn and reported (memory:
   new assets are reported in HTML before entering the game).
+
+### The towel on the rail (2026-09-07)
+
+The author drew a towel rail into the counter's right cap (art columns 566..632, rows 59..62) and
+two towels: `Items/towel_on_bar.png` (45x51, folded over the rail) and `Items/towel.png` (30x54, in
+the hand). The cloth hangs from the rail (`DiegeticStage.CounterArtPoint` finds the rail wherever
+the tiled counter puts it in this window), is the loose towel once grabbed, turns its tail toward
+the way the hand moves, and wipes with its own body — `Rub` walks the towel rect's corners, so the
+hitbox is the towel's. The counter's marks and the rim crusts wear a dark contour ring
+(`SmudgePixels`, `RimRing`) so they read on any slab.

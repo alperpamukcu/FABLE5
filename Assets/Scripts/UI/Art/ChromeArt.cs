@@ -2170,7 +2170,29 @@ namespace LastCall.UI
                         Grain(x, y, drip, 0.45f, 23 + i);
                     }
             }
-            return px;
+            // A DARK CONTOUR UNDER THE GRAINS (2026-09-07, the author: "masadaki kir için
+            // siyah kontrastlı parçalar kullan"). Cream and cyan grains on a pale slab were
+            // invisible; a ring of near-black around every inked pixel makes the mark read
+            // on any counter the room throws under it, the way the reaction faces are inked.
+            // The contour is ink the cloth takes off with the grain it rings.
+            var contour = new Color32(0x0D, 0x08, 0x13, 190);
+            var ringed = (Color32[])px.Clone();
+            for (int y = 0; y < H2; y++)
+                for (int x = 0; x < W2; x++)
+                {
+                    if (px[(H2 - 1 - y) * W2 + x].a > 0) continue;
+                    bool touches = false;
+                    for (int dy = -1; dy <= 1 && !touches; dy++)
+                        for (int dx = -1; dx <= 1 && !touches; dx++)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || nx >= W2 || ny < 0 || ny >= H2) continue;
+                            touches = px[(H2 - 1 - ny) * W2 + nx].a > 0;
+                        }
+                    if (touches) ringed[(H2 - 1 - y) * W2 + x] = contour;
+                }
+            return ringed;
         }
 
         /// <summary>The mark's size in its own pixels. Read by the counter, which has to map
@@ -2607,11 +2629,33 @@ namespace LastCall.UI
         /// keeps its edge, and everything that has to align with type is drawn by the code
         /// that places the type (GDD 16: chrome is procedural).
         /// </summary>
+        /// <summary>A scrim that fades out to the right — dark under the type at the band's
+        /// left, clear where the picture is meant to be seen (2026-09-07).</summary>
+        public static Sprite FadeRight()
+        {
+            const string Key = "lic:fade";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 32, H = 4;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float t = x / (float)(W - 1);
+                    px[y * W + x] = new Color32(255, 255, 255, (byte)(255 * (1f - t) * (1f - t)));
+                }
+            return Cache[Key] = Make(px, W, H, Vector4.zero);
+        }
+
         public static Sprite LicencePaper()
         {
             const string Key = "lic:paper";
             if (Cache.TryGetValue(Key, out var got) && got != null) return got;
             const int S = 17, B = 7;
+            // ROUNDED, A LITTLE (2026-09-07, the author: "kimlik kartı çok köşeli olmuş, çok
+            // az köşelerde curve olsun"). A two-pixel chamfer read as a cut card; the corner
+            // is a quarter circle of radius four art pixels now (twelve on the card), the rim
+            // following the curve.
+            const float R = 4f;
             var px = new Color32[S * S];
             var stock = new Color32(0xF2, 0xE8, 0xD5, 255);      // Cream[4]
             var tint = new Color32(0xEB, 0xE1, 0xCC, 255);       // the guilloche: half a step, not one
@@ -2619,11 +2663,19 @@ namespace LastCall.UI
             for (int y = 0; y < S; y++)
                 for (int x = 0; x < S; x++)
                 {
-                    int edge = Mathf.Min(Mathf.Min(x, S - 1 - x), Mathf.Min(y, S - 1 - y));
-                    bool corner = (x < 2 && y < 2) || (x < 2 && y > S - 3)
-                               || (x > S - 3 && y < 2) || (x > S - 3 && y > S - 3);
-                    px[y * S + x] = corner ? new Color32(0, 0, 0, 0)
-                        : edge == 0 ? rim
+                    int cx = Mathf.Min(x, S - 1 - x), cy = Mathf.Min(y, S - 1 - y);
+                    int edge = Mathf.Min(cx, cy);
+                    bool onRim = edge == 0;
+                    bool clear = false;
+                    if (cx < R && cy < R)
+                    {
+                        float dx = (R - 0.5f) - cx, dy = (R - 0.5f) - cy;
+                        float d = Mathf.Sqrt(dx * dx + dy * dy);
+                        clear = d > R;
+                        onRim = !clear && d > R - 1f;
+                    }
+                    px[y * S + x] = clear ? new Color32(0, 0, 0, 0)
+                        : onRim ? rim
                         : ((x + y) % 6 == 0 ? tint : stock);     // the stipple, on the diagonal
                 }
             return Cache[Key] = Make(px, S, S, new Vector4(B, B, B, B));

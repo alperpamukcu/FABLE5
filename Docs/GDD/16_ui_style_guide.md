@@ -229,6 +229,22 @@ takes (`PlaceProduct` no longer floors the scale under 3x — a 60-row drawing s
 "+1.25 COMFORT"); the restock crate is drawn (Tools/restock_icon.py); THE WALLS (the plaster
 ladder) and ON THE WALL (the picture, the screen) are two shelves.
 
+**The beam reads the night (2026-09-07, the author: "üst bar düzenini en baştan düzenle …
+haftayı görmeye artık gerek yok sadece günü görsek yeter, para yazısıyla saat yakın olmamalı, yıldız
+konfor kalp kısmını hizalı"):** the week instrument left the beam (the day card still mounts it);
+beside the hour stands a NIGHT well — the count, the night's name, tonight's crowd — with the week in
+its hover line. The till moved to the far side of the beam, left of the house's readings, so two
+seven-bar readouts never sit together. The star row and the two house strips share the beam's centre
+line (`RowY` 0, strips at ±9). The settings key wears a generated 32-pixel gold cog
+(`Items/cog3d.png`, the star3d family) at exactly 1x.
+
+**The cellar's card (2026-09-07, the author: "büyük boy bir kart … kullanıldığı tarifleri, ismini,
+fiyatını gibi detaylı küçük kompakt bir tasarım"):** the one-line caption is a card now
+(`BuildCellarCard` / `OnCellarHover` / `StepCellarCard`): name, style · tier · price a bottle, what is
+left in it (red when nearly out), the house drinks it goes into (four, then "and N more") and the
+no-shake row on anything carbonated. Stood over the bottle through the screen like the prop caption,
+kept inside the window sideways.
+
 **The cellar's bottle comes up with its card (2026-09-06, the author: "backbarda alkollerin
 isimleri gözükmüyor, gözükürse de üst üste binebilir ... bir kart içerisinde olmalı"):** thirteen
 names under thirteen bottles print over each other, so the name comes up WITH the bottle — the

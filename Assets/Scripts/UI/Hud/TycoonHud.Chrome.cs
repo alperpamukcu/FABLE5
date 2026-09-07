@@ -198,6 +198,101 @@ namespace LastCall.UI
                 + "pointer is on, in that prop's own place rather than in a fixed one");
         }
 
+        // ── THE CELLAR'S CARD (2026-09-07, the author: "mahzendeki alkollerin üstüne
+        // gelindiğinde gözüken bilgi barını sevmedim … büyük boy bir kart çıkar, içerisinde
+        // kullanıldığı tarifleri, ismini, fiyatını gibi detaylı, küçük kompakt bir tasarımı
+        // olsun"). One card, built once, filled for whichever bottle the pointer is on and
+        // stood over it the way the prop caption is — through the screen, because the doors
+        // live on the stage's own canvas. Compact: a name row, a facts row, the stock, the
+        // house drinks it goes into, and the no-shake mark only on a bottle that fizzes.
+        private RectTransform _cellarCard, _cellarCardOver;
+        private CanvasGroup _cellarCardGroup;
+        private Text _cellarCardName, _cellarCardMeta, _cellarCardStock, _cellarCardUses, _cellarCardMark;
+        private Image _cellarCardIcon;
+        private RectTransform _cellarCardMarkRow;
+        private const float CellarCardW = 252f;
+
+        private void BuildCellarCard(RectTransform root)
+        {
+            _cellarCard = NewRect("CellarCard", root);
+            _cellarCard.anchorMin = _cellarCard.anchorMax = new Vector2(0.5f, 0.5f);
+            _cellarCard.pivot = new Vector2(0.5f, 0f);
+            _cellarCard.sizeDelta = new Vector2(CellarCardW, 100f);
+            var plate = _cellarCard.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = UITheme.Night[1];
+            plate.raycastTarget = false;
+
+            Text Row(string name, Font face, int size, Color ink, float top, float h)
+            {
+                var t = NewText(name, _cellarCard, face, size, TextAnchor.UpperLeft, ink);
+                Stretch(t.rectTransform, new Vector2(0, 1), new Vector2(1, 1),
+                    new Vector2(10f, -(top + h)), new Vector2(-10f, -top));
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.verticalOverflow = VerticalWrapMode.Overflow;
+                t.raycastTarget = false;
+                return t;
+            }
+            _cellarCardName = Row("Name", _display, 8, UITheme.Amber[4], 8f, 12f);
+            _cellarCardMeta = Row("Meta", _body, 8, UITheme.Cream[3], 24f, 12f);
+            _cellarCardStock = Row("Stock", _body, 8, UITheme.Cream[3], 36f, 12f);
+            _cellarCardUses = Row("Uses", _body, 8, UITheme.Cream[4], 52f, 12f);
+
+            _cellarCardMarkRow = NewRect("MarkRow", _cellarCard);
+            Stretch(_cellarCardMarkRow, new Vector2(0, 0), new Vector2(1, 0), new Vector2(10f, 6f), new Vector2(-10f, 22f));
+            var iconRt = NewRect("Icon", _cellarCardMarkRow);
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), Vector2.zero);
+            _cellarCardIcon = iconRt.gameObject.AddComponent<Image>();
+            _cellarCardIcon.sprite = ChromeArt.NoShake();
+            _cellarCardIcon.color = UITheme.ViceRed[3];
+            _cellarCardIcon.preserveAspect = true;
+            _cellarCardIcon.raycastTarget = false;
+            _cellarCardMark = NewText("Mark", _cellarCardMarkRow, _body, 8, TextAnchor.MiddleLeft, UITheme.ViceRed[3]);
+            Stretch(_cellarCardMark.rectTransform, Vector2.zero, Vector2.one, new Vector2(22f, 0f), Vector2.zero);
+            _cellarCardMark.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _cellarCardMark.raycastTarget = false;
+            _cellarCardMark.text = "NEVER SHAKEN · BUILT AT THE GLASS";
+
+            _cellarCardGroup = _cellarCard.gameObject.AddComponent<CanvasGroup>();
+            _cellarCardGroup.alpha = 0f;
+            _cellarCardGroup.blocksRaycasts = false;
+            _cellarCardGroup.interactable = false;
+            UiAuditExempt.Mark(_cellarCard, "the cellar's card stands over whichever bottle the "
+                + "pointer is on, in that bottle's own place rather than in a fixed one");
+        }
+
+        private void StepCellarCard()
+        {
+            if (_cellarCard == null) return;
+            var over = _cellarCardOver;
+            bool up = over != null && over.gameObject.activeInHierarchy && CellarOpen;
+            float want = up ? 1f : 0f;
+            _cellarCardGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
+                _cellarCardGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
+            if (!up || _cellarCardGroup.alpha <= 0f) return;
+            var corners = new Vector3[4];
+            over.GetWorldCorners(corners);
+            var top = (corners[1] + corners[2]) * 0.5f;
+            var screen = RectTransformUtility.WorldToScreenPoint(null, top);
+            bool hang = screen.y > Screen.height * 0.72f;
+            if (hang)
+            {
+                var bottom = (corners[0] + corners[3]) * 0.5f;
+                screen = RectTransformUtility.WorldToScreenPoint(null, bottom);
+            }
+            _cellarCard.pivot = new Vector2(0.5f, hang ? 1f : 0f);
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)_cellarCard.parent, screen, null, out Vector2 local))
+            {
+                // Inside the screen sideways: a card over the end bottle must not hang off it.
+                var parent = (RectTransform)_cellarCard.parent;
+                float half = CellarCardW * 0.5f, lim = parent.rect.width * 0.5f - 8f;
+                local.x = Mathf.Clamp(local.x, -lim + half, lim - half);
+                _cellarCard.anchoredPosition = local + new Vector2(0f, hang ? -10f : 10f);
+            }
+        }
+
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
         internal void ShowPropTip(RectTransform over, string word, Sprite icon = null, string detail = null,
             System.Func<string> detailFn = null)
@@ -464,22 +559,53 @@ namespace LastCall.UI
         /// </summary>
         private void OnCellarHover(int index, RectTransform plate)
         {
-            if (index < 0 || index >= _cellarCards.Count) { HidePropTip(plate); return; }
+            if (index < 0 || index >= _cellarCards.Count || _cellarCard == null)
+            {
+                if (_cellarCardOver == plate) _cellarCardOver = null;
+                return;
+            }
             var card = _cellarCards[index];
             var run = Run;
+            var bottle = run?.Shelf.Find(card.Id);
+            string style = (card.Info?.Style ?? card.Type.ToString()).Replace('_', ' ').ToUpperInvariant();
+            int tier = bottle != null ? bottle.Tier : (card.Info?.Tier ?? 1);
+            int price = Market.StockPrice(card);
+            _cellarCardName.text = card.Name.ToUpperInvariant();
+            _cellarCardMeta.text = $"{style}  ·  TIER {tier}  ·  ${price} A BOTTLE";
+            if (bottle != null)
+            {
+                bool low = bottle.Remaining <= bottle.Capacity * 0.15;
+                _cellarCardStock.text = low
+                    ? $"ALMOST OUT  ·  {bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT"
+                    : $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
+                _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
+            }
+            else _cellarCardStock.text = "";
+
             var uses = new List<string>();
             int more = 0;
             if (run != null)
                 foreach (var r in run.MenuDrinksUsingStyle(card.Info?.Style))
                 {
-                    if (uses.Count >= 3) { more++; continue; }
-                    uses.Add(r.Name.ToUpperInvariant());
+                    if (uses.Count >= 4) { more++; continue; }
+                    uses.Add("· " + r.Name.ToUpperInvariant());
                 }
-            string line = uses.Count == 0 ? "IN NO HOUSE DRINK YET"
-                : "IN " + string.Join(" · ", uses) + (more > 0 ? " +" + more : "");
+            var sb = new System.Text.StringBuilder();
+            if (uses.Count == 0) sb.Append("IN NO HOUSE DRINK YET");
+            else
+            {
+                sb.Append("IN THE BOOK");
+                foreach (var u in uses) sb.Append('\n').Append(u);
+                if (more > 0) sb.Append('\n').Append("· AND ").Append(more).Append(" MORE");
+            }
+            _cellarCardUses.text = sb.ToString();
+            int usesRows = uses.Count == 0 ? 1 : 1 + uses.Count + (more > 0 ? 1 : 0);
+
             bool fizzy = card.Type == IngredientType.Bubbly;
-            if (fizzy) line = "NEVER SHAKEN · " + line;
-            ShowPropTip(plate, card.Name.ToUpperInvariant(), fizzy ? ChromeArt.NoShake() : null, line);
+            _cellarCardMarkRow.gameObject.SetActive(fizzy);
+            float h = 52f + usesRows * 12f + (fizzy ? 22f : 8f);
+            _cellarCard.sizeDelta = new Vector2(CellarCardW, h);
+            _cellarCardOver = plate;
         }
 
         private List<float> CellarFills(TycoonRun run)
@@ -755,6 +881,10 @@ namespace LastCall.UI
             // are amber — so nothing up here prints the day in words as well. Printing it
             // twice across one board is what made the old one read as assembled.
             RefreshWeekStrip(run);
+            // The night's well (2026-09-07): the count and the name, in place of the week.
+            if (_dayLabel != null) _dayLabel.text = $"{run.Day:00}";
+            if (_nightLabel != null)
+                _nightLabel.text = BarCalendar.Name(BarCalendar.NightOf(run.Day)).ToUpperInvariant();
 
             // THE BEAM IS THE STATE LIGHT (2026-08-14; it now answers to two states, not
             // one). A 2px rule under one plaque was never going to be seen, and the board
@@ -788,8 +918,8 @@ namespace LastCall.UI
             // CALL when the room is being called, because at that point what is in front of
             // the bar matters more than who it is.
             _crowdText.text = last ? "LAST CALL"
-                : run.CrowdToday == WealthTier.HighRoller ? "TONIGHT · HIGH ROLLERS"
-                : run.CrowdToday == WealthTier.Broke ? "TONIGHT · BROKE CROWD" : "TONIGHT · REGULARS";
+                : run.CrowdToday == WealthTier.HighRoller ? "HIGH ROLLERS"
+                : run.CrowdToday == WealthTier.Broke ? "BROKE CROWD" : "REGULARS";
             _crowdText.color = last ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];

@@ -1417,3 +1417,24 @@ Yazarın yedinci listesi. Kodda, fotoğraflandı, ölçüldü.
   kalkıyor; yazardan hangi durumda olduğunu istedik.
 - Arka plan görselleri: `Assets/Art/Backgrounds/counter.png` 638×250 (pivot orta, PPU 1, sol 217 / sağ 218 px kenar, orta 203 px
   yatay tekrar; yüzey çizgisi alttan 96, dinlenme çizgisi 120) ve `counter_shutter.png` 592×186 (kepenk).
+
+### 9.38 · Dokuzuncu liste: Malibu Club kimliği, gecenin şeridi, mahzen kartı, tek porsiyon, sesler, raydaki havlu, bardak seviyeleri (2026-09-07)
+
+- **Kimlik:** NEW ARDEN → MALIBU CLUB / "MIAMI · PATRON LICENCE · No"; şerit 16 px, `Items/licence_band.png` (200×16, PixelLab plaj
+  panoraması) + soldan sağa açılan karartma; iki satır şeridin ortasında; kâğıt köşeleri r=4 yuvarlak (`LicencePaper`), kart `Mask`.
+- **Üst bar:** hafta aleti kirişten indi (gün kartında duruyor); saatin yanında GECE kuyusu (sayı + gün adı + kalabalık; hafta hover'da);
+  kasa kirişin sağ yarısına, okumaların soluna (−470); yıldız/kalp/madalyon tek merkez çizgisinde; ayarlar anahtarında üretilmiş
+  `Items/cog3d.png`.
+- **Mahzen kartı:** tek satırlık başlık yerine kart (`BuildCellarCard`): ad, stil · kademe · şişe fiyatı (`Market.StockPrice`), kalan,
+  "IN THE BOOK" + 4 tarif (+N more), gazlıysa NEVER SHAKEN satırı.
+- **Tek porsiyon (Core):** `TransferInto(..., scale)`; `PourIntoServingGlass` ölçek = bardak/tin kapasitesi; nişan artık dökmüyor
+  (`AimGate` 0.35 ile tezgâh akıtmıyor). Testler: `AFullTin_FillsWhateverGlassComesDown…`, `HalfATin_IsHalfAGlass`, PourSystem ölçek
+  testleri; `One_confident_measure_of_a_fizzy_drink_comes_out_wrong` kendi notuna göre kaldırıldı ("the trap is gone").
+- **Sesler:** `Resources/Data/voices.json` → `VoiceBook` (Core); 13 ses, 9 ipucu; `TycoonRun.VoiceStream` ("voice" akışı); balon
+  yazıldığı gibi (cümle düzeni), servis pop'u büyük harf. Sipariş satırı yalnız kart okunduktan sonra.
+- **Bardak:** kanvas oyuğa ortalandı (`glass3d_ship.py` crop), taban yayı `FloorArc` (`MetaballFluid.SetFloorArc`), bardak tezgâh
+  çizgisinde; akış kalınlığı eğime bağlı, damla çizili yüzeye iniyor ve hızıyla sıçrıyor.
+- **Bardak seviyeleri:** `glass3d_{id}_t2..t6.png` — PixelLab `edit_image` ile taban üstüne giydirme, alfa taban siluetine kesik
+  (`Tools/ninth_art_gen.py`; sayfa: `Tools/glass3d_tiers_preview.png`).
+- **Havlu:** `Items/towel_on_bar.png` rayda (`CounterArtPoint(599, 57)`), elde `towel.png`, kuyruk hareket yönüne bakar, silme kutusu
+  havlunun kendi rect'i. Kir ve tuz/şeker halkasında koyu kontur.

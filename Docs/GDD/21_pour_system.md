@@ -537,3 +537,25 @@ is now bounded by the mouth's FAR arc above and the floor's NEAR arc below (five
 mouth centre and half-height, floor centre and half-height, wall), so a drink at any level shows the
 curve of the glass it sits in instead of a flat-topped rectangle. The glass stands at 340 on the glass
 stage (from 260) and 116 on the counter (from 92).
+
+### One tin is one portion (2026-09-07)
+
+The author: *"tam bir shaker görseldeki bardağın sadece %66'sını doldurabiliyor bu çok yanlış.
+1 shakerdan hangi bardak olursa olsun tam 1 porsiyon çıkmalı ne shakerda artmalı ne de bardakta
+tam dolmama sorunu yaşanmalı."* Two things changed in Core:
+
+- **The tin's line is the glass's line.** `PourIntoServingGlass` hands `TransferInto` a scale of
+  `ServingGlass.Capacity / Glass.Capacity`: every unit that leaves the tin lands as that many
+  glass units, so a full tin fills a coupe (0.55) and a pint (1.6) to the same brim, half a tin is
+  half a glass, and a tin poured out is empty whatever came down. The ratio is the drink; the
+  amount was never the craft.
+- **Nothing is lost to aim.** `accuracy` no longer spills a share of the pour. The serve bench reads
+  the aim as a GATE instead (`AimGate` 0.35): a stream that misses the glass is a stream the tin
+  does not pour, so the player sees the miss and loses nothing. The parameter stays on the verbs
+  for the callers and the sim.
+
+The floor of a generated glass is an ARC now, not a line (`GlassArt.Piece.FloorArc`,
+`MetaballFluid.SetFloorArc`): the near arc of the floor's ellipse the fill mask was already cut to,
+so the drink's corners no longer hang below the glass. And the generated canvases are CENTRED on
+their cavity by `glass3d_ship.py` — the highball's drawing sat five art pixels left of its canvas
+and the pool stood beside it.

@@ -551,6 +551,18 @@ namespace LastCall.UI
         public float SurfaceY(float fallback)
         {
             if (!_poolSet || _pn < 8) return fallback;
+            float local = SurfaceLocalY(float.NaN);
+            if (float.IsNaN(local)) return fallback;
+            ToSurface(0f, local, out _, out float sy);
+            return sy;
+        }
+
+        /// <summary>The same reading in the container's own frame — what a falling drop is
+        /// measured against (2026-09-07: the landing used to be tested against the NOMINAL
+        /// line, so drops popped their splash a row or two off the drawn crest).</summary>
+        private float SurfaceLocalY(float fallbackLocal)
+        {
+            if (!_poolSet || _pn < 8) return fallbackLocal;
 
             // Not the highest particle: one droplet still falling through the neck sits well
             // above the body and dragged the reported surface up with it. Bin the particles by
@@ -571,11 +583,9 @@ namespace LastCall.UI
             for (int b = Bins - 1; b >= 0; b--)
             {
                 if (_surfaceBins[b] < need) continue;
-                float local = (b + 1f) / Bins * span - _halfH;
-                ToSurface(0f, local, out _, out float sy);
-                return sy;
+                return (b + 1f) / Bins * span - _halfH;
             }
-            return fallback;
+            return fallbackLocal;
         }
 
         private readonly int[] _surfaceBins = new int[48];
@@ -589,17 +599,21 @@ namespace LastCall.UI
                     _vy[i] -= v;
         }
 
-        public void EmitStream(Vector2 from, Vector2 vel, float dt)
+        /// <param name="width">The stream's girth, 1 = the rest width (2026-09-07: a tin
+        /// tipped right over pours a fatter rope than one just past the lip, and the drops
+        /// scatter a little more the fatter it is).</param>
+        public void EmitStream(Vector2 from, Vector2 vel, float dt, float width = 1f)
         {
             _emitAccum += dt;
             int guard = 0;
+            width = Mathf.Clamp(width, 0.5f, 1.8f);
             while (_emitAccum >= StreamInterval && guard++ < 8)
             {
                 _emitAccum -= StreamInterval;
                 float f = 1f - _emitAccum / StreamInterval;
                 SpawnDrop(from + vel * (StreamInterval * f),
-                    vel + new Vector2(Random.Range(-14f, 14f), 0f),
-                    StreamRadius * Random.Range(0.85f, 1.1f), 3f, true);
+                    vel + new Vector2(Random.Range(-14f, 14f) * width, 0f),
+                    StreamRadius * width * Random.Range(0.85f, 1.1f), 3f, true);
             }
         }
 
@@ -812,6 +826,14 @@ namespace LastCall.UI
         public void SetDensity(float multiplier) => _density = Mathf.Clamp(multiplier, 0.25f, 4f);
         private float _density = 1f;
 
+        /// <summary>THE FLOOR IS AN ARC (2026-09-07, the author: "tabanı yay şeklinde değil").
+        /// How much higher the floor stands at the walls than mid-vessel, in surface px: the
+        /// near arc of the floor's ellipse, the same curve the fill mask is cut to. The clamp
+        /// used to be one flat line across the whole width at the arc's LOWEST row, so the
+        /// drink's corners hung below the glass's floor by the depth of the arc.</summary>
+        public void SetFloorArc(float px) => _floorArc = Mathf.Max(0f, px);
+        private float _floorArc;
+
         /// <summary>Clamps every particle inside the rotated vessel interior (profile-shaped).</summary>
         private void ClampToVessel()
         {
@@ -839,7 +861,16 @@ namespace LastCall.UI
                     ? iy + FoamCrown * (0.30f + 0.70f * (i * 0.6180339f % 1f))
                     : iy;
                 float ly = _py[i];
-                if (ly < -iy) ly = -iy; else if (ly > ceil) ly = ceil;
+                float lx = _px[i];
+                // The floor at THIS column: deepest in the middle, rising to the arc's height
+                // at the walls (the near arc of the floor's ellipse, seen from a little above).
+                float floorHere = -iy;
+                if (_floorArc > 0f)
+                {
+                    float u = Mathf.Clamp(lx / Mathf.Max(ix, 1f), -1f, 1f);
+                    floorHere += _floorArc * (1f - Mathf.Sqrt(1f - u * u));
+                }
+                if (ly < floorHere) ly = floorHere; else if (ly > ceil) ly = ceil;
                 float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
                 if (ly > iy)
                 {
@@ -851,7 +882,6 @@ namespace LastCall.UI
                     w = w * (0.92f - 0.35f * (ly - iy) / FoamCrown)
                         - (FoamRadius - PoolRadius) * SideOffset;
                 }
-                float lx = _px[i];
                 if (lx < -w) lx = -w; else if (lx > w) lx = w;
                 _px[i] = lx; _py[i] = ly;
             }
@@ -939,6 +969,9 @@ namespace LastCall.UI
             // The viewport is offset from the surface origin now, so the kill line has to be
             // measured from its centre — otherwise drops die (and vanish) at the wrong height.
             float floor = _originY - _size.y * 0.5f - 30f;
+            // WHERE THE DRINK ACTUALLY IS (2026-09-07): the drawn surface, read once a step,
+            // so a drop melts in at the crest it can be seen hitting — and splashes there.
+            float land = _poolSet ? SurfaceLocalY(_fillTopLocal) : _fillTopLocal;
             for (int i = 0; i < MaxDrops; i++)
             {
                 if (!_drops[i].Active) continue;
@@ -954,14 +987,18 @@ namespace LastCall.UI
                     float c = Mathf.Cos(-_angle), s2 = Mathf.Sin(-_angle);
                     float ox = d.Pos.x - _cx, oy = d.Pos.y - _cy;
                     float lx = ox * c - oy * s2, ly = ox * s2 + oy * c;
-                    if (ly <= _fillTopLocal + 6f && Mathf.Abs(lx) < _halfW)
+                    if (ly <= land + 6f && Mathf.Abs(lx) < _halfW)
                     {
-                        if (Random.value < 0.5f)
+                        // A drop that has fallen further hits harder: more spatter, a deeper
+                        // punch in the surface. What makes a pour READ as a pour (2026-09-07,
+                        // the author: "akışkanlığı ve dökülme hissiyatını").
+                        float k = Mathf.Clamp01((d.Vel.magnitude - 180f) / 520f);
+                        if (Random.value < 0.45f + 0.35f * k)
                         {
-                            ToSurface(lx, _fillTopLocal, out float hx, out float hy);
-                            Splash(new Vector2(hx, hy), 0.4f);
+                            ToSurface(lx, land, out float hx, out float hy);
+                            Splash(new Vector2(hx, hy), 0.3f + 0.6f * k);
                         }
-                        Ripple(lx, 0.012f);
+                        Ripple(lx, 0.010f + 0.012f * k);
                         d.Active = false;
                         continue;
                     }
