@@ -467,6 +467,13 @@ namespace LastCall.UI
             // kayabiliyor"). The row was re-solved every frame from scratch, so a balloon
             // slid whenever a neighbour's line grew by a letter. It is solved once for a
             // given set of balloons and sizes, and left alone until that set changes.
+            // ÇEKMECE FAZI DA İMZANIN PARÇASI (2026-09-08, oyunda ölçülerek). Bu erken dönüş
+            // balonların gereksiz kaymasını durdurmak için doğru; ama mahzen açılırken balon
+            // kümesi de boyutları da değişmediğinden imza aynı kalıyordu, çözücü hiç
+            // çalışmıyordu ve balonlar ne küçülüyor ne de banda taşınıyordu. Faz onda birlik
+            // adımlarla imzaya giriyor: açılış boyunca birkaç kez çözülür, açıldıktan sonra
+            // yine tek imzada durur.
+            sig.Append('|').Append(Mathf.RoundToInt((stage != null ? stage.DrawerPhase : 0f) * 10f));
             string now = sig.ToString();
             if (now == _saysSig) return;
             _saysSig = now;
@@ -496,16 +503,35 @@ namespace LastCall.UI
                 float baseY = CharWinH + TagLift;
                 if (homeY < baseY - 0.5f || homeY > baseY + 400f) homeY = baseY;
                 homeY = baseY;
-                // The band, while the drawer is open: the seat has ridden up, so the row is
-                // measured DOWN from the bar's underside rather than up from the head.
+                // BANT, BALONUN KENDİ ORİJİNİNDE (2026-09-08, ölçülerek düzeltildi). İlk
+                // hâli `barFloor - seatTop - h` idi: seatTop koltuğun HUD merkezine göre y'si,
+                // balonun anchoredPosition'ı ise koltuğun KENDİ tabanına göre — iki ayrı
+                // orijini çıkarınca balon ekranın ortasına düştü (ölçüldü: tepe -64).
+                //
+                // Doğrusu: balonun TEPESİ üst barın altında kalsın. Balonun tepesi koltuk
+                // uzayında (homeY + dy + h), koltuğun HUD'daki y'si v.Root.anchoredPosition.y,
+                // ve barın tabanı ekranın yarısı eksi bar yüksekliği. Hepsi HUD birimine
+                // çevrilip tek eşitlikten çözülüyor.
+                // MAHZEN AÇIKKEN BALON KAFANIN ALTINA İNER (2026-09-08, yazar: "konuşma
+                // balonu kafalarının altında vücutlarının üstünde de olabilir").
+                //
+                // Bu izin, tavan hesabını tamamen gereksiz kıldı — ve iyi ki: koltuk uzayı
+                // HUD'un TABANINA çapalı, balon ise koltuğun tabanına, aradaki 360 birimlik
+                // ofsetle iki kez yanlış hesapladım (balon bir kez ekranın ortasına düştü,
+                // bir kez barın 32 birim içine girdi, ikisi de oyunda ölçüldü).
+                //
+                // Başın ALTI zaten boş: gövdenin üstü, tezgahın üzerinde kalan bölge. Oraya
+                // yerleşince üst bardan uzaklık kendiliğinden geliyor, çünkü konum yukarıdan
+                // değil BAŞTAN aşağı ölçülüyor — mahzen ne kadar açılırsa açılsın balon başla
+                // birlikte hareket eder ve arasındaki mesafe sabit kalır. Yüzü de kapatmaz:
+                // kafa balonun üstünde durur.
                 float ceiling = float.MaxValue;
                 if (drawer > 0.01f)
                 {
-                    float seatTop = v.Root.anchoredPosition.y;
-                    float barFloor = (_hudRoot != null ? _hudRoot.rect.height * 0.5f : 360f)
-                                     - TopBarH - CellarSayClear;
-                    homeY = Mathf.Lerp(baseY, barFloor - seatTop - h, drawer);
-                    ceiling = barFloor - seatTop - h;
+                    float headY = v.Look != null ? v.Look.HeadTop : CharWinH;
+                    float under = headY - h - CellarSayClear;
+                    homeY = Mathf.Lerp(baseY, under, drawer);
+                    ceiling = under;
                 }
                 float dx = 0f, dy = 0f;
                 // Inside the picture first.
@@ -545,8 +571,8 @@ namespace LastCall.UI
                             top = Mathf.Max(top, p.yMax);
                     if (top == float.MinValue) break;
                     dy = top + Gap - homeY;
-                    // ...but never up into the top bar while the drawer is open: the band is
-                    // the whole point of the shrink, and a climbing balloon would undo it.
+                    // ...ama mahzen açıkken yukarı tırmanmasın: balonu başın altına indiren
+                    // şeyin tamamı bu, tırmanan bir balon onu geri bozar.
                     if (homeY + dy > ceiling) { dy = ceiling - homeY; break; }
                 }
                 v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
