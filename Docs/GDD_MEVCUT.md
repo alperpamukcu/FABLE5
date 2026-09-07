@@ -1520,3 +1520,18 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
+
+### 9.44 · On dördüncü liste: bez çivide, kimlik kısaldı, garnish kartları, mahzen etiketleri (2026-09-07)
+
+- **Temizlik bezi:** kendi kanvasına alındı (sıralama 8) — kepenğin isabet plakası 6'da ve odanın enini kaplıyordu, rayın
+  boyunca bezin tıklamalarını yiyordu. Elde artık **çiviye asılı**: `_clothGrabOffset` sıfır, rect'in pivotu üst ortası, yani
+  imleç nereden tutarsa tutsun bez üst orta noktasından sarkıyor. Ve **sallanıyor**: imlecin yatay hızı bir yaya giriyor, bez
+  çivinin etrafında dönüyor (`ClothSwingPerSpeed/Max/Stiffness/Damping`), el durunca dikleşiyor; `Motion.Reduced`'da sabit.
+- **Kimlik:** kart 200 → **176 sanat pikseli** (sağdan 24 px kısaldı; belge numarası v4'te banda taşındığından sağ sütun boş
+  hava taşıyordu). Şerit artık kâğıdın içinde — tam genişlik yerine `LicPad` payıyla ve en üstten başlıyor; eskiden 6 birim
+  aşağıdan başlayıp yuvarlak köşelere dayandığı için taşıyordu.
+- **Garnishler tek dilde:** fiş (`LayOutOrderIcons`), kimlik (`PrefChip`) ve tezgâhtaki kaseler artık aynı çizimi kullanıyor —
+  `PrefArt.ForPreparation`, yoksa `ChromeArt.Mark` yedeği. Kimlikte yazı kalktı, yalnız ikon; üstüne gelince adı çıkıyor.
+  Tezgâhtaki kaseler hover'da kart veriyor: ikon, ad ve ne işe yaradığı (`GarnishPurpose`, ya da hazırlığın kendi açıklaması).
+- **Mahzen etiketleri okunuyor:** aile adları artık **plakada** — koyu zemin, altında pembe raf kenarı çizgisi, üstünde krem
+  yazı, genişlik yazıya göre ölçülüyor. Ölçüm: rafın üstünde krem yazı 5.6:1, plakada 15.8:1 (metin 4.5 ister).

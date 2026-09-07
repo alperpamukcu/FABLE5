@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The fourteenth list (2026-09-07):** the cloth hangs in front of the shutter, on a nail at
+  its top middle, and swings with the hand; the licence loses 24 art pixels off its right and
+  its band sits inside the paper; a garnish is one drawing on the ticket, the licence and the
+  counter, with a card on the dishes and the word under the pointer; the cellar's family names
+  sit on name plates that carry their own contrast. GDD_MEVCUT §9.44.
+
 - **The thirteenth list (2026-09-07):** the wardrobe is Miami's — no coats, no hoodies, summer
   shirts and crop tops and vests; a `garment` column so two in five of the people still to be
   drawn wear a print or a shine rather than one flat colour; the ten Europeans finished, eleven

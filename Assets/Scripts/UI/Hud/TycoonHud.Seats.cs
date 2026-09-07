@@ -150,7 +150,17 @@ namespace LastCall.UI
             int marks = 0;
             for (int i = 0; i < view.Garnish.Length; i++)
             {
-                var mark = spec != null && i < spec.Count ? ChromeArt.Mark(spec[i].Id) : null;
+                // ONE DRAWING A GARNISH (2026-09-07, the author: "musterilerin kafasinin
+                // ustundeki siparisteki sugar rim gorseli degistirilsin ... kimlikte
+                // sugarrim lemon vs gibi garnish gorselleri esas alinsin"). The ticket drew
+                // ChromeArt's 16px punched mask while the licence and the counter's dishes
+                // drew PrefArt's pictogram, so the same ask was two pictures depending on
+                // where it was read. PrefArt is the one that carries colour and reads at a
+                // glance; ChromeArt's mark stays as the fallback for an id it has no drawing
+                // for, which is what a new garnish arrives as.
+                var mark = spec != null && i < spec.Count
+                    ? (PrefArt.ForPreparation(spec[i].Id) ?? ChromeArt.Mark(spec[i].Id))
+                    : null;
                 view.Garnish[i].sprite = mark;
                 view.Garnish[i].enabled = mark != null;
                 if (mark != null) marks++;
@@ -800,6 +810,22 @@ namespace LastCall.UI
         private RectTransform _prepRail;
         private readonly List<PrepProp> _prepProps = new List<PrepProp>();
 
+        /// <summary>What a garnish is FOR, in the words the bar would use — the fallback when
+        /// a preparation carries no description of its own (2026-09-07).</summary>
+        private static string GarnishPurpose(string id)
+        {
+            switch (id)
+            {
+                case "ice": return "KEEPS IT COLD · DROP IT IN BEFORE THE POUR";
+                case "lemon_twist": return "A TWIST OF PEEL · SHARPENS A SOUR DRINK";
+                case "salt_rim": return "SALT ROUND THE RIM · TURN THE GLASS IN THE DISH";
+                case "sugar_rim": return "SUGAR ROUND THE RIM · TURN THE GLASS IN THE DISH";
+                case "olive": return "AN OLIVE · THE SAVOURY GARNISH";
+                case "mint": return "FRESH MINT · SLAPPED, NOT STIRRED";
+                default: return "A GARNISH THE ORDER MAY ASK FOR";
+            }
+        }
+
         private sealed class PrepProp
         {
             public string Id;
@@ -1007,7 +1033,18 @@ namespace LastCall.UI
                 rt.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
                 var relay = rt.gameObject.AddComponent<HoverRelay>();
                 var theRt = rt;
-                relay.Entered = () => ShowPropTip(theRt, word);
+                // A CARD, NOT A CAPTION (2026-09-07, the author: "garnish kaselerinin ustune
+                // mouse getirildiginde onlarin iconu ve ne oldugu ne icin oldugu aciklayan bir
+                // kart cisin"). The pictogram is the one the licence prints and the ticket
+                // over a head draws, so a garnish is one picture wherever it is read; the
+                // line under it is the preparation's own description, which Core has been
+                // carrying unused.
+                var theIcon = PrefArt.ForPreparation(id);
+                var theWord = word;
+                var theWhy = prep != null && !string.IsNullOrEmpty(prep.Description)
+                    ? prep.Description.ToUpperInvariant()
+                    : GarnishPurpose(id);
+                relay.Entered = () => ShowPropTip(theRt, theWord, theIcon, theWhy);
                 relay.Exited = () => HidePropTip(theRt);
                 _prepProps.Add(prop);
             }
@@ -1167,6 +1204,13 @@ namespace LastCall.UI
         private Image _clothImg;
         private bool _clothHeld;
         private float _clothLastX;        // where the hand was, for which way the tail points
+        // THE SWING (2026-09-07): a cloth nailed at its top lags behind the hand. These are
+        // the angle it hangs at and the speed that angle is changing, in degrees.
+        private float _clothSwing, _clothSwingVel;
+        /// <summary>How far the hem trails the hand, in degrees per unit of pointer speed,
+        /// and the spring that brings it back to hanging straight.</summary>
+        private const float ClothSwingPerSpeed = 0.055f, ClothSwingMax = 34f,
+                            ClothSwingStiffness = 90f, ClothSwingDamping = 11f;
         private float _rubT;              // the wipe sound's own gap, so a rub is not a rattle
         private SeatView _clothRefused;
         private RectTransform _glassCarry;
@@ -1202,9 +1246,26 @@ namespace LastCall.UI
         private void BuildCloth()
         {
             if (_clothRt != null) return;
-            _clothRt = NewRect("Cloth", _hudRoot);
+            // ITS OWN LAYER, ABOVE THE ROLLER (2026-09-07, the author: "temizlik bezi hitboxu
+            // kepenk hitboxunun onunde olmali"). The cloth used to be an ordinary child of the
+            // HUD canvas, which sorts at 5; the shutter's hit plate is a canvas of its own at
+            // 6 and runs the width of the room, so it swallowed every click meant for the
+            // towel along the whole rail. This is the same trick the licence and the market
+            // use to sit over the bar: a canvas that says where it belongs rather than
+            // relying on the order it happened to be built in.
+            var clothLayer = NewRect("ClothLayer", _hudRoot);
+            Stretch(clothLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var clothCanvas = clothLayer.gameObject.AddComponent<Canvas>();
+            clothCanvas.overrideSorting = true;
+            clothCanvas.sortingOrder = 8;
+            clothLayer.gameObject.AddComponent<GraphicRaycaster>();
+            UiAuditExempt.Mark(clothLayer, "the cloth hangs over the room's own doors: the "
+                + "shutter's hit plate is a canvas at 6 and would otherwise take its clicks");
+
+            _clothRt = NewRect("Cloth", clothLayer);
             _clothRt.anchorMin = _clothRt.anchorMax = new Vector2(0.5f, 0.5f);
-            // Hung from its top: on the rail by the fold, in the hand by the corner.
+            // Hung from the middle of its top edge - on the rail by the fold, in the hand
+            // by the nail. One pivot serves both, and it is what the swing turns about.
             _clothRt.pivot = new Vector2(0.5f, 1f);
             _clothRt.sizeDelta = TowelRestSize;
             _clothImg = _clothRt.gameObject.AddComponent<Image>();
@@ -1305,11 +1366,14 @@ namespace LastCall.UI
             var towelHeld = ItemArt.Load("towel");
             if (towelHeld != null) { _clothImg.sprite = towelHeld; FitCloth(towelHeld, TowelHeldSize); }
             _clothRt.localScale = Vector3.one;
-            // Taken by the corner it was taken by.
+            // NAILED, NOT CARRIED (2026-09-07, the author: "bez gorselinin orta ust kismina
+            // sabitlenmeli mouse"). Everything else in the hand keeps the offset it was
+            // grabbed by, because a glass taken by the rim should hang from the rim. A cloth
+            // is the other thing: it hangs from the pointer at the middle of its top edge
+            // however it was picked up, which is why the offset is zero rather than measured.
             _clothGrabOffset = Vector2.zero;
-            var m = Mouse.current;
-            if (m != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, m.position.ReadValue(), null, out Vector2 held))
-                _clothGrabOffset = _clothRt.anchoredPosition - (held + new Vector2(0f, -12f));
+            _clothSwing = _clothSwingVel = 0f;
+            _clothLastX = float.NaN;
             HidePropTip(_clothRt);
             Sfx.Play("click", 0.4f);
         }
@@ -1318,6 +1382,9 @@ namespace LastCall.UI
         {
             if (!_clothHeld) return;
             _clothHeld = false;
+            _clothSwing = _clothSwingVel = 0f;
+            _clothLastX = float.NaN;
+            if (_clothRt != null) _clothRt.localRotation = Quaternion.identity;
             // Back on the rail, folded.
             var rest = ItemArt.Load("towel_on_bar");
             if (rest != null) { _clothImg.sprite = rest; FitCloth(rest, TowelRestSize); }
@@ -1355,14 +1422,28 @@ namespace LastCall.UI
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
             {
-                _clothRt.anchoredPosition = at + new Vector2(0f, -12f) + _clothGrabOffset;
-                // THE TAIL FOLLOWS THE HAND (the author: "towelin ucu hareket ettiği yöne
-                // doğru bakmalı"). The drawing's tail hangs to the right; moving left turns
-                // it over. A hand that has not moved keeps the towel the way it was.
-                float dx = at.x - _clothLastX;
-                if (dx > 0.5f) _clothRt.localScale = Vector3.one;
-                else if (dx < -0.5f) _clothRt.localScale = new Vector3(-1f, 1f, 1f);
+                // The nail is the pointer itself: the rect's pivot is its top middle, so
+                // putting the rect there hangs the drawing from the hand exactly.
+                _clothRt.anchoredPosition = at;
+
+                // AND IT SWINGS (the author: "civiyle cakilmis gibi mouse saga sola
+                // oynatildiginda bezde sallanmali"). The hand's own speed drives a spring;
+                // the cloth is drawn rotated about the nail, so the hem trails the hand and
+                // settles when the hand stops. Unscaled, like every other feel in this file,
+                // and the first frame of a grab has no previous position to measure against.
+                float dt = Mathf.Max(1e-4f, Time.unscaledDeltaTime);
+                float dx = float.IsNaN(_clothLastX) ? 0f : at.x - _clothLastX;
                 _clothLastX = at.x;
+                float want = Mathf.Clamp(-dx / dt * ClothSwingPerSpeed, -ClothSwingMax, ClothSwingMax);
+                if (Motion.Reduced) { _clothSwing = 0f; _clothSwingVel = 0f; }
+                else
+                {
+                    _clothSwingVel += (want - _clothSwing) * ClothSwingStiffness * dt;
+                    _clothSwingVel -= _clothSwingVel * Mathf.Min(1f, ClothSwingDamping * dt);
+                    _clothSwing = Mathf.Clamp(_clothSwing + _clothSwingVel * dt,
+                                              -ClothSwingMax, ClothSwingMax);
+                }
+                _clothRt.localRotation = Quaternion.Euler(0f, 0f, _clothSwing);
             }
             // WIPING IS RUBBING (GDD 27 §4.2, corrected 2026-09-06). The cloth used to erase
             // a whole mark the instant it touched any part of it, so a mess was a click with

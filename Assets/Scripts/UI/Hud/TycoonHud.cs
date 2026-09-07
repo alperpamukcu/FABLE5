@@ -2352,7 +2352,13 @@ namespace LastCall.UI
         // 3x — two to one, a licence's shape — with the photo and a stamp strip in a 48-wide
         // rail, the four fields in a 134-wide grid at a 19-pixel pitch, and the band carrying
         // the authority, the number, the kick and the seal.
-        private const float LicW = 200f * LicScale, LicH = 100f * LicScale;
+        // 176, NOT 200 (2026-09-07, the author: "kimlikler sag taraftan daha fazla
+        // kisalabilirmis"). The grid was drawn when the document number sat in the right-hand
+        // column; the number moved into the band with the v4 header and the column has been
+        // carrying air ever since. Twenty-four art pixels come off the right - the fields are
+        // laid out from the left and the seal and the key hang off the right edge, so both
+        // ends follow the number without a second measurement.
+        private const float LicW = 176f * LicScale, LicH = 100f * LicScale;
 
         /// <summary>The margin from the paper's edge to anything printed on it.</summary>
         private const float LicPad = 6f * LicScale;

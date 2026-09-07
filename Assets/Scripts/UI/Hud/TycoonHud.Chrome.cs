@@ -693,30 +693,64 @@ namespace LastCall.UI
             }
             while (_cellarLabels.Count < runs.Count)
             {
-                var t = NewText("CellarLabel" + _cellarLabels.Count, _hudRoot, _body, 8,
-                    TextAnchor.MiddleCenter, UITheme.Cream[3]);
-                t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                t.rectTransform.pivot = new Vector2(0.5f, 1f);
-                t.rectTransform.sizeDelta = new Vector2(160f, 12f);
+                // A PLATE, NOT LOOSE TYPE (2026-09-07, the author: "mahzende alkol isimleri
+                // hic gorunur olmuyor arka plandan dolayi"). Cream[3] on the plum boards
+                // under pink neon measures under 2:1 against its own ground, which is why
+                // the names were invisible; type wants 4.5. The bar's own answer to this is
+                // the NAME PLATE its back-bar rails wear (16 §6, and the market borrowed it
+                // for the same reason on 2026-08-19): a dark field with a lit lower lip, the
+                // word in cream on top. It carries its contrast with it, so it reads over
+                // whatever the room's lights are doing behind it.
+                var plate = NewRect("CellarTag" + _cellarLabels.Count, _hudRoot);
+                plate.anchorMin = plate.anchorMax = new Vector2(0.5f, 0.5f);
+                plate.pivot = new Vector2(0.5f, 1f);
+                plate.sizeDelta = new Vector2(88f, 18f);
+                var bg = plate.gameObject.AddComponent<Image>();
+                bg.sprite = ChromeArt.Card();
+                bg.type = Image.Type.Sliced;
+                bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.92f);
+                bg.raycastTarget = false;
+                // The shelf-edge lip: one bright rule along the bottom, which is what makes a
+                // plate read as screwed on rather than as a rectangle drawn over the wood.
+                var lip = NewRect("Lip", plate);
+                lip.anchorMin = new Vector2(0, 0); lip.anchorMax = new Vector2(1, 0);
+                lip.pivot = new Vector2(0.5f, 0f);
+                lip.sizeDelta = new Vector2(0, 1f);
+                lip.anchoredPosition = Vector2.zero;
+                var lipImg = lip.gameObject.AddComponent<Image>();
+                lipImg.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g,
+                                         UITheme.Magenta[3].b, 0.75f);
+                lipImg.raycastTarget = false;
+
+                var t = NewText("L", plate, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+                Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, 0f));
                 t.horizontalOverflow = HorizontalWrapMode.Overflow;
                 t.raycastTarget = false;
-                t.transform.SetAsFirstSibling();
+                plate.transform.SetAsFirstSibling();
                 _cellarLabels.Add(t);
             }
             for (int i = 0; i < _cellarLabels.Count; i++)
             {
                 var t = _cellarLabels[i];
+                var plate = t.rectTransform.parent as RectTransform;
                 bool on = i < runs.Count && phase > 0.02f;
-                if (t.gameObject.activeSelf != on) t.gameObject.SetActive(on);
+                if (plate.gameObject.activeSelf != on) plate.gameObject.SetActive(on);
                 if (!on) continue;
                 var r = runs[i];
                 stage.CellarSlotStage(r.first, out var a);
                 stage.CellarSlotStage(r.last, out var b);
                 float cx = (a.x + b.x) * 0.5f * StageToHud;
-                float y = a.y * StageToHud - 8f + CounterLift;
-                t.rectTransform.anchoredPosition = ToCentre(new Vector2(cx, y));
+                float y = a.y * StageToHud - 6f + CounterLift;
                 t.text = CellarGroupWord(r.group);
-                t.color = new Color(UITheme.Cream[3].r, UITheme.Cream[3].g, UITheme.Cream[3].b, phase);
+                // The plate is the width of what is written on it, never narrower than the
+                // run it labels looks like it wants — measured, because "SODA & TONIC" and
+                // "GIN" cannot share a box.
+                float w = Mathf.Max(48f, t.preferredWidth + 16f);
+                plate.sizeDelta = new Vector2(w, 18f);
+                plate.anchoredPosition = ToCentre(new Vector2(cx, y));
+                var group = plate.GetComponent<CanvasGroup>() ?? plate.gameObject.AddComponent<CanvasGroup>();
+                group.alpha = phase;
+                group.blocksRaycasts = false;
             }
         }
 

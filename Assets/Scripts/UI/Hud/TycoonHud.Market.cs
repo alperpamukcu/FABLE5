@@ -871,32 +871,38 @@ namespace LastCall.UI
         /// with the pictogram and the word side by side, not a picture with a caption
         /// floating under it. Returns 1 so the caller can count.
         /// </summary>
+        /// <summary>
+        /// One endorsement on the licence: THE PICTOGRAM ALONE (2026-09-07, the author:
+        /// "kimlikte sugar rim gorselinin yaninda yazi olmasin sadece icon, iconun ustune
+        /// gelince ne oldugu yazsin"). The word used to sit beside it, which made a row of
+        /// three asks into a paragraph on a card that is mostly type already. The name
+        /// arrives under the pointer instead, on the same caption the counter's dishes use,
+        /// so the two places a garnish is read answer in one language.
+        /// </summary>
         private int PrefChip(Sprite icon, string label, RectTransform host = null)
         {
             const float CellH = 38f, IconBox = 26f;
             var chip = NewRect("Pref", host ?? _idPrefRow);
             var plate = chip.gameObject.AddComponent<Image>();
             plate.color = new Color(0.98f, 0.97f, 0.93f, 1f);
-            plate.raycastTarget = false;
+            plate.raycastTarget = true;      // it has something to say now
             Frame(chip, 2f, new Color(0.42f, 0.39f, 0.34f, 1f));
 
             var iconRt = NewRect("I", chip);
-            Place(iconRt, new Vector2(0, 0.5f), new Vector2(IconBox, IconBox), new Vector2(7, 0));
+            Place(iconRt, new Vector2(0.5f, 0.5f), new Vector2(IconBox, IconBox), Vector2.zero);
             var img = iconRt.gameObject.AddComponent<Image>();
             img.sprite = icon; img.preserveAspect = true; img.raycastTarget = false;
             img.enabled = icon != null;
 
-            var t = NewText("L", chip, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[1]);
-            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(200, 12),
-                new Vector2(IconBox + 12f, 0));
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.text = label;
+            var relay = chip.gameObject.AddComponent<HoverRelay>();
+            var theChip = chip;
+            var theIcon = icon;
+            var theWord = label;
+            relay.Entered = () => ShowPropTip(theChip, theWord, theIcon);
+            relay.Exited = () => HidePropTip(theChip);
 
             var le = chip.gameObject.AddComponent<LayoutElement>();
-            // The measured cell: icon gutter, the word at 6.7 points a character, and the
-            // border's own margin. The old chip guessed at 7 per character with no gutter
-            // and the widest word ran out of its box.
-            le.preferredWidth = IconBox + 12f + label.Length * 6.7f + 12f;
+            le.preferredWidth = IconBox + 16f;
             le.preferredHeight = CellH;
             return 1;
         }

@@ -618,7 +618,13 @@ namespace LastCall.UI
         private void LicenceFurniture(RectTransform card)
         {
             var band = NewRect("Band", card);
-            Place(band, new Vector2(0, 1), new Vector2(LicW, LicHeaderH), new Vector2(0f, LicHeaderY));
+            // INSIDE THE PAPER (2026-09-07, the author: "kimlige koyulan serit resmi kimlik
+            // gorselinden tasiyor"). It was the card's full width starting six units down,
+            // so it ran out to the rounded corners AND left a strip of stock above itself.
+            // The band keeps the margin every other element on this card keeps, and it starts
+            // at the top: a header band with paper above it is not a header band.
+            Place(band, new Vector2(0, 1), new Vector2(LicW - LicPad, LicHeaderH),
+                new Vector2(LicPad * 0.5f, -LicPad * 0.5f));
             band.pivot = new Vector2(0, 1);
             var bandImg = band.gameObject.AddComponent<Image>();
             // THE BEACH ON THE BAND (2026-09-07, the author: "kimliğin üst şeritine uygun
@@ -720,7 +726,8 @@ namespace LastCall.UI
             // header field that is different on all thirty-one.
             // STACKED at the band's left (v3): the authority over the document's class,
             // which leaves the band's right half to the key and the seal.
-            float bandMid = LicHeaderY - LicHeaderH * 0.5f;
+            // The band's own middle, measured from where it is actually placed above.
+            float bandMid = -LicPad * 0.5f - LicHeaderH * 0.5f;
             // CLEAR OF THE EDGES (2026-09-07, the author: "şeritin üstündeki yazılar
             // çizgilere çok yakın, hizala"). The house name stood with its top on the band's
             // top rule and the class with its foot on the bottom one. The two lines are a
