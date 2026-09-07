@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The thirteenth list (2026-09-07):** the wardrobe is Miami's — no coats, no hoodies, summer
+  shirts and crop tops and vests; a `garment` column so two in five of the people still to be
+  drawn wear a print or a shine rather than one flat colour; the ten Europeans finished, eleven
+  clips each at fifteen frames with the walk closing on zero. GDD_MEVCUT §9.43.
+
 - **The twelfth list (2026-09-07):** a hundred-strong customer directory that decides every
   person once and tracks what is drawn; the cast re-cast for a night club, eleven uniformed or
   elderly patrons retired; reactions written as people (five ways to be pleased, five to be

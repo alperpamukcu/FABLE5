@@ -2,232 +2,21 @@
   "version": 1,
   "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on. The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove.",
   "papers": [
-    {
-      "slug": "",
-      "name": "Miles Corrigan",
-      "age": 26,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "nightnurse",
-      "name": "Marilou Cabrera",
-      "age": 37,
-      "country": "Philippines",
-      "iso": "ph"
-    },
-    {
-      "slug": "courier",
-      "name": "Danny Ferraro",
-      "age": 23,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "undone",
-      "name": "Craig Delaney",
-      "age": 46,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "dockman",
-      "name": "Dennis Wojcik",
-      "age": 63,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "bearded",
-      "name": "Fredrik Ohlsson",
-      "age": 34,
-      "country": "Sweden",
-      "iso": "se"
-    },
-    {
-      "slug": "barber",
-      "name": "Serkan Aydemir",
-      "age": 33,
-      "country": "Turkey",
-      "iso": "tr"
-    },
-    {
-      "slug": "bouncer",
-      "name": "Marcus Boyd",
-      "age": 42,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "ember",
-      "name": "Meredith Nolan",
-      "age": 34,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "coder",
-      "name": "Elliot Brandt",
-      "age": 24,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "inked",
-      "name": "Rowan Pike",
-      "age": 33,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "studentm",
-      "name": "Trevor Hanley",
-      "age": 21,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "nerd",
-      "name": "Spencer Kaplan",
-      "age": 25,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "bikeryoung",
-      "name": "Shane Mercer",
-      "age": 26,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "lumber",
-      "name": "Dustin Kilgore",
-      "age": 43,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "cueball",
-      "name": "Neil Prentiss",
-      "age": 55,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "violet",
-      "name": "Sabrina Voss",
-      "age": 24,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "teal",
-      "name": "Piper Landry",
-      "age": 23,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "gothpunk",
-      "name": "Erika Vaughn",
-      "age": 24,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "wanderer",
-      "name": "Joost Kramer",
-      "age": 25,
-      "country": "Netherlands",
-      "iso": "nl"
-    },
-    {
-      "slug": "studentf",
-      "name": "Brooke Whitaker",
-      "age": 20,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "gothgirl",
-      "name": "Marissa Vogel",
-      "age": 24,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "bikerold",
-      "name": "Duane Halloran",
-      "age": 64,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "profess",
-      "name": "Ulrich Brenner",
-      "age": 66,
-      "country": "Germany",
-      "iso": "de"
-    },
-    {
-      "slug": "chrome",
-      "name": "Andre Whitlock",
-      "age": 36,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "platina",
-      "name": "Paulina Nowicka",
-      "age": 33,
-      "country": "Poland",
-      "iso": "pl"
-    },
-    {
-      "slug": "gothqueen",
-      "name": "Genevieve Marsh",
-      "age": 34,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "glam",
-      "name": "Serena Fontana",
-      "age": 35,
-      "country": "Italy",
-      "iso": "it"
-    },
-    {
-      "slug": "execwoman",
-      "name": "Vivian Marchetti",
-      "age": 44,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "execman",
-      "name": "Graham Sedgwick",
-      "age": 54,
-      "country": "United Kingdom",
-      "iso": "gb"
-    },
-    {
-      "slug": "ece",
-      "name": "Ece Toprak",
-      "age": 31,
-      "country": "Turkey",
-      "iso": "tr"
-    },
-    { "slug": "linen", "name": "Camila Restrepo", "age": 29, "country": "United States", "iso": "us" },
-
-    { "slug": "clubgirl", "young": true,     "name": "Nina Delgado",     "age": 23, "country": "United States", "iso": "us" },
-    { "slug": "silkwoman",    "name": "Isabel Navarro",   "age": 28, "country": "Philippines",   "iso": "ph" },
-    { "slug": "pastelman", "young": true,    "name": "Matteo Ferrante",  "age": 22, "country": "Italy",         "iso": "it" },
-    { "slug": "shaved",       "name": "Emre Kayhan",      "age": 39, "country": "Turkey",        "iso": "tr" },
-    { "slug": "afrowoman",    "name": "Simone Baptiste",  "age": 31, "country": "United States", "iso": "us" },
-    { "slug": "eastasianman", "young": true, "name": "Daniel Yoon",      "age": 26, "country": "United States", "iso": "us" },
-    { "slug": "leopard", "young": true,      "name": "Talia Reyes",      "age": 27, "country": "United States", "iso": "us" },
+    { "slug": "", "name": "Miles Corrigan", "age": 26, "country": "United States", "iso": "us" },
+    { "slug": "ember", "name": "Meredith Nolan", "age": 34, "country": "United States", "iso": "us" },
+    { "slug": "coder", "name": "Elliot Brandt", "age": 24, "country": "United States", "iso": "us" },
+    { "slug": "inked", "name": "Rowan Pike", "age": 33, "country": "United States", "iso": "us" },
+    { "slug": "violet", "name": "Sabrina Voss", "age": 24, "country": "United States", "iso": "us" },
+    { "slug": "teal", "name": "Piper Landry", "age": 23, "country": "United States", "iso": "us" },
+    { "slug": "gothgirl", "name": "Marissa Vogel", "age": 24, "country": "United States", "iso": "us" },
+    { "slug": "ece", "name": "Ece Toprak", "age": 31, "country": "Turkey", "iso": "tr" },
+    { "slug": "clubgirl", "young": true, "name": "Nina Delgado", "age": 23, "country": "United States", "iso": "us" },
+    { "slug": "silkwoman", "name": "Isabel Navarro", "age": 28, "country": "Philippines", "iso": "ph" },
+    { "slug": "pastelman", "young": true, "name": "Matteo Ferrante", "age": 22, "country": "Italy", "iso": "it" },
+    { "slug": "shaved", "name": "Emre Kayhan", "age": 39, "country": "Turkey", "iso": "tr" },
+    { "slug": "afrowoman", "name": "Simone Baptiste", "age": 31, "country": "United States", "iso": "us" },
+    { "slug": "eastasianman", "young": true, "name": "Daniel Yoon", "age": 26, "country": "United States", "iso": "us" },
+    { "slug": "leopard", "young": true, "name": "Talia Reyes", "age": 27, "country": "United States", "iso": "us" },
     { "slug": "rider", "name": "Yeferson Mora", "age": 24, "country": "United States", "iso": "us" },
     { "slug": "guard", "name": "Andrés Vargas", "age": 33, "country": "United States", "iso": "us" },
     { "slug": "salaryman", "name": "Hiroshi Nakamura", "age": 34, "country": "Japan", "iso": "jp" },
@@ -235,6 +24,14 @@
     { "slug": "harajuku", "name": "Yui Kobayashi", "age": 22, "country": "Japan", "iso": "jp" },
     { "slug": "racerboy", "name": "Kenji Sato", "age": 26, "country": "Japan", "iso": "jp" },
     { "slug": "atelier", "name": "Camille Rieu", "age": 29, "country": "France", "iso": "fr" },
-    { "slug": "florist", "name": "Marta Kowal", "age": 27, "country": "Poland", "iso": "pl" }
+    { "slug": "florist", "name": "Marta Kowal", "age": 27, "country": "Poland", "iso": "pl" },
+    { "slug": "barista", "name": "Matteo Riva", "age": 26, "country": "Italy", "iso": "it" },
+    { "slug": "archivist", "name": "Nils Berger", "age": 31, "country": "Germany", "iso": "de" },
+    { "slug": "gallerist", "name": "Sofia Marchetti", "age": 34, "country": "Italy", "iso": "it" },
+    { "slug": "trainee", "name": "Emma Lindqvist", "age": 24, "country": "Sweden", "iso": "se" },
+    { "slug": "skater", "name": "Luca Brandt", "age": 22, "country": "Netherlands", "iso": "nl" },
+    { "slug": "junior", "name": "Tomas Ferreira", "age": 25, "country": "Portugal", "iso": "pt" },
+    { "slug": "busker", "name": "Aoife Quinn", "age": 23, "country": "Ireland", "iso": "ie" },
+    { "slug": "couriereu", "name": "Andrei Popa", "age": 28, "country": "Romania", "iso": "ro" }
   ]
 }

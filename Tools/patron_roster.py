@@ -134,7 +134,9 @@ def check():
             say('%-14s is drawn and voiced %s, but voices.json does not list them' % (s, p['voice']))
     for s in drawn - slugs:
         say('%-14s is drawn and not in the roster at all' % s)
-    for s in papers - slugs:
+    # The host and the fallback row are cast, not crowd: Ece is written in story.json and the
+    # empty slug is the licence's fallback, so neither belongs in a directory of customers.
+    for s in papers - slugs - {'', 'ece'}:
         say('%-14s has papers and is not in the roster' % s)
 
     print('\nframe counts (drawn only, the walk should be 17 since 2026-09-07):')

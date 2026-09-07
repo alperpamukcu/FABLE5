@@ -1876,7 +1876,15 @@
    "look_right": "99d310be-3818-4439-ad27-d4f4f809d728",
    "look_left": "82fb75ca-9441-45e4-9106-4c0c37d35b9b",
    "order_a": "707ad1bf-5dbd-4bed-a753-6f315ab6b0a8",
-   "drink_a": "5d32d171-5063-4bba-b848-dfe5763217bb"
+   "drink_a": "5d32d171-5063-4bba-b848-dfe5763217bb",
+   "cheer_a": "01427abd-0091-4ca4-baf2-69b023ed9cd5",
+   "upset_a": "ec288f7c-72d2-4ad3-a787-06dfadfe265e",
+   "walk_a": "781ab4f6-baf2-47d1-85d1-e14046b4e3e3",
+   "order_b": "1427e85d-fac1-49be-bca9-74fb96cea6f9",
+   "drink_b": "48d930ee-6bbe-4372-b880-e4364f48482e",
+   "cheer_b": "00c429bc-fa32-4288-b8e6-c0d2a91fd201",
+   "upset_b": "3b39b38b-f57b-44e7-8ea9-b2a60cf26ecc",
+   "walk_b": "4d6faf31-e31c-4545-923d-61ebe47fc6f8"
   }
  },
  "barista": {
@@ -1896,7 +1904,15 @@
    "look_right": "813bcd43-e4e3-4b35-8001-c9346c93a5a8",
    "look_left": "2b32b8a6-815b-4dee-bc27-1bc53bc98b49",
    "order_a": "8cebddff-b4e6-476f-96b4-d93446fb2556",
-   "drink_a": "693b383d-cc67-44ed-9646-8af12b2dffd2"
+   "drink_a": "693b383d-cc67-44ed-9646-8af12b2dffd2",
+   "cheer_a": "9b0f0480-a202-4825-9fee-bac8a29e16a9",
+   "upset_a": "4e450f6d-9902-461f-91a7-4c0951d7b5e0",
+   "walk_a": "7f5d19b0-14a1-43d8-92d1-1762d3d7cf97",
+   "order_b": "f6b1b775-526a-4380-9638-1f6ed6e8e0d1",
+   "drink_b": "2487799d-4ef3-4dd0-8091-56effe005383",
+   "cheer_b": "4e344fa4-e860-418d-bb04-1a7be37cfdc9",
+   "upset_b": "2e18c2a9-d1d7-441c-af12-3b715ffe0707",
+   "walk_b": "a5efd46a-0333-429d-b4a3-cb845d39c1e1"
   }
  },
  "archivist": {
@@ -1916,7 +1932,15 @@
    "look_right": "3a214deb-aefb-47f5-98d1-fa936ca3186f",
    "look_left": "a352fcfa-9783-479a-bad4-de9ddc2eabc9",
    "order_a": "4e4186c0-aed5-4f29-b48d-e1fecf6ac540",
-   "drink_a": "28ec9e92-1df0-4442-8dfb-9741cb4d8179"
+   "drink_a": "28ec9e92-1df0-4442-8dfb-9741cb4d8179",
+   "cheer_a": "04da1b1f-277e-4868-8d0a-321a9bd80a1a",
+   "upset_a": "c6e2f8c9-e2d6-439d-b683-7d8cc47d48b0",
+   "walk_a": "3db1616b-fc4d-4bf9-9bc6-c3642e7e623d",
+   "order_b": "e7fc9852-fd26-486a-9519-daf0a389954b",
+   "drink_b": "0fd9fe3a-26c3-4b01-af23-3951d42960f2",
+   "cheer_b": "9a060ef4-f27e-457f-b211-88ea7bb519ea",
+   "upset_b": "99b52be0-9428-474b-b1e2-a519a7a132ac",
+   "walk_b": "2a6ffc96-e547-4c6b-9b80-f225657d8f08"
   }
  },
  "gallerist": {
@@ -1936,7 +1960,15 @@
    "look_right": "359f8a5b-86d7-484d-90dd-5bd7c5084cd0",
    "look_left": "594545e3-3a61-4e87-b120-3eaad0b3e2f8",
    "order_a": "5bfd555d-8288-447c-a1de-996862a7db04",
-   "drink_a": "ac051720-f9af-4ea6-af2e-de8fbe6ced5f"
+   "drink_a": "ac051720-f9af-4ea6-af2e-de8fbe6ced5f",
+   "cheer_a": "0b7076b6-3426-4b4e-930d-03e7527c3f9c",
+   "upset_a": "14d5c877-99fc-4626-a83a-50ad9b4835ca",
+   "walk_a": "3bbf7c16-6e6a-4ce9-9390-1eaa2b109060",
+   "order_b": "82b15665-b832-48b5-a9cd-095104eca228",
+   "drink_b": "1f08c625-d2ab-49df-afd5-7d19e6b7c6d9",
+   "cheer_b": "f0e091fa-de66-4423-bde2-ddb216ec300a",
+   "upset_b": "86ca7711-2184-4a2f-bf8d-5d784658c60e",
+   "walk_b": "4b992307-1d6d-43a4-bd75-c4488a55137c"
   }
  },
  "trainee": {
@@ -1956,7 +1988,15 @@
    "look_right": "afdbd1b4-071d-4d92-82bb-be4e2a920756",
    "look_left": "0d2236b7-3767-465c-a2ce-a95bfe6e5d2c",
    "order_a": "323a5bfd-ddf7-4f93-965b-8d683385d5f7",
-   "drink_a": "58f37001-ee63-4aff-b308-d051ae2b18e0"
+   "drink_a": "58f37001-ee63-4aff-b308-d051ae2b18e0",
+   "cheer_a": "906dbfb5-8fa0-43ee-b6c2-65cbce6013d7",
+   "upset_a": "cf216fc5-8ba8-484e-93d3-84b54a51348c",
+   "walk_a": "010b07a1-7d4c-4318-b39d-9032ce964caf",
+   "order_b": "d568d5c0-3925-4a8b-8a2a-469dff4e5d0c",
+   "drink_b": "6a8dc4dc-9eb4-4f5f-a4c8-91ced8e34737",
+   "cheer_b": "086fda78-9587-4543-8aab-f0e6fe37a968",
+   "upset_b": "bcfff8a1-9e80-4116-8094-6adb6eff2e64",
+   "walk_b": "b83c6489-9a4a-4036-be72-18ec1f9469a2"
   }
  },
  "skater": {
@@ -1971,7 +2011,21 @@
    "body": 210,
    "black": 10.605
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\skater.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\skater.png",
+  "clips": {
+   "look_right": "d8a6bd95-8ffb-4654-87c0-d78d60af97e7",
+   "look_left": "3d54bebf-90e3-46d7-804c-d98c83f3532e",
+   "order_a": "aac09b04-cf73-4a10-bf3f-7c15afc53ff5",
+   "drink_a": "33457238-bcc4-4759-8453-191165174d48",
+   "cheer_a": "494ba741-24ec-4ad4-ad99-678b5df4cfc6",
+   "upset_a": "9ef9a75e-5101-4aca-a774-2525004e3800",
+   "walk_a": "dca5d944-e31a-4dd1-97c8-433f6eb6d2c6",
+   "order_b": "39b9633a-abf5-444a-b1f3-386faca48aac",
+   "drink_b": "698f44bb-da20-4950-89ef-d12b86109e16",
+   "cheer_b": "1dc1a254-48b8-4b9e-bda2-6edfed5cb454",
+   "upset_b": "d1df2008-08b0-47c0-8de3-345024bfa3b4",
+   "walk_b": "695cd0bd-fb7a-4981-8b60-32a4a7253dff"
+  }
  },
  "florist": {
   "character_id": "aa2a39a5-0b2e-47c1-8f42-8ef177ff55f3",
@@ -1985,7 +2039,21 @@
    "body": 204,
    "black": 15.876
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\florist.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\florist.png",
+  "clips": {
+   "look_right": "f7a7c7c6-5fa8-40d9-ba15-7aaf97a2f3aa",
+   "look_left": "10f0dcec-0151-4e3a-b2b5-0c2b14458cf7",
+   "order_a": "26ae8354-06cc-498c-868a-667d6bd3ee5e",
+   "drink_a": "1288271c-9ce2-486d-846f-9c722a8ceb59",
+   "cheer_a": "edcbbf53-188a-4f49-99f8-611ea46a74e4",
+   "upset_a": "e685f146-954a-46fc-b2a4-047fb82a0c65",
+   "walk_a": "e303c1ed-f127-470d-b2a1-84ae69c98a7c",
+   "order_b": "403511f4-7896-4a03-9de8-9cf58354bc6d",
+   "drink_b": "afa1864e-886d-4500-bbd2-387508482252",
+   "cheer_b": "0b46543a-8443-4e56-9e50-d6c4a11fe380",
+   "upset_b": "2d90ff84-d1c5-43fb-82ac-90b7ea4198be",
+   "walk_b": "c163fc51-904f-49c7-b047-b8064766dce8"
+  }
  },
  "junior": {
   "character_id": "b3c3cbc5-0c4e-4532-b0e1-bd90fffa1000",
@@ -1999,7 +2067,21 @@
    "body": 198,
    "black": 13.748
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\junior.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\junior.png",
+  "clips": {
+   "look_right": "6959fbdd-b81e-4557-8016-18fef996c6f1",
+   "look_left": "4923d67b-5bf2-4890-8859-cd342f101819",
+   "order_a": "3e499069-123f-40a2-a7b4-934dcde14f93",
+   "drink_a": "9d8cb71f-c643-4337-9fde-df1aefb3a59a",
+   "cheer_a": "58fa4595-8a9d-4083-8377-daba406d26ce",
+   "upset_a": "5266d7c1-906d-47c6-8c08-8c3c0a77176d",
+   "walk_a": "c3c6e13b-1b7f-4829-bc68-14cd15ee47a7",
+   "order_b": "0dc8b8ea-6e88-47cd-92e6-9e33e8b488e9",
+   "drink_b": "a285763c-44fd-446e-ac33-b5b7f26bd449",
+   "cheer_b": "faf8415d-7a32-47a6-9737-b0eea10a7348",
+   "upset_b": "f037526b-e74d-4f0e-a4e4-e2cf5927e7c8",
+   "walk_b": "63cb9088-d8e8-4eef-8be4-ba25d1f08f9e"
+  }
  },
  "busker": {
   "character_id": "451f5684-9b4b-4440-aae6-992185661187",
@@ -2013,7 +2095,21 @@
    "body": 202,
    "black": 12.429
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\busker.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\busker.png",
+  "clips": {
+   "look_right": "b8c1ea6f-d00e-4ff9-871b-d9b91ad0040c",
+   "look_left": "ae585a8d-4228-4e08-9a4e-c02a102b7308",
+   "order_a": "ff74e6b6-7885-4179-ab4f-8c814539e1e8",
+   "drink_a": "4af82b1b-6182-4fc2-9ec7-add37ef46c4b",
+   "cheer_a": "b624e3be-3fb6-452a-9611-f23a132d487d",
+   "upset_a": "a209f3e1-cbb8-446a-a8b7-438cbe53db89",
+   "walk_a": "a4d6167e-0ee3-4f4f-b756-fed3685a4ba2",
+   "order_b": "bf189e41-f7ca-445f-888c-c4fb1dbbdc59",
+   "drink_b": "94848d17-cda9-460f-869f-6a00c322a667",
+   "cheer_b": "823789f1-8c57-4736-b544-7ffbafe8bc88",
+   "upset_b": "2454bcb1-3172-4b73-b394-3bd167c5642b",
+   "walk_b": "a42fbe9e-7104-4a82-9289-f6ebac4f41ef"
+  }
  },
  "couriereu": {
   "character_id": "fecec746-a782-4a14-9012-48812d2b93de",
@@ -2027,6 +2123,20 @@
    "body": 203,
    "black": 13.798
   },
-  "png": "AssetPipeline\\sources\\patron_trial\\couriereu.png"
+  "png": "AssetPipeline\\sources\\patron_trial\\couriereu.png",
+  "clips": {
+   "look_right": "183ce40a-ab79-4c57-b090-fa0206670cec",
+   "look_left": "f5044e13-0eb8-4a96-8488-63fbf7cc2f03",
+   "order_a": "24a31d5e-1a8e-458b-b177-624e05690dbd",
+   "drink_a": "e7230c5c-0742-46ff-9400-b43dc92931e3",
+   "cheer_a": "f6813f74-f40f-4cf3-8d5e-b0b83d0c9a48",
+   "upset_a": "e2d21c8e-dd9a-43cd-a8a7-bb159e1a6cba",
+   "walk_a": "692f3b03-7ded-43af-9f5d-b52a22109420",
+   "order_b": "ef6e3aa2-3112-4d4f-babf-6b683cf6c057",
+   "drink_b": "9504f5ae-0ffa-47fe-9da6-84e92f117698",
+   "cheer_b": "d07a3c43-c8df-4f7e-a32f-62a1db309080",
+   "upset_b": "d3607401-8b41-41c5-913e-aed1bd1cb9c5",
+   "walk_b": "7120973a-dab8-4aa3-b6ef-a3679deb8b45"
+  }
  }
 }

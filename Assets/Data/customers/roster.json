@@ -1,6 +1,6 @@
 {
  "version": 2,
- "_comment": "THE CUSTOMER DIRECTORY (2026-09-07, rewritten on the author's reading of v1: 'ben normal sivil gece kulubu / pub / bar insani olusturmani istiyorum'). One row a person, decided once so the production run never has to decide it again: who they are (name, age, country, flag), how they talk (voice, an id in Resources/Data/voices.json), what they wear (dress = club / street casual / smart casual, look = the sentence a prompt is built from), which gestures they answer with (cheer / upset / order, the styles in Tools/patron_trial_gen.py), and where their art stands ('art' is drawn / briefed / planned, 'inGame' is whether TycoonHud.PatronCast carries them). THREE RULES hold the list together: the room is MIAMI, so nobody wears a coat, a jacket or a hoodie - summer shirts, tees, crop tops, blouses and vests only: everybody is out for the night, so no work uniforms and nobody old; and the countries are the player base, four to five each outside the home crowd, with Miami's own population filling the rest. Tools/patron_roster.py reads this and reports the gap; the people cut in this rewrite are listed in 'retired' with the reason.",
+ "_comment": "THE CUSTOMER DIRECTORY (2026-09-07, rewritten on the author's reading of v1: 'ben normal sivil gece kulubu / pub / bar insani olusturmani istiyorum'). One row a person, decided once so the production run never has to decide it again: who they are (name, age, country, flag), how they talk (voice, an id in Resources/Data/voices.json), what they wear (dress = club / street casual / smart casual, look = the sentence a prompt is built from, garment = plain or one patterned piece (leopard, stripe, dot, palm, floral, shine, glitter, sequin, colourblock, tiedye, check, geo)), which gestures they answer with (cheer / upset / order, the styles in Tools/patron_trial_gen.py), and where their art stands ('art' is drawn / briefed / planned, 'inGame' is whether TycoonHud.PatronCast carries them). THREE RULES hold the list together: the room is MIAMI, so nobody wears a coat, a jacket or a hoodie - summer shirts, tees, crop tops, blouses and vests only: everybody is out for the night, so no work uniforms and nobody old; and the countries are the player base, four to five each outside the home crowd, with Miami's own population filling the rest. Tools/patron_roster.py reads this and reports the gap; the people cut in this rewrite are listed in 'retired' with the reason.",
  "retired": [
   {
    "slug": "abuelita",
@@ -62,7 +62,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "silkwoman",
@@ -78,7 +79,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "pastelman",
@@ -94,7 +96,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "shaved",
@@ -110,7 +113,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "afrowoman",
@@ -126,7 +130,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "eastasianman",
@@ -142,7 +147,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "leopard",
@@ -158,7 +164,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "driftgirl",
@@ -174,7 +181,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "racerboy",
@@ -190,7 +198,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "salaryman",
@@ -206,7 +215,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "harajuku",
@@ -222,7 +232,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "guard",
@@ -238,7 +249,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "rider",
@@ -254,7 +266,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "atelier",
@@ -265,12 +278,13 @@
    "voice": "french",
    "dress": "smart casual",
    "look": "a young French woman, slim, dark blonde hair in a low chignon, small gold studs, a cream silk blouse tucked into wide navy trousers",
-   "art": "briefed",
+   "art": "drawn",
    "inGame": true,
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "barista",
@@ -281,12 +295,13 @@
    "voice": "italian",
    "dress": "street casual",
    "look": "a young Italian man, lean, dark wavy hair, light stubble, a sage green short sleeved shirt open over a white tee, stone chinos",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "archivist",
@@ -297,12 +312,13 @@
    "voice": "german",
    "dress": "smart casual",
    "look": "a German man in his early thirties, tall and slight, cropped light brown hair, thin steel glasses, a pale grey short sleeved shirt and light chino trousers",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "gallerist",
@@ -313,12 +329,13 @@
    "voice": "italian",
    "dress": "club",
    "look": "an Italian woman in her thirties, dark hair in a blunt shoulder bob, red lipstick, a rust orange sleeveless satin blouse and dark wide trousers",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "trainee",
@@ -329,12 +346,13 @@
    "voice": "nordic",
    "dress": "smart casual",
    "look": "a young Swedish woman, fair hair in a ponytail, a pale blue sleeveless blouse and navy linen trousers",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "skater",
@@ -345,12 +363,13 @@
    "voice": "nordic",
    "dress": "street casual",
    "look": "a young Dutch man, tall and narrow, sandy hair, an oversized butter yellow t-shirt and loose grey shorts",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "florist",
@@ -361,12 +380,13 @@
    "voice": "polish",
    "dress": "street casual",
    "look": "a young Polish woman, auburn hair loose, freckles, a dusty pink cropped blouse and light denim shorts",
-   "art": "briefed",
+   "art": "drawn",
    "inGame": true,
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "junior",
@@ -377,12 +397,13 @@
    "voice": "italian",
    "dress": "smart casual",
    "look": "a young Portuguese man, dark curls kept short, clean shaven, a white shirt with the sleeves rolled and a slate blue tie loosened, grey trousers",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "busker",
@@ -393,12 +414,13 @@
    "voice": "brit",
    "dress": "street casual",
    "look": "a young Irish woman, red hair in two braids, a mustard cropped tee and dark denim shorts",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "couriereu",
@@ -409,12 +431,13 @@
    "voice": "polish",
    "dress": "street casual",
    "look": "a Romanian man in his late twenties, close cropped dark hair, a teal short sleeved shirt open over a plain grey tee, light trousers",
-   "art": "briefed",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "tokyodj",
@@ -430,7 +453,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "idoljp",
@@ -446,7 +470,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "shanghai",
@@ -462,7 +487,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "stripe"
   },
   {
    "slug": "chengdu",
@@ -478,7 +504,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "floral"
   },
   {
    "slug": "canton",
@@ -494,7 +521,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "beijing",
@@ -510,7 +538,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "seoulboy",
@@ -526,7 +555,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "seoulgirl",
@@ -542,7 +572,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "dot"
   },
   {
    "slug": "kdance",
@@ -558,7 +589,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "leopard"
   },
   {
    "slug": "kstudent",
@@ -574,7 +606,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "londongirl",
@@ -590,7 +623,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "mancboy",
@@ -606,7 +640,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "analyst",
@@ -622,7 +657,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "dot"
   },
   {
    "slug": "bristol",
@@ -638,7 +674,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "dot"
   },
   {
    "slug": "berlin",
@@ -654,7 +691,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "teacherde",
@@ -670,7 +708,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "hamburg",
@@ -686,7 +725,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "munich",
@@ -702,7 +742,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "stripe"
   },
   {
    "slug": "milano",
@@ -718,7 +759,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "sequin"
   },
   {
    "slug": "roma",
@@ -734,7 +776,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "istanbul",
@@ -750,7 +793,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "kadikoy",
@@ -766,7 +810,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "izmir",
@@ -782,7 +827,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "glitter"
   },
   {
    "slug": "ankara",
@@ -798,7 +844,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "palm"
   },
   {
    "slug": "madrid",
@@ -814,7 +861,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "barcelona",
@@ -830,7 +878,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "sevilla",
@@ -846,7 +895,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "bilbao",
@@ -862,7 +912,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "stripe"
   },
   {
    "slug": "sydney",
@@ -878,7 +929,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "leopard"
   },
   {
    "slug": "melbourne",
@@ -894,7 +946,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "perth",
@@ -910,7 +963,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "brisbane",
@@ -926,7 +980,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "oslo",
@@ -942,7 +997,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "check"
   },
   {
    "slug": "copenhagen",
@@ -958,7 +1014,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "check"
   },
   {
    "slug": "helsinki",
@@ -974,7 +1031,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "beirut",
@@ -990,7 +1048,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "cairo",
@@ -1006,7 +1065,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "dubai",
@@ -1022,7 +1082,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "dot"
   },
   {
    "slug": "amman",
@@ -1038,7 +1099,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "geo"
   },
   {
    "slug": "lagos",
@@ -1054,7 +1116,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "accra",
@@ -1070,7 +1133,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "nairobi",
@@ -1086,7 +1150,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "joburg",
@@ -1102,7 +1167,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "floral"
   },
   {
    "slug": "casablanca",
@@ -1118,7 +1184,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "geo"
   },
   {
    "slug": "mumbai",
@@ -1134,7 +1201,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "delhi",
@@ -1150,7 +1218,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "bangkok",
@@ -1166,7 +1235,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "manila",
@@ -1182,7 +1252,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "shine"
   },
   {
    "slug": "jakarta",
@@ -1198,7 +1269,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "leopard"
   },
   {
    "slug": "cubanmiami",
@@ -1214,7 +1286,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "venezmiami",
@@ -1230,7 +1303,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "colombmiami",
@@ -1246,7 +1320,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "haitimiami",
@@ -1262,7 +1337,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "sequin"
   },
   {
    "slug": "brazilmiami",
@@ -1278,7 +1354,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "sequin"
   },
   {
    "slug": "dominmiami",
@@ -1294,7 +1371,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "prmiami",
@@ -1310,7 +1388,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "mexmiami",
@@ -1326,7 +1405,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "argmiami",
@@ -1342,7 +1422,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "check"
   },
   {
    "slug": "perumiami",
@@ -1358,7 +1439,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "stripe"
   },
   {
    "slug": "paralegal",
@@ -1374,7 +1456,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "realtor",
@@ -1390,7 +1473,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "lifeguard",
@@ -1406,7 +1490,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "tattooist",
@@ -1422,7 +1507,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "palm"
   },
   {
    "slug": "dj",
@@ -1438,7 +1524,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "leopard"
   },
   {
    "slug": "photographer",
@@ -1454,7 +1541,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "runner",
@@ -1470,7 +1558,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "stylist",
@@ -1486,7 +1575,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "singer",
@@ -1502,7 +1592,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "finger"
+   "order": "finger",
+   "garment": "colourblock"
   },
   {
    "slug": "coder",
@@ -1518,7 +1609,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "speak"
+   "order": "speak",
+   "garment": "tiedye"
   },
   {
    "slug": "student",
@@ -1534,7 +1626,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "inked",
@@ -1550,7 +1643,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   },
   {
    "slug": "gothgirl",
@@ -1566,7 +1660,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "violet",
@@ -1582,7 +1677,8 @@
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
-   "order": "speak"
+   "order": "speak",
+   "garment": "floral"
   },
   {
    "slug": "teal",
@@ -1598,7 +1694,8 @@
    "note": "",
    "cheer": "hands",
    "upset": "glare",
-   "order": "finger"
+   "order": "finger",
+   "garment": "check"
   },
   {
    "slug": "ember",
@@ -1614,7 +1711,8 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "bouncerless",
@@ -1630,7 +1728,8 @@
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
-   "order": "speak"
+   "order": "speak",
+   "garment": "plain"
   },
   {
    "slug": "nyctransplant",
@@ -1646,7 +1745,8 @@
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
-   "order": "finger"
+   "order": "finger",
+   "garment": "plain"
   }
  ]
 }

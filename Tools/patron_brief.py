@@ -37,11 +37,32 @@ def people():
     return json.load(io.open(ROSTER, encoding='utf-8'))['people']
 
 
+# What each pattern says in the prompt. The roster names one per person at most (see
+# `garment`), because a leopard jacket over a striped top is where a 220px figure turns to
+# noise - the reason the brief said "no pattern" at all until 2026-09-07.
+PATTERN = {
+    'plain': 'in plain colours, no pattern',
+    'leopard': 'the top is a leopard print in tan and brown',
+    'stripe': 'the top is boldly striped in two colours',
+    'dot': 'the top is a polka dot print',
+    'palm': 'the shirt is a palm leaf print in green and cream',
+    'floral': 'the top is a bright floral print',
+    'shine': 'the top is a shiny satin that catches the light',
+    'glitter': 'the top is covered in fine glitter, sparkling',
+    'sequin': 'the top is sequinned and reflective',
+    'colourblock': 'the top is colour-blocked in three bright colours',
+    'tiedye': 'the top is a soft tie-dye in two colours',
+    'check': 'the shirt is a small check pattern',
+    'geo': 'the shirt is a bold geometric print',
+}
+
+
 def entry(p):
     look = p['look'].rstrip('. ')
+    fabric = PATTERN.get(p.get('garment', 'plain'), PATTERN['plain'])
     return ('    "%s": (\n        "%s, %s, "\n'
-            '        "no logo, no pattern, no bag, no hat, nothing black"),\n'
-            % (p['slug'], look, ROOM.get(p['dress'], ROOM['street casual'])))
+            '        "%s, no logo, no bag, no hat, nothing black"),\n'
+            % (p['slug'], look, ROOM.get(p['dress'], ROOM['street casual']), fabric))
 
 
 def write():

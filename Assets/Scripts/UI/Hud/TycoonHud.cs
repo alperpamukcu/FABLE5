@@ -493,8 +493,16 @@ namespace LastCall.UI
             // should re-roll the character rather than re-ship those frames, because the
             // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
-            ("florist", 14f, 0.0f, 6, 6),   // the tenth list, 2026-09-07
-            ("atelier", 8f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
+            ("couriereu", 7f, 0.0f, 3, 4),   // the twelfth list, 2026-09-07
+            ("busker", 9f, 0.0f, 4, 5),   // the twelfth list, 2026-09-07
+            ("junior", 12f, 0.0f, 5, 6),   // the twelfth list, 2026-09-07
+            ("skater", 0f, 0.0f, 3, 5),   // the twelfth list, 2026-09-07
+            ("trainee", 6f, 0.0f, 4, 4),   // the twelfth list, 2026-09-07
+            ("gallerist", 18f, 0.0f, 5, 4),   // the twelfth list, 2026-09-07
+            ("archivist", 5f, 0.0f, 6, 5),   // the twelfth list, 2026-09-07
+            ("barista", 6f, 0.0f, 3, 5),   // the twelfth list, 2026-09-07
+            ("florist", 5f, 0.0f, 4, 7),   // the twelfth list, 2026-09-07
+            ("atelier", 0f, 0.0f, 7, 5),   // the twelfth list, 2026-09-07
             ("racerboy", 7f, 0.0f, 6, 6),   // the eleventh list, 2026-09-07
             ("harajuku", 2f, 0.0f, 5, 7),   // the eleventh list, 2026-09-07
             ("driftgirl", 10f, 0.0f, 5, 4),   // the eleventh list, 2026-09-07

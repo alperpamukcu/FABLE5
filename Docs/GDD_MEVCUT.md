@@ -1506,3 +1506,17 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   kopya kareyi kaldırıyor. `Tools/patron_walk_fix.py check` dikişi ölçer.
 - **Havlu:** rect artık çizimin tam ölçüsünde (`FitCloth`) — alfa isabet testi rect üzerinden örneklediği için `preserveAspect`'in
   bıraktığı boşluk hitbox'ı şişiriyordu. **Sipariş balonu kaldırıldı:** balon yalnız içki teslim edildikten sonra, her yudumda.
+
+### 9.43 · On üçüncü liste: Miami gardırobu, desenler, on Avrupalı (2026-09-07)
+
+- **Mekân Miami (yazar: "ceket ve mont giymemeleri gerekiyor, yazlık gömlek tshirt crop bluz, atlet"):** rehberdeki 43 kişinin
+  üstü yazlığa çevrildi (mont/ceket/hırka/kapüşonlu/triko yok), ev kurallarına da "sıcak Miami gecesi, ceket yok, kollar açık"
+  maddesi eklendi — model söylenmediği yerde herkese mont giydiriyor, ilk yüzün 41'i montlu geldi.
+- **Desenler (yazar: "karakteristik desenli kıyafetler de olsun ... çok düz olmasınlar"):** rehber `garment` sütunu kazandı —
+  plain ya da tek bir desenli parça (leopar, çizgi, puantiye, palmiye, çiçek, parlak saten, simli, payet, renk bloğu, batik,
+  ekose, geometrik). Beşte iki oranında dağıtıldı; çizilmiş herkes `plain` kalıyor çünkü sanatları zaten var. Tek parça, çünkü
+  iki desen 220 pikselde gürültü oluyor — brief'in başından beri "no pattern" demesinin sebebi buydu.
+- **On Avrupalı bitti** (atelier, barista, archivist, gallerist, trainee, skater, florist, junior, busker, couriereu): 11'er klip,
+  15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
+- **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
+  `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
