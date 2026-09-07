@@ -873,6 +873,11 @@ namespace LastCall.UI
         private const float GaugeW = 72f, GaugeH = 12f;
 
         /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
+        /// <summary>The licence's inline recipe icons: the spec panel's bottles at the size
+        /// the card's own order line has (2026-09-08). 16 because the line is 19 units tall
+        /// and the art is drawn to be shown at whole sizes.</summary>
+        private const float OrderPartPx = 16f, OrderPartGap = 4f;
+
         private const float SpecRowH = 20f;
 
         /// <summary>A footnote row — the line that spells out a word like SPIRIT.</summary>

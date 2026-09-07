@@ -211,11 +211,47 @@ namespace LastCall.UI
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
             _idOrder.text = $"<b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
-            var parts = new List<string>();
+            // WHAT GOES IN IT, IN THE MENU'S OWN LANGUAGE (2026-09-08, the author:
+            // "kimliklerdeki tarif ön izlemesini de menüdeki yeni tarif göstergesine uygun
+            // yap"). This was a string join set at 8 — "GIN · VERMOUTH · BITTERS" — while the
+            // book and this card's OWN hover tip both draw the spec panel: bottle art, stock
+            // colour, shares. Three places, two languages, and the odd one out was the one
+            // printed on the card the player is holding.
+            //
+            // It cannot be the panel itself: the card leaves 19 units between the ORDER rule
+            // and the ENDORSEMENTS caption and a spec row is 20, so a cocktail's four rows
+            // have nowhere to go. It takes the panel's language at the size the line has —
+            // the same bottle silhouettes, one per ingredient, each carrying the panel's own
+            // stock reading, so a bottle the bar cannot pour is as plain here as it is there.
+            // The words go with the join: at 8 they were barely type, the icons are what the
+            // panel exists to teach, and the hover tip still spells all of it out.
+            foreach (Transform oldPart in _idOrderParts.rectTransform) Destroy(oldPart.gameObject);
+            _idOrderParts.text = "";
+            float partX = 0f;
             foreach (var band in visit.Order.Wanted.RatioRequirements)
-                parts.Add((band.IsStyleBand ? band.Style.Replace('_', ' ') : band.Type.ToString())
-                    .ToUpperInvariant());
-            _idOrderParts.text = string.Join("  ·  ", parts);
+            {
+                // Every band in recipes.json is a STYLE band — counted 2026-09-08: 164 of
+                // 164 across 54 recipes — so every one of them has a bottle to draw. The
+                // fallback is for a hand-built recipe that has not, and it draws nothing
+                // rather than a white blob that says nothing.
+                var art = band.IsStyleBand && Run != null
+                    ? ItemArt.StyleBottle(Run.CatalogueBottles, band.Style)
+                    : null;
+                if (art == null) continue;
+                var chip = NewRect("P", _idOrderParts.rectTransform);
+                Place(chip, new Vector2(0, 0.5f), new Vector2(OrderPartPx, OrderPartPx),
+                    new Vector2(partX, 0f));
+                chip.pivot = new Vector2(0, 0.5f);
+                var img = chip.gameObject.AddComponent<Image>();
+                img.sprite = art;
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+                // The panel's own reading: full ink for a bottle on the shelf, dimmed for one
+                // the bar has not got. Same question, same answer, both places.
+                bool stocked = !band.IsStyleBand || InStock(band.Style, band.MinTier);
+                img.color = stocked ? Color.white : new Color(0.74f, 0.16f, 0.20f, 0.55f);
+                partX += OrderPartPx + OrderPartGap;
+            }
             _idOrderIcon.sprite = DrinkIcon.For(visit.Order.Wanted, _bootstrap.Glassware);
             _idOrderIcon.enabled = _idOrderIcon.sprite != null;
 
