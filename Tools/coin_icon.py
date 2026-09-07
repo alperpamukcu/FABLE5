@@ -258,11 +258,24 @@ def draw16(body, rim):
     return im
 
 
+# ── THE TWENTY-FOUR ───────────────────────────────────────────────────────────────────────
+# The author asked for the coin about half again as big (2026-09-08: "daha 1.5 kat daha buyuk
+# bir tasarim olabilir"). 16 * 1.5 = 24, and 24 is a whole multiple of neither master, so it is
+# drawn at 24 rather than resampled - but by the SAME geometry as the 32, not by hand. Hand-
+# writing it was tried first and thrown away the same hour: at 24 cells the S has enough room to
+# be a real S, so there is nothing for a hand-drawn grid to buy, and mine came back with a
+# lopsided bowl and a notch bitten out of the rim.
+#
+# What the geometry needs at 24 is what it needed at 16: a stroke that does not close the
+# counters. SW_MIN_CELLS handles it - at 24 the fraction gives 1.0 cells and the cap leaves it
+# there, which is exactly one cell of ink with clear metal either side.
+
+
 def main():
     made = {}
-    for n, suffix in ((32, ''), (16, '_16')):
-        lit = draw(LIT, RIM, n) if n >= 32 else draw16(LIT, RIM)
-        socket = draw(SOCKET, SOCKET, n) if n >= 32 else draw16(SOCKET, SOCKET)
+    for n, suffix in ((32, ''), (24, '_24'), (16, '_16')):
+        lit = draw16(LIT, RIM) if n == 16 else draw(LIT, RIM, n)
+        socket = draw16(SOCKET, SOCKET) if n == 16 else draw(SOCKET, SOCKET, n)
         sp = socket.load()
         for y in range(n):
             for x in range(n):

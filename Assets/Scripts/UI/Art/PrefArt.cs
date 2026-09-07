@@ -64,17 +64,52 @@ namespace LastCall.UI
             }
         });
 
+        // TOLD APART BY THEIR CRUST, not by a tint (2026-09-08, the author: "sugar rim ile
+        // salted rim iconlari ayni oldu ... aralarinda bariz fark olsun ama ikiside alakali
+        // olsun"). They were one drawing handed two colours — white and a pink so near white
+        // that at 24px on a lit bench they were the same icon. A tint is the weakest possible
+        // distinction: it dies at small sizes, it dies under the room's own light, and it dies
+        // completely for a colour-blind player. The GLASS stays shared, because the pair IS a
+        // pair; the rim carries the difference, because the rim is what the two preparations
+        // actually differ in — and a difference of shape survives everything.
+
+        /// <summary>Salt: a fine, even, tight-packed crust — a thin bright band on the lip.</summary>
         public static Sprite SaltRim() => Cached("salt_rim", p =>
         {
-            CoupeWithRim(p, Color.white);
+            Coupe(p);
+            // Single-pixel grains, every column, all at one height: milled small and even.
+            var grain = Color.white;
+            var under = new Color(0.72f, 0.76f, 0.82f);      // the cool shadow salt casts
+            for (int x = 4; x <= 19; x++)
+            {
+                Px(p, x, 18, grain);
+                Px(p, x, 17, under);
+            }
         });
 
+        /// <summary>Sugar: a coarse, uneven, sparkling crust — chunky grains with air between
+        /// them, and three of them catching the light.</summary>
         public static Sprite SugarRim() => Cached("sugar_rim", p =>
         {
-            CoupeWithRim(p, new Color(0.97f, 0.78f, 0.85f));
+            Coupe(p);
+            // Two-pixel grains with gaps, at two heights, in warm cream over amber: coarse,
+            // and it stands proud of the glass the way a sugared rim does.
+            var grain = new Color(0.99f, 0.95f, 0.84f);
+            var under = new Color(0.85f, 0.68f, 0.38f);
+            for (int x = 4; x <= 19; x += 3)
+            {
+                bool tall = ((x / 3) & 1) == 0;              // uneven, so it never reads as a rule
+                Px(p, x, 17, under); Px(p, x + 1, 17, under);
+                Px(p, x, 18, grain); Px(p, x + 1, 18, grain);
+                if (tall) { Px(p, x, 19, grain); Px(p, x + 1, 19, grain); }
+            }
+            // The sparkle salt has not: three lit crystals along the crust.
+            var lit = Color.white;
+            Px(p, 6, 19, lit); Px(p, 12, 19, lit); Px(p, 18, 19, lit);
         });
 
-        private static void CoupeWithRim(Color[] p, Color grains)
+        /// <summary>The glass the two rims share — bowl, stem and foot, no crust.</summary>
+        private static void Coupe(Color[] p)
         {
             // bowl
             for (int y = 10; y <= 16; y++)
@@ -86,9 +121,6 @@ namespace LastCall.UI
             // stem and foot
             for (int y = 4; y <= 9; y++) { Px(p, 11, y, GlassDim); Px(p, 12, y, GlassDim); }
             for (int x = 8; x <= 15; x++) Px(p, x, 3, GlassDim);
-            // the crusted rim, dotted along the top edge
-            for (int x = 4; x <= 19; x++)
-                if ((x & 1) == 0) Px(p, x, 18, grains); else Px(p, x, 17, grains);
         }
 
         // ── plumbing ─────────────────────────────────────────────────────────────

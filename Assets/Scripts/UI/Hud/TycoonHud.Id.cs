@@ -646,8 +646,13 @@ namespace LastCall.UI
             // so it ran out to the rounded corners AND left a strip of stock above itself.
             // The band keeps the margin every other element on this card keeps, and it starts
             // at the top: a header band with paper above it is not a header band.
-            Place(band, new Vector2(0, 1), new Vector2(LicW - LicPad, LicHeaderH),
-                new Vector2(LicPad * 0.5f, -LicPad * 0.5f));
+            // ONE MARGIN FOR THE WHOLE CARD (2026-09-08, the author: "kutuların kenarlara
+            // olan uzaklıkları da sabit olmalı"). The band was inset LicPad/2 = 9 while the
+            // photo well and every field rule keep LicPad = 18, so the card had two left
+            // edges nine units apart and read as off-centre however carefully anything else
+            // was placed. It keeps the card's margin now, like everything else on it.
+            Place(band, new Vector2(0, 1), new Vector2(LicW - LicPad * 2f, LicHeaderH),
+                new Vector2(LicPad, -LicPad));
             band.pivot = new Vector2(0, 1);
             var bandImg = band.gameObject.AddComponent<Image>();
             // THE BEACH ON THE BAND (2026-09-07, the author: "kimliğin üst şeritine uygun
@@ -684,7 +689,7 @@ namespace LastCall.UI
 
             // The portrait well and the stamp strip under it: one column, one width.
             Well(LicPortrait.x, -LicPortrait.y, LicPortrait.width, LicPortrait.height, true);
-            Well(LicPad, LicStampY, LicRailW, LicStampH, false);
+            Well(LicPad, LicStampY, LicStripW, LicStampH, false);
 
             // The field grid's rules, and the one the licence number sits on.
             void Rule(float x, float y, float w, float alpha)
@@ -750,7 +755,7 @@ namespace LastCall.UI
             // STACKED at the band's left (v3): the authority over the document's class,
             // which leaves the band's right half to the key and the seal.
             // The band's own middle, measured from where it is actually placed above.
-            float bandMid = -LicPad * 0.5f - LicHeaderH * 0.5f;
+            float bandMid = -LicPad - LicHeaderH * 0.5f;
             // CLEAR OF THE EDGES (2026-09-07, the author: "şeritin üstündeki yazılar
             // çizgilere çok yakın, hizala"). The house name stood with its top on the band's
             // top rule and the class with its foot on the bottom one. The two lines are a
@@ -875,8 +880,14 @@ namespace LastCall.UI
             // design size and every stroke lands between pixels, which is the hairline the
             // balloon was cured of on 2026-09-06 and this card still had.
             _idRelLabel = NewText("C_VISITS", card, _body, 16, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
-            Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(90, 16),
-                new Vector2(LicPad + 4f, stripTop - 3f));
+            // ON THE CARD'S OWN MARGIN (2026-09-08): the photo well above this starts at
+            // LicPad, and a caption four units adrift of the box it labels is the "tam
+            // ortalanamamış" of the author's list, in miniature.
+            // ROW ONE, and the caption heads it (2026-09-08). Each count gets a row with
+            // its word at the head and its marks beside it — which is how a form is set, reads
+            // left to right as a sentence, and is what a 54-unit well can actually hold.
+            Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
+                new Vector2(LicPad, stripTop - 2f));
             _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRelLabel.text = "VISITS";
             // ONE CAPTION PER ROW, because two do not fit (2026-09-07, measured in play).
@@ -889,8 +900,8 @@ namespace LastCall.UI
             // ...and RATED, not RATES US, at the head of the second column: the shorter word
             // is what fits the half-rail the stars need, and it says the same thing.
             _idRatesLabel = NewText("C_RATES", card, _body, 16, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
-            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(46, 16),
-                new Vector2(LicPad + LicStampCol, stripTop - 3f));
+            Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
+                new Vector2(LicPad, stripTop - 2f - LicStampRow));
             _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRatesLabel.text = "RATED";
 
@@ -908,7 +919,7 @@ namespace LastCall.UI
             {
                 var p = NewRect("Punch" + i, card);
                 Place(p, new Vector2(0, 1), new Vector2(PunchPx, PunchPx), new Vector2(
-                    LicPad + 4f + i * (PunchPx + PunchGap), stripTop - LicStampRow));
+                    LicPad + LicStampCol + i * (PunchPx + PunchGap), stripTop - 4f));
                 _idPunches[i] = p.gameObject.AddComponent<Image>();
                 _idPunches[i].sprite = ChromeArt.Punch();
                 _idPunches[i].preserveAspect = true; _idPunches[i].raycastTarget = false;
@@ -924,7 +935,7 @@ namespace LastCall.UI
             // LAST punch rather than sitting after it, drawn small and dark on the card.
             _idVisitMore.enabled = false;
             Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(28, 16), new Vector2(
-                LicPad + 4f + 62f, stripTop - 3f));
+                LicPad + LicStripW - 30f, stripTop - 2f));
             _idVisitMore.horizontalOverflow = HorizontalWrapMode.Overflow;
             // The count itself is kept off the card (the punches are the count); it feeds
             // nothing now but is still written, so the old readers stay honest.
@@ -933,23 +944,40 @@ namespace LastCall.UI
             _idRel = NewText("Standing", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[3]);
             _idRel.enabled = false;
 
-            // HOW WELL THEY KNOW YOU, IN HEARTS (2026-09-04): the bond's three, at the end of
-            // the visits row, lit as far as the rank.
+            // THE BOND COMES OFF THE CARD (2026-09-08). It was three hearts at the end of a
+            // row, and it has been moved four times in two days without ever fitting, so the
+            // measurement was finally done properly: the well is 54 units tall (two rows —
+            // the card gives it 18 art px) and 156 wide, and with each count's caption at the
+            // head of its own row, row one spends 18..152 on VISITS and five punches and row
+            // two 18..149 on RATED and five stars. Three 12px hearts want 38 units. Neither
+            // row has them. There is no fifth place on the card either: the photo well is
+            // flush to the strip, and the band is spent on the authority, the number, the
+            // KICK key and the seal.
+            //
+            // So it goes, and it is the right one to lose: the bond is derived from the VISIT
+            // COUNT (see the reader above — bond is Relationship, which counts visits), and
+            // the punches on the row above ARE the visit count. It was the same fact twice,
+            // and the card was overflowing to print it. The Image[] stays, built and disabled,
+            // because the reader that lights it is honest and cheap and the day this card
+            // grows a row is the day it comes back.
+            const bool BondOnCard = false;
             const float BondPx = 12f, BondGap = 1f;
             _idBond = new Image[3];
             for (int i = 0; i < 3; i++)
             {
                 var b = NewRect("Bond" + i, card);
-                // ON THE CAPTION ROW'S RIGHT EDGE (2026-09-07, measured three times). The
-                // rail is 144 units and the strip already spends them: punches x22-92 and
-                // stars x94-158 fill both rows edge to edge, so the hearts fit on NEITHER —
-                // on the star row they landed on Star4, on the caption row they ran through
-                // RATED. What is actually free is the end of the CAPTION row, past both
-                // words: VISITS stops at x80 and RATED at x145, and the rail runs to x162.
-                // Three 12s and their gaps is 38, so they close that row from x124.
+                // CLOSING ROW TWO, inside the well (2026-09-08). They were measured off
+                // LicRailW — the PHOTOGRAPH's width — so they sat half outside the strip's own
+                // box and over the order field beside it, which is the "kalp iconlarinin
+                // yerlestirmesinde de problem var" of the author's list. Measured off the
+                // strip's own right edge they cannot leave it; and row two is where the spare
+                // width is (row one leaves 28 units, row two 44, and three hearts want 38).
+                // It belongs there as well as fitting: RATED and the bond are both what this
+                // drinker makes of the bar, while the punches are how often they have come.
                 Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
-                    LicPad + LicRailW + 24f - (3 - i) * (BondPx + BondGap) + BondGap,
-                    stripTop - 3f));
+                    LicPad + LicStripW - 6f - (3 - i) * (BondPx + BondGap) + BondGap,
+                    stripTop - 4f - LicStampRow));
+                b.gameObject.SetActive(BondOnCard);
                 var bs = b.gameObject.AddComponent<Image>();
                 bs.sprite = ItemArt.Heart(false, BondPx);
                 bs.preserveAspect = true; bs.raycastTarget = false;
@@ -968,7 +996,8 @@ namespace LastCall.UI
             {
                 var s = NewRect("Star" + i, card);
                 Place(s, new Vector2(0, 1), new Vector2(StarBox, StarBox), new Vector2(
-                    LicPad + LicStampCol + i * (StarBox + StarGap), stripTop - LicStampRow));
+                    LicPad + LicStampCol + i * (StarBox + StarGap),
+                    stripTop - 4f - LicStampRow));
                 _idStars[i] = s.gameObject.AddComponent<Image>();
                 _idStars[i].sprite = ItemArt.Star(false, StarBox);
                 _idStars[i].preserveAspect = true;
@@ -987,7 +1016,7 @@ namespace LastCall.UI
             }
             _idRates = NewText("V_RATES", card, _display, 8, TextAnchor.MiddleRight, UITheme.Night[1]);
             Place(_idRates.rectTransform, new Vector2(0, 1), new Vector2(46, 16), new Vector2(
-                LicPad + LicStampCol, stripTop - LicStampRow));
+                LicPad + LicStampCol, stripTop - 4f - LicStampRow));
             _idRates.enabled = false;
             _idRates.horizontalOverflow = HorizontalWrapMode.Overflow;
 

@@ -279,7 +279,31 @@ namespace LastCall.UI
             var papers = PapersFor(look);
             var voice = book.For(look?.Slug, papers?.Iso);
             string said = book.Say(voice, cue, run.VoiceStream, drink, advice);
-            return string.IsNullOrEmpty(said) ? PlainLine(cue, advice) : said;
+            return Sentence(string.IsNullOrEmpty(said) ? PlainLine(cue, advice) : said);
+        }
+
+        /// <summary>
+        /// A SPOKEN LINE IS A SENTENCE (2026-09-08, the author: "konuşma balonlarında cümleler
+        /// büyük harfle başlar küçük harfle biter"). Opens on a capital, closes on punctuation.
+        ///
+        /// It is applied at the END, on the way into the balloon, because the lines that come
+        /// out wrong are the COMPOSED ones — a voice's praise glued to the coaching's "I asked
+        /// for…" tail, a Title Case recipe name dropped in by {drink}, a whole sentence dropped
+        /// into the middle of another by {advice} where {advice_l} was meant. Fixing those one
+        /// at a time fixes the lines that exist today; fixing the ends here fixes every line
+        /// the game will ever speak, including the ones the next voice brings.
+        /// </summary>
+        private static string Sentence(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return line;
+            var t = line.Trim();
+            if (t.Length == 0) return t;
+            if (char.IsLower(t[0])) t = char.ToUpperInvariant(t[0]) + t.Substring(1);
+            char end = t[t.Length - 1];
+            // A line that already ends in punctuation keeps it — including the '!' and '?'
+            // that carry most of this bar's character.
+            if (end != '.' && end != '!' && end != '?' && end != '…' && end != ':') t += ".";
+            return t;
         }
 
         /// <summary>The lines the bar said before it had voices — the fallback, never the norm.</summary>
@@ -414,8 +438,28 @@ namespace LastCall.UI
             foreach (var v in _seats)
             {
                 if (v?.Say == null || !v.Say.gameObject.activeInHierarchy) continue;
+                // A LEAVER'S BALLOON IS NOT IN THE ROW (2026-09-08, the author: "konuşma
+                // balonları ekranın sağ tarafına geçemiyor ortada takılıyor, oysa ekrandan
+                // çıkarkende müşterileri takip etmeliydi"). The solver's job is to keep the
+                // balloons of people AT THE BAR off each other and inside the picture; a
+                // walk-out is neither. Their seat travels to halfRoom + OffscreenMargin, so
+                // the inside-the-picture clamp below pinned the balloon at the frame's edge
+                // while its owner walked out from under it — the tail stretching, the balloon
+                // apparently stuck in mid-air. It is a child of the seat, so left alone it
+                // simply travels with them, which is the whole ask.
+                if (v.Exiting)
+                {
+                    v.Say.anchoredPosition = new Vector2(0f, CharWinH + TagLift);
+                    if (v.SayTail != null)
+                    {
+                        v.SayTail.rectTransform.anchoredPosition = new Vector2(0f, 3f);
+                        v.SayTail.rectTransform.sizeDelta = new Vector2(13f, 12f);
+                    }
+                    continue;
+                }
                 live.Add(v);
-                sig.Append(Mathf.RoundToInt(v.Root.anchoredPosition.x)).Append(':')
+                sig.Append(v.Exiting ? 'x' : '.')
+                   .Append(Mathf.RoundToInt(v.Root.anchoredPosition.x)).Append(':')
                    .Append(Mathf.RoundToInt(v.Say.sizeDelta.x)).Append('x')
                    .Append(Mathf.RoundToInt(v.Say.sizeDelta.y)).Append(';');
             }
@@ -433,15 +477,36 @@ namespace LastCall.UI
             // storey above the balloon it would have covered — never sideways over the
             // next drinker's head (the author: "karakter görsellerinin üstüne gelmeyecek
             // şekilde, dikey ve yatay olarak esnek").
+            // WITH THE DRAWER OPEN THEY ARE SMALL, AND THEY SIT IN THE BAND (2026-09-08, the
+            // author: "mahzen açıkken konuşma balonları üst bara taşıyor; küçülecek ve tezgah
+            // ile üst bar arasında konumlandırılacak"). The room rides up when the cellar
+            // opens and the balloons ride with it, straight through the top bar — which is why
+            // they used to be taken down outright. Kept and shrunk instead: scaled to
+            // CellarSayScale, and their row pinned into the gap between the counter's top and
+            // the bar's underside so they cannot reach it however tall the speech is.
+            float drawer = stage != null ? stage.DrawerPhase : 0f;
+            float sayScale = Mathf.Lerp(1f, CellarSayScale, drawer);
             var placed = new System.Collections.Generic.List<Rect>();
             foreach (var v in live)
             {
-                float w = v.Say.sizeDelta.x, h = v.Say.sizeDelta.y;
+                v.Say.localScale = Vector3.one * sayScale;
+                float w = v.Say.sizeDelta.x * sayScale, h = v.Say.sizeDelta.y * sayScale;
                 float rootX = v.Root.anchoredPosition.x;
                 float homeY = v.Say.anchoredPosition.y;   // the row it stands on
                 float baseY = CharWinH + TagLift;
                 if (homeY < baseY - 0.5f || homeY > baseY + 400f) homeY = baseY;
                 homeY = baseY;
+                // The band, while the drawer is open: the seat has ridden up, so the row is
+                // measured DOWN from the bar's underside rather than up from the head.
+                float ceiling = float.MaxValue;
+                if (drawer > 0.01f)
+                {
+                    float seatTop = v.Root.anchoredPosition.y;
+                    float barFloor = (_hudRoot != null ? _hudRoot.rect.height * 0.5f : 360f)
+                                     - TopBarH - CellarSayClear;
+                    homeY = Mathf.Lerp(baseY, barFloor - seatTop - h, drawer);
+                    ceiling = barFloor - seatTop - h;
+                }
                 float dx = 0f, dy = 0f;
                 // Inside the picture first.
                 float left = rootX - w * 0.5f, right = rootX + w * 0.5f;
@@ -480,6 +545,9 @@ namespace LastCall.UI
                             top = Mathf.Max(top, p.yMax);
                     if (top == float.MinValue) break;
                     dy = top + Gap - homeY;
+                    // ...but never up into the top bar while the drawer is open: the band is
+                    // the whole point of the shrink, and a climbing balloon would undo it.
+                    if (homeY + dy > ceiling) { dy = ceiling - homeY; break; }
                 }
                 v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
                 placed.Add(new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h));
@@ -489,8 +557,11 @@ namespace LastCall.UI
                 if (tail == null) continue;
                 float half = w * 0.5f;
                 float tailX = Mathf.Clamp(-dx, -half + TailInset, half - TailInset);
-                tail.anchoredPosition = new Vector2(tailX, 3f);
-                tail.sizeDelta = new Vector2(13f, 12f + Mathf.Max(0f, dy));
+                // The tail is a child of the balloon, so it is already scaled — its numbers
+                // are in the balloon's own units, and the climb has to be divided back out.
+                float k = Mathf.Max(0.01f, sayScale);
+                tail.anchoredPosition = new Vector2(tailX / k, 3f);
+                tail.sizeDelta = new Vector2(13f, 12f + Mathf.Max(0f, dy) / k);
             }
         }
 
@@ -530,6 +601,8 @@ namespace LastCall.UI
             _seats[index].SayLines = new System.Collections.Generic.List<string>(
                 PourAdvice.Lines(asked, run.ServingGlass,
                     id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec, SipsPerDrink));
+            for (int L = 0; L < _seats[index].SayLines.Count; L++)
+                _seats[index].SayLines[L] = Sentence(_seats[index].SayLines[L]);
             // IN THEIR OWN VOICE (2026-09-07): the first sip is the one with the character in
             // it — a flawless pour earns the voice's own praise (keeping any "I asked for…"
             // the coaching appended), and a pour with something to fix is told the way this
@@ -542,9 +615,9 @@ namespace LastCall.UI
                 {
                     int asked2 = first.IndexOf("I asked for", System.StringComparison.Ordinal);
                     string tail = asked2 >= 0 ? " " + first.Substring(asked2) : "";
-                    sips[0] = VoiceLine(visit, VoiceCue.Praise) + tail;
+                    sips[0] = Sentence(VoiceLine(visit, VoiceCue.Praise) + tail);
                 }
-                else sips[0] = VoiceLine(visit, VoiceCue.Sip, advice: first);
+                else sips[0] = Sentence(VoiceLine(visit, VoiceCue.Sip, advice: first));
             }
             _seats[index].SaidLines = 0;
             _seats[index].SayNextAt = Time.unscaledTime + FirstSipAfter;
@@ -1374,9 +1447,19 @@ namespace LastCall.UI
             _clothGrabOffset = Vector2.zero;
             _clothSwing = _clothSwingVel = 0f;
             _clothLastX = float.NaN;
+            _clothFlyT = -1f;          // caught mid-throw: the hand wins
+
             HidePropTip(_clothRt);
             Sfx.Play("click", 0.4f);
         }
+
+        /// <summary>The cloth's flight home: where it was let go, and how far through the
+        /// throw it is. -1 when it is not flying (2026-09-08).</summary>
+        private Vector2 _clothFlyFrom;
+        private float _clothFlyT = -1f;
+        /// <summary>How long the throw takes. Long enough to read as a throw, short enough
+        /// that the next mark can be wiped without waiting for it.</summary>
+        private const float ClothFlySeconds = 0.28f;
 
         private void DropCloth()
         {
@@ -1389,6 +1472,13 @@ namespace LastCall.UI
             var rest = ItemArt.Load("towel_on_bar");
             if (rest != null) { _clothImg.sprite = rest; FitCloth(rest, TowelRestSize); }
             _clothRt.localScale = Vector3.one;
+            // IT FLIES BACK (2026-09-08, the author: "havlu bırakıldığında direkt doğru yere
+            // ışınlanmasın, bırakıldığı noktadan başlangıç noktasına animasyonla yavaşça
+            // gitsin"). Letting go used to write `home` into the rect on the next frame, so a
+            // cloth dropped at the far end of the bar was simply on the rail with nothing in
+            // between — a teleport, because that is what it was. StepCloth carries it now.
+            _clothFlyFrom = _clothRt != null ? _clothRt.anchoredPosition : Vector2.zero;
+            _clothFlyT = Motion.Reduced ? -1f : 0f;
             Sfx.Play("dish_down", 0.45f);
         }
 
@@ -1407,6 +1497,15 @@ namespace LastCall.UI
                 : ToCentre(new Vector2(ClothX, CounterLineY - 36f + CounterLift));
             if (!_clothHeld)
             {
+                // The throw, if one is in the air: from where the hand let go to the rail,
+                // eased out, on the ROOM's clock — a towel sailing across a room the book has
+                // stopped would be the pause bug in miniature.
+                if (_clothFlyT >= 0f)
+                {
+                    _clothFlyT += Mathf.Max(0f, RoomDelta) / ClothFlySeconds;
+                    if (_clothFlyT >= 1f) _clothFlyT = -1f;
+                    else home = Vector2.Lerp(_clothFlyFrom, home, Tweening.OutCubic(_clothFlyT));
+                }
                 _clothRt.anchoredPosition = home;
                 _clothImg.raycastTarget = !CellarOpen;
                 // SEE-THROUGH WHILE THE CELLAR IS OPEN (2026-09-07, the author: "mahzen
@@ -1768,8 +1867,34 @@ namespace LastCall.UI
             _sinkPie.fillAmount = 0f;
             _sinkPie.color = UITheme.Cyan[4];
             _sinkPie.raycastTarget = false;
+
+            // THE SECONDS, AT THE DIAL'S TOP RIGHT (2026-09-08, the author: "musluk bekleme
+            // süresi musluğun üstünde sağ üstte gözüksün"). The count lived in the hand strip
+            // under the basin, a whole readout away from the dial that was showing the same
+            // wait without a number. It sits on the dial now, in the badge corner, on its own
+            // dark plate — the basin behind it is lit and moving, and cyan type straight onto
+            // running water is not type.
+            var badge = NewRect("Secs", _sinkClock);
+            badge.anchorMin = badge.anchorMax = new Vector2(1f, 1f);
+            badge.pivot = new Vector2(0.5f, 0.5f);
+            badge.sizeDelta = new Vector2(30f, 20f);
+            badge.anchoredPosition = new Vector2(4f, 2f);
+            var plate = badge.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Card();
+            plate.type = Image.Type.Sliced;
+            plate.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.92f);
+            plate.raycastTarget = false;
+            _sinkSecs = NewText("N", badge, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[4]);
+            Stretch(_sinkSecs.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _sinkSecs.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _sinkSecs.verticalOverflow = VerticalWrapMode.Overflow;
+            _sinkSecs.raycastTarget = false;
+
             _sinkClock.gameObject.SetActive(false);
         }
+
+        /// <summary>The seconds left, on the dial over the basin (2026-09-08).</summary>
+        private Text _sinkSecs;
 
         /// <summary>Each frame: the tap runs while Core says so, and the strip over the sink
         /// says what the hand holds.</summary>
@@ -1802,6 +1927,13 @@ namespace LastCall.UI
                     float whole = (float)Mathf.Max(0.01f, (float)run.SinkSeconds);
                     float gone = Mathf.Clamp01(1f - (float)run.WashLeft / whole);
                     if (_sinkPie != null) _sinkPie.fillAmount = gone;
+                    if (_sinkSecs != null)
+                    {
+                        // Ceiling, so it reads "1s" for the whole last second and never
+                        // shows a 0 over a tap that is still running.
+                        string secs = Mathf.CeilToInt((float)run.WashLeft) + "s";
+                        if (_sinkSecs.text != secs) _sinkSecs.text = secs;
+                    }
                 }
             }
             if (_handStrip == null) return;
@@ -1811,7 +1943,9 @@ namespace LastCall.UI
             int held = run != null ? run.GlassesInHand + run.GlassesWashing : 0;
             string seats = held == 1 ? " · 1 STOOL HELD" : held > 1 ? " · " + held + " STOOLS HELD" : "";
             string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
-                : busy ? "WASHING · " + Mathf.CeilToInt((float)run.WashLeft) + "s" + seats
+                // The strip no longer counts (2026-09-08): the dial does, at the tap. What
+                // is left here is the thing only this line says — what the held glasses cost.
+                : busy ? "WASHING" + seats
                 : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" + seats : "";
             if (_handStrip.text != line) _handStrip.text = line;
             // Over the sink's own slot (stage 140, 68.5 — the basin is 35 art px tall).
@@ -3334,7 +3468,13 @@ namespace LastCall.UI
                 StepSips(view, visit);
                 bool timed = view.SayLines == null || view.SayLines.Count == 0;
                 if (saying && timed && Time.unscaledTime >= view.SayUntil) { HushSeat(view); saying = false; }
-                if (saying && (!atTheStool || CellarOpen)) { HushSeat(view); saying = false; }
+                // THE CELLAR NO LONGER HUSHES THEM (2026-09-08, the author: "mahzen açıkken
+                // konuşma balonları ... küçülecek ve tezgah ile üst bar arasında
+                // konumlandırılacak"). They were taken down outright from 2026-08-22 because
+                // they rode the room up into the shelves; SeparateSays shrinks them into the
+                // band under the top bar instead, so the line can be finished while you are
+                // turned round to the stock.
+                if (saying && !atTheStool) { HushSeat(view); saying = false; }
 
                 // ONE THING OVER ONE HEAD (2026-09-04, the author: "kafalarının üstündeki
                 // kutucuk yerine konuşma baloncukları gözükmeli"). The ticket is a standing
@@ -3586,7 +3726,7 @@ namespace LastCall.UI
                 view.WalkPace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(left / ArrivalEase));
                 bool stillWalking = view.WalkT < 1f;
                 view.WalkT = Mathf.Min(1f,
-                    view.WalkT + Time.deltaTime * WalkSpeed * view.WalkPace / dist);
+                    view.WalkT + RoomDelta * WalkSpeed * view.WalkPace / dist);
                 if (stillWalking && view.WalkT >= 1f)
                 {
                     Sfx.Play("stool_take", 0.7f);
@@ -3620,7 +3760,7 @@ namespace LastCall.UI
             // up or a slow head-shake — before they get up. One shot, then the walk.
             if (view.ReactLeft > 0f)
             {
-                view.ReactLeft -= Time.deltaTime;
+                view.ReactLeft -= RoomDelta;
                 // ON THE STOOL means on the stool AS IT IS RIGHT NOW (2026-08-25, the author:
                 // "müşteriler tepki animasyonu verirlerse tezgah açılıp kapandığında havada
                 // asılı kalıyorlar"). This branch used to return without touching the rect,
@@ -3641,7 +3781,7 @@ namespace LastCall.UI
             float gone = view.ExitT * dist;
             float pace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(gone / ArrivalEase));
             view.ExitT = Mathf.Min(1f,
-                view.ExitT + Time.deltaTime * WalkSpeed * pace / dist);
+                view.ExitT + RoomDelta * WalkSpeed * pace / dist);
             view.Root.anchoredPosition = new Vector2(
                 Mathf.Lerp(view.SeatX, exitX, view.ExitT), SeatLineY);
             // Solid the whole way out, for the same reason they walk in solid: exitX is past
@@ -3650,7 +3790,7 @@ namespace LastCall.UI
 
             // Mirror the walk so they face the way they are leaving (to the right).
             UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);
-            view.AnimClock += Time.deltaTime * Mathf.Max(0.05f, pace);
+            view.AnimClock += RoomDelta * Mathf.Max(0.05f, pace);
 
             if (view.ExitT >= 1f)
             {
@@ -3699,7 +3839,7 @@ namespace LastCall.UI
             }
             view.WasOrdered = ordered;
 
-            if (drinking) view.DrinkT += Time.deltaTime; else view.DrinkT = 0f;
+            if (drinking) view.DrinkT += RoomDelta; else view.DrinkT = 0f;
 
             PatronClip clip; float t;
             if (!seated)                      { clip = PatronClip.Walk;  t = view.AnimClock; }   // faces left, walking in

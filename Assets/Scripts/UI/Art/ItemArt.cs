@@ -135,7 +135,8 @@ namespace LastCall.UI
         /// / medallion set: same canvas, same keyline, the interior in Lime because money is
         /// the only green thing in the chrome. Drawn at both sizes by Tools/coin_icon.py rather
         /// than derived, because the derivation peels ink and this icon's glyph IS ink.</summary>
-        public static Sprite Coin(float px = 16f) => Load(Name("coin3d", true, px));
+        public static Sprite Coin(float px = 24f) =>
+            Load("coin3d" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"));
 
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");

@@ -500,7 +500,7 @@ namespace LastCall.UI
             // kind of number it is (16 §5).
             float scale = coin.lossyScale.x;
             float px = CoinPx;
-            if (scale > 0.01f) px = 16f / scale;      // 16 screen pixels: the drawn size
+            if (scale > 0.01f) px = CoinPx / scale;   // CoinPx screen pixels: a drawn size
             coin.sizeDelta = new Vector2(px, px);
             var cimg = coin.GetComponent<Image>();
             if (cimg != null)
@@ -527,11 +527,12 @@ namespace LastCall.UI
             if (coin != null) coin.gameObject.SetActive(false);
         }
 
-        /// <summary>The coin's drawn size in the chrome, and its gap off the digits. 16
-        /// because that is one of the two sizes it is DRAWN at (Tools/coin_icon.py) and the
-        /// figures beside it are set at 16 — a mark and a cap that match. The gap is in the
-        /// figure's own layout units and is scaled with it.</summary>
-        private const float CoinPx = 16f, CoinGap = 10f;
+        /// <summary>The coin's drawn size in the chrome, and its gap off the digits. 24
+        /// (2026-09-08, the author: "daha 1.5 kat daha büyük bir tasarım olabilir") — half
+        /// again the 16 it shipped at this morning, and a size the coin is DRAWN at rather
+        /// than scaled to (Tools/coin_icon.py draws 16, 24 and 32). The gap is in the figure's
+        /// own layout units and is scaled with it.</summary>
+        private const float CoinPx = 24f, CoinGap = 10f;
 
         private void WatchFixtures()
         {

@@ -89,7 +89,13 @@ namespace LastCall.Core
         /// service — it slows the room far below the service menus, but the clock still
         /// never fully stops: the night keeps its one-way arrow.
         /// </summary>
-        public const double BookTimeScale = 0.05;
+        // THE MENU STOPS THE NIGHT (2026-09-08, the author: "menüye bakmak zamanı ve oyunu
+        // durdursun"). It was 0.05 from 2026-08-24 — a near-hold, chosen then because the
+        // night is meant to keep its one-way arrow. The author has now asked for the arrow to
+        // stop while the book is open, and the reason the near-hold was preferred does not
+        // survive the ask: reading the recipe you are about to build is not service, and a
+        // clock that creeps while you read is a clock that punishes reading.
+        public const double BookTimeScale = 0.0;
 
         // ── the till ────────────────────────────────────────────────────────────
         public int StartingMoney { get; }

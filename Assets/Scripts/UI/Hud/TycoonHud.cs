@@ -255,6 +255,13 @@ namespace LastCall.UI
         /// three units clear of the gauge's top and still reads as pointing at them.</summary>
         private const float TagLift = 22f;
 
+        /// <summary>How far a speech balloon shrinks while the cellar is open, and how much
+        /// air it keeps under the top bar (2026-09-08, the author: "mahzen açıkken konuşma
+        /// balonları üst bara taşıyor; küçülecek ve tezgah ile üst bar arasında
+        /// konumlandırılacak"). Two thirds is small enough to clear the band and still be
+        /// read — measured against the bold face's own 16.</summary>
+        private const float CellarSayScale = 0.66f, CellarSayClear = 10f;
+
         /// <summary>The air inside the plate, past its 5-unit border. Both axes.</summary>
         private const float TagPad = 7f;
 
@@ -1478,6 +1485,13 @@ namespace LastCall.UI
                 // moves, because the night keeps its one-way arrow.
                 float clock = _bookOpen ? (float)TycoonConfig.BookTimeScale
                     : menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f;
+                // THE ROOM RUNS ON THE SAME CLOCK AS THE NIGHT (2026-09-08, the author:
+                // "menüye bakmak zamanı ve oyunu durdursun"). The sim was scaled here and the
+                // FLOOR was not — TycoonHud.Seats walked, sat, sipped and left on raw
+                // Time.deltaTime — so with the book open the drinkers carried on moving
+                // against a stopped clock. One number now drives both, which is also what
+                // keeps them from drifting apart again.
+                RoomScale = DoorsClosed ? 0f : clock;
                 if (!DoorsClosed)
                     run.Tick(Time.deltaTime * clock);
             }
@@ -2177,6 +2191,16 @@ namespace LastCall.UI
 
         private bool _bookOpen;
 
+        /// <summary>How fast the ROOM is running: 1 in service, TycoonConfig.MenuTimeScale
+        /// behind a working menu, 0 with the book open or the doors shut. Set once a frame
+        /// beside the sim's own tick so the two cannot disagree (2026-09-08).</summary>
+        private float RoomScale = 1f;
+
+        /// <summary>The room's own delta — <see cref="RoomScale"/> applied. EVERY seat
+        /// animation reads this and not Time.deltaTime: a customer who keeps walking while
+        /// the night is stopped is the bug this exists to make impossible.</summary>
+        private float RoomDelta => Time.deltaTime * RoomScale;
+
         private Coroutine _bookAnim;
 
         // The booklet, placed against menu_booklet.py's printed ruler at exactly 2× —
@@ -2436,16 +2460,26 @@ namespace LastCall.UI
         // bottom edge of its own card. The two captions instead go side by side over two
         // half-width COLUMNS, punches left and stars right, which is the one arrangement
         // that fits readable type in the space the card has.
-        private const float LicStampY = 76f * LicScale, LicStampH = 24f * LicScale;
+        // AND IT KEEPS THE CARD'S BOTTOM MARGIN (2026-09-08, measured: the well ran to B=0,
+        // flush with the paper's edge, while every other box on the card keeps LicPad — which
+        // is the "kutuların kenarlara olan uzaklıkları da sabit olmalı" of the same list). The
+        // card is 100 art px and the margin is 6, so a well starting at 76 may be 18 tall —
+        // which is 54 units, which is exactly two rows at the pitch below. The strip's layout
+        // is not a taste; it is what fits, worked out before a pixel was moved.
+        private const float LicStampY = 76f * LicScale, LicStampH = 18f * LicScale;
         /// <summary>The pitch of the stamp strip's two rows, in HUD units: a 16-unit caption,
         /// then its marks under it.</summary>
         private const float LicStampRow = 20f;
         /// <summary>Where the strip's second column starts, measured from the rail's left.</summary>
-        // 82, not 76 (2026-09-07, measured in the shot): the punches end at x92 and at a
-        // 76 column the stars began at x94, so ten marks of the same size and pitch ran
-        // together as one undifferentiated row and the two counts could not be told apart.
-        // Six units of air is what separates two groups on a row this small.
-        private const float LicStampCol = 82f;
+        /// <summary>How wide the stamp strip's well is, and where its MARKS begin — the
+        /// caption sits to their left on the same row (2026-09-08).
+        ///
+        /// Neither number is inherited any more. The well was LicRailW, the PHOTOGRAPH's
+        /// width, for no reason beyond sitting under it; measured on the live card that left
+        /// the hearts half outside their own box and over the order field, and the stars two
+        /// units past the well's edge. The card gives the strip x18..x180 — the margin to the
+        /// field column — so the well is cut to 156 and clears that column by 6.</summary>
+        private const float LicStripW = 156f, LicStampCol = 66f;
 
         // SIXTEEN (2026-09-07): the band wears the author's beach — Items/licence_band.png,
         // 200x16 art pixels, one to one at the card's own three — and reaches the portrait's
