@@ -227,7 +227,7 @@ Bir EditMode testi (`BottleNameRuleTests`) kuralı sabitler: uzunluk ≤15 ve so
 | amaro/vermouth/likör | 2.4 | ince, yüksek omuz | vidalı | dikey ince |
 | bira | 2.6 | uzun boyun kahverengi cam, mühürlü (sıvı YOK) | taç kapak | boyun bandı |
 | teneke (kola, enerji) | 2.0 | silindir, üst halka elipsi | çekme halka | tam sarma |
-| ~~karton (meyve suyu)~~ → **meyve suyu şişesi** (2026-09-08) | 1.9–2.6 | cam; kavanoz / süt şişesi / kare omuz / şişkin gövde — kart kart | açık ağız (master), kapak (mahzen) | krem etiket ya da cama baskı |
+| karton (meyve suyu) | 1.9–2.2 | gable-top (kızılcık: tuğla), ön yüz dik dikdörtgen, sağ yan ince şerit, ~%12 | vidalı kapak — masterda kapalı, elde `open_carton` ile SÖKÜLMÜŞ (2026-09-08) | ön yüz |
 | şişe-meşrubat (tonik, soda, zencefil, şurup) | 2.4 | cam, ince | vidalı | orta |
 
 Tier merdiveni bir ailede aynı silüeti korur; **T1→T4 farkı giyimdir** (etiket zenginliği,
@@ -244,9 +244,11 @@ rapor kapısı. Farklı: **mühürlü** — kavite yok, plaka yok, tek sprite `b
 Sıvı gösterilmez (hafıza: iç plaka verilirse gri blok görünür). Hover kartı doluluğu sayıyla
 söyler, bugünkü gibi.
 
-**2026-09-08 — meyve suları bu hattan ÇIKTI.** Yazar kutuyu şart koşmayınca ("artık kutu olmak
-zorunda değiller") beşi de `mixer` ailesinde cam şişe olarak yeniden alındı ve cam hattının altı
-plakasıyla sevk edildi (GDD_MEVCUT §9.50). Mühürlü hatta teneke (kola, enerji) ve bira kaldı.
+**2026-09-08 — meyve suları bir öğleden sonra cam oldu, akşam kartona döndü.** Yazar kutuyu şart
+koşmayınca beşi `mixer` ailesinde cam şişe olarak alınıp sevk edildi; camı görünce "karton olsun
+cam değil" dedi ve beşi `carton` ailesinde yeniden alındı. Bu hattın yeni parçası **`open_carton`**:
+master kapalı üretilir, elde tutulan sprite kapağı sökülerek türetilir (ağız koyu, iç duvar aydınlık,
+halka kalır), mahzen kopyası kapalı kalır — açık hâl asla ayrı üretilmez (GDD_MEVCUT §9.50).
 
 ---
 

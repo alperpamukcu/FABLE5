@@ -289,6 +289,34 @@
    "n": 1,
    "secs": 67.4,
    "poll": "status: completed\nid: bae987b3-a7ab-4646-9428-aaf4e4bd258a\njob_id: bae987b3-a7ab-4646-9428-aaf4e4bd258a\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/bae987b3-a7ab-4646-9428-aaf4e4bd258a/download\n"
+  },
+  "orange_grove:25": {
+   "job": "99fcebd3-8ff3-4b04-b6ab-b31a5aff1568",
+   "submit": "id: 99fcebd3-8ff3-4b04-b6ab-b31a5aff1568\njob_id: 99fcebd3-8ff3-4b04-b6ab-b31a5aff1568\nmodel: pro\ndescription: a tall gable-top orange juice carton in flat orange card with a small white screw cap on the gable, seen almost straight on so the front face is a plain upright rectangle and only a thin sli"
+  },
+  "lemon_fresh:25": {
+   "job": "6bd951b3-ce8a-4dbd-b0ca-66be31952cdf",
+   "submit": "id: 6bd951b3-ce8a-4dbd-b0ca-66be31952cdf\njob_id: 6bd951b3-ce8a-4dbd-b0ca-66be31952cdf\nmodel: pro\ndescription: a gable-top lemonade carton in flat pale yellow card with a small white screw cap on the gable, a little wider than the others, seen almost straight on so the front face is a plain upright r"
+  },
+  "lime_fresh:25": {
+   "job": "adc6cf06-2a21-47bf-8e5d-9a38f7bfe06e",
+   "submit": "id: adc6cf06-2a21-47bf-8e5d-9a38f7bfe06e\njob_id: adc6cf06-2a21-47bf-8e5d-9a38f7bfe06e\nmodel: pro\ndescription: a slim gable-top limeade carton in flat green card with a small white screw cap on the gable, seen almost straight on so the front face is a plain upright rectangle and only a thin sliver of"
+  },
+  "cranberry_north:25": {
+   "job": "765fb576-59b5-4b1a-b4d5-dfbf95bf3957",
+   "submit": "id: 765fb576-59b5-4b1a-b4d5-dfbf95bf3957\njob_id: 765fb576-59b5-4b1a-b4d5-dfbf95bf3957\nmodel: pro\ndescription: a tall brick-shaped cranberry juice carton in flat deep red card with a flat top and a small white screw cap on the top face, seen almost straight on so the front face is a plain upright rec"
+  },
+  "pineapple_isla:25": {
+   "job": "4cd8f735-974a-45ca-adc1-33bf0c381f85",
+   "submit": "id: 4cd8f735-974a-45ca-adc1-33bf0c381f85\njob_id: 4cd8f735-974a-45ca-adc1-33bf0c381f85\nmodel: pro\ndescription: a tall gable-top pineapple juice carton in flat golden-yellow card with a small white screw cap on the gable, seen almost straight on so the front face is a plain upright rectangle and only "
+  },
+  "orange_grove:26": {
+   "job": "b0992a5a-3adc-4307-ab6f-0196000b3cd2",
+   "submit": "id: b0992a5a-3adc-4307-ab6f-0196000b3cd2\njob_id: b0992a5a-3adc-4307-ab6f-0196000b3cd2\nmodel: pro\ndescription: a tall gable-top orange juice carton in flat orange card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: t"
+  },
+  "lime_fresh:26": {
+   "job": "1dfb0b09-981e-40c4-b026-811ad60b58f5",
+   "submit": "id: 1dfb0b09-981e-40c4-b026-811ad60b58f5\njob_id: 1dfb0b09-981e-40c4-b026-811ad60b58f5\nmodel: pro\ndescription: a tall gable-top limeade carton in flat green card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the fro"
   }
  }
 }

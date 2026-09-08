@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Juices back in carton (2026-09-08, evening):** the author saw the glass and asked for cartons
+  ("meyve suları karton olsun cam değil"). The five are gable-top (cranberry: brick) cartons again,
+  taken through the sealed line with the bottles' camera — front face a plain upright rectangle, a
+  thin strip of the right side — at seed 25, with orange and lime retaken at seed 26 (the first
+  takes leaned, stood short and showed the left side). New in the pipeline: `open_carton` derives
+  the hand sprite from the closed master by unscrewing its cap (a dark opening, a lit inner wall,
+  the ring kept) — never generated apart — while the 32x64 cellar copy stays closed. The glass
+  plates left the game; their raws stay parked as `glass_s2*`.
 - **Juices in glass, the top bar's star (2026-09-08):** the five juice cartons are glass bottles
   now — the author lifted the carton rule ("artık kutu olmak zorunda değiller") — taken through the
   v4 glass pipeline as `mixer` cards: an open, empty 96×192 master (the hand bottle, poured from

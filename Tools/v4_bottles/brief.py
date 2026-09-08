@@ -85,15 +85,17 @@ CARDS = {
     # ── cans ────────────────────────────────────────────────────────────────────
     'cola_marlow':      ('can', 2.0, 'a plain red aluminium soft drink can with a silver top and pull tab, matte flat red', 'ViceRed', 'Cream', 'a small stylised white ribbon swoosh, flat pixel emblem, no text'),
     'energy_volt':      ('can', 2.0, 'a plain slim blue and silver aluminium energy drink can with a silver top and pull tab', 'ClubBlue', 'Cream', 'a small stylised ox head, flat pixel emblem, no text'),
-    # ── juices: glass now (the author, 2026-09-08: "kutu olmak zorunda değiller ... aynı
-    #    perspektifte, kutu şişe fark etmeksizin büyük boy meyve suyu üret, tüm meyve suları
-    #    için; büyük olanın kapağı açık olacak"). Stout clear glass, so the drink plates carry
-    #    the fruit's colour and the hand bottle pours from an open mouth like every spirit.
-    'orange_grove':     ('mixer', 2.2, 'a stout clear-glass orange juice bottle with rounded shoulders, a short wide neck and a plain cylindrical body', 'Amber', 'Cream', 'a small stylised orange fruit with a leaf, flat pixel emblem, no text'),
-    'lemon_fresh':      ('mixer', 2.2, 'a short squat clear-glass lemonade bottle as wide as a jar, a round wide body, rounded shoulders, a very short neck and a wide open mouth, no tall neck', 'Amber', 'Cream', 'a small stylised lemon with a leaf, flat pixel emblem, no text'),
-    'lime_fresh':       ('mixer', 2.2, 'a stout clear-glass limeade bottle with rounded shoulders and a ribbed lower body', 'Lime', 'Cream', 'a small stylised lime with a leaf, flat pixel emblem, no text'),
-    'cranberry_north':  ('mixer', 2.3, 'a clear-glass cranberry juice bottle with square shoulders and a short wide neck, a plain tall body', 'ViceRed', 'Cream', 'a small stylised cluster of three red berries, flat pixel emblem, no text'),
-    'pineapple_isla':   ('mixer', 2.2, 'a stout clear-glass pineapple juice bottle with a rounded bulbous body and a short neck', 'Amber', 'Lime', 'a small stylised pineapple, flat pixel emblem, no text'),
+    # ── juices: CARTONS (the author, 2026-09-08 evening: "meyve suları karton olsun cam
+    #    değil" — the glass takes of that afternoon are raw/<id>/glass_s2*.png). The closed
+    #    carton is the master; process.py unscrews the cap for the hand sprite
+    #    (open_carton — derived, never generated apart) and the cellar copy stays closed.
+    #    The camera is the bottles': almost straight on, the front face a true rectangle,
+    #    only a sliver of the right side, the gable a shallow band (PLAN §2).
+    'orange_grove':     ('carton', 2.0, 'a tall gable-top orange juice carton in flat orange card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the front face is a plain upright rectangle taking nearly the whole width, and beyond its right edge only a thin dark strip of the right side face shows, nothing of the left side', 'Amber', 'Cream', 'a small stylised orange fruit with a leaf, flat pixel emblem, no text'),
+    'lemon_fresh':      ('carton', 1.9, 'a gable-top lemonade carton in flat pale yellow card with a small white screw cap on the gable, a little wider than the others, seen almost straight on so the front face is a plain upright rectangle and only a thin sliver of the right side shows', 'Amber', 'Cream', 'a small stylised lemon with a leaf, flat pixel emblem, no text'),
+    'lime_fresh':       ('carton', 2.2, 'a tall gable-top limeade carton in flat green card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the front face is a plain upright rectangle taking nearly the whole width, and beyond its right edge only a thin dark strip of the right side face shows, nothing of the left side', 'Lime', 'Cream', 'a small stylised lime with a leaf, flat pixel emblem, no text'),
+    'cranberry_north':  ('carton', 2.0, 'a tall brick-shaped cranberry juice carton in flat deep red card with a flat top and a small white screw cap on the top face, seen almost straight on so the front face is a plain upright rectangle and only a thin sliver of the right side shows', 'ViceRed', 'Cream', 'a small stylised cluster of three red berries, flat pixel emblem, no text'),
+    'pineapple_isla':   ('carton', 2.0, 'a tall gable-top pineapple juice carton in flat golden-yellow card with a small white screw cap on the gable, seen almost straight on so the front face is a plain upright rectangle and only a thin sliver of the right side shows', 'Amber', 'Lime', 'a small stylised pineapple, flat pixel emblem, no text'),
     # ── mixer glass bottles ────────────────────────────────────────────────────
     'tonic_quinbury':   ('mixer', 2.4, 'a slim clear-glass tonic water bottle with a fluted body', 'Cream', 'Cyan', 'a small stylised cinchona leaf, flat pixel emblem, no text'),
     'soda_klara':       ('mixer', 2.4, 'a slim clear-glass soda water bottle with a plain body', 'Cream', 'ClubBlue', 'a small stylised rising bubble trio, flat pixel emblem, no text'),

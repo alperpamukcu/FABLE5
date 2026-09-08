@@ -455,6 +455,65 @@ def draw_cap(im, fam):
     return im
 
 
+def open_carton(im):
+    """THE HAND CARTON IS OPEN (the author, 2026-09-08: "büyük olanın kapağı açık olacak"),
+    UNSCREWED from the closed master rather than generated apart (memory open-states-derive:
+    a separately generated open shot comes back as a different carton — paid for three
+    times). The screw cap is the one pale blob in the silhouette's top third; its rim stays
+    as the spout's ring, its face becomes the dark opening, and the lowest row of the
+    opening is the lit inner wall. Returns (image, spout bbox or None — then the carton is
+    left closed and the audit says so)."""
+    px = im.load()
+    w, h = im.size
+    sp = spans(im, 1)
+    rows = [y for y, s in enumerate(sp) if s]
+    if not rows:
+        return im, None
+    top, bot = rows[0], rows[-1]
+    limit = top + (bot - top) // 3
+
+    def pale(c):
+        return c[3] and lum(c[:3]) > 185 and (max(c[:3]) - min(c[:3])) < 70
+
+    seen = set()
+    best = None
+    for y in range(top, limit + 1):
+        for x in range(w):
+            if (x, y) in seen or not pale(px[x, y]):
+                continue
+            blob, stack = [], [(x, y)]
+            seen.add((x, y))
+            while stack:
+                cx, cy = stack.pop()
+                blob.append((cx, cy))
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
+                    if 0 <= nx < w and top <= ny <= limit + 6 and (nx, ny) not in seen and pale(px[nx, ny]):
+                        seen.add((nx, ny))
+                        stack.append((nx, ny))
+            if best is None or len(blob) > len(best):
+                best = blob
+    if not best or len(best) < 12:
+        return im, None
+    blob = set(best)
+    xs = [p[0] for p in blob]
+    ys = [p[1] for p in blob]
+    y0, y1 = min(ys), max(ys)
+    # the cap's FACE is the upper part of the blob (its top ellipse from 17 degrees); the
+    # rows under it are the cap's side and stay as the spout's threaded collar
+    face_bottom = y0 + max(2, int((y1 - y0 + 1) * 0.55))
+    face = {p for p in blob if p[1] <= face_bottom}
+    inner = {p for p in face
+             if all(q in face for q in ((p[0] + 1, p[1]), (p[0] - 1, p[1]), (p[0], p[1] + 1), (p[0], p[1] - 1)))}
+    if len(inner) < 4:
+        return im, None
+    hole = palette.ramp('Night', 1) + (255,)
+    wall = palette.ramp('Graphite', 2) + (255,)
+    iy1 = max(p[1] for p in inner)
+    for (x, y) in inner:
+        px[x, y] = wall if y == iy1 else hole
+    return im, [min(xs), y0, max(xs), y1]
+
+
 def press_label_small(im, card_id, emblem=None):
     """The cellar label: a colour field, the band, and the emblem at a quarter - NO TEXT
     (the author: "mahzen boyutunda sadece amblemler veya sekiller olsun, yazilar gozukmesin")."""
@@ -992,6 +1051,9 @@ def process_take(card_id, take_path, out_dir, outline=1, emblem=None):
 
     if fam in brief.SEALED:
         sprite = master.copy() if GENERATED_LABEL else press_label(master.copy(), card_id, emblem)
+        if fam == 'carton':
+            # the hand sprite is the master UNSCREWED; the cellar copy below stays closed
+            sprite, audit['spout'] = open_carton(sprite)
         sprite.save(os.path.join(out_dir, 'v4_%s.png' % card_id))
         # sealed: the same renderer (no interior), so cans and cartons get one ring too
         _, _, small = cellar_box(master, cavity(master)[0], glass_tone(master, cavity(master)[0]), card_id, emblem)

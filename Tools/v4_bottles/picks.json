@@ -135,29 +135,29 @@
   "note": "single seed, 2026-09-04"
  },
  "orange_grove": {
-  "take": "s23",
+  "take": "s26",
   "emblem": null,
-  "note": "glass juice retake, 2026-09-08 (the carton take is raw/<id>/carton_s23.png)"
+  "note": "carton retake 2026-09-08 evening; s25 leaned / stood short and showed the left side, s26 is upright with the right side strip"
  },
  "lemon_fresh": {
-  "take": "s24",
+  "take": "s25",
   "emblem": null,
-  "note": "glass juice retake, 2026-09-08 (s23 came back a wine bottle, ratio 3.67)"
+  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
  },
  "lime_fresh": {
-  "take": "s23",
+  "take": "s26",
   "emblem": null,
-  "note": "glass juice retake, 2026-09-08 (the carton take is raw/<id>/carton_s23.png)"
+  "note": "carton retake 2026-09-08 evening; s25 leaned / stood short and showed the left side, s26 is upright with the right side strip"
  },
  "cranberry_north": {
-  "take": "s23",
+  "take": "s25",
   "emblem": null,
-  "note": "glass juice retake, 2026-09-08 (the carton take is raw/<id>/carton_s23.png)"
+  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
  },
  "pineapple_isla": {
-  "take": "s23",
+  "take": "s25",
   "emblem": null,
-  "note": "glass juice retake, 2026-09-08 (the carton take is raw/<id>/carton_s23.png)"
+  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
  },
  "tonic_quinbury": {
   "take": "s23",

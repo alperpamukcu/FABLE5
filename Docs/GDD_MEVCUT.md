@@ -1521,29 +1521,33 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
-### 9.50 · Meyve suları cam şişede, üst barın yıldızı (2026-09-08)
+### 9.50 · Meyve suları: cam denendi, karton kaldı; üst barın yıldızı (2026-09-08)
 
-- **Beş meyve suyu kartondan çıktı** (yazar: "kutu meşrubatların tasarımını tekrar yapalım, artık kutu olmak
-  zorunda değiller ... büyük olanın kapağı açık olacak"): `orange_grove`, `lemon_fresh`, `lime_fresh`,
-  `cranberry_north`, `pineapple_isla` brief'te `mixer` ailesine geçti (`SEALED` dışı), yani cam şişelerle AYNI
-  v4 boru (§9.18): 96×192 BOŞ ve AÇIK master (kapak yok — elde dökülen şişe açıktır), `process.py` ile üç plaka
-  (`v4_<id>_back/_mask/_front`) + `cellar_box` türetimi 32×64 mahzen takımı (`_c`, kapak çizili); `ship.py`
-  altışar plaka indirdi, eski mühürlü düzlükler (`v4_<id>.png`, `v4_<id>_c.png`) silindi. Elde `BottleArt`
-  sıvı çizgisini çizer (omuza kadar, `UITheme.LiquidColor(style)`: orange/lemon/lime/cranberry/pineapple),
-  mahzende üç SpriteRenderer + SpriteMask; hover kartının kopyası da plakalı yoldan (§9.49). `ItemArt
-  .BottlePlates.Sealed` (maske yok) artık yalnız tenekeler (kola, enerji) ve biralar için doğrudur.
-- **Biçimler (kart kart, tek tohum):** portakal — omuzlu bodur kavanoz, krem etiket "GROVE" + yaprak; limonata —
-  kavanoz, etiket CAMA basılı ("LEMONADE" + limon dilimi); lime — süt şişesi, alt gövde yivli, yeşil etiket
-  "LIMEADE"; kızılcık — kare omuz, beyaz kalkan "NORTH" + kızılcık dalı; ananas — şişkin gövde, yeşil plaka
-  "ISLA" + ananas. Limonatanın 23 tohumu ŞARAP ŞİŞESİ çıktı (oran 3.67; mahzende 12 px'lik bir çubuk kalıyordu),
-  brief "as wide as a jar, no tall neck" diye yeniden yazıldı ve 24 tohumu (oran 1.9) seçildi — `picks.json`.
-  Karton hamları `raw/<id>/carton_*.png` adıyla duruyor (staging git dışı, ham çekimler içeride).
+- **Öğleden sonra cam** (yazar: "kutu meşrubatların tasarımını tekrar yapalım, artık kutu olmak zorunda
+  değiller ... büyük olanın kapağı açık olacak"): `orange_grove`, `lemon_fresh`, `lime_fresh`, `cranberry_north`,
+  `pineapple_isla` brief'te `mixer` ailesine alınıp cam hattının altı plakasıyla sevk edildi (6ccde17a).
+  **Akşam karton** (yazar, camı görünce: "meyve suları karton olsun cam değil"): cam takımı Assets'ten çıktı
+  (hamları `raw/<id>/glass_s2*.png` olarak duruyor), beşi `carton` ailesinde (`SEALED`) yeniden alındı — tohum 25;
+  portakal ve lime 25'te yana yatık / kısa çıkmış ve SOL yanını gösteriyordu, brief "dik, kadrajı dolduran, sağ
+  yandan ince şerit, sol yan yok" diye yeniden yazılıp tohum 26 seçildi (`picks.json`). Kamera şişelerinki:
+  ön yüz dik dikdörtgen, sağ yan ince şerit, gable sığ bant (PLAN v4 §2).
+- **Kapak SÖKÜLÜR, ayrı üretilmez** (hafıza open-states-derive: ayrı üretilen açık çekim başka kap çıkıyor,
+  üç kez ödendi): master KAPALI üretilir; `process.py open_carton` silüetin üst üçte birindeki tek soluk
+  lekeyi (vidalı kapak) bulur, yüzünü koyu ağza çevirir, ağzın alt sırasını aydınlık iç duvar yapar, halkayı
+  bırakır → `v4_<id>.png` elde AÇIK kartondur (`ItemArt.BottleOpen`); `cellar_box` kopyası (`v4_<id>_c.png`,
+  32×64) kapalı kalır ve market / kart ikonu da odur. Audit `spout` bbox'ını yazar; kapak bulunamazsa karton
+  kapalı kalır, audit `null` der. Mühürlü kapta sıvı plakası yok (`BottlePlates.Sealed`): elde sıvı çizgisi
+  çizilmez, kart doluluğu sayı ve barla söyler — eskisi gibi.
+- **Biçimler:** portakal — uzun gable-top, beyaz etiket "GROVE" + portakal dilimi; limonata — geniş gable-top,
+  soluk sarı, "LEMONADE" + dilim; lime — uzun gable-top, yeşil, "LIMEADE" + dilim; kızılcık — düz tepeli tuğla
+  karton, koyu kırmızı, "NORTH" + üç meyve, kapak üst yüzde; ananas — uzun gable-top, altın sarı, beyaz etiket
+  "ISLA" + ananas. Boylar 146–178 px (kadraj 192), hepsi sağ yanını gösterir.
 - **Üst barın yıldızı evin yıldızı oldu:** puan sırası hâlâ `star3d`'nin eski 32'lik soket/dolgu çiftini
   çiziyordu (§9 tablosu, 2026-08-19); artık `ItemArt.Star(lit, StarSize)` — `StarSize` 36 (18×17'lik büyük
   yıldızın 2×'i), `StarGap` 38. §9.47'nin "tek yıldız, tek kalp" kuralı üst barda da geçerli.
-- **Doğrulama:** play'de mahzen kartı beş meyve suyunda plakalı kopyayı gösteriyor, tezgâhta beşi açık ağızla
-  ve omuza kadar kendi renginde sıvıyla duruyor (`shoot_juice.py`); EditMode 504/504, PlayMode 11/11 (bakış testleri
-  dokunulmadan yeşil — meyve suları hiçbir kutsanmış karede yok).
+- **Doğrulama:** play'de mahzen rafı beş kapalı kartonu, hover kartı kapalı kopyayı, tezgâh beşini sökülmüş kapakla
+  gösteriyor (`shoot_carton.py`, `shoot_carton2.py`); EditMode 504/504, PlayMode 11/11 (bakış testleri dokunulmadan
+  yeşil — meyve suları hiçbir kutsanmış karede yok).
 
 ### 9.49 · On dokuzuncu liste: yazarın kartı, parmak ucu, para, yazı tipi, market kartı, paneller, oda (2026-09-08)
 
@@ -1594,7 +1598,7 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   yuva birimine çevirip kopyayı tam o dikdörtgene oturtuyor; raf şişesinin renderer'ları kart dururken kapalı
   (`ShowCellarBottle`), kart gidince açılıyor. Denenip atılanlar: yuvayı delmek (yazar: "kesme"), kartı kamera kanvasına alıp
   hover'daki şişeyi 60–62'ye kaldırmak (yazarın makinesinde tüm şişelerin camı kayboldu, yalnız sıvı blokları kaldı; raf
-  yazıları da kartın üstünde kalıyordu). Plakası olmayan kartlarda (tenekeler, biralar — meyve suları aynı akşam plakaya geçti, §9.50) kopya rafın düz `_c` sprite'ı (`ItemArt.Bottle`). **Tuzak:** sahne sprite'ının
+  yazıları da kartın üstünde kalıyordu). Plakası olmayan kartlarda (tenekeler, biralar, meyve suları — §9.50) kopya rafın düz `_c` sprite'ı (`ItemArt.Bottle`). **Tuzak:** sahne sprite'ının
   dünya köşeleri `Camera.main.WorldToScreenPoint` ile ekrana çevrilir — `RectTransformUtility.WorldToScreenPoint(null, …)` kanvas
   nesneleri içindir, dünya noktasını olduğu gibi döndürür (kopya bir raf yukarı düşmüştü). Ölçüldü: kopya ile raf şişesinin
   gerçek ekran dikdörtgeni birebir aynı (limonata ve cin). **Hale kopyayla gelir** (yazar: "şişenin hareketiyle arkadaki
