@@ -2484,6 +2484,12 @@ namespace LastCall.UI
         /// where it butts against the slot's divider).</summary>
         public static Sprite CardBody() => Resliced("card_body", new Vector4(0, 6, 6, 6), "card:body");
 
+        /// <summary>The same two pieces mirrored (2026-09-08): a card whose box runs out to
+        /// the LEFT of its slot, for a bottle standing in the screen's right third. The
+        /// divider is on the slot's left and the body's rule on its right.</summary>
+        public static Sprite CardSlotL() => Resliced("card_slot_l", new Vector4(6, 6, 6, 6), "card:slot:l");
+        public static Sprite CardBodyL() => Resliced("card_body_l", new Vector4(6, 6, 0, 6), "card:body:l");
+
         private static Sprite Resliced(string item, Vector4 border, string key)
         {
             if (Cache.TryGetValue(key, out var got) && got != null) return got;

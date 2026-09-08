@@ -812,7 +812,9 @@ namespace LastCall.UI
             _dayEndPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_dayEndPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
-            panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.88f);
+            // 0.88 until 2026-09-08 (the author: "gün sonu fatura ekranında arka plan daha da
+            // karartılsın"): the room behind the bill is all but gone now.
+            panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.965f);
 
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));

@@ -251,14 +251,14 @@ namespace LastCall.UI
             _cellarCardVessel.anchorMin = _cellarCardVessel.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.pivot = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.sizeDelta = new Vector2(32f * CardScale, 64f * CardScale);
-            _cellarCardVessel.anchoredPosition = new Vector2(CardRule * 0.5f, 0f);   // the well sits between rule and divider
+            _cellarCardVessel.anchoredPosition = new Vector2(-1f, 0f);   // the well spans art px 3..38: a unit left of centre
             _cellarCardBottle = BottleArt.Under(_cellarCardVessel);
 
             var dishRt = NewRect("Dish", _cellarCardSlot);
             dishRt.anchorMin = dishRt.anchorMax = new Vector2(0.5f, 0.5f);
             dishRt.pivot = new Vector2(0.5f, 0.5f);
             dishRt.sizeDelta = new Vector2(64f, 64f);
-            dishRt.anchoredPosition = new Vector2(CardRule * 0.5f, 0f);
+            dishRt.anchoredPosition = new Vector2(-1f, 0f);
             _cellarCardDish = dishRt.gameObject.AddComponent<Image>();
             _cellarCardDish.preserveAspect = true;
             _cellarCardDish.raycastTarget = false;
@@ -389,7 +389,8 @@ namespace LastCall.UI
         {
             float x = CardPad, y = CardPad;
             float widest = Mathf.Max(_cellarCardName.preferredWidth, _cellarCardMeta.preferredWidth,
-                                     _cellarCardUsesHead.preferredWidth, usesW, fizzy ? 220f : 0f);
+                                     _cellarCardUsesHead.preferredWidth, usesW,
+                                     fizzy ? 22f + _cellarCardMark.preferredWidth : 0f);   // the no-shake line, measured
             _cellarCardName.rectTransform.anchoredPosition = new Vector2(x, -y);
             y += _cellarCardName.preferredHeight + 2f;
             _cellarCardMeta.rectTransform.anchoredPosition = new Vector2(x, -y);
@@ -424,6 +425,7 @@ namespace LastCall.UI
             {
                 y += CardRowGap;
                 _cellarCardMarkRow.anchoredPosition = new Vector2(x, -y);
+                _cellarCardMarkRow.sizeDelta = new Vector2(22f + _cellarCardMark.preferredWidth, 16f);
                 y += 16f;
             }
             y += CardPad;
@@ -496,36 +498,65 @@ namespace LastCall.UI
             _cellarCardGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _cellarCardGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
             if (!up || _cellarCardGroup.alpha <= 0f) return;
+            // BEHIND THE BOTTLE (2026-09-08, the author: "mevcut sahnedeki gin görselinin
+            // arkasında bir bilgi paneli oluşacak"). The card does not stand over the shelf
+            // with a second bottle on it: its SLOT is laid on the bottle where it stands —
+            // the copy in the slot at the shelf bottle's own size and place, so nothing
+            // seems to move — and the box runs out beside it. Past the screen's right
+            // third the box would run off, so the card turns round (the mirrored cut of
+            // the same art) and the box runs left.
+            var parent = (RectTransform)_cellarCard.parent;
             var corners = new Vector3[4];
             over.GetWorldCorners(corners);
-            var top = (corners[1] + corners[2]) * 0.5f;
-            var screen = RectTransformUtility.WorldToScreenPoint(null, top);
-            bool hang = screen.y > Screen.height * 0.72f;
-            if (hang)
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                RectTransformUtility.WorldToScreenPoint(null, corners[0]), null, out Vector2 lo);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                RectTransformUtility.WorldToScreenPoint(null, corners[2]), null, out Vector2 hi);
+            var centre = (lo + hi) * 0.5f;
+            var size = new Vector2(Mathf.Abs(hi.x - lo.x), Mathf.Abs(hi.y - lo.y));
+            bool left = centre.x > parent.rect.width * (0.5f - 0.34f);
+            SetCardHand(left);
+            if (_cellarCardFree)
+                _cellarCardDish.rectTransform.sizeDelta = new Vector2(
+                    Mathf.Clamp(size.x, 32f, CardSlotW - CardRule * 2f - 4f), Mathf.Clamp(size.y, 32f, 120f));
+            else
             {
-                var bottom = (corners[0] + corners[3]) * 0.5f;
-                screen = RectTransformUtility.WorldToScreenPoint(null, bottom);
+                float vh = Mathf.Clamp(size.y, 96f, 144f);
+                _cellarCardVessel.sizeDelta = new Vector2(vh * 0.5f, vh);
             }
-            _cellarCard.pivot = new Vector2(0.5f, hang ? 1f : 0f);
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    (RectTransform)_cellarCard.parent, screen, null, out Vector2 local))
-            {
-                // Inside the screen sideways: a card over the end bottle must not hang off it.
-                var parent = (RectTransform)_cellarCard.parent;
-                float half = _cellarCard.sizeDelta.x * 0.5f, lim = parent.rect.width * 0.5f - 8f;
-                local.x = Mathf.Clamp(local.x, -lim + half, lim - half);
-                _cellarCard.anchoredPosition = local + new Vector2(0f, hang ? -10f : 10f);
-                // ...and upright (2026-09-08): a card with six drinks on it is taller than
-                // the shelf, and hung under a top-shelf bottle it ran off the top of the
-                // screen — its title cut by the clock. Both edges are kept inside.
-                float ch = _cellarCard.sizeDelta.y, vlim = parent.rect.height * 0.5f - 8f;
-                var pos = _cellarCard.anchoredPosition;
-                float topEdge = hang ? pos.y : pos.y + ch;       // pivot y is 1 hanging, 0 standing
-                float bottomEdge = hang ? pos.y - ch : pos.y;
-                if (topEdge > vlim) pos.y -= topEdge - vlim;
-                if (bottomEdge < -vlim) pos.y += -vlim - bottomEdge;
-                _cellarCard.anchoredPosition = pos;
-            }
+            float w = _cellarCard.sizeDelta.x, h = _cellarCard.sizeDelta.y;
+            const float WellCentre = 41f;   // the well spans art px 3..38 of the 42: its centre at 2x
+            float slotCx = left ? w - WellCentre : WellCentre;
+            _cellarCard.pivot = new Vector2(0f, 0f);
+            var pos = centre - new Vector2(slotCx, h * 0.5f);
+            float lim = parent.rect.width * 0.5f - 8f, vlim = parent.rect.height * 0.5f - 8f;
+            pos.x = Mathf.Clamp(pos.x, -lim, lim - w);
+            pos.y = Mathf.Clamp(pos.y, -vlim, vlim - h);
+            _cellarCard.anchoredPosition = pos;
+        }
+
+        private bool _cellarCardLeft;
+
+        /// <summary>Turns the card round: the slot on the right and the box running left,
+        /// on the mirrored cut of the art — or back. The box's rows are anchored to the
+        /// box's own top-left either way, so nothing inside it moves.</summary>
+        private void SetCardHand(bool left)
+        {
+            if (_cellarCardLeft == left && _cellarCardSlot.GetComponent<Image>().sprite != null) return;
+            _cellarCardLeft = left;
+            var slotImg = _cellarCardSlot.GetComponent<Image>();
+            var bodyImg = _cellarCardBody.GetComponent<Image>();
+            _cellarCardSlot.anchorMin = left ? new Vector2(1f, 0f) : new Vector2(0f, 0f);
+            _cellarCardSlot.anchorMax = left ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
+            _cellarCardSlot.pivot = left ? new Vector2(1f, 0.5f) : new Vector2(0f, 0.5f);
+            _cellarCardSlot.anchoredPosition = Vector2.zero;
+            _cellarCardSlot.sizeDelta = new Vector2(CardSlotW, 0f);
+            _cellarCardBody.offsetMin = left ? Vector2.zero : new Vector2(CardSlotW, 0f);
+            _cellarCardBody.offsetMax = left ? new Vector2(-CardSlotW, 0f) : Vector2.zero;
+            var slotSprite = left ? ChromeArt.CardSlotL() : ChromeArt.CardSlot();
+            var bodySprite = left ? ChromeArt.CardBodyL() : ChromeArt.CardBody();
+            if (slotSprite != null) slotImg.sprite = slotSprite;
+            if (bodySprite != null) bodyImg.sprite = bodySprite;
         }
 
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>

@@ -1560,8 +1560,14 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Oda:** `lamp_left`/`lamp_right`/`table_mid`/`counter_end` yuvaları ve fener, kâğıt fener, tezgah mumu, orta masa (3 basamak),
   monstera fikstürleri kesildi (yazar: "mum lamba aydınlatmaları kalksın, duvar lambaları kalsın; en fazla 2 masa; bitki kötü").
   Masalar 128/516 → **224/416**, y 129 → **126**. Katalog 39 → 32.
-- **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Hendrake's Gin, 6 içki), garnish kartı (lemon
-  twist), Jersey 15 balon/fişler, market likör/geliştirme sekmeleri, gün sonu panoları, ayarlar, perfect sayfa.
+- **Kart şişenin ARKASINDA oluşur** (yazarın notu, aynı gün): yuva rafta duran şişenin kendi yerine ve boyuna oturur (kopya
+  gerçek şişenin üstünde, kimse yerinden oynamaz), kutu yanına uzanır; ekranın sağ üçte birindeki şişelerde kart döner —
+  aynı sanatın aynalanmış kesimi (`card_slot_l`/`card_body_l`), kutu sola. `StepCellarCard` kapı plakasının HUD-birimli
+  köşelerinden merkez ve boyu okur; garnish kâseleri için aynı. Kart zemini yazarın dosyasında 226/255 alfa — yarı saydamlık
+  sanatın kendisi. Gün sonu perdesi 0.88 → **0.965**. Market kartlarındaki `$` ikonu yerine düz yeşil `$` (display face,
+  `Lime[2]`); çizili dolar panolarda kaldı.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Krakatoa Rum, sağ elli Quinn's Tonic), garnish
+  kartı (lemon twist), Jersey 15 balon/fişler, market likör/geliştirme sekmeleri, gün sonu panoları, ayarlar, perfect sayfa.
 
 ### 9.48 · On sekizinci liste: tek balon, parmak ucu, emoji demeti, içindekiler satırı, duran oda (2026-09-08)
 
