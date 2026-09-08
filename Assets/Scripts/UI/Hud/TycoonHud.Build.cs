@@ -230,7 +230,7 @@ namespace LastCall.UI
                 // The socket is the same 3D drawing in dark glass — its own sprite, not a
                 // tint: multiplying the gold star dark turns its facets to mud, and the
                 // socket has to read as the same OBJECT unlit, shading intact.
-                img.sprite = ItemArt.Load("star3d_socket");
+                img.sprite = ItemArt.Star(false, StarSize);   // the house's one star, not the retired star3d file (2026-09-08)
                 img.preserveAspect = true; img.raycastTarget = false;
                 img.color = Color.white;
             }
@@ -252,7 +252,7 @@ namespace LastCall.UI
                 // iconlarından olsun fade geçiş rengini beğenmedim"). The vice-fade tint
                 // lasted one build; the fill is the generated star's own gold now, so the
                 // Image tints nothing — colour is IN the sprite, white multiplies clean.
-                img.sprite = ItemArt.Load("star3d");
+                img.sprite = ItemArt.Star(true, StarSize);
                 img.preserveAspect = true; img.raycastTarget = false;
                 img.color = Color.white;
                 _ratingStars[i] = img;

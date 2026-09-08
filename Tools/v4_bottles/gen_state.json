@@ -88,7 +88,7 @@
    "submit": "id: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nmodel: pro\ndescription: a small stylised heraldic crest with a crown, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 5\ncost: 20 generations\nstatus: processing (~1-10 min)\n\nhint: get_image(job_",
    "n": 64,
    "secs": 130.2,
-   "poll": "status: completed\nid: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/2cf40e59-27a4-4bcb-9262-9088250be1c8/download?index=0 ... ?index=63\n(60 more frames not shown — fetch them from the download URLs above)\n"
+   "poll": "status: completed\nid: 2cf40e59-27a4-4bcb-9262-9088250be1c8\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/2cf40e59-27a4-4bcb-9262-9088250be1c8/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
   },
   "gin_boothby:23": {
    "job": "e34aee2a-cc37-4074-88e4-ce63b1aaba9e",
@@ -226,24 +226,39 @@
    "submit": "id: 3963b55d-ef32-47b2-836e-89266a851718\nmodel: pro\ndescription: a plain slim blue and silver aluminium energy drink can with a silver top and pull tab, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"BLUE OX"
   },
   "orange_grove:23": {
-   "job": "997d6835-a5d0-404c-90ec-60eac21a7732",
-   "submit": "id: 997d6835-a5d0-404c-90ec-60eac21a7732\nmodel: pro\ndescription: a plain orange juice carton, a gable-top box with a small white screw cap, flat orange sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"G"
+   "job": "4134a180-f393-4dc8-8007-24c1977ca204",
+   "submit": "id: 4134a180-f393-4dc8-8007-24c1977ca204\njob_id: 4134a180-f393-4dc8-8007-24c1977ca204\nmodel: pro\ndescription: a stout clear-glass orange juice bottle with rounded shoulders, a short wide neck and a plain cylindrical body, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows o",
+   "n": 1,
+   "secs": 260.7,
+   "poll": "status: completed\nid: 4134a180-f393-4dc8-8007-24c1977ca204\njob_id: 4134a180-f393-4dc8-8007-24c1977ca204\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/4134a180-f393-4dc8-8007-24c1977ca204/download\n"
   },
   "lemon_fresh:23": {
-   "job": "259578bf-64e1-41f3-8135-8e8b54e25a08",
-   "submit": "id: 259578bf-64e1-41f3-8135-8e8b54e25a08\nmodel: pro\ndescription: a plain yellow lemonade carton, a gable-top box with a small white screw cap, flat yellow sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name"
+   "job": "12ee80f3-e988-4a43-b4c0-d7c5abab9416",
+   "submit": "id: 12ee80f3-e988-4a43-b4c0-d7c5abab9416\njob_id: 12ee80f3-e988-4a43-b4c0-d7c5abab9416\nmodel: pro\ndescription: a stout clear-glass lemonade bottle with sloping shoulders, a short neck and a slightly waisted body, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale c",
+   "n": 1,
+   "secs": 119.2,
+   "poll": "status: completed\nid: 12ee80f3-e988-4a43-b4c0-d7c5abab9416\njob_id: 12ee80f3-e988-4a43-b4c0-d7c5abab9416\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/12ee80f3-e988-4a43-b4c0-d7c5abab9416/download\n"
   },
   "lime_fresh:23": {
-   "job": "0ce3fbf7-e6e8-4b60-b8ab-dfe845b3d215",
-   "submit": "id: 0ce3fbf7-e6e8-4b60-b8ab-dfe845b3d215\nmodel: pro\ndescription: a plain green limeade carton, a gable-top box with a small white screw cap, flat green sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with the name \"L"
+   "job": "d77be86b-435d-4d72-873d-da0a5c7feec4",
+   "submit": "id: d77be86b-435d-4d72-873d-da0a5c7feec4\njob_id: d77be86b-435d-4d72-873d-da0a5c7feec4\nmodel: pro\ndescription: a stout clear-glass limeade bottle with rounded shoulders and a ribbed lower body, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty glass al",
+   "n": 1,
+   "secs": 100.8,
+   "poll": "status: completed\nid: d77be86b-435d-4d72-873d-da0a5c7feec4\njob_id: d77be86b-435d-4d72-873d-da0a5c7feec4\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/d77be86b-435d-4d72-873d-da0a5c7feec4/download\n"
   },
   "cranberry_north:23": {
-   "job": "2cf702db-24ac-4b83-89be-a148641a4900",
-   "submit": "id: 2cf702db-24ac-4b83-89be-a148641a4900\nmodel: pro\ndescription: a plain deep red cranberry juice carton, a gable-top box with a small white screw cap, flat red sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body with th"
+   "job": "25d93e31-ccec-4f3a-8c61-9343c36f8ba5",
+   "submit": "id: 25d93e31-ccec-4f3a-8c61-9343c36f8ba5\njob_id: 25d93e31-ccec-4f3a-8c61-9343c36f8ba5\nmodel: pro\ndescription: a clear-glass cranberry juice bottle with square shoulders and a short wide neck, a plain tall body, about 2.3 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale cl",
+   "n": 1,
+   "secs": 117.4,
+   "poll": "status: completed\nid: 25d93e31-ccec-4f3a-8c61-9343c36f8ba5\njob_id: 25d93e31-ccec-4f3a-8c61-9343c36f8ba5\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/25d93e31-ccec-4f3a-8c61-9343c36f8ba5/download\n"
   },
   "pineapple_isla:23": {
-   "job": "f49b3f72-031e-47a9-b6b1-c81ca46b9168",
-   "submit": "id: f49b3f72-031e-47a9-b6b1-c81ca46b9168\nmodel: pro\ndescription: a plain golden-yellow pineapple juice carton, a gable-top box with a small white screw cap, flat yellow sides, about 2.0 times as tall as it is wide. It is a sealed opaque container, drawn closed. It has its own brand label on the body"
+   "job": "fa12a481-a370-489e-b8c1-28e5dab8311f",
+   "submit": "id: fa12a481-a370-489e-b8c1-28e5dab8311f\njob_id: fa12a481-a370-489e-b8c1-28e5dab8311f\nmodel: pro\ndescription: a stout clear-glass pineapple juice bottle with a rounded bulbous body and a short neck, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, no pool at the bottom; the inside shows only pale clear empty gl",
+   "n": 1,
+   "secs": 92.6,
+   "poll": "status: completed\nid: fa12a481-a370-489e-b8c1-28e5dab8311f\njob_id: fa12a481-a370-489e-b8c1-28e5dab8311f\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/fa12a481-a370-489e-b8c1-28e5dab8311f/download\n"
   },
   "tonic_quinbury:23": {
    "job": "00cddcf3-b5f8-4f1f-8194-8a58f20106f2",
@@ -267,6 +282,13 @@
    "n": 1,
    "secs": 133.8,
    "poll": "status: completed\nid: dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/dfda5efb-c2ef-42c6-a9d2-8cecbee11f5d/download\n"
+  },
+  "lemon_fresh:24": {
+   "job": "bae987b3-a7ab-4646-9428-aaf4e4bd258a",
+   "submit": "id: bae987b3-a7ab-4646-9428-aaf4e4bd258a\njob_id: bae987b3-a7ab-4646-9428-aaf4e4bd258a\nmodel: pro\ndescription: a short squat clear-glass lemonade bottle as wide as a jar, a round wide body, rounded shoulders, a very short neck and a wide open mouth, no tall neck, about 2.2 times as tall as it is wide. The bottle is COMPLETELY EMPTY: absolutely no liquid inside, no fill level, no coloured contents, ",
+   "n": 1,
+   "secs": 67.4,
+   "poll": "status: completed\nid: bae987b3-a7ab-4646-9428-aaf4e4bd258a\njob_id: bae987b3-a7ab-4646-9428-aaf4e4bd258a\nframes: 1\ndownload: https://api.pixellab.ai/mcp/images/bae987b3-a7ab-4646-9428-aaf4e4bd258a/download\n"
   }
  }
 }

@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Juices in glass, the top bar's star (2026-09-08):** the five juice cartons are glass bottles
+  now — the author lifted the carton rule ("artık kutu olmak zorunda değiller") — taken through the
+  v4 glass pipeline as `mixer` cards: an open, empty 96×192 master (the hand bottle, poured from
+  with its liquid line) and the derived 32×64 cellar set (capped), six plates each; the old sealed
+  flats are gone. Lemonade's first take came back a wine bottle (ratio 3.67), so its brief was
+  rewritten squat and seed 24 picked. The top bar's rating row draws the house star
+  (`ItemArt.Star`, 36px) instead of the old star3d socket pair.
 - **The nineteenth list (2026-09-08):** the cellar's bottle card and the counter's garnish card stand
   on the author's card art (the bottle full in its slot, the drinks it goes into as the menu's icons,
   stars, dollar and price, a body that grows with its text); the pointer is the author's three

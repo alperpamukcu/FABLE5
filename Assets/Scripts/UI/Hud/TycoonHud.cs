@@ -2333,7 +2333,9 @@ namespace LastCall.UI
         // 2×; the size held, the drawing under it changed. Size history: cut to 16 once
         // ("row climbed into its caption"), restored ("yıldız barı ortalasın ve boyutu
         // büyütülsün") by giving the standing its own block instead.
-        private const float StarSize = 32f, StarGap = 34f;
+        // 36, not 32 (2026-09-08): the author's big star is drawn 18x17 and the strip shows it at
+        // exactly 2x — a 32 box scaled the 17 to 30 and blurred every point.
+        private const float StarSize = 36f, StarGap = 38f;
 
         /// <summary>The house's two strips in the top bar (GDD 27 §4.4): 16 px icons on an
         /// 18-unit pitch, five wide, one over the other.</summary>
