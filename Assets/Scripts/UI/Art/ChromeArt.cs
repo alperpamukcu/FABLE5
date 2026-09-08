@@ -2471,8 +2471,12 @@ namespace LastCall.UI
         // the whole curve in the corner cells, which never stretch. Nothing is redrawn —
         // every pixel is the author's.
 
-        /// <summary>The card's left piece, the bottle's slot; sliced on its 3px rule.</summary>
-        public static Sprite CardSlot() => Resliced("card_slot", new Vector4(6, 6, 6, 6), "card:slot");
+        /// <summary>The card's left piece, the slot — a FRAME (2026-09-08, the author: "yeniden o
+        /// alkolün resmini oraya koymaya gerek yok, mevcut sahnede sallananı öne çıkar"): its well
+        /// is cut clear (card_slot_hole), so the bottle on the shelf — the one that sways under
+        /// the pointer — shows through it where it stands. The stage draws under every canvas,
+        /// so a hole in the card is the only way to put the card behind the bottle.</summary>
+        public static Sprite CardSlot() => Resliced("card_slot_hole", new Vector4(6, 6, 6, 6), "card:slot");
 
         /// <summary>THE HOUSE'S PANEL (2026-09-08, the author: "paneller ... oyunda ayarlar,
         /// giriş sayfası vs. UI'i ile aynı sanatta olmalı"): the framed slot of the author's
@@ -2487,7 +2491,7 @@ namespace LastCall.UI
         /// <summary>The same two pieces mirrored (2026-09-08): a card whose box runs out to
         /// the LEFT of its slot, for a bottle standing in the screen's right third. The
         /// divider is on the slot's left and the body's rule on its right.</summary>
-        public static Sprite CardSlotL() => Resliced("card_slot_l", new Vector4(6, 6, 6, 6), "card:slot:l");
+        public static Sprite CardSlotL() => Resliced("card_slot_hole_l", new Vector4(6, 6, 6, 6), "card:slot:l");
         public static Sprite CardBodyL() => Resliced("card_body_l", new Vector4(6, 6, 0, 6), "card:body:l");
 
         private static Sprite Resliced(string item, Vector4 border, string key)

@@ -454,8 +454,7 @@ namespace LastCall.UI
             var bottle = card != null ? run?.Shelf.Find(card.Id) : null;
             ClearCardUses();
             _cellarCardBottle.Show(null);
-            _cellarCardDish.sprite = prop.Img != null ? prop.Img.sprite : icon;
-            _cellarCardDish.enabled = _cellarCardDish.sprite != null;
+            _cellarCardDish.enabled = false;   // the dish itself shows through the slot's well
             string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
             _cellarCardName.text = title.ToUpperInvariant();
             _cellarCardMeta.text = prop.IsRim ? "RIM  ·  " + word : (prop.Id == "ice" ? "ICE  ·  " + word : "GARNISH  ·  " + word);
@@ -950,15 +949,10 @@ namespace LastCall.UI
             int price = Market.StockPrice(card);
             ClearCardUses();
 
-            // the bottle itself, in the slot, as full as it is
+            // NOTHING IN THE SLOT (2026-09-08, the author): the slot is a frame round the
+            // bottle on the shelf, which shows through its cut well — no copy of it.
             _cellarCardDish.enabled = false;
-            var plates = ItemArt.Plates(card, cellar: true);
-            _cellarCardBottle.Show(plates);
-            if (plates != null)
-            {
-                double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
-                _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
-            }
+            _cellarCardBottle.Show(null);
 
             _cellarCardName.text = card.Name.ToUpperInvariant();
             _cellarCardMeta.text = $"{style}  ·  TIER {tier}";
