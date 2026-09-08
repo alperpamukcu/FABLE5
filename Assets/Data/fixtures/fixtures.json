@@ -12,12 +12,6 @@
       "y": 129
     },
     {
-      "id": "counter_end",
-      "x": 26,
-      "y": 110,
-      "onCounter": true
-    },
-    {
       "id": "wall_left",
       "x": 150,
       "y": 222
@@ -28,29 +22,14 @@
       "y": 178
     },
     {
-      "id": "lamp_left",
-      "x": 151,
-      "y": 266
-    },
-    {
-      "id": "lamp_right",
-      "x": 493,
-      "y": 266
-    },
-    {
       "id": "table_left",
-      "x": 128,
-      "y": 129
-    },
-    {
-      "id": "table_mid",
-      "x": 320,
-      "y": 129
+      "x": 224,
+      "y": 126
     },
     {
       "id": "table_right",
-      "x": 516,
-      "y": 129
+      "x": 416,
+      "y": 126
     },
     {
       "id": "taps",
@@ -179,34 +158,6 @@
       "group": "greenery"
     },
     {
-      "id": "plant_monstera",
-      "name": "Monstera",
-      "slot": "plant_right",
-      "price": 95,
-      "comfort": 0.4,
-      "stars": 3.0,
-      "flavor": "Split leaves the size of dinner plates, leaning into the neon like it paid for it.",
-      "sprite": "fx_monstera",
-      "level": 3,
-      "group": "greenery"
-    },
-    {
-      "id": "counter_candle",
-      "name": "Counter Candle",
-      "slot": "counter_end",
-      "price": 30,
-      "comfort": 0.2,
-      "stars": 0,
-      "flavor": "One small flame at the quiet end of the bar.",
-      "sprite": "fx_candle",
-      "lightR": 1.0,
-      "lightG": 0.72,
-      "lightB": 0.4,
-      "lightIntensity": 0.5,
-      "lightRadius": 26,
-      "group": "light"
-    },
-    {
       "id": "brass_sconce",
       "name": "Brass Sconce",
       "slot": "wall_left",
@@ -220,38 +171,6 @@
       "lightB": 0.55,
       "lightIntensity": 0.5,
       "lightRadius": 46,
-      "group": "light"
-    },
-    {
-      "id": "hanging_lantern",
-      "name": "Hanging Lantern",
-      "slot": "lamp_left",
-      "price": 60,
-      "comfort": 0.2,
-      "stars": 1.5,
-      "flavor": "Fills the gap the ceiling lamps leave.",
-      "sprite": "fx_lantern",
-      "lightR": 1.0,
-      "lightG": 0.78,
-      "lightB": 0.5,
-      "lightIntensity": 0.55,
-      "lightRadius": 70,
-      "group": "light"
-    },
-    {
-      "id": "paper_lantern",
-      "name": "Paper Lantern",
-      "slot": "lamp_right",
-      "price": 60,
-      "comfort": 0.2,
-      "stars": 2.5,
-      "flavor": "A soft red glow for the far corner.",
-      "sprite": "fx_lantern_red",
-      "lightR": 1.0,
-      "lightG": 0.55,
-      "lightB": 0.45,
-      "lightIntensity": 0.5,
-      "lightRadius": 70,
       "group": "light"
     },
     {
@@ -298,42 +217,6 @@
       "id": "table_left_3",
       "name": "Steel Gaslift Set",
       "slot": "table_left",
-      "price": 120,
-      "comfort": 0.6,
-      "stars": 3.0,
-      "flavor": "Plum vinyl on a polished column. Spins if you let it.",
-      "sprite": "fx_table_t3",
-      "level": 3,
-      "group": "furniture"
-    },
-    {
-      "id": "table_mid_1",
-      "name": "Rustic Bar Table",
-      "slot": "table_mid",
-      "price": 40,
-      "comfort": 0.2,
-      "stars": 0,
-      "flavor": "Reclaimed oak and a welded frame. It wobbles, and nobody minds.",
-      "sprite": "fx_table_t1",
-      "level": 1,
-      "group": "furniture"
-    },
-    {
-      "id": "table_mid_2",
-      "name": "Brass Pedestal Table",
-      "slot": "table_mid",
-      "price": 85,
-      "comfort": 0.4,
-      "stars": 1.5,
-      "flavor": "Green leather, a brass stem. The seat people ask for by name.",
-      "sprite": "fx_table_t2",
-      "level": 2,
-      "group": "furniture"
-    },
-    {
-      "id": "table_mid_3",
-      "name": "Steel Gaslift Set",
-      "slot": "table_mid",
       "price": 120,
       "comfort": 0.6,
       "stars": 3.0,

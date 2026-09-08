@@ -145,8 +145,14 @@ namespace LastCall.UI
         /// / medallion set: same canvas, same keyline, the interior in Lime because money is
         /// the only green thing in the chrome. Drawn at both sizes by Tools/coin_icon.py rather
         /// than derived, because the derivation peels ink and this icon's glyph IS ink.</summary>
+        /// <summary>THE HOUSE'S DOLLAR (2026-09-08, the author: "oyunda her yerde
+        /// kullanacağımız $ ve para iconunu paylaştım, tüm oyuna entegre et"): the author's
+        /// green dollar, 32 as drawn, its own 19x23 glyph centred on a 24 for the tiles
+        /// and the boards, and a 2:1 majority cut for the 16. The old green coin
+        /// (coin3d) is retired; the accessor is the same, so every caller changed at once.</summary>
         public static Sprite Coin(float px = 24f) =>
-            Load("coin3d" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"));
+            Load("dollar" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"))
+            ?? Load("coin3d" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"));
 
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");

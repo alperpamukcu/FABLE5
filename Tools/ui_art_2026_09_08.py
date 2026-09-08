@@ -68,6 +68,10 @@ def blow(grid, k=2, canvas=(32, 32)):
 
 
 def cursors():
+    """SUPERSEDED (2026-09-08, later the same day): the author drew the three frames
+    themselves — Tools/cursor_src/{pointer,click,grab}.png at 10x — and batch_d1 of the
+    nineteenth list cut them to 32x32 at 2x (see cursor_frames below). The cell-derivation
+    here is kept for the record of how the first pressed and grab frames were made."""
     src = os.path.join(ROOT, 'Tools', 'cursor_hand_3x.png')   # the author's Hand3 at 3x, the source
     hand = Image.open(src).convert('RGBA')
     g = cells(hand)                      # 15 rows x 16 cols
@@ -125,6 +129,20 @@ def cursors():
     print('cursor_hand / _pressed / _grab written at 2x on 32x32')
 
 
+def cursor_frames():
+    """The author's pointer / click / grab (Tools/cursor_src, 16x15 and 15x15 cells at 10x)
+    to 32x32 at 2x — the size a Windows hardware cursor takes. The finger points up-left;
+    the tip is the cell at (1..2, 0), so the hotspot at 2x is (3, 1)."""
+    src = os.path.join(ROOT, 'Tools', 'cursor_src')
+    for n, out in (('pointer', 'cursor_hand'), ('click', 'cursor_hand_pressed'), ('grab', 'cursor_hand_grab')):
+        im = Image.open(os.path.join(src, n + '.png')).convert('RGBA')
+        w, h = im.size
+        px = im.load()
+        grid = [[px[x * 10 + 5, y * 10 + 5] for x in range(w // 10)] for y in range(h // 10)]
+        blow(grid).save(os.path.join(ITEMS, out + '.png'))
+        print(out, 'from', n)
+
+
 if __name__ == '__main__':
     speech()
-    cursors()
+    cursor_frames()

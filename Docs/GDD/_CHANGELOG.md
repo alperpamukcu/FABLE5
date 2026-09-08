@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The nineteenth list (2026-09-08):** the cellar's bottle card and the counter's garnish card stand
+  on the author's card art (the bottle full in its slot, the drinks it goes into as the menu's icons,
+  stars, dollar and price, a body that grows with its text); the pointer is the author's three
+  drawings with the hotspot on the fingertip and every raycaster forgives a few pixels round it; the
+  whole book prop takes the click; the house dollar replaces the coin everywhere; speech and tickets
+  set in Jersey 15 (lowercase, Turkish, crisp at 27); the market card goes back to the old grammar with
+  full bottles and a NEW! band on what opened last night (Core: PreviousStanding / OpenedLastNight);
+  the upgrade pictograms redrawn at 48; the night boards, the settings plate and the curtain's card
+  share one panel art; the perfected page gets its own paper and type; the room loses the lanterns,
+  the candle, the middle table and the monstera and centres its two tables. GDD_MEVCUT §9.49.
+
 - **The eighteenth list (2026-09-08):** the order ticket wears the same drawn balloon as speech;
   the pointer is a 32x32 hardware cursor with its hotspot on the fingertip (and leaves a virtual
   mouse alone); the emojis come out from behind the drinker several at a time, as stage motes;

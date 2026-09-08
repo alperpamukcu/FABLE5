@@ -1521,6 +1521,48 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.49 · On dokuzuncu liste: yazarın kartı, parmak ucu, para, yazı tipi, market kartı, paneller, oda (2026-09-08)
+
+- **Mahzen şişe kartı yazarın sanatında** (`bottle_card.png`, 147×84: 3 px macenta çerçeve, erik zemin, solda yuva + ayraç).
+  İki parça (`card_slot` 42, `card_body` 105), **6 px'ten dilimli** — çerçeve 3 px ama köşeler 6 px yuvarlak (`#+++#`); 3'ten
+  dilimlenince çapraz kısmı uzayan kenar şeridine düşüp her panelin ayağında 9 px'lik merdiven yaptı (ölçüldü). 2x çizim
+  (`pixelsPerUnitMultiplier` 0.5). Yuvada şişenin kendisi: mahzen plakaları `BottleArt` sandviçinde, kalan miktar kadar dolu.
+  Kutuda: ad Silkscreen Bold 24 açık mürekkep (yazarın "Aseprite fontu" elde yok; evin kalın yüzü), aile · TIER, rung yıldızları
+  (`RungOf`), `$` ikonu + kehribar fiyat, stok satırı + çubuk, "IN THE BOOK" altında kokteyllerin **menü ikonları** (`DrinkIcon`, 32)
+  ve adları (en çok 6, kalanı sayı). Kart içeriğe göre büyür (`LayOutCellarCard`: en geniş satır + 12 pad, en az 220; boy
+  satırların toplamı, en az şişe boyu). Kendi kanvası 26 (kitap prop'u 8'de kartın önüne geçiyordu), ekranda dikey kelepçe.
+- **Garnish kartı aynı kart:** rayın kâseleri `ShowGarnishCard` — yuvada kâse, adı, "GARNISH · söz", fiyat ya da ON THE HOUSE,
+  raftaki stok, amaç cümlesi (`GarnishPurpose`). Tarifler garnish adı taşımadığı için "kullanıldığı kokteyller" listesi yok.
+- **İmleç:** yazarın üç çizimi (`Tools/cursor_src/{pointer,click,grab}.png`, 10x) 2x'te 32×32; parmak sol-üste bakıyor, sıcak nokta
+  **(3, 1)**. `ForgivingRaycaster` (tüm GraphicRaycaster'ların yerine): tam nokta boş dönerse 3 ve 6 px'lik iki halkada sekizer
+  nokta daha denenir — "parmağın etrafı tıklarken seçebilmeli".
+- **Kitap prop'u tıklanmıyordu:** `Reach` 110 birimlik prop'un ayağından 60 birim yükseliyordu; üst yarı deliklikti ve tık
+  pencereye düşüyordu. Reach artık prop'un tamamı + 6/8 birim hava. Ölçüldü: raycast prop merkezinde Reach'i buluyor.
+- **Para ikonu her yerde:** `ItemArt.Coin` → yazarın `dollar` (32), `dollar_24` (19×23 glif 24'e ortalı, ölçeksiz), `dollar_16`
+  (2:1 çoğunluk kesimi). Eski coin3d dosyaları duruyor ama çağrılmıyor. Panodaki para artık **birimle** (24) ölçülüyor — ekran
+  pikseliyle ölçülünce küçük pencerede altmış birimlik para pano üstünde yüzüyordu.
+- **Konuşma yazı tipi:** Silkscreen'de küçük harf yok, ğ ı İ ş yok. On altı aday 8–48 arası her boyda basıldı, anti-alias oranı
+  ölçüldü: **Jersey 15** (OFL) gerçek küçük harfli, tam Türkçe, 27'de keskin (%0.1 yumuşak piksel) ve Silkscreen 16'dan geniş
+  değil. Tiny5 (16'da keskin) önce girdi, yazar "kötü" dedi — 5 px yüz 2x'te ince. `_speech` Resources'tan yüklenir
+  (`Fonts/Jersey15-Regular`), balon ve fişin üç satırı 27'de; adlar ve içki adları artık büyük harfe çevrilmiyor,
+  konuşma `Sentence()` ile cümle düzeninde. `TagPad` 7 → **10**.
+- **Market kartı eski dile döndü:** pencere 148 (koyu, `Night[2]`), ayak açık plaka; şişeler **dolu** (`TileSpec.Card` →
+  `TileBottle`: mahzen plakaları 2x, seviye 1.0), ad iki satır, ince stok şeridi, `$` + rakam, tuş. Açıklama satırı ve durum
+  satırı gitti — durum pencerenin sağ üstünde damga. Rung yıldızları pencerenin sol altında. **NEW!** bandı: `Rating.PreviousStanding`
+  (kapanıştan önceki durum) ile `Average` arasında kalan kapı dün gece açılmıştır (`TycoonRun.OpenedLastNight`), pencerenin sol
+  üstünde 18° macenta bant; `NewArrivalTests` bunu pinliyor. Upgrade piktogramları **48** (24 ızgarası 2x + kutulara bevel),
+  tile'da 2x.
+- **Paneller tek sanat:** `ChromeArt.Panel()` (kartın çerçeveli yuvası, 6 px dilim) — gün sonu panoları (cyan kapaklı enstrüman
+  gitti; başlık macenta, okuma kehribar), ayarlar plakası (Card + Frame yerine), perde tarih kartı. Dev ve rehber panelleri
+  dokunulmadı.
+- **Perfect sayfa:** baskının altında soluk platin kâğıt (`BkPerfectPaper`, 8 birim içeri), ad Silkscreen Bold 24 koyu erik,
+  kaş platin; sayfa düzeni aynı.
+- **Oda:** `lamp_left`/`lamp_right`/`table_mid`/`counter_end` yuvaları ve fener, kâğıt fener, tezgah mumu, orta masa (3 basamak),
+  monstera fikstürleri kesildi (yazar: "mum lamba aydınlatmaları kalksın, duvar lambaları kalsın; en fazla 2 masa; bitki kötü").
+  Masalar 128/516 → **224/416**, y 129 → **126**. Katalog 39 → 32.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Hendrake's Gin, 6 içki), garnish kartı (lemon
+  twist), Jersey 15 balon/fişler, market likör/geliştirme sekmeleri, gün sonu panoları, ayarlar, perfect sayfa.
+
 ### 9.48 · On sekizinci liste: tek balon, parmak ucu, emoji demeti, içindekiler satırı, duran oda (2026-09-08)
 
 - **Sipariş/isim fişi aynı balon:** `SeatView.TagBg`/`Tail` artık `ChromeArt.SpeechBox`/`SpeechTail` (yazarın beyaz

@@ -1161,8 +1161,9 @@ namespace LastCall.UI
                 var theWhy = prep != null && !string.IsNullOrEmpty(prep.Description)
                     ? prep.Description.ToUpperInvariant()
                     : GarnishPurpose(id);
-                relay.Entered = () => ShowPropTip(theRt, theWord, theIcon, theWhy);
-                relay.Exited = () => HidePropTip(theRt);
+                // The dish's caption is the bottle's card now (2026-09-08).
+                relay.Entered = () => ShowGarnishCard(theRt, prop, theWord, theIcon, theWhy);
+                relay.Exited = () => HideGarnishCard(theRt);
                 _prepProps.Add(prop);
             }
 
@@ -1375,7 +1376,7 @@ namespace LastCall.UI
             var clothCanvas = clothLayer.gameObject.AddComponent<Canvas>();
             clothCanvas.overrideSorting = true;
             clothCanvas.sortingOrder = 8;
-            clothLayer.gameObject.AddComponent<GraphicRaycaster>();
+            clothLayer.gameObject.AddComponent<ForgivingRaycaster>();
             UiAuditExempt.Mark(clothLayer, "the cloth hangs over the room's own doors: the "
                 + "shutter's hit plate is a canvas at 6 and would otherwise take its clicks");
 
@@ -3018,7 +3019,7 @@ namespace LastCall.UI
                 : verdict.Match == OrderMatch.Exact ? VoiceCue.Perfect
                 : verdict.Match == OrderMatch.Close ? VoiceCue.Close
                 : VoiceCue.Wrong;
-            string line = VoiceLine(_seats[seatIndex].Visit, cue).ToUpperInvariant();
+            string line = Sentence(VoiceLine(_seats[seatIndex].Visit, cue));   // lowercase face now (2026-09-08)
             // The face for the verdict (2026-09-08): a wrong drink they HATED gets the sick
             // face rather than the raised brow, read off the same satisfaction the motes use.
             // The serve may already have chosen a rarer face (flawless first make, a
@@ -3674,7 +3675,7 @@ namespace LastCall.UI
                     // The name off their PAPERS, which is the name their licence prints —
                     // see NameOn. The ticket is where the card is remembered once it is shut.
                     view.Name.text = known && !deciding
-                        ? star + NameOn(visit, view.Look).ToUpperInvariant() : "";
+                        ? star + NameOn(visit, view.Look) : "";
 
                     // THE ORDER ARRIVES AS SPEECH (2026-08-19, the author: "yazılar konuşma
                     // metni gibi harf harf gelecek"). The clock starts on the EDGE of the
@@ -3687,7 +3688,7 @@ namespace LastCall.UI
                         view.WasKnown = true;
                         view.SpeakFrom = Time.unscaledTime;
                     }
-                    string wanted = known ? visit.Order.Wanted.Name.ToUpperInvariant() : "";
+                    string wanted = known ? visit.Order.Wanted.Name : "";
                     int said = Motion.Reduced ? wanted.Length
                         : Mathf.Clamp(Mathf.FloorToInt((Time.unscaledTime - view.SpeakFrom) * SpeakCps),
                                       0, wanted.Length);
@@ -3708,7 +3709,7 @@ namespace LastCall.UI
                         // this any more — a drinker's plate stands down for the whole savour
                         // (see showTag) — but the branch stays honest for the frames between
                         // a serve and the balloon coming up.
-                        view.Wants.text = "DRINKING" + (Motion.Reduced ? "..."
+                        view.Wants.text = "Drinking" + (Motion.Reduced ? "..."
                             : new string('.', 1 + Mathf.FloorToInt(Time.unscaledTime / DotBeat) % 3));
                         view.Wants.color = UITheme.ClubBlue[1];
                         view.Order.text = "";
@@ -3727,7 +3728,7 @@ namespace LastCall.UI
                     else if (!known)
                     {
                         // Ready, unread: the one line the author asked for, and nothing else.
-                        view.Wants.text = "READY TO ORDER";
+                        view.Wants.text = "Ready to order";
                         view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
                     }
@@ -3738,7 +3739,7 @@ namespace LastCall.UI
                         // moment they sit — they introduced themselves — so the ticket would
                         // otherwise print the ask over their head and hand the player the
                         // whole trial in advance, which is the one thing the reveal is for.
-                        view.Wants.text = "TALK TO THEM";
+                        view.Wants.text = "Talk to them";
                         view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
                         view.Spoken = false;

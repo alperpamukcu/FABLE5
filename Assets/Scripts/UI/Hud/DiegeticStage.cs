@@ -3570,7 +3570,7 @@ namespace LastCall.UI
             scaler.referenceResolution = Reference;
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;
-            if (raycasts) go.AddComponent<GraphicRaycaster>();
+            if (raycasts) go.AddComponent<ForgivingRaycaster>();
             // Fixed field, like the HUD's: what draws over the room has to be measured in
             // the same units the room is, and the room is now windowboxed to 640x360.
             return DesignFrame.Wrap((RectTransform)go.transform, Reference);

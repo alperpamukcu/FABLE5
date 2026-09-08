@@ -400,6 +400,15 @@ namespace LastCall.Core
         public IEnumerable<(IngredientCard Card, double Stars, string Sentence)> GatedStock() =>
             Market.GatedFor(_shelf, _brandCatalogue, Rating.Average, this);
 
+        /// <summary>True when a listing behind <paramref name="starGate"/> opened LAST NIGHT:
+        /// the gate lay above the standing before the night closed and at or under it
+        /// after (2026-09-08, the author: "markete yeni gelen ürünlerin üstünde NEW! bandı
+        /// olmalı, oyuncu neyi yeni açtığını bilsin"). NaN — no gate — is never new.</summary>
+        public bool OpenedLastNight(double starGate) =>
+            !double.IsNaN(starGate)
+            && starGate > Rating.PreviousStanding + 1e-9
+            && starGate <= Rating.Average + 1e-9;
+
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>

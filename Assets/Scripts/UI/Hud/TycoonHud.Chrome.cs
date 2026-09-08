@@ -205,50 +205,137 @@ namespace LastCall.UI
         // stood over it the way the prop caption is — through the screen, because the doors
         // live on the stage's own canvas. Compact: a name row, a facts row, the stock, the
         // house drinks it goes into, and the no-shake mark only on a bottle that fizzes.
-        private RectTransform _cellarCard, _cellarCardOver;
+        private RectTransform _cellarCard, _cellarCardOver, _cellarCardSlot, _cellarCardBody,
+            _cellarCardVessel, _cellarCardStars, _cellarCardUsesRoot, _cellarCardMarkRow,
+            _cellarCardStockBar, _cellarCardStockFill;
         private CanvasGroup _cellarCardGroup;
-        private Text _cellarCardName, _cellarCardMeta, _cellarCardStock, _cellarCardUses, _cellarCardMark;
-        private Image _cellarCardIcon;
-        private RectTransform _cellarCardMarkRow;
-        private const float CellarCardW = 252f;
+        private Text _cellarCardName, _cellarCardMeta, _cellarCardPrice, _cellarCardStock,
+            _cellarCardUsesHead, _cellarCardMark;
+        private Image _cellarCardIcon, _cellarCardCoin, _cellarCardDish;
+        private BottleArt _cellarCardBottle;
+        private bool _cellarCardFree;      // a garnish card stands on the counter, cellar shut or not
+        // The author's card at 2x: a 3px rule is 6 units, the slot 84 wide, and its
+        // well (36 art px) 72 — a cellar plate (32x64) at 2x stands in it with 4 to spare.
+        private const float CardScale = 2f, CardSlotW = 42f * CardScale, CardRule = 3f * CardScale;
+        private const float CardPad = 12f, CardBodyMinW = 220f, CardRowGap = 6f;
+        private const float CardDrinkIcon = 32f;   // DrinkIcon.Size, as drawn
 
         private void BuildCellarCard(RectTransform root)
         {
             _cellarCard = NewRect("CellarCard", root);
             _cellarCard.anchorMin = _cellarCard.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCard.pivot = new Vector2(0.5f, 0f);
-            _cellarCard.sizeDelta = new Vector2(CellarCardW, 100f);
-            var plate = _cellarCard.gameObject.AddComponent<Image>();
-            plate.sprite = ChromeArt.Card();
-            plate.type = Image.Type.Sliced;
-            plate.color = UITheme.Night[1];
-            plate.raycastTarget = false;
+            _cellarCard.sizeDelta = new Vector2(CardSlotW + CardBodyMinW, 160f);
+            // Over everything on the counter — the book prop draws on its own canvas at 8
+            // and stood in front of the card (photographed 2026-09-08); the card is a
+            // caption and nothing on the bar may cover it. Under the open book (27).
+            var cardCanvas = _cellarCard.gameObject.AddComponent<Canvas>();
+            cardCanvas.overrideSorting = true;
+            cardCanvas.sortingOrder = 26;
 
-            Text Row(string name, Font face, int size, Color ink, float top, float h)
+            // the slot: left, the card's full height
+            _cellarCardSlot = NewRect("Slot", _cellarCard);
+            _cellarCardSlot.anchorMin = new Vector2(0f, 0f);
+            _cellarCardSlot.anchorMax = new Vector2(0f, 1f);
+            _cellarCardSlot.pivot = new Vector2(0f, 0.5f);
+            _cellarCardSlot.sizeDelta = new Vector2(CardSlotW, 0f);
+            _cellarCardSlot.anchoredPosition = Vector2.zero;
+            var slotImg = _cellarCardSlot.gameObject.AddComponent<Image>();
+            slotImg.sprite = ChromeArt.CardSlot();
+            slotImg.type = Image.Type.Sliced;
+            slotImg.pixelsPerUnitMultiplier = 1f / CardScale;
+            slotImg.raycastTarget = false;
+            if (slotImg.sprite == null) slotImg.color = UITheme.Night[1];
+
+            _cellarCardVessel = NewRect("Vessel", _cellarCardSlot);
+            _cellarCardVessel.anchorMin = _cellarCardVessel.anchorMax = new Vector2(0.5f, 0.5f);
+            _cellarCardVessel.pivot = new Vector2(0.5f, 0.5f);
+            _cellarCardVessel.sizeDelta = new Vector2(32f * CardScale, 64f * CardScale);
+            _cellarCardVessel.anchoredPosition = new Vector2(CardRule * 0.5f, 0f);   // the well sits between rule and divider
+            _cellarCardBottle = BottleArt.Under(_cellarCardVessel);
+
+            var dishRt = NewRect("Dish", _cellarCardSlot);
+            dishRt.anchorMin = dishRt.anchorMax = new Vector2(0.5f, 0.5f);
+            dishRt.pivot = new Vector2(0.5f, 0.5f);
+            dishRt.sizeDelta = new Vector2(64f, 64f);
+            dishRt.anchoredPosition = new Vector2(CardRule * 0.5f, 0f);
+            _cellarCardDish = dishRt.gameObject.AddComponent<Image>();
+            _cellarCardDish.preserveAspect = true;
+            _cellarCardDish.raycastTarget = false;
+            _cellarCardDish.enabled = false;
+
+            // the body: from the slot's divider to the right edge
+            _cellarCardBody = NewRect("Body", _cellarCard);
+            Stretch(_cellarCardBody, Vector2.zero, Vector2.one, new Vector2(CardSlotW, 0f), Vector2.zero);
+            var bodyImg = _cellarCardBody.gameObject.AddComponent<Image>();
+            bodyImg.sprite = ChromeArt.CardBody();
+            bodyImg.type = Image.Type.Sliced;
+            bodyImg.pixelsPerUnitMultiplier = 1f / CardScale;
+            bodyImg.raycastTarget = false;
+            if (bodyImg.sprite == null) bodyImg.color = UITheme.Night[1];
+
+            Text Line(string name, Font face, int size, Color ink)
             {
-                var t = NewText(name, _cellarCard, face, size, TextAnchor.UpperLeft, ink);
-                Stretch(t.rectTransform, new Vector2(0, 1), new Vector2(1, 1),
-                    new Vector2(10f, -(top + h)), new Vector2(-10f, -top));
+                var t = NewText(name, _cellarCardBody, face, size, TextAnchor.UpperLeft, ink);
+                t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0f, 1f);
+                t.rectTransform.pivot = new Vector2(0f, 1f);
                 t.horizontalOverflow = HorizontalWrapMode.Overflow;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
                 t.raycastTarget = false;
                 return t;
             }
-            _cellarCardName = Row("Name", _display, 8, UITheme.Amber[4], 8f, 12f);
-            _cellarCardMeta = Row("Meta", _body, 8, UITheme.Cream[3], 24f, 12f);
-            _cellarCardStock = Row("Stock", _body, 8, UITheme.Cream[3], 36f, 12f);
-            _cellarCardUses = Row("Uses", _body, 8, UITheme.Cream[4], 52f, 12f);
+            // THE TITLE (the author: "alkolün ismi hem başlık gibi büyük ve kalın olmalı"):
+            // Silkscreen Bold at 24, the house's own heavy face at 3x, in the light ink.
+            _cellarCardName = Line("Name", _shop, 24, UITheme.Cream[4]);
+            _cellarCardMeta = Line("Meta", _body, 16, UITheme.Cream[2]);
 
-            _cellarCardMarkRow = NewRect("MarkRow", _cellarCard);
-            Stretch(_cellarCardMarkRow, new Vector2(0, 0), new Vector2(1, 0), new Vector2(10f, 6f), new Vector2(-10f, 22f));
+            var coinRt = NewRect("Coin", _cellarCardBody);
+            coinRt.anchorMin = coinRt.anchorMax = new Vector2(0f, 1f);
+            coinRt.pivot = new Vector2(0f, 1f);
+            coinRt.sizeDelta = new Vector2(24f, 24f);
+            _cellarCardCoin = coinRt.gameObject.AddComponent<Image>();
+            _cellarCardCoin.sprite = ItemArt.Coin(24f);
+            _cellarCardCoin.preserveAspect = true;
+            _cellarCardCoin.raycastTarget = false;
+            // THE PRICE IN AMBER (the author: "fiyatı sarı fontla"), the figure in the display face.
+            _cellarCardPrice = Line("Price", _display, 16, UITheme.Amber[4]);
+
+            _cellarCardStock = Line("Stock", _body, 16, UITheme.Cream[3]);
+            _cellarCardStockBar = NewRect("StockBar", _cellarCardBody);
+            _cellarCardStockBar.anchorMin = _cellarCardStockBar.anchorMax = new Vector2(0f, 1f);
+            _cellarCardStockBar.pivot = new Vector2(0f, 1f);
+            _cellarCardStockBar.sizeDelta = new Vector2(120f, 8f);
+            var barBg = _cellarCardStockBar.gameObject.AddComponent<Image>();
+            barBg.color = UITheme.Night[0];
+            barBg.raycastTarget = false;
+            _cellarCardStockFill = NewRect("Fill", _cellarCardStockBar);
+            _cellarCardStockFill.anchorMin = new Vector2(0f, 0f);
+            _cellarCardStockFill.anchorMax = new Vector2(0f, 1f);
+            _cellarCardStockFill.pivot = new Vector2(0f, 0.5f);
+            _cellarCardStockFill.offsetMin = new Vector2(1f, 1f);
+            _cellarCardStockFill.offsetMax = new Vector2(1f, -1f);
+            var fillImg = _cellarCardStockFill.gameObject.AddComponent<Image>();
+            fillImg.color = UITheme.Cyan[3];
+            fillImg.raycastTarget = false;
+
+            _cellarCardUsesHead = Line("UsesHead", _body, 16, UITheme.Cream[3]);
+            _cellarCardUsesRoot = NewRect("Uses", _cellarCardBody);
+            _cellarCardUsesRoot.anchorMin = _cellarCardUsesRoot.anchorMax = new Vector2(0f, 1f);
+            _cellarCardUsesRoot.pivot = new Vector2(0f, 1f);
+
+            _cellarCardMarkRow = NewRect("MarkRow", _cellarCardBody);
+            _cellarCardMarkRow.anchorMin = _cellarCardMarkRow.anchorMax = new Vector2(0f, 1f);
+            _cellarCardMarkRow.pivot = new Vector2(0f, 1f);
+            _cellarCardMarkRow.sizeDelta = new Vector2(200f, 16f);
             var iconRt = NewRect("Icon", _cellarCardMarkRow);
             Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), Vector2.zero);
+            iconRt.pivot = new Vector2(0f, 0.5f);
             _cellarCardIcon = iconRt.gameObject.AddComponent<Image>();
             _cellarCardIcon.sprite = ChromeArt.NoShake();
             _cellarCardIcon.color = UITheme.ViceRed[3];
             _cellarCardIcon.preserveAspect = true;
             _cellarCardIcon.raycastTarget = false;
-            _cellarCardMark = NewText("Mark", _cellarCardMarkRow, _body, 8, TextAnchor.MiddleLeft, UITheme.ViceRed[3]);
+            _cellarCardMark = NewText("Mark", _cellarCardMarkRow, _body, 16, TextAnchor.MiddleLeft, UITheme.ViceRed[3]);
             Stretch(_cellarCardMark.rectTransform, Vector2.zero, Vector2.one, new Vector2(22f, 0f), Vector2.zero);
             _cellarCardMark.horizontalOverflow = HorizontalWrapMode.Overflow;
             _cellarCardMark.raycastTarget = false;
@@ -262,11 +349,149 @@ namespace LastCall.UI
                 + "pointer is on, in that bottle's own place rather than in a fixed one");
         }
 
+        /// <summary>One line of the "in the book" list: the menu's own drink icon and the
+        /// drink's name beside it. Returns the line's width.</summary>
+        private float CardUseLine(RecipeDefinition r, float top)
+        {
+            var row = NewRect("Use_" + r.Id, _cellarCardUsesRoot);
+            row.anchorMin = row.anchorMax = new Vector2(0f, 1f);
+            row.pivot = new Vector2(0f, 1f);
+            row.anchoredPosition = new Vector2(0f, -top);
+            row.sizeDelta = new Vector2(200f, CardDrinkIcon);
+            var iconRt = NewRect("Icon", row);
+            iconRt.anchorMin = iconRt.anchorMax = new Vector2(0f, 0.5f);
+            iconRt.pivot = new Vector2(0f, 0.5f);
+            iconRt.sizeDelta = new Vector2(CardDrinkIcon, CardDrinkIcon);
+            var ii = iconRt.gameObject.AddComponent<Image>();
+            ii.sprite = _bootstrap != null ? DrinkIcon.For(r, _bootstrap.Glassware) : null;
+            ii.preserveAspect = true;
+            ii.raycastTarget = false;
+            if (ii.sprite == null) ii.enabled = false;
+            var name = NewText("Name", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            name.rectTransform.anchorMin = new Vector2(0f, 0f);
+            name.rectTransform.anchorMax = new Vector2(0f, 1f);
+            name.rectTransform.pivot = new Vector2(0f, 0.5f);
+            name.rectTransform.anchoredPosition = new Vector2(CardDrinkIcon + 8f, 0f);
+            name.rectTransform.sizeDelta = new Vector2(300f, 0f);
+            name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            name.raycastTarget = false;
+            name.text = r.Name.ToUpperInvariant();
+            float w = CardDrinkIcon + 8f + name.preferredWidth;
+            row.sizeDelta = new Vector2(w, CardDrinkIcon);
+            return w;
+        }
+
+        /// <summary>Lays the body's rows out top to bottom and sizes the card to them: the
+        /// body is as wide as its widest row plus the padding, never under CardBodyMinW,
+        /// and the slot takes the card's height (the author: "kartlar metinlerin boyutuna
+        /// veya şişenin boyutuna göre genişleyip büyüyebilmeli").</summary>
+        private void LayOutCellarCard(int usesRows, float usesW, bool fizzy, bool showStock)
+        {
+            float x = CardPad, y = CardPad;
+            float widest = Mathf.Max(_cellarCardName.preferredWidth, _cellarCardMeta.preferredWidth,
+                                     _cellarCardUsesHead.preferredWidth, usesW, fizzy ? 220f : 0f);
+            _cellarCardName.rectTransform.anchoredPosition = new Vector2(x, -y);
+            y += _cellarCardName.preferredHeight + 2f;
+            _cellarCardMeta.rectTransform.anchoredPosition = new Vector2(x, -y);
+            y += _cellarCardMeta.preferredHeight + CardRowGap;
+            if (_cellarCardStars != null)
+            {
+                _cellarCardStars.anchoredPosition = new Vector2(x, -y);
+                y += 16f + CardRowGap;
+            }
+            ((RectTransform)_cellarCardCoin.transform).anchoredPosition = new Vector2(x, -y + 3f);
+            _cellarCardPrice.rectTransform.anchoredPosition = new Vector2(x + 28f, -y);
+            widest = Mathf.Max(widest, 28f + _cellarCardPrice.preferredWidth);
+            y += Mathf.Max(20f, _cellarCardPrice.preferredHeight) + CardRowGap;
+            _cellarCardStock.gameObject.SetActive(showStock);
+            _cellarCardStockBar.gameObject.SetActive(showStock);
+            if (showStock)
+            {
+                _cellarCardStock.rectTransform.anchoredPosition = new Vector2(x, -y);
+                widest = Mathf.Max(widest, _cellarCardStock.preferredWidth);
+                y += _cellarCardStock.preferredHeight + 2f;
+                _cellarCardStockBar.anchoredPosition = new Vector2(x, -y);
+                _cellarCardStockBar.sizeDelta = new Vector2(Mathf.Max(120f, widest), 8f);
+                y += 8f + CardRowGap;
+            }
+            _cellarCardUsesHead.rectTransform.anchoredPosition = new Vector2(x, -y);
+            y += _cellarCardUsesHead.preferredHeight + 2f;
+            _cellarCardUsesRoot.anchoredPosition = new Vector2(x, -y);
+            _cellarCardUsesRoot.sizeDelta = new Vector2(usesW, usesRows * (CardDrinkIcon + 2f));
+            y += usesRows * (CardDrinkIcon + 2f);
+            _cellarCardMarkRow.gameObject.SetActive(fizzy);
+            if (fizzy)
+            {
+                y += CardRowGap;
+                _cellarCardMarkRow.anchoredPosition = new Vector2(x, -y);
+                y += 16f;
+            }
+            y += CardPad;
+            float bodyW = Mathf.Max(CardBodyMinW, widest + CardPad * 2f);
+            float h = Mathf.Max(64f * CardScale + CardRule * 2f + 8f, y);   // never shorter than the bottle
+            _cellarCard.sizeDelta = new Vector2(CardSlotW + bodyW, h);
+        }
+
+        private void ClearCardUses()
+        {
+            if (_cellarCardUsesRoot == null) return;
+            for (int i = _cellarCardUsesRoot.childCount - 1; i >= 0; i--)
+                Destroy(_cellarCardUsesRoot.GetChild(i).gameObject);
+            if (_cellarCardStars != null) { Destroy(_cellarCardStars.gameObject); _cellarCardStars = null; }
+        }
+
+        /// <summary>The same card over a dish on the counter's rail (the author: "şişeler ve
+        /// mahzen için kullanacağımız kart UI'ın aynısını garnishler için de kullan"): the
+        /// dish in the slot, its name as the title, what it is for, and what it costs and
+        /// how much is left when it is a thing the van brings.</summary>
+        private void ShowGarnishCard(RectTransform over, PrepProp prop, string word, Sprite icon, string why)
+        {
+            if (_cellarCard == null || prop == null) return;
+            var run = Run;
+            var card = GarnishOnTheShelf(run, prop.Style);
+            var bottle = card != null ? run?.Shelf.Find(card.Id) : null;
+            ClearCardUses();
+            _cellarCardBottle.Show(null);
+            _cellarCardDish.sprite = prop.Img != null ? prop.Img.sprite : icon;
+            _cellarCardDish.enabled = _cellarCardDish.sprite != null;
+            string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
+            _cellarCardName.text = title.ToUpperInvariant();
+            _cellarCardMeta.text = prop.IsRim ? "RIM  ·  " + word : (prop.Id == "ice" ? "ICE  ·  " + word : "GARNISH  ·  " + word);
+            int price = card != null ? Market.StockPrice(card) : 0;
+            _cellarCardPrice.text = card != null ? price + " A BOX" : "ON THE HOUSE";
+            bool showStock = bottle != null;
+            if (showStock)
+            {
+                float frac = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
+                bool low = bottle.Remaining <= bottle.Capacity * 0.15;
+                _cellarCardStock.text = (low ? "ALMOST OUT  ·  " : "") + $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
+                _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
+                SetCardStockFill(frac, low ? UITheme.ViceRed[3] : UITheme.Lime[3]);
+            }
+            _cellarCardUsesHead.text = why ?? "";
+            LayOutCellarCard(0, 0f, false, showStock);
+            _cellarCardFree = true;
+            _cellarCardOver = over;
+        }
+
+        private void HideGarnishCard(RectTransform over)
+        {
+            if (_cellarCardOver == over) { _cellarCardOver = null; _cellarCardFree = false; }
+        }
+
+        private void SetCardStockFill(float frac, Color tone)
+        {
+            var img = _cellarCardStockFill.GetComponent<Image>();
+            if (img != null) img.color = tone;
+            float w = Mathf.Max(0f, _cellarCardStockBar.sizeDelta.x - 2f) * Mathf.Clamp01(frac);
+            _cellarCardStockFill.sizeDelta = new Vector2(w, 0f);
+        }
+
         private void StepCellarCard()
         {
             if (_cellarCard == null) return;
             var over = _cellarCardOver;
-            bool up = over != null && over.gameObject.activeInHierarchy && CellarOpen;
+            bool up = over != null && over.gameObject.activeInHierarchy && (CellarOpen || _cellarCardFree);
             float want = up ? 1f : 0f;
             _cellarCardGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _cellarCardGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
@@ -287,9 +512,19 @@ namespace LastCall.UI
             {
                 // Inside the screen sideways: a card over the end bottle must not hang off it.
                 var parent = (RectTransform)_cellarCard.parent;
-                float half = CellarCardW * 0.5f, lim = parent.rect.width * 0.5f - 8f;
+                float half = _cellarCard.sizeDelta.x * 0.5f, lim = parent.rect.width * 0.5f - 8f;
                 local.x = Mathf.Clamp(local.x, -lim + half, lim - half);
                 _cellarCard.anchoredPosition = local + new Vector2(0f, hang ? -10f : 10f);
+                // ...and upright (2026-09-08): a card with six drinks on it is taller than
+                // the shelf, and hung under a top-shelf bottle it ran off the top of the
+                // screen — its title cut by the clock. Both edges are kept inside.
+                float ch = _cellarCard.sizeDelta.y, vlim = parent.rect.height * 0.5f - 8f;
+                var pos = _cellarCard.anchoredPosition;
+                float topEdge = hang ? pos.y : pos.y + ch;       // pivot y is 1 hanging, 0 standing
+                float bottomEdge = hang ? pos.y - ch : pos.y;
+                if (topEdge > vlim) pos.y -= topEdge - vlim;
+                if (bottomEdge < -vlim) pos.y += -vlim - bottomEdge;
+                _cellarCard.anchoredPosition = pos;
             }
         }
 
@@ -498,9 +733,17 @@ namespace LastCall.UI
             // pixels makes the mark taller than its digits, which is why it is held back to
             // 92% alpha: the FIGURE is what the eye should land on, the coin only says what
             // kind of number it is (16 §5).
-            float scale = coin.lossyScale.x;
+            // The ROOT canvas's scale, not the coin's own (2026-09-08): a board is built
+            // while its panel is still scaled down for its entrance, and a coin sized off
+            // that lossyScale came out sixty pixels tall and stayed so — photographed
+            // floating over the week board. The canvas's scale is the drawn size's truth.
+            // IN UNITS, LIKE EVERYTHING ELSE ON THE BOARD (2026-09-08). The coin used to be
+            // sized in SCREEN pixels off the canvas's scale — a drawn size — which made it
+            // a sixty-unit coin over the week board in a small game view and a
+            // sixteen-unit one on a big monitor: the one thing on the sheet that changed
+            // size with the window. The author's dollar is drawn for 24 units.
+            float scale = 1f;
             float px = CoinPx;
-            if (scale > 0.01f) px = CoinPx / scale;   // CoinPx screen pixels: a drawn size
             coin.sizeDelta = new Vector2(px, px);
             var cimg = coin.GetComponent<Image>();
             if (cimg != null)
@@ -674,41 +917,57 @@ namespace LastCall.UI
             string style = (card.Info?.Style ?? card.Type.ToString()).Replace('_', ' ').ToUpperInvariant();
             int tier = bottle != null ? bottle.Tier : (card.Info?.Tier ?? 1);
             int price = Market.StockPrice(card);
-            _cellarCardName.text = card.Name.ToUpperInvariant();
-            _cellarCardMeta.text = $"{style}  ·  TIER {tier}  ·  ${price} A BOTTLE";
-            if (bottle != null)
-            {
-                bool low = bottle.Remaining <= bottle.Capacity * 0.15;
-                _cellarCardStock.text = low
-                    ? $"ALMOST OUT  ·  {bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT"
-                    : $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
-                _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
-            }
-            else _cellarCardStock.text = "";
+            ClearCardUses();
 
-            var uses = new List<string>();
-            int more = 0;
+            // the bottle itself, in the slot, as full as it is
+            _cellarCardDish.enabled = false;
+            var plates = ItemArt.Plates(card, cellar: true);
+            _cellarCardBottle.Show(plates);
+            if (plates != null)
+            {
+                double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
+                _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
+            }
+
+            _cellarCardName.text = card.Name.ToUpperInvariant();
+            _cellarCardMeta.text = $"{style}  ·  TIER {tier}";
+            // THE RUNG'S STARS IN THE BOX (the author: "alkolün yıldız seviyesi de kutunun
+            // içerisinde yer almalı"): the same star gate the market shows for it.
+            double rung = RungOf(card);
+            if (!double.IsNaN(rung))
+                _cellarCardStars = StarRow(_cellarCardBody, new Vector2(0f, 1f), Vector2.zero, 16f,
+                    rung, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.22f));
+            if (_cellarCardStars != null) _cellarCardStars.pivot = new Vector2(0f, 1f);
+            _cellarCardPrice.text = price + " A BOTTLE";
+            bool showStock = bottle != null;
+            if (showStock)
+            {
+                float frac = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
+                bool low = bottle.Remaining <= bottle.Capacity * 0.15;
+                _cellarCardStock.text = (low ? "ALMOST OUT  ·  " : "") + $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
+                _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
+                SetCardStockFill(frac, low ? UITheme.ViceRed[3] : UITheme.LiquidColor(card.Info?.Style, card.Type));
+            }
+
+            // THE DRINKS IT GOES INTO, AS THE MENU DRAWS THEM (the author: "mevcut
+            // alkollerimizden hangilerinin tariflerine dahillerse o kokteyllerin menüde
+            // kullanılan iconları, altında ya da yanında hangi kokteyl olduğu"): one line a
+            // drink, the icon and the name, six at most and a count for the rest.
+            int rows = 0, more = 0;
+            float usesW = 0f;
             if (run != null)
                 foreach (var r in run.MenuDrinksUsingStyle(card.Info?.Style))
                 {
-                    if (uses.Count >= 4) { more++; continue; }
-                    uses.Add("· " + r.Name.ToUpperInvariant());
+                    if (rows >= 6) { more++; continue; }
+                    usesW = Mathf.Max(usesW, CardUseLine(r, rows * (CardDrinkIcon + 2f)));
+                    rows++;
                 }
-            var sb = new System.Text.StringBuilder();
-            if (uses.Count == 0) sb.Append("IN NO HOUSE DRINK YET");
-            else
-            {
-                sb.Append("IN THE BOOK");
-                foreach (var u in uses) sb.Append('\n').Append(u);
-                if (more > 0) sb.Append('\n').Append("· AND ").Append(more).Append(" MORE");
-            }
-            _cellarCardUses.text = sb.ToString();
-            int usesRows = uses.Count == 0 ? 1 : 1 + uses.Count + (more > 0 ? 1 : 0);
+            _cellarCardUsesHead.text = rows == 0 ? "IN NO HOUSE DRINK YET"
+                : more > 0 ? $"IN THE BOOK  ·  AND {more} MORE" : "IN THE BOOK";
 
             bool fizzy = card.Type == IngredientType.Bubbly;
-            _cellarCardMarkRow.gameObject.SetActive(fizzy);
-            float h = 52f + usesRows * 12f + (fizzy ? 22f : 8f);
-            _cellarCard.sizeDelta = new Vector2(CellarCardW, h);
+            LayOutCellarCard(rows, usesW, fizzy, showStock);
+            _cellarCardFree = false;
             _cellarCardOver = plate;
         }
 
@@ -1444,7 +1703,7 @@ namespace LastCall.UI
             var canvas = _settingsPanel.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 23;                 // over the market (22), under the guide (24)
-            _settingsPanel.gameObject.AddComponent<GraphicRaycaster>();
+            _settingsPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_settingsPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _settingsPanel.gameObject.AddComponent<Image>();
             scrim.color = UITheme.Scrim;
@@ -1455,15 +1714,15 @@ namespace LastCall.UI
             var plate = NewRect("Plate", _settingsPanel);
             Place(plate, new Vector2(0.5f, 0.5f), new Vector2(SetPlateW, SetPlateH), new Vector2(0, 10));
             var plateImg = plate.gameObject.AddComponent<Image>();
-            plateImg.sprite = ChromeArt.Card();
+            plateImg.sprite = ChromeArt.Panel();          // the house's panel (2026-09-08)
             plateImg.type = Image.Type.Sliced;
-            plateImg.color = UITheme.Night[1];
+            plateImg.pixelsPerUnitMultiplier = 0.5f;
             plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow clicks
-            Frame(plate, 2f, UITheme.Night[3]);
 
             // The title band: the cog it opened from, the word, and the neon under it.
             var band = NewRect("Band", plate);
-            Place(band, new Vector2(0.5f, 1), new Vector2(SetPlateW - 4f, 44f), new Vector2(0, -2f));
+            // inside the panel's 6-unit rule, not over it (2026-09-08)
+            Place(band, new Vector2(0.5f, 1), new Vector2(SetPlateW - 12f, 44f), new Vector2(0, -6f));
             band.pivot = new Vector2(0.5f, 1);
             var bandImg = band.gameObject.AddComponent<Image>();
             bandImg.color = UITheme.Night[0];
@@ -1638,7 +1897,7 @@ namespace LastCall.UI
             var canvas = _devPanel.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 25;                 // above the guide (24) and the market (22)
-            _devPanel.gameObject.AddComponent<GraphicRaycaster>();
+            _devPanel.gameObject.AddComponent<ForgivingRaycaster>();
             var bg = _devPanel.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.985f);
             bg.raycastTarget = true;
@@ -1944,7 +2203,7 @@ namespace LastCall.UI
             var canvas = _guidePanel.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 24;                 // above the market, which is 22
-            _guidePanel.gameObject.AddComponent<GraphicRaycaster>();
+            _guidePanel.gameObject.AddComponent<ForgivingRaycaster>();
             var bg = _guidePanel.gameObject.AddComponent<Image>();
             bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.985f);
             bg.raycastTarget = true;

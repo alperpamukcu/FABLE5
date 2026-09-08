@@ -37,6 +37,9 @@ namespace LastCall.UI
 
         private Font _body;
 
+        private Font _speech;   // Jersey 15: lowercase, Turkish, crisp at 27 (2026-09-08)
+        private const int SpeechPx = 27;   // the one size the face is crisp at (its 15px grid at 1.8x is 27)
+
         private Font _display;
 
         private Font _shop;
@@ -263,7 +266,7 @@ namespace LastCall.UI
         private const float CellarSayScale = 0.66f, CellarSayClear = 10f;
 
         /// <summary>The air inside the plate, past its 5-unit border. Both axes.</summary>
-        private const float TagPad = 7f;
+        private const float TagPad = 10f;    // 7 until 2026-09-08 (the author: "balonlar çok sıkışık")
 
         /// <summary>The plate's foot — the one dark row across the bottom of the white field
         /// (ChromeArt.Bubble). The content box owes the BOTTOM this much extra, or the type
@@ -1191,19 +1194,28 @@ namespace LastCall.UI
         /// aşağıdaki isimleriyle olacakları mesafeyle aynı olmalı".</summary>
         private const float TileArtAir = 6f;
 
-        private const float TileArtTop = TileCapH + TileArtAir, TileArtH = 124f;
+        // THE OLD GRAMMAR, BACK (2026-09-08, the author: "market ürün kartları sıradan
+        // kalmış, eskisine geri dön; ürünlerde açıklama olmasın; arka plan ile altındaki
+        // bilgi kısmı farklı bir tonda; daha küçük bir bilgi kısmı yeterli, şişeye ve
+        // nesneye daha çok yer"). The window is 148 of the 256 — a cellar bottle at 2x is
+        // 128 tall and stands in it with ten to spare — and the foot under it is the plate's
+        // own light tone: the name on two lines, a thin stock strip when the tile has
+        // stock, then the dollar and the figure beside the key. No fact line, no state
+        // row: the state is a stamp in the window's corner.
+        private const float TileArtTop = TileCapH, TileArtH = 148f;
 
         /// <summary>Two lines of 16 and the air round them. 46, not 40 (2026-08-19, measured
         /// in play): the legacy Text renderer sets 16 on a 19.2 line, so two lines need 39 —
         /// and a 40 box minus a 2-unit inset each side left 36, which TRUNCATED the second
         /// line. "Resurface the Bar" shipped to the screenshot reading RESURFACE.</summary>
-        private const float TileNameTop = TileArtTop + TileArtH + TileArtAir, TileNameH = 40f;   // 140
+        private const float TileNameTop = TileArtTop + TileArtH + TileArtAir, TileNameH = 40f;   // 158
+        private const float TileStripTop = 202f, TileStripH = 6f;
 
         private const float TileMetaTop = 182f, TileMetaH = 16f;
 
         private const float TileStateTop = 200f, TileStateH = 16f;
 
-        private const float TileFootTop = 222f, TileFootH = 28f;
+        private const float TileFootTop = 216f, TileFootH = 30f;
 
         private const string ShopIdleTip =
             "Point at anything to read it. You only pay when you place the order.";
@@ -1329,6 +1341,10 @@ namespace LastCall.UI
             /// tile wears an upgrade ICON (2026-09-06): the thing itself — the wall's swatch,
             /// the glass — for the pointer that wants to see what it is buying.</summary>
             public Sprite CardArt;
+            /// <summary>The bottle behind the tile, when there is one (2026-09-08, the
+            /// author: "ürünlerin şişeleri dolu gözüksün"): drawn as the cellar's own
+            /// sandwich, filled to the top, instead of the flat empty front plate.</summary>
+            public IngredientCard Card;
             public float ArtH = BottleH;
             public float StockFrac = -1f;    // >= 0 draws the meter instead of Meta
             public Action OnClick;
@@ -1403,6 +1419,17 @@ namespace LastCall.UI
             _body = bodyFont != null ? bodyFont : legacy;
             _display = displayFont != null ? displayFont : legacy;
             _shop = shopFont != null ? shopFont : _body;
+            // THE CROWD'S OWN FACE (2026-09-08, the author: "konuşmalarda kullanılan fontlar
+            // iyi değil, küçük harf yok, keskin değil — lokalizasyonda sıkıntı çıkarmayacak bir
+            // font bul"). Silkscreen has no lowercase and no ğ ı İ ş at all. Sixteen
+            // candidates were rasterised at every size from 8 to 48 and scored on
+            // anti-aliased pixels: Jersey 15 (OFL, Assets/Fonts/OFL-Jersey15.txt) is a real
+            // lowercase pixel face with the whole Turkish set, condensed enough to take no
+            // more width than Silkscreen at 16, and crisp at 27 (0.1% soft pixels). Tiny5 at
+            // 16 was crisp too and went in first, and the author called it bad — a 5px face
+            // at 2x is thin; Jersey's 15px grid at 27 has weight. Loaded from Resources so
+            // the scene needs no new slot.
+            _speech = Resources.Load<Font>("Fonts/Jersey15-Regular") ?? _shop;
 
             _bootstrap = GetComponent<GameBootstrap>();
             if (_bootstrap != null) _bootstrap.RunStarted += OnRunStarted;
@@ -2269,6 +2296,8 @@ namespace LastCall.UI
         /// <summary>The platinum a perfected page is printed in, as INK on paper: the plate
         /// colour is too pale to read as type on cream.</summary>
         private static readonly Color BkPlatinumInk = new Color(0.42f, 0.46f, 0.55f);
+        /// <summary>The perfected page's own paper (2026-09-08): a pale platinum sheet.</summary>
+        private static readonly Color BkPerfectPaper = new Color(0.905f, 0.910f, 0.955f);
         private const float BkParkY = 748f;                     // the drop's overhead park
         private const float BkGaugeW = 102f, BkGaugeH = 14f;    // the page's sight glass:
                                                                 // 100 px interior, 20 to a
@@ -2842,7 +2871,7 @@ namespace LastCall.UI
             var plateCanvas = _plate.gameObject.AddComponent<Canvas>();
             plateCanvas.overrideSorting = true;
             plateCanvas.sortingOrder = 7;
-            _plate.gameObject.AddComponent<GraphicRaycaster>();
+            _plate.gameObject.AddComponent<ForgivingRaycaster>();
             Place(_plate, new Vector2(0.5f, 0f), new Vector2(820, 140), new Vector2(0, 14));
             var paper = _plate.gameObject.AddComponent<Image>();
             paper.sprite = ChromeArt.Card();

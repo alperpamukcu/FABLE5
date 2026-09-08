@@ -144,6 +144,13 @@ namespace LastCall.UI
         {
             _curtainCard = NewRect("DateCard", curtain);
             Place(_curtainCard, new Vector2(0.5f, 0.5f), new Vector2(700, 520), Vector2.zero);
+            // The card stands on the house's panel (2026-09-08): the same framed plum the
+            // settings and the night boards use, so the way in looks like the rest.
+            var cardPlate = _curtainCard.gameObject.AddComponent<Image>();
+            cardPlate.sprite = ChromeArt.Panel();
+            cardPlate.type = Image.Type.Sliced;
+            cardPlate.pixelsPerUnitMultiplier = 0.5f;
+            cardPlate.raycastTarget = false;
             _curtainCardGroup = _curtainCard.gameObject.AddComponent<CanvasGroup>();
             _curtainCardGroup.alpha = 0f;
             _curtainCardGroup.blocksRaycasts = false;

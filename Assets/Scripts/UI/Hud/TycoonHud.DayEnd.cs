@@ -890,7 +890,11 @@ namespace LastCall.UI
             // and the capped head keep their drawn 2× grain at any height, and only the
             // plain navy field stretches. See ItemArt.BoardPlate for the measured borders.
             var plate = board.Root.gameObject.AddComponent<Image>();
-            plate.sprite = ChromeArt.Instrument();
+            // The author's panel (2026-09-08, "faturaların yanındaki iki panelin arkaplanını
+            // yok et ... bottle_card sanatına yakın bir sanatta"): the cyan-capped instrument
+            // is gone; the board is the card's plum field in its magenta rule, and its type
+            // goes light. The page layout under it is the same page.
+            plate.sprite = ChromeArt.Panel();
             plate.type = Image.Type.Sliced;
             plate.pixelsPerUnitMultiplier = 0.5f;
             plate.raycastTarget = false;
@@ -901,7 +905,7 @@ namespace LastCall.UI
             // grammar the top bar's wells use: a small caption, a big figure. Both sit ON
             // the plate's drawn teal cap now, so they are set in the NIGHT ink — cyan type
             // on a cyan band was the first build's other unreadable.
-            var cap = NewText("Cap", board.Root, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[0]);
+            var cap = NewText("Cap", board.Root, _body, 16, TextAnchor.MiddleLeft, UITheme.Magenta[3]);
             Place(cap.rectTransform, new Vector2(0, 1), new Vector2(BoardW - BoardPad * 2f, 20),
                 new Vector2(BoardPad, -20f));
             cap.rectTransform.pivot = new Vector2(0, 0.5f);
@@ -909,7 +913,7 @@ namespace LastCall.UI
             cap.text = caption;
 
             board.Reading = NewText("Reading", board.Root, _display, 16, TextAnchor.MiddleRight,
-                UITheme.Night[0]);
+                UITheme.Amber[4]);
             Place(board.Reading.rectTransform, new Vector2(1, 1), new Vector2(150, 20),
                 new Vector2(-BoardPad, -20f));
             board.Reading.rectTransform.pivot = new Vector2(1, 0.5f);
@@ -2073,6 +2077,7 @@ namespace LastCall.UI
                     {
                         Name = bottle.Ingredient.Name,
                         Art = ItemArt.Bottle(bottle.Ingredient),
+                        Card = bottle.Ingredient,
                         // The one fact this department exists to show, and it was line 5 or 6
                         // of a 3-line box — i.e. never once rendered. It is a bar now.
                         StockFrac = bottle.Capacity > 0
@@ -2124,6 +2129,7 @@ namespace LastCall.UI
                     {
                         Name = offer.Bottle.Name,
                         Art = ItemArt.Bottle(offer.Bottle),
+                        Card = offer.Bottle,
                         // The rung it stands on, drawn up its left margin (2026-09-04). Only
                         // on the BOARD: the restock aisle sells measures of what the bar
                         // already owns, and a gate on a bottle you are holding is history.

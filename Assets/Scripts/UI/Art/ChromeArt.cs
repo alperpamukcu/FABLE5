@@ -2459,6 +2459,42 @@ namespace LastCall.UI
         /// a hard white ground, and one pale line inside the rim so the edge has weight. Sliced
         /// at 6, so any balloon keeps that rim exactly three pixels thick.
         /// </summary>
+        // ── THE AUTHOR'S CARD (2026-09-08, bottle_card.png) ──────────────────────
+        // A 3px magenta rule (magenta / dim / magenta) round a plum field, cut in two so
+        // the card can grow: the SLOT (42 wide: rule, a 36px well, the divider) and the
+        // BODY (105 wide: the well and the right-hand rule). Both 9-sliced and drawn at
+        // 2x, so the body stretches with its text and the slot with the body's height.
+        // THE SLICE IS SIX, NOT THREE: the rule is three pixels thick but the corners
+        // are ROUNDED over six (a #+++# diagonal), and a three-pixel slice cut through
+        // the curve — the diagonal fell into the stretched edge strips and every panel
+        // grew a nine-pixel staircase at its foot (photographed 2026-09-08). Six keeps
+        // the whole curve in the corner cells, which never stretch. Nothing is redrawn —
+        // every pixel is the author's.
+
+        /// <summary>The card's left piece, the bottle's slot; sliced on its 3px rule.</summary>
+        public static Sprite CardSlot() => Resliced("card_slot", new Vector4(6, 6, 6, 6), "card:slot");
+
+        /// <summary>THE HOUSE'S PANEL (2026-09-08, the author: "paneller ... oyunda ayarlar,
+        /// giriş sayfası vs. UI'i ile aynı sanatta olmalı"): the framed slot of the author's
+        /// card — a whole box, rule on every side — sliced so it takes any size. The night
+        /// boards, the settings plate and the curtain's card all stand on it, at 2x.</summary>
+        public static Sprite Panel() => Resliced("card_slot", new Vector4(6, 6, 6, 6), "card:panel");
+
+        /// <summary>The card's right piece, the box; sliced on its rule (no rule on the left,
+        /// where it butts against the slot's divider).</summary>
+        public static Sprite CardBody() => Resliced("card_body", new Vector4(0, 6, 6, 6), "card:body");
+
+        private static Sprite Resliced(string item, Vector4 border, string key)
+        {
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var drawn = ItemArt.Load(item);
+            if (drawn == null || drawn.texture == null) return null;
+            var sliced = Sprite.Create(drawn.texture, drawn.rect, new Vector2(0.5f, 0.5f),
+                drawn.pixelsPerUnit, 0, SpriteMeshType.FullRect, border);
+            sliced.name = item + "(sliced)";
+            return Cache[key] = sliced;
+        }
+
         public static Sprite SpeechBox(BubbleTone tone = BubbleTone.Drink)
         {
             // THE AUTHOR'S BUBBLE (2026-09-08: "yeni konuşma balonu görselleri ekliyorum").

@@ -91,7 +91,7 @@ namespace LastCall.UI
             var bookLayerCanvas = bookLayer.gameObject.AddComponent<Canvas>();
             bookLayerCanvas.overrideSorting = true;
             bookLayerCanvas.sortingOrder = 8;
-            bookLayer.gameObject.AddComponent<GraphicRaycaster>();
+            bookLayer.gameObject.AddComponent<ForgivingRaycaster>();
             var prop = NewRect("BookProp", bookLayer);
             prop.anchorMin = prop.anchorMax = new Vector2(0.5f, 0);
             prop.pivot = new Vector2(0.5f, 0);           // stood on its own foot
@@ -114,12 +114,18 @@ namespace LastCall.UI
             // bottom 60 units carry the click (top edge 213, under the seat row's 224), and
             // the Button and HoverGlow on the prop hear it by event bubbling.
             img.raycastTarget = false;
+            // THE WHOLE BOOK TAKES THE CLICK (2026-09-08, the author: "menü kitabının hitbox
+            // alanı ... seçilemiyor"). The reach stood 60 units up from the foot of a
+            // 110-unit prop — its own art has raycastTarget off — so the top half of the
+            // book was a hole the click fell through to the window behind it. Measured:
+            // a raycast at the prop's centre found nothing but the reach's top edge.
+            // It covers the prop now, plus a few units of air all round.
             var reach = NewRect("Reach", prop);
             reach.anchorMin = new Vector2(0f, 0f);
-            reach.anchorMax = new Vector2(1f, 0f);
+            reach.anchorMax = new Vector2(1f, 1f);
             reach.pivot = new Vector2(0.5f, 0f);
-            reach.offsetMin = Vector2.zero;
-            reach.offsetMax = new Vector2(0f, 60f);
+            reach.offsetMin = new Vector2(-6f, 0f);
+            reach.offsetMax = new Vector2(6f, 8f);
             var reachImg = reach.gameObject.AddComponent<Image>();
             reachImg.color = new Color(0f, 0f, 0f, 0.001f);
             var btn = prop.gameObject.AddComponent<Button>();
@@ -325,7 +331,7 @@ namespace LastCall.UI
             // under the toast (30). An open book is the thing being read; nothing but a
             // notice may sit on it.
             bookCanvas.sortingOrder = 27;
-            _bookPanel.gameObject.AddComponent<GraphicRaycaster>();
+            _bookPanel.gameObject.AddComponent<ForgivingRaycaster>();
 
             // THE MENU IS AN OPEN BOOK (2026-08-24): menu_booklet.png at exactly 2× —
             // the clipboard board was 396×248 stretched onto 1148×719, a 2.899× fractional
@@ -1107,7 +1113,20 @@ namespace LastCall.UI
             Color gone = new Color(0.74f, 0.16f, 0.20f, 0.13f);
 
             // ── the heading zone: the chapter above, the name on the rule ────────
-            var eyebrow = NewText("Tier", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+            // A PERFECTED PAGE IS A DIFFERENT SHEET (2026-09-08, the author: "perfect recipe'de
+            // sayfanın arka planının rengi değişmeli, yazıların tipi değişmeli"): a pale
+            // platinum paper under the print, the name set in the heavy face, the eyebrow
+            // in platinum ink. The layout is the same page; the sheet is not.
+            if (perfected)
+            {
+                var sheet = NewRect("PerfectSheet", print);
+                Stretch(sheet, Vector2.zero, Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
+                var sheetImg = sheet.gameObject.AddComponent<Image>();
+                sheetImg.color = BkPerfectPaper;
+                sheetImg.raycastTarget = false;
+                sheet.SetAsFirstSibling();
+            }
+            var eyebrow = NewText("Tier", print, perfected ? _shop : _body, 16, TextAnchor.MiddleCenter, quiet);
             eyebrow.rectTransform.anchorMin = eyebrow.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             eyebrow.rectTransform.pivot = new Vector2(0.5f, 1f);
             eyebrow.rectTransform.sizeDelta = new Vector2(BkColW, 20f);
@@ -1126,8 +1145,9 @@ namespace LastCall.UI
             eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : perfected ? " · PERFECT RECIPE" : "");
             if (perfected) eyebrow.color = BkPlatinumInk;
 
-            var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
-                page.Locked ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.30f, 0.16f, 0.05f));
+            var head = NewText("Head", print, perfected ? _shop : _display, perfected ? 24 : 16, TextAnchor.MiddleCenter,
+                page.Locked ? new Color(0.45f, 0.36f, 0.28f)
+                : perfected ? new Color(0.22f, 0.20f, 0.34f) : new Color(0.30f, 0.16f, 0.05f));
             head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             head.rectTransform.pivot = new Vector2(0.5f, 1f);
             head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);

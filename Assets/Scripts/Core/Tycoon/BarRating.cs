@@ -90,6 +90,11 @@ namespace LastCall.Core
         /// <summary>The bar's standing overall — what the top corner shows.</summary>
         public double Average => _standing;
 
+        /// <summary>The standing BEFORE the last night closed (2026-09-08) — what the market
+        /// reads to say what is NEW: a listing whose star gate lies between this and
+        /// <see cref="Average"/> opened last night and the player should be told so.</summary>
+        public double PreviousStanding { get; private set; } = StartStars;
+
         /// <summary>Last night's (capped) stars, or the start value before any night closes.</summary>
         public double LastNight => _nights.Count == 0 ? StartStars : _nights[_nights.Count - 1];
 
@@ -132,6 +137,7 @@ namespace LastCall.Core
         {
             double night = Math.Min(ExactStarsFor(nightAverageSatisfaction), cap);
             _nights.Add(night);
+            PreviousStanding = _standing;
             _standing = StandingAfter(night);
         }
 

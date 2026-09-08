@@ -22,9 +22,12 @@ namespace LastCall.UI
         private static State _shown = (State)(-1);
         private static bool _tried;
 
-        /// <summary>The fingertip, in texture pixels from the top-left: at 2x the finger's
-        /// top row runs x 16..21, so the tip is its middle (measured by the cutting script).</summary>
-        private static readonly Vector2 Hotspot = new Vector2(19f, 0f);
+        /// <summary>The fingertip, in texture pixels from the top-left. The author's own
+        /// drawings (2026-09-08, Tools/cursor_src) point UP-LEFT, the tip in the top-left
+        /// corner: cells (1..2, 0), so (3, 1) at 2x. The raycasters forgive a few pixels
+        /// around it (<see cref="ForgivingRaycaster"/>), which is the "4px circle at the
+        /// png's top-left corner" the author asked for.</summary>
+        private static readonly Vector2 Hotspot = new Vector2(3f, 1f);
 
         private static void LoadOnce()
         {

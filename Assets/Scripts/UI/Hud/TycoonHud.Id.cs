@@ -752,7 +752,7 @@ namespace LastCall.UI
             var idCanvas = _idRoot.gameObject.AddComponent<Canvas>();
             idCanvas.overrideSorting = true;
             idCanvas.sortingOrder = 20;
-            _idRoot.gameObject.AddComponent<GraphicRaycaster>();
+            _idRoot.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_idRoot, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _idRoot.gameObject.AddComponent<Image>();
             scrim.color = UITheme.Scrim;

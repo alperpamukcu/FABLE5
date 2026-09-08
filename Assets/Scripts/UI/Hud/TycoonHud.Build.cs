@@ -546,7 +546,7 @@ namespace LastCall.UI
                 // the shop's face, so speech borrows a voice the game already has rather than
                 // introducing a fourth. The ink is unchanged: Night[0] is #0D0813, and there
                 // is no blacker ink in the palette to move to.
-                seat.SayText = NewText("Line", seat.Say, _shop, 16,
+                seat.SayText = NewText("Line", seat.Say, _speech, SpeechPx,
                     TextAnchor.UpperLeft, UITheme.Night[0]);
                 Stretch(seat.SayText.rectTransform, Vector2.zero, Vector2.one,
                     new Vector2(TagPad, 0), new Vector2(-TagPad, -TagPad));
@@ -593,18 +593,20 @@ namespace LastCall.UI
                 // the name is the room's own near-black, the status line is the plate's own
                 // magenta, and the order is read blackest of all because it is the thing the
                 // player is actually being asked to make.
-                seat.Name = NewText("Name", seat.Tag, _display, 8, TextAnchor.UpperCenter,
+                // The ticket's three lines in the crowd's face too (2026-09-08): a name is
+                // a name, not a shout, and the drink keeps its own capitals.
+                seat.Name = NewText("Name", seat.Tag, _speech, SpeechPx, TextAnchor.UpperCenter,
                     UITheme.Night[1]);
                 Stretch(seat.Name.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -8));
                 seat.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
                 seat.Name.gameObject.AddComponent<PixelBold>().Distance = 1f;
 
-                seat.Wants = NewText("Wants", seat.Tag, _display, 8, TextAnchor.UpperCenter,
+                seat.Wants = NewText("Wants", seat.Tag, _speech, SpeechPx, TextAnchor.UpperCenter,
                     UITheme.Magenta[1]);
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -18));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Order = NewText("Order", seat.Tag, _display, 8, TextAnchor.UpperCenter,
+                seat.Order = NewText("Order", seat.Tag, _speech, SpeechPx, TextAnchor.UpperCenter,
                     UITheme.Night[0]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -28));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -807,7 +809,7 @@ namespace LastCall.UI
             var dayEndCanvas = _dayEndPanel.gameObject.AddComponent<Canvas>();
             dayEndCanvas.overrideSorting = true;
             dayEndCanvas.sortingOrder = 22;   // the market covers the whole room, till included
-            _dayEndPanel.gameObject.AddComponent<GraphicRaycaster>();
+            _dayEndPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_dayEndPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
             panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.88f);

@@ -1008,140 +1008,62 @@ namespace LastCall.UI
         private RectTransform AddTile(TileSpec spec)
         {
             var state = spec.State;
+            var run = Run;
             bool hasPill = state == TileState.Orderable || state == TileState.Unaffordable
                         || state == TileState.Picked || state == TileState.Refundable
                         || state == TileState.NoFitting;
+            bool sealedTile = state == TileState.Sealed;
+            bool dim = state == TileState.Unaffordable || state == TileState.Held;
 
             var rt = NewRect("Tile", _cardTarget != null ? _cardTarget : _offerRow);
             var img = rt.gameObject.AddComponent<Image>();
-            // THE 98 PANEL (2026-08-19, the author: "ürün kartlarını kötü buluyorum" — the
-            // chamfered Card read as a washed grey lozenge on a grey page). A listing is a
-            // small raised panel of the site now, square-cornered with the era's two-step
-            // bevel, tinted with the state's paper — so its edges are shades of the
-            // listing's own colour, same rule the Card obeyed, sharper object wearing it.
             img.sprite = ChromeArt.Win98Key();
             img.type = Image.Type.Sliced;
             img.color = PlateOf(state);
 
-            // The click. A tile that cannot be acted on gets no Button at all, so the
-            // pointer itself says whether there is anything here to do.
             if (spec.OnClick != null)
             {
                 var button = rt.gameObject.AddComponent<Button>();
                 button.targetGraphic = img;
                 var act = spec.OnClick;
                 button.onClick.AddListener(() => act());
-                // …and only THEN does it warm under the pointer. A sealed crate or a bottle
-                // with no cash behind it lights up for nobody: hover says "you are pointing
-                // at this", and a listing that cannot be acted on must not answer as though
-                // it can (2026-08-14).
                 MarkHoverable(rt, img);
             }
 
-            // Hovering fills the inspector — the one place long text is allowed to live.
-            // NOT an EventTrigger: it implements IScrollHandler too, so it ate the mouse
-            // wheel and froze the aisle over every tile that had something to read.
             var shown = spec;
             var hover = rt.gameObject.AddComponent<HoverRelay>();
             hover.Entered = () => { ShowShopCard(shown); ShowShopSpec(shown.Recipe); };
             hover.Exited = () => { ShowShopCard(null); ShowShopSpec(null); };
 
-            // 0 — THE BRAND CAP: four units of the vice fade across the panel's head,
-            // inside the bevel. Every listing carries the storefront's one signature, the
-            // way every window of a 98 site carried its bar — and at four units it is a
-            // COLOPHON, not a title bar: it names the shop, it says nothing about the
-            // listing, so the fade's chrome-only law holds.
-            var cap = NewRect("Cap", rt);
-            Place(cap, new Vector2(0, 1), new Vector2(TileW - 4f, TileCapH), new Vector2(2f, -2f));
-            var capImg = cap.gameObject.AddComponent<Image>();
-            capImg.raycastTarget = false;
-            if (state == TileState.Sealed)
-            {
-                // A SEALED CRATE LOSES THE STOREFRONT'S COLOURS (2026-08-19, the author:
-                // "kilitli olanların tepesindeki fade şerit yerini gri bir şerit alsın").
-                // The fade is the shop saying "this is ours to sell"; on a crate the shop
-                // will not open, it was the one cheerful thing on an otherwise chained card.
-                //
-                // Cream[1] and not a Graphite step: Graphite and Brick are ARCHITECTURE ONLY
-                // (14 v3 §3) and may never carry a signal, and "you cannot buy this" is a
-                // signal. Cream is under no such rule and its second step is a true grey.
-                capImg.color = UITheme.Cream[1];
-            }
-            else capImg.sprite = ChromeArt.FadeStrip();
+            // ── THE WINDOW: the product's own room, in the dark tone, most of the tile ──
+            var win = NewRect("Window", rt);
+            Place(win, new Vector2(0.5f, 1), new Vector2(TileW - 8f, TileArtH), new Vector2(0, -TileArtTop));
+            var wi = win.gameObject.AddComponent<Image>();
+            wi.color = sealedTile ? UITheme.Night[0]
+                : dim ? new Color(0.24f, 0.21f, 0.28f, 1f) : UITheme.Night[2];
+            wi.raycastTarget = false;
+            win.gameObject.AddComponent<RectMask2D>();
+            var lip = NewRect("Lip", win);
+            Place(lip, new Vector2(0.5f, 0), new Vector2(TileW - 8f, 2f), Vector2.zero);
+            var li = lip.gameObject.AddComponent<Image>();
+            li.color = new Color(1f, 1f, 1f, 0.28f);
+            li.raycastTarget = false;
 
-            // 1 — (THE STRIP IS GONE, 2026-08-19, the author: "kartin solunda yesil,
-            // kirmizi, kahverengi dik serit tasarimi cok AI duruyor" — and the small box on
-            // its top-left corner with it.)
-            //
-            // They were the same mistake twice. A coloured bar welded to an edge and a
-            // coloured square welded to a corner are not things in a bar's world; they are
-            // the house style of a dashboard, and 16 §6.8 has the name for it — a dot
-            // standing in for an object. Worse, they were the ONLY two channels that said
-            // the state, so between them they took a fact that deserved a sentence and gave
-            // it two pieces of decoration.
-            //
-            // What the state says is a ROW now, on the grid with the name and the meta:
-            // a mark and a word (row 4a below). Shape and language carry it, colour comes
-            // along, and the plate's own tint is still underneath — three channels, none of
-            // them bolted to an edge.
-
-            // 2 — THE PRODUCT, on the shelf line every class shares.
-            // Glassware is mostly transparent, and transparent on a white page is nothing
-            // at all (the author: the glasses disappear). A vessel gets a recess to stand
-            // in — a shaded back with a lit lip at the foot line — the way the bar's own
-            // back shelf gives them something to be seen against. Bottles are opaque and
-            // need none of it.
-            // THE CARD, LAID OUT AGAIN (2026-09-07, the author: "ürün kartlarının düzenini
-            // en başından tekrar tasarla"). Five bands, top to bottom, every card the same:
-            //   1. the PICTURE in a recess the width of the card, whatever the product —
-            //      a bottle, a glass, a fitting all stand in the same window;
-            //   2. its RUNG, a row of five small stars along the recess's foot (the ladder
-            //      down the side is gone: it read as a second gauge beside the stock strip);
-            //   3. the NAME on its dark plate;
-            //   4. one line of FACT: the stock as a bar read left to right with its figure,
-            //      or the meta word with its mark;
-            //   5. the STATE row, then the foot with the price tag and the key.
-            if (spec.Art != null && state != TileState.Sealed)
+            bool drewBottle = !sealedTile && spec.Card != null && TileBottle(win, spec.Card, dim);
+            if (!drewBottle && spec.Art != null && !sealedTile)
             {
-                var recess = NewRect("Recess", rt);
-                Place(recess, new Vector2(0.5f, 1), new Vector2(TileW - 8f, TileArtH + 6f),
-                    new Vector2(0, -(TileCapH + 3f)));
-                var ri = recess.gameObject.AddComponent<Image>();
-                ri.color = state == TileState.Unaffordable || state == TileState.Held
-                    ? new Color(0.80f, 0.81f, 0.85f, 1f) : ShopAisle;
-                ri.raycastTarget = false;
-                var lip = NewRect("Lip", recess);
-                Place(lip, new Vector2(0.5f, 0), new Vector2(TileW - 8f, 2f), Vector2.zero);
-                var li = lip.gameObject.AddComponent<Image>();
-                li.color = new Color(1f, 1f, 1f, 0.55f);
-                li.raycastTarget = false;
-            }
-            if (spec.Art != null && spec.ArtH == VesselH)
-            {
-                var niche = NewRect("Niche", rt);
-                Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112),
-                    new Vector2(0, ProductFootY - 4f));
-                var ni = niche.gameObject.AddComponent<Image>();
-                // sh_niche2 is DRAWN AT 116x112 — the exact rect — so it goes in 1:1: no
-                // slicing, no stretch, no smear. A back-bar alcove is a thing in the bar
-                // rather than a piece of chrome, which is why this one is generated.
-                // sh_niche3: a cool DISPLAY CASE in the page's own family. The generated warm
-                // wooden alcove was a lovely picture of somewhere else — a brown lamp-lit
-                // cupboard pasted into a white-and-green catalogue.
-                var nicheArt = ItemArt.Load("sh_niche3") ?? ItemArt.Load("sh_niche2");
-                if (nicheArt != null) ni.sprite = nicheArt;
-                else ni.color = ShopAisle;
-                ni.raycastTarget = false;
-                // A dead listing dims the recess with the glass in it rather than going
-                // pale — a pale recess is the white page again, and the vessel vanishes
-                // exactly where it was supposed to become visible.
-                if (state == TileState.Unaffordable || state == TileState.Held)
-                    ni.color = new Color(0.714f, 0.729f, 0.784f, 1f);
-            }
-            if (spec.Art != null)
-            {
-                var thumb = NewRect("Art", rt);
-                PlaceProduct(thumb, spec.Art, spec.ArtH);
+                if (spec.ArtH == VesselH)
+                {
+                    var niche = NewRect("Niche", win);
+                    Place(niche, new Vector2(0.5f, 0), new Vector2(116, 112), new Vector2(0, 6f));
+                    var ni = niche.gameObject.AddComponent<Image>();
+                    var nicheArt = ItemArt.Load("sh_niche3") ?? ItemArt.Load("sh_niche2");
+                    if (nicheArt != null) ni.sprite = nicheArt; else ni.enabled = false;
+                    ni.raycastTarget = false;
+                    if (dim) ni.color = new Color(0.714f, 0.729f, 0.784f, 1f);
+                }
+                var thumb = NewRect("Art", win);
+                PlaceInWindow(thumb, spec.Art, spec.ArtH);
                 var ti = thumb.gameObject.AddComponent<Image>();
                 ti.sprite = spec.Art;
                 ti.raycastTarget = false;
@@ -1149,296 +1071,155 @@ namespace LastCall.UI
                     : state == TileState.Held ? new Color(0.855f, 0.871f, 0.918f, 0.85f)
                     : Color.white;
             }
-            else if (state == TileState.Sealed)
+            else if (sealedTile)
             {
-                // A crate the house will not open, and it is the WHOLE tile that is shut:
-                // the chains run corner to corner (the author — a 78px X in the middle read
-                // as an ornament, not as something chained), drawn at the tile's own
-                // 160x208 so no link is stretched into an oval, with the padlock where they
-                // cross. No product and no name: the empty well is the tell.
-                // AT ITS OWN SIZE, centred (2026-08-19). sh_chain_x is drawn at 160x208 and
-                // the card is 230 now, so stretching it to fill would pull every link into
-                // an oval — the exact fault the art was cut at the tile's size to avoid.
-                var chain = NewRect("Chain", rt);
-                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(TileW, TileH - 28f), Vector2.zero);
+                var chain = NewRect("Chain", win);
+                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(TileW - 8f, TileArtH), Vector2.zero);
                 var chainImg = chain.gameObject.AddComponent<Image>();
                 chainImg.sprite = ItemArt.Load("sh_chain_x") ?? ItemArt.Load("sh_chain");
                 chainImg.raycastTarget = false;
                 chainImg.color = new Color(1f, 1f, 1f, 0.95f);
-                var padlock = NewRect("Lock", rt);
-                Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(42, 63), new Vector2(0, 6));
+                var padlock = NewRect("Lock", win);
+                Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(42, 63), new Vector2(0, 0));
                 var lockImg = padlock.gameObject.AddComponent<Image>();
                 lockImg.sprite = ItemArt.Load("sh_lock");
                 lockImg.preserveAspect = true;
                 lockImg.raycastTarget = false;
             }
 
-            // 3 — THE NAME, title case straight from the JSON. Two lines of 26 characters;
-            // the longest string in the game is 24 and lands on one.
-            //
-            // A SEALED crate is laid out differently, and it has to be: the chains cross
-            // the whole tile now, so a star gate sitting in the bottom-left action row
-            // printed straight through them. The gate belongs directly under the padlock,
-            // centred, where the eye already is — and with the chains and the lock saying
-            // "sealed" three ways over, the crate needs no left-aligned name beside them.
-            if (state == TileState.Sealed)
+            // the rung's stars, in the window's bottom-left corner
+            if (!sealedTile && !double.IsNaN(spec.RungStars))
+                StarRow(win, new Vector2(0, 0), new Vector2(6f, 6f), 12f,
+                    spec.RungStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
+
+            // THE STATE IS A STAMP (2026-09-08): the mark and its word in the window's
+            // top-right corner, where the old state row used to take a line of the foot.
+            string stateWord = spec.StateWord ?? StateWordOf(state);
+            if (!sealedTile && !string.IsNullOrEmpty(stateWord))
             {
-                // A TAG HUNG ON THE LOCK. The chains cross the whole tile, so a star gate
-                // set straight onto the plate lands on the links whatever row it sits in —
-                // it needs its own ground, not a better y. A dark tag under the padlock is
-                // that ground, and it is the thing a chained crate would actually carry.
+                var stamp = NewRect("Stamp", win);
+                var ink = StateInk(state);
+                var markArt = StateMark(state);
+                var stampText = NewText("State", stamp, _shop, 8, TextAnchor.MiddleLeft, ink);
+                stampText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                stampText.text = stateWord;
+                float textW = stampText.preferredWidth;
+                float markW = markArt != null ? TileStateH + 4f : 0f;
+                Place(stamp, new Vector2(1, 1), new Vector2(markW + textW + 12f, 20f), new Vector2(-4f, -4f));
+                var stampBg = stamp.gameObject.AddComponent<Image>();
+                stampBg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.82f);
+                stampBg.raycastTarget = false;
+                RectTransform markRt = null;
+                if (markArt != null)
+                {
+                    markRt = NewRect("StateMark", stamp);
+                    Place(markRt, new Vector2(0, 0.5f), new Vector2(TileStateH, TileStateH), new Vector2(6f, 0));
+                    var mi = markRt.gameObject.AddComponent<Image>();
+                    mi.sprite = markArt;
+                    mi.preserveAspect = true;
+                    mi.raycastTarget = false;
+                    mi.color = ink;
+                }
+                Place(stampText.rectTransform, new Vector2(0, 0.5f), new Vector2(textW + 2f, TileStateH),
+                    new Vector2(6f + markW, 0));
+                stampText.raycastTarget = false;
+                if (state == TileState.Ordered && !Motion.Reduced)
+                {
+                    StartCoroutine(StampDrop(markRt != null ? markRt : stampText.rectTransform));
+                    Sfx.Play("stamp", 0.8f);
+                }
+            }
+
+            // THE NEW! BAND (2026-09-08): a listing whose star gate the rating crossed last
+            // night wears it across the window's top-left corner.
+            if (!sealedTile && run != null && run.OpenedLastNight(spec.RungStars))
+            {
+                var band = NewRect("New", win);
+                Place(band, new Vector2(0, 1), new Vector2(64f, 16f), new Vector2(-8f, -8f));
+                band.pivot = new Vector2(0.5f, 0.5f);
+                band.anchoredPosition = new Vector2(22f, -14f);
+                band.localRotation = Quaternion.Euler(0, 0, 18f);
+                var bandImg = band.gameObject.AddComponent<Image>();
+                bandImg.color = UITheme.Magenta[3];
+                bandImg.raycastTarget = false;
+                var bandText = NewText("T", band, _shop, 8, TextAnchor.MiddleCenter, Color.white);
+                Stretch(bandText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                bandText.raycastTarget = false;
+                bandText.text = "NEW!";
+                var glow = NewRect("Glow", band);
+                Stretch(glow, Vector2.zero, Vector2.one, new Vector2(0, 0), new Vector2(0, -14f));
+                var gi = glow.gameObject.AddComponent<Image>();
+                gi.color = new Color(1f, 1f, 1f, 0.35f);
+                gi.raycastTarget = false;
+            }
+
+            // ── THE FOOT: the name, the stock, the dollar and the key ─────────────────
+            if (sealedTile)
+            {
                 bool drawnGate = !double.IsNaN(spec.GateStars);
                 var tag = NewRect("Tag", rt);
-                Place(tag, new Vector2(0.5f, 1), new Vector2(104, drawnGate ? 58 : 44),
-                    new Vector2(0, -132));
+                Place(tag, new Vector2(0.5f, 1), new Vector2(TileW - 24f, drawnGate ? 58 : 44),
+                    new Vector2(0, -(TileNameTop + 4f)));
                 var tagImg = tag.gameObject.AddComponent<Image>();
                 tagImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.92f);
                 tagImg.raycastTarget = false;
                 var gate = NewText("Gate", tag, _display, 16, TextAnchor.MiddleCenter, Color.white);
-                Place(gate.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 20),
-                    new Vector2(0, -5));
+                Place(gate.rectTransform, new Vector2(0.5f, 1), new Vector2(TileW - 32f, 20), new Vector2(0, -5));
                 gate.horizontalOverflow = HorizontalWrapMode.Wrap;
                 gate.verticalOverflow = VerticalWrapMode.Truncate;
                 gate.text = spec.Money;
                 var what = NewText("Sealed", tag, _body, 8, TextAnchor.MiddleCenter,
                     new Color(0.624f, 0.647f, 0.729f, 1f));
-                Place(what.rectTransform, new Vector2(0.5f, 1), new Vector2(96, 12),
-                    new Vector2(0, -27));
+                Place(what.rectTransform, new Vector2(0.5f, 1), new Vector2(TileW - 32f, 12), new Vector2(0, -27));
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
                 what.text = string.IsNullOrEmpty(spec.GateNote) ? "STARS TO OPEN" : spec.GateNote;
                 if (drawnGate)
                 {
-                    // The gate itself, drawn between its figure and its word: the row is
-                    // lit to what the crate WANTS, not to what the bar has — a padlock
-                    // states its price, and the standing is read off the top bar.
                     StarRow(tag, new Vector2(0.5f, 1), new Vector2(0, -30f), 12f,
                         spec.GateStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
                     what.rectTransform.anchoredPosition = new Vector2(0, -44);
                 }
-            }
-            else
-            {
-                // NOT THE BOLD FACE (2026-08-11, the author: change whatever font the
-                // product names are set in). It is the same complaint the receipt's figures
-                // had: Silkscreen Bold is drawn on an 8px grid with NO side bearing, so its
-                // letters touch at every size and a name reads as one long shape. The two
-                // ways out are a lighter weight or a face that carries its own gap;
-                // PressStart2P carries its gap inside the cell, which is why it is the one
-                // of the three that can be set solid — and at 8 it is exactly 1x its design
-                // size, so it lands on the pixel grid perfectly.
-                //
-                // It is wider — a flat 8 units a character against the bold's 6.25 mixed —
-                // so the column holds 17 characters a line instead of 22. The box is two
-                // lines, and the longest name on the shelf is 24 characters, which is what
-                // the measurement below had to settle before this shipped.
-                // THE NAME PLATE (2026-08-19, the author: "isimlerini kutu içerisine al
-                // veya ön plana çıkması için bir şey yap ... daha okunaklı ve kalın bir
-                // font"). The name was 8px PressStart2P lying loose on the card, one grey
-                // among four other greys, and on a shelf of twelve listings the thing you
-                // are actually shopping BY was the quietest reading on the plate.
-                //
-                // It is a NAME PLATE now, and that is not a box invented to hold it: the
-                // back bar of this game has name plates on its rails, so the aisle borrows
-                // the object the room already owns (16 §6, the positive form). Dark field,
-                // light type — the one inversion on the card, which is why the eye lands on
-                // it first.
-                // INK ON THE PAPER, NOT A PLAQUE (2026-09-08, the author: "urun kartlarinin
-                // tasarimini en bastan ele al"). The navy plate was the one thing on a cream
-                // catalogue page that was not paper, and it is what made every card read as
-                // a dashboard tile with a picture on it; its width is also what cut the names
-                // short ("SMIRNOFF VODKA" printed as "SM / VO"). The name is set in the
-                // display face on the card itself, two lines at most, on the card's margin.
-                // The SHOP face, not the display face (photographed 2026-09-08): Press Start
-                // at 16 is 16 units a character, nine to a 156 line, and "RESTOCK THE WHOLE
-                // WELL" wrapped to three and lost its last word. Silkscreen Bold at 16 is
-                // ~11 a character, fourteen to the line, and is the face the shop already
-                // speaks in. Upper case, because the names arrive as written and a catalogue
-                // sets its names in caps.
-                var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft,
-                    state == TileState.Unaffordable || state == TileState.Held
-                        ? ShopInkSoft : ShopInk);
-                Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, TileNameH),
-                    new Vector2(TilePad, -TileNameTop));
-                name.rectTransform.pivot = new Vector2(0, 1);
-                name.horizontalOverflow = HorizontalWrapMode.Wrap;
-                name.verticalOverflow = VerticalWrapMode.Truncate;
-                name.lineSpacing = 1.05f;
-                name.text = (spec.Name ?? "").ToUpperInvariant();
+                return rt;
             }
 
-            // 3b — THE RUNG, DOWN THE LEFT EDGE (2026-09-04, the author: "markette açık olan
-            // her ürünün kutusunun bir tarafında kaç yıldız gerekiyorsa yıldız iconu ile
-            // gösterilsin"). A sealed crate has always printed what it is waiting for; an
-            // OPEN one said nothing, so the ladder the whole shop is arranged by — which
-            // bottle belongs to which rung — was visible only on the half of the aisle you
-            // could not buy from.
-            //
-            // A LADDER, and it climbs: rung one at the bottom. Five sockets, so a listing
-            // that opens for anybody reads as five empty ones rather than as a tile that
-            // forgot to say. It is the same five-star ruler the sealed crates, the bill and
-            // the recipe book are drawn on (one helper, one cetvel), stood on its end so it
-            // can live in the one band of the tile nothing else uses — the art's left
-            // margin, opposite the stock gauge, which is why neither has to move.
-            // The rung, where a shelf label goes: the window's lower-left corner (2026-09-08).
-            if (state != TileState.Sealed && !double.IsNaN(spec.RungStars))
-                StarRow(rt, new Vector2(0, 1), new Vector2(TilePad, -(TileArtTop + TileArtH - 8f)), 12f,
-                    spec.RungStars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.14f));
+            var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft, dim ? ShopInkSoft : ShopInk);
+            Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, TileNameH), new Vector2(TilePad, -TileNameTop));
+            name.rectTransform.pivot = new Vector2(0, 1);
+            name.horizontalOverflow = HorizontalWrapMode.Wrap;
+            name.verticalOverflow = VerticalWrapMode.Truncate;
+            name.lineSpacing = 1.05f;
+            name.text = (spec.Name ?? "").ToUpperInvariant();
 
-            // 4 — ONE contextual token, or the stock meter where stock IS the fact.
             if (spec.StockFrac >= 0f)
             {
-                // A METER YOU CAN ACTUALLY READ (2026-08-10, the author). It was a 6-unit
-                // hairline with an 8pt percentage floating to its right: at a glance you
-                // could tell "some" from "none" and nothing else. Now it is 12 deep with a
-                // dark surround, so the bar has an edge to be read against, and the number
-                // rides ON it in the shop's bold face — one object, one reading.
-                // A GAUGE DOWN THE SIDE (2026-08-11, the author: stand the meter up beside
-                // the bottles, and the bottle stays centred in its box).
-                //
-                // It was a 136-wide bar lying at -170, and the ADD pill sits 6..30 up from
-                // the tile's foot — the bar's own bottom edge is 24 up from it, so the two
-                // shared six units and the percentage printed into the key. Standing it up
-                // does not just move the collision, it removes the row they were fighting
-                // over: the strip runs the height of the ART, where there is nothing else,
-                // and reads like the level in the bottle it is standing next to. The art is
-                // an overlay on the left, so nothing about the bottle's placement changes.
-                // ONE GAUGE, ONE SIZE, ON THE RIGHT EDGE (2026-08-11, the author's second
-                // ruling, and the better one). Pinning it to each bottle's own drawing put
-                // it where the product was — but that means it MOVES: a page of tiles then
-                // has six gauges at six different x's and six different heights, and an
-                // instrument you have to find on every card is not an instrument. Fixed and
-                // flush right, it is the same stripe in the same place on every plate, and
-                // the eye can run down a column of them and compare.
-                //
-                // It still clears the ADD key by construction: the strip's foot is at the
-                // product's own foot line, 68 up from the plate, and the key lives in the
-                // bottom 30.
-                // A BAR READ LEFT TO RIGHT on the fact row (2026-09-07): the level lies
-                // where the meta word would, with its figure at the row's end, so the eye
-                // reads "how much" where it reads "what" on the cards beside it.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float StripW = ContentW - 46f;
-                const float StripH = 10f;
-                const float StripX = TilePad;
-                const float StripTop = -(TileMetaTop + 1f);
-                var surround = NewRect("Track", rt);
-                Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
-                    new Vector2(StripX, StripTop - 2f));
-                var surroundImg = surround.gameObject.AddComponent<Image>();
-                surroundImg.color = UITheme.ClubBlue[0];
-                surroundImg.raycastTarget = false;
-
-                var well = NewRect("Well", rt);
-                Place(well, new Vector2(0, 1), new Vector2(StripW - 4f, StripH - 4f),
-                    new Vector2(StripX + 2f, StripTop - 4f));
-                var wellImg = well.gameObject.AddComponent<Image>();
-                wellImg.color = new Color(0.792f, 0.812f, 0.871f, 1f);
-                wellImg.raycastTarget = false;
-
-                // THE LEVEL WEARS THE FADE (2026-08-19, the author: "restock doluluk barı da
-                // yeşil yerine bu renk olsun"). The fill is the vertical FadeStrip CROPPED
-                // by a Filled image, never squeezed: the rect spans the whole well and
-                // fillAmount reveals the bottom `frac` of it, so a half bottle shows the
-                // fade's blue half and a full one the whole blue-into-pink run — the level
-                // climbs INTO the pink the way the evening climbs into the neon. Geometry
-                // still carries the reading (height is the fraction); the fade only dresses
-                // it, which is what keeps the chrome-only law honest here.
-                //
-                // The one signal stays a signal: under a quarter the level drops the fade
-                // for flat ShopCost red, because "nearly out" is a warning and a warning is
-                // never worn as decoration.
-                var fill = NewRect("Fill", well);
-                Stretch(fill, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var track = NewRect("Track", rt);
+                Place(track, new Vector2(0, 1), new Vector2(ContentW, TileStripH), new Vector2(TilePad, -TileStripTop));
+                var trackImg = track.gameObject.AddComponent<Image>();
+                trackImg.color = UITheme.ClubBlue[0];
+                trackImg.raycastTarget = false;
+                var fill = NewRect("Fill", track);
+                fill.anchorMin = new Vector2(0, 0); fill.anchorMax = new Vector2(0, 1);
+                fill.pivot = new Vector2(0, 0.5f);
+                fill.offsetMin = new Vector2(1f, 1f); fill.offsetMax = new Vector2(1f, -1f);
+                fill.sizeDelta = new Vector2(Mathf.Max(0f, (ContentW - 2f) * frac), 0f);
                 var fillImg = fill.gameObject.AddComponent<Image>();
-                if (frac < 0.25f)
-                {
-                    fill.anchorMax = new Vector2(0, 1);
-                    fill.pivot = new Vector2(0, 0.5f);
-                    fill.sizeDelta = new Vector2((StripW - 4f) * frac, 0);
-                    fill.anchoredPosition = Vector2.zero;
-                    fillImg.color = ShopCost;
-                }
-                else
-                {
-                    fillImg.sprite = ChromeArt.FadeStrip(horizontal: true);
-                    fillImg.type = Image.Type.Filled;
-                    fillImg.fillMethod = Image.FillMethod.Horizontal;
-                    fillImg.fillOrigin = (int)Image.OriginHorizontal.Left;
-                    fillImg.fillAmount = frac;
-                }
+                fillImg.color = frac < 0.25f ? ShopCost : UITheme.Lime[3];
                 fillImg.raycastTarget = false;
-
-                // The reading moved onto the STATE ROW (2026-08-19), right-aligned. It used
-                // to float at the card's top-right corner, which put a number in the one
-                // band that carries no words — and left the state row half empty. Words
-                // about the listing all live on one line now: what it is on the left, how
-                // much of it there is on the right.
-                var pct = NewText("Pct", rt, _shop, 8, TextAnchor.MiddleRight, ShopInkSoft);
-                Place(pct.rectTransform, new Vector2(1, 1), new Vector2(40, TileMetaH),
-                    new Vector2(-TilePad, -TileMetaTop));
-                pct.raycastTarget = false;
-                pct.text = Mathf.RoundToInt(frac * 100f) + "%";
-            }
-            else if (!string.IsNullOrEmpty(spec.Meta) && state != TileState.Sealed)
-            {
-                // A MARK BEFORE THE WORD (2026-09-06, the author: "geliştirmelerin
-                // açıklamalarında iconlardan yararlanılsın"): the medal for a figure of
-                // comfort, so the line reads as the beam's own reading rather than a caption.
-                float lead = 0f;
-                if (spec.MetaIcon != null)
-                {
-                    var mi = NewRect("MetaIcon", rt);
-                    Place(mi, new Vector2(0, 1), new Vector2(16, 16),
-                        new Vector2(TilePad, -TileMetaTop - (TileMetaH - 16f) * 0.5f));
-                    var miImg = mi.gameObject.AddComponent<Image>();
-                    miImg.sprite = spec.MetaIcon; miImg.preserveAspect = true; miImg.raycastTarget = false;
-                    lead = 20f;
-                }
-                var meta = NewText("Meta", rt, _body, 8, TextAnchor.MiddleLeft, TileMetaInk);
-                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(ContentW - lead, TileMetaH),
-                    new Vector2(TilePad + lead, -TileMetaTop));
-                meta.horizontalOverflow = HorizontalWrapMode.Wrap;
-                meta.verticalOverflow = VerticalWrapMode.Truncate;
-                meta.text = spec.Meta;
             }
 
-            // 5 — THE ACTION ROW: one money token, and at most one control. Both texts
-            // TRUNCATE rather than overflow — Overflow is exactly how the old badge walked
-            // 165 units onto its neighbour.
-            if (!string.IsNullOrEmpty(spec.Money) && state != TileState.Sealed)
+            if (!string.IsNullOrEmpty(spec.Money))
             {
-                // Sealed puts its price — the star gate — under the padlock instead.
-                //
-                // ON A TAG (2026-08-19, the author: "fiyatını gösteren yazıyı bir fiyat
-                // etiketi içerisine al"). A number set loose in the bottom-left corner was
-                // the last thing on this card still being a caption rather than an object;
-                // ChromeArt.PriceTag is the card of stock a shop hangs on a bottle's neck,
-                // 9-sliced so "$8" and "+$105" are one drawing at two widths.
-                //
-                // AMBER, which is not decoration: money is Amber and only money is (16 §5),
-                // so the tag is the sacred colour doing exactly its job. Out of reach, it
-                // drops to the ramp's dark step — still plainly a price tag, plainly one you
-                // cannot pay, and the key beside it says NO CASH in red.
-                // THE COIN AND THE FIGURE (2026-09-08). The amber nib tag was the last
-                // place in the chrome a typed $ still lived, a day after the house coin
-                // replaced it everywhere else; it was also 62 units for a figure that needs
-                // 40, with 13 of them spent on a nib. The price is the coin and the number,
-                // in the display face, on the paper, dimmed with the card when it cannot be
-                // paid. spec.Money keeps its sign and its stars ("+$105", "3.0*") - only the
-                // dollar glyph is drawn rather than typed.
-                bool dim = state == TileState.Unaffordable || state == TileState.Held;
                 string figure = spec.Money.Replace("$", "");
                 var coin = NewRect("Coin", rt);
-                Place(coin, new Vector2(0, 1), new Vector2(24, 24),
-                    new Vector2(TilePad, -(TileFootTop + 2f)));
+                Place(coin, new Vector2(0, 1), new Vector2(24, 24), new Vector2(TilePad, -(TileFootTop + 3f)));
                 var coinImg = coin.gameObject.AddComponent<Image>();
                 coinImg.sprite = ItemArt.Coin(24f);
                 coinImg.preserveAspect = true;
                 coinImg.raycastTarget = false;
                 coinImg.color = new Color(1f, 1f, 1f, dim ? 0.45f : 1f);
-                var money = NewText("Money", rt, _display, 16, TextAnchor.MiddleLeft,
-                    dim ? ShopInkSoft : ShopInk);
+                var money = NewText("Money", rt, _display, 16, TextAnchor.MiddleLeft, dim ? ShopInkSoft : ShopInk);
                 Place(money.rectTransform, new Vector2(0, 1), new Vector2(ContentW - 24f - 74f, TileFootH),
                     new Vector2(TilePad + 28f, -TileFootTop));
                 money.rectTransform.pivot = new Vector2(0, 1);
@@ -1448,12 +1229,8 @@ namespace LastCall.UI
             }
             else if (!string.IsNullOrEmpty(spec.Word) && state != TileState.Held)
             {
-                // Held says it on the sash across the product, so the action row stays
-                // empty — printing FULL twice on one tile is the habit this rewrite was
-                // supposed to break.
                 var word = NewText("Word", rt, _shop, 16, TextAnchor.MiddleLeft, MoneyInk(state));
-                Place(word.rectTransform, new Vector2(0, 1), new Vector2(62, TileFootH),
-                    new Vector2(TilePad, -TileFootTop));
+                Place(word.rectTransform, new Vector2(0, 1), new Vector2(70, TileFootH), new Vector2(TilePad, -TileFootTop));
                 word.horizontalOverflow = HorizontalWrapMode.Wrap;
                 word.verticalOverflow = VerticalWrapMode.Truncate;
                 word.text = spec.Word;
@@ -1461,28 +1238,18 @@ namespace LastCall.UI
 
             if (hasPill && !string.IsNullOrEmpty(spec.PillVerb))
             {
-                // A KEY YOU COULD PRESS (2026-08-11, the author: "ADD butonu çok yapay
-                // duruyor"). The generated pill was a flat lozenge with a word on it — a
-                // picture of a button. This one is drawn with an edge and a throw: two dark
-                // rows under the face, so it stands above the card instead of being printed
-                // on it. The label rides one pixel up, off the throw.
                 var pill = NewRect("Pill", rt);
-                Place(pill, new Vector2(1, 1), new Vector2(70, TileFootH - 4f),
-                    new Vector2(-TilePad, -(TileFootTop + 2f)));
+                Place(pill, new Vector2(1, 1), new Vector2(70, TileFootH - 4f), new Vector2(-TilePad, -(TileFootTop + 2f)));
                 var pillImg = pill.gameObject.AddComponent<Image>();
-                // The 98 key face (2026-08-19), same drawing as every button on this site.
                 pillImg.sprite = ChromeArt.Win98Key();
                 pillImg.type = Image.Type.Sliced;
                 pillImg.color = PillOf(state);
                 pillImg.raycastTarget = false;
                 var label = NewText("L", pill, _shop, 8, TextAnchor.MiddleCenter, PillInk(state));
-                Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(6, 0), new Vector2(-6, 0));
+                Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 0), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 label.verticalOverflow = VerticalWrapMode.Truncate;
                 label.text = spec.PillVerb;
-                // The TILE is the click, so the tile's press turns ITS key inside out —
-                // the pointer lands anywhere on the listing and the ADD key answers.
                 if (spec.OnClick != null)
                 {
                     var press = rt.gameObject.AddComponent<Win98Press>();
@@ -1491,68 +1258,42 @@ namespace LastCall.UI
                 }
             }
 
-            // 6 — the picked tile is the only one wearing a frame on all four sides.
             if (state == TileState.Picked) Frame(rt, 2f, StripPicked);
-
-            // (THE SASH IS GONE, 2026-08-19. A dark band printed FULL across the bottle
-            // while the gauge beside it read 100% and the corner chip wore an "=" — the
-            // same fact three times on one card, which is §6.5 exactly. The state row says
-            // it once, in the place every card says everything.)
-
-            // 7 — THE STATE, IN A ROW (2026-08-19). This is what replaced the edge strip
-            // and the corner chip, and like the chip before it, it is built LAST so nothing
-            // on the card can draw over the one line that says what the listing is doing.
-            //
-            // The card had four channels for saying what a listing was doing — a strip hue,
-            // a chip glyph, a plate tint, and whether a control existed — and two of them
-            // were decoration welded to the plate's edges. They are one LINE now, sitting on
-            // the grid between the meta and the foot, built the way every other line on this
-            // page is built: a drawn mark, then a word, then the reading right-aligned.
-            //
-            // It costs nothing in what the player can tell apart. Shape says it (each state
-            // has its own mark), language says it (each has its own word), the plate's tint
-            // still says it underneath, and the ADD key's presence still says it — so the
-            // colour-blind path reads on three channels instead of on a hue down an edge.
-            // And it gains the thing the strip could never give: a listing you can READ.
-            string stateWord = spec.StateWord ?? StateWordOf(state);
-            if (!string.IsNullOrEmpty(stateWord))
-            {
-                float markX = TilePad;
-                var ink = StateInk(state);
-                var markArt = StateMark(state);
-                RectTransform markRt = null;
-                if (markArt != null)
-                {
-                    markRt = NewRect("StateMark", rt);
-                    Place(markRt, new Vector2(0, 1), new Vector2(TileStateH, TileStateH),
-                        new Vector2(markX, -TileStateTop));
-                    var mi = markRt.gameObject.AddComponent<Image>();
-                    mi.sprite = markArt;
-                    mi.preserveAspect = true;
-                    mi.raycastTarget = false;
-                    mi.color = ink;
-                    markX += TileStateH + 4f;
-                }
-                var stateText = NewText("State", rt, _shop, 8, TextAnchor.MiddleLeft, ink);
-                // IT STOPS SHORT OF THE READING. The stock percentage shares this row and
-                // is right-aligned to the same margin, so a word allowed to overflow would
-                // print straight through it on the restock tab — where a full shelf and an
-                // empty wallet are exactly the two states that have most to say. 44 units
-                // is what "100%" takes in the shop face plus a space to breathe.
-                const float ReadingCol = 0f;   // the stock figure moved up to the fact row (2026-09-07)
-                Place(stateText.rectTransform, new Vector2(0, 1),
-                    new Vector2(TileW - markX - TilePad - ReadingCol, TileStateH),
-                    new Vector2(markX, -TileStateTop));
-                stateText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                stateText.verticalOverflow = VerticalWrapMode.Truncate;
-                stateText.text = stateWord;
-                // The van still lands. It lands on the ROW rather than on a corner square:
-                // the stamp belongs to the thing that says "ordered", and that is this line.
-                if (state == TileState.Ordered && !Motion.Reduced)
-                    StartCoroutine(StampDrop(markRt != null ? markRt : stateText.rectTransform));
-                    Sfx.Play("stamp", 0.8f);
-            }
             return rt;
+        }
+
+        /// <summary>A bottle standing FULL in the tile's window (2026-09-08): the cellar
+        /// plates at 2x in a BottleArt sandwich with the level at the brim. False when the
+        /// card has no v4 plates, and the flat art takes the window instead.</summary>
+        private bool TileBottle(RectTransform win, IngredientCard card, bool dim)
+        {
+            var plates = ItemArt.Plates(card, cellar: true);
+            if (plates == null) return false;
+            var vessel = NewRect("Bottle", win);
+            Place(vessel, new Vector2(0.5f, 0.5f), new Vector2(64f, 128f), new Vector2(0f, 2f));
+            var art = BottleArt.Under(vessel);
+            art.Show(plates);
+            art.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), 1.0, 0f);
+            if (dim)
+            {
+                var g = vessel.gameObject.AddComponent<CanvasGroup>();
+                g.alpha = 0.55f;
+                g.blocksRaycasts = false;
+            }
+            return true;
+        }
+
+        /// <summary>Stands a flat product drawing in the window, on a foot line ten units
+        /// up, scaled to fit the window's width and height (whole multiples from 3x up).</summary>
+        private static void PlaceInWindow(RectTransform rt, Sprite s, float boxH)
+        {
+            var m = VesselArt.Of(s);
+            float w = s.rect.width, h = s.rect.height;
+            float room = Mathf.Min(boxH, TileArtH - 20f);
+            float k = Mathf.Min(ContentW / m.Drawing.width, room / m.Drawing.height);
+            if (k >= 3f) k = Mathf.Floor(k);
+            Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k),
+                new Vector2((w * 0.5f - m.Drawing.center.x) * k, 10f - m.Drawing.y * k));
         }
     }
 }
