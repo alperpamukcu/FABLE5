@@ -2583,7 +2583,8 @@
    "upset_a": "c375c2b2-661f-4eac-a77b-d3f494e733f2",
    "cheer_b": "13d52255-880b-4a6f-bdf7-eb21efdd9ba4",
    "upset_b": "5dfba4a1-cae3-413a-9569-367ace3a894e",
-   "walk_a": "6d135432-41ef-44b5-8497-c3e1bd1aab5b"
+   "walk_a": "6d135432-41ef-44b5-8497-c3e1bd1aab5b",
+   "walk_b": "19d43539-799b-4b02-9435-09cfc49e0512"
   }
  },
  "hamburg": {
@@ -2610,7 +2611,8 @@
    "upset_a": "42fde2dd-1567-4a1d-83fa-a641011d58cb",
    "cheer_b": "96b7b681-b8c5-4f8c-969d-25022a17bb16",
    "upset_b": "90a7be51-cb71-4113-9299-628f1f860fbd",
-   "walk_a": "7372325e-2797-48a1-a5d8-886c77d1105a"
+   "walk_a": "7372325e-2797-48a1-a5d8-886c77d1105a",
+   "walk_b": "5637b75f-dc9b-42f0-89be-808558022bde"
   }
  },
  "munich": {
@@ -2637,7 +2639,8 @@
    "upset_a": "b5fadaaa-eead-42dd-8d19-9971ce313b94",
    "cheer_b": "38f74800-8dd3-43ce-92db-473a62655d53",
    "upset_b": "32e72c90-7af6-4219-b270-5c10c4eb022a",
-   "walk_a": "294dcf57-0695-468b-a924-ce7ab2a2d674"
+   "walk_a": "294dcf57-0695-468b-a924-ce7ab2a2d674",
+   "walk_b": "9d8f8bc1-6b76-4e14-b649-dfb044981ad5"
   }
  },
  "milano": {
@@ -2664,7 +2667,8 @@
    "upset_a": "bb7405a7-059a-46d4-9c3f-6892ffcf55ee",
    "cheer_b": "a59d81b0-96a9-467d-a283-1d59f817b522",
    "upset_b": "bd2f0783-d154-48ab-9e1d-c6f0adb9f27e",
-   "walk_a": "dbf2372a-7ad7-471b-83a1-5c387c7c24ee"
+   "walk_a": "dbf2372a-7ad7-471b-83a1-5c387c7c24ee",
+   "walk_b": "8ceb95ee-01ac-466e-9fa6-57b5a36ebf6e"
   }
  },
  "roma": {
@@ -2691,7 +2695,8 @@
    "upset_a": "3e77ff61-fb6c-42ee-8345-d41329ae03fe",
    "cheer_b": "0c8ae0c6-61f4-460e-bb45-78c339d8a7f7",
    "upset_b": "e0de9ab3-f3fd-4505-9980-a94993160b60",
-   "walk_a": "2ac93eb5-9720-4692-a544-53472bfba64a"
+   "walk_a": "2ac93eb5-9720-4692-a544-53472bfba64a",
+   "walk_b": "be19e054-df9b-4e4d-b8d2-7ec28d0f8f2d"
   }
  }
 }

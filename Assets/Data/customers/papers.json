@@ -311,6 +311,11 @@
     { "slug": "mancboy", "name": "Callum Reid", "age": 27, "country": "United Kingdom", "iso": "gb" },
     { "slug": "analyst", "name": "Owen Pritchard", "age": 29, "country": "United Kingdom", "iso": "gb" },
     { "slug": "bristol", "name": "Nia Okoro", "age": 24, "country": "United Kingdom", "iso": "gb" },
-    { "slug": "berlin", "name": "Lena Fischer", "age": 25, "country": "Germany", "iso": "de" }
+    { "slug": "berlin", "name": "Lena Fischer", "age": 25, "country": "Germany", "iso": "de" },
+    { "slug": "teacherde", "name": "Jonas Weber", "age": 30, "country": "Germany", "iso": "de" },
+    { "slug": "hamburg", "name": "Nele Krause", "age": 27, "country": "Germany", "iso": "de" },
+    { "slug": "munich", "name": "Felix Bauer", "age": 26, "country": "Germany", "iso": "de" },
+    { "slug": "milano", "name": "Giulia Conti", "age": 26, "country": "Italy", "iso": "it" },
+    { "slug": "roma", "name": "Alessio Greco", "age": 28, "country": "Italy", "iso": "it" }
   ]
 }
