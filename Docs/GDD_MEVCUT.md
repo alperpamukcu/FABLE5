@@ -1573,7 +1573,10 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   yazıları da kartın üstünde kalıyordu). Plakası olmayan kartlarda (lemon_fresh, kartonlar) kopya rafın düz `_c` sprite'ı (`ItemArt.Bottle`). **Tuzak:** sahne sprite'ının
   dünya köşeleri `Camera.main.WorldToScreenPoint` ile ekrana çevrilir — `RectTransformUtility.WorldToScreenPoint(null, …)` kanvas
   nesneleri içindir, dünya noktasını olduğu gibi döndürür (kopya bir raf yukarı düşmüştü). Ölçüldü: kopya ile raf şişesinin
-  gerçek ekran dikdörtgeni birebir aynı (limonata ve cin).
+  gerçek ekran dikdörtgeni birebir aynı (limonata ve cin). **Garnish kâseleri** HUD nesnesi olduğundan kopyaya gerek yok:
+  her kâse uyuyan bir Canvas taşır (`overrideSorting` kapalı); kartı açılınca 27'ye kaldırılır (kartın 26'sının üstü), çıkışta
+  yine miras alır — kâsenin kendisi, parlamasıyla, kartın üstünde (yazar: "üstüne gelinen asset hiyerarşide en üste, bilgi
+  kartının üstüne çıksın, odağa").
   Kart zemini yazarın dosyasında 226/255 alfa — yarı saydamlık sanatın kendisi. Gün sonu perdesi 0.88 → **0.965**. Market kartlarındaki `$` ikonu yerine düz yeşil `$` (display face,
   `Lime[2]`); çizili dolar panolarda kaldı.
 - **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Krakatoa Rum, sağ elli Quinn's Tonic), garnish

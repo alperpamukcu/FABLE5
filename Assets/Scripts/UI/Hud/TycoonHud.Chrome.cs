@@ -463,8 +463,8 @@ namespace LastCall.UI
             var bottle = card != null ? run?.Shelf.Find(card.Id) : null;
             ClearCardUses();
             _cellarCardBottle.Show(null);
-            _cellarCardDish.sprite = prop.Img != null ? prop.Img.sprite : icon;
-            _cellarCardDish.enabled = _cellarCardDish.sprite != null;   // the dish, drawn again in the slot
+            _cellarCardDish.enabled = false;   // the dish itself rises over the card (its own canvas, 27)
+            LiftProp(over, true);
             string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
             _cellarCardName.text = title.ToUpperInvariant();
             _cellarCardMeta.text = prop.IsRim ? "RIM  ·  " + word : (prop.Id == "ice" ? "ICE  ·  " + word : "GARNISH  ·  " + word);
@@ -487,7 +487,19 @@ namespace LastCall.UI
 
         private void HideGarnishCard(RectTransform over)
         {
+            LiftProp(over, false);
             if (_cellarCardOver == over) { _cellarCardOver = null; _cellarCardFree = false; }
+        }
+
+        /// <summary>Sorts a HUD prop over the card (27) or lets it inherit again: the prop
+        /// carries a dormant Canvas for this (see the rail's dishes in Seats).</summary>
+        private static void LiftProp(RectTransform prop, bool up)
+        {
+            if (prop == null) return;
+            var cv = prop.GetComponent<Canvas>();
+            if (cv == null) return;
+            cv.overrideSorting = up;
+            if (up) cv.sortingOrder = 27;
         }
 
         /// <summary>Switches the shelf's bottle back on when its card goes.</summary>

@@ -1127,6 +1127,14 @@ namespace LastCall.UI
                 var glow = rt.gameObject.AddComponent<HoverGlow>();
                 glow.Graphics = new Graphic[] { img };
                 glow.Rise = 4f; glow.Sway = 1.4f; glow.Grow = 1.07f;
+                // THE DISH RISES OVER ITS CARD (2026-09-08, the author: "üstüne gelinen asset
+                // hiyerarşide en üste, bilgi kartının üstüne çıksın, odağa"). A canvas of
+                // its own, dormant (inheriting) until the card stands, when ShowGarnishCard
+                // sorts it at 27 — over the card's 26 — and the dish itself, glow and all,
+                // is the one thing in front. Its raycaster keeps the pointer on it.
+                var lift = rt.gameObject.AddComponent<Canvas>();
+                lift.overrideSorting = false;
+                rt.gameObject.AddComponent<ForgivingRaycaster>();
                 var carryArt = carry != null ? ItemArt.Load(carry) : null;
                 var prop = new PrepProp
                 {
