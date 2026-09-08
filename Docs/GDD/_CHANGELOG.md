@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighteenth list (2026-09-08):** the order ticket wears the same drawn balloon as speech;
+  the pointer is a 32x32 hardware cursor with its hotspot on the fingertip (and leaves a virtual
+  mouse alone); the emojis come out from behind the drinker several at a time, as stage motes;
+  the contents rows hold a two-line count; and the room's ambient animation — window, tap water,
+  flicker — stops with the book. GDD_MEVCUT §9.48.
+
 - **The author's art of 2026-09-08:** every glass gets its rim strip drawn over the liquid and the
   tin its steel front plate (the brimful pool moved up into the mouth the plate leaves open); the
   pointer is the author's hand in three frames — idle, pressed, grabbing — derived from one drawing;

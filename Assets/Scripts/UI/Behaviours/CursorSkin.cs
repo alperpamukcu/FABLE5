@@ -10,7 +10,7 @@ namespace LastCall.UI
     /// something (a glass, the tin, the cloth, a bowl, a bottle on the bench).
     ///
     /// The frames are cut from the one drawing by Tools/ui_art_2026_09_08.py, so they are the
-    /// same hand at the same size (48x45, a 16x15 drawing at 3x). The hotspot is the
+    /// same hand at the same size (32x32, the 16x15 drawing at 2x — a Windows hardware cursor's size). The hotspot is the
     /// fingertip. One static so every caller agrees on the state, and one <see cref="Step"/>
     /// a frame from the HUD, which is the only place that knows what the hand is holding.
     /// </summary>
@@ -22,9 +22,9 @@ namespace LastCall.UI
         private static State _shown = (State)(-1);
         private static bool _tried;
 
-        /// <summary>The fingertip, in texture pixels from the top-left: the finger points up
-        /// from x 24..32 at rows 0..2, so the tip is the middle of that run.</summary>
-        private static readonly Vector2 Hotspot = new Vector2(28f, 1f);
+        /// <summary>The fingertip, in texture pixels from the top-left: at 2x the finger's
+        /// top row runs x 16..21, so the tip is its middle (measured by the cutting script).</summary>
+        private static readonly Vector2 Hotspot = new Vector2(19f, 0f);
 
         private static void LoadOnce()
         {
@@ -44,6 +44,13 @@ namespace LastCall.UI
             if (state == _shown) return;
             _shown = state;
             var tex = state == State.Grab ? _grab : state == State.Pressed ? _pressed : _idle;
+            // HARDWARE, at the hardware's size (2026-09-08, the author: "imlecin hedefi
+            // parmağın ucunda olmalı, şu an ortayı hedefleyen bir hitbox'ı var"). A Windows
+            // hardware cursor is 32x32; handed the 48x45 drawing, Auto scaled it and the
+            // hotspot with it, so the click landed near the middle of the hand. A software
+            // cursor kept the size but was drawn INTO every screenshot — the look tests
+            // went red on a 48x45 hand — and the frames are 32x32 now (the 16x15 drawing
+            // at 2x), so the hardware takes them as they are and the tip is the tip.
             Cursor.SetCursor(tex, Hotspot, CursorMode.Auto);
         }
 

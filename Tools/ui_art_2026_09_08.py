@@ -49,20 +49,27 @@ def cells(im):
     return [[px[x * 3, y * 3] for x in range(w // 3)] for y in range(h // 3)]
 
 
-def blow(grid):
+def blow(grid, k=2, canvas=(32, 32)):
+    """The cell grid at k x, on a canvas — 32x32, because that is the one size a Windows
+    HARDWARE cursor takes: handed the 3x drawing (48x45), Unity scaled it down and the
+    hotspot with it, so the click landed near the middle of the hand; drawn by Unity as a
+    software cursor instead, the hand was captured in every screenshot and the look tests
+    went red on it (2026-09-08). At 2x the 16x15 drawing is 32x30, a whole multiple."""
     h, w = len(grid), len(grid[0])
-    out = Image.new('RGBA', (w * 3, h * 3), (0, 0, 0, 0))
+    out = Image.new('RGBA', canvas, (0, 0, 0, 0))
     o = out.load()
     for y in range(h):
         for x in range(w):
-            for dy in range(3):
-                for dx in range(3):
-                    o[x * 3 + dx, y * 3 + dy] = grid[y][x]
+            for dy in range(k):
+                for dx in range(k):
+                    if x * k + dx < canvas[0] and y * k + dy < canvas[1]:
+                        o[x * k + dx, y * k + dy] = grid[y][x]
     return out
 
 
 def cursors():
-    hand = Image.open(os.path.join(ITEMS, 'cursor_hand.png')).convert('RGBA')
+    src = os.path.join(ROOT, 'Tools', 'cursor_hand_3x.png')   # the author's Hand3 at 3x, the source
+    hand = Image.open(src).convert('RGBA')
     g = cells(hand)                      # 15 rows x 16 cols
     H, W = len(g), len(g[0])
     clear = (0, 0, 0, 0)
@@ -89,6 +96,9 @@ def cursors():
         if pressed[2][x][3] > 128 and pressed[1][x][3] <= 128:
             pressed[2][x] = ink
     blow(pressed).save(os.path.join(ITEMS, 'cursor_hand_pressed.png'))
+    blow(g).save(os.path.join(ITEMS, 'cursor_hand.png'))
+    tip = [x for x in range(W) if g[0][x][3] > 128]
+    print('fingertip cells x %s -> hotspot at 2x (%d, 0)' % (tip, (min(tip) + max(tip) + 1)))
 
     # GRAB: the index finger folded. The finger is the inked run in the top rows between the
     # thumb (left) and the fist (right): rows 0..2 hold the fingertip, rows 3..5 the finger's
@@ -112,7 +122,7 @@ def cursors():
             if 0 <= x < W and grab[top_of_fist][x][3] > 128:
                 grab[top_of_fist][x] = ink
     blow(grab).save(os.path.join(ITEMS, 'cursor_hand_grab.png'))
-    print('cursor_hand_pressed / cursor_hand_grab written (%dx%d)' % hand.size)
+    print('cursor_hand / _pressed / _grab written at 2x on 32x32')
 
 
 if __name__ == '__main__':

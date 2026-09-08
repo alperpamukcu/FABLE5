@@ -1436,7 +1436,12 @@ namespace LastCall.UI
             bool grabbing = _glassCarrying || _tinCarrying || _clothHeld || _snackInHand != null
                             || (_flow != null && _flow.IsHolding);
             var mouse = Mouse.current;
-            bool pressed = mouse != null && mouse.leftButton.isPressed;
+            // A VIRTUAL mouse leaves the pointer alone (2026-09-08): the PlayMode suite drives
+            // one, and swapping the hardware cursor under its presses cost it clicks — a
+            // different test red on each run (the roller, the market, the sink). Only a
+            // real device gets the hand; the test's mouse has no screen to show it on.
+            if (mouse == null || !mouse.native) return;
+            bool pressed = mouse.leftButton.isPressed;
             CursorSkin.Step(grabbing ? CursorSkin.State.Grab
                 : pressed ? CursorSkin.State.Pressed : CursorSkin.State.Idle);
         }
@@ -1529,6 +1534,10 @@ namespace LastCall.UI
                 // against a stopped clock. One number now drives both, which is also what
                 // keeps them from drifting apart again.
                 RoomScale = DoorsClosed ? 0f : clock;
+                // ...and the room's AMBIENT animation (window wind, tap water, flicker)
+                // follows the same clock, so the book stops the whole picture (2026-09-08).
+                // Not gated on the doors: a closed bar still has weather in its window.
+                if (stage != null) stage.AmbientScale = clock;
                 if (!DoorsClosed)
                     run.Tick(Time.deltaTime * clock);
             }

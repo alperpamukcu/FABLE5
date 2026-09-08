@@ -1521,6 +1521,33 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.48 · On sekizinci liste: tek balon, parmak ucu, emoji demeti, içindekiler satırı, duran oda (2026-09-08)
+
+- **Sipariş/isim fişi aynı balon:** `SeatView.TagBg`/`Tail` artık `ChromeArt.SpeechBox`/`SpeechTail` (yazarın beyaz
+  gövdesi + çizili kuyruk, 20×12, y=2). Kenar rengiyle söylenen durum (Order/Take/Drink) fişten kalktı; durum ikonların
+  altındaki `IconRule` renginde ve noktalarda yaşıyor.
+- **İmleç parmak ucundan hedefliyor:** Windows donanım imleci 32×32'dir; 48×45'lik çizimi `CursorMode.Auto` küçültüp sıcak
+  noktayı ortaya kaydırıyordu. Denendi: `ForceSoftware` boyutu korudu ama eli her ekran görüntüsüne çizdi — look testleri
+  48×45'lik bir bölgede kırmızıya döndü. Kalıcı çözüm: üç kare **2x, 32×32** (`Tools/ui_art_2026_09_08.py`, kaynak
+  `Tools/cursor_hand_3x.png`), sıcak nokta **(19, 0)** — parmağın üst satırı x 16..21. Ve `StepCursor` yalnız
+  `Mouse.current.native` iken çalışıyor: PlayMode süitinin sanal faresi altında imleç değiştirmek tıklama düşürdü (her
+  koşuda başka test: makara, market, lavabo; tek başına geçiyordu).
+- **Emojiler demet hâlinde, arkadan:** HUD'daki tek yüz gitti; `ReactionMotes.Burst` yeni aşırı yüklemesiyle (`Sprite[]
+  faces, units`) sahne motları olarak, omuzların arkasından yükselip sallanarak sönüyor. Vuruş başına adet: PERFECT/
+  FLAWLESS/BOND 4, PATIENCE/CLOSE 2, diğerleri 3; yüzler havuzdan **birbirinden farklı** (`EmotesFor`, ilk seçim voice
+  akışından, gerisi havuzu dolaşır). Boyut **16 sahne birimi** (1 birim = 1 sanat pikseli); 32 denendi, başın genişliğinde
+  bulanık yüzler çıktı.
+- **İçindekiler satırı 50 → 72, adım 56 → 78;** sayım metni 36 yüksek (iki satır) — "11 POURS · 1 PERFECT · 7 LOCKED"
+  16'da sütuna sığmayıp alttan yukarı büyüyerek başlığa biniyordu.
+- **Kitap açıkken oda da duruyor:** `DiegeticStage.AmbientScale` (HUD her kare `clock` veriyor: kitap 0, tezgâh menüleri
+  0.3, aksi 1) ve `_ambientClock`; pencere rüzgârı (`Time.unscaledTime` yerine bu saat), musluk suyu kareleri ve ışık
+  titremesi ondan akıyor. Ölçüldü: kitap açıkken 35.324 → 35.324 (2 sn), kapanınca yürüdü. Kapıya bağlı değil — kapalı
+  barın penceresinde hava sürer.
+- **Koruma:** `RefreshSeats` koltuk atarken `i >= _seats.Count` ise durur (koltukları kurulmamış bara karşı başlatılan
+  koşuda her kare `ArgumentOutOfRange` atıyordu; yansıma probunda görüldü, oyunda yol yok ama sınır ayrı).
+- **Doğrulama:** EditMode 503/503, PlayMode 11/11 (yazılım imleciyle 5 kırmızı, donanım 32×32 + native kapısıyla temiz).
+  UnityMCP'nin `TestJobManager` sınıfı `internal`; sıkışan işi yansımayla `ClearStuckJob` temizledi.
+
 ### 9.47 · Yazarın 2026-09-08 sanatı: bardak dudakları, tin ön plakası, el imleci, yıldız/kalp, balon, otuz emoji (2026-09-08)
 
 - **Bardak dudakları:** `Items/glass3d_<bardak>_t<N>_Front` (t2–t6; t1'in ön parçası yok) bardağın sıvının ÖNÜNDE kalan

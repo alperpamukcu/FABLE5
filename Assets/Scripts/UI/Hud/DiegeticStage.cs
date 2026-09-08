@@ -616,6 +616,14 @@ namespace LastCall.UI
         private Sprite[] _waterFrames;
         private bool _waterOn;
         private int _waterFrame;
+        /// <summary>THE ROOM STOPS WITH THE BOOK (2026-09-08, the author: "menü açıldığında
+        /// oyun durduğu için arka plan animasyonları da durmalı"). The window's wind, the
+        /// tap's water and the lights' flicker ran on unscaled time, so they carried on
+        /// while the night stood still. The HUD hands the night's clock scale here every
+        /// frame; the ambient timers accumulate through it instead of reading the wall.</summary>
+        public float AmbientScale = 1f;
+        private float _ambientClock;
+
         private float _waterClock;
         private const float WaterFrameStep = 1f / 10f;
 
@@ -670,7 +678,7 @@ namespace LastCall.UI
                 _waterSr.sprite = _waterFrames[0];
             }
             if (Motion.Reduced) return;
-            _waterClock += Time.unscaledDeltaTime;
+            _waterClock += Time.unscaledDeltaTime * AmbientScale;
             while (_waterClock >= WaterFrameStep)
             {
                 _waterClock -= WaterFrameStep;
@@ -2035,6 +2043,8 @@ namespace LastCall.UI
 
         private void Update()
         {
+
+            _ambientClock += Time.unscaledDeltaTime * AmbientScale;
             StepWater();
             StepClosing();
             StepDrawer();
@@ -2621,7 +2631,7 @@ namespace LastCall.UI
             // cannot come apart, whatever the drawer does to the stage under them.
             _windRoot.position = _windowSr.transform.position;
             float s = _windowSr.transform.localScale.x;
-            float t = Time.unscaledTime;
+            float t = _ambientClock;
             float k = Motion.Reduced ? 0f : 1f;
 
             for (int i = 0; i < _wind.Count; i++)
@@ -3713,7 +3723,7 @@ namespace LastCall.UI
             float nextFlicker = Random.Range(3f, 7f);
             while (true)
             {
-                nextFlicker -= Time.unscaledDeltaTime;
+                nextFlicker -= Time.unscaledDeltaTime * AmbientScale;
                 if (nextFlicker <= 0f && _globalLight != null)
                 {
                     // OFF THE HOUR'S OWN LEVEL, not off a constant (2026-08-19). The flicker

@@ -66,24 +66,35 @@ namespace LastCall.UI
         public static void Burst(DiegeticStage stage, Vector3 at, SpriteRenderer body,
             bool follow, Sprite face, Color tint, int count)
         {
-            if (stage == null || face == null || count <= 0) return;
+            if (face == null) return;
+            Burst(stage, at, body, follow, new[] { face }, tint, count, MoteUnits);
+        }
+
+        /// <summary>A burst of several DIFFERENT faces (2026-09-08, the author's emojis:
+        /// "eskisi gibi müşterilerin arkasından birkaç tane"): mote i wears faces[i % n],
+        /// drawn <paramref name="units"/> tall on the stage.</summary>
+        public static void Burst(DiegeticStage stage, Vector3 at, SpriteRenderer body,
+            bool follow, Sprite[] faces, Color tint, int count, float units)
+        {
+            if (stage == null || faces == null || faces.Length == 0 || count <= 0) return;
             var host = new GameObject("ReactionMotes");
             var motes = host.AddComponent<ReactionMotes>();
-            motes.Build(stage, at, body, follow, face, tint, count);
+            motes.Build(stage, at, body, follow, faces, tint, count, units);
         }
 
         private void Build(DiegeticStage stage, Vector3 at, SpriteRenderer body, bool follow,
-            Sprite face, Color tint, int count)
+            Sprite[] faces, Color tint, int count, float units)
         {
             _tint = tint;
             _body = body;
             _follow = follow && body != null;
             _followFrom = body != null ? body.transform.position : Vector3.zero;
             bool calm = Motion.Reduced;
-            float scale = MoteUnits / Mathf.Max(0.0001f, face.bounds.size.y);
             _motes = new Mote[count];
             for (int i = 0; i < count; i++)
             {
+                var face = faces[i % faces.Length];
+                float scale = units / Mathf.Max(0.0001f, face.bounds.size.y);
                 var sr = stage.NewStageSprite("Mote" + i, MoteOrder);
                 sr.sprite = face;
                 sr.color = new Color(tint.r, tint.g, tint.b, 0f);

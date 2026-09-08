@@ -3110,80 +3110,58 @@ namespace LastCall.UI
             [EmoteBeat.Bond]     = new[] { 118, 86 },
         };
 
-        /// <summary>One face for the beat, rolled on the run's voice stream so the pick is
-        /// the seed's and not the frame's.</summary>
-        private Sprite EmoteFor(EmoteBeat beat)
+        /// <summary>Up to <paramref name="want"/> DIFFERENT faces for the beat, the first
+        /// rolled on the run's voice stream (the seed's pick, not the frame's), the rest
+        /// following it round the pool — so a burst never shows the same face twice while
+        /// the pool has another.</summary>
+        private Sprite[] EmotesFor(EmoteBeat beat, int want)
         {
             if (!EmoteTable.TryGetValue(beat, out var pool) || pool.Length == 0) return null;
             var run = Run;
-            int i = run != null ? run.VoiceStream.NextInt(pool.Length) : 0;
-            return Resources.Load<Sprite>("Emotes/em_" + pool[Mathf.Clamp(i, 0, pool.Length - 1)]);
+            int first = run != null ? run.VoiceStream.NextInt(pool.Length) : 0;
+            var faces = new List<Sprite>();
+            for (int k = 0; k < pool.Length && faces.Count < want; k++)
+            {
+                var s = Resources.Load<Sprite>("Emotes/em_" + pool[(first + k) % pool.Length]);
+                if (s != null) faces.Add(s);
+            }
+            return faces.Count > 0 ? faces.ToArray() : null;
         }
 
-        /// <summary>The 16px face at 2x. A whole multiple, or it is mud.</summary>
-        private const float EmotePx = 32f;
+        /// <summary>The 16px face at 1:1 on the stage (a stage unit is an art pixel; 32 drew a
+        /// blurred face wider than the head — measured 2026-09-08).</summary>
+        private const float EmoteUnits = 16f;
+
+        /// <summary>How many faces a beat throws: the big moments more, the quiet ones fewer.</summary>
+        private static int EmoteCount(EmoteBeat beat)
+        {
+            switch (beat)
+            {
+                case EmoteBeat.Perfect: case EmoteBeat.Flawless: case EmoteBeat.Bond: return 4;
+                case EmoteBeat.Patience: case EmoteBeat.Close: return 2;
+                default: return 3;
+            }
+        }
 
         /// <summary>
-        /// Pops a face up from behind the head: it starts under the crown at 0.6 and rises
-        /// over it (OutBack), holds, then drifts up and fades. On the seat's root, so it
-        /// rides the seat wherever the room takes it; above the balloon in the draw order.
+        /// Throws the beat's faces out from behind the drinker — the same stage motes the
+        /// reactions have always used (ReactionMotes: they leave the shoulders behind the
+        /// body, rise, sway and fade), only wearing the author's emojis, several different
+        /// ones, at 2x (2026-09-08, the author: "emojiler eskisi gibi müşterilerin
+        /// arkasından birkaç tane olsun"). The first draft stood ONE face over the head on
+        /// the HUD, which read as a badge landing on them rather than them reacting.
         /// </summary>
         private void Emote(SeatView view, EmoteBeat beat)
         {
-            if (view?.Root == null || !view.Root.gameObject.activeInHierarchy) return;
-            var face = EmoteFor(beat);
-            if (face == null) return;
-            var rt = NewRect("Emote", view.Root);
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
-            rt.pivot = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(EmotePx, EmotePx);
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = face;
-            img.raycastTarget = false;
-            img.preserveAspect = true;
-            rt.SetAsLastSibling();
-            float headTop = view.Look != null ? view.Look.HeadTop : CharWinH;
-            StartCoroutine(EmotePop(rt, img, headTop));
-        }
-
-        /// <summary>Out-back: overshoots the mark and settles, the pop of a thing that
-        /// jumped up (the house's Tweening carries no back easing).</summary>
-        private static float EmoteEase(float x)
-        {
-            const float c1 = 1.70158f, c3 = c1 + 1f;
-            float u = x - 1f;
-            return 1f + c3 * u * u * u + c1 * u * u;
-        }
-
-        private System.Collections.IEnumerator EmotePop(RectTransform rt, Image img, float headTop)
-        {
-            const float rise = 0.22f, hold = 1.1f, fade = 0.35f;
-            float from = headTop - 12f, to = headTop + 10f, t = 0f;
-            // the head is drawn on the stage, the face on the HUD: "behind" is the scale and
-            // the start under the crown, which is what the eye reads as coming out from
-            // behind somebody
-            while (t < rise && rt != null)
-            {
-                t += Time.unscaledDeltaTime;
-                float k = Motion.Reduced ? 1f : EmoteEase(Mathf.Clamp01(t / rise));
-                rt.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(from, to, k));
-                float sc = Mathf.LerpUnclamped(0.6f, 1f, k);
-                rt.localScale = new Vector3(sc, sc, 1f);
-                yield return null;
-            }
-            if (rt != null) { rt.anchoredPosition = new Vector2(0f, to); rt.localScale = Vector3.one; }
-            t = 0f;
-            while (t < hold && rt != null) { t += Time.unscaledDeltaTime; yield return null; }
-            t = 0f;
-            while (t < fade && rt != null)
-            {
-                t += Time.unscaledDeltaTime;
-                float k = Mathf.Clamp01(t / fade);
-                rt.anchoredPosition = new Vector2(0f, to + 14f * k);
-                img.color = new Color(1f, 1f, 1f, 1f - k);
-                yield return null;
-            }
-            if (rt != null) Destroy(rt.gameObject);
+            if (stage == null || view == null || view.Body == null) return;
+            if (!view.Body.gameObject.activeSelf) return;
+            int count = EmoteCount(beat);
+            var faces = EmotesFor(beat, count);
+            if (faces == null) return;
+            float headHud = view.Look != null ? view.Look.HeadTop : CharSize * 0.5f;
+            float upStage = (headHud - (CharSize * 0.5f - CharFootDrop) - MotesBelowCrown) / StageToHud;
+            var at = view.Body.transform.position + new Vector3(0f, upStage, 0f);
+            ReactionMotes.Burst(stage, at, view.Body, false, faces, Color.white, count, EmoteUnits);
         }
 
         private static (string Face, Color Tint, int Count) ReactionFor(double satisfaction, bool perfect)
@@ -3559,7 +3537,11 @@ namespace LastCall.UI
                 for (int n = 0; n < owned; n++)
                 {
                     int i = nearTheTill ? TillEndward(order, owned, n) : order[n];
-                    if (i < 0) break;
+                    // A run can own more stools than the HUD has built (seen 2026-09-08 with
+                    // a run started against a bar whose seats were not up): the room's
+                    // order is the run's, the views are the HUD's, and the two are bounded
+                    // separately.
+                    if (i < 0 || i >= _seats.Count) break;
                     var v = _seats[i];
                     if (v.Visit == null && !v.Exiting)
                     {
@@ -3892,8 +3874,10 @@ namespace LastCall.UI
                 var tone = drinking ? ChromeArt.BubbleTone.Drink
                     : canTake ? ChromeArt.BubbleTone.Take
                     : ChromeArt.BubbleTone.Order;
-                view.TagBg.sprite = ChromeArt.Bubble(tone);
-                if (view.Tail != null) view.Tail.sprite = ChromeArt.BubbleTail(tone);
+                // The ticket keeps the author's one balloon whatever its state (2026-09-08);
+                // the tone survives in the rule's colour below.
+                view.TagBg.sprite = ChromeArt.SpeechBox(tone);
+                if (view.Tail != null) view.Tail.sprite = ChromeArt.SpeechTail(tone);
                 if (view.IconRule != null)
                     view.IconRule.color = canTake ? UITheme.Cyan[0] : UITheme.Magenta[1];
             }

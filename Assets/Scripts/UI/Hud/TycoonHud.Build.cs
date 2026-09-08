@@ -460,7 +460,11 @@ namespace LastCall.UI
                 seat.Tag.sizeDelta = new Vector2(TagMinW, 40f);
                 seat.Tag.anchoredPosition = new Vector2(0, CharWinH + TagLift);
                 seat.TagBg = seat.Tag.gameObject.AddComponent<Image>();
-                seat.TagBg.sprite = ChromeArt.Bubble();
+                // ONE BALLOON (2026-09-08, the author: "isteklerinin, isimlerinin yazdığı
+                // balon da aynı balon olmalı"): the ticket is the author's drawn bubble,
+                // the same body the speech balloon wears. Its state used to be said by the
+                // edge colour; that now rests with the rule under the icons and the dots.
+                seat.TagBg.sprite = ChromeArt.SpeechBox();
                 seat.TagBg.type = Image.Type.Sliced;
                 seat.TagBg.raycastTarget = false;
 
@@ -472,10 +476,11 @@ namespace LastCall.UI
                 var tailRt = NewRect("Tail", seat.Tag);
                 tailRt.anchorMin = tailRt.anchorMax = new Vector2(0.5f, 0);
                 tailRt.pivot = new Vector2(0.5f, 1);
-                tailRt.sizeDelta = new Vector2(11f, 9f);
-                tailRt.anchoredPosition = new Vector2(0, 3f);
+                // The drawn tail, 10x6 at 2x, its top row the body's own outline (2026-09-08).
+                tailRt.sizeDelta = new Vector2(20f, 12f);
+                tailRt.anchoredPosition = new Vector2(0, 2f);
                 seat.Tail = tailRt.gameObject.AddComponent<Image>();
-                seat.Tail.sprite = ChromeArt.BubbleTail();
+                seat.Tail.sprite = ChromeArt.SpeechTail();
                 seat.Tail.raycastTarget = false;
 
                 // ── THE SPEECH BALLOON (2026-09-04, the author: "konuşmalar normalde

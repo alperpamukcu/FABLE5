@@ -1051,7 +1051,11 @@ namespace LastCall.UI
             foreach (var ch in _bookChapters)
             {
                 var chTitle = ch.Title;
-                var row = TocRow(body, y, 50f, () => { _bookTocChapter = chTitle; BuildTocBody(body); });
+                // TWO LINES OF COUNT (2026-09-08, the author: "yazılar üst üste biniyor").
+                // "11 POURS · 1 PERFECT · 7 LOCKED" is wider than the column at 16, and a
+                // bottom-anchored line grows UP into the title. The row is tall enough for
+                // the count to wrap under the title instead: 72 (title 5..29, count 3..39).
+                var row = TocRow(body, y, 72f, () => { _bookTocChapter = chTitle; BuildTocBody(body); });
                 var nm = NewText("N", row, _display, 16, TextAnchor.UpperLeft, ink);
                 Place(nm.rectTransform, new Vector2(0, 1), new Vector2(BkColW - 70f, 24f), Vector2.zero);
                 nm.rectTransform.pivot = new Vector2(0, 1);
@@ -1061,7 +1065,7 @@ namespace LastCall.UI
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(56f, 24f), new Vector2(-8f, 0));
                 fo.text = (ch.FirstPage + 1).ToString();
                 var meta = NewText("M", row, _body, 16, TextAnchor.LowerLeft, quiet);
-                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 18f), Vector2.zero);
+                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 36f), Vector2.zero);
                 meta.rectTransform.pivot = new Vector2(0, 0);
                 meta.rectTransform.anchoredPosition = new Vector2(8f, 3f);
                 // THE CHAPTER SAYS HOW MANY ARE MASTERED (2026-09-08, the author: "perfect
@@ -1070,7 +1074,7 @@ namespace LastCall.UI
                 meta.text = ch.Count + " POURS"
                     + (ch.PerfectCount > 0 ? " · " + ch.PerfectCount + " PERFECT" : "")
                     + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
-                y += 56f;
+                y += 78f;
             }
 
             var note = NewText("Note", body, _body, 16, TextAnchor.MiddleCenter, quiet);
