@@ -1570,7 +1570,10 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   yuva birimine çevirip kopyayı tam o dikdörtgene oturtuyor; raf şişesinin renderer'ları kart dururken kapalı
   (`ShowCellarBottle`), kart gidince açılıyor. Denenip atılanlar: yuvayı delmek (yazar: "kesme"), kartı kamera kanvasına alıp
   hover'daki şişeyi 60–62'ye kaldırmak (yazarın makinesinde tüm şişelerin camı kayboldu, yalnız sıvı blokları kaldı; raf
-  yazıları da kartın üstünde kalıyordu). Ölçüldü: kopya ile raf şişesinin ekran dikdörtgeni birebir aynı.
+  yazıları da kartın üstünde kalıyordu). Plakası olmayan kartlarda (lemon_fresh, kartonlar) kopya rafın düz `_c` sprite'ı (`ItemArt.Bottle`). **Tuzak:** sahne sprite'ının
+  dünya köşeleri `Camera.main.WorldToScreenPoint` ile ekrana çevrilir — `RectTransformUtility.WorldToScreenPoint(null, …)` kanvas
+  nesneleri içindir, dünya noktasını olduğu gibi döndürür (kopya bir raf yukarı düşmüştü). Ölçüldü: kopya ile raf şişesinin
+  gerçek ekran dikdörtgeni birebir aynı (limonata ve cin).
   Kart zemini yazarın dosyasında 226/255 alfa — yarı saydamlık sanatın kendisi. Gün sonu perdesi 0.88 → **0.965**. Market kartlarındaki `$` ikonu yerine düz yeşil `$` (display face,
   `Lime[2]`); çizili dolar panolarda kaldı.
 - **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Krakatoa Rum, sağ elli Quinn's Tonic), garnish

@@ -553,16 +553,25 @@ namespace LastCall.UI
             if (!_cellarCardFree && stage != null && _cellarCardShown >= 0
                 && stage.CellarBottleBounds(_cellarCardShown, out var bMin, out var bMax))
             {
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
-                    RectTransformUtility.WorldToScreenPoint(null, bMin), null, out Vector2 blo);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
-                    RectTransformUtility.WorldToScreenPoint(null, bMax), null, out Vector2 bhi);
+                // A STAGE sprite's corners are world units, and go through the camera —
+                // WorldToScreenPoint(null, ...) is for canvas objects and hands a world point
+                // back untouched, which laid the copy a shelf too high (measured 2026-09-08).
+                var cam = Camera.main;
+                Vector2 sLo = cam != null ? (Vector2)cam.WorldToScreenPoint(bMin) : (Vector2)bMin;
+                Vector2 sHi = cam != null ? (Vector2)cam.WorldToScreenPoint(bMax) : (Vector2)bMax;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, sLo, null, out Vector2 blo);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, sHi, null, out Vector2 bhi);
                 var bCentre = (blo + bhi) * 0.5f;
                 var bSize = new Vector2(Mathf.Abs(bhi.x - blo.x), Mathf.Abs(bhi.y - blo.y));
                 // the vessel is anchored at the slot's centre; the offset is from there
                 var slotCentre = pos + new Vector2(left ? w - CardSlotW * 0.5f : CardSlotW * 0.5f, h * 0.5f);
                 _cellarCardVessel.sizeDelta = bSize;
                 _cellarCardVessel.anchoredPosition = bCentre - slotCentre;
+                if (_cellarCardDish.enabled)   // the flat copy, same rect
+                {
+                    _cellarCardDish.rectTransform.sizeDelta = bSize;
+                    _cellarCardDish.rectTransform.anchoredPosition = bCentre - slotCentre;
+                }
             }
         }
 
@@ -996,6 +1005,15 @@ namespace LastCall.UI
             {
                 double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
                 _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
+            }
+            else
+            {
+                // A card without the v4 plates (lemon_fresh, the cartons) is drawn on the
+                // shelf from its flat cellar sprite — the copy is that same sprite, on the
+                // same rect. Without this the shelf's one went dark and nothing stood in
+                // for it (the author, 2026-09-08: "üstüne gelindiğinde şişeler yok oluyor").
+                _cellarCardDish.sprite = ItemArt.Bottle(card);
+                _cellarCardDish.enabled = _cellarCardDish.sprite != null;
             }
 
             _cellarCardName.text = card.Name.ToUpperInvariant();
