@@ -1544,9 +1544,9 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   "SM / VO" diye kesiyordu), Silkscreen Bold 16 büyük harf, en çok iki satır; bir satır OLGU (stok çubuğu + yüzde, ya da meta);
   DURUM satırı; ayakta **madeni para + rakam** (kehribar etiket, chrome'da yazılı `$`ın kaldığı son yerdi) ve tuş. Ölçüldü:
   display face 16'da 156 sütuna 9 karakter sığıyor, "RESTOCK THE WHOLE WELL" üç satıra bölünüp son kelimeyi kaybediyordu.
-- **Doğrulama notu:** EditMode 503/503. PlayMode koşusu editörün girdi katmanı öldüğü için doğrulanamadı — `InputSystem.devices`
-  BOŞ (native fare bile yok), elle reflection'la aynı fiiller çalışıyor (koltuk → inspected, kepenk → CellarDoor_*). Editör
-  yeniden başlatılınca koşulacak.
+- **Doğrulama:** EditMode 503/503, PlayMode 11/11 (editör yeniden başlatıldıktan sonra; öncesinde `InputSystem.devices` boştu ve
+  süit koşamıyordu). Ara kırmızılar — iki market kartı testi — eski kartla da düştü ve aynı kodla sonra geçti: sebep play modunda
+  eklediğim probe sanal faresiydi, kart değil (hafıza: playmode-red-is-usually-ghost-input, beşinci sebep).
 
 ### 9.45 · On beşinci liste: kimlik açılıyor, vesikalıklar tek çerçevede, fatura panoları dizildi (2026-09-07)
 
