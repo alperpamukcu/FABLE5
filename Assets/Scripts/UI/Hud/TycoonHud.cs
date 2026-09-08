@@ -1473,6 +1473,11 @@ namespace LastCall.UI
                 : pressed ? CursorSkin.State.Pressed : CursorSkin.State.Idle);
         }
 
+        private void LateUpdate()
+        {
+            StepCellarCard();
+        }
+
         private void OnRunStarted()
         {
             // A new run re-resolves the ART, not just the state: sprite and piece
@@ -1615,7 +1620,9 @@ namespace LastCall.UI
             StepMiniPreps(run);
             StepIdOpen();
             StepPropTip();
-            StepCellarCard();
+            // StepCellarCard runs in LateUpdate: the copy in the card's slot is laid on the
+            // shelf bottle's rect, and the shelf bottle is moved by HoverGlow's Update — a
+            // frame late, the copy trailed the light behind it (2026-09-08).
             StepCursor();
             StepCellarLabels();
             UpdateEscape();

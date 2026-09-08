@@ -211,7 +211,7 @@ namespace LastCall.UI
         private CanvasGroup _cellarCardGroup;
         private Text _cellarCardName, _cellarCardMeta, _cellarCardPrice, _cellarCardStock,
             _cellarCardUsesHead, _cellarCardMark;
-        private Image _cellarCardIcon, _cellarCardCoin, _cellarCardDish;
+        private Image _cellarCardIcon, _cellarCardCoin, _cellarCardDish, _cellarCardHalo;
         private BottleArt _cellarCardBottle;
         private bool _cellarCardFree;      // a garnish card stands on the counter, cellar shut or not
         // The author's card at 2x: a 3px rule is 6 units, the slot 84 wide, and its
@@ -256,6 +256,16 @@ namespace LastCall.UI
             slotImg.raycastTarget = false;
             if (slotImg.sprite == null) slotImg.color = UITheme.Night[1];
 
+            // THE HALO COMES WITH THE COPY (2026-09-08, the author: "şişenin hareketiyle
+            // arkadaki ışıklandırmanın hareketi bir değil"): the shelf's halo stays off while
+            // the card stands, and the same art, tint and rise are drawn here, behind the
+            // copy, on the copy's own rect — so light and bottle move as one.
+            var haloRt = NewRect("Halo", _cellarCardSlot);
+            haloRt.anchorMin = haloRt.anchorMax = new Vector2(0.5f, 0.5f);
+            haloRt.pivot = new Vector2(0.5f, 0.5f);
+            _cellarCardHalo = haloRt.gameObject.AddComponent<Image>();
+            _cellarCardHalo.raycastTarget = false;
+            _cellarCardHalo.enabled = false;
             _cellarCardVessel = NewRect("Vessel", _cellarCardSlot);
             _cellarCardVessel.anchorMin = _cellarCardVessel.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.pivot = new Vector2(0.5f, 0.5f);
@@ -463,6 +473,7 @@ namespace LastCall.UI
             var bottle = card != null ? run?.Shelf.Find(card.Id) : null;
             ClearCardUses();
             _cellarCardBottle.Show(null);
+            _cellarCardHalo.enabled = false;
             _cellarCardDish.enabled = false;   // the dish itself rises over the card (its own canvas, 27)
             LiftProp(over, true);
             string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
@@ -579,6 +590,17 @@ namespace LastCall.UI
                 var slotCentre = pos + new Vector2(left ? w - CardSlotW * 0.5f : CardSlotW * 0.5f, h * 0.5f);
                 _cellarCardVessel.sizeDelta = bSize;
                 _cellarCardVessel.anchoredPosition = bCentre - slotCentre;
+                var glow = stage.CellarGlow(_cellarCardShown);
+                bool lit = glow != null && glow.HaloArtNow != null && glow.GlowNow > 0.01f;
+                _cellarCardHalo.enabled = lit;
+                if (lit)
+                {
+                    _cellarCardHalo.sprite = glow.HaloArtNow;
+                    var tint = glow.HaloTint;
+                    _cellarCardHalo.color = new Color(tint.r, tint.g, tint.b, tint.a * glow.GlowNow);
+                    _cellarCardHalo.rectTransform.sizeDelta = glow.HaloBoxFor(bSize);
+                    _cellarCardHalo.rectTransform.anchoredPosition = bCentre - slotCentre;
+                }
                 if (_cellarCardDish.enabled)   // the flat copy, same rect
                 {
                     _cellarCardDish.rectTransform.sizeDelta = bSize;
@@ -1018,7 +1040,8 @@ namespace LastCall.UI
                 double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
                 _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
             }
-            else
+            _cellarCardHalo.enabled = false;
+            if (plates == null)
             {
                 // A card without the v4 plates (lemon_fresh, the cartons) is drawn on the
                 // shelf from its flat cellar sprite — the copy is that same sprite, on the

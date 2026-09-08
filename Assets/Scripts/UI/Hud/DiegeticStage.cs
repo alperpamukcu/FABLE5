@@ -537,6 +537,8 @@ namespace LastCall.UI
         public void ShowCellarBottle(int index, bool shown)
         {
             if (index < 0 || index >= _cellarStock.Count) return;
+            var glow = CellarGlow(index);
+            if (glow != null) glow.HaloHidden = !shown;   // the card draws the halo with the copy
             _cellarStock[index].enabled = shown;
             if (index < _cellarBack.Count) _cellarBack[index].enabled = shown;
             if (index < _cellarDrink.Count) _cellarDrink[index].enabled = shown && _cellarDrinkOn(index);
@@ -545,6 +547,11 @@ namespace LastCall.UI
         private bool _cellarDrinkOn(int index) =>
             index < _cellarDrink.Count && _cellarDrink[index].gameObject.activeSelf
             && index < _cellarMask.Count && _cellarMask[index].sprite != null;
+
+        /// <summary>The hover glow on one cellar door — the sway, the rise, the halo — for
+        /// the card to draw the same light behind its copy of the bottle.</summary>
+        public HoverGlow CellarGlow(int index) =>
+            index >= 0 && index < _cellarDoors.Count ? _cellarDoors[index].GetComponent<HoverGlow>() : null;
 
         /// <summary>The world corners (min, max) of one cellar bottle's front plate, where
         /// it stands THIS frame — sway and all — for the HUD to lay its copy on. False

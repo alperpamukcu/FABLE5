@@ -101,6 +101,31 @@ namespace LastCall.UI
         /// <summary>The colour of that light. Warm by default: it is a bar.</summary>
         public Color HaloTint = new Color(1f, 0.86f, 0.62f, 0.7f);
 
+        /// <summary>Keeps the halo off while something else draws it (2026-09-08: the
+        /// bottle's card draws the bottle AND its halo on top of itself; the shelf's own
+        /// halo under the card moved a frame apart from the copy and read as broken). The
+        /// glow's rise is still tracked, so <see cref="GlowNow"/> and <see cref="HaloArtNow"/>
+        /// let the other drawer show the same light.</summary>
+        public bool HaloHidden;
+
+        /// <summary>The halo's rise this frame, 0..1 — what its alpha is scaled by.</summary>
+        public float GlowNow { get; private set; }
+
+        /// <summary>The halo's art as dressed for the lit sprite, or null before there is one.</summary>
+        public Sprite HaloArtNow { get; private set; }
+
+        /// <summary>The halo box for a body of <paramref name="bodySize"/>, the way
+        /// <see cref="HaloBox"/> sizes it for the prop (aspect kept): the lit sprite plus
+        /// the glow's spread on every side, at the body's scale.</summary>
+        public Vector2 HaloBoxFor(Vector2 bodySize)
+        {
+            var sp = _haloFor;
+            if (sp == null || sp.rect.width < 1f || sp.rect.height < 1f) return bodySize;
+            float grown = 2f * ChromeArt.GlowSpread(sp, Halo);
+            float k = Mathf.Min(bodySize.x / sp.rect.width, bodySize.y / sp.rect.height);
+            return new Vector2((sp.rect.width + grown) * k, (sp.rect.height + grown) * k);
+        }
+
         /// <summary>Everything that moves with the prop when it is more than one object —
         /// the cellar's bottle is a front plate, a back plate, a drink and a mask standing in
         /// one place. Left null, the prop moves alone.</summary>
@@ -408,12 +433,24 @@ namespace LastCall.UI
         /// </summary>
         private void Shine(float g)
         {
+            GlowNow = g;
             if (Halo <= 0f) return;
             // NO DRAWING, NO LIGHT (2026-09-06). The glow is cut FROM the prop's own art, so a
             // prop that has none has nothing to light: the ellipse fallback sized itself to the
             // hit RECT and a 180x384 plate became a pair of beams across the bench, which is
             // what the author photographed when a juice carton found no bottle sprite.
             if (LitSprite() == null) { HideHalo(); return; }
+            if (HaloHidden)
+            {
+                var litNow = LitSprite();
+                if (_haloFor != litNow)
+                {
+                    _haloFor = litNow;
+                    HaloArtNow = litNow != null ? ChromeArt.Glow(litNow, ChromeArt.GlowSpread(litNow, Halo)) : null;
+                }
+                HideHalo();
+                return;
+            }
             // A light nobody has asked for is never built — and never built ON THE WAY OUT
             // either, which is what a fading-to-nothing prop and a closing panel both are.
             if (_halo == null && _haloSprite == null)
@@ -525,6 +562,7 @@ namespace LastCall.UI
         {
             _haloFor = src;
             var art = src != null ? ChromeArt.Glow(src, ChromeArt.GlowSpread(src, Halo)) : ChromeArt.Halo();
+            HaloArtNow = art;
             if (_halo is Image im) im.sprite = art;
             if (_haloSprite != null)
             {

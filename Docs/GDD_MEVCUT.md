@@ -1573,7 +1573,11 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   yazıları da kartın üstünde kalıyordu). Plakası olmayan kartlarda (lemon_fresh, kartonlar) kopya rafın düz `_c` sprite'ı (`ItemArt.Bottle`). **Tuzak:** sahne sprite'ının
   dünya köşeleri `Camera.main.WorldToScreenPoint` ile ekrana çevrilir — `RectTransformUtility.WorldToScreenPoint(null, …)` kanvas
   nesneleri içindir, dünya noktasını olduğu gibi döndürür (kopya bir raf yukarı düşmüştü). Ölçüldü: kopya ile raf şişesinin
-  gerçek ekran dikdörtgeni birebir aynı (limonata ve cin). **Garnish kâseleri** HUD nesnesi olduğundan kopyaya gerek yok:
+  gerçek ekran dikdörtgeni birebir aynı (limonata ve cin). **Hale kopyayla gelir** (yazar: "şişenin hareketiyle arkadaki
+  ışıklandırmanın hareketi bir değil"): kart dururken rafın HoverGlow halesi kapalı (`HoverGlow.HaloHidden`; yükselme
+  `GlowNow` olarak izlenmeye devam eder), aynı hale sanatı (`HaloArtNow`), tonu ve yükselmesi kopyanın arkasına kopyanın
+  dikdörtgeninde (`HaloBoxFor`) çizilir; kart adımı `LateUpdate`'te — HoverGlow'un Update'inin bir kare gerisinde kalınca
+  kopya ışığın arkasından geliyordu. **Garnish kâseleri** HUD nesnesi olduğundan kopyaya gerek yok:
   her kâse uyuyan bir Canvas taşır (`overrideSorting` kapalı); kartı açılınca 27'ye kaldırılır (kartın 26'sının üstü), çıkışta
   yine miras alır — kâsenin kendisi, parlamasıyla, kartın üstünde (yazar: "üstüne gelinen asset hiyerarşide en üste, bilgi
   kartının üstüne çıksın, odağa").
