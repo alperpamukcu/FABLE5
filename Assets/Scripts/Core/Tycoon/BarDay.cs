@@ -104,7 +104,14 @@ namespace LastCall.Core
 
         /// <summary>The shift is over when the door has shut AND the last stool is empty:
         /// closing time stops new arrivals, it does not throw anyone out mid-drink.</summary>
-        public bool IsComplete => IsClosingTime && _seated.Count == 0;
+        /// <summary>The floor is done with its people: closing time, nobody on a stool.
+        /// The NIGHT may still be open — the run waits for the counter too (2026-09-08,
+        /// TycoonRun.Tick), but that is the run's rule: this class is a floor, and the
+        /// verbs that clear a counter are the run's. Kept as the floor's own word so the
+        /// floor's tests keep meaning what they say.</summary>
+        public bool FloorEmpty => IsClosingTime && _seated.Count == 0;
+
+        public bool IsComplete => FloorEmpty;
 
         /// <summary>
         /// Sits somebody the night did not roll (GDD 26 §2) — the last customer, who comes in

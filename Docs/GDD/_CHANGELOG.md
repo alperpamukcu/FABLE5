@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The seventeenth list (2026-09-08):** the night waits for the counter — the doors shut once the
+  glasses are collected and the marks wiped (gated in the run, swept by the dev verb and the sim's
+  rot hands); a carried glass leaves no silhouette behind; the book's chapter line clears the frame,
+  its dots keep their edge pixel, seven pours fit a page, the perfect ribbon becomes a chapter-line
+  word, the contents mark PERFECT pages, the badge is a star with a count, the book prop sits above
+  the shutter's hit plate; cellar name plates stagger instead of overlapping; the market card laid
+  out again — name in ink on paper, coin and figure for the price, five to a row. GDD_MEVCUT §9.46.
+
 - **The fifteenth list (2026-09-07):** the licence opens rather than appears, its photo clears
   the band and its small type is set at the size it is drawn; the flags are redrawn at 48x33 with
   real geometry; customers walk on and off solid at full pace and their parting line rides out

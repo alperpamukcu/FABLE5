@@ -797,7 +797,13 @@ namespace LastCall.Core
             // A generous cap: a night is 95 seconds and the longest patience is under a
             // minute, so this lands long before it. It exists so a bug can never spin here.
             for (int guard = 0; guard < 20000 && Phase == TycoonPhase.DayOpen; guard++)
+            {
+                // The dev verb is asked to close the night on the spot; since 2026-09-08 a
+                // night waits for its counter, so the counter is swept the moment the floor
+                // is done with its people. The real clock still runs everyone out.
+                if (Floor.IsComplete && !Floor.House.CounterClear) Floor.House.SweepForClosing();
                 Tick(0.25);
+            }
         }
 
         /// <summary>
@@ -992,7 +998,16 @@ namespace LastCall.Core
             seated = SettleLastCall(seated);
             WatchForLessons();        // the host's cues that are read off the floor
 
-            if (Floor.IsComplete)
+            // THE NIGHT ENDS WHEN THE COUNTER IS CLEAR (2026-09-08, the author: "tüm sahne
+            // temizlenip bardaklar toparlanmadan Doors Shut olmamalı, oyuncu masaları
+            // temizleyip bardakları toplayınca gün bitmeli"). It used to end the moment the
+            // last drinker left, and whatever they left behind was billed to comfort and
+            // swept away by CloseNight. The last thing the shift does now is what a shift
+            // does: collect the glasses, wipe the marks. The books open when that is done.
+            // Gated HERE and not in BarDay.IsComplete: the floor's tests serve people and
+            // wait for the floor to empty with nobody to clean — a floor is not the thing
+            // that owns a cloth.
+            if (Floor.IsComplete && Floor.House.CounterClear)
             {
                 // The counter's night ends here, BEFORE anything reads ComfortTonight: what
                 // is still in the hand and in the sink is washed for free, what is still on

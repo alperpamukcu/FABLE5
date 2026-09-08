@@ -124,6 +124,17 @@ namespace LastCall.Core
         public int Wipes { get; private set; }
         public int GlassesWashed { get; private set; }
 
+        /// <summary>NOTHING LEFT ON THE COUNTER (2026-09-08): no glass standing and no mark
+        /// wanting the cloth. What the night now waits for before it can close.</summary>
+        public bool CounterClear
+        {
+            get
+            {
+                foreach (var m in _messes) if (!m.IsClean) return false;
+                return true;
+            }
+        }
+
         /// <summary>Glasses standing on the counter — each one holds a stool.</summary>
         public int GlassesOnCounter
         {
@@ -198,6 +209,20 @@ namespace LastCall.Core
             _messes.Add(mess);
             MessesLeft++;
             return mess;
+        }
+
+        /// <summary>
+        /// THE CLOSING SWEEP (2026-09-08): everything off the counter and out of the hand at
+        /// once, counting nothing. For the two callers that may end a night without doing the
+        /// work — DevSkipToDayEnd, which is asked to close the night on the spot, and the
+        /// simulator's never-cleans hands, which exist to measure what rot costs and could
+        /// not measure it if rot kept the doors open for ever. The night's comfort has
+        /// already been read by then; this gives nothing back.
+        /// </summary>
+        public void SweepForClosing()
+        {
+            _messes.Clear();
+            GlassesInHand = 0;
         }
 
         /// <summary>The glass leaves the counter for the hand; the stool is free this instant.</summary>

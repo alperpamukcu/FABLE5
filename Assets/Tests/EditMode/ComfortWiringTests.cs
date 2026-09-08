@@ -58,6 +58,13 @@ namespace LastCall.Tests
                 Assert.Less(guard++, 600, "the day must terminate");
                 run.Tick(5);
                 if (clean) TestNight.Clean(run);
+                // A night waits for its counter since 2026-09-08 (TycoonRun.Tick): the
+                // dirty night here would hold the doors open for ever and never file. It
+                // is swept once the floor is done, exactly as the simulator's never-cleans
+                // hands are — the comfort it lost was charged while the mess stood, and the
+                // sweep gives none of it back, which is what this test measures.
+                else if (run.Floor.IsComplete && !run.Floor.House.CounterClear)
+                    run.Floor.House.SweepForClosing();
                 ServeEveryone(run);
             }
         }

@@ -754,14 +754,32 @@ namespace LastCall.UI
             var bookKey = BuildBookProp(root);
             // The badge rides the book's top-right corner, so the news is where the way in
             // already is. Built once and parked; RefreshBookBadge raises it.
+            // A STAR WITH A COUNT, not a square with a digit (2026-09-08, the author:
+            // "bildirim butonunu değiştir dümdüz 1 yazıyor"). What the badge announces is
+            // a recipe PERFECTED — the page that wears platinum — so the badge is the star
+            // the page earns, in the same platinum, with how many beside it. The star is
+            // the house's own (ItemArt.Star at 16), dimmed to the platinum by alpha only,
+            // never tinted (CLAUDE.md: one star).
             _bookBadge = NewRect("Badge", bookKey);
-            Place(_bookBadge, new Vector2(1, 1), new Vector2(20, 20), new Vector2(6, 4));
-            var badgeImg = _bookBadge.gameObject.AddComponent<Image>();
-            badgeImg.color = BkPlatinum;
-            badgeImg.raycastTarget = false;
-            _bookBadgeText = NewText("N", _bookBadge, _display, 8, TextAnchor.MiddleCenter,
+            Place(_bookBadge, new Vector2(1, 1), new Vector2(40, 22), new Vector2(14, 6));
+            var badgePlate = _bookBadge.gameObject.AddComponent<Image>();
+            badgePlate.sprite = ChromeArt.Card();
+            badgePlate.type = Image.Type.Sliced;
+            badgePlate.color = BkPlatinum;
+            badgePlate.raycastTarget = false;
+            var badgeStar = NewRect("Star", _bookBadge);
+            Place(badgeStar, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(3, 0));
+            badgeStar.pivot = new Vector2(0, 0.5f);
+            var badgeStarImg = badgeStar.gameObject.AddComponent<Image>();
+            badgeStarImg.sprite = ItemArt.Star(true, 16f);
+            badgeStarImg.preserveAspect = true;
+            badgeStarImg.raycastTarget = false;
+            _bookBadgeText = NewText("N", _bookBadge, _display, 16, TextAnchor.MiddleRight,
                 new Color(0.16f, 0.18f, 0.24f));
-            Stretch(_bookBadgeText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Place(_bookBadgeText.rectTransform, new Vector2(1, 0.5f), new Vector2(18, 20),
+                new Vector2(-3, 0));
+            _bookBadgeText.rectTransform.pivot = new Vector2(1, 0.5f);
+            _bookBadgeText.horizontalOverflow = HorizontalWrapMode.Overflow;
             _bookBadge.gameObject.SetActive(false);
             BuildRecipeBook(root);
 

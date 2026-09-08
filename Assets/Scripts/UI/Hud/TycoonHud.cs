@@ -1119,7 +1119,11 @@ namespace LastCall.UI
         // the rows it already had would have had to pay for them — the art was the only
         // row with anything to give and it had already given 16 units this morning. A card
         // that gained two objects is a taller card; the aisle scrolls.
-        private const float TileW = 160f, TileH = 236f, ContentW = 140f;
+        // THE CARD, ONE GRAMMAR (2026-09-08, the author: "ürün kartlarının tasarımını en
+        // baştan ele al"). 176 wide so a name in the display face fits two lines without
+        // truncating — "SMIRNOFF VODKA" printed as "SM / VO" on the 140 the old plate gave
+        // it — and 256 tall so the five bands under the picture each get a whole row.
+        private const float TileW = 176f, TileH = 256f, ContentW = 156f;
 
         // A bottle is the tallest thing the aisle draws and it may not exceed TileArtH:
         // PlaceProduct stands every product on ProductFootY and grows it UPWARD, so
@@ -1178,19 +1182,19 @@ namespace LastCall.UI
         /// aşağıdaki isimleriyle olacakları mesafeyle aynı olmalı".</summary>
         private const float TileArtAir = 6f;
 
-        private const float TileArtTop = TileCapH + TileArtAir, TileArtH = 118f;
+        private const float TileArtTop = TileCapH + TileArtAir, TileArtH = 124f;
 
         /// <summary>Two lines of 16 and the air round them. 46, not 40 (2026-08-19, measured
         /// in play): the legacy Text renderer sets 16 on a 19.2 line, so two lines need 39 —
         /// and a 40 box minus a 2-unit inset each side left 36, which TRUNCATED the second
         /// line. "Resurface the Bar" shipped to the screenshot reading RESURFACE.</summary>
-        private const float TileNameTop = TileArtTop + TileArtH + TileArtAir, TileNameH = 46f;
+        private const float TileNameTop = TileArtTop + TileArtH + TileArtAir, TileNameH = 40f;   // 140
 
-        private const float TileMetaTop = 182f, TileMetaH = 12f;
+        private const float TileMetaTop = 182f, TileMetaH = 16f;
 
-        private const float TileStateTop = 196f, TileStateH = 14f;
+        private const float TileStateTop = 200f, TileStateH = 16f;
 
-        private const float TileFootTop = 212f, TileFootH = 20f;
+        private const float TileFootTop = 222f, TileFootH = 28f;
 
         private const string ShopIdleTip =
             "Point at anything to read it. You only pay when you place the order.";
@@ -2197,6 +2201,7 @@ namespace LastCall.UI
             public int FirstPage;
             public int Count;
             public int LockedCount;
+            public int PerfectCount;   // mastered pages in the chapter (2026-09-08)
         }
 
         private bool _bookOpen;
@@ -2223,7 +2228,14 @@ namespace LastCall.UI
         private const float BkPageDX = 183f;                    // a page's centre off the spine
         private const float BkReach = 175f;                     // spine → leaf outer edge, art px
         private const float BkColW = 296f;                      // print column inside the gold frame
-        private const float BkContentTop = 80f;                 // under the heading rules
+        private const float BkContentTop = 90f;                 // under the heading rules (+10, 2026-09-08: the head cleared the frame)
+        /// <summary>Where the page's story foot begins, from the top: the pours may not run
+        /// past it (2026-09-08). Measured off the foot the page draws — the rule at 540 with
+        /// the story under it — and used to size the pour rows to what is left.</summary>
+        private const float BkStoryTop = 504f;   // the foot's rule is 142 from the bottom of 652
+        /// <summary>The platinum a perfected page is printed in, as INK on paper: the plate
+        /// colour is too pale to read as type on cream.</summary>
+        private static readonly Color BkPlatinumInk = new Color(0.42f, 0.46f, 0.55f);
         private const float BkParkY = 748f;                     // the drop's overhead park
         private const float BkGaugeW = 102f, BkGaugeH = 14f;    // the page's sight glass:
                                                                 // 100 px interior, 20 to a

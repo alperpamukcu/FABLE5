@@ -672,7 +672,14 @@ namespace LastCall.UI
         {
             foreach (var v in _seats)
             {
-                bool show = v.Dirty != null && v.Dirty.HasGlass;
+                // IN THE HAND MEANS OFF THE COUNTER (2026-09-08, the author: "bardaklar
+                // lavaboya sürüklenirken bir silüet tezgahta kalmaya devam ediyor"). The
+                // prop is drawn from the mess every frame, and Core keeps the glass IN the
+                // mess until the sink takes it — so while it was being carried the counter
+                // copy stood exactly where it had been, under the one in the hand. The seat
+                // being carried draws no counter glass until the carry ends.
+                bool show = v.Dirty != null && v.Dirty.HasGlass
+                            && !(_glassCarrying && _carriedEmpty == v);
                 if (show && v.DirtyProp == null)
                 {
                     var prop = NewRect("DirtyGlass", _hudRoot);
@@ -1968,9 +1975,16 @@ namespace LastCall.UI
             // the strip counts stools rather than crockery.
             int held = run != null ? run.GlassesInHand + run.GlassesWashing : 0;
             string seats = held == 1 ? " · 1 STOOL HELD" : held > 1 ? " · " + held + " STOOLS HELD" : "";
+            // THE NIGHT WAITS ON THE COUNTER, AND SAYS SO (2026-09-08): with the last
+            // drinker gone the doors used to shut at once; they wait for the glasses and the
+            // marks now (BarDay.IsComplete), and a shift standing in an empty room needs to
+            // be told what it is waiting for.
+            bool waitingOnCounter = run != null && run.Phase == TycoonPhase.DayOpen
+                && run.Floor != null && run.Floor.FloorEmpty && !run.Floor.House.CounterClear;
             string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
                 // The strip no longer counts (2026-09-08): the dial does, at the tap. What
                 // is left here is the thing only this line says — what the held glasses cost.
+                : waitingOnCounter && !busy ? "LAST CALL · CLEAR THE COUNTER TO CLOSE"
                 : busy ? "WASHING" + seats
                 : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" + seats : "";
             if (_handStrip.text != line) _handStrip.text = line;

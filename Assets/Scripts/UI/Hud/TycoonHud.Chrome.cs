@@ -823,6 +823,15 @@ namespace LastCall.UI
                 plate.transform.SetAsFirstSibling();
                 _cellarLabels.Add(t);
             }
+            // NEIGHBOURS ON ONE SHELF DO NOT SHARE A SPOT (2026-09-08, the author:
+            // "mahzende isim ayırması net değil, tüm içecekler mevcut olduğunda problem
+            // oluyor"). A plate is as wide as its word and centred on its run; with every
+            // shelf full a run can be one slot wide, and "SODA & TONIC" is wider than a
+            // slot, so two plates on one shelf overlapped and read as one smear. The
+            // plates are laid left to right, and one that would overlap the plate before
+            // it on the same shelf drops a plate's height — the balloons' own staircase,
+            // at plate scale — so every family keeps its own name.
+            float prevRight = float.MinValue, prevY = float.NaN, prevDrop = 0f;
             for (int i = 0; i < _cellarLabels.Count; i++)
             {
                 var t = _cellarLabels[i];
@@ -840,8 +849,14 @@ namespace LastCall.UI
                 // run it labels looks like it wants — measured, because "SODA & TONIC" and
                 // "GIN" cannot share a box.
                 float w = Mathf.Max(48f, t.preferredWidth + 16f);
-                plate.sizeDelta = new Vector2(w, 18f);
-                plate.anchoredPosition = ToCentre(new Vector2(cx, y));
+                const float PlateH = 18f, PlateGap = 4f;
+                float drop = 0f;
+                bool sameShelf = !float.IsNaN(prevY) && Mathf.Abs(prevY - y) < 1f;
+                if (sameShelf && cx - w * 0.5f < prevRight + PlateGap)
+                    drop = prevDrop > 0f ? 0f : PlateH + 2f;   // alternate: down, level, down
+                plate.sizeDelta = new Vector2(w, PlateH);
+                plate.anchoredPosition = ToCentre(new Vector2(cx, y - drop));
+                prevRight = cx + w * 0.5f; prevY = y; prevDrop = drop;
                 // The plate's group is built with the plate (see above), so this is a read,
                 // not a hunt. It was `GetComponent<CanvasGroup>() ?? Add...` for one afternoon
                 // and threw MissingComponentException every frame the cellar was open: a

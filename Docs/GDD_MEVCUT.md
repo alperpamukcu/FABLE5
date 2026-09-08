@@ -1521,6 +1521,33 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.46 · On yedinci liste: gece tezgah temizlenince biter, menü sayfası ve market kartı yeniden (2026-09-08)
+
+- **Gece tezgah temizlenmeden bitmiyor.** `TycoonRun.Tick` gün kapatma bloğuna yalnız `Floor.IsComplete && Floor.House.CounterClear`
+  iken giriyor. Kapı KOŞUDA, katta değil: `BarDay.IsComplete` "kapanış saati ve tabure boş" olarak kaldı (`FloorEmpty` aynı şeyin
+  adı), çünkü kat testleri servis edip kimse temizlemeden katın boşalmasını bekliyor — bez katın değil koşunun. İki fiil
+  süpürerek kapatır (`Housekeeping.SweepForClosing`): `DevSkipToDayEnd` ve simülatörün "never wipes" elleri (çürümenin
+  bedeli zaten `CloseNight`'ta okunmuştur, süpürmek geri vermez). El şeridi kat boşken ve tezgah kirliyken "LAST CALL · CLEAR
+  THE COUNTER TO CLOSE" yazıyor.
+- **Sürüklenen bardağın silüeti tezgahta kalmıyor:** `RefreshDirtyGlasses` taşınan koltuğun prop'unu taşıma süresince
+  çizmiyor (Core bardağı lavabo alana kadar mess'te tutuyor, prop her kare mess'ten çiziliyordu).
+- **Kitap:** chapter satırı çerçevenin iç çizgisinin (5. sanat satırı = 10 birim) altına indi (-8 → -18, `BkContentTop` 80 → 90);
+  `RatioDots` iki uçta birer piksel pay aldı (son dot'un merkezi 60, kenarı 64.4, doku 64'tü); satır aralığı sayfaya göre ölçülüyor
+  (`rowPitch = clamp((BkStoryTop − y) / satır, 32, 48)`, öykü ayağı alttan 142 = üstten 510) ve şişe kutusu ona uyuyor — Long
+  Island 7 satırla sığıyor; perfect kurdelesi gitti (170×22'lik 45° kurdele uzun adı örtüyordu: "SEX ON THE BEA"), söz chapter
+  satırına platin mürekkeple ("HOUSE PRIDE · PERFECT RECIPE"); içindekilerde mükemmel sayfa PERFECT etiketi, chapter satırı
+  "N PERFECT" sayımı taşıyor; rozet kare-rakam yerine platin yıldız + sayı; kitap prop'u kendi kanvasında **8**'de (kepengin
+  isabet plakası 6'da odanın enini kaplıyor, bez gibi), açık kitap 15 → **27**.
+- **Mahzen plakaları:** aynı rafta ardışık iki plaka çakışırsa ikincisi bir plaka boyu iner (balonların merdiveni, plaka ölçeğinde).
+- **Market kartı baştan:** 176×256, beş sütun (5×176 + 4×12 = 928 / 1004). Resim penceresi tam genişlik, rung yıldızları
+  pencerenin sol altında; **ad kâğıdın üstünde** (lacivert plaka gitti — sayfadaki kâğıt olmayan tek nesneydi ve "SMIRNOFF VODKA"yı
+  "SM / VO" diye kesiyordu), Silkscreen Bold 16 büyük harf, en çok iki satır; bir satır OLGU (stok çubuğu + yüzde, ya da meta);
+  DURUM satırı; ayakta **madeni para + rakam** (kehribar etiket, chrome'da yazılı `$`ın kaldığı son yerdi) ve tuş. Ölçüldü:
+  display face 16'da 156 sütuna 9 karakter sığıyor, "RESTOCK THE WHOLE WELL" üç satıra bölünüp son kelimeyi kaybediyordu.
+- **Doğrulama notu:** EditMode 503/503. PlayMode koşusu editörün girdi katmanı öldüğü için doğrulanamadı — `InputSystem.devices`
+  BOŞ (native fare bile yok), elle reflection'la aynı fiiller çalışıyor (koltuk → inspected, kepenk → CellarDoor_*). Editör
+  yeniden başlatılınca koşulacak.
+
 ### 9.45 · On beşinci liste: kimlik açılıyor, vesikalıklar tek çerçevede, fatura panoları dizildi (2026-09-07)
 
 - **Kimlik açılıyor:** kart 0.86'dan tam boya `IdOpenSeconds` (0.14 sn) içinde, ölçeklenmemiş saatte; `Motion.Reduced`'da anında.

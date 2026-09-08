@@ -857,12 +857,14 @@ namespace LastCall.UI
             // been 790: it was 730, so a third of every fourth card — its whole pill and
             // pick-mark — was masked away, which is what the author saw run under the bar.
             // No padding and no centring: the 4 units of slack must stay on the right.
+            // FIVE across since the card grew to 176 (2026-09-08): 5*176 + 4*12 = 928 in
+            // the 1004 viewport, the slack on the right as before.
             g.cellSize = new Vector2(TileW, TileH);
-            g.spacing = new Vector2(8, 8);
+            g.spacing = new Vector2(12, 12);
             g.padding = new RectOffset(0, 0, 0, 0);
             g.childAlignment = TextAnchor.UpperLeft;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 6;
+            g.constraintCount = 5;
             return sec;
         }
 
@@ -1102,14 +1104,14 @@ namespace LastCall.UI
             if (spec.Art != null && state != TileState.Sealed)
             {
                 var recess = NewRect("Recess", rt);
-                Place(recess, new Vector2(0.5f, 1), new Vector2(TileW - 12f, TileArtH + 6f),
+                Place(recess, new Vector2(0.5f, 1), new Vector2(TileW - 8f, TileArtH + 6f),
                     new Vector2(0, -(TileCapH + 3f)));
                 var ri = recess.gameObject.AddComponent<Image>();
                 ri.color = state == TileState.Unaffordable || state == TileState.Held
                     ? new Color(0.80f, 0.81f, 0.85f, 1f) : ShopAisle;
                 ri.raycastTarget = false;
                 var lip = NewRect("Lip", recess);
-                Place(lip, new Vector2(0.5f, 0), new Vector2(TileW - 12f, 2f), Vector2.zero);
+                Place(lip, new Vector2(0.5f, 0), new Vector2(TileW - 8f, 2f), Vector2.zero);
                 var li = lip.gameObject.AddComponent<Image>();
                 li.color = new Color(1f, 1f, 1f, 0.55f);
                 li.raycastTarget = false;
@@ -1158,7 +1160,7 @@ namespace LastCall.UI
                 // the card is 230 now, so stretching it to fill would pull every link into
                 // an oval — the exact fault the art was cut at the tile's size to avoid.
                 var chain = NewRect("Chain", rt);
-                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(160f, 208f), Vector2.zero);
+                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(TileW, TileH - 28f), Vector2.zero);
                 var chainImg = chain.gameObject.AddComponent<Image>();
                 chainImg.sprite = ItemArt.Load("sh_chain_x") ?? ItemArt.Load("sh_chain");
                 chainImg.raycastTarget = false;
@@ -1241,31 +1243,28 @@ namespace LastCall.UI
                 // the object the room already owns (16 §6, the positive form). Dark field,
                 // light type — the one inversion on the card, which is why the eye lands on
                 // it first.
-                var namePlate = NewRect("NamePlate", rt);
-                Place(namePlate, new Vector2(0, 1), new Vector2(TileW - 8f, TileNameH),
-                    new Vector2(4f, -TileNameTop));
-                var nameBg = namePlate.gameObject.AddComponent<Image>();
-                // ONE PLATE FOR EVERY STATE. The first cut dimmed it for the listings you
-                // cannot buy — Cream[0] under Cream[2] type, which measures 2.6:1 and shipped
-                // a name you had to lean in to read. A name is not a state: what a bottle is
-                // called does not change because the till is empty. The card's own tint and
-                // the red NO CASH key carry that, and the plate stays legible.
-                nameBg.color = ShopViceDeep;
-                nameBg.raycastTarget = false;
-
-                // SILKSCREEN BOLD AT 16, not PressStart2P at 8. Both halves of that matter:
-                // twice the size, and the bold face. The standing objection to this face for
-                // product names (2026-08-11) was that its letters touch — true, and it is a
-                // complaint about 8px, where the gap it does not have is a whole pixel of a
-                // six-pixel glyph. At 16 the same face is 2x its design size, every letter
-                // lands on the grid, and light-on-dark parts them by contrast anyway.
-                var name = NewText("Name", namePlate, _shop, 16, TextAnchor.UpperLeft,
-                    Color.white);
-                Stretch(name.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(6, 3), new Vector2(-6, -3));
+                // INK ON THE PAPER, NOT A PLAQUE (2026-09-08, the author: "urun kartlarinin
+                // tasarimini en bastan ele al"). The navy plate was the one thing on a cream
+                // catalogue page that was not paper, and it is what made every card read as
+                // a dashboard tile with a picture on it; its width is also what cut the names
+                // short ("SMIRNOFF VODKA" printed as "SM / VO"). The name is set in the
+                // display face on the card itself, two lines at most, on the card's margin.
+                // The SHOP face, not the display face (photographed 2026-09-08): Press Start
+                // at 16 is 16 units a character, nine to a 156 line, and "RESTOCK THE WHOLE
+                // WELL" wrapped to three and lost its last word. Silkscreen Bold at 16 is
+                // ~11 a character, fourteen to the line, and is the face the shop already
+                // speaks in. Upper case, because the names arrive as written and a catalogue
+                // sets its names in caps.
+                var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft,
+                    state == TileState.Unaffordable || state == TileState.Held
+                        ? ShopInkSoft : ShopInk);
+                Place(name.rectTransform, new Vector2(0, 1), new Vector2(ContentW, TileNameH),
+                    new Vector2(TilePad, -TileNameTop));
+                name.rectTransform.pivot = new Vector2(0, 1);
                 name.horizontalOverflow = HorizontalWrapMode.Wrap;
                 name.verticalOverflow = VerticalWrapMode.Truncate;
-                name.text = spec.Name;
+                name.lineSpacing = 1.05f;
+                name.text = (spec.Name ?? "").ToUpperInvariant();
             }
 
             // 3b — THE RUNG, DOWN THE LEFT EDGE (2026-09-04, the author: "markette açık olan
@@ -1281,8 +1280,9 @@ namespace LastCall.UI
             // the recipe book are drawn on (one helper, one cetvel), stood on its end so it
             // can live in the one band of the tile nothing else uses — the art's left
             // margin, opposite the stock gauge, which is why neither has to move.
+            // The rung, where a shelf label goes: the window's lower-left corner (2026-09-08).
             if (state != TileState.Sealed && !double.IsNaN(spec.RungStars))
-                StarRow(rt, new Vector2(0.5f, 1), new Vector2(0, -(TileArtTop + TileArtH - 6f)), 12f,
+                StarRow(rt, new Vector2(0, 1), new Vector2(TilePad, -(TileArtTop + TileArtH - 8f)), 12f,
                     spec.RungStars, UITheme.Amber[3], new Color(0f, 0f, 0f, 0.14f));
 
             // 4 — ONE contextual token, or the stock meter where stock IS the fact.
@@ -1318,20 +1318,20 @@ namespace LastCall.UI
                 // where the meta word would, with its figure at the row's end, so the eye
                 // reads "how much" where it reads "what" on the cards beside it.
                 float frac = Mathf.Clamp01(spec.StockFrac);
-                const float StripW = ContentW - 44f;
+                const float StripW = ContentW - 46f;
                 const float StripH = 10f;
                 const float StripX = TilePad;
                 const float StripTop = -(TileMetaTop + 1f);
                 var surround = NewRect("Track", rt);
                 Place(surround, new Vector2(0, 1), new Vector2(StripW, StripH),
-                    new Vector2(StripX, StripTop));
+                    new Vector2(StripX, StripTop - 2f));
                 var surroundImg = surround.gameObject.AddComponent<Image>();
                 surroundImg.color = UITheme.ClubBlue[0];
                 surroundImg.raycastTarget = false;
 
                 var well = NewRect("Well", rt);
                 Place(well, new Vector2(0, 1), new Vector2(StripW - 4f, StripH - 4f),
-                    new Vector2(StripX + 2f, StripTop - 2f));
+                    new Vector2(StripX + 2f, StripTop - 4f));
                 var wellImg = well.gameObject.AddComponent<Image>();
                 wellImg.color = new Color(0.792f, 0.812f, 0.871f, 1f);
                 wellImg.raycastTarget = false;
@@ -1420,26 +1420,31 @@ namespace LastCall.UI
                 // so the tag is the sacred colour doing exactly its job. Out of reach, it
                 // drops to the ramp's dark step — still plainly a price tag, plainly one you
                 // cannot pay, and the key beside it says NO CASH in red.
-                var tag = NewRect("PriceTag", rt);
-                Place(tag, new Vector2(0, 1), new Vector2(62, 16f),
+                // THE COIN AND THE FIGURE (2026-09-08). The amber nib tag was the last
+                // place in the chrome a typed $ still lived, a day after the house coin
+                // replaced it everywhere else; it was also 62 units for a figure that needs
+                // 40, with 13 of them spent on a nib. The price is the coin and the number,
+                // in the display face, on the paper, dimmed with the card when it cannot be
+                // paid. spec.Money keeps its sign and its stars ("+$105", "3.0*") - only the
+                // dollar glyph is drawn rather than typed.
+                bool dim = state == TileState.Unaffordable || state == TileState.Held;
+                string figure = spec.Money.Replace("$", "");
+                var coin = NewRect("Coin", rt);
+                Place(coin, new Vector2(0, 1), new Vector2(24, 24),
                     new Vector2(TilePad, -(TileFootTop + 2f)));
-                var tagImg = tag.gameObject.AddComponent<Image>();
-                tagImg.sprite = ChromeArt.PriceTag();
-                tagImg.type = Image.Type.Sliced;
-                tagImg.color = state == TileState.Unaffordable || state == TileState.Held
-                    ? UITheme.Amber[0] : UITheme.Money;
-                tagImg.raycastTarget = false;
-
-                // The type sits in the tag's BODY, clear of the nib and its punch hole —
-                // the 11 units the 9-slice keeps for the point are 11 units of no man's land.
-                var money = NewText("Money", tag, MoneyFace(spec.Money), 16, TextAnchor.MiddleLeft,
-                    state == TileState.Unaffordable || state == TileState.Held
-                        ? UITheme.Amber[4] : UITheme.TextOnAmber);
-                Stretch(money.rectTransform, Vector2.zero, Vector2.one,
-                    new Vector2(13, 0), new Vector2(-4, 0));
+                var coinImg = coin.gameObject.AddComponent<Image>();
+                coinImg.sprite = ItemArt.Coin(24f);
+                coinImg.preserveAspect = true;
+                coinImg.raycastTarget = false;
+                coinImg.color = new Color(1f, 1f, 1f, dim ? 0.45f : 1f);
+                var money = NewText("Money", rt, _display, 16, TextAnchor.MiddleLeft,
+                    dim ? ShopInkSoft : ShopInk);
+                Place(money.rectTransform, new Vector2(0, 1), new Vector2(ContentW - 24f - 74f, TileFootH),
+                    new Vector2(TilePad + 28f, -TileFootTop));
+                money.rectTransform.pivot = new Vector2(0, 1);
                 money.horizontalOverflow = HorizontalWrapMode.Overflow;
                 money.verticalOverflow = VerticalWrapMode.Truncate;
-                money.text = spec.Money;
+                money.text = figure;
             }
             else if (!string.IsNullOrEmpty(spec.Word) && state != TileState.Held)
             {
@@ -1462,8 +1467,8 @@ namespace LastCall.UI
                 // rows under the face, so it stands above the card instead of being printed
                 // on it. The label rides one pixel up, off the throw.
                 var pill = NewRect("Pill", rt);
-                Place(pill, new Vector2(1, 1), new Vector2(70, TileFootH),
-                    new Vector2(-TilePad, -TileFootTop));
+                Place(pill, new Vector2(1, 1), new Vector2(70, TileFootH - 4f),
+                    new Vector2(-TilePad, -(TileFootTop + 2f)));
                 var pillImg = pill.gameObject.AddComponent<Image>();
                 // The 98 key face (2026-08-19), same drawing as every button on this site.
                 pillImg.sprite = ChromeArt.Win98Key();

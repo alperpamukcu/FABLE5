@@ -2591,18 +2591,25 @@ namespace LastCall.UI
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             const int R = 4, Gap = 6;                    // dot radius, and the run between them
             int step = R * 2 + Gap;
-            int w = count * (R * 2) + (count - 1) * Gap, h = R * 2 + 1;
+            // ONE PIXEL OF AIR AT EACH END (2026-09-08, the author: "en sondaki koyu yeşil
+            // yuvarlağın sağ tarafından birkaç pixel kırpılmış"). The last dot's centre is
+            // R + 4*step = 60 and its edge is drawn to R + 0.4 = 4.4, so it reaches 64.4 on
+            // a texture 64 wide — the rim's last column fell off the sprite. Same on the
+            // left, hidden because the first dot starts at 0. The strip is two wider and
+            // everything on it moves one right.
+            const int Edge = 1;
+            int w = count * (R * 2) + (count - 1) * Gap + Edge * 2, h = R * 2 + 1;
             var px = new Color32[w * h];
             var openFill = new Color32(0xC9, 0xBC, 0xA8, 255);   // Cream[3]: an empty measure
             var rim = new Color32(0x45, 0x3E, 0x38, 255);        // Cream[0]
             float cy = (h - 1) * 0.5f;
 
             // The string first, so the dots sit on it.
-            for (int x = R; x < w - R; x++) px[(int)cy * w + x] = rim;
+            for (int x = R + Edge; x < w - R - Edge; x++) px[(int)cy * w + x] = rim;
 
             for (int i = 0; i < count; i++)
             {
-                float cx = R + i * step;
+                float cx = Edge + R + i * step;
                 var fill = i <= lit && colours != null && colours.Length > i
                     ? (Color32)colours[i] : openFill;
                 for (int y = 0; y < h; y++)

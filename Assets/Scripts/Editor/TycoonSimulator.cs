@@ -784,6 +784,12 @@ namespace LastCall.EditorTools
                         }
                         if (!hands.NeverCleans && run.GlassesInHand > 0 && !run.SinkBusy)
                         { run.WashGlasses(); stats.Washes++; }
+                        // A night waits for its counter now (2026-09-08). Hands that never
+                        // clean would hold the doors open for ever and measure nothing;
+                        // once the floor is done they sweep — the night's comfort has
+                        // already been charged, so the rot's cost is still the rot's.
+                        if (hands.NeverCleans && run.Floor.IsComplete && !run.Floor.House.CounterClear)
+                            run.Floor.House.SweepForClosing();
                     }
 
                     // TAKING ORDERS is not building drinks (2026-08-02, the two-clock split).

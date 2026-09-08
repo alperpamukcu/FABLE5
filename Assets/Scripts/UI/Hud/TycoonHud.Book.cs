@@ -81,7 +81,18 @@ namespace LastCall.UI
             shadow.color = new Color(0f, 0f, 0f, 0.42f);
             shadow.raycastTarget = false;
 
-            var prop = NewRect("BookProp", root);
+            // ITS OWN LAYER, ABOVE THE ROLLER (2026-09-08, the author: "menünün hitboxu
+            // pencerenin arkasında kalıyor, hitboxu en öne al"). The same fault the cloth
+            // had on 2026-09-07 and the same cure: the shutter's hit plate is a canvas at 6
+            // that runs the width of the room, and a prop left on the base canvas (5)
+            // under it never hears a click. The book stands on a canvas of its own at 8.
+            var bookLayer = NewRect("BookLayer", root);
+            Stretch(bookLayer, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var bookLayerCanvas = bookLayer.gameObject.AddComponent<Canvas>();
+            bookLayerCanvas.overrideSorting = true;
+            bookLayerCanvas.sortingOrder = 8;
+            bookLayer.gameObject.AddComponent<GraphicRaycaster>();
+            var prop = NewRect("BookProp", bookLayer);
             prop.anchorMin = prop.anchorMax = new Vector2(0.5f, 0);
             prop.pivot = new Vector2(0.5f, 0);           // stood on its own foot
             prop.sizeDelta = art != null
@@ -310,7 +321,10 @@ namespace LastCall.UI
             // its own canvas at 15 lets the BOOK key on the flow's ledge show the thing.
             var bookCanvas = _bookPanel.gameObject.AddComponent<Canvas>();
             bookCanvas.overrideSorting = true;
-            bookCanvas.sortingOrder = 15;
+            // 27, not 15 (2026-09-08): above the bench (25) and the day-end sheets (22),
+            // under the toast (30). An open book is the thing being read; nothing but a
+            // notice may sit on it.
+            bookCanvas.sortingOrder = 27;
             _bookPanel.gameObject.AddComponent<GraphicRaycaster>();
 
             // THE MENU IS AN OPEN BOOK (2026-08-24): menu_booklet.png at exactly 2× —
@@ -452,6 +466,7 @@ namespace LastCall.UI
                 }
                 chapter.Count++;
                 if (isLocked) chapter.LockedCount++;
+                else if (r.HasAuthoredRatios && run.IsPerfected(r.Id)) chapter.PerfectCount++;
                 _bookPages.Add(new BookPage
                 {
                     Kind = BookPageKind.Recipe,
@@ -975,6 +990,19 @@ namespace LastCall.UI
                         lk.text = "LOCKED";
                     }
                 }
+                // PERFECTED, SAID IN THE INDEX (2026-09-08, the author: "perfect tarifler
+                // içindekiler kısmında belirtilmeli"). The locked rows already carry their
+                // gate; the pages the player has MASTERED carried nothing, so the contents
+                // could not tell a drink you own from one you have finished. The page's own
+                // platinum, in the same slot the lock uses, so the two states read as a pair.
+                else if (pg.Recipe != null && pg.Recipe.HasAuthoredRatios
+                         && Run != null && Run.IsPerfected(pg.Recipe.Id))
+                {
+                    var pf = NewText("PF", row, _body, 8, TextAnchor.MiddleRight, BkPlatinumInk);
+                    Place(pf.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
+                        new Vector2(-46f, 0));
+                    pf.text = "PERFECT";
+                }
                 var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight, figure);
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(40f, 22f), new Vector2(-8f, 0));
                 fo.text = (pageIdx + 1).ToString();
@@ -1036,7 +1064,11 @@ namespace LastCall.UI
                 Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 18f), Vector2.zero);
                 meta.rectTransform.pivot = new Vector2(0, 0);
                 meta.rectTransform.anchoredPosition = new Vector2(8f, 3f);
+                // THE CHAPTER SAYS HOW MANY ARE MASTERED (2026-09-08, the author: "perfect
+                // tarifler içindekiler kısmında belirtilmeli"): the count beside the locks,
+                // so the index reads progress in both directions at a glance.
                 meta.text = ch.Count + " POURS"
+                    + (ch.PerfectCount > 0 ? " · " + ch.PerfectCount + " PERFECT" : "")
                     + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
                 y += 56f;
             }
@@ -1075,15 +1107,27 @@ namespace LastCall.UI
             eyebrow.rectTransform.anchorMin = eyebrow.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             eyebrow.rectTransform.pivot = new Vector2(0.5f, 1f);
             eyebrow.rectTransform.sizeDelta = new Vector2(BkColW, 20f);
-            eyebrow.rectTransform.anchoredPosition = new Vector2(0, -8f);
-            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : "");
+            // CLEAR OF THE FRAME (2026-09-08, the author: "MID SHELF yazısı boxun üstüne
+            // denk geliyor"). The page frame's inner rule is at art row 5 = 10 units down;
+            // this box began at -8 and its 16px capitals reached -10, so the chapter word
+            // sat ON the rule. The whole heading zone drops ten, and BkContentTop with it.
+            eyebrow.rectTransform.anchoredPosition = new Vector2(0, -18f);
+            // A PERFECTED PAGE SAYS SO HERE, in platinum ink (2026-09-08, the author:
+            // "perfect tarif sayfasının düzenini değiştir"). The angled corner ribbon it
+            // used to wear covered the title: 170 units at 45° over the top-right spans
+            // x -112..+8 and y -8..-96, and a long name centred in the 296 column reaches
+            // that corner — the screenshot read "SEX ON THE BEA". No size of corner ribbon
+            // clears every name, so the word moves to the line that has room for it. The
+            // platinum frame still binds the page.
+            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : perfected ? " · PERFECT RECIPE" : "");
+            if (perfected) eyebrow.color = BkPlatinumInk;
 
             var head = NewText("Head", print, _display, 16, TextAnchor.MiddleCenter,
                 page.Locked ? new Color(0.45f, 0.36f, 0.28f) : new Color(0.30f, 0.16f, 0.05f));
             head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             head.rectTransform.pivot = new Vector2(0.5f, 1f);
             head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);
-            head.rectTransform.anchoredPosition = new Vector2(0, -30f);
+            head.rectTransform.anchoredPosition = new Vector2(0, -40f);
             head.text = r.Name.ToUpperInvariant();
 
             float y = BkContentTop;
@@ -1167,6 +1211,17 @@ namespace LastCall.UI
 
             // ── the pours, one full-width row each ───────────────────────────────
             var specRows = RecipeSpecRows(r, poursOnly: true, locked: page.Locked);
+            // THE ROWS FIT THE PAGE THEY ARE ON (2026-09-08, the author: "Long Island
+            // menüden taşıyor"). At 48 a row, seven pours are 336 units from a start near
+            // 264 on a page whose story foot begins about 540: the last three rows ran over
+            // the story and off the paper. The pitch is measured against what is left —
+            // 48 when it fits, tighter when it must, never under the 32 a bottle at 2x and
+            // its dots need.
+            int pourRows = 0;
+            for (int k = 0; k < specRows.Count; k++)
+                if (!(k == 0 && r.Id != "draught") && !specRows[k].Hint) pourRows++;
+            float rowPitch = pourRows <= 0 ? 48f
+                : Mathf.Clamp(Mathf.Floor((BkStoryTop - y - 8f) / pourRows), 32f, 48f);
             for (int i = 0; i < specRows.Count; i++)
             {
                 var spec = specRows[i];
@@ -1190,9 +1245,9 @@ namespace LastCall.UI
                 var line = NewRect("S" + i, print);
                 line.anchorMin = line.anchorMax = new Vector2(0.5f, 1f);
                 line.pivot = new Vector2(0.5f, 1f);
-                line.sizeDelta = new Vector2(BkColW, 46f);
+                line.sizeDelta = new Vector2(BkColW, rowPitch - 2f);
                 line.anchoredPosition = new Vector2(0, -y);
-                y += 48f;
+                y += rowPitch;
 
                 if (ingredient)
                 {
@@ -1222,7 +1277,12 @@ namespace LastCall.UI
                     }
                     // BIGGER BOTTLES ON THE PAGE (2026-09-06: "tarifteki alkol görsellerini
                     // ve kapladıkları alanı sayfada büyütelim") — the row grew with them.
-                    const float box = 40f;
+                    // ...AND NO BIGGER THAN THE ROW (2026-09-08, photographed on the
+                    // endgame's Long Island): seven pours tighten the pitch to ~34, and a
+                    // 40-unit bottle in a 32-unit row stood across the row below it — with
+                    // every rung on the shelf, four bottles a row, the column was a heap.
+                    // The box follows the pitch; a bottle drawn smaller is still the bottle.
+                    float box = Mathf.Min(40f, rowPitch - 6f);
                     float step = pour.Count > 1 ? Mathf.Min(box, 56f / pour.Count) : box;
                     for (int b = 0; b < pour.Count; b++)
                     {
@@ -1442,24 +1502,8 @@ namespace LastCall.UI
             if (perfected)
             {
                 PlatinumFrame(print);
-                // The angled ribbon over the top corner (the author: "perfect recipe
-                // diye kartının üst köşesinde açılı bir şekilde belirtilir").
-                var rib = NewRect("PerfectRib", print);
-                rib.anchorMin = rib.anchorMax = new Vector2(1f, 1f);
-                rib.pivot = new Vector2(0.5f, 0.5f);
-                rib.sizeDelta = new Vector2(170f, 22f);
-                rib.anchoredPosition = new Vector2(-52f, -52f);
-                rib.localEulerAngles = new Vector3(0, 0, -45f);
-                var rbi = rib.gameObject.AddComponent<Image>();
-                rbi.color = BkPlatinum;
-                rbi.raycastTarget = false;
-                var rimEdge = new Color(0.42f, 0.46f, 0.55f, 0.9f);
-                Hairline(rib, new Vector2(0, 0), new Vector2(1, 0), rimEdge);
-                Hairline(rib, new Vector2(0, 1), new Vector2(1, 1), rimEdge);
-                var rt = NewText("T", rib, _body, 8, TextAnchor.MiddleCenter,
-                    new Color(0.16f, 0.18f, 0.24f));
-                Stretch(rt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                rt.text = "PERFECT RECIPE";
+                // (The angled corner ribbon retired 2026-09-08 — it covered long titles; the
+                // word is on the chapter line now, see the eyebrow above.)
             }
         }
 
