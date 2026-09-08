@@ -513,8 +513,8 @@ namespace LastCall.UI
                 var sayTail = NewRect("Tail", seat.Say);
                 sayTail.anchorMin = sayTail.anchorMax = new Vector2(0.5f, 0);
                 sayTail.pivot = new Vector2(0.5f, 1);
-                sayTail.sizeDelta = new Vector2(13f, 12f);
-                sayTail.anchoredPosition = new Vector2(0, 3f);
+                sayTail.sizeDelta = new Vector2(20f, 12f);
+                sayTail.anchoredPosition = new Vector2(0, 2f);
                 seat.SayTail = sayTail.gameObject.AddComponent<Image>();
                 seat.SayTail.sprite = ChromeArt.SpeechTail(ChromeArt.BubbleTone.Drink);
                 seat.SayTail.raycastTarget = false;

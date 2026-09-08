@@ -291,6 +291,17 @@ namespace LastCall.UI
             _serveGlassImage.sprite = piece.Front != null ? piece.Front : piece.Sprite;
             _serveGlassImage.preserveAspect = true;
             _serveGlassImage.color = Color.white;
+            if (_serveGlassLip != null)
+            {
+                bool hasLip = piece.LipPlacement(_serveGlass.sizeDelta, out var lipSize, out var lipAt);
+                _serveGlassLip.enabled = hasLip;
+                if (hasLip)
+                {
+                    _serveGlassLip.sprite = piece.Lip;
+                    _serveGlassLipRt.sizeDelta = lipSize;
+                    _serveGlassLipRt.SetAsLastSibling();
+                }
+            }
             if (_serveGlassBack != null)
             {
                 _serveGlassBack.sprite = piece.Back;
@@ -549,6 +560,14 @@ namespace LastCall.UI
             _serveFluid.SetDensity(0.90f);
 
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
+            // ...and the rim's front edge over the glass (2026-09-08, the author's `_Front`
+            // strips): the fluid's meniscus met the rim's front and read as sitting on it.
+            _serveGlassLipRt = NewRect("GlassLip", _serveSurface);
+            _serveGlassLipRt.anchorMin = _serveGlassLipRt.anchorMax = new Vector2(0.5f, 0.5f);
+            _serveGlassLipRt.pivot = new Vector2(0.5f, 1f);
+            _serveGlassLip = _serveGlassLipRt.gameObject.AddComponent<Image>();
+            _serveGlassLip.raycastTarget = false;
+            _serveGlassLip.enabled = false;
 
             // THE SAME TIN THE OTHER BENCH WORKS (2026-08-26, the author: "bardağa
             // koyduğumuz sahnedeki shaker ile shakera koyduğumuz sahnedeki shaker aynı

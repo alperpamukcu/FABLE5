@@ -452,8 +452,8 @@ namespace LastCall.UI
                     v.Say.anchoredPosition = new Vector2(0f, CharWinH + TagLift);
                     if (v.SayTail != null)
                     {
-                        v.SayTail.rectTransform.anchoredPosition = new Vector2(0f, 3f);
-                        v.SayTail.rectTransform.sizeDelta = new Vector2(13f, 12f);
+                        v.SayTail.rectTransform.anchoredPosition = new Vector2(0f, 2f);
+                        v.SayTail.rectTransform.sizeDelta = new Vector2(20f, 12f);
                     }
                     continue;
                 }
@@ -577,8 +577,11 @@ namespace LastCall.UI
                 }
                 v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
                 placed.Add(new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h));
-                // The tail: over the head, on the balloon's underside — and as long as the
-                // climb, so a raised balloon still points at its own drinker.
+                // The tail: over the head, on the balloon's underside. It used to grow with
+                // the climb so a raised balloon still pointed at its drinker; with the
+                // author's drawn tail (2026-09-08) that stretch read as a white spike a
+                // hundred pixels tall, so the tail keeps its drawn size and a raised
+                // balloon simply floats above its owner, the tail still over the head.
                 var tail = v.SayTail != null ? v.SayTail.rectTransform : null;
                 if (tail == null) continue;
                 float half = w * 0.5f;
@@ -586,8 +589,10 @@ namespace LastCall.UI
                 // The tail is a child of the balloon, so it is already scaled — its numbers
                 // are in the balloon's own units, and the climb has to be divided back out.
                 float k = Mathf.Max(0.01f, sayScale);
-                tail.anchoredPosition = new Vector2(tailX / k, 3f);
-                tail.sizeDelta = new Vector2(13f, 12f + Mathf.Max(0f, dy) / k);
+                // The author's tail is drawn 10x6 and shown at 2x, its top row being the
+                // body's own outline; it overlaps the body by that one row (2026-09-08).
+                tail.anchoredPosition = new Vector2(tailX / k, 2f);
+                tail.sizeDelta = new Vector2(20f, 12f);
             }
         }
 
@@ -656,6 +661,12 @@ namespace LastCall.UI
             var verdict = run.ServeTo(visit);
             CloseId();
             Sfx.Play("serve_clink");                          // the glass lands in front of them
+            // The rarer faces (2026-09-08), held for the reaction beat so one face shows:
+            // mind-blown for a flawless first make, in love for a regular's perfect drink.
+            if (verdict.PerfectMake && !knewItAlready && run.IsPerfected(asked.Id))
+                _seats[index].HeldEmote = EmoteBeat.Flawless;
+            else if (verdict.PerfectMake && visit.Regular != null && visit.Regular.Relationship >= Relationship.Regular)
+                _seats[index].HeldEmote = EmoteBeat.Bond;
             if (verdict.PerfectMake && !knewItAlready && run.IsPerfected(asked.Id))
                 NotePerfect(asked);
             LogVerdict(visit, verdict);
@@ -2457,6 +2468,16 @@ namespace LastCall.UI
             _drinkGlassArt = art.gameObject.AddComponent<Image>();
             _drinkGlassArt.raycastTarget = false;
             _drinkGlassArt.preserveAspect = true;
+            // THE RIM'S FRONT EDGE, over everything (2026-09-08, the author's `_Front`
+            // strips): the liquid's surface disc used to draw over the front of the rim,
+            // which is what made a full glass look like a glass with a plate of liquid on
+            // it. The lip is the last layer, placed on the rim by GlassArt.Piece.LipPlacement.
+            var lipRt = NewRect("Lip", _drinkGlass);
+            lipRt.anchorMin = lipRt.anchorMax = new Vector2(0.5f, 1f);
+            lipRt.pivot = new Vector2(0.5f, 1f);
+            _drinkGlassLip = lipRt.gameObject.AddComponent<Image>();
+            _drinkGlassLip.raycastTarget = false;
+            _drinkGlassLip.enabled = false;
             // The glow's drawing, now that there is one: the front face is the glass you see.
             if (_drinkGlassGlow != null) _drinkGlassGlow.Graphics = new Graphic[] { _drinkGlassArt };
 
@@ -2818,6 +2839,18 @@ namespace LastCall.UI
                 // height is what made every glass the same glass.
                 _drinkGlass.sizeDelta = GlassArt.BoxFor(run.ServingGlassware, piece.Sprite,
                                                         CarriedGlassHeight);
+                if (_drinkGlassLip != null)
+                {
+                    bool hasLip = piece.LipPlacement(_drinkGlass.sizeDelta, out var lipSize, out var lipAt);
+                    _drinkGlassLip.enabled = hasLip;
+                    if (hasLip)
+                    {
+                        _drinkGlassLip.sprite = piece.Lip;
+                        _drinkGlassLip.rectTransform.sizeDelta = lipSize;
+                        _drinkGlassLip.rectTransform.anchoredPosition = lipAt;
+                        _drinkGlassLip.transform.SetAsLastSibling();
+                    }
+                }
             }
             _drinkGlassLiquid.color = DrinkColor();
             _drinkGlassLiquid.fillAmount = piece.FillAmount((float)run.ServingGlass.FillFraction);
@@ -2986,6 +3019,18 @@ namespace LastCall.UI
                 : verdict.Match == OrderMatch.Close ? VoiceCue.Close
                 : VoiceCue.Wrong;
             string line = VoiceLine(_seats[seatIndex].Visit, cue).ToUpperInvariant();
+            // The face for the verdict (2026-09-08): a wrong drink they HATED gets the sick
+            // face rather than the raised brow, read off the same satisfaction the motes use.
+            // The serve may already have chosen a rarer face (flawless first make, a
+            // regular's bond); one face a verdict, so that one wins.
+            var seatView = _seats[seatIndex];
+            var beat = seatView.HeldEmote ?? (verdict.OrdersAgain ? EmoteBeat.Another
+                : verdict.Match == OrderMatch.Exact ? EmoteBeat.Perfect
+                : verdict.Match == OrderMatch.Close ? EmoteBeat.Close
+                : seatView.Visit != null && seatView.Visit.Satisfaction < ReactionSour ? EmoteBeat.Awful
+                : EmoteBeat.Wrong);
+            seatView.HeldEmote = null;
+            Emote(seatView, beat);
             if (verdict.OrdersAgain) Sfx.Play("another_round", 0.85f);
 
             var text = NewText("React", seat.parent, _display, 14, TextAnchor.LowerCenter, tone);
@@ -3044,6 +3089,103 @@ namespace LastCall.UI
         private const int PerfectMotes = 32, PerfectBackMotes = 20;
 
         /// <summary>The face, its ink and how many of them one serve is worth.</summary>
+        // ── THE CROWD'S EMOJIS (2026-09-08) ───────────────────────────────────
+        // The author's thirty faces, read one by one and sorted by what each says; the
+        // game's beats get the faces that fit them. Numbers are the author's file numbers
+        // (Resources/Emotes/em_<n>). A face with no beat is worse than none, so the ones
+        // not listed here (12 single tear, 18 drooling, 37 dizzy) wait for their beat.
+        private enum EmoteBeat { Perfect, Flawless, Another, Close, Wrong, Awful, Patience, Storm, Kicked, Bond }
+
+        private static readonly Dictionary<EmoteBeat, int[]> EmoteTable = new Dictionary<EmoteBeat, int[]>
+        {
+            [EmoteBeat.Perfect]  = new[] { 85, 6, 50, 51, 19 },
+            [EmoteBeat.Flawless] = new[] { 19, 85, 21 },
+            [EmoteBeat.Another]  = new[] { 49, 53, 42, 115 },
+            [EmoteBeat.Close]    = new[] { 27, 67, 51 },
+            [EmoteBeat.Wrong]    = new[] { 35, 1, 10 },
+            [EmoteBeat.Awful]    = new[] { 65, 71, 15 },
+            [EmoteBeat.Patience] = new[] { 17, 81, 9 },
+            [EmoteBeat.Storm]    = new[] { 73, 9, 23 },
+            [EmoteBeat.Kicked]   = new[] { 23, 3, 33 },
+            [EmoteBeat.Bond]     = new[] { 118, 86 },
+        };
+
+        /// <summary>One face for the beat, rolled on the run's voice stream so the pick is
+        /// the seed's and not the frame's.</summary>
+        private Sprite EmoteFor(EmoteBeat beat)
+        {
+            if (!EmoteTable.TryGetValue(beat, out var pool) || pool.Length == 0) return null;
+            var run = Run;
+            int i = run != null ? run.VoiceStream.NextInt(pool.Length) : 0;
+            return Resources.Load<Sprite>("Emotes/em_" + pool[Mathf.Clamp(i, 0, pool.Length - 1)]);
+        }
+
+        /// <summary>The 16px face at 2x. A whole multiple, or it is mud.</summary>
+        private const float EmotePx = 32f;
+
+        /// <summary>
+        /// Pops a face up from behind the head: it starts under the crown at 0.6 and rises
+        /// over it (OutBack), holds, then drifts up and fades. On the seat's root, so it
+        /// rides the seat wherever the room takes it; above the balloon in the draw order.
+        /// </summary>
+        private void Emote(SeatView view, EmoteBeat beat)
+        {
+            if (view?.Root == null || !view.Root.gameObject.activeInHierarchy) return;
+            var face = EmoteFor(beat);
+            if (face == null) return;
+            var rt = NewRect("Emote", view.Root);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(EmotePx, EmotePx);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = face;
+            img.raycastTarget = false;
+            img.preserveAspect = true;
+            rt.SetAsLastSibling();
+            float headTop = view.Look != null ? view.Look.HeadTop : CharWinH;
+            StartCoroutine(EmotePop(rt, img, headTop));
+        }
+
+        /// <summary>Out-back: overshoots the mark and settles, the pop of a thing that
+        /// jumped up (the house's Tweening carries no back easing).</summary>
+        private static float EmoteEase(float x)
+        {
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            float u = x - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
+
+        private System.Collections.IEnumerator EmotePop(RectTransform rt, Image img, float headTop)
+        {
+            const float rise = 0.22f, hold = 1.1f, fade = 0.35f;
+            float from = headTop - 12f, to = headTop + 10f, t = 0f;
+            // the head is drawn on the stage, the face on the HUD: "behind" is the scale and
+            // the start under the crown, which is what the eye reads as coming out from
+            // behind somebody
+            while (t < rise && rt != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Motion.Reduced ? 1f : EmoteEase(Mathf.Clamp01(t / rise));
+                rt.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(from, to, k));
+                float sc = Mathf.LerpUnclamped(0.6f, 1f, k);
+                rt.localScale = new Vector3(sc, sc, 1f);
+                yield return null;
+            }
+            if (rt != null) { rt.anchoredPosition = new Vector2(0f, to); rt.localScale = Vector3.one; }
+            t = 0f;
+            while (t < hold && rt != null) { t += Time.unscaledDeltaTime; yield return null; }
+            t = 0f;
+            while (t < fade && rt != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Mathf.Clamp01(t / fade);
+                rt.anchoredPosition = new Vector2(0f, to + 14f * k);
+                img.color = new Color(1f, 1f, 1f, 1f - k);
+                yield return null;
+            }
+            if (rt != null) Destroy(rt.gameObject);
+        }
+
         private static (string Face, Color Tint, int Count) ReactionFor(double satisfaction, bool perfect)
         {
             if (perfect) return ("good", UITheme.Amber[4], PerfectMotes);
@@ -3302,6 +3444,10 @@ namespace LastCall.UI
                     if (!v.Visit.OnTheHouse && !kicked)
                         ReactionBurst(v, v.ExitStorm ? 0.0 : v.Visit.Satisfaction, follow: false,
                             perfect: !v.ExitStorm && v.Note.Flawless);
+                    // The face on the way out (2026-09-08): rage for a storm-off, tears for
+                    // the door. A served drinker leaving calm already said their piece.
+                    if (!v.Visit.OnTheHouse && (kicked || v.ExitStorm))
+                        Emote(v, kicked ? EmoteBeat.Kicked : EmoteBeat.Storm);
                     // ...AND A WORD ON THE WAY OUT (2026-09-07): a walk-out and a kick each get
                     // one line in the drinker's voice, said from the stool as they get up. The
                     // guest of the house leaves in silence here — her lines are the story's.
@@ -3419,6 +3565,7 @@ namespace LastCall.UI
                     {
                         v.Visit = visit;
                         v.WalkT = 0f;
+                        v.Nagged = false;
                         v.Note = default;      // the last drinker's line is not this one's
                         HushSeat(v);           // …and neither is what they said about it
                         // Who walked in, and how tall they are. The ticket and the gauge
@@ -3685,6 +3832,13 @@ namespace LastCall.UI
                 // over the head is the same reading the till pays by, and the bubble — not a
                 // hue — says which wait it is.
                 float patience = (deciding || drinking) ? 1f : (float)visit.PatienceFraction;
+                // ONE warning face a visit (2026-09-08): when a third of the patience is left,
+                // the sweat drop comes up over the head. Once — a face every frame is noise.
+                if (!view.Nagged && !deciding && !drinking && patience < 0.34f)
+                {
+                    view.Nagged = true;
+                    Emote(view, EmoteBeat.Patience);
+                }
                 // THE BAR IS ONLY UP WHILE IT IS EMPTYING (2026-08-20, the author: "herhangi
                 // bir sabır barı azalmıyorken kafasının üstünde bar gözükmesin ... içki
                 // içerken odadan çıkarken vs"). It used to stand over every seated customer

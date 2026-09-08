@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The author's art of 2026-09-08:** every glass gets its rim strip drawn over the liquid and the
+  tin its steel front plate (the brimful pool moved up into the mouth the plate leaves open); the
+  pointer is the author's hand in three frames — idle, pressed, grabbing — derived from one drawing;
+  one star and one heart accessor swap to the new art everywhere; the balloon is the author's white
+  bubble with a drawn tail that no longer stretches with the climb; and thirty faces are sorted into
+  ten beats — perfect, flawless first make, another round, close, wrong, awful, patience, storm-off,
+  shown the door, a regular's bond — and pop up from behind the head. GDD_MEVCUT §9.47.
+
 - **The seventeenth list (2026-09-08):** the night waits for the counter — the doors shut once the
   glasses are collected and the marks wiped (gated in the run, swept by the dev verb and the sim's
   rot hands); a carried glass leaves no silhouette behind; the book's chapter line clears the frame,

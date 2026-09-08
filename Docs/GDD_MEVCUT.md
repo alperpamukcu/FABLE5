@@ -1521,6 +1521,52 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.47 · Yazarın 2026-09-08 sanatı: bardak dudakları, tin ön plakası, el imleci, yıldız/kalp, balon, otuz emoji (2026-09-08)
+
+- **Bardak dudakları:** `Items/glass3d_<bardak>_t<N>_Front` (t2–t6; t1'in ön parçası yok) bardağın sıvının ÖNÜNDE kalan
+  kısmıdır — birkaç satırlık rim şeridi (coupe 41×6, highball 26×4, rocks 36×5). `GlassArt.Piece.Lip` + `LipPlacement(box,
+  out size, out topCentre)`; `LipRowTable` {coupe 13/88, highball 14/96, rocks 13/72, martini 11/88} şeridin ana çizimdeki
+  satırını söyler. Servis tezgahında `_serveGlassLipRt` her kare `FollowServeGlassLip()` ile bardağı izler (eğilen bardakla
+  döner); koltuktaki bardakta `_drinkGlassLip`. Eski `_front` araması `_frontplate` oldu — yeni dosyalarla ad çakışıyordu.
+- **Tin ön plakası:** `tin_open_Front` / `tin_open_t2_Front` (82×124, 116×208'lik ana çizimin x 17..99, alttan y 13..137'si)
+  sıvının önüne `_tinFrontRt` olarak biner ve `FollowTinFront()` ile fırlatılan tin'i izler (`StepBlowout`'tan sonra çağrılır;
+  o adım tin'in yerini son belirleyen). Plaka opak çelik: ağız boşluğu ana çizimde alttan **0.615–0.73** bandı. Dolu tin'in
+  havuzu eskiden rim'in 7+22 px altındaydı, yani tümü plakanın arkasına düştü; havuz artık **ağzın içinde** (`rimY + 2` →
+  `MouthTop` 0.70). Yazarın 09-06 kuralı duruyor: dolmadan sıvı görünmez, dolunca ağızdan görünür.
+- **El imleci:** `CursorSkin` (yeni dosya, statik) üç kare: `cursor_hand` (yazarın Hand3, 16×15'in 3x'i = 48×45),
+  `cursor_hand_pressed` (bir hücre aşağı, parmak bir hücre kısa), `cursor_hand_grab` (işaret parmağı yumruğa katlanmış) —
+  ikisi `Tools/ui_art_2026_09_08.py` ile aynı çizimin hücre ızgarasından türetildi, elle çizilmedi. Sıcak nokta parmak ucu
+  (28,1). `TycoonHud.StepCursor()` her kare: `TycoonServiceFlow.IsHolding` (şişe/kaşık/bardak elde) ya da taşınan bardak/bez
+  → Grab; sol tuş basılı → Pressed; yoksa Idle. `Cursor.SetCursor` yalnız durum değişince (sürücü çağrısı). Play'den çıkışta
+  `CursorSkin.Reset()`. Ekran görüntüsünde görünmez (OS imleci); durum `_shown` alanından okundu: Idle.
+- **Yıldız ve kalp:** `ItemArt.Star(lit, px)` → `star_small(_socket)` 14×12 / `star_big(_socket)` 18×17; `Heart` → `heart_lit` /
+  `heart_socket` 12×12, `HeartHalf()` → `heart_half`. Üst bar, kitap rozeti, kimlik şeridi, market rung'ları hepsi bu iki
+  erişimciden geçtiği için tek değişiklikle yenilendi.
+- **Balon:** `ChromeArt.SpeechBox` yazarın `bubble_white_10`'u (32×32, 8/8/8/8 dilim); kuyruk `bubble_white_2`'den kesilen
+  `speech_tail` (10×6, üst satırı gövdenin alt çizgisi), 20×12'de y=2'ye biner. **Kuyruk artık tırmanışla uzamıyor** — 12 +
+  dy'lik eski kural çizilmiş kuyruğu yüz piksellik beyaz bir sivri uca çeviriyordu (ölçüldü: ortadaki balonun kuyruğu ~100 px);
+  yükselen balon sahibinin üstünde durur, kuyruk başın üstünde kalır.
+- **Otuz emoji, on vuruş** (`Resources/Emotes/em_<n>`, 16×16, oyunda 2x = 32; `PatronArtPostprocessor` klasörü sprite kuralına
+  aldı — ilk import Default doku olarak indi, `Resources.Load<Sprite>` null döndü, force reimport gerekti). Tablo
+  `TycoonHud.Seats.EmoteTable`: PERFECT 85·6·50·51·19, FLAWLESS (ilk kusursuz yapım) 19·85·21, ANOTHER 49·53·42·115, CLOSE
+  27·67·51, WRONG 35·1·10, AWFUL (yanlış VE tatmin < `ReactionSour`) 65·71·15, PATIENCE 17·81·9, STORM (servis edilmeden
+  gitti) 73·9·23, KICKED 23·3·33, BOND (müdavimin kusursuz içkisi, `Relationship ≥ Regular`) 118·86. Kancalar: `ServeReaction`
+  (hüküm; `SeatView.HeldEmote` varsa — servis anında seçilen FLAWLESS/BOND — o kazanır, tek yüz), kalkış (yalnız storm ve
+  kick; sakin giden zaten söyledi), sabır `< 0.34` bir ziyarette **bir kez** (`SeatView.Nagged`, taburede yeni ziyaretle
+  sıfırlanır). Seçim `run.VoiceStream` üzerinden — tohumun, karenin değil. Gösterim `Emote()`/`EmotePop`: koltuk kökünde,
+  başın 12 altında 0.6 ölçekle başlar, OutBack (evde yoktu; `EmoteEase`) ile 0.22 sn'de başın 10 üstüne çıkar, 1.1 sn durur,
+  0.35 sn'de 14 birim süzülüp söner; `Motion.Reduced` anında. Vuruşsuz kalanlar (12 tek gözyaşı, 18 salya, 37 baş dönmesi)
+  bilerek bağlanmadı — vuruşu olmayan yüz hiç yüzden kötü.
+- **PixelLab:** 3777/10000 kullanım; yazar "5000 dolunca yeni karakter yaratmaya ara" dedi — karakter yaratma o eşikte durur,
+  var olanların klipleri devam eder (klip karakter yaratmaz). istanbul/kadikoy/izmir/ankara/madrid'in look/order/drink
+  klipleri çekildi; cheer_a/upset_a/walk_a kuyrukta (15 iş).
+- **Doğrulama:** Roslyn üç derleme temiz; Unity 0 hata; EditMode/PlayMode aşağıda. Fotoğraflar: üst barın yeni yıldız/kalpleri,
+  balonun yeni gövdesi, servis tezgahında rocks t6 dudağı (ilk çekimde (0,0)'da asılıydı — `FollowServeGlassLip()` tanımlı ama
+  ÇAĞRILMAMIŞTI; `FollowTinFront()` da öyle, plaka `Place` sayesinde yerindeydi ama fırlatmayı izlemiyordu — ikisi de bağlandı).
+  Hayalet girdi bir kez daha: bu sefer klavye olaylarının fareye düştüğü "State format KEYS ... MOUS" — bench kendi kendine
+  açılıp Smirkoff döktü; Clear Ghost Input sonrası cihaz listesi BOŞ kaldı (yerli fare/klavye yeniden keşfedilmedi) — editörü
+  yeniden başlatmak gerekir, yansımayla çekim yapmaya engel değil.
+
 ### 9.46 · On yedinci liste: gece tezgah temizlenince biter, menü sayfası ve market kartı yeniden (2026-09-08)
 
 - **Gece tezgah temizlenmeden bitmiyor.** `TycoonRun.Tick` gün kapatma bloğuna yalnız `Floor.IsComplete && Floor.House.CounterClear`

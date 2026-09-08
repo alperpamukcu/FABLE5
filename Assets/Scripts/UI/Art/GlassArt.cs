@@ -91,13 +91,44 @@ namespace LastCall.UI
             /// (<see cref="MetaballFluid.SetFloorArc"/>). Zero for a flat-bottomed drawing.</summary>
             public readonly float FloorArc;
 
+            /// <summary>THE RIM'S FRONT EDGE (2026-09-08, the author's `_Front` strips): the
+            /// one part of the glass that stays in front of the liquid. Drawn last, over the
+            /// fill and the surface disc, centred on the glass at <see cref="LipRow"/>. Null
+            /// where the author drew none (the pint, the procedural set).</summary>
+            public readonly Sprite Lip;
+            /// <summary>Where the strip's TOP goes: the rim ellipse's axis, as a fraction of
+            /// the sprite's height from its top. Measured off each base drawing.</summary>
+            public readonly float LipRow;
+
             public Piece(Sprite sprite, Sprite fill, float interiorHalf, float floorY, float rimY,
                 float[] profile, float aspect, float density,
-                Sprite front = null, Sprite back = null, float floorArc = 0f)
+                Sprite front = null, Sprite back = null, float floorArc = 0f,
+                Sprite lip = null, float lipRow = 0f)
             {
                 Sprite = sprite; Fill = fill; InteriorHalf = interiorHalf;
                 FloorY = floorY; RimY = rimY; Profile = profile; Aspect = aspect;
                 Density = density; Front = front; Back = back; FloorArc = floorArc;
+                Lip = lip; LipRow = lipRow;
+            }
+
+            /// <summary>
+            /// The lip's rect inside a box the SPRITE is drawn in with preserveAspect: where
+            /// the strip goes so it sits on the rim of the drawing as it is actually shown.
+            /// Returns the size and the anchored position for a top-centre-anchored rect
+            /// whose pivot is (0.5, 1), in the box's own units.
+            /// </summary>
+            public bool LipPlacement(Vector2 box, out Vector2 size, out Vector2 topCentre)
+            {
+                size = Vector2.zero; topCentre = Vector2.zero;
+                if (Lip == null || Sprite == null || Sprite.rect.height < 1f) return false;
+                float k = Mathf.Min(box.x / Sprite.rect.width, box.y / Sprite.rect.height);
+                float drawnW = Sprite.rect.width * k, drawnH = Sprite.rect.height * k;
+                float left = (box.x - drawnW) * 0.5f, top = (box.y - drawnH) * 0.5f;
+                size = new Vector2(Lip.rect.width * k, Lip.rect.height * k);
+                // centred on the drawing, its top on the rim's axis
+                topCentre = new Vector2(left + drawnW * 0.5f - box.x * 0.5f,
+                                        -(top + drawnH * LipRow));
+                return true;
             }
 
             /// <summary>
@@ -308,6 +339,16 @@ namespace LastCall.UI
         // surface stops a pixel or two short of its box, so the pools overshoot to
         // the full drawn width at their call sites and let the wall band cover the
         // margin (the author: boundary = contact point + a few px, so no seams).
+        /// <summary>The rim ellipse's axis row per glass, as a fraction of the drawing's
+        /// height from the top — measured 2026-09-08 (the widest row inside the top 14 of
+        /// each base sprite): coupe row 13 of 88, highball 14 of 96, rocks 13 of 72, martini
+        /// 11 of 88. Where the `_Front` strip's top lands.</summary>
+        private static readonly Dictionary<string, float> LipRowTable = new Dictionary<string, float>
+        {
+            ["coupe"] = 13f / 88f, ["highball"] = 14f / 96f, ["rocks"] = 13f / 72f,
+            ["martini"] = 11f / 88f,
+        };
+
         private static readonly Dictionary<string, Gen3D> Gen3DTable = new Dictionary<string, Gen3D>
         {
             // RimY is the CAVITY's top row (the fill mask's first row), not the mouth
@@ -385,10 +426,16 @@ namespace LastCall.UI
             if (glass.Profile != null && glass.Profile.Count > 0)
                 for (int i = 0; i < glass.Profile.Count; i++) solverProfile[i] = (float)glass.Profile[i];
             else solverProfile = new[] { 1f, 1f };
+            // `_frontplate`, not `_front` (2026-09-08): the author's rim strips are named
+            // `_Front`, and Resources.Load is case-insensitive on Windows, so the old
+            // full-plate lookup found the STRIP and drew it instead of the glass. No file
+            // has ever existed for the plate; the name only has to stop colliding.
             return new Piece(sprite, fill, g.InteriorHalf, g.FloorY, g.RimY, solverProfile,
                 sprite.rect.width / sprite.rect.height, g.Density,
-                ItemArt.Load($"glass3d_{glass.Id}{dress}_front"),
-                ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc);
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_frontplate"),
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc,
+                ItemArt.Load($"glass3d_{glass.Id}{dress}_Front"),
+                LipRowTable.TryGetValue(glass.Id, out var lipRow) ? lipRow : 0.12f);
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

@@ -21,6 +21,28 @@ namespace LastCall.UI
     /// </summary>
     public sealed partial class TycoonServiceFlow : MonoBehaviour
     {
+        /// <summary>Something is in the hand on the bench: a bottle being poured, the bar
+        /// spoon, or the pint under the tap (2026-09-08, for the cursor's grab frame).</summary>
+        public bool IsHolding => IsOpen && (_bottleGrabbed || _spoonHeld || _glassHeld);
+
+        /// <summary>The serve glass's rim strip and its rect (2026-09-08).</summary>
+        private Image _serveGlassLip;
+        private RectTransform _serveGlassLipRt;
+
+        /// <summary>Keeps the rim strip on the glass wherever the glass is: called from the
+        /// serve stage's step. The strip's top-centre is the glass rect's top-centre plus
+        /// the placement the piece measured.</summary>
+        private void FollowServeGlassLip()
+        {
+            if (_serveGlassLip == null || !_serveGlassLip.enabled || _serveGlass == null) return;
+            if (!_serveGlassPiece.LipPlacement(_serveGlass.sizeDelta, out _, out var lipAt)) return;   // Piece is a struct; LipPlacement answers false with no sprite
+            var g = _serveGlass;
+            _serveGlassLipRt.anchoredPosition = g.anchoredPosition
+                + new Vector2(lipAt.x, g.sizeDelta.y * (1f - g.pivot.y) + lipAt.y);
+            _serveGlassLipRt.localRotation = g.localRotation;
+            _serveGlassLipRt.localScale = g.localScale;
+        }
+
         [SerializeField] private Font bodyFont;
         [SerializeField] private Font displayFont;
 
@@ -307,6 +329,7 @@ namespace LastCall.UI
                 // and the body are, and UpdateCap would otherwise walk them both home in the
                 // same frame the bang was drawn.
                 StepBlowout();
+                FollowTinFront();                // after the blowout: the plate rides wherever the tin ended up (2026-09-08)
                 // LAST of the bench's own steps: the meter withdraws on the first frame no
                 // hand claimed it, so whichever verb wrote to it above has already had its say.
                 StepWorkMeter();
@@ -330,6 +353,7 @@ namespace LastCall.UI
             {
                 _servePouringNow = false;
                 UpdateServeTilt(run);
+                FollowServeGlassLip();           // the rim strip rides the tilted glass (2026-09-08)
                 UpdateServeStepCard(run); PushServeDone(run);
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.

@@ -586,6 +586,8 @@ namespace LastCall.UI
             public bool Exiting;             // playing the leave animation
             public float ExitT;              // 0..1 leave progress
             public bool ExitStorm;           // stormed off (angry exit) vs served (calm)
+            public bool Nagged;              // the patience face has shown once this visit (2026-09-08)
+            public EmoteBeat? HeldEmote;     // a face the serve chose for the verdict's moment (flawless, bond)
             public CustomerVisit Visit;      // who is assigned to this stool (stable until they leave)
             public float AnimClock;          // running time for the looping clips (idle, walk)
             public bool WasOrdered;          // edge-detect the deciding→ordered moment
@@ -929,6 +931,8 @@ namespace LastCall.UI
         private int _shopTab;
 
         private Text _tabletTill;
+        /// <summary>The carried glass's rim strip, over the liquid (2026-09-08).</summary>
+        private Image _drinkGlassLip;
 
         /// <summary>
         /// PALM CARGO — the trade the bar orders from. Renamed for the Miami turn
@@ -1421,6 +1425,20 @@ namespace LastCall.UI
         private void OnDestroy()
         {
             if (_bootstrap != null) _bootstrap.RunStarted -= OnRunStarted;
+            CursorSkin.Reset();
+        }
+
+        /// <summary>THE HAND'S THREE FRAMES (2026-09-08): grabbing whenever something is in
+        /// it — a glass, the tin, the cloth, a bowl of snacks, or on the bench a bottle, the
+        /// spoon or the pint — pressed while the button is down, idle otherwise.</summary>
+        private void StepCursor()
+        {
+            bool grabbing = _glassCarrying || _tinCarrying || _clothHeld || _snackInHand != null
+                            || (_flow != null && _flow.IsHolding);
+            var mouse = Mouse.current;
+            bool pressed = mouse != null && mouse.leftButton.isPressed;
+            CursorSkin.Step(grabbing ? CursorSkin.State.Grab
+                : pressed ? CursorSkin.State.Pressed : CursorSkin.State.Idle);
         }
 
         private void OnRunStarted()
@@ -1562,6 +1580,7 @@ namespace LastCall.UI
             StepIdOpen();
             StepPropTip();
             StepCellarCard();
+            StepCursor();
             StepCellarLabels();
             UpdateEscape();
             UpdateBookKeys();

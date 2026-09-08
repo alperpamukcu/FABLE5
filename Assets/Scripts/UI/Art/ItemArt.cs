@@ -115,12 +115,22 @@ namespace LastCall.UI
         // half-imported project still counts.
 
         /// <summary>The star, lit or empty, at the size it is about to be drawn.</summary>
+        // THE AUTHOR'S OWN (2026-09-08: "yeni yıldız ve kalp görsellerini veriyorum, oyunda
+        // bunları kullanacağız her yerde"). Two stars — 14x12 for the small rows, 18x17 for
+        // the big ones — each with its socket; one heart with a lit, a half and a socket
+        // state. Every caller already comes through here, so the swap is this one place;
+        // the star3d/heart3d files stay on disk until the author retires them.
         public static Sprite Star(bool lit, float px) =>
-            Load(Name("star3d", lit, px)) ?? Load("star");
+            Load(px <= 16f ? (lit ? "star_small" : "star_small_socket")
+                           : (lit ? "star_big" : "star_big_socket"))
+            ?? Load(Name("star3d", lit, px)) ?? Load("star");
 
         /// <summary>The heart, lit or empty, at the size it is about to be drawn.</summary>
         public static Sprite Heart(bool lit, float px) =>
-            Load(Name("heart3d", lit, px));
+            Load(lit ? "heart_lit" : "heart_socket") ?? Load(Name("heart3d", lit, px));
+
+        /// <summary>The half-earned heart — the author drew one (2026-09-08).</summary>
+        public static Sprite HeartHalf() => Load("heart_half") ?? Heart(true, 16f);
 
         /// <summary>The medallion — COMFORT's symbol (GDD 27 §2.2), drawn in the star's own
         /// language by Tools/medallion_icon.py — lit or empty, at the size it is drawn at.</summary>

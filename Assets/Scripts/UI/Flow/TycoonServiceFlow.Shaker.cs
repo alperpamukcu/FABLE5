@@ -35,6 +35,8 @@ namespace LastCall.UI
         /// art (VesselArt) when the stage refreshes, swung with the bottle when it tips.</summary>
         private Vector2 _pourMouth;
         private MetaballFluid _shakerFluid;   // the metaball liquid: pour stream + pooled body
+        private RectTransform _tinFrontRt;    // the tin's front body, over the fluid (2026-09-08)
+        private Image _tinFrontImg;
         private float _slosh;                 // running slosh phase for the shaker surface
         private Vector2 _bottleRest;
         private bool _bottleGrabbed;
@@ -193,11 +195,36 @@ namespace LastCall.UI
 
         /// <summary>Puts the owned tin on both benches. Called on the way into either one, so
         /// a rung bought at the market is on the counter the next time the tin is opened.</summary>
+        /// <summary>The tin's front body for its tier, or nothing where the author drew none.</summary>
+        private void DressTinFront()
+        {
+            if (_tinFrontImg == null) return;
+            string t = ShakerTier;
+            var front = ItemArt.Load("tin_open" + t + "_Front") ?? ItemArt.Load("tin_open_Front");
+            _tinFrontImg.sprite = front;
+            _tinFrontImg.enabled = front != null;
+        }
+
+        /// <summary>The front rides the tin: same position, rotation and scale, every frame
+        /// the shaker stage is stepped.</summary>
+        private void FollowTinFront()
+        {
+            if (_tinFrontRt == null || _shakerVessel == null) return;
+            bool on = _shakerVessel.gameObject.activeInHierarchy && _tinFrontImg != null && _tinFrontImg.sprite != null;
+            if (_tinFrontRt.gameObject.activeSelf != on) _tinFrontRt.gameObject.SetActive(on);
+            if (!on) return;
+            _tinFrontRt.anchoredPosition = _shakerVessel.anchoredPosition;
+            _tinFrontRt.localRotation = _shakerVessel.localRotation;
+            _tinFrontRt.localScale = _shakerVessel.localScale;
+            _tinFrontRt.sizeDelta = _shakerVessel.sizeDelta;
+        }
+
         private void DressShakerArt()
         {
             string t = ShakerTier;
             var tin = ItemArt.Load("tin_open" + t) ?? ItemArt.Load("tin_open");
             if (_shakerBodyImg != null && tin != null) _shakerBodyImg.sprite = tin;
+            DressTinFront();
             if (_serveShakerBody != null && tin != null) _serveShakerBody.sprite = tin;
             var cap = ItemArt.Load("shaker_cap" + t) ?? ItemArt.Load("shaker_cap");
             if (_shakerCapImg != null && cap != null) _shakerCapImg.sprite = cap;
@@ -1030,15 +1057,21 @@ namespace LastCall.UI
             // mouth. Everything below the brim is simply not visible, and the readout above
             // the bench is where the level is read instead.
             if (fill < BrimFill) { _shakerFluid.ClearPool(); return; }
-            float band = Mathf.Min(innerH * 0.10f, 22f);   // the last of it, at the rim
-            // UNDER THE LIP (2026-09-06, the author: "shaker tamamen doluyken yanlış
-            // gözüküyor sıvı dış yüzeyinin üstünde gözüküyor"). The pool's top edge sat at
-            // the cavity's rim row, and a metaball surface stands a few pixels proud of the
-            // band it is given — so a brimful tin drew its drink above the steel. The band
-            // is dropped by that overshoot: the drink shows in the mouth, never over it.
-            const float BrimInset = 7f;
+            // IN THE MOUTH (2026-09-08, the author's tin_open_Front: "sıvının önünü ekle,
+            // böylece sıvı şişenin içerisinde gibi gözükecek"). The tin's front wall is now
+            // a plate drawn OVER the fluid, its top edge at the front lip (0.615 of the
+            // sprite, the cavity rim), and the mouth's interior — 0.615 to 0.73, measured
+            // on the master — is what it leaves open. The brimful pool used to sit a band
+            // under the rim, which put the whole of it behind the plate; it now stands in
+            // the mouth, from just over the front lip to under the back rim, so a brimful
+            // tin shows its drink through the opening and nowhere else. The plate's ring
+            // hides the metaball's proud edge on the front side; MouthTop keeps it under
+            // the back rim.
+            const float MouthTop = 0.70f;                  // of the sprite, from its bottom
+            const float LipClear = 2f;                     // px over the front lip's inner edge
+            float mouthTop = rimY + h * (MouthTop - CavityRim);
             // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
-            _shakerFluid.SetPool(minX, maxX, rimY - BrimInset - band + bob, rimY - BrimInset + bob, 1f, rad);
+            _shakerFluid.SetPool(minX, maxX, rimY + LipClear + bob, mouthTop + bob, 1f, rad);
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
         }
@@ -1690,6 +1723,24 @@ namespace LastCall.UI
             // The metaball fluid draws over the vessel (pool); the solids float on top of it;
             // the bottle is created after, so it sits in front of the liquid.
             _shakerFluid = new MetaballFluid(_pourSurface);
+            // THE TIN'S FRONT, OVER THE LIQUID (2026-09-08, the author: "shakerın içerisi
+            // eskisi gibi dolsun, sen kesme, sadece sıvının önünü tin_open_Front ... ekle
+            // böylece sıvı şişenin içerisinde gibi gözükecek"). The fluid is a RawImage
+            // created after the tin on this surface, so it already draws over the tin — the
+            // fill the author wants kept. This is the third layer: the tin's front body,
+            // drawn 82x124 of the 116x208 tin from x 17, bottom-aligned at row 195, placed
+            // on a rect that copies the tin's transform every frame so it shakes and pours
+            // with it.
+            _tinFrontRt = NewRect("TinFront", _pourSurface);
+            Place(_tinFrontRt, new Vector2(0.5f, 0.5f), new Vector2(TinW, TinH), _shakerHome);
+            var tinFrontArt = NewRect("Art", _tinFrontRt);
+            tinFrontArt.anchorMin = new Vector2(17f / 116f, (208f - 195f) / 208f);
+            tinFrontArt.anchorMax = new Vector2((17f + 82f) / 116f, (208f - 195f + 124f) / 208f);
+            tinFrontArt.offsetMin = tinFrontArt.offsetMax = Vector2.zero;
+            _tinFrontImg = tinFrontArt.gameObject.AddComponent<Image>();
+            _tinFrontImg.raycastTarget = false;
+            _tinFrontImg.preserveAspect = false;
+            DressTinFront();
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
             _shakerFluid.SetProfile(new[] {

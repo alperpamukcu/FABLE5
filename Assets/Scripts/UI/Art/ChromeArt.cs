@@ -2461,6 +2461,22 @@ namespace LastCall.UI
         /// </summary>
         public static Sprite SpeechBox(BubbleTone tone = BubbleTone.Drink)
         {
+            // THE AUTHOR'S BUBBLE (2026-09-08: "yeni konuşma balonu görselleri ekliyorum").
+            // bubble_white_10 — the tailless one — sliced 8/8/8/8 so its rounded corners
+            // never stretch (the body spans 4..27 of 32; the corners are four deep). The
+            // tone stays a parameter for the callers; the art is white, and a white balloon
+            // is what a speech balloon is. The drawn rounded rectangle below stays as the
+            // fallback for a project without the file.
+            string drawnKey = "speech:box:drawn";
+            if (Cache.TryGetValue(drawnKey, out var drawnGot) && drawnGot != null) return drawnGot;
+            var drawn = ItemArt.Load("speech_body");
+            if (drawn != null && drawn.texture != null)
+            {
+                var sliced = Sprite.Create(drawn.texture, drawn.rect, new Vector2(0.5f, 0.5f),
+                    drawn.pixelsPerUnit, 0, SpriteMeshType.FullRect, new Vector4(8, 8, 8, 8));
+                sliced.name = "speech_body(sliced)";
+                return Cache[drawnKey] = sliced;
+            }
             // ROUNDED (2026-09-06, the author: "konuşma balonları köşeli olmasın"). A rectangle
             // with its corners clipped by a pixel still read as a box; this is a real
             // rounded rectangle — a five-pixel radius on a 17-pixel tile — with a two-pixel
@@ -2491,6 +2507,10 @@ namespace LastCall.UI
         {
             string key = "speech:tail:" + tone;
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            // The tail cut from bubble_white_2 (Tools/ui_art_2026_09_08.py), with the body's
+            // bottom outline on its top row so it fuses with the body it hangs under.
+            var drawnTail = ItemArt.Load("speech_tail");
+            if (drawnTail != null) return Cache[key] = drawnTail;
             const int W = 13, H = 12;
             var ink = EdgeOf(tone);
             var paper = new Color32(0xFF, 0xFF, 0xFF, 255);

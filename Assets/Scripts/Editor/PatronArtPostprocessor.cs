@@ -21,7 +21,7 @@ namespace LastCall.EditorTools
             // than wired into the scene, because one serialized slot cannot hold three.
             bool world = p.Contains("Resources/Fixtures/") || p.Contains("Resources/Scene/")
                       || p.Contains("Art/Backgrounds/");
-            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !world) return;
+            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !p.Contains("Resources/Emotes/") && !world) return;
 
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;
