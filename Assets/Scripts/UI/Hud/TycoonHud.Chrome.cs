@@ -220,41 +220,27 @@ namespace LastCall.UI
         private const float CardPad = 12f, CardBodyMinW = 220f, CardRowGap = 6f;
         private const float CardDrinkIcon = 32f;   // DrinkIcon.Size, as drawn
 
-        private Camera _cellarCardCam;     // the camera the card's canvas is drawn by (null: overlay)
-        private int _cellarCardRaised = -1; // the bottle lifted over the card, or -1
+        private int _cellarCardShown = -1;  // the shelf bottle switched off under the card's copy, or -1
 
         private void BuildCellarCard(RectTransform root)
         {
-            // THE BOTTLE STAYS ON TOP (2026-09-08, the author: "kesme; şişe hiyerarşide üstte
-            // kalsın"). A screen-space-overlay canvas is drawn after the whole world, so no
-            // sprite on the shelf can ever stand in front of it. The card therefore lives on
-            // a canvas of its own that the CAMERA draws, in the counter's sorting layer at
-            // DiegeticStage.CellarCardOrder — over the shelf and every bottle, and under the
-            // one bottle the stage lifts while the card stands (RaiseCellarBottle). The same
-            // 1280x720 frame as the HUD, so every unit on it is a HUD unit.
-            var host = root;
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                var canvasGo = new GameObject("CellarCardCanvas", typeof(Canvas), typeof(CanvasScaler));
-                var cv = canvasGo.GetComponent<Canvas>();
-                cv.renderMode = RenderMode.ScreenSpaceCamera;
-                cv.worldCamera = cam;
-                cv.planeDistance = 5f;
-                cv.sortingLayerName = DiegeticStage.LayerCounter;
-                cv.sortingOrder = DiegeticStage.CellarCardOrder;
-                var scaler = canvasGo.GetComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1280, 720);
-                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-                scaler.matchWidthOrHeight = 1f;
-                host = DesignFrame.Wrap((RectTransform)canvasGo.transform, new Vector2(1280f, 720f));
-                _cellarCardCam = cam;
-            }
-            _cellarCard = NewRect("CellarCard", host);
+            // ON TOP OF EVERYTHING (2026-09-08, the author: "açılan bilgi kartları her zaman
+            // hiyerarşide en üstte olmalı, sadece üstüne gelinen asset gözükecek"). The card
+            // is on the HUD's own canvas, sorted at 26 — over the shelf captions, the book
+            // prop (8), the counter, every sprite. What shows over it is the one thing the
+            // pointer is on: the bottle, drawn again in the slot as a UI sandwich — which is
+            // unlit, the "ışıklandırılmadan arındırılmış aydınlık" form the author asked for
+            // — at the shelf bottle's own place and size, following its sway, while the
+            // shelf's renderers are switched off so there is one bottle and it is in front.
+            // (A camera-space canvas under a lifted bottle was tried the same day; it lost
+            // every bottle's glass on the author's machine.)
+            _cellarCard = NewRect("CellarCard", root);
             _cellarCard.anchorMin = _cellarCard.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCard.pivot = new Vector2(0.5f, 0f);
             _cellarCard.sizeDelta = new Vector2(CardSlotW + CardBodyMinW, 160f);
+            var cardCanvas = _cellarCard.gameObject.AddComponent<Canvas>();
+            cardCanvas.overrideSorting = true;
+            cardCanvas.sortingOrder = 26;
 
             // the slot: left, the card's full height
             _cellarCardSlot = NewRect("Slot", _cellarCard);
@@ -274,7 +260,7 @@ namespace LastCall.UI
             _cellarCardVessel.anchorMin = _cellarCardVessel.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.pivot = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.sizeDelta = new Vector2(32f * CardScale, 64f * CardScale);
-            _cellarCardVessel.anchoredPosition = new Vector2(-1f, 0f);   // the well spans art px 3..38: a unit left of centre
+            _cellarCardVessel.anchoredPosition = new Vector2(-1f, 0f);   // re-laid every frame on the shelf bottle's rect
             _cellarCardBottle = BottleArt.Under(_cellarCardVessel);
 
             var dishRt = NewRect("Dish", _cellarCardSlot);
@@ -477,7 +463,8 @@ namespace LastCall.UI
             var bottle = card != null ? run?.Shelf.Find(card.Id) : null;
             ClearCardUses();
             _cellarCardBottle.Show(null);
-            _cellarCardDish.enabled = false;   // the dish itself shows through the slot's well
+            _cellarCardDish.sprite = prop.Img != null ? prop.Img.sprite : icon;
+            _cellarCardDish.enabled = _cellarCardDish.sprite != null;   // the dish, drawn again in the slot
             string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
             _cellarCardName.text = title.ToUpperInvariant();
             _cellarCardMeta.text = prop.IsRim ? "RIM  ·  " + word : (prop.Id == "ice" ? "ICE  ·  " + word : "GARNISH  ·  " + word);
@@ -503,12 +490,12 @@ namespace LastCall.UI
             if (_cellarCardOver == over) { _cellarCardOver = null; _cellarCardFree = false; }
         }
 
-        /// <summary>Sets the lifted bottle back among the others.</summary>
+        /// <summary>Switches the shelf's bottle back on when its card goes.</summary>
         private void LowerCellarBottle()
         {
-            if (_cellarCardRaised < 0) return;
-            stage?.RaiseCellarBottle(_cellarCardRaised, false);
-            _cellarCardRaised = -1;
+            if (_cellarCardShown < 0) return;
+            stage?.ShowCellarBottle(_cellarCardShown, true);
+            _cellarCardShown = -1;
         }
 
         private void SetCardStockFill(float frac, Color tone)
@@ -540,9 +527,9 @@ namespace LastCall.UI
             var corners = new Vector3[4];
             over.GetWorldCorners(corners);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
-                RectTransformUtility.WorldToScreenPoint(null, corners[0]), _cellarCardCam, out Vector2 lo);
+                RectTransformUtility.WorldToScreenPoint(null, corners[0]), null, out Vector2 lo);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
-                RectTransformUtility.WorldToScreenPoint(null, corners[2]), _cellarCardCam, out Vector2 hi);
+                RectTransformUtility.WorldToScreenPoint(null, corners[2]), null, out Vector2 hi);
             var centre = (lo + hi) * 0.5f;
             var size = new Vector2(Mathf.Abs(hi.x - lo.x), Mathf.Abs(hi.y - lo.y));
             bool left = centre.x > parent.rect.width * (0.5f - 0.34f);
@@ -550,11 +537,6 @@ namespace LastCall.UI
             if (_cellarCardFree)
                 _cellarCardDish.rectTransform.sizeDelta = new Vector2(
                     Mathf.Clamp(size.x, 32f, CardSlotW - CardRule * 2f - 4f), Mathf.Clamp(size.y, 32f, 120f));
-            else
-            {
-                float vh = Mathf.Clamp(size.y, 96f, 144f);
-                _cellarCardVessel.sizeDelta = new Vector2(vh * 0.5f, vh);
-            }
             float w = _cellarCard.sizeDelta.x, h = _cellarCard.sizeDelta.y;
             const float WellCentre = 41f;   // the well spans art px 3..38 of the 42: its centre at 2x
             float slotCx = left ? w - WellCentre : WellCentre;
@@ -564,6 +546,24 @@ namespace LastCall.UI
             pos.x = Mathf.Clamp(pos.x, -lim, lim - w);
             pos.y = Mathf.Clamp(pos.y, -vlim, vlim - h);
             _cellarCard.anchoredPosition = pos;
+
+            // THE BOTTLE IN THE SLOT IS THE SHELF'S BOTTLE, THIS FRAME: its front plate's
+            // world corners (sway and all) become the copy's rect, in the slot's own units,
+            // so the copy stands exactly where the shelf's one would and moves as it moves.
+            if (!_cellarCardFree && stage != null && _cellarCardShown >= 0
+                && stage.CellarBottleBounds(_cellarCardShown, out var bMin, out var bMax))
+            {
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                    RectTransformUtility.WorldToScreenPoint(null, bMin), null, out Vector2 blo);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                    RectTransformUtility.WorldToScreenPoint(null, bMax), null, out Vector2 bhi);
+                var bCentre = (blo + bhi) * 0.5f;
+                var bSize = new Vector2(Mathf.Abs(bhi.x - blo.x), Mathf.Abs(bhi.y - blo.y));
+                // the vessel is anchored at the slot's centre; the offset is from there
+                var slotCentre = pos + new Vector2(left ? w - CardSlotW * 0.5f : CardSlotW * 0.5f, h * 0.5f);
+                _cellarCardVessel.sizeDelta = bSize;
+                _cellarCardVessel.anchoredPosition = bCentre - slotCentre;
+            }
         }
 
         private bool _cellarCardLeft;
@@ -973,11 +973,11 @@ namespace LastCall.UI
                 if (_cellarCardOver == plate) { _cellarCardOver = null; LowerCellarBottle(); }
                 return;
             }
-            if (_cellarCardRaised != index)
+            if (_cellarCardShown != index)
             {
                 LowerCellarBottle();
-                stage?.RaiseCellarBottle(index, true);
-                _cellarCardRaised = index;
+                stage?.ShowCellarBottle(index, false);
+                _cellarCardShown = index;
             }
             var card = _cellarCards[index];
             var run = Run;
@@ -987,10 +987,16 @@ namespace LastCall.UI
             int price = Market.StockPrice(card);
             ClearCardUses();
 
-            // NOTHING IN THE SLOT (2026-09-08, the author): the slot is a frame round the
-            // bottle on the shelf, which shows through its cut well — no copy of it.
+            // The bottle itself in the slot — the UI sandwich, unlit and bright — filled to
+            // what is left of it; StepCellarCard lays it on the shelf bottle's own rect.
             _cellarCardDish.enabled = false;
-            _cellarCardBottle.Show(null);
+            var plates = ItemArt.Plates(card, cellar: true);
+            _cellarCardBottle.Show(plates);
+            if (plates != null)
+            {
+                double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
+                _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
+            }
 
             _cellarCardName.text = card.Name.ToUpperInvariant();
             _cellarCardMeta.text = $"{style}  ·  TIER {tier}";

@@ -1563,13 +1563,15 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kart şişenin ARKASINDA oluşur** (yazarın notu, aynı gün): yuva rafta duran şişenin kendi yerine ve boyuna oturur (kopya
   gerçek şişenin üstünde, kimse yerinden oynamaz), kutu yanına uzanır; ekranın sağ üçte birindeki şişelerde kart döner —
   aynı sanatın aynalanmış kesimi (`card_slot_l`/`card_body_l`), kutu sola. `StepCellarCard` kapı plakasının HUD-birimli
-  köşelerinden merkez ve boyu okur; garnish kâseleri için aynı. **Yuvada kopya yok, kesim de yok** (yazar: "mevcut sahnede sallananı öne
-  çıkar … kesme; şişe hiyerarşide üstte kalsın"): overlay kanvas dünyanın üstüne çizildiğinden kart HUD'dan ayrıldı — kendi
-  **kamera kanvasında** (`ScreenSpaceCamera`, `Bar Counter` katmanı, sıra `DiegeticStage.CellarCardOrder` = 40: rafın ve her
-  şişenin (30–32) üstünde), hover'daki şişeyi ise sahne `RaiseCellarBottle` ile 60–62'ye kaldırıyor; kart kalkınca indiriyor.
-  Aynı 1280×720 çerçeve, aynı birimler; ekran→yerel dönüşümü kartın kamerasıyla. **Ölçüm tuzağı:** `CaptureScreenshot`
-  süper-boyutla (3x) kamera kanvasını yanlış ölçekleyip sol kenara yapıştırıyor — kamera kanvası 1x çekilir. Deliğin sanatı
-  (`card_slot_hole`) silindi. Kart zemini yazarın dosyasında 226/255 alfa — yarı saydamlık sanatın kendisi. Gün sonu perdesi 0.88 → **0.965**. Market kartlarındaki `$` ikonu yerine düz yeşil `$` (display face,
+  köşelerinden merkez ve boyu okur; garnish kâseleri için aynı. **Yuvada kopya var, ama tek şişe** (yazarın son sözü: "açılan bilgi kartları her zaman hiyerarşide en üstte olmalı, sadece
+  üstüne gelinen asset gözükecek … seçilen şey ışıklandırılmadan arındırılmış aydınlık şekliyle gözükecek"): kart HUD'un kendi
+  kanvasında 26'da — raf yazılarının, kitabın, her sprite'ın üstünde. Yuvadaki şişe UI sandviçi (ışıksız = "aydınlık" hâli),
+  `StepCellarCard` her kare raf şişesinin ön plakasının dünya köşelerini (`DiegeticStage.CellarBottleBounds`, sallanma dahil)
+  yuva birimine çevirip kopyayı tam o dikdörtgene oturtuyor; raf şişesinin renderer'ları kart dururken kapalı
+  (`ShowCellarBottle`), kart gidince açılıyor. Denenip atılanlar: yuvayı delmek (yazar: "kesme"), kartı kamera kanvasına alıp
+  hover'daki şişeyi 60–62'ye kaldırmak (yazarın makinesinde tüm şişelerin camı kayboldu, yalnız sıvı blokları kaldı; raf
+  yazıları da kartın üstünde kalıyordu). Ölçüldü: kopya ile raf şişesinin ekran dikdörtgeni birebir aynı.
+  Kart zemini yazarın dosyasında 226/255 alfa — yarı saydamlık sanatın kendisi. Gün sonu perdesi 0.88 → **0.965**. Market kartlarındaki `$` ikonu yerine düz yeşil `$` (display face,
   `Lime[2]`); çizili dolar panolarda kaldı.
 - **Doğrulama:** EditMode 504/504, PlayMode 11/11. Fotoğraflar: mahzen kartı (Krakatoa Rum, sağ elli Quinn's Tonic), garnish
   kartı (lemon twist), Jersey 15 balon/fişler, market likör/geliştirme sekmeleri, gün sonu panoları, ayarlar, perfect sayfa.

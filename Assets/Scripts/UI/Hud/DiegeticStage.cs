@@ -530,28 +530,37 @@ namespace LastCall.UI
         /// gösteren sıvılar sabit kalıyor"). The doors are built before the back, mask and drink
         /// renderers, so a door built then followed only the bottle — and the drink stood still
         /// in the air while the bottle rocked. Rewired every time the plates are set.</summary>
-        /// <summary>The order the bottle's card is drawn at (2026-09-08): a camera-space
-        /// canvas in the counter's layer, over the shelf and every bottle (30..32) and under
-        /// the one bottle <see cref="RaiseCellarBottle"/> lifts.</summary>
-        public const int CellarCardOrder = 40;
-
-        private const int CellarLift = 30;   // 30..32 → 60..62 while the card stands under it
-
-        /// <summary>Lifts one cellar bottle — its back, its drink and mask, its front — over
-        /// the card's order, or sets it back down (2026-09-08, the author: "şişe hiyerarşide
-        /// üstte kalsın"). The mask's custom range moves with the drink it clips.</summary>
-        public void RaiseCellarBottle(int index, bool up)
+        /// <summary>Switches one cellar bottle's renderers off or on (2026-09-08): while
+        /// the bottle's card stands, the HUD draws the bottle itself — unlit, bright, on
+        /// top of the card — and the shelf's one must not show through beside it. The
+        /// transforms keep moving (HoverGlow's sway), so the copy can follow them.</summary>
+        public void ShowCellarBottle(int index, bool shown)
         {
             if (index < 0 || index >= _cellarStock.Count) return;
-            int lift = up ? CellarLift : 0;
-            _cellarStock[index].sortingOrder = 32 + lift;
-            if (index < _cellarBack.Count) _cellarBack[index].sortingOrder = 30 + lift;
-            if (index < _cellarDrink.Count) _cellarDrink[index].sortingOrder = 31 + lift;
-            if (index < _cellarMask.Count)
-            {
-                _cellarMask[index].frontSortingOrder = 31 + lift;
-                _cellarMask[index].backSortingOrder = 31 + lift;
-            }
+            _cellarStock[index].enabled = shown;
+            if (index < _cellarBack.Count) _cellarBack[index].enabled = shown;
+            if (index < _cellarDrink.Count) _cellarDrink[index].enabled = shown && _cellarDrinkOn(index);
+        }
+
+        private bool _cellarDrinkOn(int index) =>
+            index < _cellarDrink.Count && _cellarDrink[index].gameObject.activeSelf
+            && index < _cellarMask.Count && _cellarMask[index].sprite != null;
+
+        /// <summary>The world corners (min, max) of one cellar bottle's front plate, where
+        /// it stands THIS frame — sway and all — for the HUD to lay its copy on. False
+        /// when there is no such bottle.</summary>
+        public bool CellarBottleBounds(int index, out Vector3 min, out Vector3 max)
+        {
+            min = max = Vector3.zero;
+            if (index < 0 || index >= _cellarStock.Count) return false;
+            var sr = _cellarStock[index];
+            if (sr == null || sr.sprite == null) return false;
+            var b = sr.sprite.bounds;
+            var m = sr.transform.localToWorldMatrix;
+            var a = m.MultiplyPoint3x4(new Vector3(b.min.x, b.min.y, 0f));
+            var c = m.MultiplyPoint3x4(new Vector3(b.max.x, b.max.y, 0f));
+            min = Vector3.Min(a, c); max = Vector3.Max(a, c);
+            return true;
         }
 
         private void RefreshCellarMovers()
