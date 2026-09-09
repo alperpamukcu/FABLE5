@@ -1008,6 +1008,15 @@ namespace LastCall.UI
                     Place(pf.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
                         new Vector2(-46f, 0));
                     pf.text = "PERFECT";
+                    var pmark = NewRect("PerfectMark", row);
+                    pmark.anchorMin = pmark.anchorMax = new Vector2(1f, 0.5f);
+                    pmark.pivot = new Vector2(1f, 0.5f);
+                    pmark.sizeDelta = new Vector2(16f, 16f);
+                    pmark.anchoredPosition = new Vector2(-(46f + pf.preferredWidth + 4f), 0f);
+                    var pimg = pmark.gameObject.AddComponent<Image>();
+                    pimg.sprite = ItemArt.Perfect(16f);
+                    pimg.preserveAspect = true;
+                    pimg.raycastTarget = false;
                 }
                 var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight, figure);
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(40f, 22f), new Vector2(-8f, 0));
@@ -1084,7 +1093,9 @@ namespace LastCall.UI
             }
 
             var note = NewText("Note", body, _body, 16, TextAnchor.MiddleCenter, quiet);
-            Place(note.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 24f),
+            // TWO LINES, because that is what it takes (2026-09-09, measured over every page:
+            // 41 units of wrapped text in a 24-unit box, and the second line was cut in half).
+            Place(note.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 44f),
                 new Vector2(0, -(y + 12f)));
             note.rectTransform.pivot = new Vector2(0.5f, 1f);
             note.text = "A CHAPTER OPENS ITS OWN LIST HERE";
@@ -1142,8 +1153,27 @@ namespace LastCall.UI
             // that corner — the screenshot read "SEX ON THE BEA". No size of corner ribbon
             // clears every name, so the word moves to the line that has room for it. The
             // platinum frame still binds the page.
-            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : perfected ? " · PERFECT RECIPE" : "");
+            // THE MARK SAYS IT, NOT THE WORD (2026-09-09, the author: "menüde perfect
+            // tariflerde yazılar kutulardan taşıyor" + "perfect tarif için bir icon oluştur").
+            // "MID SHELF · PERFECT RECIPE" is 26 capitals at 16 in the heavy face — wider than
+            // the 296-unit column — so it wrapped onto the title and printed RECIPE across the
+            // drink's name. The chapter keeps the line, the rosette stands before it, and the
+            // line cannot wrap whatever a chapter is called.
+            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : "");
+            eyebrow.horizontalOverflow = HorizontalWrapMode.Overflow;
             if (perfected) eyebrow.color = BkPlatinumInk;
+            if (perfected)
+            {
+                var seal = NewRect("PerfectMark", print);
+                seal.anchorMin = seal.anchorMax = new Vector2(0.5f, 1f);
+                seal.pivot = new Vector2(1f, 1f);
+                seal.sizeDelta = new Vector2(20f, 20f);
+                seal.anchoredPosition = new Vector2(-(eyebrow.preferredWidth * 0.5f + 6f), -16f);
+                var sealImg = seal.gameObject.AddComponent<Image>();
+                sealImg.sprite = ItemArt.Perfect(20f);
+                sealImg.preserveAspect = true;
+                sealImg.raycastTarget = false;
+            }
 
             var head = NewText("Head", print, perfected ? _shop : _display, perfected ? 24 : 16, TextAnchor.MiddleCenter,
                 page.Locked ? new Color(0.45f, 0.36f, 0.28f)
@@ -1153,6 +1183,16 @@ namespace LastCall.UI
             head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);
             head.rectTransform.anchoredPosition = new Vector2(0, -40f);
             head.text = r.Name.ToUpperInvariant();
+            // THE TITLE FITS ITS COLUMN (2026-09-09). A perfected page sets the name in the
+            // heavy face at 24, and a long one — SEX ON THE BEACH, TEQUILA SUNRISE — is wider
+            // than the column, so it wrapped into the line under it. Measured, and stepped
+            // back to the page's own 16 when it must be.
+            if (head.preferredWidth > head.rectTransform.sizeDelta.x)
+            {
+                head.fontSize = 16;
+                head.font = _display;
+            }
+            head.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             float y = BkContentTop;
 
@@ -1209,7 +1249,7 @@ namespace LastCall.UI
             var cap = NewText("Cap", print, _body, 16, TextAnchor.MiddleCenter, quiet);
             cap.rectTransform.anchorMin = cap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             cap.rectTransform.pivot = new Vector2(0.5f, 1f);
-            cap.rectTransform.sizeDelta = new Vector2(BkColW, 18f);
+            cap.rectTransform.sizeDelta = new Vector2(BkColW, 22f);   // 16pt needs 20 (measured)
             cap.rectTransform.anchoredPosition = new Vector2(0, -y);
             cap.text = "THE POUR · ONE DOT IS A FIFTH";
             y += 22f;
@@ -1228,7 +1268,7 @@ namespace LastCall.UI
             var scale = NewText("Scale", print, _body, 16, TextAnchor.MiddleCenter, quiet);
             scale.rectTransform.anchorMin = scale.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             scale.rectTransform.pivot = new Vector2(0.5f, 1f);
-            scale.rectTransform.sizeDelta = new Vector2(BkColW, 18f);
+            scale.rectTransform.sizeDelta = new Vector2(BkColW, 22f);   // 16pt needs 20 (measured)
             scale.rectTransform.anchoredPosition = new Vector2(0, -(y + legendH + 2f));
             scale.text = "20%   40%   60%   80%  100%";
             y += legendH + 24f;

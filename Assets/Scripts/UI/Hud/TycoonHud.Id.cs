@@ -911,6 +911,17 @@ namespace LastCall.UI
             // what they make of the place, five small stars filled to their average, with
             // the figure beside them. Two captions, one word each.
             float stripTop = -LicStampY;
+            // CENTRED IN ITS WELL (2026-09-09, the author: "kimlikteki görselde paylaştığım
+            // kutunun içindeki görsel ve yazıları tam ortala kutuya"). Both rows were pinned
+            // to the well's top-left corner — caption on the margin, marks two units under
+            // the rule — so a box drawn round them had all its air on the other two sides.
+            // The block is a caption column plus five marks wide and two rows tall; what the
+            // well has over that is split evenly, and every mark below is placed off these.
+            const float StampMark = 12f, StampMarkGap = 2f;
+            float stampBlockW = LicStampCol + 5f * (StampMark + StampMarkGap) - StampMarkGap;
+            float stampBlockH = LicStampRow + 16f;
+            float stampX = LicPad + Mathf.Max(0f, (LicStripW - stampBlockW) * 0.5f);
+            float stampTop = stripTop - Mathf.Max(0f, (LicStampH - stampBlockH) * 0.5f);
             // AT SIXTEEN (2026-09-07, the author: "sol altta visit rate us fontlari hem
             // okunakli degil"). The body face is drawn on an 8px grid: at 8 it is half its
             // design size and every stroke lands between pixels, which is the hairline the
@@ -923,7 +934,7 @@ namespace LastCall.UI
             // its word at the head and its marks beside it — which is how a form is set, reads
             // left to right as a sentence, and is what a 54-unit well can actually hold.
             Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
-                new Vector2(LicPad, stripTop - 2f));
+                new Vector2(stampX, stampTop));
             _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRelLabel.text = "VISITS";
             // ONE CAPTION PER ROW, because two do not fit (2026-09-07, measured in play).
@@ -937,7 +948,7 @@ namespace LastCall.UI
             // is what fits the half-rail the stars need, and it says the same thing.
             _idRatesLabel = NewText("C_RATES", card, _body, 16, TextAnchor.UpperLeft, UITheme.ClubBlue[2]);
             Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
-                new Vector2(LicPad, stripTop - 2f - LicStampRow));
+                new Vector2(stampX, stampTop - LicStampRow));
             _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _idRatesLabel.text = "RATED";
 
@@ -955,7 +966,7 @@ namespace LastCall.UI
             {
                 var p = NewRect("Punch" + i, card);
                 Place(p, new Vector2(0, 1), new Vector2(PunchPx, PunchPx), new Vector2(
-                    LicPad + LicStampCol + i * (PunchPx + PunchGap), stripTop - 4f));
+                    stampX + LicStampCol + i * (PunchPx + PunchGap), stampTop - 2f));
                 _idPunches[i] = p.gameObject.AddComponent<Image>();
                 _idPunches[i].sprite = ChromeArt.Punch();
                 _idPunches[i].preserveAspect = true; _idPunches[i].raycastTarget = false;
@@ -971,7 +982,7 @@ namespace LastCall.UI
             // LAST punch rather than sitting after it, drawn small and dark on the card.
             _idVisitMore.enabled = false;
             Place(_idVisitMore.rectTransform, new Vector2(0, 1), new Vector2(28, 16), new Vector2(
-                LicPad + LicStripW - 30f, stripTop - 2f));
+                stampX + stampBlockW - 28f, stampTop));
             _idVisitMore.horizontalOverflow = HorizontalWrapMode.Overflow;
             // The count itself is kept off the card (the punches are the count); it feeds
             // nothing now but is still written, so the old readers stay honest.
@@ -1011,8 +1022,8 @@ namespace LastCall.UI
                 // It belongs there as well as fitting: RATED and the bond are both what this
                 // drinker makes of the bar, while the punches are how often they have come.
                 Place(b, new Vector2(0, 1), new Vector2(BondPx, BondPx), new Vector2(
-                    LicPad + LicStripW - 6f - (3 - i) * (BondPx + BondGap) + BondGap,
-                    stripTop - 4f - LicStampRow));
+                    stampX + stampBlockW - (3 - i) * (BondPx + BondGap) + BondGap,
+                    stampTop - 2f - LicStampRow));
                 b.gameObject.SetActive(BondOnCard);
                 var bs = b.gameObject.AddComponent<Image>();
                 bs.sprite = ItemArt.Heart(false, BondPx);
@@ -1032,8 +1043,8 @@ namespace LastCall.UI
             {
                 var s = NewRect("Star" + i, card);
                 Place(s, new Vector2(0, 1), new Vector2(StarBox, StarBox), new Vector2(
-                    LicPad + LicStampCol + i * (StarBox + StarGap),
-                    stripTop - 4f - LicStampRow));
+                    stampX + LicStampCol + i * (StarBox + StarGap),
+                    stampTop - 2f - LicStampRow));
                 _idStars[i] = s.gameObject.AddComponent<Image>();
                 _idStars[i].sprite = ItemArt.Star(false, StarBox);
                 _idStars[i].preserveAspect = true;
@@ -1052,7 +1063,7 @@ namespace LastCall.UI
             }
             _idRates = NewText("V_RATES", card, _display, 8, TextAnchor.MiddleRight, UITheme.Night[1]);
             Place(_idRates.rectTransform, new Vector2(0, 1), new Vector2(46, 16), new Vector2(
-                LicPad + LicStampCol, stripTop - 4f - LicStampRow));
+                stampX + LicStampCol, stampTop - 2f - LicStampRow));
             _idRates.enabled = false;
             _idRates.horizontalOverflow = HorizontalWrapMode.Overflow;
 
@@ -1106,14 +1117,18 @@ namespace LastCall.UI
             // read it anyway. The card is 714 wide on a 1280 canvas, so 252 clears it.
             _idRecipeTip = NewRect("RecipeTip", _idRoot);
             Place(_idRecipeTip, new Vector2(0.5f, 0.5f), new Vector2(TipW, 120), Vector2.zero);
+            _idRecipeTip.sizeDelta = new Vector2(TipW, 120f);
             _idRecipeTip.pivot = new Vector2(0, 1);
             _idRecipeTip.anchoredPosition = new Vector2(LicW * 0.5f + 12f, LicH * 0.5f - LicLines[2] + 16f);
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
-            tipBg.color = new Color(0.07f, 0.07f, 0.11f, 0.96f);
+            // THE BOOK'S OWN PAPER (2026-09-09): the tip prints a page of the menu, so it is
+            // set on the booklet's paper (menu_booklet.png, #F2E8D5) and bound in the page
+            // frame's gold rather than on the night-blue plate it used to wear.
+            tipBg.color = new Color(0.949f, 0.910f, 0.835f, 0.98f);
             // Nothing in the panel may take a raycast, or hovering it reads as leaving the
             // order line and the whole thing blinks.
             tipBg.raycastTarget = false;
-            var tipEdge = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.8f);
+            var tipEdge = new Color(0.788f, 0.510f, 0.169f, 0.95f);   // menu_page_frame's gold
             Hairline(_idRecipeTip, new Vector2(0, 0), new Vector2(1, 0), tipEdge);
             Hairline(_idRecipeTip, new Vector2(0, 1), new Vector2(1, 1), tipEdge);
             HairlineV(_idRecipeTip, 0f, tipEdge);

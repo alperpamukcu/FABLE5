@@ -2,6 +2,20 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The twentieth list (2026-09-09):** the bottle card is two boxes now — the author redrew
+  card_slot.png as a box open on one side and card_body.png as a whole box, and each is sized
+  to what it holds (the bottle, the text) instead of one being stretched to the other; the
+  mirrored cuts are taken from that art rather than left stale, and card_body is the house's
+  panel wherever a panel is drawn. The card hangs on the bottle and the TEXT box is what
+  slides to stay on screen, so the copy can never leave its well. The stock bar's fill is
+  anchored, so a narrow card after a wide one cannot run it off the card. The copy takes the
+  shelf bottle's POSE — unrotated size, centre, rock — and its drink is re-laid every frame,
+  so glass and liquid move as one thing. Money types a $ in its own ink instead of wearing the
+  drawn coin. The crowd speaks the house body face at 16. A platinum rosette marks a perfected
+  recipe (Tools/perfect_icon.py) on the page, in the index and on the licence — whose recipe
+  hover is now a page of the book, paper and all. Every one of the 56 book pages was measured
+  for text that does not fit, plain and perfected: three real overflows found and fixed. And
+  Docs/SES_LISTESI.md is the audio inventory the author asked for.
 - **Juices back in carton (2026-09-08, evening):** the author saw the glass and asked for cartons
   ("meyve suları karton olsun cam değil"). The five are gable-top (cranberry: brick) cartons again,
   taken through the sealed line with the bottles' camera — front face a plain upright rectangle, a

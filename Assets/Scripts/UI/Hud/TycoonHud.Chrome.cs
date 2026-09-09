@@ -211,16 +211,35 @@ namespace LastCall.UI
         private CanvasGroup _cellarCardGroup;
         private Text _cellarCardName, _cellarCardMeta, _cellarCardPrice, _cellarCardStock,
             _cellarCardUsesHead, _cellarCardMark;
-        private Image _cellarCardIcon, _cellarCardCoin, _cellarCardDish, _cellarCardHalo;
+        private Image _cellarCardIcon, _cellarCardDish, _cellarCardHalo;
+        private Text _cellarCardSign;   // the yellow $ before the price
         private BottleArt _cellarCardBottle;
         private bool _cellarCardFree;      // a garnish card stands on the counter, cellar shut or not
         // The author's card at 2x: a 3px rule is 6 units, the slot 84 wide, and its
         // well (36 art px) 72 — a cellar plate (32x64) at 2x stands in it with 4 to spare.
-        private const float CardScale = 2f, CardSlotW = 42f * CardScale, CardRule = 3f * CardScale;
-        private const float CardPad = 12f, CardBodyMinW = 220f, CardRowGap = 6f;
+        private const float CardScale = 2f, CardRule = 3f * CardScale;
+        // TWENTY-FOUR, not twelve (2026-09-09, measured in play twice): the box is drawn from
+        // the author's art with a six art px slice, which lands as TWELVE units of rule at 2x,
+        // so a twelve-unit pad left nothing at all under the last line and the no-shake mark
+        // printed on the frame itself. Twelve for the rule, twelve for the air, on every side.
+        private const float CardPad = 24f, CardBodyMinW = 220f, CardRowGap = 6f;
         private const float CardDrinkIcon = 32f;   // DrinkIcon.Size, as drawn
 
+        // THE SLOT IS A BOX OF ITS OWN, SIZED TO THE BOTTLE (2026-09-09, the author:
+        // "gereksiz yere card'ı uzatma, alkolün kapladığı alan kadar boyutu büyüsün aynı
+        // açıklamaların olduğu kısımdaki gibi"). The frame numbers are measured off the
+        // author's card_slot.png: the rule sits five art px in from the closed side and
+        // eight from the top and foot. Air is what the hover's rise and growth need.
+        private const float CardSlotFrameX = 5f * CardScale, CardSlotFrameY = 8f * CardScale;
+        private const float CardSlotAir = 8f;
+        private const float CardSlotMinW = 56f, CardSlotMinH = 76f;
+
         private int _cellarCardShown = -1;  // the shelf bottle switched off under the card's copy, or -1
+        private Vector2 _cellarCardSlotSize = new Vector2(84f, 140f);   // the bottle's box, this card
+        private Color _cellarCardTone = Color.white;   // the drink in the copy, re-laid every frame
+        private double _cellarCardFrac;
+        private Vector2 _cellarCardBodySize = new Vector2(CardBodyMinW, 140f);   // the text's box
+        private float _cellarCardStockFrac;    // laid on the bar AFTER the bar has its width
 
         private void BuildCellarCard(RectTransform root)
         {
@@ -237,17 +256,16 @@ namespace LastCall.UI
             _cellarCard = NewRect("CellarCard", root);
             _cellarCard.anchorMin = _cellarCard.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCard.pivot = new Vector2(0.5f, 0f);
-            _cellarCard.sizeDelta = new Vector2(CardSlotW + CardBodyMinW, 160f);
+            _cellarCard.sizeDelta = _cellarCardSlotSize + new Vector2(CardBodyMinW, 0f);
             var cardCanvas = _cellarCard.gameObject.AddComponent<Canvas>();
             cardCanvas.overrideSorting = true;
             cardCanvas.sortingOrder = 26;
 
-            // the slot: left, the card's full height
+            // the slot: its own box beside the text's, as tall and as wide as the bottle in it
             _cellarCardSlot = NewRect("Slot", _cellarCard);
-            _cellarCardSlot.anchorMin = new Vector2(0f, 0f);
-            _cellarCardSlot.anchorMax = new Vector2(0f, 1f);
+            _cellarCardSlot.anchorMin = _cellarCardSlot.anchorMax = new Vector2(0f, 0.5f);
             _cellarCardSlot.pivot = new Vector2(0f, 0.5f);
-            _cellarCardSlot.sizeDelta = new Vector2(CardSlotW, 0f);
+            _cellarCardSlot.sizeDelta = _cellarCardSlotSize;
             _cellarCardSlot.anchoredPosition = Vector2.zero;
             var slotImg = _cellarCardSlot.gameObject.AddComponent<Image>();
             slotImg.sprite = ChromeArt.CardSlot();
@@ -270,22 +288,25 @@ namespace LastCall.UI
             _cellarCardVessel.anchorMin = _cellarCardVessel.anchorMax = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.pivot = new Vector2(0.5f, 0.5f);
             _cellarCardVessel.sizeDelta = new Vector2(32f * CardScale, 64f * CardScale);
-            _cellarCardVessel.anchoredPosition = new Vector2(-1f, 0f);   // re-laid every frame on the shelf bottle's rect
+            _cellarCardVessel.anchoredPosition = Vector2.zero;   // re-laid every frame on the shelf bottle's rect
             _cellarCardBottle = BottleArt.Under(_cellarCardVessel);
 
             var dishRt = NewRect("Dish", _cellarCardSlot);
             dishRt.anchorMin = dishRt.anchorMax = new Vector2(0.5f, 0.5f);
             dishRt.pivot = new Vector2(0.5f, 0.5f);
             dishRt.sizeDelta = new Vector2(64f, 64f);
-            dishRt.anchoredPosition = new Vector2(-1f, 0f);
+            dishRt.anchoredPosition = Vector2.zero;
             _cellarCardDish = dishRt.gameObject.AddComponent<Image>();
             _cellarCardDish.preserveAspect = true;
             _cellarCardDish.raycastTarget = false;
             _cellarCardDish.enabled = false;
 
-            // the body: from the slot's divider to the right edge
+            // the body: its own box, as wide and as tall as its text, beside the slot's
             _cellarCardBody = NewRect("Body", _cellarCard);
-            Stretch(_cellarCardBody, Vector2.zero, Vector2.one, new Vector2(CardSlotW, 0f), Vector2.zero);
+            _cellarCardBody.anchorMin = _cellarCardBody.anchorMax = new Vector2(1f, 0.5f);
+            _cellarCardBody.pivot = new Vector2(1f, 0.5f);
+            _cellarCardBody.anchoredPosition = Vector2.zero;
+            _cellarCardBody.sizeDelta = _cellarCardBodySize;
             var bodyImg = _cellarCardBody.gameObject.AddComponent<Image>();
             bodyImg.sprite = ChromeArt.CardBody();
             bodyImg.type = Image.Type.Sliced;
@@ -308,15 +329,11 @@ namespace LastCall.UI
             _cellarCardName = Line("Name", _shop, 24, UITheme.Cream[4]);
             _cellarCardMeta = Line("Meta", _body, 16, UITheme.Cream[2]);
 
-            var coinRt = NewRect("Coin", _cellarCardBody);
-            coinRt.anchorMin = coinRt.anchorMax = new Vector2(0f, 1f);
-            coinRt.pivot = new Vector2(0f, 1f);
-            coinRt.sizeDelta = new Vector2(24f, 24f);
-            _cellarCardCoin = coinRt.gameObject.AddComponent<Image>();
-            _cellarCardCoin.sprite = ItemArt.Coin(24f);
-            _cellarCardCoin.preserveAspect = true;
-            _cellarCardCoin.raycastTarget = false;
-            // THE PRICE IN AMBER (the author: "fiyatı sarı fontla"), the figure in the display face.
+            // A YELLOW $ AND A YELLOW FIGURE (2026-09-09, the author: "dolar iconu yerine
+            // fiyatlarda sarı $ ve sarı para miktarı kullanılsın"): the drawn coin came off
+            // the card, and the sign is typed in the same amber as the money beside it.
+            _cellarCardSign = Line("Sign", _display, 16, UITheme.Amber[4]);
+            _cellarCardSign.text = "$";
             _cellarCardPrice = Line("Price", _display, 16, UITheme.Amber[4]);
 
             _cellarCardStock = Line("Stock", _body, 16, UITheme.Cream[3]);
@@ -328,11 +345,7 @@ namespace LastCall.UI
             barBg.color = UITheme.Night[0];
             barBg.raycastTarget = false;
             _cellarCardStockFill = NewRect("Fill", _cellarCardStockBar);
-            _cellarCardStockFill.anchorMin = new Vector2(0f, 0f);
-            _cellarCardStockFill.anchorMax = new Vector2(0f, 1f);
             _cellarCardStockFill.pivot = new Vector2(0f, 0.5f);
-            _cellarCardStockFill.offsetMin = new Vector2(1f, 1f);
-            _cellarCardStockFill.offsetMax = new Vector2(1f, -1f);
             var fillImg = _cellarCardStockFill.gameObject.AddComponent<Image>();
             fillImg.color = UITheme.Cyan[3];
             fillImg.raycastTarget = false;
@@ -395,6 +408,7 @@ namespace LastCall.UI
             name.horizontalOverflow = HorizontalWrapMode.Overflow;
             name.raycastTarget = false;
             name.text = r.Name.ToUpperInvariant();
+            name.rectTransform.sizeDelta = new Vector2(name.preferredWidth, 0f);   // its ink, not a guess
             float w = CardDrinkIcon + 8f + name.preferredWidth;
             row.sizeDelta = new Vector2(w, CardDrinkIcon);
             return w;
@@ -419,9 +433,10 @@ namespace LastCall.UI
                 _cellarCardStars.anchoredPosition = new Vector2(x, -y);
                 y += 16f + CardRowGap;
             }
-            ((RectTransform)_cellarCardCoin.transform).anchoredPosition = new Vector2(x, -y + 3f);
-            _cellarCardPrice.rectTransform.anchoredPosition = new Vector2(x + 28f, -y);
-            widest = Mathf.Max(widest, 28f + _cellarCardPrice.preferredWidth);
+            _cellarCardSign.rectTransform.anchoredPosition = new Vector2(x, -y);
+            float signW = Mathf.Max(14f, _cellarCardSign.preferredWidth + 4f);
+            _cellarCardPrice.rectTransform.anchoredPosition = new Vector2(x + signW, -y);
+            widest = Mathf.Max(widest, signW + _cellarCardPrice.preferredWidth);
             y += Mathf.Max(20f, _cellarCardPrice.preferredHeight) + CardRowGap;
             _cellarCardStock.gameObject.SetActive(showStock);
             _cellarCardStockBar.gameObject.SetActive(showStock);
@@ -431,7 +446,6 @@ namespace LastCall.UI
                 widest = Mathf.Max(widest, _cellarCardStock.preferredWidth);
                 y += _cellarCardStock.preferredHeight + 2f;
                 _cellarCardStockBar.anchoredPosition = new Vector2(x, -y);
-                _cellarCardStockBar.sizeDelta = new Vector2(Mathf.Max(120f, widest), 8f);
                 y += 8f + CardRowGap;
             }
             _cellarCardUsesHead.rectTransform.anchoredPosition = new Vector2(x, -y);
@@ -448,9 +462,24 @@ namespace LastCall.UI
                 y += 16f;
             }
             y += CardPad;
-            float bodyW = Mathf.Max(CardBodyMinW, widest + CardPad * 2f);
-            float h = Mathf.Max(64f * CardScale + CardRule * 2f + 8f, y);   // never shorter than the bottle
-            _cellarCard.sizeDelta = new Vector2(CardSlotW + bodyW, h);
+            // TWO BOXES, EACH THE SIZE OF WHAT IT HOLDS (2026-09-09): the text's box takes its
+            // widest row and its last row, the bottle's box takes the bottle, and the card is
+            // as tall as the taller of them. Nothing is stretched to match the other.
+            _cellarCardBodySize = new Vector2(Mathf.Max(CardBodyMinW, widest + CardPad * 2f), y);
+            _cellarCard.sizeDelta = new Vector2(_cellarCardSlotSize.x + _cellarCardBodySize.x,
+                                                Mathf.Max(_cellarCardBodySize.y, _cellarCardSlotSize.y));
+            _cellarCardStockBar.sizeDelta = new Vector2(_cellarCardBodySize.x - CardPad * 2f, 8f);
+            ApplyCardHand();
+            ApplyCardStockFill();
+        }
+
+        /// <summary>The bottle's box, sized to the bottle standing in it plus the rule and a
+        /// little air — what the hover's rise and growth need to stay inside the well.</summary>
+        private void SizeCardSlot(Vector2 art)
+        {
+            _cellarCardSlotSize = new Vector2(
+                Mathf.Max(CardSlotMinW, art.x + (CardSlotFrameX + CardSlotAir) * 2f),
+                Mathf.Max(CardSlotMinH, art.y + (CardSlotFrameY + CardSlotAir) * 2f));
         }
 
         private void ClearCardUses()
@@ -475,6 +504,9 @@ namespace LastCall.UI
             _cellarCardBottle.Show(null);
             _cellarCardHalo.enabled = false;
             _cellarCardDish.enabled = false;   // the dish itself rises over the card (its own canvas, 27)
+            _cellarCardFrac = 0.0;
+            SizeCardSlot(new Vector2(Mathf.Clamp(over.rect.width, 32f, 120f),
+                                     Mathf.Clamp(over.rect.height, 32f, 120f)));
             LiftProp(over, true);
             string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
             _cellarCardName.text = title.ToUpperInvariant();
@@ -521,12 +553,28 @@ namespace LastCall.UI
             _cellarCardShown = -1;
         }
 
+        /// <summary>What is left in the bottle, as a share of the bar. REMEMBERED, not
+        /// measured (2026-09-09, the author: "mahzendeki bilgi kutusunda açılan bar ekrandan
+        /// taşıyor"): this is called while the card is being filled in, BEFORE the layout
+        /// gives the bar its width, so a fill sized here in pixels was sized against the
+        /// last card's bar — and a wide card followed by a narrow one ran the fill out
+        /// past the box. The share is laid on in <see cref="ApplyCardStockFill"/>, on
+        /// anchors, so the fill cannot be wider than the bar whatever happens.</summary>
         private void SetCardStockFill(float frac, Color tone)
         {
+            _cellarCardStockFrac = Mathf.Clamp01(frac);
             var img = _cellarCardStockFill.GetComponent<Image>();
             if (img != null) img.color = tone;
-            float w = Mathf.Max(0f, _cellarCardStockBar.sizeDelta.x - 2f) * Mathf.Clamp01(frac);
-            _cellarCardStockFill.sizeDelta = new Vector2(w, 0f);
+        }
+
+        private void ApplyCardStockFill()
+        {
+            var img = _cellarCardStockFill.GetComponent<Image>();
+            if (img != null) img.enabled = _cellarCardStockFrac > 0.004f;
+            _cellarCardStockFill.anchorMin = new Vector2(0f, 0f);
+            _cellarCardStockFill.anchorMax = new Vector2(_cellarCardStockFrac, 1f);
+            _cellarCardStockFill.offsetMin = new Vector2(1f, 1f);
+            _cellarCardStockFill.offsetMax = new Vector2(-1f, -1f);
         }
 
         private void StepCellarCard()
@@ -555,42 +603,61 @@ namespace LastCall.UI
                 RectTransformUtility.WorldToScreenPoint(null, corners[2]), null, out Vector2 hi);
             var centre = (lo + hi) * 0.5f;
             var size = new Vector2(Mathf.Abs(hi.x - lo.x), Mathf.Abs(hi.y - lo.y));
-            bool left = centre.x > parent.rect.width * (0.5f - 0.34f);
+
+            // THE BOTTLE IN THE SLOT IS THE SHELF'S BOTTLE, THIS FRAME — its pose, not its
+            // bounding box: the plate's centre, its size WITHOUT the rock, and the angle it
+            // is rocked by. The card is hung on that centre, so the bottle sits in the middle
+            // of the well however the hit plate over it is cut.
+            Vector2 bCentre = Vector2.zero, bSize = Vector2.zero;
+            float bAngle = 0f;
+            bool haveBottle = !_cellarCardFree && _cellarCardShown >= 0
+                && CardBottleRect(_cellarCardShown, parent, out bCentre, out bSize, out bAngle);
+            var anchor = haveBottle ? bCentre : centre;
+            bool left = anchor.x > parent.rect.width * (0.5f - 0.34f);
             SetCardHand(left);
             if (_cellarCardFree)
                 _cellarCardDish.rectTransform.sizeDelta = new Vector2(
-                    Mathf.Clamp(size.x, 32f, CardSlotW - CardRule * 2f - 4f), Mathf.Clamp(size.y, 32f, 120f));
+                    Mathf.Clamp(size.x, 32f, _cellarCardSlotSize.x - CardSlotFrameX * 2f),
+                    Mathf.Clamp(size.y, 32f, _cellarCardSlotSize.y - CardSlotFrameY * 2f));
             float w = _cellarCard.sizeDelta.x, h = _cellarCard.sizeDelta.y;
-            const float WellCentre = 41f;   // the well spans art px 3..38 of the 42: its centre at 2x
-            float slotCx = left ? w - WellCentre : WellCentre;
+            float slotCx = left ? w - _cellarCardSlotSize.x * 0.5f : _cellarCardSlotSize.x * 0.5f;
             _cellarCard.pivot = new Vector2(0f, 0f);
-            var pos = centre - new Vector2(slotCx, h * 0.5f);
-            float lim = parent.rect.width * 0.5f - 8f, vlim = parent.rect.height * 0.5f - 8f;
-            pos.x = Mathf.Clamp(pos.x, -lim, lim - w);
-            pos.y = Mathf.Clamp(pos.y, -vlim, vlim - h);
+            // THE BOTTLE'S BOX NEVER LEAVES THE BOTTLE (2026-09-09, measured). The card used
+            // to be clamped to the screen as one plate, so a tall card on the lower shelf was
+            // pushed up and took the slot with it while the copy stayed on the bottle —
+            // seventy-five units of daylight between a bottle and the box drawn round it.
+            // They are two boxes: the card hangs on the bottle, and the TEXT box slides
+            // inside it to stay on screen.
+            var pos = anchor - new Vector2(slotCx, h * 0.5f);
             _cellarCard.anchoredPosition = pos;
+            float lim = parent.rect.width * 0.5f - 8f, vlim = parent.rect.height * 0.5f - 8f;
+            var bodySize = _cellarCardBodySize;
+            var bodyMid = pos + new Vector2(left ? bodySize.x * 0.5f : w - bodySize.x * 0.5f, h * 0.5f);
+            Vector2 slide = Vector2.zero;
+            if (bodyMid.y + bodySize.y * 0.5f > vlim) slide.y = vlim - (bodyMid.y + bodySize.y * 0.5f);
+            else if (bodyMid.y - bodySize.y * 0.5f < -vlim) slide.y = -vlim - (bodyMid.y - bodySize.y * 0.5f);
+            if (bodyMid.x + bodySize.x * 0.5f > lim) slide.x = lim - (bodyMid.x + bodySize.x * 0.5f);
+            else if (bodyMid.x - bodySize.x * 0.5f < -lim) slide.x = -lim - (bodyMid.x - bodySize.x * 0.5f);
+            _cellarCardBody.anchoredPosition = slide;
 
-            // THE BOTTLE IN THE SLOT IS THE SHELF'S BOTTLE, THIS FRAME: its front plate's
-            // world corners (sway and all) become the copy's rect, in the slot's own units,
-            // so the copy stands exactly where the shelf's one would and moves as it moves.
-            if (!_cellarCardFree && stage != null && _cellarCardShown >= 0
-                && stage.CellarBottleBounds(_cellarCardShown, out var bMin, out var bMax))
+            if (haveBottle)
             {
-                // A STAGE sprite's corners are world units, and go through the camera —
-                // WorldToScreenPoint(null, ...) is for canvas objects and hands a world point
-                // back untouched, which laid the copy a shelf too high (measured 2026-09-08).
-                var cam = Camera.main;
-                Vector2 sLo = cam != null ? (Vector2)cam.WorldToScreenPoint(bMin) : (Vector2)bMin;
-                Vector2 sHi = cam != null ? (Vector2)cam.WorldToScreenPoint(bMax) : (Vector2)bMax;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, sLo, null, out Vector2 blo);
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, sHi, null, out Vector2 bhi);
-                var bCentre = (blo + bhi) * 0.5f;
-                var bSize = new Vector2(Mathf.Abs(bhi.x - blo.x), Mathf.Abs(bhi.y - blo.y));
-                // the vessel is anchored at the slot's centre; the offset is from there
-                var slotCentre = pos + new Vector2(left ? w - CardSlotW * 0.5f : CardSlotW * 0.5f, h * 0.5f);
+                // the vessel is anchored at the slot's centre; the offset is from there —
+                // zero until the card is pushed off the bottle by the screen's edge
+                var slotCentre = pos + new Vector2(slotCx, h * 0.5f);
+                var rock = Quaternion.Euler(0f, 0f, bAngle);
                 _cellarCardVessel.sizeDelta = bSize;
                 _cellarCardVessel.anchoredPosition = bCentre - slotCentre;
-                var glow = stage.CellarGlow(_cellarCardShown);
+                _cellarCardVessel.localRotation = rock;
+                // THE DRINK IS RE-LAID EVERY FRAME (2026-09-09, the author: "içerisindeki sıvı
+                // sabit kaldığından bir bütün gibi durmuyorlar"). BottleArt measures the level
+                // against the rect the stencil HAS when it is told, in canvas units, so a
+                // level set once when the card opened stayed the size the bottle was then —
+                // and the glass rose, grew and rocked away from it. The tilt is zero because
+                // the whole vessel is rocked by the line above, drink and glass together.
+                if (_cellarCardFrac > 0.0)
+                    _cellarCardBottle.SetLevel(_cellarCardTone, _cellarCardFrac, 0f);
+                var glow = stage != null ? stage.CellarGlow(_cellarCardShown) : null;
                 bool lit = glow != null && glow.HaloArtNow != null && glow.GlowNow > 0.01f;
                 _cellarCardHalo.enabled = lit;
                 if (lit)
@@ -600,13 +667,36 @@ namespace LastCall.UI
                     _cellarCardHalo.color = new Color(tint.r, tint.g, tint.b, tint.a * glow.GlowNow);
                     _cellarCardHalo.rectTransform.sizeDelta = glow.HaloBoxFor(bSize);
                     _cellarCardHalo.rectTransform.anchoredPosition = bCentre - slotCentre;
+                    _cellarCardHalo.rectTransform.localRotation = rock;
                 }
                 if (_cellarCardDish.enabled)   // the flat copy, same rect
                 {
                     _cellarCardDish.rectTransform.sizeDelta = bSize;
                     _cellarCardDish.rectTransform.anchoredPosition = bCentre - slotCentre;
+                    _cellarCardDish.rectTransform.localRotation = rock;
                 }
             }
+        }
+
+        /// <summary>One cellar bottle's pose in the card's own units: where its front plate
+        /// stands, how big it is with the rock taken out, and the angle of that rock. The
+        /// stage speaks world units and they go through the CAMERA —
+        /// RectTransformUtility.WorldToScreenPoint(null, ...) is for canvas objects and hands
+        /// a world point back untouched, which laid the copy a shelf too high (2026-09-08).</summary>
+        private bool CardBottleRect(int index, RectTransform parent,
+                                    out Vector2 centre, out Vector2 size, out float angleDeg)
+        {
+            centre = Vector2.zero; size = Vector2.zero; angleDeg = 0f;
+            if (stage == null || !stage.CellarBottlePose(index, out var wc, out var ws, out angleDeg))
+                return false;
+            var cam = Camera.main;
+            var wr = wc + new Vector3(ws.x, ws.y, 0f) * 0.5f;
+            Vector2 s0 = cam != null ? (Vector2)cam.WorldToScreenPoint(wc) : (Vector2)wc;
+            Vector2 s1 = cam != null ? (Vector2)cam.WorldToScreenPoint(wr) : (Vector2)wr;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, s0, null, out centre);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, s1, null, out Vector2 corner);
+            size = new Vector2(Mathf.Abs(corner.x - centre.x) * 2f, Mathf.Abs(corner.y - centre.y) * 2f);
+            return size.x > 1f && size.y > 1f;
         }
 
         private bool _cellarCardLeft;
@@ -620,17 +710,27 @@ namespace LastCall.UI
             _cellarCardLeft = left;
             var slotImg = _cellarCardSlot.GetComponent<Image>();
             var bodyImg = _cellarCardBody.GetComponent<Image>();
-            _cellarCardSlot.anchorMin = left ? new Vector2(1f, 0f) : new Vector2(0f, 0f);
-            _cellarCardSlot.anchorMax = left ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
-            _cellarCardSlot.pivot = left ? new Vector2(1f, 0.5f) : new Vector2(0f, 0.5f);
-            _cellarCardSlot.anchoredPosition = Vector2.zero;
-            _cellarCardSlot.sizeDelta = new Vector2(CardSlotW, 0f);
-            _cellarCardBody.offsetMin = left ? Vector2.zero : new Vector2(CardSlotW, 0f);
-            _cellarCardBody.offsetMax = left ? new Vector2(-CardSlotW, 0f) : Vector2.zero;
             var slotSprite = left ? ChromeArt.CardSlotL() : ChromeArt.CardSlot();
             var bodySprite = left ? ChromeArt.CardBodyL() : ChromeArt.CardBody();
             if (slotSprite != null) slotImg.sprite = slotSprite;
             if (bodySprite != null) bodyImg.sprite = bodySprite;
+            ApplyCardHand();
+        }
+
+        /// <summary>Puts the two boxes side by side at the sizes they were given: the bottle's
+        /// box against one edge, the text's box against the other, both centred on the card's
+        /// middle line. Neither is stretched to the other's height (2026-09-09).</summary>
+        private void ApplyCardHand()
+        {
+            bool left = _cellarCardLeft;
+            _cellarCardSlot.anchorMin = _cellarCardSlot.anchorMax = new Vector2(left ? 1f : 0f, 0.5f);
+            _cellarCardSlot.pivot = new Vector2(left ? 1f : 0f, 0.5f);
+            _cellarCardSlot.anchoredPosition = Vector2.zero;
+            _cellarCardSlot.sizeDelta = _cellarCardSlotSize;
+            _cellarCardBody.anchorMin = _cellarCardBody.anchorMax = new Vector2(left ? 0f : 1f, 0.5f);
+            _cellarCardBody.pivot = new Vector2(left ? 0f : 1f, 0.5f);
+            _cellarCardBody.anchoredPosition = Vector2.zero;
+            _cellarCardBody.sizeDelta = _cellarCardBodySize;
         }
 
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
@@ -803,65 +903,39 @@ namespace LastCall.UI
             if (figure == null) return;
             figure.text = sign + Mathf.Abs(amount);
             var rt = figure.rectTransform;
-            // One coin per figure, kept and re-placed rather than rebuilt every frame — these
-            // are stepped readouts (the till counts up) and a new Image per frame is garbage.
-            var coin = rt.Find("Coin") as RectTransform;
-            if (coin == null)
+            // A TYPED $, NOT THE DRAWN COIN (2026-09-09, the author: "dolar iconu yerine
+            // fiyatlarda sarı $ ve sarı para miktarı kullanılsın"). The coin was a 16px
+            // drawing that had to be sized against three different scales to stay a disc
+            // rather than a smudge (the four notes this replaces); a $ set in the figure's
+            // own face and ink is the same word in the same voice, at any size, and reads
+            // as part of the number rather than as a badge beside it. One per figure, kept
+            // and re-placed rather than rebuilt — these are stepped readouts.
+            var sign_ = rt.Find("Sign") as RectTransform;
+            Text signText;
+            if (sign_ == null)
             {
-                coin = NewRect("Coin", rt);
-                coin.pivot = new Vector2(1f, 0.5f);
-                coin.anchorMin = coin.anchorMax = new Vector2(1f, 0.5f);
-                var img = coin.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Coin(CoinPx);
-                img.preserveAspect = true;
-                img.raycastTarget = false;
+                var t = NewText("Sign", rt, figure.font, figure.fontSize, TextAnchor.MiddleRight, figure.color);
+                sign_ = t.rectTransform;
+                sign_.pivot = new Vector2(1f, 0.5f);
+                sign_.anchorMin = sign_.anchorMax = new Vector2(1f, 0.5f);
+                sign_.sizeDelta = new Vector2(24f, figure.fontSize + 8f);
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.verticalOverflow = VerticalWrapMode.Overflow;
+                t.raycastTarget = false;
+                t.text = "$";
+                signText = t;
             }
-            if (!coin.gameObject.activeSelf) coin.gameObject.SetActive(true);
-            // SIZED AGAINST THE SCREEN, not against the layout (2026-09-07, measured). The
-            // day-end panel is laid out large and scaled to fit — lossyScale 0.45 on this
-            // machine — so a 16-unit coin showing the 16px drawing came out about seven
-            // SCREEN pixels: a green smudge with no disc and no glyph in it. That is the
-            // bottle lesson again (PLAN_bottle_art_v4 §9.18): at a size the art was not drawn
-            // for, you pick the drawing that WAS. The rect is set so the icon lands on a
-            // whole multiple of its 16px master after the panel's scale is applied, and the
-            // accessor is handed that same screen size so it picks the right master.
-            // The target is whole SCREEN pixels, not whole layout units: the drawing is 16px
-            // and it must land on exactly 16 of them after the panel's scale, or its keyline
-            // falls between pixels and the disc silts up (the first cut of this sized the
-            // rect in layout units and rendered a seven-pixel green smudge; measured).
-            //
-            // ONE COIN PER FIGURE, AND IT HAS A FLOOR. The coin is 16 SCREEN pixels and no
-            // smaller: its meaning is interior detail (a glyph inside a disc), unlike the
-            // star and the heart whose silhouettes carry theirs, so it cannot be shrunk the
-            // way they can — an 8px coin was drawn, measured and thrown away on 2026-09-07,
-            // and it came back a blob. Sixteen against a 16pt figure whose ink is ~7 screen
-            // pixels makes the mark taller than its digits, which is why it is held back to
-            // 92% alpha: the FIGURE is what the eye should land on, the coin only says what
-            // kind of number it is (16 §5).
-            // The ROOT canvas's scale, not the coin's own (2026-09-08): a board is built
-            // while its panel is still scaled down for its entrance, and a coin sized off
-            // that lossyScale came out sixty pixels tall and stayed so — photographed
-            // floating over the week board. The canvas's scale is the drawn size's truth.
-            // IN UNITS, LIKE EVERYTHING ELSE ON THE BOARD (2026-09-08). The coin used to be
-            // sized in SCREEN pixels off the canvas's scale — a drawn size — which made it
-            // a sixty-unit coin over the week board in a small game view and a
-            // sixteen-unit one on a big monitor: the one thing on the sheet that changed
-            // size with the window. The author's dollar is drawn for 24 units.
-            float scale = 1f;
-            float px = CoinPx;
-            coin.sizeDelta = new Vector2(px, px);
-            var cimg = coin.GetComponent<Image>();
-            if (cimg != null)
+            else signText = sign_.GetComponent<Text>();
+            if (!sign_.gameObject.activeSelf) sign_.gameObject.SetActive(true);
+            if (signText != null)
             {
-                cimg.sprite = ItemArt.Coin(px * scale);
-                // Its own colour, held a little back so the FIGURE is what is read first
-                // (16 §5: money is the number, the mark only says which number it is).
-                cimg.color = new Color(1f, 1f, 1f, 0.92f);
+                signText.font = figure.font;
+                signText.fontSize = figure.fontSize;
+                signText.color = figure.color;
             }
-            // Clear of the digits by a whole screen pixel or three, measured off the type
-            // rather than guessed: preferredWidth is the ink, and the gap is added to it.
-            coin.anchoredPosition = new Vector2(
-                -(figure.preferredWidth + CoinGap + px * 0.10f), 0f);
+            // Clear of the digits by a couple of units, measured off the type rather than
+            // guessed: preferredWidth is the ink, and the gap is added to it.
+            sign_.anchoredPosition = new Vector2(-(figure.preferredWidth + CoinGap), 0f);
         }
 
         /// <summary>Empties a money figure AND takes its coin down with it. A figure blanked
@@ -871,8 +945,8 @@ namespace LastCall.UI
         {
             if (figure == null) return;
             figure.text = "";
-            var coin = figure.rectTransform.Find("Coin");
-            if (coin != null) coin.gameObject.SetActive(false);
+            var sign = figure.rectTransform.Find("Sign");
+            if (sign != null) sign.gameObject.SetActive(false);
         }
 
         /// <summary>The coin's drawn size in the chrome, and its gap off the digits. 24
@@ -880,7 +954,7 @@ namespace LastCall.UI
         /// again the 16 it shipped at this morning, and a size the coin is DRAWN at rather
         /// than scaled to (Tools/coin_icon.py draws 16, 24 and 32). The gap is in the figure's
         /// own layout units and is scaled with it.</summary>
-        private const float CoinPx = 24f, CoinGap = 10f;
+        private const float CoinGap = 6f;   // the $ sits this far off the digits (2026-09-09)
 
         private void WatchFixtures()
         {
@@ -1035,11 +1109,14 @@ namespace LastCall.UI
             _cellarCardDish.enabled = false;
             var plates = ItemArt.Plates(card, cellar: true);
             _cellarCardBottle.Show(plates);
-            if (plates != null)
-            {
-                double frac = bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0;
-                _cellarCardBottle.SetLevel(UITheme.LiquidColor(card.Info?.Style, card.Type), frac, 0f);
-            }
+            _cellarCardTone = UITheme.LiquidColor(card.Info?.Style, card.Type);
+            _cellarCardFrac = plates != null
+                ? (bottle != null && bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 1.0) : 0.0;
+            if (_cellarCardFrac > 0.0) _cellarCardBottle.SetLevel(_cellarCardTone, _cellarCardFrac, 0f);
+            // THE BOX IS THE BOTTLE'S SIZE (2026-09-09): measured off the shelf where it
+            // stands, before the hover's rise and growth have started.
+            if (CardBottleRect(index, (RectTransform)_cellarCard.parent, out _, out var art, out _))
+                SizeCardSlot(art);
             _cellarCardHalo.enabled = false;
             if (plates == null)
             {

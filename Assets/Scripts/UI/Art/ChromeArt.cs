@@ -2471,27 +2471,31 @@ namespace LastCall.UI
         // the whole curve in the corner cells, which never stretch. Nothing is redrawn —
         // every pixel is the author's.
 
-        /// <summary>The card's left piece, the bottle's slot, as the author drew it. The bottle
-        /// in it is the one on the shelf: the card is drawn by the camera under the hovered
-        /// bottle (TycoonHud.BuildCellarCard, DiegeticStage.RaiseCellarBottle), not cut open
-        /// for it — "kesme; şişe hiyerarşide üstte kalsın" (2026-09-08).</summary>
-        public static Sprite CardSlot() => Resliced("card_slot", new Vector4(6, 6, 6, 6), "card:slot");
+        /// <summary>The card's bottle box, as the author redrew it on 2026-09-09: a rounded
+        /// rule down the LEFT and along the top and foot, and the plum well running out to the
+        /// right, where the body's own box stands beside it. Measured off that art — the rule
+        /// is five px in from the left, eight from the top and foot (four of those clear) — so
+        /// the slices are 8/10/0/10 and no curve falls in a stretched strip.</summary>
+        public static Sprite CardSlot() => Resliced("card_slot", new Vector4(8, 10, 0, 10), "card:slot");
 
-        /// <summary>THE HOUSE'S PANEL (2026-09-08, the author: "paneller ... oyunda ayarlar,
-        /// giriş sayfası vs. UI'i ile aynı sanatta olmalı"): the framed slot of the author's
-        /// card — a whole box, rule on every side — sliced so it takes any size. The night
-        /// boards, the settings plate and the curtain's card all stand on it, at 2x.</summary>
-        public static Sprite Panel() => Resliced("card_slot", new Vector4(6, 6, 6, 6), "card:panel");
+        /// <summary>THE HOUSE'S PANEL — card_body, always (2026-09-09, the author:
+        /// "card_body.png normal kutular için hep bu kullanılsın; referans veya yeni bir yerde
+        /// kullanılacağında bunu esas al"). It is the author's whole box, rule on every side,
+        /// sliced so it takes any size. The night boards, the settings plate and the curtain's
+        /// card stand on it, at 2x — and so does anything panel-shaped drawn after this.
+        /// (It drew the SLOT until 2026-09-09, when the slot became a box open on one side.)</summary>
+        public static Sprite Panel() => Resliced("card_body", new Vector4(6, 6, 6, 6), "card:panel");
 
-        /// <summary>The card's right piece, the box; sliced on its rule (no rule on the left,
-        /// where it butts against the slot's divider).</summary>
-        public static Sprite CardBody() => Resliced("card_body", new Vector4(0, 6, 6, 6), "card:body");
+        /// <summary>The card's text box — a WHOLE box since the author redrew it
+        /// (2026-09-09): rule on all four sides, four px thick over a four px curve.</summary>
+        public static Sprite CardBody() => Resliced("card_body", new Vector4(6, 6, 6, 6), "card:body");
 
-        /// <summary>The same two pieces mirrored (2026-09-08): a card whose box runs out to
-        /// the LEFT of its slot, for a bottle standing in the screen's right third. The
-        /// divider is on the slot's left and the body's rule on its right.</summary>
-        public static Sprite CardSlotL() => Resliced("card_slot_l", new Vector4(6, 6, 6, 6), "card:slot:l");
-        public static Sprite CardBodyL() => Resliced("card_body_l", new Vector4(6, 6, 0, 6), "card:body:l");
+        /// <summary>The same two pieces mirrored, cut from the author's art rather than
+        /// redrawn (2026-09-09): a card whose text box runs out to the LEFT of its bottle box,
+        /// for a bottle standing in the screen's right third. The slot's open side is then its
+        /// left, so its slices turn round with it; the body's box is symmetric either way.</summary>
+        public static Sprite CardSlotL() => Resliced("card_slot_l", new Vector4(0, 10, 8, 10), "card:slot:l");
+        public static Sprite CardBodyL() => Resliced("card_body_l", new Vector4(6, 6, 6, 6), "card:body:l");
 
         private static Sprite Resliced(string item, Vector4 border, string key)
         {

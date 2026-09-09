@@ -37,8 +37,8 @@ namespace LastCall.UI
 
         private Font _body;
 
-        private Font _speech;   // Jersey 15: lowercase, Turkish, crisp at 27 (2026-09-08)
-        private const int SpeechPx = 27;   // the one size the face is crisp at (its 15px grid at 1.8x is 27)
+        private Font _speech;   // the house body face at 16 (2026-09-09)
+        private const int SpeechPx = 16;   // the body face's 8px grid at 2x (2026-09-09)
 
         private Font _display;
 
@@ -1429,7 +1429,14 @@ namespace LastCall.UI
             // 16 was crisp too and went in first, and the author called it bad — a 5px face
             // at 2x is thin; Jersey's 15px grid at 27 has weight. Loaded from Resources so
             // the scene needs no new slot.
-            _speech = Resources.Load<Font>("Fonts/Jersey15-Regular") ?? _shop;
+            // ...AND OFF IT AGAIN (2026-09-09, the author: "müşteri metinlerindeki yazım
+            // fontunu değiştirelim puntoyu azaltalım"). Jersey at 27 is a tall condensed face
+            // twice the size of every other word in the game, and the balloons read as a
+            // different piece of software. The crowd speaks the HOUSE body face now, at the
+            // 16 the rest of the chrome is set in — one voice, one grid. What it costs is
+            // Silkscreen's missing ğ ı İ ş (measured: lowercase yes, Turkish no), so a
+            // Turkish build wants a face bought for it; that is a one-line change here.
+            _speech = _body;
 
             _bootstrap = GetComponent<GameBootstrap>();
             if (_bootstrap != null) _bootstrap.RunStarted += OnRunStarted;

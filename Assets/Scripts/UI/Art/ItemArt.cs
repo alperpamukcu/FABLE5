@@ -137,6 +137,13 @@ namespace LastCall.UI
         public static Sprite Medal(bool lit, float px) =>
             Load(Name("medal3d", lit, px));
 
+        /// <summary>THE PERFECT MARK (2026-09-09, the author: "perfect tarif için bir icon
+        /// oluştur bu iconu perfect tarif için kullanalım") — a platinum rosette drawn in the
+        /// star's own language by Tools/perfect_icon.py, at the two sizes the set keeps. It
+        /// has one state: a recipe is perfected or the mark is not drawn.</summary>
+        public static Sprite Perfect(float px) =>
+            Load(px <= 16f ? "perfect3d_16" : "perfect3d") ?? Load("perfect3d");
+
         /// <summary>MONEY'S OWN MARK (2026-09-07, the author: "2D siyah kontras yesil ic planli
         /// dolar iconu uret ve oyunda para gosteren her yere $ yerine o iconu koy"). Every
         /// figure that meant money used to be printed with a typed dollar sign, so the till

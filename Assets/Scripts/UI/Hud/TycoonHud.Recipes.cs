@@ -186,8 +186,12 @@ namespace LastCall.UI
         /// same silhouettes that stand on the back bar — seeing them here is how the shapes
         /// become readable there.
         /// </summary>
+        /// <param name="skipPrep">Leaves the prep row out — for a surface that already says
+        /// how the drink is worked in its own heading (the licence's page, 2026-09-09), where
+        /// the row would print SHAKEN under a line reading SHAKEN · COUPE GLASS.</param>
         private float DrawRecipeSpec(RectTransform host, RecipeDefinition r, bool dark,
-            float width, string note = null, bool poursOnly = false, bool locked = false)
+            float width, string note = null, bool poursOnly = false, bool locked = false,
+            bool skipPrep = false)
         {
             for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
 
@@ -205,6 +209,7 @@ namespace LastCall.UI
             for (int i = 0; i < rows.Count; i++)
             {
                 var spec = rows[i];
+                if (skipPrep && i == 0 && spec.Style == null) continue;
                 bool ingredient = spec.Style != null;
                 // The stock reading stays HONEST on a locked page: whether the shelf holds
                 // this bottle is true whether or not the bar owns the recipe, and dimming it
@@ -387,13 +392,133 @@ namespace LastCall.UI
             return y;
         }
 
-        /// <summary>The spec for the ordered drink, shown AT THE POINTER (hover).</summary>
+        /// <summary>
+        /// A RECIPE AS THE BOOK SETS IT (2026-09-09, the author: "kimlikte kokteyl tarifi çıkan
+        /// hoveri güncelleyelim ve menüdeki tarif tarzına benzetelim"). The same grammar as
+        /// FillRecipePage, on whatever paper the caller hands it: the chapter over the name,
+        /// the working and the glass, the drink beside its price, the legend that says what a
+        /// dot is worth, and the pours full width under it. The rows themselves are
+        /// <see cref="DrawRecipeSpec"/>'s — its light palette is this page's ink — so the two
+        /// surfaces can never drift apart. Returns the height it used.
+        /// </summary>
+        private float DrawRecipeCard(RectTransform host, RecipeDefinition r, float width)
+        {
+            for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
+            if (r == null) return 0f;
+            Color ink = new Color(0.30f, 0.16f, 0.05f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            Color figure = new Color(0.10f, 0.06f, 0.02f);
+            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
+            bool perfected = Run != null && r.HasAuthoredRatios && Run.IsPerfected(r.Id);
+            float y = 0f;
+
+            Text Centred(string name, Font face, int size, Color colour, float h)
+            {
+                var t = NewText(name, host, face, size, TextAnchor.MiddleCenter, colour);
+                t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                t.rectTransform.pivot = new Vector2(0.5f, 1f);
+                t.rectTransform.sizeDelta = new Vector2(width, h);
+                t.rectTransform.anchoredPosition = new Vector2(0f, -y);
+                t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.raycastTarget = false;
+                return t;
+            }
+
+            var chapter = Centred("Tier", perfected ? _shop : _body, 16,
+                                  perfected ? new Color(0.42f, 0.46f, 0.55f) : quiet, 20f);
+            chapter.text = TierName(r.Rank);
+            if (perfected)
+            {
+                var seal = NewRect("PerfectMark", host);
+                seal.anchorMin = seal.anchorMax = new Vector2(0.5f, 1f);
+                seal.pivot = new Vector2(1f, 1f);
+                seal.sizeDelta = new Vector2(16f, 16f);
+                seal.anchoredPosition = new Vector2(-(chapter.preferredWidth * 0.5f + 6f), -(y + 2f));
+                var simg = seal.gameObject.AddComponent<Image>();
+                simg.sprite = ItemArt.Perfect(16f);
+                simg.preserveAspect = true;
+                simg.raycastTarget = false;
+            }
+            y += 20f;
+
+            var head = Centred("Head", perfected ? _shop : _display, 16, ink, 24f);
+            head.text = r.Name.ToUpperInvariant();
+            y += 26f;
+
+            string glassWord = string.IsNullOrEmpty(r.GlassId)
+                ? "HIGHBALL" : r.GlassId.Replace('_', ' ').ToUpperInvariant();
+            var way = Centred("Way", _body, 16, prepInk, 20f);
+            way.text = PrepWord(r) + " · " + glassWord + " GLASS";
+            y += 24f;
+
+            // the drink and what it sells for, the way the page pairs them
+            var icon = NewRect("I", host);
+            icon.anchorMin = icon.anchorMax = new Vector2(0.5f, 1f);
+            icon.pivot = new Vector2(1f, 1f);
+            icon.sizeDelta = new Vector2(48f, 48f);
+            icon.anchoredPosition = new Vector2(-8f, -y);
+            var img = icon.gameObject.AddComponent<Image>();
+            img.sprite = _bootstrap != null ? DrinkIcon.For(r, _bootstrap.Glassware) : null;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.enabled = img.sprite != null;
+
+            var priceT = NewText("Price", host, _display, 24, TextAnchor.MiddleLeft, figure);
+            priceT.rectTransform.anchorMin = priceT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            priceT.rectTransform.pivot = new Vector2(0f, 1f);
+            priceT.rectTransform.sizeDelta = new Vector2(110f, 28f);
+            priceT.rectTransform.anchoredPosition = new Vector2(8f, -(y + 8f));
+            priceT.horizontalOverflow = HorizontalWrapMode.Overflow;
+            priceT.raycastTarget = false;
+            priceT.text = "$" + DrinkOrder.MenuPrice(r);
+            var priceCap = NewText("PriceCap", host, _body, 8, TextAnchor.MiddleLeft, quiet);
+            priceCap.rectTransform.anchorMin = priceCap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            priceCap.rectTransform.pivot = new Vector2(0f, 1f);
+            priceCap.rectTransform.sizeDelta = new Vector2(110f, 12f);
+            priceCap.rectTransform.anchoredPosition = new Vector2(10f, -(y + 34f));
+            priceCap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            priceCap.raycastTarget = false;
+            priceCap.text = "ON THE TAB";
+            y += 56f;
+
+            // The book's caption is "THE POUR · ONE DOT IS A FIFTH" — 29 capitals, wider than
+            // this card (measured in play 2026-09-09: it ran off both edges). Same sentence,
+            // the half that carries the meaning.
+            var cap = Centred("Cap", _body, 16, quiet, 22f);
+            cap.text = "ONE DOT IS A FIFTH";
+            y += 20f;
+            var legend = NewRect("Legend", host);
+            var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
+            float legendW = legendArt.rect.width * 2f, legendH = legendArt.rect.height * 2f;
+            legend.anchorMin = legend.anchorMax = new Vector2(0.5f, 1f);
+            legend.pivot = new Vector2(0.5f, 1f);
+            legend.sizeDelta = new Vector2(legendW, legendH);
+            legend.anchoredPosition = new Vector2(0f, -y);
+            var legendImg = legend.gameObject.AddComponent<Image>();
+            legendImg.sprite = legendArt;
+            legendImg.raycastTarget = false;
+            y += legendH + 6f;
+
+            // the pours, in the book's own order and the paper palette
+            var rows = NewRect("Rows", host);
+            rows.anchorMin = rows.anchorMax = new Vector2(0.5f, 1f);
+            rows.pivot = new Vector2(0.5f, 1f);
+            rows.sizeDelta = new Vector2(width, 10f);
+            rows.anchoredPosition = new Vector2(0f, -y);
+            float rowsH = DrawRecipeSpec(rows, r, dark: false, width: width, poursOnly: true,
+                                         skipPrep: true);
+            rows.sizeDelta = new Vector2(width, rowsH);
+            return y + rowsH;
+        }
+
+        /// <summary>The spec for the ordered drink, shown AT THE POINTER (hover) — the
+        /// book's own page since 2026-09-09.</summary>
         private void ShowOrderRecipeTip()
         {
             var visit = _idVisit;
             if (visit == null || _idRecipeTip == null || _idRecipeTipBody == null) return;
-            float h = DrawRecipeSpec(_idRecipeTipBody, visit.Order.Wanted, dark: true, width: TipW - 20f);
-            _idRecipeTip.sizeDelta = new Vector2(TipW, h + 16f);
+            float h = DrawRecipeCard(_idRecipeTipBody, visit.Order.Wanted, TipW - 20f);
+            _idRecipeTip.sizeDelta = new Vector2(TipW, h + 20f);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
             // NOTHING IN IT MAY TAKE THE POINTER. Only the background used to say so, which

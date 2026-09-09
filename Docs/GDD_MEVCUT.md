@@ -1521,6 +1521,56 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.51 · Yirminci liste: iki kutu, sarı $, hareket eden sıvı, perfect mührü, kimlik sayfası (2026-09-09)
+
+- **Kart artık İKİ KUTU** (yazar: "gereksiz yere card'ı uzatma, alkolün kapladığı alan kadar boyutu büyüsün aynı
+  açıklamaların olduğu kısımdaki gibi"). Yazar `card_slot.png`'yi yeniden çizdi: bir yanı açık, yuvarlak çerçeveli
+  bir kutu; `card_body.png` de dört yanı kapalı tam kutu oldu. Ters cutları o sanattan **aynalanarak** kesildi
+  (elle çizilmedi). Dilimler ölçüldü: slot 8/10/0/10, body 6/6/6/6. Şişe kutusu şişenin boyuna göre
+  (`SizeCardSlot`: çerçeve 10/16 + 8 hava), metin kutusu metnine göre; kart ikisinden uzun olanı kadar. Kenar
+  boşluğu **24** (çerçeve 2×'te 12 unit yer kaplıyor — 12'lik pad hiçbir şey bırakmıyordu, "NEVER SHAKEN" satırı
+  çerçevenin üstüne basıyordu).
+- **Şişe kutusundan hiç çıkmıyor** (ölçüldü): kart eskiden tek plaka gibi ekrana kırpılıyordu, alt raftaki uzun bir
+  kartta yuva 75 unit yukarı kayıyor ve kopya şişenin üstünde kalıyordu. Artık kart ŞİŞEYE asılı; ekranda kalmak
+  için kayan şey **metin kutusu**. Kopya yuvanın ortasında (offset 0.0, ölçüldü), her kenardan 8/11 px boşlukla.
+- **Bar taşmıyor** (yazar: "mahzendeki bilgi kutusunda açılan bar ekrandan taşıyor"): doluluk artık **anchor** ile
+  çiziliyor ve bar kutunun genişliği. Eskiden `SetCardStockFill` düzenden ÖNCE çağrıldığı için dolgu bir önceki
+  kartın barına göre piksel olarak ölçülüyordu — geniş karttan dar karta geçince dolgu kutunun dışına taşıyordu.
+- **Sıvı şişeyle birlikte hareket ediyor** (yazar: "içerisindeki sıvı sabit kaldığından bir bütün gibi durmuyorlar").
+  Kopya artık şişenin **duruşunu** alıyor (`DiegeticStage.CellarBottlePose`: dönmemiş boy, dünya merkezi, sallanma
+  açısı), o açıyla dönüyor, ve `BottleArt.SetLevel` HER KARE yeniden çağrılıyor — seviye, söylendiği andaki rect'e
+  göre canvas biriminde ölçüldüğü için kart açılırken bir kez ölçülen sıvı, büyüyüp sallanan camın altında sabit
+  kalıyordu. Sınırlayıcı kutu yerine duruş: sallanan bir şişenin AABB'si açıyla şişip söndüğü için kopya da
+  nabız gibi atıyordu.
+- **Fiyatlarda sarı $** (yazar: "dolar iconu yerine fiyatlarda sarı $ ve sarı para miktarı"): mahzen kartında
+  çizili yeşil dolar yerine amber bir `$` + amber rakam; `CoinFigure` (kasa, gün sonu toplamları, sepet) da
+  çizili parayı bırakıp rakamın KENDİ mürekkebinde `$` yazıyor — dört ayrı ölçek notunu ("16 ekran pikseli",
+  "kanvasın ölçeği", "unit olarak") tek satır yazı emekli etti. Markette yeşil $ (bir önceki listenin isteği) kaldı.
+- **`card_body.png` evin paneli** (yazar: "normal kutular için hep bu kullanılsın"): `ChromeArt.Panel()` artık onu
+  çiziyor — gece panoları, ayarlar plakası, perde kartı ve bundan sonra çizilecek her kutu.
+- **Müşteri metinleri ev yazısında** (yazar: "yazım fontunu değiştirelim puntoyu azaltalım"): Jersey 15 / 27 →
+  **Silkscreen 16**, yani balonlar ve tabure etiketleri oyunun geri kalanıyla aynı ızgarada. Bedeli ölçüldü:
+  Silkscreen'de küçük harf VAR ama ğ ı İ ş YOK — Türkçe build gerekirse `_speech` tek satırda geri döner.
+- **Perfect mührü** (yazar: "perfect tarif için bir icon oluştur"): `Tools/perfect_icon.py` yıldızın dilinde bir
+  **platin rozet** çiziyor (32 ve 16; `ItemArt.Perfect`). Yıldız ve madalya doluydu — biri puan, biri konfor — ve
+  ikisinin ikinci bir çizimi "tek yıldız tek kalp" kuralını bozardı. Rozet kitabın perfect sayfasında bölüm adının
+  önünde, içindekilerde PERFECT etiketinin yanında ve kimliğin tarif sayfasında duruyor.
+- **Menü sayfaları ölçüldü** (yazar: "her kokteyl için kontrol et hata olmasın"): 56 sayfanın hepsi hem düz hem
+  perfect hâlde tarandı (`scratchpad/audit_pages.py`; kapanan metnin testi `preferredWidth` değil, sahip olduğu
+  genişlikteki `preferredHeight`). Üç gerçek taşma bulundu ve düzeltildi — perfect sayfasının "MID SHELF · PERFECT
+  RECIPE" kaşı 296'lık sütuna sığmayıp başlığın üstüne sarıyordu (kaş artık yalnız bölüm + rozet, satır
+  sarmıyor; uzun ad 24'ten 16'ya düşüyor), bölüm sayfasının notu 24'lük kutuda 41 unit tutuyordu, ve gösterge
+  lejantının iki başlığı 18'lik kutularda 20 unit tutup alttan kırpılıyordu.
+- **Kimliğin tarif hover'ı menü sayfası oldu** (yazar: "menüdeki tarif tarzına benzetelim"): kitabın kağıdı ve altın
+  cetveli, bölüm + ad + "SHAKEN · COUPE GLASS", içki ve fiyatı, nokta lejantı, altında tam genişlik döküm satırları
+  (`DrawRecipeCard`; satırlar `DrawRecipeSpec`'in kağıt paletinden, yani iki yüzey asla ayrışamaz).
+- **Kimliğin damga şeridi kutusuna ortalandı** (yazar: "kutunun içindeki görsel ve yazıları tam ortala"): iki satır
+  blok olarak ölçülüp kuyunun artan boşluğu iki eksende eşit paylaştırıldı.
+- **Ses envanteri çıkarıldı**: `Docs/SES_LISTESI.md` — 73 klibin hepsi (nerede çalıyor, süresi, istenen karakter),
+  bağlanmamış beş klip, ve ihtiyaç listesi (en büyük eksik: oyunda müzik hiç yok).
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11 (basket bakış testi ilk turda kendi bilinen "ilk tıklama yutulur"
+  oynaklığıyla düştü, tekrarda geçti — gün sonu akışı ayrıca elle ölçüldü).
+
 ### 9.50 · Meyve suları: cam denendi, karton kaldı; üst barın yıldızı (2026-09-08)
 
 - **Öğleden sonra cam** (yazar: "kutu meşrubatların tasarımını tekrar yapalım, artık kutu olmak zorunda

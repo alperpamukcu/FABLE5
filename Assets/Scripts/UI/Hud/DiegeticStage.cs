@@ -553,20 +553,24 @@ namespace LastCall.UI
         public HoverGlow CellarGlow(int index) =>
             index >= 0 && index < _cellarDoors.Count ? _cellarDoors[index].GetComponent<HoverGlow>() : null;
 
-        /// <summary>The world corners (min, max) of one cellar bottle's front plate, where
-        /// it stands THIS frame — sway and all — for the HUD to lay its copy on. False
-        /// when there is no such bottle.</summary>
-        public bool CellarBottleBounds(int index, out Vector3 min, out Vector3 max)
+        /// <summary>How one cellar bottle STANDS this frame: the world centre of its front
+        /// plate, that plate's size WITHOUT the rock (world units) and the angle it is rocked
+        /// by. The card copies the pose rather than the bounding box (2026-09-09): a box
+        /// around a rocking bottle swells and shrinks with the angle, so a copy laid on it
+        /// pumped, and the drink measured inside that copy could never keep up. False when
+        /// there is no such bottle.</summary>
+        public bool CellarBottlePose(int index, out Vector3 centre, out Vector2 size, out float angleDeg)
         {
-            min = max = Vector3.zero;
+            centre = Vector3.zero; size = Vector2.zero; angleDeg = 0f;
             if (index < 0 || index >= _cellarStock.Count) return false;
             var sr = _cellarStock[index];
             if (sr == null || sr.sprite == null) return false;
+            var t = sr.transform;
             var b = sr.sprite.bounds;
-            var m = sr.transform.localToWorldMatrix;
-            var a = m.MultiplyPoint3x4(new Vector3(b.min.x, b.min.y, 0f));
-            var c = m.MultiplyPoint3x4(new Vector3(b.max.x, b.max.y, 0f));
-            min = Vector3.Min(a, c); max = Vector3.Max(a, c);
+            centre = t.TransformPoint(b.center);
+            var ls = t.lossyScale;
+            size = new Vector2(b.size.x * Mathf.Abs(ls.x), b.size.y * Mathf.Abs(ls.y));
+            angleDeg = t.eulerAngles.z;
             return true;
         }
 
