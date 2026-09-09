@@ -1521,6 +1521,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.53 · Yirmi ikinci liste: bardağın önü ölçüldü, tuz dönerken oluşuyor, shaker tek parça (2026-09-09)
+
+- **Front şeritleri ÖLÇÜLDÜ, tahmin edilmedi** (yazar: "bardakların front kısmı doğru oturtulmamamış, her bardağı
+  kontrol et"). Şerit bardağın KENDİ çiziminden kesildiği için pikselleri o bardağın pikselleri: her şerit kendi
+  sayfasının üstünde kaydırılıp eşleşme puanı alındı. Doğru yer eskisinden **3–7 satır AŞAĞIDA** çıktı (highball
+  t3 ve martini t2 sırasıyla 21 ve 17. satırda %100 eşleşiyor). Eski tablo ağzın EN GENİŞ satırını (elipsin
+  ekseni) tutuyordu; yazar şeritleri onun altındaki ön duvardan kesmiş. Tablo artık bardak ve kademe başına:
+  `GlassArt.LipRowsPx` (coupe 17/17/16/16/16, highball 21, rocks 16, martini 17/17/16/16/16, pint 17).
+- **Bardaklar t2'den başlıyor** (yazar: "glass3d_*.png görselleri kullanılmayacak"): `dress = _t{max(2,tier)}`.
+  Süssüz taban takım setin en eski sanatı ve front şeriti hiç kesilmemiş tek takımdı.
+- **Tuz ve şeker ağızda, aşağıda değil** (yazar: "tuz ve limon bardağın yukarısında olmalı, şu an aşağısına
+  sabitlenmiş"): `RimPlacement` şeridin çerçevesinde — üst kenardan aşağı, tepe pivotlu bir çocuk için — cevap
+  veriyor, `GlassDecor.NewChild` ise MERKEZ pivotlu kuruyor; aradaki yarım bardak boyu düşülmüştü. `h*0.5f`
+  eklenerek çevrildi (ölçüldü ve resmedildi).
+- **Tuz döndürdüğün kadar oluşuyor** (yazar: "bardağın etrafında tuzu döndürürken döndürdüğümüz kadarı oluşmalı"):
+  kabuk `Image.Type.Filled` (yatay, soldan) ve dolgusu turun süpürdüğü açı — `GlassDecor.BuildSalt/BuildSugar`,
+  `GlassDecor.Sync(..., buildSalt, buildSugar)` ile her kare besleniyor. Tur bitince hazırlık bardağa yazılır ve
+  dolgu 1'e kilitlenir.
+- **Kapalı shaker tek nesne** (yazar: "kapağı shakera takınca artık shaker bir olmalı, ayrı ayrı kapak ve gövde
+  seçilmemeli"): kapağın kendi `HoverGlow`'u kapak takılınca kapanıyor, tinin ışığı hem gövdeyi hem kapağı
+  aydınlatıyor ve iki transform'u birlikte sallıyor (`Movers`). Kapağın raycast'i zaten kapanıyordu.
+- **Kimlik tarif kartı yeniden kağıt** (yazar: "arkaplan renkleri uygun değil ... göz almayacak bir desen
+  uygula"): kartın gölgesi olarak eklenen koyu dikdörtgen kartın ÇOCUĞU olduğu için arka planın ÜSTÜNE
+  çiziliyordu — krem kağıdı gri-kahve yapan buydu. Gölge kaldırıldı, kağıt opak `#F2E8D5`, üstünde
+  `ChromeArt.PaperGrain()` (16×16, %4 mürekkep, hash'li) 1×'te döşeniyor: desen okunuyor ama yazıyla yarışmıyor.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11 (basket bakış testi yine kendi bilinen "ilk tıklama yutulur"
+  oynaklığıyla bir turda düştü, tekrarda geçti). Beş bardak ölçülen satırlarla ve yarım turluk tuzla
+  resmedildi (`scratchpad/glass_check.png`): dikiş görünmüyor, kabuk ağızda ve yarısı dolu.
+
 ### 9.52 · Yirmi birinci liste, birinci geçiş: bardağın önü, rimler, para, oda (2026-09-09)
 
 - **Bardağın FRONT'u her bardakta** (yazar: "belli sahnelerde değil sadece; front kısmı bardağa dökülen veya

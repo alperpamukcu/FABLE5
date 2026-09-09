@@ -188,6 +188,7 @@ namespace LastCall.UI
         // here has to know what a gold shaker looks like.
 
         private Image _shakerBodyImg, _shakerCapImg;
+        private HoverGlow _capGlow;     // off once the lid is on: the shaker is one thing
 
         /// <summary>The tier's suffix on a shaker plate: "" for the steel one the bar opened
         /// with, "_t2" once the gold rung is fitted. Read off Core's own ladder.</summary>
@@ -1087,6 +1088,8 @@ namespace LastCall.UI
             if (_shakerTop == null) return;
             // The tin answers the hand only once the lid is on it (see BuildShakerPanel).
             if (_tinGlow != null && _tinGlow.enabled != _capped) _tinGlow.enabled = _capped;
+            // ...and the lid stops being its own object the moment it is on (2026-09-09).
+            if (_capGlow != null && _capGlow.enabled == _capped) _capGlow.enabled = !_capped;
             float dt = Mathf.Max(Time.deltaTime, 1e-4f);
             var mouse = Mouse.current;
 
@@ -1710,7 +1713,7 @@ namespace LastCall.UI
             // and it is held rather than picked up, so it takes the light and a breath
             // of sway — no rise, because a tin that lifts off the bench is a spill.
             var tinGlow = _tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
-            tinGlow.Graphics = new Graphic[] { shakerImg };
+            tinGlow.Graphics = new Graphic[] { shakerImg };   // the lid joins it below, once it exists
             tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.3f;
             // NOT UNTIL THERE IS SOMETHING TO DO WITH IT (2026-09-06, the author: "shakera
             // koyma sahnesinde shaker kapatılmadan önceki shakerin gövdesi ile mousela
@@ -1782,10 +1785,23 @@ namespace LastCall.UI
                 Sfx.Play("cap_on", 0.35f);
             });
             _shakerTop.gameObject.AddComponent<EventTrigger>().triggers.Add(capGrab);
-            var capGlow = _shakerTop.gameObject.AddComponent<HoverGlow>();
+            // THE LID IS ITS OWN THING ONLY WHILE IT IS OFF (2026-09-09, the author:
+            // "kapağı shakera takınca artık shaker bir olmalı, ayrı ayrı kapak ve gövde
+            // seçilmemeli"). A capped tin that lights its lid on one hover and its body on
+            // the next is two objects wearing one silhouette. Once the lid is on, this glow
+            // is switched off and the TIN's glow lights both drawings and moves both
+            // transforms — one shaker, one light, one sway.
+            var capGlow = _capGlow = _shakerTop.gameObject.AddComponent<HoverGlow>();
             capGlow.Graphics = new Graphic[] { topImg };
             capGlow.Rise = 4f; capGlow.Sway = 1.4f; capGlow.Grow = 1.06f;
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
+            // ONE SHAKER (2026-09-09): the tin's own light takes the lid's drawing and the
+            // lid's transform, so a capped tin lights and sways as one object.
+            if (_tinGlow != null)
+            {
+                _tinGlow.Graphics = new Graphic[] { shakerImg, topImg };
+                _tinGlow.Movers = new Transform[] { _shakerVessel, _shakerTop };
+            }
 
             // The metal shaker is opaque, so the fluid draws OVER it (2026-07-24): you see the
             // drink inside the tin as a cutaway, which is the point — a metal shaker you can

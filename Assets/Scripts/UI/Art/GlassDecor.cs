@@ -62,7 +62,7 @@ namespace LastCall.UI
         /// <summary>Finds or adds the decor layer on <paramref name="glassRect"/> and brings it
         /// up to date with what is actually on <paramref name="glass"/>.</summary>
         public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass,
-                                TycoonRun run = null)
+                                TycoonRun run = null, float buildSalt = 0f, float buildSugar = 0f)
         {
             var t = glassRect.Find("Decor");
             GlassDecor decor;
@@ -77,6 +77,8 @@ namespace LastCall.UI
             }
             else decor = t.GetComponent<GlassDecor>();
             decor.transform.SetAsLastSibling();   // crust and wedge draw over the glass walls
+            decor.BuildSalt = buildSalt;
+            decor.BuildSugar = buildSugar;
             decor.Refresh(piece, glass, run);
         }
 
@@ -101,6 +103,8 @@ namespace LastCall.UI
             if (glass != null && glass.IceCubes > 0) sig.Append('i').Append(glass.IceCubes).Append(';');
             if (mint) sig.Append("m;");
             if (olive) sig.Append("o;");
+            if (BuildSalt > 0.004f) sig.Append("bs;");
+            if (BuildSugar > 0.004f) sig.Append("bg;");
             string signature = sig.ToString();
             if (signature != _signature)
             {
@@ -108,7 +112,20 @@ namespace LastCall.UI
                 Rebuild(glass, mint, olive);
             }
             PlaceFloats(glass);
+            if (_crust != null)
+            {
+                bool done = glass != null && (glass.HasPreparation("salt_rim")
+                                              || glass.HasPreparation("sugar_rim"));
+                float want = done ? 1f : Mathf.Clamp01(Mathf.Max(BuildSalt, BuildSugar));
+                if (!Mathf.Approximately(_crust.fillAmount, want)) _crust.fillAmount = want;
+            }
         }
+
+        /// <summary>How far round the lap has got, 0..1, for the crust that is being laid
+        /// right now (2026-09-09). Set by whoever is running the turn; zero the rest of the
+        /// time. The finished preparation on the glass still wins over both.</summary>
+        public float BuildSalt, BuildSugar;
+        private Image _crust;
 
         private void Rebuild(GlassContents glass, bool mint, bool olive)
         {
@@ -139,7 +156,9 @@ namespace LastCall.UI
             // a dark seat where the crust meets the glass so it reads as ON something, the
             // speckle itself, and a bright lip along the very top edge where a real crust
             // catches the light. Nothing about it is random — see Speckles.
-            if (glass.HasPreparation("salt_rim") || glass.HasPreparation("sugar_rim"))
+            // A CRUST IS ON THE GLASS EITHER WHEN IT IS FINISHED OR WHILE IT IS BEING LAID.
+            bool applied = glass.HasPreparation("salt_rim") || glass.HasPreparation("sugar_rim");
+            if (applied || BuildSalt > 0.004f || BuildSugar > 0.004f)
             {
                 // A RING OF GRAINS ROUND THE MOUTH (2026-09-06, the author: "çok küçük tuz
                 // ve şeker taneleri bardağın ağzını saracak şekilde"). The new glasses are
@@ -147,7 +166,7 @@ namespace LastCall.UI
                 // ALONG it — one-pixel grains scattered on that ellipse, denser where the
                 // near arc catches the light — at the exact size the glass is shown at, so
                 // no grain is ever scaled. A flat band across the rim was a stripe.
-                bool salt = glass.HasPreparation("salt_rim");
+                bool salt = glass.HasPreparation("salt_rim") || (!applied && BuildSalt > BuildSugar);
                 // THE AUTHOR DREW THEM (2026-09-09: "artık şeker ve tuz rim için görseller
                 // geliştirdim"). Eight crusts, one a glass a kind, each cut to that glass's
                 // own mouth with the grains breaking over the near arc — so the ring is a
@@ -157,12 +176,25 @@ namespace LastCall.UI
                 if (drawn != null && _piece.RimPlacement(new Vector2(w, h), drawn,
                                                         out var crustSize, out var crustTop))
                 {
+                    // UP ON THE MOUTH, NOT DOWN AT THE FOOT (2026-09-09, the author: "tuz ve
+                    // limon bardağın yukarısında olmalı, şu an aşağısına sabitlenmiş").
+                    // RimPlacement answers in the LIP's frame — an offset from the rect's TOP
+                    // for a top-pivoted child — and NewChild builds a CENTRE-pivoted one, so
+                    // the offset was half a glass adrift. Half the height puts it back.
                     var crust = NewChild("Crust", crustSize,
-                        new Vector2(crustTop.x, crustTop.y - crustSize.y * 0.5f));
-                    var cimg = crust.gameObject.AddComponent<Image>();
-                    cimg.sprite = drawn;
-                    cimg.preserveAspect = true;
-                    cimg.raycastTarget = false;
+                        new Vector2(crustTop.x, h * 0.5f + crustTop.y - crustSize.y * 0.5f));
+                    _crust = crust.gameObject.AddComponent<Image>();
+                    _crust.sprite = drawn;
+                    _crust.preserveAspect = true;
+                    _crust.raycastTarget = false;
+                    // AND IT BUILDS AS THE GLASS TURNS (2026-09-09, the author: "bardağın
+                    // etrafında tuzu döndürürken döndürdüğümüz kadarı oluşmalı"): the crust
+                    // is filled left to right by the lap's own sweep, so the picture on the
+                    // glass and the ring under the hand say the same thing at the same time.
+                    _crust.type = Image.Type.Filled;
+                    _crust.fillMethod = Image.FillMethod.Horizontal;
+                    _crust.fillOrigin = (int)Image.OriginHorizontal.Left;
+                    _crust.fillAmount = applied ? 1f : Mathf.Clamp01(salt ? BuildSalt : BuildSugar);
                 }
                 else
                 {

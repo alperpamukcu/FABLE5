@@ -2913,7 +2913,12 @@ namespace LastCall.UI
             PlaceDrinkSurface(piece, (float)run.ServingGlass.FillFraction);
             // The finishing touches ride the carried glass too (P14): the customer is handed
             // the drink that was actually finished, salt and wedge and all.
-            GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run);
+            // The lap in progress rides in with it, so the crust on the glass grows while
+            // the hand turns it (2026-09-09).
+            _rimSwept.TryGetValue("salt_rim", out float sweptSalt);
+            _rimSwept.TryGetValue("sugar_rim", out float sweptSugar);
+            GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run,
+                            sweptSalt / RimLap, sweptSugar / RimLap);
 
             float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
             var mouse = Mouse.current;

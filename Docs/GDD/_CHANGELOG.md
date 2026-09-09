@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The twenty-second list (2026-09-09):** every front strip was MATCHED against the glass
+  it was cut from — its pixels are that glass's pixels — and every one was seated three to
+  seven rows too high, because the table held the rim's widest row and the author cut the
+  strips from the near wall under it; the rows are per glass and per tier now. The undressed
+  base glasses are retired: tier 1 pours from the t2 sheet. The drawn crust was placed with a
+  top-anchored offset inside a centre-anchored child and landed half a glass low; it is on
+  the mouth now, and it BUILDS as the lap turns instead of appearing whole at the end. A
+  capped tin lights and sways as one object. And the licence's recipe card is paper again —
+  its drop shadow was a child, so it drew over the very background it was meant to lift.
 - **The twenty-first list, first pass (2026-09-09):** every glass keeps its front strip
   now — one call rather than two hand-hung copies, and the pint's own row measured instead
   of defaulted — and the author's eight drawn salt and sugar rims replace the procedural

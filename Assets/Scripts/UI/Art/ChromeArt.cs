@@ -1798,6 +1798,38 @@ namespace LastCall.UI
         ///
         /// Sliced (6,6,6,6) with a flat middle, so it stretches to any card.
         /// </summary>
+        /// <summary>
+        /// PAPER, NOT A FLAT FIELD (2026-09-09, the author: "arkaplan renkleri uygun değil,
+        /// uygun bir arkaplan renk kombinasyonu yap, arkaplana göz almayacak bir desen
+        /// uygula"). A 16x16 tile of the faintest possible speckle — four percent ink on
+        /// nothing — meant to be tiled under type at 1x. It has to be a PATTERN and not a
+        /// texture: anything you can see as a shape competes with the words on top of it,
+        /// so this is deterministic dust that reads as grain only when you look for it.
+        /// </summary>
+        public static Sprite PaperGrain()
+        {
+            const string Key = "paper:grain";
+            if (Cache.TryGetValue(Key, out var had) && had != null) return had;
+            const int N = 16;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Repeat };
+            var px = new Color32[N * N];
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    // a hash, never a die: the same paper every run (the house's rule)
+                    uint h = (uint)(x * 73856093 ^ y * 19349663);
+                    h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15;
+                    byte a = (h % 23) == 0 ? (byte)14 : (h % 47) == 0 ? (byte)9 : (byte)0;
+                    px[y * N + x] = new Color32(0x3A, 0x2A, 0x16, a);
+                }
+            tex.SetPixels32(px);
+            tex.Apply();
+            var sp = Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), 1f);
+            sp.hideFlags = HideFlags.DontSave;
+            return Cache[Key] = sp;
+        }
+
         public static Sprite Inlay(int w, int h)
         {
             string key = $"inlay:{w}x{h}";

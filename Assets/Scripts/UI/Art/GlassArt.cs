@@ -368,14 +368,25 @@ namespace LastCall.UI
         /// height from the top — measured 2026-09-08 (the widest row inside the top 14 of
         /// each base sprite): coupe row 13 of 88, highball 14 of 96, rocks 13 of 72, martini
         /// 11 of 88. Where the `_Front` strip's top lands.</summary>
-        private static readonly Dictionary<string, float> LipRowTable = new Dictionary<string, float>
-        {
-            // THE PINT WAS MISSING (2026-09-09, the author: "bardakların Front'u düzgün
-            // yerleştirilmemiş"). It has strips like the rest and fell through to the 0.12
-            // default — row 11.5 of 96 against a rim whose axis is at 14, so its front edge
-            // stood two and a half rows up inside the beer.
-            ["coupe"] = 13f / 88f, ["highball"] = 14f / 96f, ["rocks"] = 13f / 72f,
-            ["martini"] = 11f / 88f, ["pint"] = 14f / 96f,
+        /// <summary>Where each strip's TOP row goes, per glass and per tier (t2..t6), in
+        /// ART ROWS of that glass's sheet.
+        ///
+        /// MEASURED, NOT REASONED (2026-09-09, the author: "bardakların front kısmı doğru
+        /// oturtulmamamış, her bardağı kontrol et"). A strip is CUT FROM its glass, so its
+        /// pixels are that glass's pixels and the seat is the offset where the two match:
+        /// every strip was slid over its sheet and scored, and the best fit came back three
+        /// to seven rows BELOW where the old single number put it (highball t3 and martini
+        /// t2 match 100% at rows 21 and 17). The old table held the rim's widest row — the
+        /// ellipse's axis — and the author cut the strips from the near WALL under it.
+        /// Where a tier's strip is too dressed to score (coupe t6, pint t2/t3/t6 all under
+        /// 8%), it takes its glass's own row rather than a number nothing agrees with.</summary>
+        private static readonly Dictionary<string, int[]> LipRowsPx = new Dictionary<string, int[]>
+        {                                   //  t2  t3  t4  t5  t6
+            ["coupe"] = new[] { 17, 17, 16, 16, 16 },
+            ["highball"] = new[] { 21, 21, 21, 21, 21 },
+            ["rocks"] = new[] { 16, 16, 16, 16, 16 },
+            ["martini"] = new[] { 17, 17, 16, 16, 16 },
+            ["pint"] = new[] { 17, 17, 17, 17, 17 },
         };
 
         /// <summary>The drawing's FIRST opaque row, as a fraction of its height — where the
@@ -451,7 +462,12 @@ namespace LastCall.UI
             // Tier 1 is the undecorated base set; higher tiers load their dressed
             // sprites and fall back to the base if a dress file is missing, so a
             // half-installed set degrades to plain glass instead of a white square.
-            string dress = tier > 1 ? $"_t{tier}" : "";
+            // THE BASE SET IS RETIRED (2026-09-09, the author: "glass3d_highball.png
+            // glass3d_coupe.png glass3d_pint.png glass3d_martini.png glass3d_rocks.png
+            // görselleri kullanılmayacak, bardaklar t2'den başlayacak"). The undressed
+            // sheets are the oldest art in the set and the only ones with no front strip
+            // cut for them; a bar that has bought nothing now pours from the t2 glass.
+            string dress = $"_t{Mathf.Max(2, tier)}";
             if (dress.Length > 0)
             {
                 var dressed = ItemArt.Load($"glass3d_{glass.Id}{dress}");
@@ -473,7 +489,7 @@ namespace LastCall.UI
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_frontplate"),
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc,
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_Front"),
-                LipRowTable.TryGetValue(glass.Id, out var lipRow) ? lipRow : 0.12f,
+                LipRow(glass.Id, tier, sprite),
                 ItemArt.Load($"glass3d_{glass.Id}_rim_salt"),
                 ItemArt.Load($"glass3d_{glass.Id}_rim_sugar"),
                 MouthTopTable.TryGetValue(glass.Id, out var mouth) ? mouth : 0.10f);
@@ -517,6 +533,20 @@ namespace LastCall.UI
             if (!found.gameObject.activeSelf) found.gameObject.SetActive(true);
             var img = found.GetComponent<Image>();
             if (img != null) { img.sprite = piece.Lip; img.enabled = true; }
+        }
+
+        /// <summary>The strip's top row for this glass at this tier, as a fraction of the
+        /// sheet's height — the measurement in <see cref="LipRowsPx"/>, or the glass's own
+        /// first row when a tier is missing.</summary>
+        private static float LipRow(string glassId, int tier, Sprite sheet)
+        {
+            float h = sheet != null && sheet.rect.height > 1f ? sheet.rect.height : 96f;
+            if (glassId != null && LipRowsPx.TryGetValue(glassId, out var rows) && rows.Length > 0)
+            {
+                int i = Mathf.Clamp(tier - 2, 0, rows.Length - 1);
+                return rows[i] / h;
+            }
+            return 0.18f;
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

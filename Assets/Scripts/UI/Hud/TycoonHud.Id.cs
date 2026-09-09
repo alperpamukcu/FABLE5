@@ -1128,8 +1128,9 @@ namespace LastCall.UI
             var tipBg = _idRecipeTip.gameObject.AddComponent<Image>();
             // THE BOOK'S OWN PAPER (2026-09-09): the tip prints a page of the menu, so it is
             // set on the booklet's paper (menu_booklet.png, #F2E8D5) and bound in the page
-            // frame's gold rather than on the night-blue plate it used to wear.
-            tipBg.color = new Color(0.949f, 0.910f, 0.835f, 0.98f);
+            // frame's gold. OPAQUE — a card that lets the room through is a card the room
+            // tints, and the author saw exactly that: "arkaplan renkleri uygun değil".
+            tipBg.color = new Color(0.949f, 0.910f, 0.835f, 1f);
             // Nothing in the panel may take a raycast, or hovering it reads as leaving the
             // order line and the whole thing blinks.
             tipBg.raycastTarget = false;
@@ -1139,14 +1140,23 @@ namespace LastCall.UI
             // has to read as lifted. Three units of the page frame's own gold, with a dark
             // line outside them so the gold has something to sit against on any ground.
             var tipEdge = new Color(0.788f, 0.510f, 0.169f, 0.98f);   // menu_page_frame's gold
-            var tipShade = new Color(0.16f, 0.10f, 0.04f, 0.85f);
             Frame(_idRecipeTip, 3f, tipEdge);
-            var lift = NewRect("Lift", _idRecipeTip);
-            Stretch(lift, Vector2.zero, Vector2.one, new Vector2(-3f, -3f), new Vector2(3f, 3f));
-            lift.SetAsFirstSibling();
-            var liftImg = lift.gameObject.AddComponent<Image>();
-            liftImg.color = tipShade;
-            liftImg.raycastTarget = false;
+            // AND A PATTERN THAT DOES NOT TAKE THE EYE (2026-09-09, the author: "arkaplana
+            // göz almayacak bir desen uygula"): the house's paper grain, tiled at 1x under
+            // everything the card prints. Four percent ink — it reads as paper, not as a
+            // texture, and no line of type has to compete with it.
+            //
+            // (A drop shadow stood here for one build and was the fault the author saw: a
+            // CHILD of the card draws OVER its background, so an 85%-opaque dark rect turned
+            // the cream paper grey-brown. A shadow belongs behind the card, and the card has
+            // no room behind it.)
+            var grain = NewRect("Grain", _idRecipeTip);
+            Stretch(grain, Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            grain.SetAsFirstSibling();
+            var grainImg = grain.gameObject.AddComponent<Image>();
+            grainImg.sprite = ChromeArt.PaperGrain();
+            grainImg.type = Image.Type.Tiled;
+            grainImg.raycastTarget = false;
             _idRecipeTipBody = NewRect("Body", _idRecipeTip);
             Stretch(_idRecipeTipBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _idRecipeTip.gameObject.SetActive(false);
