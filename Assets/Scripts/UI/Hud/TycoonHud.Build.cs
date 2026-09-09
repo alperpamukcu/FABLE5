@@ -196,7 +196,12 @@ namespace LastCall.UI
             tillPlate.sprite = ChromeArt.Panel();
             tillPlate.type = Image.Type.Sliced;
             tillPlate.pixelsPerUnitMultiplier = 0.5f;
-            tillPlate.raycastTarget = true;
+            // IT TAKES NO CLICKS (2026-09-09, measured): the card hangs over the tablet's
+            // top-right corner, and a readout that swallows the pointer there is a market
+            // listing that cannot be pressed — the smoke suite caught exactly that, twice
+            // ("six listings were pressed and the basket stayed empty"). It is a number on
+            // the wall; nothing is done to it.
+            tillPlate.raycastTarget = false;
             var tillCoin = NewRect("Coin", tillCard);
             Place(tillCoin, new Vector2(0, 0.5f), new Vector2(24f, 24f), new Vector2(16f, 0f));
             tillCoin.pivot = new Vector2(0, 0.5f);
@@ -213,7 +218,7 @@ namespace LastCall.UI
             _beamTillText.verticalOverflow = VerticalWrapMode.Overflow;
             _beamTillText.raycastTarget = false;
             _beamTillText.text = "0";
-            HoverTip(tillCard, ItemArt.Load("sh_b_coin"), "THE TILL", "WHAT THE BAR HAS TONIGHT");
+            _beamTillCard = tillCard;
 
             // ── the standing, right: the stars and who they brought in ─────────
             // NO PLATE UNDER THEM (2026-08-14, the author: "yıldızlar hala üst barda kutu

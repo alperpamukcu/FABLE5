@@ -1671,6 +1671,9 @@ namespace LastCall.UI
         /// four and a half seconds — so this is a backstop against a view that never
         /// finishes, never a timer the night is expected to hit.</summary>
         private const float DayEndPatience = 9f;
+        /// <summary>The beat between the last glass going away and the books (2026-09-09).</summary>
+        private const float DayEndBeat = 1f;
+        private float _dayEndClearAt = -1f;
 
         private bool _flowWasOpen;
 
@@ -2361,6 +2364,7 @@ namespace LastCall.UI
 
         private RectTransform _settingsPanel;
         private Text _beamTillText;   // the till, on its own card under the beam (2026-09-09)
+        private RectTransform _beamTillCard;   // ...and the card itself, hidden under a sheet
         private Image[] _settingsMeter;     // the volume, five blocks
 
         private Text _settingsVolume, _settingsMute, _settingsMotion;

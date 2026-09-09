@@ -39,7 +39,10 @@ namespace LastCall.UI
         /// five vessels differ by silhouette rather than all being stretched into one box.</summary>
         // 340, from 260 (2026-09-06, the author: "bardakların boyutu küçük kalmış ekranda daha
         // da büyümeli"): the glass is the thing this stage is about.
-        private const float ServeGlassHeight = 340f;
+        // BIGGER (2026-09-09, the author: "bardağa alkol koyma sahnesindeki bardak
+        // boyutlarını büyüt"): the glass is what this whole bench is about and it stood at
+        // 340 on a 720 field with air all round it.
+        private const float ServeGlassHeight = 420f;
         private Image _serveGlassImage;
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private int _serveGlassTier = 1;
@@ -53,6 +56,8 @@ namespace LastCall.UI
         private Image _serveCapImg;
         private string _serveMixSig = "";
         private GlassArt.Piece _serveGlassPiece;
+        private Image _serveGlassSurface;          // the pool's top face (2026-09-09)
+        private RectTransform _serveGlassSurfaceRt;
 
         // ── the first-person staging (v5 P14, the author's diagram of 2026-07-31) ──
         //
@@ -302,6 +307,7 @@ namespace LastCall.UI
                     _serveGlassLipRt.SetAsLastSibling();
                 }
             }
+            PlaceServeSurface(piece, (float)run.ServingGlass.FillFraction);
             if (_serveGlassBack != null)
             {
                 _serveGlassBack.sprite = piece.Back;
@@ -441,6 +447,40 @@ namespace LastCall.UI
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
 
+        /// <summary>
+        /// THE TOP OF THE POOL IS AN ELLIPSE HERE TOO (2026-09-09, the author: "bardakların
+        /// içerisinde sıvının bulunduğu konumu kesinlikle doğru konumlandır, taban ve tavan
+        /// eğimli olmalı 2.5d"). The fluid gives the bench a real surface with a wet band on
+        /// it, but seen from the front that surface is still a LINE: the drink in a cylinder
+        /// shows its top face, which is what tells the eye the glass is round. The counter's
+        /// carried glass has drawn one since 2026-08-11; this is the same disc, at the same
+        /// width the glass has at that level, riding the fluid's own measured surface.
+        /// </summary>
+        private void PlaceServeSurface(GlassArt.Piece piece, float fraction)
+        {
+            if (_serveGlassSurface == null) return;
+            if (piece.Sprite == null || fraction <= 0.001f || piece.Aspect <= 0f)
+            {
+                _serveGlassSurface.enabled = false;
+                return;
+            }
+            var rect = _serveGlass.rect.size;
+            float drawnH = Mathf.Min(rect.y, rect.x / piece.Aspect);
+            float drawnW = drawnH * piece.Aspect;
+            float level = piece.FillAmount(fraction);
+            float width = piece.InteriorWidthAt(level) * drawnW;
+            if (width <= 1f) { _serveGlassSurface.enabled = false; return; }
+            var rt = _serveGlassSurface.rectTransform;
+            rt.sizeDelta = new Vector2(width, width * GlassArt.SurfaceSquash);
+            rt.anchoredPosition = _serveGlass.anchoredPosition
+                                  + new Vector2(0f, (level - 0.5f) * drawnH);
+            var body = DrinkColor(Run != null ? Run.ServingGlass : null);
+            _serveGlassSurface.color = new Color(
+                Mathf.Lerp(body.r, 1f, 0.24f), Mathf.Lerp(body.g, 1f, 0.24f),
+                Mathf.Lerp(body.b, 1f, 0.24f), body.a);
+            _serveGlassSurface.enabled = true;
+        }
+
         private void BuildServePanel()
         {
             // The whole screen, not a panel floating on it: the stage is the counter you are
@@ -545,6 +585,7 @@ namespace LastCall.UI
             _serveGlassBack.enabled = false;
 
             _serveGlass = NewRect("Glass", _serveSurface);
+            // the pool's top face, made before the glass so it draws under the front wall
             Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
                 glassRest);
             _serveGlassImage = _serveGlass.gameObject.AddComponent<Image>();
@@ -558,6 +599,17 @@ namespace LastCall.UI
             // are a bigger share of it and the estimate runs generous — measured at four fills,
             // it wants a tenth fewer particles to draw the level it was actually given.
             _serveFluid.SetDensity(0.90f);
+
+            // The pool's top face: made BEFORE the glass is brought forward, so the glass's
+            // own front wall crosses it and it reads as inside the vessel (2026-09-09).
+            var srf = NewRect("PoolSurface", _serveSurface);
+            srf.anchorMin = srf.anchorMax = srf.pivot = new Vector2(0.5f, 0.5f);
+            srf.anchoredPosition = _serveGlass.anchoredPosition;
+            _serveGlassSurface = srf.gameObject.AddComponent<Image>();
+            _serveGlassSurface.sprite = GlassArt.SurfaceDisc();
+            _serveGlassSurface.raycastTarget = false;
+            _serveGlassSurface.enabled = false;
+            _serveGlassSurfaceRt = srf;
 
             _serveGlass.SetAsLastSibling();   // the hollow glass draws over the fluid
             // ...and the rim's front edge over the glass (2026-09-08, the author's `_Front`

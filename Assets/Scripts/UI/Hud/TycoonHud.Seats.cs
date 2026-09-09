@@ -759,8 +759,15 @@ namespace LastCall.UI
                     dirtyGlow.Rise = 4f; dirtyGlow.Sway = 1.4f; dirtyGlow.Grow = 1.05f;
                     var dirtyRelay = prop.gameObject.AddComponent<HoverRelay>();
                     var dirtyRt = prop;
-                    dirtyRelay.Entered = () => { ShowPropTip(dirtyRt, "CARRY IT TO THE SINK"); _emptyHovered++; };
-                    dirtyRelay.Exited = () => { HidePropTip(dirtyRt); _emptyHovered = Mathf.Max(0, _emptyHovered - 1); };
+                    // WHICH EMPTY, NOT HOW MANY (2026-09-09, the author: "ilk bardağı
+                    // yıkadıktan sonra sink hover modda takılı kalıyor, mouse onun üstüne
+                    // gelmese bile; hatta sonraki güne geçildiğinde de aynı kalıyor"). It was
+                    // a COUNTER, and a glass picked up under the pointer is destroyed before
+                    // its Exit can fire — so the count never came back down and the basin
+                    // beckoned for the rest of the night, and the next one. A reference heals
+                    // itself: the prop it names is checked for life every frame.
+                    dirtyRelay.Entered = () => { ShowPropTip(dirtyRt, "CARRY IT TO THE SINK"); _emptyOver = dirtyRt; };
+                    dirtyRelay.Exited = () => { HidePropTip(dirtyRt); if (_emptyOver == dirtyRt) _emptyOver = null; };
                     var sink = prop.gameObject.AddComponent<PressSink>();
                     sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
                     v.DirtyProp = prop;
@@ -1385,7 +1392,7 @@ namespace LastCall.UI
         private SeatView _emptyPressed;   // an empty under a finger that has not travelled yet
         private SeatView _carriedEmpty;   // ...and the one in the air, not yet Core's business
         private Vector2 _emptyPressAt;
-        private int _emptyHovered;        // how many empties the pointer is on (0 or 1, counted safely)
+        private RectTransform _emptyOver;   // the empty the pointer is on, or null (2026-09-09)
         private RectTransform _tinCarry;
         private Image _tinCarryImg;
         private bool _tinCarrying, _tinPressed;
@@ -1462,7 +1469,13 @@ namespace LastCall.UI
 
         /// <summary>The tallest empty on the counter, in HUD units; every other line is drawn
         /// at the same units-per-pixel as this one (GlassArt.TallestSheet).</summary>
-        private const float EmptyGlassHeight = 52f;
+        // IN PROPORTION WITH THE REST (2026-09-09, the author: "müşterilerin bıraktığı
+        // bardağın boyutunu diğer bardak boyutlarıyla orantıla"). It is the same glass that
+        // was carried to them at 116 and it stood at 52 — less than half — so a bar with
+        // empties on it looked like a bar with toys on it. It stands a little smaller than
+        // the working glass because it is on the far side of the counter, not because it is
+        // a different object.
+        private const float EmptyGlassHeight = 96f;
 
         /// <summary>What is left of a mark, as a share of the ink it started with, below which
         /// the counter calls it clean. Not zero: chasing the last few translucent pixels of a
@@ -1698,6 +1711,13 @@ namespace LastCall.UI
             int y1 = Mathf.CeilToInt((maxY / rt.rect.height) * ChromeArt.SmudgeH);
             if (x1 < 0 || y1 < 0 || x0 >= ChromeArt.SmudgeW || y0 >= ChromeArt.SmudgeH) return false;
 
+            // WHERE THE CLOTH ACTUALLY IS, not the box round it (2026-09-09, the author:
+            // "tezgah silerken bezin değdiği yerler silinsin gerçekten de"). The rag swings
+            // on the hand, and a bounding box round a rotated rag is a good deal bigger than
+            // the rag — so marks came off where no cloth had been, and the wipe read as
+            // approximate. Every texel in the box is taken back into the CLOTH's own frame
+            // and kept only if it is inside its rectangle.
+            float halfW = _clothRt.rect.width * 0.5f, cloth = _clothRt.rect.height;
             bool changed = false;
             for (int y = Mathf.Max(0, y0); y <= Mathf.Min(ChromeArt.SmudgeH - 1, y1); y++)
                 for (int x = Mathf.Max(0, x0); x <= Mathf.Min(ChromeArt.SmudgeW - 1, x1); x++)
@@ -1705,6 +1725,12 @@ namespace LastCall.UI
                     int i = (ChromeArt.SmudgeH - 1 - y) * ChromeArt.SmudgeW + x;
                     var c = mk.Px[i];
                     if (c.a == 0) continue;
+                    // texel centre → the mark's local point → world → the cloth's local frame
+                    var here = new Vector3(((x + 0.5f) / ChromeArt.SmudgeW - 0.5f) * rt.rect.width,
+                                           ((y + 0.5f) / ChromeArt.SmudgeH) * rt.rect.height, 0f);
+                    var inCloth = _clothRt.InverseTransformPoint(rt.TransformPoint(here));
+                    // the rag hangs from its top edge: pivot (0.5, 1), so y runs 0 .. -height
+                    if (Mathf.Abs(inCloth.x) > halfW || inCloth.y > 0f || inCloth.y < -cloth) continue;
                     mk.Px[i] = new Color32(c.r, c.g, c.b, 0);
                     changed = true;
                 }
@@ -1883,7 +1909,9 @@ namespace LastCall.UI
         private RectTransform _sinkFadeRt;
         private Image _sinkFadeImg;
         private float _sinkFadeT;
-        private const float SinkFadeSeconds = 0.28f, SinkFadeDrop = 70f;
+        // Longer and deeper than the old fade (2026-09-09): it is a fall into a basin now,
+        // and a fall you can see takes about a third of a second.
+        private const float SinkFadeSeconds = 0.42f, SinkFadeDrop = 96f;
 
         /// <summary>Starts a carried picture sinking: down into the basin and gone, over a
         /// quarter of a second. Under reduced motion it is simply put away.</summary>
@@ -1892,6 +1920,14 @@ namespace LastCall.UI
             if (rt == null || img == null) return;
             if (Motion.Reduced) { rt.gameObject.SetActive(false); return; }
             _sinkFadeRt = rt; _sinkFadeImg = img; _sinkFadeT = 0f;
+            _sinkFadeFrom = rt.anchoredPosition;
+            _sinkFadeScale = rt.localScale;
+            // A GLASS GOES INTO A SINK, IT DOES NOT EVAPORATE OVER ONE (2026-09-09, the
+            // author: "bardak sink'e sürüklenip bırakıldığındaki durum için bir animasyon
+            // ekle bardağa"). Three droplets leave the rim as it tips in — the same drops
+            // the cloth sheds, so the bar has one kind of splash.
+            for (int i = 0; i < 3; i++)
+                ShedDrop(_sinkFadeFrom + new Vector2((i - 1) * 9f, -10f));
         }
 
         private void StepSinkFade()
@@ -1899,17 +1935,29 @@ namespace LastCall.UI
             if (_sinkFadeRt == null) return;
             float dt = Time.unscaledDeltaTime;
             _sinkFadeT += dt / SinkFadeSeconds;
-            var p = _sinkFadeRt.anchoredPosition;
-            p.y -= SinkFadeDrop * dt;
-            _sinkFadeRt.anchoredPosition = p;
+            // TIPPED, DROPPED AND SWALLOWED. It leans into the basin, falls the basin's own
+            // depth on an eased curve rather than at a constant rate, shrinks as it goes
+            // down into the bowl, and only then fades — so the eye follows it in instead of
+            // watching it dissolve where it was let go.
+            float t = Mathf.Clamp01(_sinkFadeT);
+            float fall = t * t * SinkFadeDrop;      // in-quad: it accelerates as it drops
+            _sinkFadeRt.anchoredPosition = _sinkFadeFrom + new Vector2(0f, -fall);
+            _sinkFadeRt.localRotation = Quaternion.Euler(0f, 0f, -34f * Tweening.OutCubic(t));
+            float k = Mathf.Lerp(1f, 0.62f, t);
+            _sinkFadeRt.localScale = new Vector3(_sinkFadeScale.x * k, _sinkFadeScale.y * k, 1f);
             var c = _sinkFadeImg.color;
-            c.a = Mathf.Clamp01(1f - _sinkFadeT);
+            c.a = Mathf.Clamp01(1f - Mathf.Max(0f, t - 0.45f) / 0.55f);
             _sinkFadeImg.color = c;
             if (_sinkFadeT < 1f) return;
             _sinkFadeRt.gameObject.SetActive(false);
+            _sinkFadeRt.localRotation = Quaternion.identity;
+            _sinkFadeRt.localScale = _sinkFadeScale;
             c.a = 1f; _sinkFadeImg.color = c;
             _sinkFadeRt = null; _sinkFadeImg = null;
         }
+
+        private Vector2 _sinkFadeFrom;
+        private Vector3 _sinkFadeScale = Vector3.one;
 
         /// <summary>The sink's click: wash what the hand holds. The one free verb on the
         /// drain — pouring a drink away is still only by carrying it there.</summary>
@@ -2001,7 +2049,8 @@ namespace LastCall.UI
             // anything must not offer to, so it goes quiet under the pointer as well.
             if (stage != null)
             {
-                stage.CallTheDrain(!busy && (_glassCarrying || _tinCarrying || _emptyHovered > 0));
+                if (_emptyOver != null && !_emptyOver.gameObject.activeInHierarchy) _emptyOver = null;
+                stage.CallTheDrain(!busy && (_glassCarrying || _tinCarrying || _emptyOver != null));
                 stage.SetDrainAnswers(!busy);
             }
             // The clock over the basin, while it is busy.
@@ -2046,6 +2095,7 @@ namespace LastCall.UI
             // drinker gone the doors used to shut at once; they wait for the glasses and the
             // marks now (BarDay.IsComplete), and a shift standing in an empty room needs to
             // be told what it is waiting for.
+            if (_emptyOver != null && !_emptyOver.gameObject.activeInHierarchy) _emptyOver = null;
             bool waitingOnCounter = run != null && run.Phase == TycoonPhase.DayOpen
                 && run.Floor != null && run.Floor.FloorEmpty && !run.Floor.House.CounterClear;
             string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
@@ -2378,7 +2428,7 @@ namespace LastCall.UI
             {
                 _prepMatSlots = slot;
                 float span = Mathf.Max(0, slot - 1) * PrepRailGap;
-                stage.SetPrepMatSpan(PrepRailX0 + span * 0.5f, span + PrepDishBox);
+                stage.SetPrepMatSpan(PrepRailX0 + span * 0.5f, span + PrepDishBox, slot);
             }
             StepSinkFade();
             SeparateSays();

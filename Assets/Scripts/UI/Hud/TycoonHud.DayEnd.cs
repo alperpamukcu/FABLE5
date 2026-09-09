@@ -24,8 +24,25 @@ namespace LastCall.UI
         private void StepDayEndDue()
         {
             if (!_dayEndDue) return;
-            if (!FloorIsClear() && Time.unscaledTime - _dayEndDueAt < DayEndPatience) return;
+            // AND THE LAST GLASS IS PUT AWAY FIRST (2026-09-09, the author: "gün sonu son
+            // bardak yıkandıktan 1 saniye sonra triggerlanmalı"). The floor being clear is
+            // about PEOPLE; the sink is still running when the last of them goes, and the
+            // books used to land over a tap the player was watching. One beat after the wash
+            // finishes, so the last thing the night does is finish, and then the books come.
+            var run = Run;
+            bool washing = run != null && (run.SinkBusy || run.GlassesWashing > 0
+                                           || run.GlassesInHand > 0);
+            bool clear = FloorIsClear() && !washing;
+            if (!clear)
+            {
+                _dayEndClearAt = -1f;
+                // The old escape hatch stands: a night that cannot clear itself still closes.
+                if (Time.unscaledTime - _dayEndDueAt < DayEndPatience) return;
+            }
+            else if (_dayEndClearAt < 0f) { _dayEndClearAt = Time.unscaledTime; return; }
+            else if (Time.unscaledTime - _dayEndClearAt < DayEndBeat) return;
             _dayEndDue = false;
+            _dayEndClearAt = -1f;
             ShowDayEnd();
         }
 

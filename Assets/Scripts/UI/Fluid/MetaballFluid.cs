@@ -382,7 +382,10 @@ namespace LastCall.UI
         // drink shared one alpha range; the range is per-drink now (UITheme.DrinkAlpha reads
         // the drink's own pigment), so a vodka deliberately asks for 0.30 and the old floor
         // would have quietly made it as solid as a juice.
-        private const float AlphaFloor = 0.26f, AlphaCeiling = 0.97f;
+        // The floor rises with UITheme's own bands (2026-09-09): a fluid clamped at 0.26
+        // under a drink table that now starts at 0.55 would be the one surface still
+        // washing its colour out.
+        private const float AlphaFloor = 0.50f, AlphaCeiling = 1.00f;
         private float _bodyAlpha = AlphaCeiling;
         private bool _streamNamed;
 

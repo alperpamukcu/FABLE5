@@ -408,11 +408,24 @@ namespace LastCall.PlayTests
             yield return ClickOn(Find("Tab0"));
             yield return new WaitForSecondsRealtime(0.4f);
 
-            // The aisle sorts what is emptiest first, so behind the crate at slot 0 stand
-            // exactly the two bottles that were drained.
+            // THE AISLE IS GROUPED NOW (2026-09-09, the author: "markette restock kısmını
+            // guruplandır"): spirits, beer, mixers, syrups, garnishes, each sorted emptiest
+            // first. So the two drained bottles are no longer at slots 1 and 2 — they are
+            // wherever their families are — and the test looks for them BY NAME, which is
+            // what it was ever really about.
             var head = Find("BasketHL").GetComponent<Text>();
-            yield return ClickOn(NthTile(1));
-            yield return ClickOn(NthTile(2));
+            // Looked up ONE AT A TIME: the page rebuilds after every press, so a rect found
+            // before the first click is a destroyed object by the second.
+            var firstTile = TileNamed(drained[0].Ingredient.Name);
+            Assert.That(firstTile, Is.Not.Null, "the restock page has no line for "
+                        + drained[0].Ingredient.Name);
+            yield return ClickOn(firstTile);
+            yield return new WaitForSecondsRealtime(0.2f);
+            var secondTile = TileNamed(drained[1].Ingredient.Name);
+            Assert.That(secondTile, Is.Not.Null, "the restock page has no line for "
+                        + drained[1].Ingredient.Name);
+            yield return ClickOn(secondTile);
+            yield return new WaitForSecondsRealtime(0.2f);
             Assert.That(head.text, Is.EqualTo("BASKET (2)"),
                 "the two short bottles did not both go in: " + head.text);
 
@@ -516,6 +529,24 @@ namespace LastCall.PlayTests
 
         /// <summary>The nth listing in the open aisle, in the order they are laid out — or
         /// null once the aisle runs out. Named "Tile" by the market that builds them.</summary>
+        /// <summary>The market tile whose heading is this drink or bottle, wherever the page
+        /// has put it (2026-09-09: the restock page is grouped into aisles, so an ordinal is
+        /// no longer an address). Case-insensitive: the tiles shout their names.</summary>
+        private static RectTransform TileNamed(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
+            foreach (var rt in Object.FindObjectsByType<RectTransform>(
+                         FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (rt.name != "Tile" || !rt.gameObject.activeInHierarchy) continue;
+                foreach (var t in rt.GetComponentsInChildren<Text>(true))
+                    if (t.name == "Name" && t.text != null
+                        && t.text.Trim().Equals(name.Trim(), System.StringComparison.OrdinalIgnoreCase))
+                        return rt;
+            }
+            return null;
+        }
+
         private static RectTransform NthTile(int index)
         {
             var tiles = new List<RectTransform>();

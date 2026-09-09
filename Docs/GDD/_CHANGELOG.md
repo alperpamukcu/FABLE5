@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The twenty-third list (2026-09-09):** the books wait for the last glass to be washed and
+  then one beat; the basin stops beckoning forever after the first wash (a counter that could
+  never come down because the glass under the pointer was destroyed before its exit fired);
+  a glass dropped into the sink tips, falls, shrinks and splashes instead of fading where it
+  was let go; the customer's empty is 96 rather than 52 and the pour bench's glass 420 rather
+  than 340; the pool on that bench draws its top face as an ellipse, the way the carried glass
+  has since August; every drink is more opaque (the alpha bands were set against a black
+  bench); the cloth erases the pixels it actually covers rather than the box around a swinging
+  rag; and the rail wears the author's own drawn mats at four, five and six dishes. Measured
+  trap: the new till card hung over the tablet's top-right corner and swallowed the market's
+  clicks — it takes no pointer now and hides under a sheet.
 - **The twenty-second list (2026-09-09):** every front strip was MATCHED against the glass
   it was cut from — its pixels are that glass's pixels — and every one was seated three to
   seven rows too high, because the table held the rim's widest row and the author cut the

@@ -1521,6 +1521,43 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.54 · Yirmi üçüncü liste: lavabo, bardak boyları, içkinin rengi, paspaslar (2026-09-09)
+
+- **Gün sonu son bardaktan bir saniye sonra** (yazar): kapanış artık zemindeki İNSANLARI beklemekle
+  yetinmiyor — lavabo çalışırken, elde ya da yıkamada bardak varken kitaplar gelmiyor; hepsi bitince
+  `DayEndBeat` (1 sn) sayılıyor. Kendini toparlayamayan bir gece için 9 saniyelik eski emniyet kapağı duruyor.
+- **Lavabo hover'a takılmıyor** (yazar: "ilk bardağı yıkadıktan sonra sink hover modda takılı kalıyor ... sonraki
+  güne geçildiğinde de aynı kalıyor"): `_emptyHovered` bir SAYAÇTI ve imlecin altındaki bardak alınınca yok
+  edildiği için Exit'i hiç çalışmıyordu — sayı bir daha inmiyordu. Yerine kendini iyileştiren bir referans:
+  gösterdiği prop her karede yaşıyor mu diye bakılıyor.
+- **Bardak lavaboya DÜŞÜYOR** (yazar: "bardak sink'e sürüklenip bırakıldığındaki durum için bir animasyon
+  ekle"): eğilir (−34°), hızlanarak 96 birim düşer, %62'ye küçülür, yarısından sonra solar; kenarından üç damla
+  (bezin döktüğü damlaların aynısı) sıçrar. 0.42 sn.
+- **Boylar orantılandı**: müşterinin bıraktığı boş bardak 52 → **96** (tezgahtaki çalışan bardak 116),
+  bardağa döküm sahnesindeki bardak 340 → **420**.
+- **Sıvının tavanı elips** (yazar: "taban ve tavan eğimli olmalı 2.5d"): tezgahtaki bardak 2026-08-11'den beri
+  bir üst yüz çiziyordu, tezgah sahnesindeki havuz çizmiyordu — düz bir çizgiyle bitiyordu. Aynı disk
+  (`GlassArt.SurfaceDisc`) o bardağın o seviyedeki genişliğinde, camın ön duvarının ARKASINDA. Taban yayı
+  zaten bardak başına ayarlıydı (`Piece.FloorArc`, metaball'a veriliyor).
+- **İçkiler saydam değil** (yazar: "şu an çok saydam gözüküyorlar"): `UITheme.DrinkAlpha` bantları siyah tezgaha
+  göre ayarlanmıştı; oda ışığında ve market kağıdında aynı sayılar renkli cam gibi okunuyordu. Kanun aynı —
+  berrak içki sulu içkiden ince, dolu bardak az doludan koyu — ama ölçek yukarı kaydı: berrak 0.30–0.56 →
+  **0.55–0.78**, gövdeli 0.74–0.95 → **0.88–1.00**; `MetaballFluid` tabanı 0.26 → **0.50**. Renk hâlâ tek
+  fonksiyondan (`UITheme.DrinkColor`) geliyor, yani her sahnede aynı.
+- **Bez tam değdiği yeri siliyor** (yazar: "bezin değdiği yerler silinsin gerçekten de"): silme, dönmüş bezin
+  ÇEVRELEYEN KUTUSUNU siliyordu — bez sallandıkça kutu büyüdüğü için bezin gitmediği yerler de temizleniyordu.
+  Artık her doku pikseli bezin kendi çerçevesine alınıp dikdörtgenin içinde mi diye bakılıyor.
+- **Paspaslar yazarın çizimi**: `fx_prep_mat_4/5/6.png` (143/180/217 × 13) — raf kaç kap taşıyorsa o çizim,
+  KENDİ boyunda (tile edilmeden). Dördün altında ya da altının üstünde eski döşenen mat devrede.
+- **Kokteyl sahnesinin tezgahı PNG olarak çıkarıldı** (yazar istedi): sahne prosedürel çiziliyor, bu yüzden
+  ekrandan kesildi — `scratchpad/bench_counter_1920.png` (yakalandığı çözünürlük) ve 1280'e indirilmiş hâli.
+- **Tuzak, ölçüldü:** üst bardan indirdiğim para kartı tabletin sağ üst köşesinin ÜSTÜNE denk geliyordu ve
+  raycast alıyordu — market listelerine yapılan tıklamalar ona gidiyordu ("six listings were pressed and the
+  basket stayed empty", smoke suite iki kez). Kart artık hiç tıklama almıyor ve bir levha açıkken gizleniyor.
+  Ayrıca restock testinin "en boş şişe 1. ve 2. sırada" varsayımı guruplandırmayla çeliştiği için test artık
+  şişeleri ADIYLA buluyor.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11.
+
 ### 9.53 · Yirmi ikinci liste: bardağın önü ölçüldü, tuz dönerken oluşuyor, shaker tek parça (2026-09-09)
 
 - **Front şeritleri ÖLÇÜLDÜ, tahmin edilmedi** (yazar: "bardakların front kısmı doğru oturtulmamamış, her bardağı

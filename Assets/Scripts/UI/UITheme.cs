@@ -290,8 +290,14 @@ namespace LastCall.UI
         /// answer as well as the one that looks right, and it costs the clears nothing —
         /// being thin is what makes them read as clear in the first place.
         /// </remarks>
-        private const float ClearThin = 0.30f, ClearDeep = 0.56f;
-        private const float BodyThin = 0.74f, BodyDeep = 0.95f;
+        // RAISED (2026-09-09, the author: "içkilerin rengi ... şu an çok saydam gözüküyorlar").
+        // The bands were set against a black bench where a thin wash still reads; over the
+        // room's lit counter and the market's paper the same numbers came out as tinted
+        // glass rather than as drink. The SHAPE of the law is unchanged — a clear spirit is
+        // still thinner than a juice, and a full glass still deeper than a splash — the whole
+        // scale just starts higher: a barely-there 0.30 is a stain, not vodka.
+        private const float ClearThin = 0.55f, ClearDeep = 0.78f;
+        private const float BodyThin = 0.88f, BodyDeep = 1.00f;
 
         public static float DrinkAlpha(double fillFraction, Color drink)
         {

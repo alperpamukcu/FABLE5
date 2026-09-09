@@ -981,6 +981,15 @@ namespace LastCall.UI
             // figure in the game that COUNTS, so the coin is re-placed as the digits change
             // width — $99 to $100 moves the mark a whole glyph.
             CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "");
+            if (_beamTillCard != null)
+            {
+                // AND IT GOES BEHIND A SHEET (2026-09-09): the books and the market draw
+                // their own till, and a second one hanging over the tablet is both a repeat
+                // and something in the way.
+                bool room = _dayEndPanel == null || !_dayEndPanel.gameObject.activeSelf;
+                if (_beamTillCard.gameObject.activeSelf != room)
+                    _beamTillCard.gameObject.SetActive(room);
+            }
             if (_beamTillText != null)
             {
                 string money = (shown < 0 ? "-" : "") + Mathf.Abs(shown);

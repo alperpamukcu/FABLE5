@@ -328,20 +328,40 @@ namespace LastCall.UI
         // the height it stands at.
         private float _prepMatCentreX = float.NaN, _prepMatWidth = 0f;
 
-        /// <summary>The rail's centre and width in HUD units (the 1280-wide canvas, centred).</summary>
-        public void SetPrepMatSpan(float centreHudX, float widthHud)
+        /// <summary>The rail's centre and width in HUD units (the 1280-wide canvas, centred),
+        /// and how many dishes are standing on it.</summary>
+        public void SetPrepMatSpan(float centreHudX, float widthHud, int dishes = 0)
         {
             _prepMatCentreX = Reference.x * 0.5f + centreHudX * 0.5f;
             _prepMatWidth = Mathf.Max(8f, widthHud * 0.5f);
+            // THE AUTHOR DREW ONE PER COUNT (2026-09-09: "garnishlerin altına uygun 4, 5, 6
+            // garnishe göre olan paspas görsellerini verdim") — 143, 180 and 217 art px, the
+            // exact widths the rail asks for at four, five and six dishes. A drawn mat is
+            // used at its OWN size and never tiled; anything else still stretches the one
+            // the room was given.
+            _prepMatArt = dishes >= 4 && dishes <= 6
+                ? Resources.Load<Sprite>("Fixtures/fx_prep_mat_" + dishes) : null;
             foreach (var placed in _placedFixtures)
             {
                 if (placed.Def == null || placed.Def.Id != "prep_mat" || placed.Body == null) continue;
                 var sr = placed.Body.GetComponent<SpriteRenderer>();
-                if (sr != null && sr.sprite != null)
+                if (sr == null) continue;
+                if (_prepMatArt != null)
+                {
+                    sr.sprite = _prepMatArt;
+                    sr.drawMode = SpriteDrawMode.Simple;
+                }
+                else if (sr.sprite != null)
+                {
+                    sr.drawMode = SpriteDrawMode.Tiled;
+                    sr.tileMode = SpriteTileMode.Continuous;
                     sr.size = new Vector2(_prepMatWidth, sr.sprite.rect.height / sr.sprite.pixelsPerUnit);
+                }
             }
             PlaceFixtures();
         }
+
+        private Sprite _prepMatArt;    // the drawn mat for this count, or null for the tiled one
         private float _drawerT;                     // 0 shut, 1 open
         private float _drawerTarget;
 
