@@ -1521,6 +1521,22 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.55 · Bitkiler yerine, televizyon oynuyor (2026-09-09)
+
+- **Bitkiler yazarın verdiği yere**: `fx_plant_agave` merkez y −6.5 → **−42.5**, `fx_plant_pothos` 23 → **−16.5**.
+  Dosyadaki sayı AYAK olduğu ve sahne sanatı ayağın yarım boy üstüne oturttuğu için ayak değerleri sırasıyla
+  107 ve 125.5 yazıldı; play'de ölçüldü (250/−42.5 ve −170/−16.5).
+- **Televizyon artık oynuyor** (yazar: "televizyon animasyonları daha detaylandırılsın, daha profesyonel
+  animasyonlar üretilsin, reklam kafasında olsun yine"). Dört reklam altı saniye duran DÖRT DURAĞAN kareydi.
+  Şimdi her reklam altı karelik bir döngü ve hepsi kendi plakasından TÜRETİLDİ (hafıza open-states-derive —
+  ayrıca üretilen kare başka bir reklam olarak geri geliyor): yavaş bir içeri itiş (reklamın kendi dolly'si),
+  bir tur boyunca camın üstünden geçen parıltı, ve tüpün kendi tarama çizgisi kare kare aşağı iniyor. Her kare
+  reklamın kendi paletine geri oturtuluyor, hiçbirine ışık/bloom yazılmıyor (ışık hâlâ sahnenin Light2D'si).
+- **Sayfa düzeni**: `fx_tv.png` 6×6 hücre (294×294) — satır 0–3 dört reklam, satır 4 kapanış, satır 5 ısınma.
+  Oynatıcı reklamın karelerini `TvAdStep` (0.19 sn) ile döndürüyor, `TvAdHold` dolunca tüp kapanıyor, beş saniye
+  karanlık, ısınma, sonraki reklam. Play'de izlendi: r0 kareleri → r4 (kapanış) → r5 (ısınma) → r1 kareleri.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11.
+
 ### 9.54 · Yirmi üçüncü liste: lavabo, bardak boyları, içkinin rengi, paspaslar (2026-09-09)
 
 - **Gün sonu son bardaktan bir saniye sonra** (yazar): kapanış artık zemindeki İNSANLARI beklemekle

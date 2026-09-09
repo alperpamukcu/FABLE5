@@ -2864,7 +2864,7 @@ namespace LastCall.UI
                             _tvSr = sr;
                             _tvFrames = frames;
                             _tvCols = cols;
-                            SetTvFrame(TvAdRow, 0);
+                            SetTvFrame(0, 0);
                         }
                     }
                     // A matched pair FACES each other: the art is one drawing, and two
@@ -3430,8 +3430,18 @@ namespace LastCall.UI
         // at an angle). Tools/tv_build.py seats the adverts in its face and lays the sheet
         // out; a redraw at another size changes these two numbers and nothing else.
         private const int TvCellW = 49, TvCellH = 49;
-        private const int TvAdRow = 0, TvOffRow = 1, TvOnRow = 2;
-        private const int TvAdCount = 4;
+        // ONE ROW PER ADVERT, AND EACH ROW IS A LOOP (2026-09-09, the author:
+        // "televizyon animasyonları daha detaylandırılsın, daha profesyonel animasyonlar
+        // üretilsin, reklam kafasında olsun yine"). The four adverts were four STILLS held
+        // for six seconds each, which is a poster on a wall rather than a set that is on.
+        // Tools/tv_build.py derives six frames from each plate — a push in, a shine crossing
+        // it, the tube's own scan stepping down — so the sheet is rows 0..3 of advert and
+        // then the two states the tube has.
+        private const int TvAdCount = 4, TvAdFrames = 6;
+        private const int TvOffRow = TvAdCount, TvOnRow = TvAdCount + 1;
+        /// <summary>Seconds a frame of an advert gets — slower than the tube's own frames,
+        /// which are a machine doing something, where this is a picture moving.</summary>
+        private const float TvAdStep = 0.19f;
 
         /// <summary>How long one advert holds before the set shuts itself off.</summary>
         private const float TvAdHold = 6f;
@@ -3466,10 +3476,18 @@ namespace LastCall.UI
             {
                 if (_tvSr == null || _tvFrames == null) yield break;
 
-                // the advert, held
-                SetTvFrame(TvAdRow, ad);
+                // the advert, PLAYING: its own six frames, round and round for as long as
+                // the spot runs (2026-09-09)
                 SetTvGlow(1f);
-                yield return new WaitForSecondsRealtime(TvAdHold);
+                float until = Time.realtimeSinceStartup + TvAdHold;
+                int frame = 0;
+                while (Time.realtimeSinceStartup < until)
+                {
+                    if (_tvSr == null || _tvFrames == null) yield break;
+                    SetTvFrame(ad, frame % TvAdFrames);
+                    frame++;
+                    yield return new WaitForSecondsRealtime(TvAdStep);
+                }
 
                 // it switches itself off
                 for (int i = 0; i < _tvCols; i++)
@@ -3546,7 +3564,9 @@ namespace LastCall.UI
                 // that needs a readable texture would work in the editor and fail in a
                 // build. The window's cutter can scan because Scene textures are readable;
                 // this one cannot, so the sheet's shape is stated instead.
-                int wide = row == TvAdRow ? Mathf.Min(TvAdCount, c) : c;
+                // Every row is full now: an advert's row is its six frames, and the tube's
+                // two rows are six each (2026-09-09).
+                int wide = c;
                 for (int col = 0; col < wide; col++)
                 {
                     var rect = new Rect(col * cellW,

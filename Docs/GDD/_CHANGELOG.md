@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The set is on (2026-09-09):** the wall television's four adverts were four stills held
+  for six seconds each — a poster, not a broadcast. Each is a six-frame loop now, derived
+  from its own plate the way the tube's collapse and warm-up already were: a slow push in, a
+  shine crossing the picture once, and the CRT's own scan stepping down it. The sheet is a
+  row per advert. Also: the agave and the pothos stand where the author put them.
 - **The twenty-third list (2026-09-09):** the books wait for the last glass to be washed and
   then one beat; the basin stops beckoning forever after the first wash (a counter that could
   never come down because the glass under the pointer was destroyed before its exit fired);

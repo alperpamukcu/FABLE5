@@ -133,7 +133,7 @@
       "level": 3,
       "group": "greenery",
       "x": 150.0,
-      "y": 165.0,
+      "y": 125.5,
       "hasX": true,
       "hasY": true
     },
@@ -161,7 +161,7 @@
       "level": 2,
       "group": "greenery",
       "x": 570.0,
-      "y": 143.0,
+      "y": 107.0,
       "hasX": true,
       "hasY": true,
       "order": 34

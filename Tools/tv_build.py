@@ -23,6 +23,7 @@ room is lit by URP 2D lights and the CRT's spill is a Light2D the stage hangs
 off the fixture (memory art-direction-rules, 2026-08-18). These frames carry the
 PICTURE only.
 """
+import math
 import os
 
 from PIL import Image
@@ -312,6 +313,87 @@ def with_picture(cab, pic):
     return out
 
 
+
+# ── the advert MOVES (2026-09-09) ───────────────────────────────────────────────
+# The author: "televizyon animasyonlari daha detaylandirilsin, daha profesyonel
+# animasyonlar uretilsin, reklam kafasinda olsun yine". A still held for six
+# seconds is a poster, not a broadcast. Each advert is a six-frame loop now,
+# DERIVED from its own plate the way the collapse and the warm-up already are
+# (memory open-states-derive) — nothing new is generated, so nothing comes back a
+# different advert:
+#
+#   * a slow PUSH IN, the commercial's own dolly, a couple of per cent either way;
+#   * a SHINE crossing the picture once a loop, the glint an advert puts on glass;
+#   * the CRT's own scan, one darker line stepping down the tube a frame at a time.
+#
+# Everything is snapped back to the ad's palette afterwards, so a lift can never
+# invent a colour, and no frame carries glow or bloom — the spill is still the
+# stage's Light2D (art-direction-rules).
+AD_FRAMES = 6
+
+
+def _ad_palette(pic):
+    seen = {}
+    px = pic.load()
+    for y in range(pic.size[1]):
+        for x in range(pic.size[0]):
+            c = px[x, y][:3]
+            seen[c] = seen.get(c, 0) + 1
+    return [c for c, _ in sorted(seen.items(), key=lambda kv: -kv[1])]
+
+
+def _push(pic, k):
+    """A centred zoom of 1+k, resampled NEAREST and cropped back to size."""
+    w, h = pic.size
+    nw, nh = max(w, int(round(w * (1.0 + k)))), max(h, int(round(h * (1.0 + k))))
+    big = pic.resize((nw, nh), Image.NEAREST)
+    return big.crop(((nw - w) // 2, (nh - h) // 2, (nw - w) // 2 + w, (nh - h) // 2 + h))
+
+
+def _shine(pic, t, palette):
+    """One bright diagonal band travelling left to right across the frame."""
+    w, h = pic.size
+    out = pic.copy()
+    px = out.load()
+    head = -w * 0.4 + t * (w * 1.8)          # off the left edge, off the right
+    for y in range(h):
+        for x in range(w):
+            d = abs((x - 0.6 * y) - head)
+            if d > 5.0:
+                continue
+            lift = (1.0 - d / 5.0) * 0.30
+            r, g, b = px[x, y][:3]
+            px[x, y] = (min(255, int(r + (255 - r) * lift)),
+                        min(255, int(g + (255 - g) * lift)),
+                        min(255, int(b + (255 - b) * lift)))
+    return _snap(out.convert('RGBA'), palette).convert('RGB')
+
+
+def _scan(pic, i):
+    """The tube's own line, one row darker, stepping down a frame at a time."""
+    out = pic.copy()
+    px = out.load()
+    w, h = pic.size
+    for y in range((i * 2) % 4, h, 4):
+        for x in range(w):
+            r, g, b = px[x, y][:3]
+            px[x, y] = (int(r * 0.88), int(g * 0.88), int(b * 0.90))
+    return out
+
+
+def ad_loop(pic):
+    """The six frames one advert plays, in order."""
+    palette = _ad_palette(pic)
+    frames = []
+    for i in range(AD_FRAMES):
+        t = i / float(AD_FRAMES)
+        f = _push(pic, 0.05 * (0.5 - 0.5 * math.cos(2 * math.pi * t)))
+        f = _shine(f, t, palette)
+        f = _scan(f, i)
+        frames.append(f)
+    return frames
+
+
 def squeeze(pic, t):
     """The CRT collapse, derived from the picture that is playing.
 
@@ -360,13 +442,12 @@ def build():
     # whatever was on it, and four sets would quadruple the sheet to no gain.
     field = ads[0]
 
-    rows = [
-        [with_picture(cab, a) for a in ads],
-        [with_picture(cab, squeeze(field, i / float(OFF_FRAMES - 1)))
-         for i in range(OFF_FRAMES)],
-        [with_picture(cab, warm(field, i / float(ON_FRAMES - 1)))
-         for i in range(ON_FRAMES)],
-    ]
+    # ONE ROW PER ADVERT, six frames of it, then the tube's two states (2026-09-09).
+    rows = [[with_picture(cab, f) for f in ad_loop(a)] for a in ads]
+    rows.append([with_picture(cab, squeeze(field, i / float(OFF_FRAMES - 1)))
+                 for i in range(OFF_FRAMES)])
+    rows.append([with_picture(cab, warm(field, i / float(ON_FRAMES - 1)))
+                 for i in range(ON_FRAMES)])
 
     cols = max(len(r) for r in rows)
     sheet = Image.new('RGBA', (cols * CELL_W, len(rows) * CELL_H), (0, 0, 0, 0))
