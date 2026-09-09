@@ -2813,8 +2813,12 @@ namespace LastCall.UI
                     float off = copies == 2
                         ? (m == 0 ? -0.5f : 0.5f) * slot.PairSpreadPx : 0f;
                     string suffix = copies == 2 ? (m == 0 ? "_L" : "_R") : "";
+                    // A PIECE MAY WANT ITS OWN ORDER (2026-09-09, the author: the agave is
+                    // counter dressing — "tezgahın önünde bira musluklarının arkasında" —
+                    // which is neither its slot's hook nor its slot's band).
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
-                                         order: onCounter ? (flat ? 34 : 35)
+                                         order: def.Order != 0 ? def.Order
+                                              : onCounter ? (flat ? 34 : 35)
                                               : hangs ? 15 : flat ? 16 : 20);
                     if (def.Id == "prep_mat")
                     {
@@ -2981,7 +2985,9 @@ namespace LastCall.UI
             plate.anchorMin = plate.anchorMax = new Vector2(0, 0);
             plate.pivot = new Vector2(0.5f, 0);
             plate.sizeDelta = new Vector2(art.x * sx, art.y * sy);
-            plate.anchoredPosition = new Vector2(slot.X * sx, slot.Y * sy);
+            plate.anchoredPosition = new Vector2(
+                (float.IsNaN(def.X) ? slot.X : def.X) * sx,
+                (float.IsNaN(def.Y) ? slot.Y : def.Y) * sy);   // the piece's own spot, if it has one
             var hit = plate.gameObject.AddComponent<Image>();
             hit.color = new Color(0, 0, 0, 0);   // invisible, but catches the pointer
             if (onClick != null)
@@ -3042,11 +3048,16 @@ namespace LastCall.UI
                 // shelves. It has never fired in a normal night (the market shuts the
                 // cellar), and it is one term.
                 // The snack mat stands where the HUD's rail is, not at its slot's x.
+                // AND A PIECE MAY STAND WHERE IT LIKES (2026-09-09): the author put the agave
+                // on the counter and lifted the pothos without moving the rungs they share a
+                // slot with, so an x/y written on the FIXTURE wins over the slot's hook.
                 float atX = placed.Def.Id == "prep_mat" && !float.IsNaN(_prepMatCentreX)
-                    ? _prepMatCentreX : slot.X + placed.OffsetX;
+                    ? _prepMatCentreX
+                    : (float.IsNaN(placed.Def.X) ? slot.X : placed.Def.X) + placed.OffsetX;
+                float atY = float.IsNaN(placed.Def.Y) ? slot.Y : placed.Def.Y;
                 var basePos = (_backgroundSr != null
-                    ? StageArtPointToWorld(new Vector2(atX, slot.Y))
-                    : StageToWorld(atX, slot.Y))
+                    ? StageArtPointToWorld(new Vector2(atX, atY))
+                    : StageToWorld(atX, atY))
                     + (_world != null ? _world.position : Vector3.zero);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
                 placed.Body.localScale = new Vector3(k, k, 1f);
@@ -3066,7 +3077,7 @@ namespace LastCall.UI
                 // The scale is deliberately tiny: 360 art rows come to 0.72 world units,
                 // nowhere near the camera's clip planes, and Z never outranks a sorting
                 // order — it only decides who goes first when two pieces are already equal.
-                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, slot.Y * 0.002f);
+                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, atY * 0.002f);
                 // The glow hangs at the piece's own light line — the flame, the belly of
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)

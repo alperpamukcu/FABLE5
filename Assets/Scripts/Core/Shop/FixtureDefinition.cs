@@ -37,6 +37,18 @@ namespace LastCall.Core
         /// two fixtures fighting over one hook is a content bug, and the parser refuses it.</summary>
         public string Slot { get; }
 
+        /// <summary>Where this ONE piece stands, when it does not stand where its slot says
+        /// (2026-09-09, the author moved the agave onto the counter and lifted the pothos
+        /// without wanting the rest of their ladders to follow). Stage units, the slot's own
+        /// frame; NaN means "the slot's".</summary>
+        public float X { get; }
+        public float Y { get; }
+
+        /// <summary>The sorting order this ONE piece draws at, or 0 for the slot's own
+        /// (2026-09-09: the agave is counter dressing — in front of the bar, behind the
+        /// taps — which is an order, not a hook).</summary>
+        public int Order { get; }
+
         public int Price { get; }
 
         /// <summary>The bar standing required before the market will sell it (0 = always).</summary>
@@ -181,7 +193,8 @@ namespace LastCall.Core
             bool startsInTheRoom = false, int tapLevel = 0, int level = 0,
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
-            string swatch = null, string group = null, double washSeconds = 0)
+            string swatch = null, string group = null, double washSeconds = 0,
+            float x = float.NaN, float y = float.NaN, int order = 0)
         {
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
             if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
@@ -239,6 +252,7 @@ namespace LastCall.Core
             Water = string.IsNullOrEmpty(water) ? null : water;
             Swatch = string.IsNullOrWhiteSpace(swatch) ? null : swatch;
             Group = string.IsNullOrWhiteSpace(group) ? null : group.Trim().ToLowerInvariant();
+            X = x; Y = y; Order = order;
         }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";

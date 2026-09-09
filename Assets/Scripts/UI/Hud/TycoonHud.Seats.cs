@@ -720,6 +720,7 @@ namespace LastCall.UI
                         if (dirtyPiece.Sprite != null)
                             prop.sizeDelta = GlassArt.BoxFor(dirtyDef, dirtyPiece.Sprite,
                                                              EmptyGlassHeight);
+                        GlassArt.Lip(prop, dirtyPiece);   // the front is on every glass (2026-09-09)
                     }
                     img.preserveAspect = true;
                     img.color = new Color(1f, 1f, 1f, 0.85f);
@@ -943,6 +944,23 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>The dish this garnish is taken from, as it stands on the counter — the
+        /// picture a hover shows when a word is not enough (2026-09-09). One table, because
+        /// the rail's own table is built inside a method and this is asked from the licence.</summary>
+        private static Sprite GarnishCounterArt(string id)
+        {
+            switch (id)
+            {
+                case "ice": return ItemArt.Load("counter_ice");
+                case "lemon_twist": return ItemArt.Load("counter_lemon");
+                case "salt_rim": return ItemArt.Load("counter_salt");
+                case "sugar_rim": return ItemArt.Load("counter_sugar");
+                case "olive": return ItemArt.Load("counter_olive");
+                case "mint": return ItemArt.Load("counter_mint");
+                default: return null;
+            }
+        }
+
         private sealed class PrepProp
         {
             public string Id;
@@ -1062,6 +1080,8 @@ namespace LastCall.UI
         // turned off separately. The stool, the till and the room keep every sound they had;
         // only the mouths are quiet.
         private float _grainCarried;
+        private float _clothSprayed;              // travel banked toward the next wipe drop
+        private const float ClothSprayEvery = 16f;
         private const float GrainEvery = 26f;     // units of travel between crystals
         private const float GrainLife = 0.55f;
         private const float GrainFall = 520f;
@@ -1090,10 +1110,6 @@ namespace LastCall.UI
                  "glass_ice", 34f),
                 ("lemon_twist", "counter_lemon", Preparations.LemonTwist,
                  null, "LEMON", "glass_lemon", 40f),
-                ("olive", "counter_olive", null, "olive", "OLIVE",
-                 "glass_olive", 52f),
-                ("mint", "counter_mint", null, "mint", "MINT",
-                 "glass_mint", 40f),
                 // A PINCH, not the dish (2026-08-26, the author: "surukledigimiz tuz ve
                 // seker daha cok tuz ve seker yumagi gibi olmali"). Carrying the whole
                 // cellar was the same mistake the bucket made, and the answer is the same:
@@ -1103,6 +1119,16 @@ namespace LastCall.UI
                  null, "TURN IT IN THE SALT", "carry_salt", 32f),
                 ("sugar_rim", "counter_sugar", Preparations.SugarRim,
                  null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
+                // WHAT IS BOUGHT GOES ON THE END (2026-09-09, the author: "yeni eklenen
+                // garnishler sağa doğru eklenmeli"). The olive and the mint are the only two
+                // the bar does not start with, and they sat in the middle of the table — so
+                // buying a jar of olives opened a gap between the lemon and the salt and
+                // shoved half the rail sideways. The four the house always has keep their
+                // places; a jar arrives at the right-hand end, where a new thing belongs.
+                ("olive", "counter_olive", null, "olive", "OLIVE",
+                 "glass_olive", 52f),
+                ("mint", "counter_mint", null, "mint", "MINT",
+                 "glass_mint", 40f),
             };
             // THE MAT IS THE ROOM'S (2026-09-06, the author: "çerez paspası tezgah, oda,
             // musluk, bira paspası, bira musluğunun olduğu sahneye koyulsun ve 2 pixel
@@ -1569,6 +1595,7 @@ namespace LastCall.UI
                 return;
             }
             _clothImg.color = Color.white;
+            float dxTravel = 0f;               // how far the hand moved this frame, for the spray
             var mouse = Mouse.current;
             if (mouse == null || !mouse.leftButton.isPressed || CellarOpen) { DropCloth(); return; }
             var screen = mouse.position.ReadValue();
@@ -1596,6 +1623,7 @@ namespace LastCall.UI
                                               -ClothSwingMax, ClothSwingMax);
                 }
                 _clothRt.localRotation = Quaternion.Euler(0f, 0f, _clothSwing);
+                dxTravel = dx;
             }
             // WIPING IS RUBBING (GDD 27 §4.2, corrected 2026-09-06). The cloth used to erase
             // a whole mark the instant it touched any part of it, so a mess was a click with
@@ -1608,6 +1636,17 @@ namespace LastCall.UI
                 {
                     if (mk.Prop == null || mk.Mess == null || mk.Tex == null || mk.Px == null) continue;
                     if (!Rub(mk)) continue;
+                    // IT THROWS OFF WHAT IT TAKES UP (2026-09-09, the author: "cloth ile
+                    // tezgah temizlenirken partiküller çıksın temizlenen masadan"). Rub
+                    // returns true only on a frame that actually took ink out of the mark, so
+                    // the spray is tied to the work and not to the hand waving about: a drop
+                    // every ClothSprayEvery units of travel, off the cloth's own hem.
+                    _clothSprayed += Mathf.Abs(dxTravel);
+                    while (_clothSprayed >= ClothSprayEvery)
+                    {
+                        _clothSprayed -= ClothSprayEvery;
+                        ShedDrop(at + new Vector2(((_grains.Count * 29) % 23) - 11f, -20f));
+                    }
                     // ASKED AFTER EVERY TOUCH, not only after one that took something off: the
                     // last few percent can end up somewhere the cloth has already been, and a
                     // mark that can never be finished is worse than one that finishes early.
@@ -1976,7 +2015,15 @@ namespace LastCall.UI
                 if (_sinkClock.gameObject.activeSelf != showPie) _sinkClock.gameObject.SetActive(showPie);
                 if (busy)
                 {
-                    _sinkClock.anchoredPosition = new Vector2(280f, 137f + 70f + 30f + CounterLift);
+                    // UNDER THE BASIN (2026-09-09, the author: "sink bekleme süresi sinkin
+                    // hemen altına alınsın"). The dial stood at HUD (280, 237) — the middle
+                    // of the counter, a screen away from the sink it was timing. The basin's
+                    // fixture slot is stage (110, 68.5) and a slot is the art's FOOT, so the
+                    // dial hangs a clock's height under that foot, on the sink's own column.
+                    const float SinkStageX = 110f, SinkStageY = 68.5f;
+                    _sinkClock.anchoredPosition = new Vector2(
+                        (SinkStageX - 320f) * StageToHud,
+                        (SinkStageY - 180f) * StageToHud - 30f + CounterLift);
                     float whole = (float)Mathf.Max(0.01f, (float)run.SinkSeconds);
                     float gone = Mathf.Clamp01(1f - (float)run.WashLeft / whole);
                     if (_sinkPie != null) _sinkPie.fillAmount = gone;

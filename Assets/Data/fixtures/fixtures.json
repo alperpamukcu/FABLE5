@@ -131,7 +131,11 @@
       "flavor": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor.",
       "sprite": "fx_plant_pothos",
       "level": 3,
-      "group": "greenery"
+      "group": "greenery",
+      "x": 150.0,
+      "y": 165.0,
+      "hasX": true,
+      "hasY": true
     },
     {
       "id": "plant_snake",
@@ -155,23 +159,12 @@
       "flavor": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it.",
       "sprite": "fx_plant_agave",
       "level": 2,
-      "group": "greenery"
-    },
-    {
-      "id": "brass_sconce",
-      "name": "Brass Sconce",
-      "slot": "wall_left",
-      "price": 45,
-      "comfort": 0.2,
-      "stars": 1.5,
-      "flavor": "Warm brass, warmer light.",
-      "sprite": "fx_sconce",
-      "lightR": 1.0,
-      "lightG": 0.8,
-      "lightB": 0.55,
-      "lightIntensity": 0.5,
-      "lightRadius": 46,
-      "group": "light"
+      "group": "greenery",
+      "x": 570.0,
+      "y": 143.0,
+      "hasX": true,
+      "hasY": true,
+      "order": 34
     },
     {
       "id": "neon_martini",

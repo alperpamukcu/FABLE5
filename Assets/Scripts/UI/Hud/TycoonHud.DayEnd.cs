@@ -497,11 +497,17 @@ namespace LastCall.UI
             // above already draws the night as five — but ONE, as a unit mark, the way a
             // price carries a currency sign. It is the smallest thing that turns "1.0" from
             // a number into a score.
+            // BIG ENOUGH TO BE A MARK, AND ON THE FIGURE'S LINE (2026-09-09, the author:
+            // "faturada kullanılan müşteri yıldızının görseli büyütülsün çok küçük kalmış ve
+            // metine ortalansın biraz yukarıda kalıyor"). Fourteen beside a 24pt figure is a
+            // speck; the star is drawn 18x17 and 22 is that art at a whole step over its own
+            // grid. Its ink sits a row proud of centre in its box, so it drops one unit to
+            // land on the digits' own middle rather than over their tops.
             var unit = NewRect("U", row);
-            Place(unit, new Vector2(1, 0.5f), new Vector2(14, 14), new Vector2(-54f, 0));
+            Place(unit, new Vector2(1, 0.5f), new Vector2(22, 22), new Vector2(-56f, -1f));
             unit.pivot = new Vector2(1, 0.5f);
             var ui = unit.gameObject.AddComponent<Image>();
-            ui.sprite = ItemArt.Star(true, 14f);
+            ui.sprite = ItemArt.Star(true, 22f);
             ui.preserveAspect = true; ui.raycastTarget = false;
 
             var score = NewText("N", row, _body, 24, TextAnchor.MiddleRight, ink);
@@ -1786,6 +1792,35 @@ namespace LastCall.UI
             if (k >= 1f) SettleSlide();
         }
 
+        /// <summary>Which aisle of the restock page a shelf line belongs to, and in what
+        /// order the aisles run (2026-09-09). Coarser than the cellar's own families — a
+        /// shopping list wants four headings, not eleven — but derived from the same fact,
+        /// the card's category and type, so the page and the shelf never disagree.</summary>
+        private static int RestockAisleOrder(IngredientCard card)
+        {
+            if (card == null) return 9;
+            if (card.Type == IngredientType.Garnish) return 4;
+            if (card.Type == IngredientType.Beer) return 1;
+            string cat = card.Info?.Category;
+            if (cat == IngredientCategories.Juice || cat == IngredientCategories.Mixer
+                || card.Type == IngredientType.Bubbly) return 2;
+            if (card.Type == IngredientType.Sweet || card.Type == IngredientType.Bitter) return 3;
+            return IngredientCategories.IsAlcoholic(card.Info?.Category, card.Type) ? 0 : 2;
+        }
+
+        private static string RestockAisleWord(IngredientCard card)
+        {
+            switch (RestockAisleOrder(card))
+            {
+                case 0: return "SPIRITS & LIQUEURS";
+                case 1: return "BEER";
+                case 2: return "MIXERS, JUICES & SODA";
+                case 3: return "SYRUPS & BITTERS";
+                case 4: return "GARNISHES";
+                default: return "THE REST";
+            }
+        }
+
         private void RebuildDayEnd()
         {
             var run = Run;
@@ -2049,11 +2084,20 @@ namespace LastCall.UI
                 // already is. Ties keep the shelf's own order, so the page does not
                 // reshuffle under the pointer as levels change.
                 var shelf = new List<ShelfBottle>(run.Shelf.Bottles);
+                // GROUPED, THEN EMPTIEST FIRST (2026-09-09, the author: "markette restock
+                // kısmını guruplandır alkoller, meşrubatlar, garnishler vs. gibi"). Thirty-six
+                // lines in one run is a wall you have to read to shop; the cellar behind the
+                // bar is already sorted into families, so the page that refills it is sorted
+                // the same way and in the same order — spirits, beer, mixers, garnishes —
+                // with what is emptiest at the head of each family, which is the errand.
                 shelf.Sort((x, y) =>
                 {
+                    int gx = RestockAisleOrder(x.Ingredient), gy = RestockAisleOrder(y.Ingredient);
+                    if (gx != gy) return gx.CompareTo(gy);
                     double mx = x.Capacity - x.Remaining, my = y.Capacity - y.Remaining;
                     return my.CompareTo(mx);
                 });
+                string aisleNow = null;
                 // THE WHOLE WELL COVERS WHAT YOU HAVE NOT PICKED YOURSELF (2026-09-04). It
                 // used to cover EVERYTHING and throw the singles back out of the basket to
                 // prove it — a line that silently edited the order after the player had made
@@ -2070,6 +2114,8 @@ namespace LastCall.UI
                 foreach (var b in shelf)
                 {
                     var bottle = b;
+                    string aisle = RestockAisleWord(bottle.Ingredient);
+                    if (aisle != aisleNow) { aisleNow = aisle; ShopSection(aisle); }
                     int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
                         * cfg.RefillPricePerCapacity);
                     string key = RefillKey + bottle.Ingredient.Id;

@@ -881,7 +881,8 @@ namespace LastCall.UI
         /// arrives under the pointer instead, on the same caption the counter's dishes use,
         /// so the two places a garnish is read answer in one language.
         /// </summary>
-        private int PrefChip(Sprite icon, string label, RectTransform host = null)
+        private int PrefChip(Sprite icon, string label, RectTransform host = null,
+                             Sprite picture = null, string detail = null)
         {
             const float CellH = 38f, IconBox = 26f;
             var chip = NewRect("Pref", host ?? _idPrefRow);
@@ -900,7 +901,11 @@ namespace LastCall.UI
             var theChip = chip;
             var theIcon = icon;
             var theWord = label;
-            relay.Entered = () => ShowPropTip(theChip, theWord, theIcon);
+            var thePicture = picture;
+            var theDetail = detail;
+            relay.Entered = () => ShowPropTip(theChip, theWord,
+                                              thePicture ?? theIcon, theDetail,
+                                              picture: thePicture != null);
             relay.Exited = () => HidePropTip(theChip);
 
             var le = chip.gameObject.AddComponent<LayoutElement>();

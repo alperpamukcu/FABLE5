@@ -96,6 +96,13 @@ namespace LastCall.UI
             /// fill and the surface disc, centred on the glass at <see cref="LipRow"/>. Null
             /// where the author drew none (the pint, the procedural set).</summary>
             public readonly Sprite Lip;
+
+            /// <summary>The author's drawn crusts for this glass (2026-09-09), or null where
+            /// there are none — then <see cref="GlassDecor"/> falls back to its own ring.</summary>
+            public readonly Sprite RimSalt, RimSugar;
+            /// <summary>Where a crust is seated: the drawing's first opaque row, as a
+            /// fraction of its height from the top.</summary>
+            public readonly float MouthTop;
             /// <summary>Where the strip's TOP goes: the rim ellipse's axis, as a fraction of
             /// the sprite's height from its top. Measured off each base drawing.</summary>
             public readonly float LipRow;
@@ -103,12 +110,30 @@ namespace LastCall.UI
             public Piece(Sprite sprite, Sprite fill, float interiorHalf, float floorY, float rimY,
                 float[] profile, float aspect, float density,
                 Sprite front = null, Sprite back = null, float floorArc = 0f,
-                Sprite lip = null, float lipRow = 0f)
+                Sprite lip = null, float lipRow = 0f,
+                Sprite rimSalt = null, Sprite rimSugar = null, float mouthTop = 0f)
             {
                 Sprite = sprite; Fill = fill; InteriorHalf = interiorHalf;
                 FloorY = floorY; RimY = rimY; Profile = profile; Aspect = aspect;
                 Density = density; Front = front; Back = back; FloorArc = floorArc;
                 Lip = lip; LipRow = lipRow;
+                RimSalt = rimSalt; RimSugar = rimSugar; MouthTop = mouthTop;
+            }
+
+            /// <summary>A crust's rect inside a box the SPRITE is drawn in with
+            /// preserveAspect — the same arithmetic as <see cref="LipPlacement"/>, seated on
+            /// the mouth's first row rather than on the rim's axis.</summary>
+            public bool RimPlacement(Vector2 box, Sprite crust, out Vector2 size, out Vector2 topCentre)
+            {
+                size = Vector2.zero; topCentre = Vector2.zero;
+                if (crust == null || Sprite == null || Sprite.rect.height < 1f) return false;
+                float k = Mathf.Min(box.x / Sprite.rect.width, box.y / Sprite.rect.height);
+                float drawnW = Sprite.rect.width * k, drawnH = Sprite.rect.height * k;
+                float left = (box.x - drawnW) * 0.5f, top = (box.y - drawnH) * 0.5f;
+                size = new Vector2(crust.rect.width * k, crust.rect.height * k);
+                topCentre = new Vector2(left + drawnW * 0.5f - box.x * 0.5f,
+                                        -(top + drawnH * MouthTop));
+                return true;
             }
 
             /// <summary>
@@ -345,8 +370,21 @@ namespace LastCall.UI
         /// 11 of 88. Where the `_Front` strip's top lands.</summary>
         private static readonly Dictionary<string, float> LipRowTable = new Dictionary<string, float>
         {
+            // THE PINT WAS MISSING (2026-09-09, the author: "bardakların Front'u düzgün
+            // yerleştirilmemiş"). It has strips like the rest and fell through to the 0.12
+            // default — row 11.5 of 96 against a rim whose axis is at 14, so its front edge
+            // stood two and a half rows up inside the beer.
             ["coupe"] = 13f / 88f, ["highball"] = 14f / 96f, ["rocks"] = 13f / 72f,
-            ["martini"] = 11f / 88f,
+            ["martini"] = 11f / 88f, ["pint"] = 14f / 96f,
+        };
+
+        /// <summary>The drawing's FIRST opaque row, as a fraction of its height — where the
+        /// mouth's far arc begins, and so where a crust drawn round that mouth is seated
+        /// (2026-09-09; measured off the t2 sheets, and constant across the tiers).</summary>
+        private static readonly Dictionary<string, float> MouthTopTable = new Dictionary<string, float>
+        {
+            ["coupe"] = 6f / 88f, ["highball"] = 10f / 96f, ["rocks"] = 8f / 72f,
+            ["martini"] = 4f / 88f, ["pint"] = 8f / 96f,
         };
 
         private static readonly Dictionary<string, Gen3D> Gen3DTable = new Dictionary<string, Gen3D>
@@ -435,7 +473,50 @@ namespace LastCall.UI
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_frontplate"),
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc,
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_Front"),
-                LipRowTable.TryGetValue(glass.Id, out var lipRow) ? lipRow : 0.12f);
+                LipRowTable.TryGetValue(glass.Id, out var lipRow) ? lipRow : 0.12f,
+                ItemArt.Load($"glass3d_{glass.Id}_rim_salt"),
+                ItemArt.Load($"glass3d_{glass.Id}_rim_sugar"),
+                MouthTopTable.TryGetValue(glass.Id, out var mouth) ? mouth : 0.10f);
+        }
+
+        /// <summary>
+        /// HANGS THE GLASS'S OWN FRONT ON IT, wherever it is drawn (2026-09-09, the author:
+        /// "bardakların front kısımları bardaklarda her zaman olmalı belli sahnelerde değil
+        /// sadece; front kısmı bardağa dökülen veya koyulan sıvı katmanının önünde kalacak
+        /// tek kısım"). The strip used to be built and placed by hand at two of the five
+        /// surfaces that draw a glass, so a pint under the tap and a glass in the sink had
+        /// no front edge at all and their drink ran over the rim.
+        ///
+        /// One call: it makes the child if it is missing, sizes and seats it off the piece,
+        /// and puts it last so it draws over everything else in that rect — which is the
+        /// whole point of a front. Call it AFTER the fill and the decor are laid.
+        /// </summary>
+        public static void Lip(RectTransform glassRect, Piece piece)
+        {
+            if (glassRect == null) return;
+            var found = glassRect.Find("GlassLip") as RectTransform;
+            if (!piece.LipPlacement(glassRect.sizeDelta, out var size, out var at))
+            {
+                if (found != null) found.gameObject.SetActive(false);
+                return;
+            }
+            if (found == null)
+            {
+                var go = new GameObject("GlassLip", typeof(RectTransform), typeof(Image));
+                found = (RectTransform)go.transform;
+                found.SetParent(glassRect, false);
+                var made = go.GetComponent<Image>();
+                made.raycastTarget = false;
+                made.preserveAspect = true;
+            }
+            found.anchorMin = found.anchorMax = new Vector2(0.5f, 1f);
+            found.pivot = new Vector2(0.5f, 1f);
+            found.sizeDelta = size;
+            found.anchoredPosition = at;
+            found.SetAsLastSibling();
+            if (!found.gameObject.activeSelf) found.gameObject.SetActive(true);
+            var img = found.GetComponent<Image>();
+            if (img != null) { img.sprite = piece.Lip; img.enabled = true; }
         }
 
         private static Piece Draw(GlasswareDefinition glass, int tier)

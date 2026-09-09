@@ -1521,6 +1521,62 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.52 · Yirmi birinci liste, birinci geçiş: bardağın önü, rimler, para, oda (2026-09-09)
+
+- **Bardağın FRONT'u her bardakta** (yazar: "belli sahnelerde değil sadece; front kısmı bardağa dökülen veya
+  koyulan sıvı katmanının önünde kalacak tek kısım"). Şerit elle iki yüzeye asılıyordu; artık tek çağrı
+  (`GlassArt.Lip`) ve fıçı bardağı (tap sahnesi) ile lavabodaki kirli bardak da onu takıyor. **Pint'in satırı
+  tabloda yoktu** — 0.12 varsayılanına düşüyor, yani ağzın ekseni 14/96 iken 11.5'e çiziliyordu; ölçülüp eklendi.
+- **Yazarın rim görselleri oyunda** ("artık şeker ve tuz rim için görseller geliştirdim"): sekiz çizim
+  (`glass3d_{coupe|highball|martini|rocks}_rim_{salt|sugar}`), prosedürel tane halkasının yerine. Oturma noktası
+  ölçüldü: ortalanmış, üstü bardağın ilk opak satırında (`Piece.RimPlacement` + `MouthTopTable`). Çizim yoksa
+  eski halka hâlâ devrede.
+- **Grab imleci garnişte de**: `_prepCarry` aktifken el kavrar (bardak, tin, cloth, çerez zaten vardı).
+- **Kimliğin tarif hover'ı kalın çerçeveli** ("biraz daha hover gibi olmalı"): dört saç teli yerine 3 birimlik
+  altın çerçeve + dışında koyu bir çizgi.
+- **Kimlikte istenen garniş resmiyle**: pref çipinin üstüne gelince tezgahtaki KABIN kendisi 48 px olarak
+  görünüyor (`ShowPropTip(..., picture: true)`), altında ne işe yaradığı.
+- **Garnish kartı görsel anlatıyor** ("yazılar eksik, daha fazla görsellerden yararlanılmalı"): rim garnişlerinde
+  kartta o rimi takmış bardak duruyor (yazarın rim çizimi yazarın bardağının üstünde), diğerlerinde kabın kendisi.
+- **Fatura**: müşteri yıldızı 14 → **22** ve rakamın ortasına indi; arka plan 0.965 → **0.988**.
+- **Para üst bardan indi** ("aynı tasarıma sahip hem saat hem de para göstergesi var, bu da karmaşa yaratıyor"):
+  yedi çubuklu makine + yuva gitti; para artık kirişin ALTINDA, evin `card_body` panelinde, çizili dolar +
+  amber rakam (`_beamTillText`), eksideyken kırmızı.
+- **Çerez paspası ölçüleri** (yazar kendi çizecek): raf `PrepRailX0 −310`, adım `74`, kap kutusu `64` HUD birimi;
+  yani genişlik = (n−1)×74 + 64 → **4 garniş 286, 5 garniş 360, 6 garniş 434 HUD birimi**. Sahne birimi bunun
+  yarısı, ve fikstür PPU'su 1 olduğu için **sanat pikseli olarak 143 / 180 / 217** (yükseklik serbest, şu anki
+  `fx_prep_mat` 13 px). Mat tek parça çiziliyorsa `SpriteDrawMode.Tiled` ile yatayda tekrarlanır.
+- **Yeni garnişler sağa ekleniyor**: rafın tablosunda satın alınabilir ikisi (zeytin, nane) sona alındı; ev
+  hep-açık dördü yerini korur.
+- **Oda**: `plant_agave` tezgah dekorasyonu (sahne 570/143 = ekran x 250 y −37, sıra **34** — tezgahın önünde,
+  muslukların arkasında), `plant_pothos` (150/165 = x −170 y −15), **`brass_sconce` oyundan kaldırıldı**. Bunun
+  için fikstüre kendi `x`/`y`/`order`'ı verilebiliyor artık (`FixtureDefinition.X/Y/Order`), yani bir merdivenin
+  bir basamağı diğerlerini taşımadan yer değiştirebiliyor.
+- **Lavabo sayacı leğenin altında**: HUD (280, 237) → lavabonun kendi sütunu, `(110−320)×2, (68.5−180)×2 − 30`.
+- **Cloth silerken parçacık atıyor**: `Rub` gerçekten mürekkep aldığı karelerde, her 16 birim yolda bir damla.
+- **Meyve sularının raf görselleri okunuyor** ("küçük hangi meyvenin meyve suyu olduğu anlaşılmalı"): 32×32
+  amblemi 13'e küçültmek koyu bir leke veriyordu (ölçüldü) — beş meyve **13 px'te elle çizildi**
+  (`Tools/v4_bottles/fruit_marks.py`) ve mahzen kopyasının etiketine basıldı (`cellar_fruit.py`).
+- **Fıçı biralar fıçı oldu** ("şişe bira oyunda yok"): `beer_kestrel/collier/marigold` brief'te `keg` ailesine
+  geçti (oran 1.25, mühürlü) ve tohum 27 sevk edildi — çelik, koyu ve pirinç üç fıçı, mahzende de fıçı.
+- **Müşteri puntosu 16 → 14.**
+- **Market restock guruplandı** ("alkoller, meşrubatlar, garnishler vs."): SPIRITS & LIQUEURS · BEER ·
+  MIXERS, JUICES & SODA · SYRUPS & BITTERS · GARNISHES; her grubun içinde en boş şişe başta.
+- **Kimlik vesikalıkları IDLE karesinden kesildi**: `patron_gen.make_face` zaten idle_00'dan kesiyordu; 51
+  karakterin hepsi yeniden kesildi, 8'i güncellendi (ankara, barcelona, bilbao, istanbul, izmir, kadikoy,
+  madrid, sevilla).
+- **Kokteyl sahnesinin dosya yolları** (yazar elle ayarlayacak): arka plan bir PNG DEĞİL — `TycoonServiceFlow
+  .Shaker.cs` içinde `BenchSlab #1F1924`, `BenchRidge #312E3A`, `BenchRail` magenta rampası ve
+  `ChromeArt.CounterGrain.Slate` ile çiziliyor (renkler `Assets/Art/Backgrounds/counter.png`'den örneklenmiş);
+  shaker siluetli doluluk göstergesi `Assets/Resources/Items/gauge_tin.png` + `gauge_tin_solid.png` (yoksa
+  `ChromeArt.ShakerOutline/ShakerSolid`); 1-2-3-4 kartı da prosedürel (`ChromeArt.Inlay`, Shaker.cs ~319);
+  tin ve kapak `tin_open.png`, `tin_open_Front.png`, `shaker_cap.png`, `shaker_cap_pour.png`, kaşık
+  `bench_spoon.png`.
+- **Bekleyen:** televizyon reklam animasyonları; flamingo/masa/tezgah varyantları yazarın onayında
+  (`Tools/room_variants_gen.py`, ön izleme `Tools/room_variants_preview.png`). Yeni karakter üretimi durduruldu.
+- **Doğrulama:** EditMode 504/504, PlayMode 11/11; oda, para kartı ve fikstür konumları play'de ölçüldü
+  (agave 250/−37 sıra 34, pothos −170/−15, sconce yok).
+
 ### 9.51 · Yirminci liste: iki kutu, sarı $, hareket eden sıvı, perfect mührü, kimlik sayfası (2026-09-09)
 
 - **Kart artık İKİ KUTU** (yazar: "gereksiz yere card'ı uzatma, alkolün kapladığı alan kadar boyutu büyüsün aynı

@@ -38,7 +38,10 @@ namespace LastCall.UI
         private Font _body;
 
         private Font _speech;   // the house body face at 16 (2026-09-09)
-        private const int SpeechPx = 16;   // the body face's 8px grid at 2x (2026-09-09)
+        // FOURTEEN (2026-09-09, the author: "müşterilerin konuşma puntosunu 2 adet düşür").
+        // Off the face's 8px grid, which the balloons can afford: they are short lines in a
+        // wide box, and the crowd's voice is meant to sit under the chrome's, not beside it.
+        private const int SpeechPx = 14;
 
         private Font _display;
 
@@ -1467,7 +1470,12 @@ namespace LastCall.UI
         /// spoon or the pint — pressed while the button is down, idle otherwise.</summary>
         private void StepCursor()
         {
+            // AND A GARNISH IS SOMETHING IN THE HAND TOO (2026-09-09, the author: "grab
+            // cursoru ana sahnede garnishleri taşırken gözükmeli, aynı şekilde sahnedeki
+            // bardakları ve clothu sürüklerken de"). The dish carried off the rail rides
+            // _prepCarry, which was the one carry the hand did not know about.
             bool grabbing = _glassCarrying || _tinCarrying || _clothHeld || _snackInHand != null
+                            || (_prepCarry != null && _prepCarry.gameObject.activeSelf)
                             || (_flow != null && _flow.IsHolding);
             var mouse = Mouse.current;
             // A VIRTUAL mouse leaves the pointer alone (2026-09-08): the PlayMode suite drives
@@ -2352,7 +2360,7 @@ namespace LastCall.UI
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 
         private RectTransform _settingsPanel;
-        private SegmentFigure _beamTill;    // the till's figure, in the hour's own hand (2026-09-06)
+        private Text _beamTillText;   // the till, on its own card under the beam (2026-09-09)
         private Image[] _settingsMeter;     // the volume, five blocks
 
         private Text _settingsVolume, _settingsMute, _settingsMotion;

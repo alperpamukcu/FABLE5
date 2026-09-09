@@ -79,9 +79,12 @@ CARDS = {
     'liqueur_delia':    ('liqueur', 2.4, 'a slim clear-glass liqueur bottle with a tapered body', 'Amber', 'ViceRed', 'a small stylised sailing ship, flat pixel emblem, no text'),
     'liqueur_kafa':     ('liqueur', 2.4, 'a slim dark-brown glass liqueur bottle with high shoulders', 'Malt', 'Cream', 'a small stylised koala face, flat pixel emblem, no text'),
     # ── beers: sealed brown glass ───────────────────────────────────────────────
-    'beer_kestrel':     ('beer', 2.6, 'a long-neck brown glass beer bottle with a gold crown cap', 'Amber', 'ClubBlue', 'a small stylised kestrel bird, flat pixel emblem, no text'),
-    'beer_collier':     ('beer', 2.6, 'a long-neck dark brown glass stout bottle with a black crown cap', 'Night', 'Cream', 'a small stylised harp, flat pixel emblem, no text'),
-    'beer_marigold':    ('beer', 2.6, 'a long-neck brown glass ale bottle with a red crown cap', 'Amber', 'ViceRed', 'a small stylised brass triangle, flat pixel emblem, no text'),
+    # ── draught: KEGS, not bottles (2026-09-09, the author: "fıçı biralar için bira fıçısı
+    #    görseli kullanmalıyız, şişe bira oyunda yok"). These three are only ever poured from
+    #    the tower, so the thing standing in the cellar is the cask they came in.
+    'beer_kestrel':     ('keg', 1.25, 'a small stainless steel beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly', 'Amber', 'ClubBlue', 'a small stylised kestrel bird, flat pixel emblem, no text'),
+    'beer_collier':     ('keg', 1.25, 'a small dark painted beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly', 'Night', 'Cream', 'a small stylised harp, flat pixel emblem, no text'),
+    'beer_marigold':    ('keg', 1.25, 'a small brass-toned beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly', 'Amber', 'ViceRed', 'a small stylised brass triangle, flat pixel emblem, no text'),
     # ── cans ────────────────────────────────────────────────────────────────────
     'cola_marlow':      ('can', 2.0, 'a plain red aluminium soft drink can with a silver top and pull tab, matte flat red', 'ViceRed', 'Cream', 'a small stylised white ribbon swoosh, flat pixel emblem, no text'),
     'energy_volt':      ('can', 2.0, 'a plain slim blue and silver aluminium energy drink can with a silver top and pull tab', 'ClubBlue', 'Cream', 'a small stylised ox head, flat pixel emblem, no text'),
@@ -117,7 +120,7 @@ BRAND_WORD = {
     'tonic_quinbury': "QUINN'S", 'soda_klara': 'KLARA', 'ginger_kicker': 'KICKER', 'syrup_house': 'HOUSE', 'grenadine_rubis': 'RUBIS',
 }
 
-SEALED = {'can', 'carton', 'beer'}     # no cavity, no liquid plates — one sprite + derived open
+SEALED = {'can', 'carton', 'beer', 'keg'}   # no cavity, no liquid plates — one sprite + derived open
 GLASS = {'vodka', 'gin', 'rum', 'whiskey', 'tequila', 'liqueur', 'mixer'}
 
 

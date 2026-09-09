@@ -334,7 +334,7 @@ namespace LastCall.Game
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
                         f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group,
-                        f.washSeconds));
+                        f.washSeconds, f.hasX ? f.x : float.NaN, f.hasY ? f.y : float.NaN, f.order));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -743,6 +743,13 @@ namespace LastCall.Game
             public string swatch;
             /// <summary>The shelf of the upgrade screen it is sold from (2026-09-06).</summary>
             public string group;
+            // WHERE THIS ONE PIECE STANDS (2026-09-09). JsonUtility cannot tell a missing
+            // number from a zero, so the flags say whether the author wrote one.
+            public float x;
+            public float y;
+            public bool hasX;
+            public bool hasY;
+            public int order;
             // A lamp is a fixture whose intensity is above zero; JsonUtility cannot say
             // "absent", so unlit fixtures simply leave the light block off (0 defaults).
             public float lightR;

@@ -261,8 +261,13 @@ namespace LastCall.UI
             // numbers, which is the honest way to say how full a glass should be.
             foreach (Transform old in _idPrefRow) Destroy(old.gameObject);
             int chips = 0;
+            // AND THE THING ITSELF UNDER THE POINTER (2026-09-09, the author: "kimlikte
+            // hangi garnish istenildiği iconun üstüne gelindiğinde görseliyle gözükmeli").
+            // The chip is a pictogram, which says WHICH of the four this is; hovering it
+            // shows the dish as it stands on the counter, which says where to go and get it.
             foreach (var g in visit.Order.Garnishes)
-                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant());
+                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant(),
+                                  picture: GarnishCounterArt(g.Id), detail: GarnishPurpose(g.Id));
             // (The SHAKEN HARD chip retired 2026-08-11: the method is the recipe's demand
             // now, printed where the recipe is — the spec panel and the book.)
             // No fill chip (the author, 2026-08-02): nobody demands a fill any more — the
@@ -1128,11 +1133,20 @@ namespace LastCall.UI
             // Nothing in the panel may take a raycast, or hovering it reads as leaving the
             // order line and the whole thing blinks.
             tipBg.raycastTarget = false;
-            var tipEdge = new Color(0.788f, 0.510f, 0.169f, 0.95f);   // menu_page_frame's gold
-            Hairline(_idRecipeTip, new Vector2(0, 0), new Vector2(1, 0), tipEdge);
-            Hairline(_idRecipeTip, new Vector2(0, 1), new Vector2(1, 1), tipEdge);
-            HairlineV(_idRecipeTip, 0f, tipEdge);
-            HairlineV(_idRecipeTip, 1f, tipEdge);
+            // A HOVER WEARS A THICK EDGE (2026-09-09, the author: "biraz daha hover gibi
+            // olmalı, daha kalın kenarları olsun"). Four one-unit hairlines are what a FIELD
+            // on a form is ruled with — this is a card that has come up over the room, and it
+            // has to read as lifted. Three units of the page frame's own gold, with a dark
+            // line outside them so the gold has something to sit against on any ground.
+            var tipEdge = new Color(0.788f, 0.510f, 0.169f, 0.98f);   // menu_page_frame's gold
+            var tipShade = new Color(0.16f, 0.10f, 0.04f, 0.85f);
+            Frame(_idRecipeTip, 3f, tipEdge);
+            var lift = NewRect("Lift", _idRecipeTip);
+            Stretch(lift, Vector2.zero, Vector2.one, new Vector2(-3f, -3f), new Vector2(3f, 3f));
+            lift.SetAsFirstSibling();
+            var liftImg = lift.gameObject.AddComponent<Image>();
+            liftImg.color = tipShade;
+            liftImg.raycastTarget = false;
             _idRecipeTipBody = NewRect("Body", _idRecipeTip);
             Stretch(_idRecipeTipBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _idRecipeTip.gameObject.SetActive(false);

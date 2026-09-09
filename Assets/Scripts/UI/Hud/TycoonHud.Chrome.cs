@@ -523,9 +523,94 @@ namespace LastCall.UI
                 SetCardStockFill(frac, low ? UITheme.ViceRed[3] : UITheme.Lime[3]);
             }
             _cellarCardUsesHead.text = why ?? "";
-            LayOutCellarCard(0, 0f, false, showStock);
+            // AND IT SHOWS WHAT IT DOES (2026-09-09, the author: "salted rim garnishinin ana
+            // sahnedeki hover tasarımı güzel ama içerisindeki yazılar eksik, daha fazla
+            // görsellerden yararlanılmalı"). A line of type saying "the rim run through salt"
+            // is the caption for a picture that was never drawn: the card carries the glass
+            // wearing that rim now — the author's own crust art on the author's own glass —
+            // or, for a garnish that goes IN the drink, the dish it is taken from.
+            float usesW = GarnishPicture(prop, card);
+            LayOutCellarCard(usesW > 0f ? 2 : 0, usesW, false, showStock);
             _cellarCardFree = true;
             _cellarCardOver = over;
+        }
+
+        /// <summary>The picture under a garnish card's heading: a glass wearing the crust for
+        /// a rim, the counter's own dish for anything else. Returns the width it took, or 0
+        /// when there is nothing to draw.</summary>
+        private float GarnishPicture(PrepProp prop, IngredientCard card)
+        {
+            if (prop == null || _cellarCardUsesRoot == null) return 0f;
+            const float Box = 64f;
+            var row = NewRect("Shows", _cellarCardUsesRoot);
+            row.anchorMin = row.anchorMax = new Vector2(0f, 1f);
+            row.pivot = new Vector2(0f, 1f);
+            row.anchoredPosition = Vector2.zero;
+            row.sizeDelta = new Vector2(220f, Box + 4f);
+
+            var picRt = NewRect("Pic", row);
+            picRt.anchorMin = picRt.anchorMax = new Vector2(0f, 0.5f);
+            picRt.pivot = new Vector2(0f, 0.5f);
+            picRt.sizeDelta = new Vector2(Box, Box);
+            picRt.anchoredPosition = Vector2.zero;
+
+            string tell;
+            if (prop.IsRim)
+            {
+                // The glass the crust is turned in — the tumbler for salt, the coupe for
+                // sugar, which is how a bar actually rims them.
+                string glassId = prop.Id == "sugar_rim" ? "coupe" : "rocks";
+                GlasswareDefinition def = null;
+                if (_bootstrap != null && _bootstrap.Glassware != null)
+                    foreach (var g in _bootstrap.Glassware)
+                        if (g.Id == glassId) { def = g; break; }
+                var piece = def != null ? GlassArt.For(def, 2) : default;
+                var img = picRt.gameObject.AddComponent<Image>();
+                img.sprite = piece.Sprite;
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+                img.enabled = piece.Sprite != null;
+                var crust = prop.Id == "sugar_rim" ? piece.RimSugar : piece.RimSalt;
+                if (crust != null && piece.RimPlacement(picRt.sizeDelta, crust,
+                                                        out var cSize, out var cTop))
+                {
+                    var cRt = NewRect("Crust", picRt);
+                    cRt.anchorMin = cRt.anchorMax = new Vector2(0.5f, 1f);
+                    cRt.pivot = new Vector2(0.5f, 1f);
+                    cRt.sizeDelta = cSize;
+                    cRt.anchoredPosition = cTop;
+                    var cImg = cRt.gameObject.AddComponent<Image>();
+                    cImg.sprite = crust;
+                    cImg.preserveAspect = true;
+                    cImg.raycastTarget = false;
+                }
+                tell = prop.Id == "sugar_rim"
+                    ? "TURN THE GLASS IN THE DISH" : "TURN THE GLASS IN THE DISH";
+            }
+            else
+            {
+                var img = picRt.gameObject.AddComponent<Image>();
+                img.sprite = GarnishCounterArt(prop.Id) ?? (card != null ? ItemArt.Bottle(card) : null);
+                img.preserveAspect = true;
+                img.raycastTarget = false;
+                img.enabled = img.sprite != null;
+                tell = prop.Id == "ice" ? "DROP IT IN BEFORE THE POUR" : "ON THE RIM OR IN THE DRINK";
+            }
+
+            var word = NewText("Tell", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
+            word.rectTransform.anchorMin = new Vector2(0f, 0f);
+            word.rectTransform.anchorMax = new Vector2(0f, 1f);
+            word.rectTransform.pivot = new Vector2(0f, 0.5f);
+            word.rectTransform.anchoredPosition = new Vector2(Box + 10f, 0f);
+            word.rectTransform.sizeDelta = new Vector2(200f, 0f);
+            word.horizontalOverflow = HorizontalWrapMode.Wrap;
+            word.verticalOverflow = VerticalWrapMode.Overflow;
+            word.raycastTarget = false;
+            word.text = tell;
+            float w = Box + 10f + Mathf.Min(200f, word.preferredWidth);
+            word.rectTransform.sizeDelta = new Vector2(Mathf.Min(200f, word.preferredWidth), 0f);
+            row.sizeDelta = new Vector2(w, Box + 4f);
+            return w;
         }
 
         private void HideGarnishCard(RectTransform over)
@@ -734,28 +819,43 @@ namespace LastCall.UI
         }
 
         /// <summary>The pointer arrived on a prop: say what pressing it does.</summary>
+        /// <param name="picture">Draws the mark as a PICTURE rather than a bullet
+        /// (2026-09-09, the author: "kimlikte hangi garnish istenildiği iconun üstüne
+        /// gelindiğinde görseliyle gözükmeli"). A 16-unit pictogram beside a word says which
+        /// of four things it is; the thing itself, at 48, says what it looks like on a
+        /// counter — which is what a player about to go and find it needs.</param>
         internal void ShowPropTip(RectTransform over, string word, Sprite icon = null, string detail = null,
-            System.Func<string> detailFn = null)
+            System.Func<string> detailFn = null, bool picture = false)
         {
             if (_propTip == null || over == null || string.IsNullOrEmpty(word)) return;
             _propTipOver = over;
             _propTipDetailFn = detailFn;
             _propTipText.text = word;
             bool rich = icon != null || !string.IsNullOrEmpty(detail);
+            bool big = picture && icon != null;
+            float box = big ? 48f : 16f;
             // Two rows and as wide as its longer line when it carries a mark or a detail;
-            // the one-row word it always was otherwise.
+            // the one-row word it always was otherwise. A picture takes its own column.
             float chars = Mathf.Max(word.Length, (detail ?? "").Length);
-            _propTip.sizeDelta = rich
-                ? new Vector2(Mathf.Max(200f, 30f + chars * 7.2f + 12f), 40f)
+            _propTip.sizeDelta = big
+                ? new Vector2(Mathf.Max(220f, box + 24f + chars * 7.2f), 64f)
+                : rich ? new Vector2(Mathf.Max(200f, 30f + chars * 7.2f + 12f), 40f)
                 : new Vector2(180f, 22f);
+            var ir = _propTipIcon.rectTransform;
+            ir.sizeDelta = new Vector2(box, box);
+            ir.anchoredPosition = new Vector2(big ? 12f : 8f, 0f);
             _propTipIcon.sprite = icon;
             _propTipIcon.enabled = icon != null;
             _propTipDetail.text = detail ?? "";
             _propTipDetail.enabled = rich;
             _propTipText.alignment = rich ? TextAnchor.UpperLeft : TextAnchor.MiddleCenter;
             var tr = _propTipText.rectTransform;
-            tr.offsetMin = rich ? new Vector2(icon != null ? 30f : 10f, 20f) : Vector2.zero;
-            tr.offsetMax = rich ? new Vector2(-8f, -7f) : Vector2.zero;
+            float inset = big ? box + 20f : icon != null ? 30f : 10f;
+            tr.offsetMin = rich ? new Vector2(inset, big ? 26f : 20f) : Vector2.zero;
+            tr.offsetMax = rich ? new Vector2(-8f, big ? -10f : -7f) : Vector2.zero;
+            var dr = _propTipDetail.rectTransform;
+            dr.offsetMin = new Vector2(inset, 5f);
+            dr.offsetMax = new Vector2(-8f, big ? -30f : -20f);
         }
 
         /// <summary>...and left it. Only the prop that RAISED the tip may lower it: two props
@@ -881,10 +981,11 @@ namespace LastCall.UI
             // figure in the game that COUNTS, so the coin is re-placed as the digits change
             // width — $99 to $100 moves the mark a whole glyph.
             CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "");
-            if (_beamTill != null)
+            if (_beamTillText != null)
             {
-                _beamTill.Show(shown);
-                _beamTill.SetHue(shown < 0 ? UITheme.ViceRed[3] : UITheme.Cyan[4]);
+                string money = (shown < 0 ? "-" : "") + Mathf.Abs(shown);
+                if (_beamTillText.text != money) _beamTillText.text = money;
+                _beamTillText.color = shown < 0 ? UITheme.ViceRed[3] : UITheme.Amber[4];
             }
         }
 

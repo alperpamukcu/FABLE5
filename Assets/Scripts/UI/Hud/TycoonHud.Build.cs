@@ -177,17 +177,43 @@ namespace LastCall.UI
             // 2 sayı karışıyor"). Two seven-bar readouts side by side read as one number; the
             // till stands at the far side of the beam now, just left of the house's readings,
             // with the night's well between it and the clock.
-            var tillWell = NewRect("Till", top);
-            Place(tillWell, new Vector2(1, 0.5f), new Vector2(SegmentFigure.Width + 24f, 40), new Vector2(-470f, 0));
-            var tillImg = tillWell.gameObject.AddComponent<Image>();
-            tillImg.sprite = ChromeArt.Well();
-            tillImg.type = Image.Type.Sliced;
-            tillImg.raycastTarget = true;
-            var figure = NewRect("Figure", tillWell);
-            Place(figure, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width, 28), new Vector2(12, 0));
-            _beamTill = new SegmentFigure(figure, UITheme.Cyan[4]);
-            _beamTill.Show(0);
-            HoverTip(tillWell, ItemArt.Load("sh_b_coin"), "THE TILL", "WHAT THE BAR HAS TONIGHT");
+            // AND OFF THE BEAM ALTOGETHER (2026-09-09, the author: "üst bardaki para
+            // göstergemizi kaldıralım farklı bir yere taşıyalım; üst barda aynı tasarıma
+            // sahip hem saat hem de para göstergesi var, bu da karmaşa yaratıyor").
+            // A seven-bar figure in a well beside another seven-bar figure in a well is one
+            // instrument printed twice, whatever the gap between them: the eye reads the
+            // MACHINE, not the position. So the money stops being a readout at all. It hangs
+            // UNDER the beam on the house's own card — the box every panel in this game is
+            // drawn on — with the drawn dollar beside it and the figure in the display face,
+            // amber like every other price and red when the bar is under water. Nothing else
+            // in the room wears that shape, so there is nothing left to confuse it with.
+            var tillCard = NewRect("TillCard", root);
+            tillCard.anchorMin = tillCard.anchorMax = new Vector2(1f, 1f);
+            tillCard.pivot = new Vector2(1f, 1f);
+            tillCard.sizeDelta = new Vector2(158f, 44f);
+            tillCard.anchoredPosition = new Vector2(-16f, -(TopBarH + 10f));
+            var tillPlate = tillCard.gameObject.AddComponent<Image>();
+            tillPlate.sprite = ChromeArt.Panel();
+            tillPlate.type = Image.Type.Sliced;
+            tillPlate.pixelsPerUnitMultiplier = 0.5f;
+            tillPlate.raycastTarget = true;
+            var tillCoin = NewRect("Coin", tillCard);
+            Place(tillCoin, new Vector2(0, 0.5f), new Vector2(24f, 24f), new Vector2(16f, 0f));
+            tillCoin.pivot = new Vector2(0, 0.5f);
+            var tillCoinImg = tillCoin.gameObject.AddComponent<Image>();
+            tillCoinImg.sprite = ItemArt.Coin(24f);
+            tillCoinImg.preserveAspect = true;
+            tillCoinImg.raycastTarget = false;
+            _beamTillText = NewText("Figure", tillCard, _display, 24, TextAnchor.MiddleRight,
+                                    UITheme.Amber[4]);
+            Place(_beamTillText.rectTransform, new Vector2(1, 0.5f), new Vector2(100f, 30f),
+                  new Vector2(-14f, 0f));
+            _beamTillText.rectTransform.pivot = new Vector2(1, 0.5f);
+            _beamTillText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _beamTillText.verticalOverflow = VerticalWrapMode.Overflow;
+            _beamTillText.raycastTarget = false;
+            _beamTillText.text = "0";
+            HoverTip(tillCard, ItemArt.Load("sh_b_coin"), "THE TILL", "WHAT THE BAR HAS TONIGHT");
 
             // ── the standing, right: the stars and who they brought in ─────────
             // NO PLATE UNDER THEM (2026-08-14, the author: "yıldızlar hala üst barda kutu
@@ -814,7 +840,7 @@ namespace LastCall.UI
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
             // 0.88 until 2026-09-08 (the author: "gün sonu fatura ekranında arka plan daha da
             // karartılsın"): the room behind the bill is all but gone now.
-            panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.965f);
+            panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.988f);
 
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));

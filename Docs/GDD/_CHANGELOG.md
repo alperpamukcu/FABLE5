@@ -2,6 +2,19 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The twenty-first list, first pass (2026-09-09):** every glass keeps its front strip
+  now — one call rather than two hand-hung copies, and the pint's own row measured instead
+  of defaulted — and the author's eight drawn salt and sugar rims replace the procedural
+  speckle. Money leaves the beam for a card of its own under it (a clock and a till in
+  matching wells read as one instrument). A fixture can want its own spot and order inside a
+  shared slot, which puts the agave on the counter and lifts the pothos without moving their
+  ladders; the brass sconce is gone. The sink's dial hangs under the basin. The cloth throws
+  off what it lifts. The juices' shelf copies carry a fruit drawn at thirteen pixels, and the
+  three draught beers are KEGS. The market's restock page is grouped into aisles, the crowd
+  speaks at 14, the licence's recipe hover wears a thick frame and its garnish chips show the
+  dish itself, and every licence portrait was re-cut from its idle frame. Still open: the
+  television's adverts, and the upgrade variants waiting on the author's pick
+  (Tools/room_variants_gen.py).
 - **The twentieth list (2026-09-09):** the bottle card is two boxes now — the author redrew
   card_slot.png as a box open on one side and card_body.png as a whole box, and each is sized
   to what it holds (the bottle, the text) instead of one being stretched to the other; the

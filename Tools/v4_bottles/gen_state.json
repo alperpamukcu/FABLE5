@@ -317,6 +317,53 @@
   "lime_fresh:26": {
    "job": "1dfb0b09-981e-40c4-b026-811ad60b58f5",
    "submit": "id: 1dfb0b09-981e-40c4-b026-811ad60b58f5\njob_id: 1dfb0b09-981e-40c4-b026-811ad60b58f5\nmodel: pro\ndescription: a tall gable-top limeade carton in flat green card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the fro"
+  },
+  "beer_kestrel:27": {
+   "job": "19dce479-9fe4-4ec1-b743-fa5fd17d4346",
+   "submit": "id: 19dce479-9fe4-4ec1-b743-fa5fd17d4346\njob_id: 19dce479-9fe4-4ec1-b743-fa5fd17d4346\nmodel: pro\ndescription: a small stainless steel beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly, ab"
+  },
+  "beer_collier:27": {
+   "job": "d4fff721-0ed8-403d-8c49-571a706ed2c8",
+   "submit": "id: d4fff721-0ed8-403d-8c49-571a706ed2c8\njob_id: d4fff721-0ed8-403d-8c49-571a706ed2c8\nmodel: pro\ndescription: a small dark painted beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly, about"
+  },
+  "beer_marigold:27": {
+   "job": "0c29d1b9-baee-4a34-8c34-13750bc07b68",
+   "submit": "id: 0c29d1b9-baee-4a34-8c34-13750bc07b68\njob_id: 0c29d1b9-baee-4a34-8c34-13750bc07b68\nmodel: pro\ndescription: a small brass-toned beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly, about "
+  },
+  "orange_grove:emblem:7": {
+   "job": "602ef6f1-1585-434d-bd9c-13100f101dea",
+   "submit": "id: 602ef6f1-1585-434d-bd9c-13100f101dea\njob_id: 602ef6f1-1585-434d-bd9c-13100f101dea\nmodel: pro\ndescription: a small stylised orange fruit with a leaf, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 7\ncost: 20 generations\nstatus: pr",
+   "n": 64,
+   "secs": 146.0,
+   "poll": "status: completed\nid: 602ef6f1-1585-434d-bd9c-13100f101dea\njob_id: 602ef6f1-1585-434d-bd9c-13100f101dea\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/602ef6f1-1585-434d-bd9c-13100f101dea/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "lemon_fresh:emblem:7": {
+   "job": "fd135309-ca19-4e81-bbfe-34ea8d1c8277",
+   "submit": "id: fd135309-ca19-4e81-bbfe-34ea8d1c8277\njob_id: fd135309-ca19-4e81-bbfe-34ea8d1c8277\nmodel: pro\ndescription: a small stylised lemon with a leaf, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 7\ncost: 20 generations\nstatus: processin",
+   "n": 64,
+   "secs": 175.5,
+   "poll": "status: completed\nid: fd135309-ca19-4e81-bbfe-34ea8d1c8277\njob_id: fd135309-ca19-4e81-bbfe-34ea8d1c8277\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/fd135309-ca19-4e81-bbfe-34ea8d1c8277/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "lime_fresh:emblem:7": {
+   "job": "efaf538a-f82f-43a6-91fc-902185c7f762",
+   "submit": "id: efaf538a-f82f-43a6-91fc-902185c7f762\njob_id: efaf538a-f82f-43a6-91fc-902185c7f762\nmodel: pro\ndescription: a small stylised lime with a leaf, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 7\ncost: 20 generations\nstatus: processing",
+   "n": 64,
+   "secs": 195.9,
+   "poll": "status: completed\nid: efaf538a-f82f-43a6-91fc-902185c7f762\njob_id: efaf538a-f82f-43a6-91fc-902185c7f762\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/efaf538a-f82f-43a6-91fc-902185c7f762/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "cranberry_north:emblem:7": {
+   "job": "82be0494-4958-4c0e-89fa-aae4fff1d090",
+   "submit": "id: 82be0494-4958-4c0e-89fa-aae4fff1d090\njob_id: 82be0494-4958-4c0e-89fa-aae4fff1d090\nmodel: pro\ndescription: a small stylised cluster of three red berries, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 7\ncost: 20 generations\nstatus",
+   "n": 64,
+   "secs": 153.6,
+   "poll": "status: completed\nid: 82be0494-4958-4c0e-89fa-aae4fff1d090\njob_id: 82be0494-4958-4c0e-89fa-aae4fff1d090\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/82be0494-4958-4c0e-89fa-aae4fff1d090/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "pineapple_isla:emblem:7": {
+   "job": "4c76acfc-9a6c-4551-a56a-9beedab14488",
+   "submit": "id: 4c76acfc-9a6c-4551-a56a-9beedab14488\njob_id: 4c76acfc-9a6c-4551-a56a-9beedab14488\nmodel: pro\ndescription: a small stylised pineapple, flat pixel emblem, no text, centred on a transparent background, clean hi-bit pixel art, flat fills, thin dark outline\nsize: 32x32px\ntransparent: True\ncandidates: 64\nstyle_image: yes (color_palette, outline)\nseed: 7\ncost: 20 generations\nstatus: processing (~1-10",
+   "n": 64,
+   "secs": 163.7,
+   "poll": "status: completed\nid: 4c76acfc-9a6c-4551-a56a-9beedab14488\njob_id: 4c76acfc-9a6c-4551-a56a-9beedab14488\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/4c76acfc-9a6c-4551-a56a-9beedab14488/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
   }
  }
 }

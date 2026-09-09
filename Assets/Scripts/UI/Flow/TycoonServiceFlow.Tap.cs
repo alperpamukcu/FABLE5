@@ -586,6 +586,10 @@ namespace LastCall.UI
                         _tapPiece = tapPiece;
                         _tapPintImage.sprite = tapPiece.Sprite;
                         _tapPintImage.color = Color.white;
+                        // AND ITS FRONT, over the beer (2026-09-09): the pint is the one
+                        // glass in the game that is always full of something, and it was the
+                        // one glass drawn without its rim strip.
+                        GlassArt.Lip((RectTransform)_tapPintImage.transform, tapPiece);
                         _tapFluid.SetProfile(tapPiece.Profile);
                         _tapFluid.SetDensity(tapPiece.Density);
                         break;

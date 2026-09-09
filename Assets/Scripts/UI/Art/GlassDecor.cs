@@ -148,17 +148,36 @@ namespace LastCall.UI
                 // near arc catches the light — at the exact size the glass is shown at, so
                 // no grain is ever scaled. A flat band across the rim was a stripe.
                 bool salt = glass.HasPreparation("salt_rim");
-                float mouthW = _piece.InteriorWidthAt(_piece.RimY) * w;
-                if (mouthW < 4f) mouthW = interiorW * 2f;
-                var tone = salt ? new Color(0.95f, 0.96f, 0.97f) : new Color(0.94f, 0.89f, 0.77f);
-                int ringW = Mathf.Max(12, Mathf.RoundToInt(mouthW + 10f));
-                int ringH = Mathf.Max(6, Mathf.RoundToInt(h * 0.085f));
-                var ring = NewChild("Crust", new Vector2(ringW, ringH),
-                    new Vector2(0, rimYLocal + ringH * 0.5f - 1f));
-                var img = ring.gameObject.AddComponent<Image>();
-                img.sprite = RimRing(ringW, ringH, salt);
-                img.color = tone;
-                img.raycastTarget = false;
+                // THE AUTHOR DREW THEM (2026-09-09: "artık şeker ve tuz rim için görseller
+                // geliştirdim"). Eight crusts, one a glass a kind, each cut to that glass's
+                // own mouth with the grains breaking over the near arc — so the ring is a
+                // drawing now rather than a scatter of pixels on an ellipse, and it is
+                // seated by measurement: centred, its top on the glass's first opaque row.
+                var drawn = salt ? _piece.RimSalt : _piece.RimSugar;
+                if (drawn != null && _piece.RimPlacement(new Vector2(w, h), drawn,
+                                                        out var crustSize, out var crustTop))
+                {
+                    var crust = NewChild("Crust", crustSize,
+                        new Vector2(crustTop.x, crustTop.y - crustSize.y * 0.5f));
+                    var cimg = crust.gameObject.AddComponent<Image>();
+                    cimg.sprite = drawn;
+                    cimg.preserveAspect = true;
+                    cimg.raycastTarget = false;
+                }
+                else
+                {
+                    float mouthW = _piece.InteriorWidthAt(_piece.RimY) * w;
+                    if (mouthW < 4f) mouthW = interiorW * 2f;
+                    var tone = salt ? new Color(0.95f, 0.96f, 0.97f) : new Color(0.94f, 0.89f, 0.77f);
+                    int ringW = Mathf.Max(12, Mathf.RoundToInt(mouthW + 10f));
+                    int ringH = Mathf.Max(6, Mathf.RoundToInt(h * 0.085f));
+                    var ring = NewChild("Crust", new Vector2(ringW, ringH),
+                        new Vector2(0, rimYLocal + ringH * 0.5f - 1f));
+                    var img = ring.gameObject.AddComponent<Image>();
+                    img.sprite = RimRing(ringW, ringH, salt);
+                    img.color = tone;
+                    img.raycastTarget = false;
+                }
             }
 
             // THE WEDGE STRADDLES THE GLASS (2026-08-26, the author: "bardagin camina
