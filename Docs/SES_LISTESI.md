@@ -16,6 +16,7 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume` |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
 | **Şu anki kaynak** | 73 klibin **tamamı sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py` ile üretildi). Yani hepsi yer tutucu; gerçekleriyle değiştirilebilir |
+| **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
 **Uzunluk kuralı:** UI tıklamaları 40–80 ms, nesne sesleri 150–400 ms, olay sesleri

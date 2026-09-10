@@ -122,6 +122,170 @@ def bandpass(x, freq, q=4.0):
 
 # ── sources ─────────────────────────────────────────────────────────────────
 
+# ── shelves and bells (RBJ cookbook), for the voicing chain ─────────────────
+
+def _shelf(x, freq, gain_db, kind, slope=1.0):
+    a = 10.0 ** (gain_db / 40.0)
+    w = 2 * math.pi * freq / SR
+    cs, sn = math.cos(w), math.sin(w)
+    al = sn / 2.0 * math.sqrt((a + 1.0 / a) * (1.0 / slope - 1.0) + 2.0)
+    tsa = 2.0 * math.sqrt(a) * al
+    if kind == 'low':
+        b0 = a * ((a + 1) - (a - 1) * cs + tsa)
+        b1 = 2 * a * ((a - 1) - (a + 1) * cs)
+        b2 = a * ((a + 1) - (a - 1) * cs - tsa)
+        a0 = (a + 1) + (a - 1) * cs + tsa
+        a1 = -2 * ((a - 1) + (a + 1) * cs)
+        a2 = (a + 1) + (a - 1) * cs - tsa
+    else:
+        b0 = a * ((a + 1) + (a - 1) * cs + tsa)
+        b1 = -2 * a * ((a - 1) + (a + 1) * cs)
+        b2 = a * ((a + 1) + (a - 1) * cs - tsa)
+        a0 = (a + 1) - (a - 1) * cs + tsa
+        a1 = 2 * ((a - 1) - (a + 1) * cs)
+        a2 = (a + 1) - (a - 1) * cs - tsa
+    return _biquad(x, b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0)
+
+
+def lowshelf(x, freq, gain_db):
+    return _shelf(x, freq, gain_db, 'low')
+
+
+def highshelf(x, freq, gain_db):
+    return _shelf(x, freq, gain_db, 'high')
+
+
+def peaking(x, freq, gain_db, q=1.0):
+    a = 10.0 ** (gain_db / 40.0)
+    w = 2 * math.pi * freq / SR
+    al = math.sin(w) / (2 * q)
+    cs = math.cos(w)
+    b0, b1, b2 = 1 + al * a, -2 * cs, 1 - al * a
+    a0, a1, a2 = 1 + al / a, -2 * cs, 1 - al / a
+    return _biquad(x, b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0)
+
+
+# ── THE ROOM (2026-09-10) ───────────────────────────────────────────────────
+#
+# The author heard the first bank and did not like it, and the measurement said why
+# more clearly than the ear could: median spectral centroid 1626 Hz, 85% rolloff at
+# 2832 Hz — warm enough — but every single clip bone DRY. That is the tell. Real foley
+# is recorded in a place, and a synthesised hit with no reflections behind it reads as
+# a synthesiser however good its partials are. Nothing else in the bank changes what
+# it sounds like as much as putting the bar around it.
+#
+# Built as a synthetic impulse response and convolved, rather than as a comb network:
+# an IR is one FFT per clip instead of a per-sample recursion in Python (the ambience
+# bed alone is 1.4M samples), and it lets the early reflections be PLACED rather than
+# fall out of whatever delay lengths were chosen.
+
+def room_ir(rt60=0.42, size=1.0, name='room', bright=3200.0):
+    """A small warm room: a few placed early reflections, then a damped noise tail.
+
+    THE IR CARRIES NO DIRECT SOUND. Putting the dry impulse at sample 0 and then mixing
+    the result against the dry signal was the first attempt, and measuring it showed why
+    that is wrong: the wet path is then MOSTLY the dry clip again, so `wet` scales the
+    reflections and the direct sound together and a 14% mix moves almost nothing (median
+    tail energy 0.159 -> 0.150, which is no room at all). Reflections only, mixed on top
+    of the dry, is a send — and then `wet` means what it says."""
+    n = int(round(min(1.6, rt60 * 1.7) * SR))
+    ir = np.zeros(n)
+    r = rng('ir:' + name)
+    # Early reflections — the walls of a room this size, alternating in sign because a
+    # reflection off a hard surface inverts. Spaced unevenly on purpose: an even spacing
+    # is a comb filter, which is heard as a pitch and not as a room.
+    for ms, amp in ((7.0, 0.52), (11.3, -0.40), (17.1, 0.33), (23.8, -0.26),
+                    (31.5, 0.20), (41.2, -0.15), (52.9, 0.11)):
+        i = int(round(ms * size * SR / 1000.0))
+        if i < n:
+            ir[i] += amp * (1.0 + 0.06 * r.standard_normal())
+    # The tail: noise under an exponential, -60 dB at rt60.
+    x = np.arange(n) / float(SR)
+    tail = r.standard_normal(n) * np.exp(-6.908 * x / max(rt60, 0.05))
+    tail[:int(0.006 * SR)] = 0.0               # predelay: no tail before first contact
+    ir = ir + 0.34 * tail
+    # A room absorbs highs faster than lows, and a bar full of wood and bodies more so.
+    ir = lowpass(ir, bright, 0.707)
+    ir = highpass(ir, 130.0, 0.707)            # keep the tail out of the low end
+    return ir / max(float(np.max(np.abs(ir))), 1e-9)
+
+
+_IR_CACHE = {}
+
+
+def room(x, wet=0.14, rt60=0.42, size=1.0, name='room', tail=True):
+    """Put the bar behind a dry clip. `wet` is a mix, not a send: 0 is unchanged.
+
+    `tail` LENGTHENS the clip by the room's own decay. Without it the convolution is
+    cut at the dry clip's last sample and the export fade then forces that cut to zero
+    — which is a room with its reverb chopped off, i.e. a worse sound than no room at
+    all. A LOOP keeps its length instead: its tail belongs at its own head, and that is
+    `loopify`'s job.
+    """
+    if wet <= 0.0:
+        return x
+    key = (round(rt60, 3), round(size, 3), name)
+    ir = _IR_CACHE.get(key)
+    if ir is None:
+        ir = room_ir(rt60, size, name)
+        _IR_CACHE[key] = ir
+    n = x.size + ir.size - 1
+    m = 1 << int(math.ceil(math.log2(n)))
+    wetsig = np.fft.irfft(np.fft.rfft(x, m) * np.fft.rfft(ir, m), m)[:n]
+    dry = np.pad(x, (0, n - x.size)) if tail else x
+    if not tail:
+        wetsig = wetsig[:x.size]
+    p = float(np.max(np.abs(wetsig)))
+    if p > 1e-9:
+        wetsig = wetsig * (float(np.max(np.abs(x))) / p)
+    # A SEND, not a crossfade: the dry stays whole and the reflections sit on top of it,
+    # `wet` decibels down. Crossfading dry against wet takes the object away as it adds
+    # the room, which is why the first pass sounded no wetter — it was losing as much
+    # direct sound as it gained reflection.
+    return dry + wet * wetsig
+
+
+def trim_tail(x, floor_db=-56.0, keep=0.04):
+    """Cut a clip where its own tail has fallen out of hearing.
+
+    A room adds half a second to everything it touches, and most of that half second is
+    below anything a bar at 2am will ever let through. Trimming at the point the tail
+    passes -46 dB keeps a glass short and lets a door stay long, WITHOUT either being a
+    number somebody typed in."""
+    p = float(np.max(np.abs(x)))
+    if p <= 1e-9:
+        return x
+    over = np.flatnonzero(np.abs(x) > p * (10.0 ** (floor_db / 20.0)))
+    if over.size == 0:
+        return x
+    end = min(x.size, int(over[-1]) + int(keep * SR))
+    return x[:max(end, int(0.02 * SR))]
+
+
+# ── THE VOICE OF THE HOUSE ──────────────────────────────────────────────────
+
+def cozy(x, air=-3.5, harsh=-2.2, warmth=2.0):
+    """The tone every clip wears, in one place (2026-09-10, the author: "cozy seslere
+    yakın ses efektleri olsun").
+
+    Cozy is a specific balance and not simply "dull" — a clip with nothing above 3 kHz
+    does not sound warm, it sounds like a bad sample. Three moves, in this order:
+
+      * 45 Hz highpass. Nothing in a bar is subsonic, and rumble only eats headroom
+        the limiter then gives away.
+      * A dip at 3 kHz. This is the band the ear is most sensitive to and where cheap
+        digital sound lives; taking a couple of decibels out of it is most of what
+        separates "warm" from "harsh" while leaving the detail above it alone.
+      * A low shelf up at 320 Hz and a high shelf gently down at 6.5 kHz. Body added,
+        glare removed, and the air between them kept.
+    """
+    x = highpass(x, 45.0, 0.707)
+    x = peaking(x, 3000.0, harsh, 1.1)
+    x = lowshelf(x, 320.0, warmth)
+    x = highshelf(x, 6500.0, air)
+    return x
+
+
 def noise(seconds, name, kind='white'):
     n = rng(name).standard_normal(int(round(seconds * SR)))
     if kind == 'white':
@@ -143,6 +307,20 @@ def modal(seconds, partials, name, damp_spread=1.0):
     `partials` is a list of (hz, amplitude, decay_seconds). Real glass, wood and metal
     differ almost entirely in WHICH ratios ring and how fast each dies — a single sine
     is a beep, three well-chosen partials is a thing you can name with your eyes shut.
+
+    TWO THINGS THIS GOT WRONG UNTIL 2026-09-10, and between them they were most of why
+    the bank read as a synthesiser:
+
+      * every partial started at FULL amplitude on sample zero. A struck object does
+        not: the contact takes a moment to hand its energy over, and it hands the high
+        partials over faster than the low ones. Starting them all at once is a click
+        with a chord behind it, which is precisely the sound of an envelope generator.
+      * every partial decayed at the rate it was given. Real objects lose their highs
+        FIRST — that is why a glass goes from bright to hollow as it rings, and why a
+        set of equal decays sounds like a bell rather than like a thing.
+
+    Both are one line each and neither is a matter of taste; they are what the physics
+    does. The partial table each caller passes is unchanged.
     """
     x = t(seconds)
     out = np.zeros_like(x)
@@ -151,7 +329,13 @@ def modal(seconds, partials, name, damp_spread=1.0):
         # A hair of detune per partial so a struck object is never a perfect chord.
         f = hz * (1.0 + 0.0013 * r.standard_normal())
         phase = r.uniform(0, 2 * math.pi)
-        out += amp * np.sin(2 * math.pi * f * x + phase) * np.exp(-x / (dec * damp_spread))
+        # Highs die first: a partial an octave up loses roughly a sixth of its life.
+        dec_f = dec * damp_spread / (1.0 + hz / 5200.0)
+        # And each one takes a moment to come up — faster the higher it sits, which is
+        # the contact handing its energy over rather than an envelope opening.
+        atk = max(0.00025, 0.0016 / (1.0 + hz / 900.0))
+        env = (1.0 - np.exp(-x / atk)) * np.exp(-x / max(dec_f, 1e-4))
+        out += amp * np.sin(2 * math.pi * f * x + phase) * env
     return out
 
 
@@ -160,11 +344,21 @@ def impact(seconds, name, tone=1400.0, q=3.0, crack=0.004, body=0.9):
 
     This is the shape of nearly every physical sound in a bar — something meets
     something, air moves sharply, and the object rings a little.
+
+    A hit is not one band of noise. Real contact is BROADBAND — two surfaces scuffing
+    is most of what the ear uses to name the materials — and the resonant band on its
+    own is a filtered click, which is what this made until 2026-09-10. So there are two
+    layers now: the scuff, low-passed to the material's weight and dying almost at once,
+    and the resonant crack over it.
     """
     n = noise(seconds, name + ':imp')
-    env = np.exp(-t(seconds) / max(crack, 1e-4))
+    x = t(seconds)
+    env = np.exp(-x / max(crack, 1e-4))
     trans = bandpass(n * env, tone, q)
-    return trans * body
+    # The scuff: shorter than the crack, and only as bright as the object is light.
+    scuff = lowpass(noise(seconds, name + ':scuff') * np.exp(-x / max(crack * 0.55, 1e-4)),
+                    min(9000.0, tone * 2.2), 0.707)
+    return (trans + 0.42 * scuff) * body
 
 
 def analog(seconds, hz, name, detune=0.010, voices=3, shape='saw',
@@ -318,17 +512,39 @@ def loopify(x, crossfade=0.06):
     return x
 
 
+# How far under the direct sound the reflections sit, and how long the room rings.
+# These are send levels, so 0.28 is reflections about 11 dB down — present, nameable as
+# a room, and nowhere near the wash that "put reverb on it" usually means.
+SPACES = {
+    'dry':   (0.00, 0.30),   # UI, and anything that is not IN the room
+    'near':  (0.16, 0.32),   # a small prop under the hand
+    'prop':  (0.28, 0.45),   # the everyday: glass, bottle, paper, garnish
+    'wide':  (0.42, 0.60),   # a door, the cellar, a drawer — the room answers
+    'far':   (0.55, 0.78),   # a voice, a bell, something across the bar
+}
+
+
 def render(x, level='body', name='clip', fade_in=0.0015, fade_out=0.012,
-           drive=1.0, loop=False):
+           drive=1.0, loop=False, space='prop'):
     """The ONLY export path. Everything that reaches a .wav passes through here.
 
-    Order matters: DC first (so the limiter is not biased), then limit (so peaks bend
-    rather than snap), then set the level, and only THEN force the edges to zero — a
-    fade applied before normalising would be scaled back up.
+    Order matters: voice and room FIRST, while the clip is still at synthesis level and
+    a shelf cannot push it into the limiter; then DC (so the limiter is not biased),
+    then limit (so peaks bend rather than snap), then set the level, and only THEN force
+    the edges to zero — a fade applied before normalising would be scaled back up.
+
+    `space` is how much bar stands behind the clip; see SPACES. It is a mix and not a
+    send, so 'dry' leaves a clip exactly as it was — which is right for the UI, because
+    a click does not happen in the room, it happens under the player's finger.
     """
     x = np.asarray(x, dtype=np.float64)
     if x.size == 0:
         raise ValueError('empty clip: ' + name)
+    wet, rt = SPACES[space] if isinstance(space, str) else space
+    x = cozy(x)
+    x = room(x, wet=wet, rt60=rt, name='bar', tail=not loop)
+    if not loop and wet > 0.0:
+        x = trim_tail(x)
     x = dc_block(x)
     x = soft_limit(x, drive)
     x = normalize(x, LEVELS[level] if isinstance(level, str) else float(level))

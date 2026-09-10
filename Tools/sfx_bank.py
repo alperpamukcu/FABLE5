@@ -1401,6 +1401,48 @@ BANK = {
 }
 
 
+# ── WHERE EACH CLIP HAPPENS (2026-09-10) ────────────────────────────────────
+#
+# The author heard the first bank and asked for it again, "cozy" — and measuring it
+# said what the ear could not name: median centroid 1626 Hz, 85% rolloff 2832 Hz, so
+# warm enough, but all 73 clips bone DRY. That is the tell. Foley is recorded in a
+# place; a hit with no reflections behind it reads as a synthesiser however good its
+# partials are.
+#
+# So every clip now says where it happens. This is a design decision and not a wash:
+# a UI click is under the player's FINGER and gets no room at all, a glass set down is
+# on the counter in front of them, a door is across the bar. Putting reverb on
+# everything equally is the amateur move — it turns a room into a swimming pool.
+SPACE_BY_LEVEL = {
+    'whisper': 'dry', 'tick': 'dry', 'light': 'near', 'body': 'prop',
+    'weight': 'wide', 'moment': 'wide', 'bed': 'dry', 'loop': 'prop',
+}
+
+SPACE = {
+    # The interface is not in the room.
+    'click': 'dry', 'hover': 'dry', 'key_press': 'dry', 'deny': 'dry',
+    'whoosh': 'dry', 'page_turn': 'dry', 'screen_on': 'dry', 'screen_off': 'dry',
+    'curtain': 'dry', 'order_ready': 'dry', 'patience_warn': 'dry',
+    'id_card': 'dry', 'id_card_away': 'dry', 'bill_slip': 'near',
+    # Nor is the music, nor the stingers that comment on play rather than happen in it.
+    'ambience_loop': 'dry', 'synth_swell': 'dry', 'level_up': 'near',
+    'star_earn': 'near', 'another_round': 'near', 'buy': 'near',
+    'verdict_good': 'near', 'verdict_bad': 'near', 'verdict_flat': 'near',
+    # People are across the bar.
+    'voice_order': 'far', 'voice_happy': 'far', 'voice_upset': 'far',
+    'voice_greet': 'far', 'cheer_sfx': 'far', 'upset_sfx': 'far',
+    'last_call_bell': 'far', 'bar_closed': 'far',
+    # And these are big enough that the room answers back.
+    'door': 'wide', 'cellar_open': 'wide', 'cellar_close': 'wide',
+    'stool_take': 'wide', 'day_open': 'wide', 'day_close': 'wide',
+    'blowout': 'wide',
+}
+
+
+def space_of(name, level):
+    return SPACE.get(name, SPACE_BY_LEVEL.get(level, 'prop'))
+
+
 def build(names=None):
     names = names or sorted(BANK)
     rows = []
@@ -1409,7 +1451,8 @@ def build(names=None):
             print('  ?? no such clip: %s' % n)
             continue
         fn, level, loop, drive = BANK[n]
-        x = render(fn(), level=level, name=n, loop=loop, drive=drive)
+        x = render(fn(), level=level, name=n, loop=loop, drive=drive,
+                   space=space_of(n, level))
         rows.append(write(os.path.join(OUT, n + '.wav'), x, n))
         r = rows[-1]
         print('  %-16s %5.2fs  peak %6.1f dB  rms %6.1f dB  %6d B'
