@@ -389,8 +389,10 @@ namespace LastCall.UI
             StopHeldSounds();
             Sfx.Play(slide ? "whoosh" : "click", 0.6f);
             _bottleGrabbed = false;
+            _bottleHand.Release();
             _pouring = false;
             _serveGrabbed = false;
+            _serveHand.Release();
             _shaking = false;
             _shakeEnergy = 0;
             _spoonHeld = false;

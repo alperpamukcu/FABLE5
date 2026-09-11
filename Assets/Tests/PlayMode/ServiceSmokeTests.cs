@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using LastCall.Core;
 using LastCall.Game;
@@ -238,6 +238,166 @@ namespace LastCall.PlayTests
             Assert.That(run.Glass.TotalVolume, Is.GreaterThan(0.0));
             Assert.That(run.Glass.Ingredients, Contains.Item("vodka_astra"),
                 "something poured, but not the bottle that was picked up");
+        }
+
+        /// <summary>
+        /// THE TALL GLASS CAN BE POURED (2026-09-11). Nothing tipped the tin into the glass
+        /// before this, and that is how the 420-tall glass of 2026-09-09 shipped unpourable:
+        /// tilt was taken from the height of a grip low on the tin, so lifting it past 17
+        /// degrees LOWERED its mouth, and the rim ended up above anything the mouth could reach
+        /// at a pouring angle — a window of 10 units of hand travel, where there had been 328.
+        ///
+        /// So this pours the drink the way a player does — the lid dragged onto the tin, the
+        /// bench sliding to the glass on its own, the tin taken by the hand — into a HIGHBALL
+        /// (a vodka soda chooses one, and the default glass the first drop meets is one too),
+        /// and it does not stop at the first drop: it sweeps the hand up the bench in rows and
+        /// counts how many rows pour. A glass or a grip that narrows the window again turns
+        /// this red long before a player has to find it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Tipping_the_tin_pours_into_the_tall_glass()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+
+            yield return OpenTheCellar("CellarDoor_vodka_astra");
+            yield return ClickOn(Find("CellarDoor_vodka_astra"));
+            // The tin is filled through Core: the bottle's pour is the test above. This one is
+            // about what happens after the lid goes on.
+            run.PourMeasure("vodka_astra", 0.4);
+            run.PourMeasure("soda_klara", 0.6);
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.That(run.CanPourOut, Is.True, "a vodka soda should need no mix to leave the tin");
+
+            var shakerPanel = Find("ShakerPanel");
+            var cap = Find("ShakerCap", shakerPanel);
+            var tin = Find("Shaker", shakerPanel);
+            Assert.That(cap, Is.Not.Null, "the bench has no lid");
+            Assert.That(tin, Is.Not.Null, "the bench has no tin");
+
+            // THE LID GOES ON, BY HAND.
+            var from = ScreenPointOf(cap);
+            var to = ScreenPointOf(tin);
+            Press(_mouse.leftButton, from);
+            yield return WaitFrames(2);
+            for (int i = 1; i <= 8; i++)
+            {
+                Set(_mouse.position, Vector2.Lerp(from, to, i / 8f));
+                yield return new WaitForSecondsRealtime(0.03f);
+            }
+            yield return new WaitForSecondsRealtime(0.15f);
+            Release(_mouse.leftButton);
+
+            // A capped, pourable tin walks itself to the glass.
+            var servePanel = Find("ServePanel");
+            float waited = 0f;
+            while ((servePanel == null || !servePanel.gameObject.activeInHierarchy) && waited < 4f)
+            {
+                yield return new WaitForSecondsRealtime(0.1f);
+                waited += 0.1f;
+                servePanel = Find("ServePanel");
+            }
+            Assert.That(servePanel != null && servePanel.gameObject.activeInHierarchy, Is.True,
+                "the lid went on and the bench never moved to the glass");
+            yield return new WaitForSecondsRealtime(0.6f);   // the slide, and the lurch after it
+
+            var surface = Find("ServeSurface", servePanel);
+            // ON THE WORK SURFACE: the panel also carries a "Shaker" of its own (at the far left),
+            // and a search of the whole panel hands that one back first.
+            var serveTin = Find("Shaker", surface);
+            Assert.That(surface, Is.Not.Null);
+            Assert.That(serveTin != null && serveTin.gameObject.activeInHierarchy, Is.True,
+                "the serving bench has no tin in it");
+
+            // THE HAND SWEEPS UP THE BENCH. The pointer is laid out in the surface's own
+            // coordinates, starting where the tin was taken and rising in rows; each row scans
+            // left toward the glass until the glass takes something, then the next row begins.
+            // LOOK BEFORE THE HAND CLOSES. The tin arrives by a slide from the other bench and
+            // then rocks on the counter, and a press made while it is still settling lands on
+            // the panel behind it — so the hand waits until the tin itself is under the pointer.
+            string underPress = WhatIsUnder(ScreenPointOf(serveTin));
+            for (float t = 0f; t < 3f && !underPress.StartsWith("[Shaker]"); t += 0.1f)
+            {
+                yield return new WaitForSecondsRealtime(0.1f);
+                underPress = WhatIsUnder(ScreenPointOf(serveTin));
+            }
+            var start = (Vector2)surface.InverseTransformPoint(serveTin.position);
+            var tinRest = serveTin.anchoredPosition;
+            Press(_mouse.leftButton, ScreenPointOf(serveTin));
+            yield return new WaitForSecondsRealtime(0.1f);
+            int rowsThatPoured = 0;
+            float maxLean = 0f, maxMove = 0f;
+            for (int row = 0; row < 14; row++)
+            {
+                float y = start.y + 15f + row * 15f;
+                double before = run.ServingGlass.TotalVolume;
+                bool first = true;
+                for (float x = start.x; x >= start.x - 560f; x -= 35f)
+                {
+                    Set(_mouse.position, ScreenPointIn(surface, new Vector2(x, y)));
+                    // The hand has weight now and the lean catches up on a spring: the first
+                    // point of a row waits for the lean, the rest only for the aim.
+                    yield return new WaitForSecondsRealtime(first ? 0.35f : 0.12f);
+                    first = false;
+                    maxLean = Mathf.Max(maxLean, Mathf.Abs(Mathf.DeltaAngle(serveTin.localEulerAngles.z, 0f)));
+                    maxMove = Mathf.Max(maxMove, (serveTin.anchoredPosition - tinRest).magnitude);
+                    if (run.ServingGlass.TotalVolume > before) { rowsThatPoured++; break; }
+                }
+                if (run.ServingGlass.IsFull || run.Glass.IsEmpty) break;
+            }
+            Release(_mouse.leftButton);
+            yield return new WaitForSecondsRealtime(0.2f);
+
+            Assert.That(run.ServingGlass.IsEmpty, Is.False,
+                "the tin was carried over the whole bench and the tall glass stayed empty"
+                + $" · under the press: {underPress} · the tin moved at most {maxMove:0} u and leaned"
+                + $" at most {maxLean:0} deg · tin fill {run.Glass.FillFraction:0.00}");
+            Assert.That(run.ServingGlassware.Id, Is.EqualTo("highball"),
+                "the drink should have stayed in its tall glass");
+            Assert.That(rowsThatPoured, Is.GreaterThanOrEqualTo(4),
+                $"only {rowsThatPoured} rows of hand height poured into the tall glass — the pour "
+                + "window has narrowed again (it was 10 units wide before the neck grip)");
+        }
+
+        /// <summary>
+        /// A BOTTLE LET GO GOES HOME (2026-09-11, the author: "sıvılar ve şişeler daha hareketli
+        /// olmalı"). It used to snap to the pointer and was left hanging, tipped, wherever it was
+        /// let go. It has weight now — and when it has walked back it must stand EXACTLY where it
+        /// stood, not a hair off, because the look suite holds the bench to a picture.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator A_released_bottle_goes_back_where_it_stood()
+        {
+            yield return OpenTheBar();
+            yield return OpenTheCellar("CellarDoor_vodka_astra");
+            yield return ClickOn(Find("CellarDoor_vodka_astra"));
+
+            var panel = Find("ShakerPanel");
+            var bottle = Find("Bottle", panel);
+            Assert.That(bottle, Is.Not.Null, "there is no bottle on the bench");
+            yield return new WaitForSecondsRealtime(0.3f);
+            var restPos = bottle.anchoredPosition;
+            var restRot = bottle.localEulerAngles.z;
+
+            var at = ScreenPointOf(bottle);
+            Press(_mouse.leftButton, at);
+            yield return WaitFrames(2);
+            // Up and across, far enough to tip it well over.
+            for (int i = 1; i <= 6; i++)
+            {
+                Set(_mouse.position, at + new Vector2(-40f * i, 22f * i));
+                yield return new WaitForSecondsRealtime(0.05f);
+            }
+            yield return new WaitForSecondsRealtime(0.3f);
+            Assert.That(Mathf.DeltaAngle(bottle.localEulerAngles.z, 0f), Is.Not.EqualTo(0f).Within(1f),
+                "the bottle was lifted and never tipped");
+            Release(_mouse.leftButton);
+
+            yield return new WaitForSecondsRealtime(1.2f);
+            Assert.That((bottle.anchoredPosition - restPos).magnitude, Is.LessThan(1e-4f),
+                $"the bottle came back to {bottle.anchoredPosition} instead of {restPos}");
+            Assert.That(Mathf.Abs(Mathf.DeltaAngle(bottle.localEulerAngles.z, restRot)), Is.LessThan(0.01f),
+                "the bottle came back leaning");
         }
 
         /// <summary>

@@ -88,7 +88,15 @@ namespace LastCall.UI
         private Text _aimText;
         private Vector2 _serveShakerRest;
         private bool _serveGrabbed;
-        private Vector2 _serveGrabOffset;   // the hand keeps its grip (2026-09-06)
+        /// <summary>The hand on the tin (PourHand, 2026-09-11): the neck grip that lets a tall
+        /// glass be poured, the weight, and the walk home when it is let go.</summary>
+        private readonly PourHand _serveHand = new PourHand();
+        /// <summary>How far below the drawn spout the hand holds the tin, and how much grip lift
+        /// tips it fully. Measured against the 420 highball: the tin's spout clears the drawn rim
+        /// from the first pouring angle to full tilt, over ~116 units of hand travel (was 10).</summary>
+        private const float ServeGripDepth = 60f, ServeLiftRange = 170f;
+        /// <summary>A tin that ran dry leaves the bench — but only once it is standing on it.</summary>
+        private bool _serveTinLeaving;
         private const float ServePourRate = 0.34f;   // glass-fractions per second (slower, 2026-07-22)
 
         // The way out: SERVE only means something once a drink stands in the glass, so
@@ -107,8 +115,9 @@ namespace LastCall.UI
             _serveGlassText.text = run.ServingGlass.IsEmpty
                 ? "glass empty"
                 : $"glass {run.ServingGlass.FillFraction:P0} full";
-            _serveShaker.anchoredPosition = _serveShakerRest;
-            _serveShaker.localRotation = Quaternion.identity;
+            // The hand is re-measured on the way in (the tier dresses the cap, and the cap is the
+            // spout), and a hand that is not holding anything is stood back on the rest.
+            ConfigureServeHand();
             _serveFluid.Clear();
             _serveFluid.ClearStreamColor();       // nothing is in the air on the way in
             // The pool is the drink IN THE GLASS, not the one in the shaker. Those are the same
@@ -148,6 +157,49 @@ namespace LastCall.UI
         private void ResetServeHand()
         {
             _serveGrabbed = false;
+            _serveHand.Release();
+        }
+
+        /// <summary>
+        /// Reads the tin's DRAWN spout off its cap and gives it to the hand. The cap is stretched
+        /// over the tin's whole rect and its sheet is exactly the tin's, so the spout is the top of
+        /// the cap's opaque pixels mapped into that rect, relative to the tin's pivot — the same
+        /// measurement the shaker bench's TinMouth makes, which this bench never had: it aimed
+        /// from the rect's top, 42 units of empty canvas above the drawn lid.
+        /// </summary>
+        private void ConfigureServeHand()
+        {
+            if (_serveShaker == null) return;
+            float h = _serveShaker.rect.height;
+            float top = h * (1f - _serveShaker.pivot.y);                 // the rect top, pivot-relative
+            var sp = _serveCapImg != null ? _serveCapImg.sprite : null;
+            if (sp != null && sp.rect.height >= 1f)
+            {
+                var ob = ItemArt.OpaqueBounds(sp);
+                top -= (sp.rect.height - (ob.y + ob.height)) * (h / sp.rect.height);
+            }
+            _serveHand.Configure(_serveShakerRest, new Vector2(0f, top), ServeGripDepth, ServeLiftRange, MaxTilt);
+            _serveHand.Apply(_serveShaker);
+        }
+
+        /// <summary>Where the tin's drawn spout really is, in surface space — through the live
+        /// transform, because the hover glow grows the held tin by 4% about its pivot and that
+        /// carries the spout 11 units further out than the hand's own arithmetic knows.</summary>
+        private Vector2 ServeSpoutNow()
+        {
+            var world = _serveShaker.TransformPoint(_serveHand.Spout);
+            return _serveSurface.InverseTransformPoint(world);
+        }
+
+        /// <summary>The glass's DRAWN rim: its cavity top and half-width, off the glass art.</summary>
+        private (Vector2 Centre, float Half) ServeRim()
+        {
+            var c = _serveGlass.anchoredPosition;
+            float w = _serveGlass.rect.width, h = _serveGlass.rect.height;
+            var piece = _serveGlassPiece;
+            if (piece.Sprite == null)
+                return (c + new Vector2(0f, h * 0.5f), w * 0.4f);
+            return (new Vector2(c.x, c.y - h * 0.5f + h * piece.RimY), w * 0.5f * piece.InteriorHalf);
         }
 
         /// <summary>The SERVE key answers only a glass with a drink in it — dim until then.
@@ -183,37 +235,44 @@ namespace LastCall.UI
         private void UpdateServeTilt(TycoonRun run)
         {
             if (Mouse.current == null) return;
-            if (_serveGrabbed && !Mouse.current.leftButton.isPressed) _serveGrabbed = false;
+            if (_serveGrabbed && !Mouse.current.leftButton.isPressed) { _serveGrabbed = false; _serveHand.Release(); }
+
+            // The hand moves every frame, held or not: let go and the tin walks itself home.
+            Vector2? pointer = null;
+            if (_serveGrabbed && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 ptr))
+                pointer = ptr;
+            float halfW = _serveSurface.rect.width * 0.5f;
+            float halfH = _serveSurface.rect.height * 0.5f;
+            _serveHand.Step(Time.deltaTime, pointer,
+                Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH - 20f));
+            _serveHand.Apply(_serveShaker);
+            if (_serveTinLeaving && _serveHand.AtRest)
+            {
+                _serveTinLeaving = false;
+                _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
+            }
 
             bool pourNow = false;
             double accuracy = 0;
-            if (_serveGrabbed && !run.Glass.IsEmpty &&
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
+            if (_serveGrabbed && _serveHand.Held && !run.Glass.IsEmpty)
             {
-                local += _serveGrabOffset;
-                float halfW = _serveSurface.rect.width * 0.5f;
-                float halfH = _serveSurface.rect.height * 0.5f;
-                local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
-                local.y = Mathf.Clamp(local.y, -halfH + 20f, halfH - 20f);
-                _serveShaker.anchoredPosition = local;
-
-                float lift = Mathf.Clamp01((local.y - _serveShakerRest.y) / LiftRange);
-                float tilt = lift * MaxTilt;
-                _serveShaker.localRotation = Quaternion.Euler(0, 0, tilt);
-
-                float rad = tilt * Mathf.Deg2Rad;
-                Vector2 mouth = local + new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad)) * (ServeVesselH * 0.78f);
-                var opening = _serveGlass.anchoredPosition + new Vector2(0, _serveGlass.rect.height * 0.5f);
+                float tilt = _serveHand.Tilt;
+                // The DRAWN spout over the DRAWN rim — the pair the shaker bench has measured
+                // since 2026-08-11 and this bench never did (it aimed rect top at rect top).
+                Vector2 mouth = ServeSpoutNow();
+                var (opening, rimHalf) = ServeRim();
+                bool clear = mouth.y > opening.y + 2f;
 
                 // The glass is full: the pour stops there rather than running a stream into a
                 // vessel that cannot take it (GDD 21 §3, 2026-07-28).
-                if (run.ServingGlass.IsFull && tilt > 42f && mouth.y > opening.y - 30f)
+                if (run.ServingGlass.IsFull && tilt > 42f && clear)
                 {
                     _serveGrabbed = false;
+                    _serveHand.Release();
                     ShowGlassFull();
                 }
-                else if (tilt > 42f && mouth.y > opening.y - 30f && !run.CanPourOut)
+                else if (tilt > 42f && clear && !run.CanPourOut)
                 {
                     // THE MANDATORY MIX (GDD 21 §14): two spirits may not leave the tin
                     // unmixed. Core refuses in PourIntoServingGlass — which this stage
@@ -221,11 +280,11 @@ namespace LastCall.UI
                     // stream the way CanPull greys the keg key, instead of catching an
                     // exception forty times a second.
                     _serveGrabbed = false;
-                    _serveShaker.localRotation = Quaternion.identity;
+                    _serveHand.Release();     // set back on the bench, not snapped upright in mid-air
                     if (_aimText != null)
                         _aimText.text = "THIS ONE NEEDS MIXING — BACK TO THE SHAKER";
                 }
-                else if (tilt > 42f && mouth.y > opening.y - 30f)
+                else if (tilt > 42f && clear)
                 {
                     // Aim: how well the mouth is centred over the glass. Within ~half the
                     // glass width is a clean pour; beyond that the stream drifts wide.
@@ -386,10 +445,9 @@ namespace LastCall.UI
         private void PutTheShakerDown(TycoonRun run)
         {
             _serveGrabbed = false;
+            _serveHand.Release();             // it walks home now — it used to teleport there
             _serveFluid.ClearStreamColor();   // the tin has stopped; the air belongs to the glass
-            _serveShaker.anchoredPosition = _serveShakerRest;
-            _serveShaker.localRotation = Quaternion.identity;
-            _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
+            _serveTinLeaving = true;          // and leaves the bench once it is standing on it
             RefreshServeText(run, 1.0);
             if (run.Glass.IsEmpty)
             {
@@ -694,10 +752,12 @@ namespace LastCall.UI
                     return;
                 }
                 _serveGrabbed = true;
-                _serveGrabOffset = Vector2.zero;
-                if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                // The out parameter is ZERO when the point cannot be mapped, so the fallback is
+                // chosen after the call, not before it.
+                if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
-                    _serveGrabOffset = _serveShaker.anchoredPosition - held;
+                    held = _serveHand.GripPoint;
+                _serveHand.Press(held);
             Sfx.Play("tin_tip", 0.6f);
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);

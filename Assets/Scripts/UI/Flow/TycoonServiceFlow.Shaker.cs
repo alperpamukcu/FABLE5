@@ -43,7 +43,12 @@ namespace LastCall.UI
         // THE HAND KEEPS ITS GRIP (2026-09-06, the author: "nesneler tutulurken veya
         // sürüklenirken hep mouseun ortasına hizalanıyor bunun olmamasını istiyorum"): where
         // on the bottle or the lid the finger landed is where it stays for the carry.
-        private Vector2 _bottleGrabOffset, _capGrabOffset;
+        private Vector2 _capGrabOffset;
+        /// <summary>The hand on the bottle (PourHand, 2026-09-11) — the neck grip, the weight and
+        /// the walk home. The bottle used to snap to the cursor and was left hanging, tipped,
+        /// wherever it was let go.</summary>
+        private readonly PourHand _bottleHand = new PourHand();
+        private const float BottleGripDepth = 60f;
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
         private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
@@ -779,8 +784,7 @@ namespace LastCall.UI
             if (inHand) PushFocusBottleArt(run);
             else if (_shakerTitle != null) _shakerTitle.text = "THE TIN";
             SayShaker(ShakerLine(run));
-            _pourBottle.anchoredPosition = _bottleRest;
-            _pourBottle.localRotation = Quaternion.identity;
+            ConfigureBottleHand();
             _shakerFluid.Clear();
             _shakerFluid.ClearStreamColor();      // a new visit pours nothing yet
             _shakerFluid.SetColor(DrinkColor(run.Glass));
@@ -818,36 +822,41 @@ namespace LastCall.UI
         {
             if (Mouse.current == null || _focusBottle == null) return;
 
-            // A grab already in flight must not survive the lid going on either.
-            if (_capped) { _bottleGrabbed = false; return; }
+            // A grab already in flight must not survive the lid going on either — the bottle
+            // still walks home behind the faded bench rather than freezing where it was.
+            if (_capped && _bottleGrabbed) { _bottleGrabbed = false; _bottleHand.Release(); }
 
             // Release when the button comes up, wherever the cursor is.
             if (_bottleGrabbed && !Mouse.current.leftButton.isPressed)
-                _bottleGrabbed = false;
-
-            bool pourNow = false;
-            if (_bottleGrabbed &&
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 local))
             {
-                local += _bottleGrabOffset;
-                // Keep the bottle on the surface.
+                _bottleGrabbed = false;
+                _bottleHand.Release();
+            }
+
+            // The hand moves every frame, held or not: let go and the bottle goes home.
+            Vector2? pointer = null;
+            if (_bottleGrabbed && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 ptr))
+                pointer = ptr;
+            {
                 float halfW = _pourSurface.rect.width * 0.5f;
                 float halfH = _pourSurface.rect.height * 0.5f;
-                local.x = Mathf.Clamp(local.x, -halfW + 30f, halfW - 30f);
-                local.y = Mathf.Clamp(local.y, -halfH + 20f, halfH - 20f);
-                _pourBottle.anchoredPosition = local;
+                _bottleHand.Step(Time.deltaTime, pointer,
+                    Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH - 20f));
+                _bottleHand.Apply(_pourBottle);
+            }
 
-                float lift = Mathf.Clamp01((local.y - _bottleRest.y) / LiftRange);
-                float tilt = lift * MaxTilt;                       // degrees, counter-clockwise = leans left
-                _pourBottle.localRotation = Quaternion.Euler(0, 0, tilt);
+            bool pourNow = false;
+            if (_bottleGrabbed && _bottleHand.Held)
+            {
+                float tilt = _bottleHand.Tilt;                     // degrees, counter-clockwise = leans left
 
-                // Where the mouth ends up: the bottle's CAP, swung around its grip. It used to
-                // be the top centre of the grab plate, which is the cap only for art that
-                // fills its sheet — the juice cartons poured from a point some 80px above
-                // their own spout (the author, 2026-08-11: "sıvının çıkış yerini kapak olarak
-                // ayarla"). VesselArt reads it off the drawing instead.
-                Vector2 mouth = local + VesselArt.Swing(_pourMouth, tilt);
+                // Where the mouth ends up: the bottle's CAP, turned about the hand's grip on the
+                // neck. It used to be the top centre of the grab plate, which is the cap only for
+                // art that fills its sheet — the juice cartons poured from a point some 80px
+                // above their own spout (the author, 2026-08-11: "sıvının çıkış yerini kapak
+                // olarak ayarla"). VesselArt reads it off the drawing instead.
+                Vector2 mouth = _bottleHand.SpoutNow;
 
                 var (opening, mouthHalf) = TinMouth();
                 bool over = Mathf.Abs(mouth.x - opening.x) < mouthHalf && mouth.y > opening.y - 30f;
@@ -1001,6 +1010,25 @@ namespace LastCall.UI
         /// before anything poured, which is how the pour smoke test found it. Returns the rim
         /// in the surface's own coordinates, and how far either side of it counts as "in".
         /// </summary>
+        /// <summary>
+        /// Gives the hand this bottle: its rest, its measured cap, and a lift range fitted to the
+        /// room above it. A bottle's neck stands high on this bench, so the lift a full tilt takes
+        /// is whatever is left under the top of the surface (between 90 and the old 200) — and the
+        /// grip depth is kept inside what that lift allows, so raising the hand can never lower
+        /// the mouth (PourHand.Configure guards the same inequality).
+        /// </summary>
+        private void ConfigureBottleHand()
+        {
+            if (_pourBottle == null) return;
+            float clampTop = _pourSurface.rect.height * 0.5f - 20f;
+            float g = BottleGripDepth;
+            float lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
+            g = Mathf.Min(g, 0.8f * lr / (MaxTilt * Mathf.Deg2Rad));
+            lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
+            _bottleHand.Configure(_bottleRest, _pourMouth, g, lr, MaxTilt);
+            _bottleHand.Apply(_pourBottle);
+        }
+
         private (Vector2 Centre, float Half) TinMouth()
         {
             var rt = _shakerVessel;
@@ -1860,10 +1888,12 @@ namespace LastCall.UI
                 if (_focusBottle != null && Run != null && Run.Phase == TycoonPhase.DayOpen)
                 {
                     _bottleGrabbed = true;
-                    _bottleGrabOffset = Vector2.zero;
-                    if (Mouse.current != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    // The out parameter is ZERO when the point cannot be mapped, so the fallback
+                    // is chosen after the call, not before it.
+                    if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                             _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
-                        _bottleGrabOffset = _pourBottle.anchoredPosition - held;
+                        held = _bottleHand.GripPoint;
+                    _bottleHand.Press(held);
                 }
             Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });

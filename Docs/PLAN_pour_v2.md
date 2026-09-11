@@ -60,7 +60,7 @@ already burns 11.7 ms; (3) phases are re-cut so the two things broken today ship
 | # | Phase | Done when |
 |---|---|---|
 | **P1a** ✅ | The shader ships (Resources material + `LogError` + `ShipTests`); the tall glass's solver fixed; rest early-out; profiler markers | **done 2026-09-11** — see §3 |
-| **P1b** | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | the 420 highball pours over ≥ 90 u of hand travel; new PlayMode serve test; released vessel returns exactly |
+| **P1b** ✅ | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | **done 2026-09-11** — see §4 |
 | **P2** | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | EditMode law tests; sim report unchanged |
 | **P3** | The rope stream, split budgets, drops-only gravity, landing into the vessel with mass, tin sink, source alpha | no drop leaves a vessel; stream area ≈ Core's delivered area |
 | **P4** | Pixel-art shading: bands, dither, walls, depth, meniscus, top face, rope stripes, pixel splash, agitation | A/B look report to the author BEFORE locking |
@@ -110,3 +110,35 @@ Still open from P1a: a full glass is calm (p99 23 px/s) but not fully asleep, so
 until it leaves the bench.
 
 Suites: EditMode **505/505**, PlayMode **11/11**.
+
+## 4 · P1b — what landed and what it measured (2026-09-11)
+
+**`PourHand`** (`Assets/Scripts/UI/Flow/PourHand.cs`), one per bench: the vessel turns about a grip
+a short way below its DRAWN spout, so `d(spout.y)/d(lift) = 1 − g·sinθ·dθ/dy` stays positive at every
+angle (Configure clamps `g` to keep it so). GDD 24 §2.2's "the higher it goes, the further it tips"
+is unchanged; only where the hand holds the vessel moved.
+
+| Serve bench, live scene | before | neck grip |
+|---|---|---|
+| highball (420) pour window | **10 u** of hand travel, 42–48° | **108 u, 43–118°** — the whole tilt range |
+| rocks | — | 108 u, 43–118° |
+
+The serve bench now also aims **drawn spout at drawn rim** (`ServeSpoutNow` through the live transform,
+because the hover glow grows the held tin 4% about its pivot — 11 u along the axis; `ServeRim` off the
+glass art), the pair the shaker bench has measured since 2026-08-11.
+
+**Weight**: the grip follows the pointer on a spring (ω 28, ζ 0.75), the tilt on a softer one (ω 18,
+ζ 0.62), a sideways push swings the body under the neck (≤ 12°), and a released vessel walks home
+(ω 16, ζ 0.9) and is then put EXACTLY on its rest — the hand writes the pose only while moving and
+once on arrival, because the vessel at rest belongs to its additive HoverGlow. `Motion.Reduced`
+drops the springs. The tin that runs dry leaves the bench only once it is standing on it; the mix
+refusal and a full glass set it down instead of snapping it upright in mid-air.
+
+**Tests**: `Tipping_the_tin_pours_into_the_tall_glass` (new) caps the tin by hand, rides the slide to
+the glass, sweeps the tin up the bench in rows and asserts ≥ 4 rows pour into the highball — the
+window the old grip left would score 0–1. It first pressed the wrong object: the serve panel carries
+a second "Shaker" of its own, which a whole-panel search returns first; the test now looks on the
+work surface. `A_released_bottle_goes_back_where_it_stood` (new): exact to 1e-4 u and 0.01°.
+The existing bottle sweep passed unchanged under the springs.
+
+Suites: EditMode **505/505**, PlayMode **13/13**.
