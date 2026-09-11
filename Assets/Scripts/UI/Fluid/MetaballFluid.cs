@@ -23,13 +23,31 @@ namespace LastCall.UI
         public const string MaterialPath = "Fluid/MetaballLiquid";
 
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
-        private const int MaxPool = 2040;
-        private const int MaxDrops = 110;
-        private const int RenderMax = 2176;   // must match MAX_DROPS in the shader
+        // THE STREAM HAS ITS OWN SLOTS (2026-09-11). 110 were shared, and measured: the stream
+        // alone filled them into an EMPTY glass (90 of 110 on average, 110 at the peak — a 0.7 s
+        // fall at one drop per 6 ms), and into a full one the splashes held 60 and left the
+        // stream 34. Splashes can no longer take a stream node's place, and the pool gave up 24
+        // slots it never uses (the tallest stacked glass holds ~880), so RenderMax is unchanged.
+        private const int StreamMax = 96, SplashMax = 64;
+        private const int MaxDrops = StreamMax + SplashMax;
+        private const int MaxPool = 2016;
+        private const int RenderMax = 2176;   // must match MAX_DROPS in the shader = MaxPool + MaxDrops
 
-        private const float Gravity = 1400f;          // px/s² down
-        private const float StreamRadius = 4f;
-        private const float StreamInterval = 0.006f;
+        private const float Gravity = 1400f;          // px/s² down — the POOL's; its calibration hangs on it
+        /// <summary>The drops' own gravity. A pour falls hard and a stream that drifts down reads as
+        /// syrup; but the pool's packing was measured under 1400, so the air gets its own number.</summary>
+        private const float StreamGravity = 1800f;
+        /// <summary>A stream node's radius at width 1. It was 4, and a thresholded kernel draws an
+        /// isolated drop at 0.4 of its radius: the pour was a 3-5 px thread carrying about a tenth
+        /// of the area the glass gained. A connected rope of 10s draws ~11 px at a trickle and ~21 at
+        /// full flow — a fifth of a highball's mouth, a pour you can read the rate off.</summary>
+        private const float StreamRadius = 10f;
+        /// <summary>Node spacing as a share of the node's radius. Under ~1.28 the fields of two
+        /// neighbours join; at 0.3 the rope stays one column most of the way down.</summary>
+        private const float StreamSpacing = 0.30f;
+        /// <summary>How much thinner liquid in the air is drawn than liquid at rest (the shader's
+        /// _StreamAlpha). 0.55 made the pour the faintest thing on the bench — see SetStreamColor.</summary>
+        private const float StreamAlphaShare = 0.85f;
 
         // Position-based fluid (PBD / position-based dynamics, the real-time SPH-family method).
         // Incompressibility is a hard MINIMUM-DISTANCE constraint relaxed a few passes per frame:
@@ -403,10 +421,41 @@ namespace LastCall.UI
             public Vector2 Pos, Vel;
             public float Radius, Life;
             public bool Merges, Active;
+            /// <summary>Went in through the vessel's MOUTH: from then on it is inside the glass and
+            /// the walls hold it. One that crossed the rim outside the mouth is falling past.</summary>
+            public bool Entered;
         }
         private readonly Drop[] _drops = new Drop[MaxDrops];
         private readonly Vector4[] _dropData = new Vector4[RenderMax];
         private float _emitAccum;
+        private float _streamT;                  // the stream's own clock, for its sway
+        private float _lastLandLx, _lastLandAge = 99f;   // where the stream last hit the drink
+
+        // THE TIN'S MOUTH (2026-09-11). The tin is opaque, so below the brim it draws no body —
+        // and with no body to land on, the stream fell straight through the steel and out under
+        // it: the "drips to the floor" the author saw. A sink is the mouth as a hole the stream
+        // goes into, for a vessel that shows nothing inside.
+        private bool _sinkSet;
+        private float _sinkX, _sinkY, _sinkHalf;
+
+        /// <summary>A mouth the stream goes INTO and vanishes, for a vessel whose inside is not
+        /// drawn (the steel tin below its brim). Surface-local px.</summary>
+        public void SetSink(Vector2 mouthCentre, float halfWidth)
+        {
+            _sinkSet = true; _sinkX = mouthCentre.x; _sinkY = mouthCentre.y; _sinkHalf = halfWidth;
+        }
+
+        public void ClearSink() => _sinkSet = false;
+
+        // What became of every drop that left the air — the evidence for "nothing drips onto
+        // the counter". Landed: melted into the drink. Swallowed: went into a sink. Lost: a
+        // stream node that fell out of the viewport or ran out of life without landing anywhere,
+        // which is exactly the drop the author saw fall past the glass.
+        public int StreamLanded { get; private set; }
+        public int StreamSwallowed { get; private set; }
+        public int StreamLost { get; private set; }
+        public int SplashLost { get; private set; }
+        public void ResetDropCounts() { StreamLanded = StreamSwallowed = StreamLost = SplashLost = 0; }
 
         private static readonly int IdSize      = Shader.PropertyToID("_Size");
         private static readonly int IdColor     = Shader.PropertyToID("_Color");
@@ -470,6 +519,7 @@ namespace LastCall.UI
             // connected body (no gaps between particles) with a flat surface, not separate blobs.
             _material?.SetFloat(IdThreshold, 0.7f);
             _material?.SetFloat(IdEdgeWidth, 0.10f);
+            _material?.SetFloat("_StreamAlpha", StreamAlphaShare);
             _image.enabled = _material != null;
         }
 
@@ -540,13 +590,13 @@ namespace LastCall.UI
         public void SetStreamColor(Color c)
         {
             if (_material == null) return;
-            // The stream takes the BODY's alpha, never its own source table's. The callers
-            // reach for two different tables — LiquidColor carries 1.0 from a Color32, while
-            // DrinkColor carries the fill-derived alpha — so a bottle stream was landing at
-            // 0.53 against a body that could be as thin as 0.52, and _StreamAlpha's whole
-            // promise ("liquid in the air is thinner than liquid at rest") held only by
-            // accident. With the alpha shared, _StreamAlpha is the one thing that thins it.
-            c.a = _bodyAlpha;
+            // THE STREAM IS AS OPAQUE AS THE LIQUID IT IS (2026-09-11). It used to take the
+            // BODY's alpha — the drink already in the glass — which at the start of every pour
+            // is a near-empty glass, so the stream fell at its faintest (measured: ~0.31 on the
+            // first frame) exactly when the player is looking for it, and climbed back only as
+            // the glass filled. It keeps its own, floored and capped as the body's is, and the
+            // shader's share (StreamAlphaShare) is what makes air thinner than rest.
+            c.a = c.a <= 0f ? 0f : Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
             _streamNamed = true;
             _material.SetColor(IdStreamColor, c);
         }
@@ -692,13 +742,21 @@ namespace LastCall.UI
             // and a half glass popped to the rim. Laid on a hexagonal lattice a hair wider than
             // the rest spacing, a new body starts with nothing to push and simply settles.
             if (seeding && kind == KindBeer && _stacked) have += SeedLattice(target - have);
+            // THE LEVEL RISES FROM THE POUR (2026-09-11). Growth used to rain in at random x
+            // across the whole surface while the stream's own drops were deleted where they hit —
+            // the glass filled from everywhere except the place the drink was going in. While a
+            // stream is landing, new drink arrives at ITS column, moving down, which is a plunge.
+            bool fromStream = !seeding && _lastLandAge < 0.35f;
+            float spread = Mathf.Max(_halfW - _pr * SideOffset, 2f);
             while (have < target && _pn < MaxPool)
             {
-                _px[_pn] = Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
+                _px[_pn] = fromStream
+                    ? Mathf.Clamp(_lastLandLx + Random.Range(-1.5f, 1.5f) * _sp, -spread, spread)
+                    : Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
                 _py[_pn] = seeding
                     ? Random.Range(-_halfH, Mathf.Max(lineLocal, -_halfH + 1f))
                     : lineLocal + Random.Range(-6f, 10f);
-                _vx[_pn] = 0f; _vy[_pn] = seeding ? 0f : -40f;
+                _vx[_pn] = 0f; _vy[_pn] = seeding ? 0f : (fromStream ? -140f : -40f);
                 _kind[_pn] = kind;
                 _contact[_pn] = 0;
                 if (kind == KindFoam) _foamN++;
@@ -810,32 +868,66 @@ namespace LastCall.UI
         /// scatter a little more the fatter it is).</param>
         public void EmitStream(Vector2 from, Vector2 vel, float dt, float width = 1f)
         {
-            _emitAccum += dt;
-            int guard = 0;
+            // A ROPE, NOT BEADS (2026-09-11). A node every 6 ms spaced them 0.006·v apart, so a
+            // stream broke into beads the moment it sped up; and every drop got its own random
+            // sideways kick, which frayed it. Now a node leaves each time the last one has gone a
+            // fraction of its own radius, so the column stays joined, and the stream sways as ONE
+            // thing on a slow wave — a real pour waves, it does not fray.
             width = Mathf.Clamp(width, 0.5f, 1.8f);
-            while (_emitAccum >= StreamInterval && guard++ < 8)
+            float r = StreamRadius * width;
+            float interval = Mathf.Clamp(StreamSpacing * r / Mathf.Max(vel.magnitude, 60f), 0.004f, 0.05f);
+            _emitAccum = Mathf.Min(_emitAccum + dt, interval * 4f);   // a hitch never fires a burst
+            _streamT += dt;
+            int guard = 0;
+            while (_emitAccum >= interval && guard++ < 6)
             {
-                _emitAccum -= StreamInterval;
-                float f = 1f - _emitAccum / StreamInterval;
-                SpawnDrop(from + vel * (StreamInterval * f),
-                    vel + new Vector2(Random.Range(-14f, 14f) * width, 0f),
-                    StreamRadius * width * Random.Range(0.85f, 1.1f), 3f, true);
+                _emitAccum -= interval;
+                // WHERE IT WOULD BE BY NOW. What is left in the accumulator after this node is
+                // the time since it left the lip, so that is how far it has already fallen —
+                // at v·τ, with the fall's own curve. This used to be interval − τ, which is the
+                // same distance measured from the wrong end: the nodes sat unevenly, a frame that
+                // let nothing go doubled the gap behind it, and once the stream sped up that gap
+                // passed the width the field can bridge — the rope broke into lengths (measured:
+                // six nodes 3-13 px apart, then 19-33 px of nothing).
+                float tau = _emitAccum;
+                var v = vel + new Vector2(9f * width * Mathf.Sin((_streamT - tau) * 2f * Mathf.PI * 2.6f), 0f);
+                var pos = from + v * tau + new Vector2(0f, -0.5f * StreamGravity * tau * tau);
+                SpawnDrop(pos, v + new Vector2(0f, -StreamGravity * tau), r, 3f, true);
             }
         }
 
-        public void Splash(Vector2 at, float strength)
+        public void Splash(Vector2 at, float strength) => Splash(at, strength, 36f);
+
+        /// <summary>
+        /// A landing's spatter, kept INSIDE the vessel (2026-09-11). It used to fly ±150 px/s
+        /// sideways for up to half a second — wider than the glass — and simply die wherever it
+        /// was, which is drops landing outside the drink. It rises no higher than
+        /// <paramref name="apex"/> (never over the rim), is held by the walls, and melts back into
+        /// the drink when it falls to it.
+        /// </summary>
+        public void Splash(Vector2 at, float strength, float apex)
         {
-            int n = Mathf.Clamp(Mathf.RoundToInt(2f + strength * 3f), 2, 6);
+            int n = Mathf.Clamp(Mathf.RoundToInt(1f + strength * 2f), 1, 4);
+            float vyMax = Mathf.Sqrt(2f * StreamGravity * Mathf.Max(apex, 4f));
             for (int i = 0; i < n; i++)
-                SpawnDrop(at + new Vector2(Random.Range(-5f, 5f), 0f),
-                    new Vector2(Random.Range(-150f, 150f), Random.Range(120f, 300f) * strength),
-                    Random.Range(6f, 9f), Random.Range(0.28f, 0.5f), false);
+            {
+                SpawnDrop(at + new Vector2(Random.Range(-4f, 4f), 2f),
+                    new Vector2(Random.Range(-90f, 90f), Random.Range(0.5f, 1f) * vyMax),
+                    Random.Range(3f, 5.5f), 0.9f, false);
+                int k = _lastSpawned;
+                if (k >= 0) _drops[k].Entered = true;
+            }
         }
+
+        private int _lastSpawned = -1;
 
         private void SpawnDrop(Vector2 pos, Vector2 vel, float radius, float life, bool merges)
         {
+            // The stream and the splash each search their OWN slots.
+            int from = merges ? 0 : StreamMax, to = merges ? StreamMax : MaxDrops;
             int slot = -1;
-            for (int i = 0; i < MaxDrops; i++) if (!_drops[i].Active) { slot = i; break; }
+            for (int i = from; i < to; i++) if (!_drops[i].Active) { slot = i; break; }
+            _lastSpawned = slot;
             if (slot < 0) return;   // full: let the new drop go, never cull one mid-fall
             _drops[slot] = new Drop { Pos = pos, Vel = vel, Radius = radius, Life = life, Merges = merges, Active = true };
         }
@@ -1375,13 +1467,68 @@ namespace LastCall.UI
             // WHERE THE DRINK ACTUALLY IS (2026-09-07): the drawn surface, read once a step,
             // so a drop melts in at the crest it can be seen hitting — and splashes there.
             float land = _poolSet ? SurfaceLocalY(_fillTopLocal) : _fillTopLocal;
+            float wix = Mathf.Max(_halfW - _pr * SideOffset, 2f);
+            float wiy = Mathf.Max(_halfH - _pr * FaceOffset, 2f);
+            float mouthHalf = _poolSet ? HalfWidthAt(1f, wix) + 2f : 0f;
+            // A splash rises no higher than half the air left in the glass, and never over 36 px.
+            float apex = Mathf.Min(0.5f * Mathf.Max(_halfH - land, 0f), 36f);
+            _lastLandAge += dt;
             for (int i = 0; i < MaxDrops; i++)
             {
                 if (!_drops[i].Active) continue;
                 ref Drop d = ref _drops[i];
-                d.Vel.y -= Gravity * dt;
+                d.Vel.y -= StreamGravity * dt;
                 d.Pos += d.Vel * dt;
                 d.Life -= dt;
+
+                // A vessel that draws nothing inside (the steel tin under its brim) swallows the
+                // stream at its mouth instead of letting it fall through the metal.
+                if (d.Merges && !_poolSet && _sinkSet
+                    && d.Pos.y <= _sinkY && Mathf.Abs(d.Pos.x - _sinkX) <= _sinkHalf)
+                {
+                    d.Active = false;
+                    StreamSwallowed++;
+                    continue;
+                }
+
+                if (_poolSet)
+                {
+                    // Into the container's frame.
+                    float c = Mathf.Cos(-_angle), s2 = Mathf.Sin(-_angle);
+                    float ox = d.Pos.x - _cx, oy = d.Pos.y - _cy;
+                    float lx = ox * c - oy * s2, ly = ox * s2 + oy * c;
+
+                    // IN THROUGH THE MOUTH, THEN HELD BY THE GLASS (2026-09-11). A drop crossing
+                    // the rim inside the mouth is in the drink's vessel from then on, and its walls
+                    // hold it: a stream that comes in near a wall runs down it instead of passing
+                    // through the glass and out onto the counter.
+                    if (!d.Entered && ly < _halfH && ly > _halfH - 40f && Mathf.Abs(lx) <= mouthHalf)
+                        d.Entered = true;
+                    if (d.Entered && ly < _halfH)
+                    {
+                        float w = HalfWidthAt((ly + wiy) / (2f * wiy), wix);
+                        if (Mathf.Abs(lx) > w)
+                        {
+                            float side = Mathf.Sign(lx);
+                            lx = side * w;
+                            // local velocity; the component into the wall goes (a splash bounces a little)
+                            float cb = Mathf.Cos(-_angle), sb = Mathf.Sin(-_angle);
+                            float lvx = d.Vel.x * cb - d.Vel.y * sb, lvy = d.Vel.x * sb + d.Vel.y * cb;
+                            if (lvx * side > 0f) lvx = d.Merges ? 0f : -0.4f * lvx;
+                            float ca = Mathf.Cos(_angle), sa = Mathf.Sin(_angle);
+                            d.Vel = new Vector2(lvx * ca - lvy * sa, lvx * sa + lvy * ca);
+                            ToSurface(lx, ly, out float wx, out float wy);
+                            d.Pos = new Vector2(wx, wy);
+                        }
+                    }
+
+                    // A splash that falls back to the drink goes back into it.
+                    if (!d.Merges && d.Entered && ly <= land && d.Vel.y < 0f)
+                    {
+                        d.Active = false;
+                        continue;
+                    }
+                }
 
                 // A stream drop that reaches the liquid surface inside the vessel melts in.
                 if (d.Merges && _poolSet)
@@ -1390,23 +1537,30 @@ namespace LastCall.UI
                     float c = Mathf.Cos(-_angle), s2 = Mathf.Sin(-_angle);
                     float ox = d.Pos.x - _cx, oy = d.Pos.y - _cy;
                     float lx = ox * c - oy * s2, ly = ox * s2 + oy * c;
-                    if (ly <= land + 6f && Mathf.Abs(lx) < _halfW)
+                    float wHere = HalfWidthAt(Mathf.Clamp01((land + wiy) / (2f * wiy)), wix) + 2f;
+                    if (ly <= land + 6f && Mathf.Abs(lx) < wHere)
                     {
+                        _lastLandLx = lx; _lastLandAge = 0f;
+                        StreamLanded++;
                         // A drop that has fallen further hits harder: more spatter, a deeper
                         // punch in the surface. What makes a pour READ as a pour (2026-09-07,
                         // the author: "akışkanlığı ve dökülme hissiyatını").
                         float k = Mathf.Clamp01((d.Vel.magnitude - 180f) / 520f);
-                        if (Random.value < 0.45f + 0.35f * k)
+                        if (Random.value < 0.30f + 0.30f * k)
                         {
                             ToSurface(lx, land, out float hx, out float hy);
-                            Splash(new Vector2(hx, hy), 0.3f + 0.6f * k);
+                            Splash(new Vector2(hx, hy), 0.3f + 0.6f * k, apex);
                         }
                         Ripple(lx, 0.010f + 0.012f * k);
                         d.Active = false;
                         continue;
                     }
                 }
-                if (d.Life <= 0f || d.Pos.y < floor) d.Active = false;
+                if (d.Life <= 0f || d.Pos.y < floor)
+                {
+                    d.Active = false;
+                    if (d.Merges) StreamLost++; else SplashLost++;
+                }
             }
         }
 

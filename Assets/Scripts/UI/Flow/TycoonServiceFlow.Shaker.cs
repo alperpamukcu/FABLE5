@@ -1058,6 +1058,11 @@ namespace LastCall.UI
         /// plus a vertical slosh <paramref name="bob"/> on the surface (all surface-local px).</summary>
         private void PushShakerPool(TycoonRun run, float bob)
         {
+            // The tin's mouth is always a hole the stream goes into (2026-09-11): below the brim
+            // the steel shows no drink, and with nothing to land on the stream used to fall
+            // through the tin and out under it — the "drips to the floor" the author saw.
+            var (mouthAt, mouthHalfW) = TinMouth();
+            _shakerFluid.SetSink(mouthAt, mouthHalfW);
             if (run.Glass.IsEmpty) { _shakerFluid.ClearPool(); return; }
             // Read the vessel live so the pool travels with the shaker when it is thrown about.
             // Fill the glass INTERIOR (inset from the walls) so the liquid pools inside the

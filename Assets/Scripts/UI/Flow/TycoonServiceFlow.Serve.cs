@@ -306,15 +306,18 @@ namespace LastCall.UI
                     // falling past onto the counter — the spill you can see (GDD 24 §3).
                     // What comes out of the TIN is the shaker's own drink, which is a different
                     // liquid from what is already standing in the glass; it goes on the stream.
-                    _serveFluid.SetStreamColor(DrinkColor(run.Glass));
-                    float landX = Mathf.Lerp(mouth.x + (mouth.x - opening.x) * 1.5f, opening.x, (float)accuracy);
-                    var streamVel = new Vector2((landX - mouth.x) * 1.8f, -225f);
-                    // A fatter rope the further the tin is tipped (2026-09-07): the pour
-                    // is read off the stream, and a stream that never changes is a line.
-                    // As thick as the pour is heavy: Core's share of full flow, not the angle.
-                    _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime,
-                        pourNow ? 0.6f + 0.9f * _tinShare : 0.6f);
-                    if (!pourNow) RefreshServeText(run, accuracy);
+                    // NO LIQUID IS DRAWN THAT DOES NOT POUR (2026-09-11). Off the aim nothing
+                    // leaves the tin (GDD 21, 2026-09-07: the aim gates the pour), yet a thin
+                    // "miss" stream was still drawn falling wide of the glass and onto the
+                    // counter — liquid visibly running out of a tin that was pouring nothing.
+                    if (pourNow)
+                    {
+                        _serveFluid.SetStreamColor(DrinkColor(run.Glass));
+                        var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
+                        // As thick as the pour is heavy: Core's share of full flow, not the angle.
+                        _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.6f + 0.9f * _tinShare);
+                    }
+                    else RefreshServeText(run, accuracy);
                 }
             }
 
@@ -418,7 +421,11 @@ namespace LastCall.UI
         /// and five glasses would have been fifteen of them.</summary>
         private void PushServePool(TycoonRun run)
         {
-            if (run.ServingGlass.IsEmpty) { _serveFluid.ClearPool(); return; }
+            // AN EMPTY GLASS STILL HAS A FLOOR (2026-09-11). It used to clear the pool, and a pool
+            // that is not there is nothing to land on: the first drops of EVERY pour fell straight
+            // through the empty glass and onto the counter behind it — the author's "bardağa
+            // koyarken sıvılar yere damlıyor gibi gözüküyor". The box is set with no drink in it,
+            // so the stream lands on the glass's own floor and the drink starts there.
             var piece = _serveGlassPiece;
             var c = _serveGlass.anchoredPosition;
             float w = _serveGlass.rect.width, h = _serveGlass.rect.height;

@@ -758,7 +758,10 @@ namespace LastCall.UI
 
                 // A stream from the faucet's lip, falling into the mouth wherever it now is.
                 var toMouth = mouth - spout;
-                _tapFluid.EmitStream(spout, new Vector2(toMouth.x * 2.2f, -300f), dt);
+                // A steady column, a little under the hand pour's rest girth (2026-09-11): the
+                // stream became a rope of radius-10 nodes, and a tap's flow is fixed and modest
+                // beside a tin tipped right over — the head is what this bench is read by.
+                _tapFluid.EmitStream(spout, new Vector2(toMouth.x * 2.2f, -300f), dt, 0.8f);
                 if (run.ServingGlass.TotalVolume + run.ServingGlass.Head != before) RefreshTapText(run);
             }
 

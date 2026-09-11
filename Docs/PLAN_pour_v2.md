@@ -62,7 +62,7 @@ already burns 11.7 ms; (3) phases are re-cut so the two things broken today ship
 | **P1a** ✅ | The shader ships (Resources material + `LogError` + `ShipTests`); the tall glass's solver fixed; rest early-out; profiler markers | **done 2026-09-11** — see §3 |
 | **P1b** ✅ | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | **done 2026-09-11** — see §4 |
 | **P2** ✅ | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | **done 2026-09-11** — see §5 |
-| **P3** | The rope stream, split budgets, drops-only gravity, landing into the vessel with mass, tin sink, source alpha | no drop leaves a vessel; stream area ≈ Core's delivered area |
+| **P3** ✅ | The rope stream, split budgets, drops-only gravity, landing into the vessel, tin sink, source alpha | **done 2026-09-11** — see §6 |
 | **P4** | Pixel-art shading: bands, dither, walls, depth, meniscus, top face, rope stripes, pixel splash, agitation | A/B look report to the author BEFORE locking |
 | **P5** | Slosh (bottle + pool, dt-correct damping); frozen solver core if P3 is over budget | pouring full glass ≤ 3.5 ms |
 | **P6** | Docs: GDD 24 §2/§3/§3.5/§12, GDD 21 §3, GDD_MEVCUT | — |
@@ -174,3 +174,43 @@ mix, so under the full catalogue gin with a liqueur is a Built drink and needs n
 
 The sim pours through `PourMeasure` and `PourIntoServingGlass`, neither of which changed behaviour, so
 its report is unchanged by construction. Suites: EditMode **518/518**, PlayMode **13/13**.
+
+## 6 · P3 — the stream carries its drink into the vessel (2026-09-11)
+
+**Why the author saw drinks "dripping onto the floor"**, found in two places:
+
+* **Serve bench:** an EMPTY glass cleared its pool, and a pool that is not there is nothing to land on —
+  the first drops of every pour fell straight through the transparent glass onto the counter behind
+  it. The empty glass now sets its box with no drink in it, so the stream lands on its floor.
+* **Shaker bench:** the steel tin draws no body below its brim, so the stream fell through the metal
+  and out under it. The tin's mouth is now a **sink** (`SetSink`): the stream goes in and is gone.
+* Also: splashes flew ±150 px/s for up to half a second — wider than the glass — and died wherever
+  they were; and an off-aim "miss" stream was drawn falling wide while Core poured nothing. Splashes
+  now rise no higher than half the air left in the glass (never over the rim), are held by the walls
+  and melt back into the drink; no liquid is drawn that does not pour.
+
+**The rope.** Stream and splash have their own slots (96 + 64; the pool gave up 24 it never uses,
+so RenderMax is unchanged). Nodes leave by DISTANCE — every 0.3 of their radius — not every 6 ms,
+and sway as one column on a slow wave instead of each drop getting its own random kick. Radius 10
+× Core's share (4 before): a trickle is ~11 px, full flow ~21 px. Drops fall at their own 1800 px/s²;
+the pool keeps its calibrated 1400. A drop crossing the rim INSIDE the mouth is held by the glass
+walls from then on. New drink arrives at the stream's landing column, moving down — the level
+rises FROM the pour instead of raining in across the whole surface. The stream keeps its own
+alpha (it took the near-empty glass's, and fell at ~0.31 on the first frame) at 0.85 of it.
+
+**A bug the picture found:** the rope still came out in lengths. Every node's height, dumped: six
+nodes 3–13 px apart, then 19–33 px of nothing. The emitter placed a node emitted τ ago at
+`v·(interval − τ)` — the same distance measured from the wrong end — so the spacing was uneven,
+a frame that let nothing go doubled the gap behind it, and once the stream sped up the gap passed
+the width the field can bridge (1.28·r). At `v·τ` with the fall's own curve the spacing climbs
+smoothly, 6 → 18 px, inside 19 all the way down.
+
+| Measured (whole tin into an empty highball / a bottle into a tin below its brim) | before | after |
+|---|---|---|
+| stream nodes that fell outside any vessel | the first drops of every pour | **0 / 0** |
+| splashes outside | up to ±60 px wide | **0** |
+| stream slots in use | 110/110 into an empty glass | **≤ 49 / 96** |
+| rope | 3–5 px beads | continuous, 11–21 px, necking only just above the landing |
+
+The pint is unchanged (197 beer / 34 foam / 0 sunk); the tap's stream is width 0.8.
+Suites: EditMode **518/518**, PlayMode **13/13**.
