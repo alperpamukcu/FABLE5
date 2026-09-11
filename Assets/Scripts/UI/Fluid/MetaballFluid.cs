@@ -129,6 +129,56 @@ namespace LastCall.UI
         /// <summary>How many of the final relaxation passes use shock propagation in a still
         /// vessel (see StepPool: the lower particle of a stacked pair holds, the upper moves).</summary>
         private const int ShockPasses = 4;
+
+        // ── A LIQUID FINDS ITS LEVEL (2026-09-11) ───────────────────────────────
+        // The author: "daha çok sıvı gibi hareket etsin". The stacked still glass is a pile of
+        // equal discs, and a pile of equal discs is a GRANULAR body: a disc sat in the pocket of
+        // the two below it stays there, so the heap a pour builds under the stream never ran off.
+        // Measured 5 s after a pour into the highball: the side the stream landed on stood 8-14
+        // px — one to two rows — over the other, for good. What a liquid has and a heap does not
+        // is PRESSURE: a surface standing higher on one side drives the drink toward the other.
+        // The surface layer gets exactly that — pushed down the slope of the surface around it,
+        // hard enough at a one-row step (slope ~0.43) to roll a disc out of its pocket (which
+        // takes tan 30 = 0.58 of gravity) — so a heap runs out flat and a partial top row spreads
+        // across the glass. A level surface sits inside the dead band, feels nothing, and sleeps.
+        private const int LevelBinsMax = 96;
+        private readonly float[] _levelH = new float[LevelBinsMax];
+        private const float LevelGain = 2.0f;        // x gravity x the surface's slope
+        private const float LevelMax = 1.1f;         // x gravity, however steep
+        // STATIC FRICTION: a push that cannot roll a disc out of its pocket (0.58 g) only
+        // presses it into the pocket's wall, every frame, and a drink pressed like that never
+        // counts as at rest. So the push starts where it can move something — a real one-row
+        // step (slope ~0.43, a push of 0.86 g) is well past it; a lone disc of a part-filled top
+        // row, sat in its pocket, is left alone.
+        private const float LevelDeadSlope = 0.30f;
+
+        // ── A STILL DRINK'S BODY IS STILL (2026-09-11) ──────────────────────────
+        // Five seconds after a pour the highball's body was still creeping: 245 of its 332
+        // particles moved over a pixel in a second, the deep ones 2-3 px, each with its velocity
+        // reading zero. Gravity presses the stack every frame, the passes never resolve a tall
+        // column completely, and the part they leave over comes out as a slow loop — down
+        // through the middle, up the right wall — which is what held the right side of every
+        // drink one to two rows high, and why the body never once fell asleep. A drink standing
+        // in a glass has no motion anywhere below its surface. So once nothing has touched it
+        // for CalmAfter — no stream or splash in the air, no new drink, no knock, no carried
+        // glass — everything deeper than FreezeRows below the surface over it is HELD: it is not
+        // integrated, and a live particle meeting it takes the whole of their overlap, as the
+        // shock passes do. The rows above stay live, find their level and sleep. Anything that
+        // disturbs the drink releases the whole body at once, at rest, so nothing jumps.
+        private const float CalmAfter = 0.35f;
+        private const float FreezeRows = 2.5f;
+        // WHILE IT POURS, TOO — deeper (2026-09-11, the author: "oyun çok düşük sistemlerde de
+        // çalışmalı"). New drink arrives at the surface under the stream and the plunge and the
+        // splash live in the top rows, so the core below PourFreezeRows is held all through a
+        // pour as well. That bounds the solve by the few rows at the top, however full the glass:
+        // measured 2-3 ms a step through a pour on a Ryzen 5800X with every particle live.
+        private const float PourFreezeRows = 5f;
+        private readonly bool[] _frozen = new bool[MaxPool];
+        private float _calmT;
+        private int _calmPn = -1;
+        private float _calmCx, _calmCy, _calmAngle;
+        /// <summary>Particles held in the still body this frame — for probes.</summary>
+        public int Frozen { get; private set; }
         private const float ShakeDamping = 0.995f;   // barely damped while the tin is moving
         private const float ShakeViscosity = 0.22f;  // freer to move, but still one body         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
@@ -357,6 +407,9 @@ namespace LastCall.UI
         private const int GridBuckets = 8192;          // power of two
         private readonly int[] _cellHead = new int[GridBuckets];
         private readonly int[] _next = new int[MaxPool];
+        // Live (not held) particles per bucket: a held particle whose whole forward neighbourhood
+        // is held has no pair left to solve, and skips the scan (see the still body).
+        private readonly int[] _cellLive = new int[GridBuckets];
         // The cell is the CONSTRAINT distance, not the (larger) viscosity radius: at a fine
         // particle scale a viscosity-sized cell would hold dozens of particles and make the
         // relaxation sweep expensive. Relaxation scans 3×3 cells; viscosity widens its sweep.
@@ -458,6 +511,98 @@ namespace LastCall.UI
         public void ResetDropCounts() { StreamLanded = StreamSwallowed = StreamLost = SplashLost = 0; }
 
         private static readonly int IdSize      = Shader.PropertyToID("_Size");
+        private static readonly int IdTexel     = Shader.PropertyToID("_Texel");
+        private static readonly int IdViewOrigin = Shader.PropertyToID("_ViewOrigin");
+        private static readonly int IdFlowT     = Shader.PropertyToID("_FlowT");
+        private static readonly int IdRtMap     = Shader.PropertyToID("_RtMap");
+
+        // ── DRAWN SMALL (2026-09-11) ─────────────────────────────────────────────
+        // The author: "Oyunda FPS sorunu yaşanmamalı ... oyun çok düşük sistemlerde de
+        // çalışmalı." The metaball shader loops every blob for every pixel it shades, and it
+        // shaded every SCREEN pixel of the viewport: measured 4.48 ms a frame on an RTX 4070 for
+        // a 70% highball at 1080p — on the integrated graphics of a cheap laptop, a frame budget
+        // several times over. The drink is pixel art, and one pixel of it is one pixel of the
+        // glass: so it is drawn into a texture at ONE PIXEL PER TEXEL, and the canvas shows that
+        // texture point-sampled. Measured 0.13 ms for the same glass — and nothing at all while
+        // the drink is at rest, because a picture that has not changed is not drawn again. The
+        // smooth look draws the same way at SmoothPx a pixel, filtered.
+        private const int TexturePass = 1;
+        private const float SmoothPx = 2f;
+        private FluidTexture _owner;
+        private bool _drawDirty = true;     // something about the look changed since the last draw
+        private bool _drawnQuiet;           // the last draw was of a drink with nothing moving
+        private float _drawnTexel = -1f, _drawnOx, _drawnOy;
+        private Vector2 _drawnSize, _drawnGrid;
+
+        /// <summary>
+        /// THE LIQUID'S TEXTURE (2026-09-11, the author: "dökülen sıvıların sıvı dokusu olması
+        /// için bir yol düşünelim, dümdüz boyalı alan gibi gözükmesin"). The size, in UI units, of
+        /// one texel of the pixel-art liquid the shader draws: value bands that multiply the
+        /// drink's own colour, a checker seam between them, a rim lit from the body's own
+        /// gradient, depth, a meniscus on the real surface, flecks the flow carries, and bubbles
+        /// where it churns. 0 is the smooth look it
+        /// replaced, kept whole behind this one number so the two can be set side by side and
+        /// either one chosen. Above 0 it is only the FALLBACK size: a bench that says which vessel
+        /// the drink is in (<see cref="SetPixelGrid"/>) draws it on that vessel's own pixels.
+        /// </summary>
+        public static float LiquidTexel = 2f;
+        private float _flowT;   // the drink's own clock: it only turns while the drink moves
+        private float _gridTexel;       // one art pixel of the vessel, in surface px (0: LiquidTexel)
+        private Vector2 _gridOrigin;    // a corner of that art, so the two grids are one grid
+
+        /// <summary>
+        /// Draws the liquid on the VESSEL's pixel grid: one texel is one pixel of the art the
+        /// drink sits in, counted from that art's corner. A liquid drawn finer than its glass
+        /// reads as noise on a pixel-art bench — the first texture pass drew 2 px texels inside a
+        /// highball drawn at 4.375 px a pixel. A vessel that turns keeps its upright grid.
+        /// </summary>
+        public void SetPixelGrid(float texel, Vector2 origin)
+        {
+            _gridTexel = Mathf.Max(0f, texel);
+            _gridOrigin = origin;
+        }
+
+        /// <summary>
+        /// Draws the drink into its texture. The texture covers WHOLE texels of the vessel's
+        /// grid a little past the viewport, so its pixels land exactly on the glass's pixels;
+        /// the image shows the viewport's part of it (uvRect) point-sampled.
+        /// </summary>
+        private void DrawTexture(float texel)
+        {
+            float px = texel > 0f ? texel : SmoothPx;
+            Vector2 g = texel > 0f ? _gridOrigin : Vector2.zero;
+            float vx0 = _originX - _size.x * 0.5f, vy0 = _originY - _size.y * 0.5f;
+            float rx0 = g.x + Mathf.Floor((vx0 - g.x) / px) * px;
+            float ry0 = g.y + Mathf.Floor((vy0 - g.y) / px) * px;
+            int w = Mathf.Clamp(Mathf.CeilToInt(_size.x / px) + 1, 1, 2048);
+            int h = Mathf.Clamp(Mathf.CeilToInt(_size.y / px) + 1, 1, 2048);
+            var tex = _owner.Tex;
+            if (tex == null || tex.width != w || tex.height != h)
+            {
+                if (tex != null) { tex.Release(); Object.Destroy(tex); }
+                tex = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32)
+                {
+                    name = "MetaballFluid", hideFlags = HideFlags.HideAndDontSave,
+                    wrapMode = TextureWrapMode.Clamp, useMipMap = false,
+                };
+                tex.Create();
+                _owner.Tex = tex;
+                _image.texture = tex;
+            }
+            tex.filterMode = texel > 0f ? FilterMode.Point : FilterMode.Bilinear;
+            float rw = w * px, rh = h * px;
+            _material.SetVector(IdRtMap, new Vector4(rw / _size.x, rh / _size.y,
+                                                     (rx0 - vx0) / _size.x, (ry0 - vy0) / _size.y));
+            _image.uvRect = new Rect((vx0 - rx0) / rw, (vy0 - ry0) / rh, _size.x / rw, _size.y / rh);
+            // Blit leaves its destination as the ACTIVE target, and anything after it that
+            // reads "the screen" through the active target — a ReadPixels, a capture — would
+            // read the drink's texture instead. Put back whatever was active.
+            var prev = RenderTexture.active;
+            RenderTexture.active = tex;
+            GL.Clear(false, true, Color.clear);
+            Graphics.Blit(null, tex, _material, TexturePass);
+            RenderTexture.active = prev;
+        }
         private static readonly int IdColor     = Shader.PropertyToID("_Color");
         private static readonly int IdDropCount = Shader.PropertyToID("_DropCount");
         private static readonly int IdDrops     = Shader.PropertyToID("_Drops");
@@ -503,9 +648,12 @@ namespace LastCall.UI
                 if (shader != null)
                     _material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
             }
-            if (_material != null) _image.material = _material;
+            // The image shows the drink's texture with the plain UI material; the liquid
+            // material only ever draws INTO that texture (see DrawTexture).
+            _owner = go.AddComponent<FluidTexture>();
+            _owner.Material = _material;
             // An error and not a warning: no liquid is a broken main mechanic, not a cosmetic gap.
-            else Debug.LogError("MetaballFluid: no liquid material — Resources/" + MaterialPath
+            if (_material == null) Debug.LogError("MetaballFluid: no liquid material — Resources/" + MaterialPath
                                 + " is missing and the shader was not found. Nothing will pour.");
 
             RefreshSize();
@@ -521,6 +669,9 @@ namespace LastCall.UI
             _material?.SetFloat(IdEdgeWidth, 0.10f);
             _material?.SetFloat("_StreamAlpha", StreamAlphaShare);
             _image.enabled = _material != null;
+            // Drawn once, empty, so the image never shows the white a RawImage draws with no
+            // texture before the first frame of the drink.
+            Upload();
         }
 
         private void RefreshSize()
@@ -551,7 +702,9 @@ namespace LastCall.UI
             var pos = new Vector2(cx, cy);
             if ((_rt.anchoredPosition - pos).sqrMagnitude > 1f) _rt.anchoredPosition = pos;
 
-            _originX = cx; _originY = cy;
+            // The rect's OWN centre, not the one asked for: the rect only moves once the ask is
+            // a pixel away, and the drink's texels have to land where the image actually is.
+            _originX = _rt.anchoredPosition.x; _originY = _rt.anchoredPosition.y;
             RefreshSize();
         }
 
@@ -575,12 +728,17 @@ namespace LastCall.UI
             // promised the opposite. Zero means zero; every other value is a drink.
             c.a = c.a <= 0f ? 0f : Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
             _bodyAlpha = c.a;
+            if (_material.GetColor(IdColor) != c) _drawDirty = true;
             _material.SetColor(IdColor, c);
             // A stream nobody has named is the drink itself — a splash struck off a settled
             // pool, or the tail of a pour that has stopped. Without this the last thing poured
             // kept the slot, so vodka drops still in the air turned amaro-red the instant a
             // different bottle was tipped, and a splash wore whichever drink was poured last.
-            if (!_streamNamed) _material.SetColor(IdStreamColor, c);
+            if (!_streamNamed)
+            {
+                if (_material.GetColor(IdStreamColor) != c) _drawDirty = true;
+                _material.SetColor(IdStreamColor, c);
+            }
         }
 
         /// <summary>The colour of what is being POURED — the stream in the air, before it
@@ -598,6 +756,7 @@ namespace LastCall.UI
             // shader's share (StreamAlphaShare) is what makes air thinner than rest.
             c.a = c.a <= 0f ? 0f : Mathf.Clamp(c.a, AlphaFloor, AlphaCeiling);
             _streamNamed = true;
+            if (_material.GetColor(IdStreamColor) != c) _drawDirty = true;
             _material.SetColor(IdStreamColor, c);
         }
 
@@ -628,6 +787,7 @@ namespace LastCall.UI
         public void SetFoamColor(Color c)
         {
             if (_material == null) return;
+            if (_material.GetColor(IdFoamColor) != c) _drawDirty = true;
             _material.SetColor(IdFoamColor, c);
         }
 
@@ -937,9 +1097,17 @@ namespace LastCall.UI
             if (dt <= 0f) dt = 1e-4f;
             if (dt > 1f / 30f) dt = 1f / 30f;   // keep the solver stable on a hitch
 
+            bool disturbed = _wake || _pn != _calmPn || AnyDropActive()
+                || Mathf.Abs(_cx - _calmCx) > 0.01f || Mathf.Abs(_cy - _calmCy) > 0.01f
+                || Mathf.Abs(_angle - _calmAngle) > 1e-4f || _vesselSpeed > 0.5f
+                || Mathf.Abs(_shakeAx) >= 1f || Mathf.Abs(_shakeAy) >= 1f;
+            _calmT = disturbed ? 0f : _calmT + dt;
+            _calmPn = _pn; _calmCx = _cx; _calmCy = _cy; _calmAngle = _angle;
+
             Resting = CanRest();
             if (!Resting)
             {
+                _flowT += dt;
                 using (MarkPool.Auto()) StepPool(dt);
                 int awake = 0;
                 for (int i = 0; i < _pn; i++)
@@ -1026,6 +1194,49 @@ namespace LastCall.UI
             return Mathf.Abs(_shakeAx) < 1f && Mathf.Abs(_shakeAy) < 1f && _vesselSpeed < 0.5f;
         }
 
+        /// <summary>The drink's top in columns half a particle wide across the vessel, measured
+        /// along gravity; 0 when there is no drink to level. See <see cref="LevelBinsMax"/>.</summary>
+        private int MeasureLevel(float upX, float upY, out float binW, out float x0)
+        {
+            binW = Mathf.Max(_sp * 0.5f, 1f);
+            x0 = -_halfW;
+            if (_pn < 8) return 0;
+            int nb = Mathf.Clamp(Mathf.CeilToInt(2f * _halfW / binW), 1, LevelBinsMax);
+            for (int b = 0; b < nb; b++) _levelH[b] = float.MinValue;
+            bool any = false;
+            for (int i = 0; i < _pn; i++)
+            {
+                if (_kind[i] != KindBeer) continue;
+                float across = _px[i] * upY - _py[i] * upX;
+                int b = (int)((across - x0) / binW);
+                if (b < 0) b = 0; else if (b >= nb) b = nb - 1;
+                float along = _px[i] * upX + _py[i] * upY;
+                if (along > _levelH[b]) _levelH[b] = along;
+                any = true;
+            }
+            if (!any) return 0;
+            // An empty column — the wall's margin, a gap — stands at its neighbour's height, so
+            // it makes no slope: the walls are not a drop for the drink to run into.
+            for (int b = 1; b < nb; b++) if (_levelH[b] == float.MinValue) _levelH[b] = _levelH[b - 1];
+            for (int b = nb - 2; b >= 0; b--) if (_levelH[b] == float.MinValue) _levelH[b] = _levelH[b + 1];
+            return nb;
+        }
+
+        private bool AnyDropActive()
+        {
+            for (int i = 0; i < MaxDrops; i++) if (_drops[i].Active) return true;
+            return false;
+        }
+
+        private float LevelAt(float across, int nb, float binW, float x0)
+        {
+            float f = (across - x0) / binW - 0.5f;
+            if (f <= 0f) return _levelH[0];
+            if (f >= nb - 1) return _levelH[nb - 1];
+            int b0 = (int)f;
+            return Mathf.Lerp(_levelH[b0], _levelH[b0 + 1], f - b0);
+        }
+
         private void TakeRestSignature()
         {
             _sigPn = _pn; _sigFoam = _foamN;
@@ -1043,8 +1254,37 @@ namespace LastCall.UI
             float wax = _shakeAx, way = -Gravity + _shakeAy;
             float accX = wax * c - way * sn;
             float accY = wax * sn + way * c;
+            // The surface's heights, taken before anything moves (see LevelBinsMax).
+            float lvUx = -sn, lvUy = c, lvBin = 1f, lvX0 = 0f;
+            int lvN = _stacked && _vesselSpeed <= 40f ? MeasureLevel(lvUx, lvUy, out lvBin, out lvX0) : 0;
+            bool calm = lvN > 0 && _calmT >= CalmAfter;
+            bool hold = lvN > 0;
+            // Held below the drink's MEAN level, not below the surface over each particle: a
+            // pour leaves a heap under the stream, and a core held to the heap's own shape kept
+            // it — measured 10 px high on the stream's side for good. Measured from the mean,
+            // the whole heap stays live and runs out across the glass.
+            float meanTop = 0f;
+            for (int b = 0; b < lvN; b++) meanTop += _levelH[b];
+            float holdLine = (lvN > 0 ? meanTop / lvN : 0f)
+                - (calm ? FreezeRows : PourFreezeRows) * _sp * 0.8660254f;
+            int frozen = 0;
             for (int i = 0; i < _pn; i++)
             {
+                bool f = hold && _kind[i] == KindBeer
+                    && _px[i] * lvUx + _py[i] * lvUy < holdLine;
+                _frozen[i] = f;
+                if (f) frozen++;
+            }
+            Frozen = frozen;
+            for (int i = 0; i < _pn; i++)
+            {
+                if (_frozen[i])
+                {
+                    _ppx[i] = _px[i]; _ppy[i] = _py[i];
+                    _vx[i] = 0f; _vy[i] = 0f;
+                    _qx[i] = _px[i]; _qy[i] = _py[i];
+                    continue;
+                }
                 _ppx[i] = _px[i]; _ppy[i] = _py[i];
                 // Foam is mostly air: it feels a fraction of the weight beer does, and a bubble
                 // with beer around it is pushed the other way entirely.
@@ -1055,6 +1295,22 @@ namespace LastCall.UI
                     g = FoamGravity - FoamBuoyancy * buried;
                 }
                 _vx[i] += accX * g * dt; _vy[i] += accY * g * dt;
+                if (lvN > 0 && _kind[i] == KindBeer)
+                {
+                    float across = _px[i] * lvUy - _py[i] * lvUx;
+                    float along = _px[i] * lvUx + _py[i] * lvUy;
+                    if (along > LevelAt(across, lvN, lvBin, lvX0) - 1.2f * _sp)
+                    {
+                        float slope = (LevelAt(across + _sp, lvN, lvBin, lvX0)
+                                     - LevelAt(across - _sp, lvN, lvBin, lvX0)) / (2f * _sp);
+                        if (Mathf.Abs(slope) > LevelDeadSlope)
+                        {
+                            float a = Mathf.Clamp(-Gravity * LevelGain * slope,
+                                                  -Gravity * LevelMax, Gravity * LevelMax);
+                            _vx[i] += a * lvUy * dt; _vy[i] -= a * lvUx * dt;
+                        }
+                    }
+                }
                 _px[i] += _vx[i] * dt; _py[i] += _vy[i] * dt;
                 _qx[i] = _px[i]; _qy[i] = _py[i];   // predicted, before the constraints
             }
@@ -1107,6 +1363,15 @@ namespace LastCall.UI
                 {
                     int i = stillVessel ? _order[oi] : oi;
                     int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
+                    // Held, and nothing live anywhere it looks: every pair it would find is held
+                    // against held. The still body costs nothing but this test.
+                    if (_frozen[i])
+                    {
+                        int live = 0;
+                        for (int s = 0; s < 5 && live == 0; s++)
+                            live += _cellLive[HashCell(cx + StencilX[s], cy + StencilY[s])];
+                        if (live == 0) continue;
+                    }
                     int seen = 0;
                     float pxi = _px[i], pyi = _py[i];
                     for (int s = 0; s < 5; s++)
@@ -1125,6 +1390,15 @@ namespace LastCall.UI
                             // against foam only part way leaves the packing irregular, which is
                             // what gives the head a lumpy crest instead of a planed one.
                             if (_kind[i] == KindFoam && _kind[j] == KindFoam) push *= FoamSlack;
+                            // The still body is held: the live one of the pair takes it all.
+                            if (_frozen[i] || _frozen[j])
+                            {
+                                if (_frozen[i] && _frozen[j]) continue;
+                                float full = minD - r;
+                                if (_frozen[i]) { _px[j] += dx / r * full; _py[j] += dy / r * full; }
+                                else { pxi -= dx / r * full; pyi -= dy / r * full; }
+                                continue;
+                            }
                             // Only INSIDE the body. The top rows stay soft: a stack held rigid all
                             // the way up had nowhere to put the load but the ceiling of a full
                             // glass, and its surface fifth churned at 230 px/s against it.
@@ -1341,6 +1615,7 @@ namespace LastCall.UI
             float iy = Mathf.Max(_halfH - _pr * FaceOffset, 2f);
             for (int i = 0; i < _pn; i++)
             {
+                if (_frozen[i]) continue;   // held where it lies, inside the walls it settled in
                 // Foam may stand proud of the rim — a head crowns over the glass — and each bubble
                 // gets its OWN ceiling. A single shared one is a hard clamp applied after every
                 // relaxation pass, so every particle that tried to rise was slammed to exactly the
@@ -1401,6 +1676,7 @@ namespace LastCall.UI
             float upX = -gs, upY = gc;
             for (int i = 0; i < _pn; i++)
             {
+                if (_frozen[i]) continue;   // held: no velocity to blend
                 float avx = 0f, avy = 0f; int n = 0, same = 0, beerN = 0;
                 byte ki = _kind[i];
                 int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
@@ -1451,11 +1727,13 @@ namespace LastCall.UI
         private void BuildGrid()
         {
             for (int i = 0; i < GridBuckets; i++) _cellHead[i] = -1;
+            System.Array.Clear(_cellLive, 0, GridBuckets);
             for (int i = 0; i < _pn; i++)
             {
                 int h = HashCell(CellOf(_px[i]), CellOf(_py[i]));
                 _next[i] = _cellHead[h];
                 _cellHead[h] = i;
+                if (!_frozen[i]) _cellLive[h]++;
             }
         }
 
@@ -1567,6 +1845,14 @@ namespace LastCall.UI
         private void Upload()
         {
             if (_material == null) return;
+            float texel = LiquidTexel <= 0f ? 0f : (_gridTexel > 0f ? _gridTexel : LiquidTexel);
+            // NOTHING TO DRAW: nothing is moving — a drink at rest, or no drink at all — nothing is
+            // in the air, the look is as it was, and the last picture was already of this still
+            // drink. The texture holds it; the GPU does no work for the liquid at all.
+            bool quiet = (Resting || _pn == 0) && !AnyDropActive();
+            bool sameLook = !_drawDirty && texel == _drawnTexel && _originX == _drawnOx
+                && _originY == _drawnOy && _size == _drawnSize && _gridOrigin == _drawnGrid;
+            if (quiet && _drawnQuiet && sameLook) return;
             int count = 0;
             // A shaken drink spreads out, and spread particles thin the metaball field between
             // them — which reads as the drink losing volume. Give each one a little more reach
@@ -1581,7 +1867,16 @@ namespace LastCall.UI
                 // step with its neighbours, so the crest breaks into rounds.
                 bool foam = _kind[i] == KindFoam;
                 float rr = foam ? _fr * (0.80f + 0.40f * (i * 0.7548777f % 1f)) : r;
-                _dropData[count++] = new Vector4(uv.x, uv.y, rr, foam ? 2f : 1f);
+                // The kind is the whole part of w; the particle's SPEED rides in the fraction
+                // (0 .. 0.49, inside every range the shader decodes kinds by), which is how the
+                // drink shows bubbles where it churns and none where it is still.
+                float spd = Mathf.Min(Mathf.Sqrt(_vx[i] * _vx[i] + _vy[i] * _vy[i]) / MaxSpeed, 1f) * 0.49f;
+                // One drop of drink in eleven carries a FLECK, flagged by a negative radius: a
+                // still drink holds a still scatter of light and a moving one carries it round.
+                // Hashed, not every eleventh: the body is seeded on a lattice, and a stride
+                // across its rows lays the flecks out in diagonal lines.
+                if (!foam && Fleck(i)) rr = -rr;
+                _dropData[count++] = new Vector4(uv.x, uv.y, rr, (foam ? 2f : 1f) + spd);
             }
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
             {
@@ -1597,6 +1892,9 @@ namespace LastCall.UI
             for (int i = count; i < RenderMax; i++) _dropData[i] = Vector4.zero;
 
             _material.SetFloat(IdDropCount, count);
+            _material.SetFloat(IdTexel, texel);
+            _material.SetVector(IdViewOrigin, new Vector4(_originX - _gridOrigin.x, _originY - _gridOrigin.y, 0f, 0f));
+            _material.SetFloat(IdFlowT, _flowT);
             _material.SetVectorArray(IdDrops, _dropData);
             // The rectangular pool contributes NOTHING to the field — the particles are the
             // body — so its width and floor stay collapsed.
@@ -1618,13 +1916,26 @@ namespace LastCall.UI
                     ? 2f : ToUv(0f, surfaceLocal).y);
             }
             else _material.SetFloat(IdPoolTopY, 2f);
+
+            DrawTexture(texel);
+            _drawDirty = false;
+            _drawnQuiet = quiet;
+            _drawnTexel = texel; _drawnOx = _originX; _drawnOy = _originY;
+            _drawnSize = _size; _drawnGrid = _gridOrigin;
+        }
+
+        private static bool Fleck(int i)
+        {
+            uint h = (uint)i * 2654435761u;
+            h ^= h >> 15; h *= 2246822519u; h ^= h >> 13;
+            return (h & 1023u) < 93u;   // ~1 in 11
         }
 
         public void Clear()
         {
             for (int i = 0; i < MaxDrops; i++) _drops[i].Active = false;
             _pn = 0; _foamN = 0; _emitAccum = 0f;
-            _wake = true; _restFrames = 0;
+            _wake = true; _restFrames = 0; _drawDirty = true;
             Upload();
         }
 

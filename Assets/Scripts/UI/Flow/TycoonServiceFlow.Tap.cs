@@ -788,6 +788,18 @@ namespace LastCall.UI
             float rad = -_glassTilt * Mathf.Deg2Rad;
             var centre = RotateAboutGrip(new Vector2((minX + maxX) * 0.5f, bottomY + innerH * 0.5f), rad);
             float iw = (maxX - minX) * 0.5f;
+            // The beer is drawn in the pint's own pixels, counted from the drawing's corner
+            // (the aspect-fit picture, not the letterboxed rect, which turns about its foot).
+            var pint = _tapPiece.Sprite;
+            if (pint != null && pint.rect.height >= 1f)
+            {
+                float tw = _tapGlass.rect.width, th = _tapGlass.rect.height;
+                float ak = Mathf.Min(tw / pint.rect.width, th / pint.rect.height);
+                var tc = _tapGlass.anchoredPosition;
+                _tapFluid.SetPixelGrid(ak, new Vector2(
+                    tc.x - tw * _tapGlass.pivot.x + (tw - pint.rect.width * ak) * 0.5f,
+                    tc.y - th * _tapGlass.pivot.y + (th - pint.rect.height * ak) * 0.5f));
+            }
 
             if (glass.IsEmpty) _tapFluid.ClearPool();
             else

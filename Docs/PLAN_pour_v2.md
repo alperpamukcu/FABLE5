@@ -63,8 +63,9 @@ already burns 11.7 ms; (3) phases are re-cut so the two things broken today ship
 | **P1b** ✅ | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | **done 2026-09-11** — see §4 |
 | **P2** ✅ | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | **done 2026-09-11** — see §5 |
 | **P3** ✅ | The rope stream, split budgets, drops-only gravity, landing into the vessel, tin sink, source alpha | **done 2026-09-11** — see §6 |
-| **P4** | Pixel-art shading: bands, dither, walls, depth, meniscus, top face, rope stripes, pixel splash, agitation | A/B look report to the author BEFORE locking |
-| **P5** | Slosh (bottle + pool, dt-correct damping); frozen solver core if P3 is over budget | pouring full glass ≤ 3.5 ms |
+| **P4** ◐ | Pixel-art shading on the vessel's own grid: bands, checker seam, lit rim, depth, meniscus, flecks, agitation | **in the game 2026-09-11, provisional** — A/B report sent; `LiquidTexel = 0` restores the smooth look — see §7 |
+| **P5** ◐ | A liquid finds its level; the still body is held; frozen core during pours | **done 2026-09-11** (slosh of the bottle's line still open) — see §8 |
+| **P5b** ✅ | The author: "oyun çok düşük sistemlerde de çalışmalı" — the drink drawn small, the room's dead passes cut, frames paced | **done 2026-09-11** — see §9 |
 | **P6** | Docs: GDD 24 §2/§3/§3.5/§12, GDD 21 §3, GDD_MEVCUT | — |
 
 **Rules this overturns, for the author to know:** the stream's 55% alpha (it draws at the
@@ -213,4 +214,83 @@ smoothly, 6 → 18 px, inside 19 all the way down.
 | rope | 3–5 px beads | continuous, 11–21 px, necking only just above the landing |
 
 The pint is unchanged (197 beer / 34 foam / 0 sunk); the tap's stream is width 0.8.
+Suites: EditMode **518/518**, PlayMode **13/13**.
+
+## 7 · P4 — the drink has a texture (2026-09-11, provisional until the author picks)
+
+The author: "dökülen sıvıların sıvı dokusu olması için bir yol düşünelim, dümdüz boyalı alan gibi
+gözükmesin". The shader's pixel look, behind `MetaballFluid.LiquidTexel` (0 = the smooth look,
+kept whole):
+
+* **The vessel's own grid.** One liquid texel is one pixel of the art the drink sits in, counted
+  from the art's corner (`SetPixelGrid`): 4.375 px in the highball, 2.0 in the tin, the pint's
+  own on the tap. The first pass drew 2 px texels inside a glass drawn at 4.375 and read as noise.
+* **Five value bands that multiply the drink's own colour** (never an add, never toward white);
+  a lift is capped so no channel passes 0.94, and a lit texel is drawn DENSER (alpha) instead —
+  the cap alone left an orange juice's meniscus 7% lighter and invisible.
+* **The rim from the field's own gradient**, one texel wide: `(f − T)/|∇f|` is the distance to
+  the edge in px (reading it off the field's value put the rim inside one texel of a packed body).
+  The top face gets the meniscus (two rows), the lit side a band up, the shade side a band down —
+  the stream too, which is what makes the rope round.
+* **Depth** darkens and thickens the body below its surface; the band change is a checker seam a
+  couple of texels tall (an ordered dither over the whole ramp read as a screen door).
+* **Flecks**: one particle in eleven (hashed, not strided — the lattice seed would line them up)
+  carries a lit texel, so a moving drink visibly carries its light round and a still one holds it.
+* Agitation adds flickering flecks on the drink's own clock, which only turns while it moves —
+  a settled glass is the same picture every frame.
+
+The comparison (orange, soda, cola; mid-pour and settled; the SAME particle state drawn both ways)
+went to the author as an HTML report. Known, not this change: a cola + vodka reads grey-mauve in
+both looks — the drink palette's, not the shader's.
+
+## 8 · P5 — a liquid finds its level, and a still drink is still (2026-09-11)
+
+**What was wrong, measured.** Five seconds after a pour into the highball the side the stream
+landed on stood 8–14 px (one to two rows) above the other, and the body never fell asleep: 245 of
+332 particles moved over a pixel a second — the deep ones 2–3 px, velocities reading zero — in a
+slow loop down the middle and up the right wall. A pile of equal discs is granular (a disc in its
+pocket stays there), and the passes' leftover correction came out as creep.
+
+* **Levelling**: the surface layer of the stacked still glass is pushed down the local slope of the
+  surface (gain 2 g, capped 1.1 g) — past the 0.58 g it takes to roll a disc out of its pocket at
+  a real one-row step — with a static-friction band (slope < 0.3 is left alone, or a disc pressed
+  into its pocket every frame keeps the drink awake). Tried and dropped: pushing only drink above
+  the MEAN level (slower, left a dip at the wall).
+* **The held core**: once nothing has touched the drink for 0.35 s, everything more than 2.5 rows
+  below its mean level is not integrated; a live particle meeting it takes the whole overlap. A
+  pour holds the core below 5 rows (new drink arrives at the surface). Anything that disturbs the
+  drink releases the whole body at rest. A held particle with nothing live near it skips the
+  pair scan and the viscosity pass.
+
+| Measured (70 frames into the highball, then released) | before | after |
+|---|---|---|
+| left − right level, settled | 8–14 px | **0.5 px** |
+| particles still moving 5 s later | 245 / 332 | **0** |
+| body asleep (no solve at all) | never | **~5.4 s after the pour** |
+
+## 9 · P5b — it has to run on a cheap machine (2026-09-11)
+
+The author: "Oyunda FPS sorunu yaşanmamalı, oyun 2d bir oyun, oyun çok düşük sistemlerde de
+çalışmalı." Measured on an RTX 4070 / Ryzen 5800X at 1080p — read them as ratios:
+
+* **The drink is drawn small.** The metaball shader loops every blob per pixel and was shading
+  every SCREEN pixel of the viewport: **4.48 ms** a frame for a 70% highball. It now draws into a
+  texture at one pixel per texel (`FluidTexture`, shader pass 1), shown point-sampled —
+  **0.07 ms** — and not at all while the drink is still (nothing moving, nothing in the air, the
+  look unchanged). The smooth look draws the same way at 2 px, filtered.
+* **The solver** peaks at **1.55 ms** a step through a pour into the highball (3.0 before) and costs
+  nothing once the drink sleeps.
+* **Post-processing and HDR are off** on the room's camera (`DiegeticStage.RoomBloom`). They were on
+  for the LastCallVolume bloom, which no pixel ever reaches: one frame rendered three ways inside
+  one call — the start of a night, twice later, and the closing beat at full strength — differs
+  in **0 pixels** either way. The saving is the bloom chain and the HDR resolve; on this GPU it is
+  inside the timing noise, on a bandwidth-starved laptop GPU it is not.
+* **The window's sky is read once**, whole: each of its 31 frames used to be read the first time the
+  window reached it, ~620 KB of garbage each, mid-service. Same light to 7.7e-7.
+* **Frames are paced** in player builds (`vSyncCount = 1`): nothing capped the frame rate, so a build
+  ran at 160–260 fps flat out. The editor and the PlayMode suite keep their own pacing.
+* Checked and left alone: the HUD's steps allocate ~0.75 KB a frame; incremental GC is on.
+  (A 74 KB/frame reading in the room turned out to be a PlayMode test's coroutine running in the
+  same editor — measure with nothing else driving it.)
+
 Suites: EditMode **518/518**, PlayMode **13/13**.

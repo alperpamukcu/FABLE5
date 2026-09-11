@@ -442,6 +442,8 @@ namespace LastCall.UI
             float rim = c.y - h * 0.5f + h * piece.RimY - GlassArt.PoolCeilingArtPx * artPx;
             _serveFluid.SetFloorArc(piece.FloorArc * h);   // the floor's near arc, not a line
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
+            // The drink is drawn in the glass's own pixels, counted from the drawing's corner.
+            _serveFluid.SetPixelGrid(artPx, new Vector2(c.x - w * 0.5f, c.y - h * 0.5f));
         }
 
         /// <summary>

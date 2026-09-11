@@ -1063,6 +1063,15 @@ namespace LastCall.UI
             // through the tin and out under it — the "drips to the floor" the author saw.
             var (mouthAt, mouthHalfW) = TinMouth();
             _shakerFluid.SetSink(mouthAt, mouthHalfW);
+            // The drink at the brim and the stream into it are drawn in the tin's own pixels.
+            var tinArt = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
+            if (tinArt != null && tinArt.rect.height >= 1f)
+            {
+                var tr = _shakerVessel;
+                _shakerFluid.SetPixelGrid(tr.rect.height / tinArt.rect.height, new Vector2(
+                    tr.anchoredPosition.x - tr.rect.width * tr.pivot.x,
+                    tr.anchoredPosition.y - tr.rect.height * tr.pivot.y));
+            }
             if (run.Glass.IsEmpty) { _shakerFluid.ClearPool(); return; }
             // Read the vessel live so the pool travels with the shaker when it is thrown about.
             // Fill the glass INTERIOR (inset from the walls) so the liquid pools inside the
