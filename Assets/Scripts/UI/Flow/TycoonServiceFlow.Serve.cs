@@ -592,6 +592,11 @@ namespace LastCall.UI
             _serveGlassImage.raycastTarget = false;
 
             _serveFluid = new MetaballFluid(_serveSurface);
+            // The serving glass stands still and never carries foam, and its tall glasses are
+            // the columns the stacked regime exists for (MetaballFluid, 2026-09-11): without it
+            // the full 420 highball boiled at 13 ms a step and drew its level wherever the boil
+            // put it. The tin and the tap keep the regime they were tuned in.
+            _serveFluid.SetStacked(true);
             // The vessel's silhouette and its interior now come from GlassArt, which draws the
             // glass from the same profile the solver fills — set on first refresh, because the
             // glass that stands here depends on what the drink turns out to be.

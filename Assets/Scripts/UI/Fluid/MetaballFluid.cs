@@ -18,6 +18,10 @@ namespace LastCall.UI
     /// </summary>
     public sealed class MetaballFluid
     {
+        /// <summary>The shipped template the fluid clones its material from — under Resources so
+        /// a player build carries the shader (see the constructor). Pinned by ShipTests.</summary>
+        public const string MaterialPath = "Fluid/MetaballLiquid";
+
         // Render budget — pool particles + free stream/splash drops share the shader's _Drops[].
         private const int MaxPool = 2040;
         private const int MaxDrops = 110;
@@ -61,9 +65,38 @@ namespace LastCall.UI
         /// only pushes back so far, so the pile finds an equilibrium tighter than its rest
         /// spacing. Every vessel in the game is filled by pouring, so that is the state to
         /// calibrate against — a body assembled in one frame instead sits at rest spacing, which
-        /// is a different (and unreachable in play) density.
+        /// is a different (and unreachable in play) density. The tin and the pint run on this.
         /// </summary>
         private const float PackedArea = 0.71f;
+        /// <summary>
+        /// The same share for the STACKED regime (below), measured 2026-09-11: 0.858. Relaxed
+        /// bottom-up with shock passes, a still drink no longer settles compressed — it stacks at
+        /// very nearly the hexagonal packing (0.866). On the 420 highball at half fill the drawn
+        /// body stood 185.2 u off the floor against the 153.3 the 0.71 estimate asked for, a
+        /// ratio of 1.208, and 0.71 x 1.208 = 0.858. The rocks glass then drew its half-full line
+        /// to the hundredth of a unit, with its own SetDensity untouched.
+        /// </summary>
+        private const float StackedArea = 0.858f;
+
+        // ── THE STACKED REGIME (2026-09-11) ─────────────────────────────────────
+        //
+        // The serve bench's tall glasses need a still drink to be a STACK: bottom-up shock passes,
+        // a lattice seed, a cap at what the cavity holds, depth damping and boundaries that stop
+        // motion without throwing it — together they took the full 420 highball from a body
+        // boiling at 13 ms a step to one that sleeps. But the pint's head RISES through its beer
+        // by buoyancy, and a rigid beer stack held two bubbles under it that the committed solver
+        // floated (measured: 2 sunk against 0); and the tin and the pint are calibrated on the
+        // compressed packing, which the stack no longer makes. So the regime is the bench's to
+        // choose, and only the serve bench chooses it: the tin and the tap run exactly as before.
+        private bool _stacked;
+        /// <summary>Opt this fluid into the stacked regime — for a still, foam-free vessel
+        /// (the serving glass). Re-seeds, because the packing the count assumes changes.</summary>
+        public void SetStacked(bool on)
+        {
+            if (on == _stacked) return;
+            _stacked = on;
+            _pn = 0; _foamN = 0; _wake = true; _restFrames = 0; _capCache = -1;
+        }
         // Render radius is well above the spacing so the fine, tightly-packed particles
         // overlap into ONE smooth connected surface with no gaps between them.
         private const float PoolRadius = 7.5f;
@@ -72,6 +105,12 @@ namespace LastCall.UI
         private const float Viscosity = 0.42f;        // 0..1 neighbour-velocity blend (more flow)
         private const float MaxSpeed = 1300f;
         private const float RestDamping = 0.94f;
+        /// <summary>What a DEEP particle in a still vessel keeps of its velocity, per 1/60 s.
+        /// See the depth damping in StepPool: the surface is untouched by it.</summary>
+        private const float DeepDamping = 0.55f;
+        /// <summary>How many of the final relaxation passes use shock propagation in a still
+        /// vessel (see StepPool: the lower particle of a stacked pair holds, the upper moves).</summary>
+        private const int ShockPasses = 4;
         private const float ShakeDamping = 0.995f;   // barely damped while the tin is moving
         private const float ShakeViscosity = 0.22f;  // freer to move, but still one body         // bleeds off the energy the solver adds
         private const float SleepSpeed = 30f;
@@ -184,6 +223,96 @@ namespace LastCall.UI
         /// <summary>Beer or foam. Both live in the same arrays and the same solver — the head is
         /// not a separate system, it is the same fluid made of lighter stuff.</summary>
         private readonly byte[] _kind = new byte[MaxPool];
+        /// <summary>What the final clamp of the frame pressed each particle against: bit 1 the
+        /// floor, bit 2 the left wall, bit 4 the right wall, bit 8 the ceiling. See
+        /// ClampToVessel(true).</summary>
+        private readonly byte[] _contact = new byte[MaxPool];
+        // The bottom-up visiting order for a still vessel's relaxation, rebuilt each frame
+        // without allocating (Array.Sort on preallocated key/index buffers).
+        private readonly int[] _order = new int[MaxPool];
+        private readonly float[] _orderKey = new float[MaxPool];
+
+        private float _topKey;                       // the highest particle along gravity's up
+
+        private void SortBottomUp(float upX, float upY)
+        {
+            float top = float.MinValue;
+            for (int i = 0; i < _pn; i++)
+            {
+                _order[i] = i;
+                float k = _px[i] * upX + _py[i] * upY;
+                _orderKey[i] = k;
+                if (k > top) top = k;
+            }
+            _topKey = top;
+            System.Array.Sort(_orderKey, _order, 0, _pn);
+        }
+
+        private int _capCache = -1;
+        private float _capW, _capH, _capK, _capArc;
+        private float[] _capProfile;
+
+        /// <summary>How many particles the cavity holds on a hexagonal lattice at the rest spacing
+        /// — the most that fit without overlap. Cached until the vessel, scale or floor change.</summary>
+        private int LatticeCapacity()
+        {
+            if (_capCache >= 0 && _capW == _halfW && _capH == _halfH && _capK == _k
+                && _capArc == _floorArc && ReferenceEquals(_capProfile, _profile))
+                return _capCache;
+            float ix = Mathf.Max(_halfW - _pr * SideOffset, 2f);
+            float iy = Mathf.Max(_halfH - _pr * FaceOffset, 2f);
+            float rowH = _sp * 0.8660254f;
+            int n = 0;
+            for (int r = 0; ; r++)
+            {
+                float y = -iy + r * rowH;
+                if (y > iy) break;
+                float w = HalfWidthAt((y + iy) / (2f * iy), ix);
+                for (float x = -w + ((r & 1) != 0 ? _sp * 0.5f : 0f); x <= w; x += _sp)
+                {
+                    if (_floorArc > 0f)
+                    {
+                        float u = Mathf.Clamp(x / Mathf.Max(ix, 1f), -1f, 1f);
+                        if (y < -iy + _floorArc * (1f - Mathf.Sqrt(1f - u * u))) continue;
+                    }
+                    n++;
+                }
+            }
+            _capCache = Mathf.Min(n, MaxPool);
+            _capW = _halfW; _capH = _halfH; _capK = _k; _capArc = _floorArc; _capProfile = _profile;
+            return _capCache;
+        }
+
+        /// <summary>Lays up to <paramref name="count"/> drink particles on a hexagonal lattice from
+        /// the floor up, inside the vessel's own walls and floor arc; returns how many fit.</summary>
+        private int SeedLattice(int count)
+        {
+            if (count <= 0) return 0;
+            float ix = Mathf.Max(_halfW - _pr * SideOffset, 2f);
+            float iy = Mathf.Max(_halfH - _pr * FaceOffset, 2f);
+            float gap = _sp * 1.02f;                 // a hair apart: nothing to push on frame one
+            float rowH = gap * 0.8660254f;
+            int placed = 0;
+            for (int r = 0; placed < count && _pn < MaxPool; r++)
+            {
+                float y = -iy + r * rowH;
+                if (y > iy) break;
+                float w = HalfWidthAt((y + iy) / (2f * iy), ix);
+                for (float x = -w + ((r & 1) != 0 ? gap * 0.5f : 0f);
+                     x <= w && placed < count && _pn < MaxPool; x += gap)
+                {
+                    if (_floorArc > 0f)
+                    {
+                        float u = Mathf.Clamp(x / Mathf.Max(ix, 1f), -1f, 1f);
+                        if (y < -iy + _floorArc * (1f - Mathf.Sqrt(1f - u * u))) continue;
+                    }
+                    _px[_pn] = x; _py[_pn] = y; _vx[_pn] = 0f; _vy[_pn] = 0f;
+                    _kind[_pn] = KindBeer; _contact[_pn] = 0;
+                    _pn++; placed++;
+                }
+            }
+            return placed;
+        }
         /// <summary>
         /// 0..1, how much beer is sitting ON TOP of this particle — measured from the neighbours
         /// the viscosity pass already gathers, so buoyancy costs no extra neighbour search.
@@ -214,7 +343,44 @@ namespace LastCall.UI
         // particle scale a viscosity-sized cell would hold dozens of particles and make the
         // relaxation sweep expensive. Relaxation scans 3×3 cells; viscosity widens its sweep.
         private const float Cell = Spacing;
-        private static readonly int ViscCellR = Mathf.CeilToInt(H / Cell);
+        private static readonly int ViscCellR = Mathf.CeilToInt(H / Cell);   // a ratio: scale-free
+
+        // ── THE PARTICLE FITS THE VESSEL (2026-09-11) ───────────────────────────
+        //
+        // Every length above is the particle at SCALE 1, the scale the solver was tuned at — in
+        // the tin, a column about 41 rows tall, which measured fully asleep when settled. The
+        // 420-tall highball of 2026-09-09 is 59 rows at that scale and it never settles: its
+        // "still" body measured a median particle speed of 56 px/s, its drawn level swinging
+        // between 68 and 125 over two seconds, ~25 u short of the rim Core had filled it to,
+        // at 11.7 ms a step. Fourteen passes cannot carry the pressure up a column that tall,
+        // and the overlap they leave comes back as velocity the next frame — the body boils.
+        //
+        // More passes would cost what the frame does not have. So the PARTICLE grows with the
+        // vessel instead: SetPool fits the scale so no column is taller than MaxRows, every
+        // length the solver and the renderer use grows with it, and the body is drawn from
+        // fewer, larger units inside the same smooth iso-surface. A vessel inside the tuned
+        // height keeps scale 1 exactly, so the tin, the pint and every short glass are
+        // untouched — and the next glass to change size cannot silently break this again.
+        private const float MaxRows = 44f;
+        private float _k = 1f;                                  // the fitted particle scale
+        private float _sp = Spacing, _h = H, _pr = PoolRadius, _fr = FoamRadius, _cell = Cell;
+
+        /// <summary>The particle scale SetPool fitted to the current vessel (1 = as tuned).</summary>
+        public float ParticleScale => _k;
+
+        private void FitParticleScale(float cavityHeight)
+        {
+            // 5% steps, so a vessel is re-seeded when it really changes size and never because
+            // a rim moved by a fraction of a pixel between frames.
+            float k = Mathf.Max(1f, cavityHeight / (Spacing * MaxRows));
+            k = Mathf.Round(k * 20f) / 20f;
+            if (Mathf.Abs(k - _k) < 1e-3f) return;
+            _k = k;
+            _sp = Spacing * k; _h = H * k; _pr = PoolRadius * k; _fr = FoamRadius * k; _cell = Cell * k;
+            // Particles packed at the old spacing would be crushed or blown apart by the new
+            // one; the body is re-seeded whole, as it is on any change of vessel.
+            _pn = 0; _foamN = 0; _wake = true; _restFrames = 0;
+        }
 
         // Container (vessel interior) this frame: a rect rotated by _angle, narrowed at each
         // height by an optional silhouette profile so the liquid takes the VESSEL's shape
@@ -273,13 +439,25 @@ namespace LastCall.UI
             _image = go.AddComponent<RawImage>();
             _image.raycastTarget = false;
 
-            var shader = Shader.Find("LastCall/MetaballLiquid");
-            if (shader != null)
+            // THE SHADER HAS TO SHIP (2026-09-11). It used to be found only by Shader.Find, and a
+            // player build strips every shader no asset references — this one was referenced by
+            // nothing, so outside the editor the fluid switched itself off and the game's main
+            // mechanic drew no liquid at all. A material in Resources IS a reference, which is
+            // what carries the shader into a build; each fluid clones it, because the arrays
+            // below are written per instance. Shader.Find stays as the editor fallback only.
+            var template = Resources.Load<Material>(MaterialPath);
+            if (template != null)
+                _material = new Material(template) { hideFlags = HideFlags.HideAndDontSave };
+            else
             {
-                _material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
-                _image.material = _material;
+                var shader = Shader.Find("LastCall/MetaballLiquid");
+                if (shader != null)
+                    _material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
             }
-            else Debug.LogWarning("MetaballFluid: shader 'LastCall/MetaballLiquid' not found.");
+            if (_material != null) _image.material = _material;
+            // An error and not a warning: no liquid is a broken main mechanic, not a cosmetic gap.
+            else Debug.LogError("MetaballFluid: no liquid material — Resources/" + MaterialPath
+                                + " is missing and the shader was not found. Nothing will pour.");
 
             RefreshSize();
             SetColor(new Color(0.30f, 0.60f, 1.0f, 0.95f));
@@ -427,6 +605,7 @@ namespace LastCall.UI
             // The stream lands on whatever is on top — foam, if there is any — so the surface the
             // drops merge into is the top of the WHOLE body, not the beer line inside it.
             _fillTopY = bottomY + (rimY - bottomY) * (fillFrac + headFrac);
+            FitParticleScale(rimY - bottomY);
             _poolSet = true;
             FitViewport();   // draw only over the vessel + its stream/splash margin
 
@@ -464,8 +643,22 @@ namespace LastCall.UI
             // takes the top of the glass instead of being painted over a full pint.
             int beerTarget = CountUpTo(fillFrac, bottomY, rimY, out float beerLineLocal);
             int totalTarget = CountUpTo(fillFrac + headFrac, bottomY, rimY, out _fillTopLocal);
+            // A FULL GLASS HOLDS WHAT FITS (2026-09-11). The count is an area estimate, good to a
+            // few units of level; below the rim that error just moves a free surface a little.
+            // At the rim there is no free surface — the estimate's excess has nowhere to go but
+            // into the particles already there, and a full highball's top fifth, 50 particles
+            // over what its lattice holds, churned at 110 px/s while the body under it slept.
+            // So no target may exceed the hexagonal lattice the cavity can actually hold.
+            // Foam is counted off the ESTIMATE, before the cap: capping the beer first would hand
+            // the difference to the head, and a full pint would grow froth it was never poured.
+            // Foam is not bound by the cavity anyway — a head crowns over the rim.
             int foamTarget = Mathf.Clamp(
                 Mathf.RoundToInt((totalTarget - beerTarget) * FoamCountScale), 0, MaxPool - beerTarget);
+            if (_stacked)
+            {
+                int cap = LatticeCapacity();
+                if (beerTarget > cap) beerTarget = cap;
+            }
 
             bool seeding = _pn == 0 && totalTarget > 0;   // a fresh body, not a top-up
             Reconcile(KindBeer, beerTarget, beerLineLocal, seeding);
@@ -477,11 +670,11 @@ namespace LastCall.UI
         private int CountUpTo(float frac, float bottomY, float rimY, out float topLocal)
         {
             frac = Mathf.Clamp01(frac);
-            float h = Mathf.Max((rimY - bottomY) * frac - 2f * PoolRadius * FaceOffset, 0f);
+            float h = Mathf.Max((rimY - bottomY) * frac - 2f * _pr * FaceOffset, 0f);
             topLocal = -_halfH + h;
             return Mathf.Clamp(
-                Mathf.RoundToInt((2f * Mathf.Max(_halfW - PoolRadius * SideOffset, 1f) * AverageProfile(frac))
-                                 * h / (Spacing * Spacing * PackedArea) * _density),
+                Mathf.RoundToInt((2f * Mathf.Max(_halfW - _pr * SideOffset, 1f) * AverageProfile(frac))
+                                 * h / (_sp * _sp * (_stacked ? StackedArea : PackedArea)) * _density),
                 0, MaxPool);
         }
 
@@ -493,6 +686,12 @@ namespace LastCall.UI
         private void Reconcile(byte kind, int target, float lineLocal, bool seeding)
         {
             int have = kind == KindFoam ? _foamN : _pn - _foamN;
+            // A FRESH DRINK IS LAID, NOT THROWN (2026-09-11). Seeding at random positions put
+            // hundreds of overlapping pairs into the first frame, and the relaxation then had to
+            // blow them apart — with the stack's shock passes that blast went all one way, up,
+            // and a half glass popped to the rim. Laid on a hexagonal lattice a hair wider than
+            // the rest spacing, a new body starts with nothing to push and simply settles.
+            if (seeding && kind == KindBeer && _stacked) have += SeedLattice(target - have);
             while (have < target && _pn < MaxPool)
             {
                 _px[_pn] = Random.Range(-_halfW * 0.6f, _halfW * 0.6f);   // local frame
@@ -501,6 +700,7 @@ namespace LastCall.UI
                     : lineLocal + Random.Range(-6f, 10f);
                 _vx[_pn] = 0f; _vy[_pn] = seeding ? 0f : -40f;
                 _kind[_pn] = kind;
+                _contact[_pn] = 0;
                 if (kind == KindFoam) _foamN++;
                 _pn++; have++;
             }
@@ -527,6 +727,8 @@ namespace LastCall.UI
                 _ppx[i] = _ppx[last]; _ppy[i] = _ppy[last];
                 _qx[i] = _qx[last]; _qy[i] = _qy[last];
                 _kind[i] = _kind[last];
+                _contact[i] = _contact[last];
+                _submerged[i] = _submerged[last];
             }
             _pn = last;
         }
@@ -542,7 +744,7 @@ namespace LastCall.UI
             return sum / steps;
         }
 
-        public void ClearPool() { _poolSet = false; _pn = 0; _foamN = 0; }
+        public void ClearPool() { _poolSet = false; _pn = 0; _foamN = 0; _wake = true; _restFrames = 0; }
 
         /// <summary>
         /// Where the drawn liquid actually ends, in surface space — taken from the particles
@@ -596,9 +798,10 @@ namespace LastCall.UI
         /// <summary>Punches the surface near a local x — a pour landing or a knock.</summary>
         public void Ripple(float localX, float velImpulse)
         {
+            _wake = true;
             float v = velImpulse * _size.y;
             for (int i = 0; i < _pn; i++)
-                if (Mathf.Abs(_px[i] - localX) < H && _py[i] > _fillTopLocal - H)
+                if (Mathf.Abs(_px[i] - localX) < _h && _py[i] > _fillTopLocal - _h)
                     _vy[i] -= v;
         }
 
@@ -642,9 +845,99 @@ namespace LastCall.UI
             if (dt <= 0f) dt = 1e-4f;
             if (dt > 1f / 30f) dt = 1f / 30f;   // keep the solver stable on a hitch
 
-            StepPool(dt);
-            StepDrops(dt);
-            Upload();
+            Resting = CanRest();
+            if (!Resting)
+            {
+                using (MarkPool.Auto()) StepPool(dt);
+                int awake = 0;
+                for (int i = 0; i < _pn; i++)
+                    if (_vx[i] != 0f || _vy[i] != 0f) awake++;
+                Awake = awake;
+                // AT REST IS NOT THE SAME AS ASLEEP. The sleep test zeroes any velocity under
+                // SleepSpeed (30 px/s), but one frame of gravity only adds ~23 px/s — so a particle
+                // falling freely from rest reports zero velocity EVERY frame while it creeps down.
+                // Keyed to "every velocity is zero", the first version of this froze exactly those
+                // particles in mid-air. What marks a body at rest is that nothing MOVED: a
+                // supported particle's net move over the frame is zero, a falling one's is not.
+                //
+                // And the threshold follows the frame rate: one frame of free fall from rest is
+                // g*dt^2 — 0.39 px at 60 fps but only 0.024 px at 240 — so a fixed number in px
+                // would freeze falling particles again on a fast machine. A quarter of one
+                // frame's free fall can never be mistaken for a fall.
+                float restMove = Mathf.Min(RestMovePx, 0.25f * Gravity * dt * dt);
+                _restFrames = _lastMaxMove < restMove ? _restFrames + 1 : 0;
+                TakeRestSignature();
+                _wake = false;
+            }
+            using (MarkDrops.Auto()) StepDrops(dt);
+            using (MarkUpload.Auto()) Upload();
+        }
+
+        // ── REST (2026-09-11) ───────────────────────────────────────────────────
+        //
+        // A still, full glass was costing the whole solve every frame: 1,640 particles in the
+        // 420 highball measured 11.7 ms per step STANDING STILL, 3.6x the 3.2 ms the solver was
+        // tuned to. Nothing about a settled drink needs solving, so once every particle has
+        // gone to sleep and nothing outside the solver has touched the body, the solve is
+        // skipped outright and the particles keep exactly where they are.
+        //
+        // This is NOT the convergence early-out that was tried and removed above (a full vessel
+        // never converges — the wall clamp re-introduces overlap each pass). It asks a different
+        // question: not "did the passes settle" but "did every particle end the frame asleep,
+        // twice running, with the vessel, the count and the constraints all unchanged". Any of
+        // those moving — a pour topping it up, the glass carried, a ripple, a knock, a new
+        // profile — wakes it for a full solve. A body that never falls fully asleep simply never
+        // rests, which is today's behaviour and so costs nothing to have tried.
+        //
+        // It also makes a still drink STILL: the re-applied gravity used to nudge the packing a
+        // fraction of a pixel every frame, which the look tests' byte-identical capture rule
+        // cannot tolerate once a settled drink is on screen.
+
+        /// <summary>Frames of the solve in a row that ended with every particle asleep.</summary>
+        private int _restFrames;
+        /// <summary>Something outside the solver touched the body since it last slept.</summary>
+        private bool _wake = true;
+        private int _sigPn = -1, _sigFoam = -1;
+        private float _sigCx, _sigCy, _sigAngle, _sigTop;
+        private const int RestAfterFrames = 2;
+        /// <summary>The largest net move, in px, any particle may make in a frame for the body to
+        /// count as at rest — capped further to a quarter of one frame's free fall (see Step).
+        /// A free fall moves g*dt^2 a frame even while its velocity reads 0.</summary>
+        private const float RestMovePx = 0.05f;
+        private float _lastMaxMove = float.MaxValue;
+        /// <summary>The largest net move any particle made in the last solve (px).</summary>
+        public float LastMaxMove => _lastMaxMove;
+
+        /// <summary>True for a frame the solve was skipped because the body is asleep.</summary>
+        public bool Resting { get; private set; }
+        /// <summary>Particles still moving after the last solve — 0 means the body slept.</summary>
+        public int Awake { get; private set; }
+        /// <summary>Live pool particles — for probes and the performance notes.</summary>
+        public int PoolCount => _pn;
+
+        private static readonly Unity.Profiling.ProfilerMarker MarkPool =
+            new Unity.Profiling.ProfilerMarker("LastCall.Fluid.StepPool");
+        private static readonly Unity.Profiling.ProfilerMarker MarkDrops =
+            new Unity.Profiling.ProfilerMarker("LastCall.Fluid.StepDrops");
+        private static readonly Unity.Profiling.ProfilerMarker MarkUpload =
+            new Unity.Profiling.ProfilerMarker("LastCall.Fluid.Upload");
+
+        private bool CanRest()
+        {
+            if (_wake || _pn == 0 || _restFrames < RestAfterFrames) return false;
+            if (_pn != _sigPn || _foamN != _sigFoam) return false;
+            if (Mathf.Abs(_cx - _sigCx) > 0.01f || Mathf.Abs(_cy - _sigCy) > 0.01f) return false;
+            if (Mathf.Abs(_angle - _sigAngle) > 1e-4f || Mathf.Abs(_fillTopY - _sigTop) > 0.01f)
+                return false;
+            // The shake force decays by a lerp and never reaches zero exactly; under a pixel per
+            // second squared against 1400 of gravity is nothing the drink can feel.
+            return Mathf.Abs(_shakeAx) < 1f && Mathf.Abs(_shakeAy) < 1f && _vesselSpeed < 0.5f;
+        }
+
+        private void TakeRestSignature()
+        {
+            _sigPn = _pn; _sigFoam = _foamN;
+            _sigCx = _cx; _sigCy = _cy; _sigAngle = _angle; _sigTop = _fillTopY;
         }
 
         // ── the position-based fluid step ───────────────────────────────────────
@@ -689,9 +982,28 @@ namespace LastCall.UI
             // converges, because the wall clamp re-introduces overlap after every pass, so it
             // never once fired.)
             int maxIters = _vesselSpeed > 40f ? ShakeRelaxIters : RelaxIters;
-            float minD = Spacing, minD2 = minD * minD;
+            float minD = _sp, minD2 = minD * minD;
+
+            // BOTTOM UP, AND THE BOTTOM HOLDS (2026-09-11). A still drink is a STACK, and a stack
+            // relaxed by splitting every overlap half-and-half never finishes settling: each
+            // pass pushes the lower particle down as far as it pushes the upper one up, so the
+            // weight never reaches the floor and the column is re-compressed every frame. On
+            // the full 420 highball that left the bottom fifth of the body churning at 155 px/s.
+            // Two standard remedies, used together and only in a still vessel:
+            //   * the particles are visited from the BOTTOM of the gravity axis up, so a pass
+            //     carries support up the column instead of across it;
+            //   * the last passes use SHOCK PROPAGATION: between two drink particles one above
+            //     the other, only the UPPER one moves, by the whole overlap — the lower one is
+            //     ground. The column then resolves from the floor up, and the floor stops moving.
+            // A shaken or carried vessel keeps the plain symmetric passes: there the drink is
+            // meant to be thrown about, and a rigid stack would fight the slosh.
+            bool stillVessel = _stacked && _vesselSpeed <= 40f;
+            int shockFrom = stillVessel ? maxIters - ShockPasses : int.MaxValue;
+            if (stillVessel) SortBottomUp(upX, upY);
+            float shockTop = stillVessel ? _topKey - 2.5f * _sp : float.MinValue;
             for (int iter = 0; iter < maxIters; iter++)
             {
+                bool shock = iter >= shockFrom;
                 BuildGrid();   // O(N) neighbour lookup — keeps a fine particle scale affordable
                 // Only the FORWARD half of the neighbourhood (2026-07-28). Scanning all nine
                 // cells and throwing away half the pairs with `j <= i` walked every pair twice
@@ -699,8 +1011,9 @@ namespace LastCall.UI
                 // plus this one still meet every neighbouring pair exactly once: a pair that
                 // straddles two cells is found from the backward one, a pair inside a cell by
                 // taking only j > i.
-                for (int i = 0; i < _pn; i++)
+                for (int oi = 0; oi < _pn; oi++)
                 {
+                    int i = stillVessel ? _order[oi] : oi;
                     int cx = CellOf(_px[i]), cy = CellOf(_py[i]);
                     int seen = 0;
                     float pxi = _px[i], pyi = _py[i];
@@ -720,6 +1033,30 @@ namespace LastCall.UI
                             // against foam only part way leaves the packing irregular, which is
                             // what gives the head a lumpy crest instead of a planed one.
                             if (_kind[i] == KindFoam && _kind[j] == KindFoam) push *= FoamSlack;
+                            // Only INSIDE the body. The top rows stay soft: a stack held rigid all
+                            // the way up had nowhere to put the load but the ceiling of a full
+                            // glass, and its surface fifth churned at 230 px/s against it.
+                            if (shock && _kind[i] == KindBeer && _kind[j] == KindBeer
+                                && pxi * upX + pyi * upY < shockTop
+                                && _px[j] * upX + _py[j] * upY < shockTop)
+                            {
+                                // Ground and load: the pair's whole overlap goes to whichever of
+                                // the two sits higher along gravity. A side-by-side pair (less
+                                // than ~20 degrees off level) is not a stack, and splits as usual.
+                                float along0 = dx * upX + dy * upY;         // >0: j is above i
+                                if (along0 > r * 0.35f)
+                                {
+                                    float full = minD - r;
+                                    _px[j] += dx / r * full; _py[j] += dy / r * full;
+                                    continue;
+                                }
+                                if (along0 < -r * 0.35f)
+                                {
+                                    float full = minD - r;
+                                    pxi -= dx / r * full; pyi -= dy / r * full;
+                                    continue;
+                                }
+                            }
                             float nx = dx / r * push, ny = dy / r * push;
                             pxi -= nx; pyi -= ny;
                             _px[j] += nx; _py[j] += ny;
@@ -761,7 +1098,20 @@ namespace LastCall.UI
             // stuffs the grid cells so the neighbour sweep — and the frame — blows up.
             bool moving = _vesselSpeed > 40f;
             float damp = moving ? ShakeDamping : RestDamping;
-            float maxCorr = Spacing * 4f, maxCorr2 = maxCorr * maxCorr;
+            // THE BOTTOM OF A STILL GLASS DOES NOT MOVE (2026-09-11). Measured on the full 420
+            // highball, settled for six seconds: the bottom fifth of the body averaged 155 px/s
+            // and the surface fifth 16. A still drink's floor has no business moving at all —
+            // what moved there was the solver: gravity presses the stack every frame, the
+            // passes cannot resolve a tall column completely, and the correction left over is
+            // largest where the weight is largest, at the bottom, where it turns into velocity
+            // and comes back as next frame's overlap. Damping by DEPTH breaks that loop where it
+            // lives and nowhere else: the top of the drink keeps every bit of its freedom to
+            // ripple, take a stream and slosh, and a vessel being moved or shaken is exempt.
+            // Per SECOND, not per frame, so it holds at any frame rate.
+            float deepKeep = Mathf.Pow(DeepDamping, 60f * dt);
+            float maxMove2 = 0f;
+            float depthSpan = Mathf.Max(_fillTopLocal + _halfH, 1f);
+            float maxCorr = _sp * 4f, maxCorr2 = maxCorr * maxCorr;
             for (int i = 0; i < _pn; i++)
             {
                 float cxd = _px[i] - _qx[i], cyd = _py[i] - _qy[i];
@@ -772,7 +1122,7 @@ namespace LastCall.UI
                     _px[i] = _qx[i] + cxd * sc; _py[i] = _qy[i] + cyd * sc;
                 }
             }
-            ClampToVessel();
+            ClampToVessel(true);
 
             // Velocity from the net move (this is what carries a moving/tilting vessel into the
             // liquid — the slosh), speed-capped.
@@ -781,8 +1131,40 @@ namespace LastCall.UI
                 // Velocity is the net move over the frame. This is the property that lets the
                 // drink come to rest at all: a particle held by the floor or its neighbours
                 // barely moves, so its velocity falls to zero instead of being re-integrated.
-                _vx[i] = (_px[i] - _ppx[i]) / dt;
-                _vy[i] = (_py[i] - _ppy[i]) / dt;
+                float mvx = _px[i] - _ppx[i], mvy = _py[i] - _ppy[i];
+                float mv2 = mvx * mvx + mvy * mvy;
+                if (mv2 > maxMove2) maxMove2 = mv2;
+                _vx[i] = mvx / dt;
+                _vy[i] = mvy / dt;
+                // THE FLOOR STOPS A DROP, IT DOES NOT THROW IT (2026-09-11). Velocity is the net
+                // move, and the net move of a particle the floor just pushed back up INCLUDES that
+                // push — so the floor launched it. The glass's floor is the near arc of an
+                // ellipse, 1 - sqrt(1 - u^2), whose slope runs to infinity at the walls: a
+                // particle sliding into a bottom corner was thrown up that near-vertical arc,
+                // fell, and was thrown again. Measured on the full 420 highball: the bottom fifth
+                // of the body averaged 116 px/s while the surface averaged 16 — the drink was
+                // boiling from the floor up. A boundary may stop motion INTO it; it may not add
+                // motion OUT of it. Tangential motion is untouched, so the drink still runs down
+                // a wall and sloshes along the floor. In the container frame, so it holds tilted.
+                if (_stacked && !moving)
+                {
+                    float depth = (_fillTopLocal - _py[i]) / depthSpan;   // 0 surface, 1 floor
+                    float k = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.18f, 0.62f, depth));
+                    if (k > 0f)
+                    {
+                        float keep = Mathf.Lerp(1f, deepKeep, k);
+                        _vx[i] *= keep; _vy[i] *= keep;
+                    }
+                }
+                byte ct = _stacked ? _contact[i] : (byte)0;
+                if ((ct & 1) != 0 && _vy[i] > 0f) _vy[i] = 0f;
+                if ((ct & 2) != 0 && _vx[i] > 0f) _vx[i] = 0f;
+                if ((ct & 4) != 0 && _vx[i] < 0f) _vx[i] = 0f;
+                // And the CEILING. A full glass is filled to its pool ceiling by definition, so
+                // its top row lives against that clamp — which pushed it back down every pass and
+                // threw it into the body below: the top fifth of a full highball churned at
+                // 110-440 px/s while the rest of the body slept.
+                if ((ct & 8) != 0 && _vy[i] < 0f) _vy[i] = 0f;
                 // Damping is what lets the drink go still — but applied while you are shaking it
                 // it just swallows the slosh. So it is light in a moving tin, strong in a still
                 // one, and strongest of all on foam, which is thick and does not ring.
@@ -793,6 +1175,7 @@ namespace LastCall.UI
                 if (sp2 < sleep * sleep) { _vx[i] = 0f; _vy[i] = 0f; }
                 else if (sp2 > MaxSpeed * MaxSpeed) { float s = MaxSpeed / Mathf.Sqrt(sp2); _vx[i] *= s; _vy[i] *= s; }
             }
+            _lastMaxMove = Mathf.Sqrt(maxMove2);
             BuildGrid();   // positions moved during relaxation — refresh before the neighbour blend
             ApplyViscosity();
         }
@@ -817,7 +1200,11 @@ namespace LastCall.UI
 
         /// <summary>Sets the vessel silhouette: half-width multipliers sampled bottom → rim.
         /// Pass null for a plain rectangular interior.</summary>
-        public void SetProfile(float[] halfWidths) => _profile = halfWidths;
+        public void SetProfile(float[] halfWidths)
+        {
+            if (!ReferenceEquals(_profile, halfWidths)) _wake = true;   // new walls: re-solve
+            _profile = halfWidths;
+        }
 
         /// <summary>
         /// Per-vessel correction on how many particles a given fill asks for. The estimate draws
@@ -826,7 +1213,12 @@ namespace LastCall.UI
         /// shortest cavity, so what is left of the inset error is a bigger share of it — and it
         /// asks for a tenth fewer. Measured 2026-07-28 at four fills, live in each stage.
         /// </summary>
-        public void SetDensity(float multiplier) => _density = Mathf.Clamp(multiplier, 0.25f, 4f);
+        public void SetDensity(float multiplier)
+        {
+            float d = Mathf.Clamp(multiplier, 0.25f, 4f);
+            if (d != _density) _wake = true;
+            _density = d;
+        }
         private float _density = 1f;
 
         /// <summary>THE FLOOR IS AN ARC (2026-09-07, the author: "tabanı yay şeklinde değil").
@@ -834,11 +1226,17 @@ namespace LastCall.UI
         /// near arc of the floor's ellipse, the same curve the fill mask is cut to. The clamp
         /// used to be one flat line across the whole width at the arc's LOWEST row, so the
         /// drink's corners hung below the glass's floor by the depth of the arc.</summary>
-        public void SetFloorArc(float px) => _floorArc = Mathf.Max(0f, px);
+        public void SetFloorArc(float px)
+        {
+            // Called every frame by the tap; only a CHANGED floor may wake a sleeping body.
+            float a = Mathf.Max(0f, px);
+            if (a != _floorArc) _wake = true;
+            _floorArc = a;
+        }
         private float _floorArc;
 
         /// <summary>Clamps every particle inside the rotated vessel interior (profile-shaped).</summary>
-        private void ClampToVessel()
+        private void ClampToVessel(bool record = false)
         {
             // Local frame: the walls are axis-aligned here, so this is a straight compare —
             // no rotation per particle per iteration (the old hot path).
@@ -847,8 +1245,8 @@ namespace LastCall.UI
             // (where the wall cuts a packed column) and 0.53r above a free surface. Holding the
             // centres exactly that far in makes the DRAWN liquid meet the vessel wall, so it
             // covers the whole interior without bleeding out of it.
-            float ix = Mathf.Max(_halfW - PoolRadius * SideOffset, 2f);
-            float iy = Mathf.Max(_halfH - PoolRadius * FaceOffset, 2f);
+            float ix = Mathf.Max(_halfW - _pr * SideOffset, 2f);
+            float iy = Mathf.Max(_halfH - _pr * FaceOffset, 2f);
             for (int i = 0; i < _pn; i++)
             {
                 // Foam may stand proud of the rim — a head crowns over the glass — and each bubble
@@ -873,7 +1271,8 @@ namespace LastCall.UI
                     float u = Mathf.Clamp(lx / Mathf.Max(ix, 1f), -1f, 1f);
                     floorHere += _floorArc * (1f - Mathf.Sqrt(1f - u * u));
                 }
-                if (ly < floorHere) ly = floorHere; else if (ly > ceil) ly = ceil;
+                byte hit = 0;
+                if (ly < floorHere) { ly = floorHere; hit |= 1; } else if (ly > ceil) { ly = ceil; hit |= 8; }
                 float w = HalfWidthAt((ly + iy) / (2f * iy), ix);   // the wall at this height
                 if (ly > iy)
                 {
@@ -883,10 +1282,11 @@ namespace LastCall.UI
                     // gives back the extra iso reach its fatter render radius has over
                     // the pool particles the wall insets were measured for.
                     w = w * (0.92f - 0.35f * (ly - iy) / FoamCrown)
-                        - (FoamRadius - PoolRadius) * SideOffset;
+                        - (_fr - _pr) * SideOffset;
                 }
-                if (lx < -w) lx = -w; else if (lx > w) lx = w;
+                if (lx < -w) { lx = -w; hit |= 2; } else if (lx > w) { lx = w; hit |= 4; }
                 _px[i] = lx; _py[i] = ly;
+                if (record) _contact[i] = hit;
             }
         }
 
@@ -902,7 +1302,7 @@ namespace LastCall.UI
         /// one body instead of rattling as loose grains. Grid-accelerated.</summary>
         private void ApplyViscosity()
         {
-            float h2 = H * H;
+            float h2 = _h * _h;
             // Gravity's direction in the container's frame, so "above" means above in the world
             // even when the glass is laid over.
             float gc = Mathf.Cos(-_angle), gs = Mathf.Sin(-_angle);
@@ -947,7 +1347,7 @@ namespace LastCall.UI
         }
 
         // ── spatial hash grid ───────────────────────────────────────────────────
-        private static int CellOf(float v) => Mathf.FloorToInt(v / Cell);
+        private int CellOf(float v) => Mathf.FloorToInt(v / _cell);
 
         private static int HashCell(int gx, int gy)
         {
@@ -1017,7 +1417,7 @@ namespace LastCall.UI
             // A shaken drink spreads out, and spread particles thin the metaball field between
             // them — which reads as the drink losing volume. Give each one a little more reach
             // while the tin is moving so the body stays as solid as it is when it is still.
-            float r = _vesselSpeed > 40f ? PoolRadius * 1.18f : PoolRadius;
+            float r = _vesselSpeed > 40f ? _pr * 1.18f : _pr;
             for (int i = 0; i < _pn && count < RenderMax; i++)
             {
                 ToSurface(_px[i], _py[i], out float sx, out float sy);
@@ -1026,7 +1426,7 @@ namespace LastCall.UI
                 // it: the golden ratio gives each bubble a stable size that does not march in
                 // step with its neighbours, so the crest breaks into rounds.
                 bool foam = _kind[i] == KindFoam;
-                float rr = foam ? FoamRadius * (0.80f + 0.40f * (i * 0.7548777f % 1f)) : r;
+                float rr = foam ? _fr * (0.80f + 0.40f * (i * 0.7548777f % 1f)) : r;
                 _dropData[count++] = new Vector4(uv.x, uv.y, rr, foam ? 2f : 1f);
             }
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
@@ -1070,6 +1470,7 @@ namespace LastCall.UI
         {
             for (int i = 0; i < MaxDrops; i++) _drops[i].Active = false;
             _pn = 0; _foamN = 0; _emitAccum = 0f;
+            _wake = true; _restFrames = 0;
             Upload();
         }
 
