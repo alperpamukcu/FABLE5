@@ -18,9 +18,7 @@
     {"id": "floor_marble", "name": "Marble Floor", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_marble.png", "round": 4},
 
     {"id": "art_city", "name": "City Triptych", "slot": "wall_center", "sprite": "Tools/room_variants/art_city.png", "like": "flamingo_triptych", "round": 1},
-    {"id": "picS_flamingo", "name": "Flamingo (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_flamingo.png", "like": "flamingo_triptych", "round": 3},
-    {"id": "picS_cherry", "name": "Cherry (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_cherry.png", "like": "flamingo_triptych", "round": 3},
-    {"id": "picS_lips", "name": "Lips (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_lips.png", "like": "flamingo_triptych", "round": 3},
+    {"id": "picS_trio", "name": "Small Trio", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_trio.png", "like": "flamingo_triptych", "round": 3},
 
     {"id": "pic_pelican", "name": "Pelican", "slot": "wall_right_art", "layer": "Tools/room_variants3/fx_picR_pelican.png", "round": 3},
 

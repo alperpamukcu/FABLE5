@@ -5,8 +5,10 @@
 - **The right wall climbs its own ladder (2026-09-12):** the author drew the side wall four
   ways, so it is no longer whatever the back wall's plate happened to carry. A backdrop slot
   that OVERLAYS the plate rather than replacing it (`walls_right`, drawn at order 12 on the
-  plate's own transform) takes the four rungs; the room's own door, with the "+20 ONLY" sign
-  the age law hangs on, shows through every one of them. And the room now has an UPGRADE TREE
+  plate's own transform) takes the four rungs, drawn whole — the doorway the author painted
+  into them included, which costs the room the "+20 ONLY" sign that hung on the plate's own
+  door (it would come back as a plate over this layer). The three small pictures of round 3
+  became ONE, hung like the triptych it shares a hook with. And the room now has an UPGRADE TREE
   (`Tools/upgrade_tree/`): every ladder and rung on one page, the room built from whatever is
   clicked, rungs reordered to set tiers, combinations saved — with the approved art that has
   not shipped yet standing in it as candidates. Its pieces come out of the game itself

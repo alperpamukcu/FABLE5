@@ -1534,11 +1534,18 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   her şeyin 15'i altında). Böylece sağ duvar arka duvardan bağımsız tırmanıyor; eskiden dört plakanın
   her biri kendi sağ duvarını taşıyordu. Basamaklar: Peeling Purple (açılışta, odanın zaten sahip olduğu
   duvar) · Plum Coat · Bubble Paper · Sunset Panelling. Fiyat/konfor/yıldız **geçici**, yazarın ayarına açık.
-- **Kapı odanın kalıyor:** çizimlerin kapı boşluğundaki düz bej panel (dördünde de aynı 8.580 piksel)
-  saydamlaştırılıyor, böylece plakanın kendi kapı girintisi ve "+20 ONLY" tabelası (GDD 28) her basamakta
-  duruyor. `Tools/right_wall_ship.py` sürüyor: kaynak `Tools/AssetPipeline/sources/konsept_art/right_wall_t*.png`,
-  yerleşim (426, 0) — tier 1'in plakanın kendi sağ duvarı olmasından ölçüldü; birinci basamak eski odadan
-  yalnız 63 kenar pikseliyle ayrılıyor. `KEEP_DRAWN_DOOR = True` bej kapıyı çizdirir.
+- **Duvar çizildiği gibi, kapısıyla birlikte** (2026-09-12, yazar: "yeni yüklenen sağ duvarın tamamını
+  kullan kesme"): kapı boşluğundaki düz bej panel de basılıyor. Bunun bedeli, plakanın kapı girintisiyle
+  birlikte **"+20 ONLY" tabelasının da görünmemesi** (GDD 28'in kapı yaşı kuralının odadaki tek işareti
+  oydu) — geri gelmesi gerekirse bu katmanın üstüne kendi plakası olarak konur.
+  `Tools/right_wall_ship.py` sürüyor: kaynak `Tools/AssetPipeline/sources/konsept_art/right_wall_t*.png`,
+  yerleşim (426, 0) — tier 1'in plakanın kendi sağ duvarı olmasından ölçüldü. `KEEP_DRAWN_DOOR = False`
+  kapı bölgesini boşaltıp odanın kendi kapısını gösterir (o hâlde birinci basamak eski odadan yalnız 63
+  kenar pikseliyle ayrılıyor).
+- **Üç küçük tablo tek tablo oldu** (yazar: "bu üç görseli birleştirip diğer orta duvar tabloları gibi 3lü
+  tek tablo olsun, ve t2 olsun, t3 flamingo"): `Tools/pics_trio.py` flamingo/kiraz/dudak çerçevelerini tek
+  orta çizgide yan yana diziyor (148×46, `picS_trio`). Orta duvar merdiveni artık **art_city → üçlü →
+  flamingo triptych**; ağaçtaki sıra da böyle kaydedildi.
 - **Yuva iki şey daha öğrendi:** `overlay` (bir backdrop'un plakayı değiştirmek yerine üstüne serilmesi) ve
   `place` (markette basamağın nereye gittiğinin adı — "The right wall"; yoksa eskisi gibi "The back wall").
 - **Upgrade ağacı** (`Tools/upgrade_tree/`): odanın her merdiveni ve her basamağı tek sayfada; basamağa

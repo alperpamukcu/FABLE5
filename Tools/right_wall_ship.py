@@ -13,11 +13,13 @@ with the back wall.
 WHERE: at (426, 0) of the 640x360 room, found by matching tier 1 against fx_walls_1, whose
 right wall it is — 64% of its pixels land on the plate's own, the rest is the door.
 
-THE DOOR STAYS THE ROOM'S. Inside the door frame the drawings carry a flat beige panel, the
-same 8,580 pixels in all four; the plate there has the dark recess and the "+20 ONLY" sign the
-door law hangs on (GDD 28). The door region — where tier 1 differs from the plate, right of the
-jamb and below the lintel — is cleared in every tier, so the plate's door shows through at
-every rung. KEEP_DRAWN_DOOR = True draws the beige panel instead.
+THE WHOLE DRAWING, DOOR AND ALL (2026-09-12, the author: "yeni yüklenen sağ duvarın tamamını
+kullan kesme"). Inside the door frame the drawings carry a flat beige panel — the same 8,580
+pixels in all four — where the plate has the dark recess and the "+20 ONLY" sign the door law
+hangs on (GDD 28). The wall is laid down as drawn, so that sign is no longer on the door; it
+would come back as a plate of its own over this layer. KEEP_DRAWN_DOOR = False clears the door
+region instead (it is measured as: where tier 1 differs from the plate it was cut from, right
+of the jamb and below the lintel), which leaves the room's own door showing through every rung.
 
   py -3 -X utf8 Tools/right_wall_ship.py
 """
@@ -33,7 +35,7 @@ FIXT = os.path.join(ROOT, 'Assets', 'Resources', 'Fixtures')
 AT = (426, 0)                 # the drawing's top-left in the room, y down
 JAMB_X, LINTEL_Y = 146, 55    # the door region starts here, in the drawing's own pixels
 SWATCH = (64, 48)
-KEEP_DRAWN_DOOR = False
+KEEP_DRAWN_DOOR = True
 
 
 def load(i):
