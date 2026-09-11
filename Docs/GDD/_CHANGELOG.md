@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Pour v2 (2026-09-11/12):** the main mechanic, rebuilt at the author's request. The bottle
+  and the tin are held by the neck on springs, so the tall glass can be poured into; the pour's
+  law moved into Core (`BottlePour`: a fill-dependent onset, 24° full to 102° empty, a 30° ramp
+  from an 8% trickle); the stream is a continuous rope that lands in its vessel and never on the
+  floor; the drink is drawn on the vessel's own pixel grid with value bands, a lit rim, a
+  meniscus, depth and flecks — the author chose that look over the smooth one on 2026-09-12
+  ("Yenisi güzel"); a poured drink finds its level (0.5 px) and goes still. And for a cheap
+  laptop: the drink is drawn into a small texture only when it changes (4.48 → 0.07 ms at
+  1080p), the room's camera drops a bloom no pixel reached, the window's sky is read once, and
+  builds sync to the display. Rules overturned: the stream's 55% alpha, the fixed 42° onset,
+  the drawn miss, UI-owned pour rates (GDD 21 §3, GDD 24 §12.1, `Docs/PLAN_pour_v2.md`).
 - **The set is on (2026-09-09):** the wall television's four adverts were four stills held
   for six seconds each — a poster, not a broadcast. Each is a six-frame loop now, derived
   from its own plate the way the tube's collapse and warm-up already were: a slow push in, a

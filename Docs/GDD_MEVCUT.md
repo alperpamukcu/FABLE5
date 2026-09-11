@@ -56,6 +56,11 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Servis dökümü zorunlu:** içki shaker'da servis edilemez; `PourIntoServingGlass(hacim, isabet)` — isabet dışı kısım dökülür, oranlar bozulmadan (TransferInto brim'e kadar, hazırlıklar bardağa taşınır).
 - **Zorunlu karıştırma (GDD 21 §14; tarife bağlandı 2026-08-14):** önce **tarif** konuşur — `TinMethod`, tin'in kendi içeriğinin eşleştiği tarifin `prepMethod`'u: `Shaken`/`Stirred` çalışmayı zorunlu kılar, `Built` asla. Kitap içeceği adlandıramıyorsa eski yapısal kural devreye girer: tin'de ≥%3 payla **2+ alkollü** içerik (kategori testi — likörler sayılır, ABV asla kural beslemez) varsa dışa döküm `Shake` ya da `Stir` ister; red `PourIntoServingGlass`'ta, UI `CanPourOut` okur. Bardakta inşa muaf (kural tin hakkında); bin her zaman açık; Info'suz test kartları bilerek muaf. `Stir(enerji)` = `Shake`'in aynası (`IsStirred/StirEnergy`, tek yuva son kazanır). Hakem yöntemi aynı gün öğrendi (§6 zanaat): Martini'yi çalkalamak hâlâ YASAL (kapı "karışsın" der, "doğru karışsın" demez) ama bahşişten öder.
 - **Bardak otomatiği:** eşleşen tarifin `GlassId`'si ilk dışa dökümde seçilir; sıvı varken kap değişmez. Kapasiteler: pint 1.6 · highball 1.0 (varsayılan) · rocks 0.7 · martini 0.6 · coupe 0.55.
+- **Şişe ve tin dökme yasası (`BottlePour`, Core, 2026-09-11):** akış eğimle ve kabın doluluğuyla gelir — eşik dolu kapta
+  **24°**, boşalırken **102°**'ye kayar (eğri 1.3); eşiği geçince 30°'lik rampa (üs 1.25), eşiğin hemen üstünde %8'lik damla.
+  Hacim = tam hız × pay × süre; tezgâh hızları `TycoonConfig.HandPourScale` 0.60 ve `ServePourMax` 0.45. `PourTick(sn, eğim)`
+  eşiğin altındaki bir yatırışta 0 döner (seçili şişeyi bırakmaz, karışımı bozmaz); servis `PourOutTilted(sn, eğim)`.
+  Sabit 42° eşik ve UI'ya ait hızlar KALKTI. Nişan bir KAPI (GDD 21): bardağı ıskalayan akış dökülmez, çizilmez de.
 - **Bira fiziği (TapPour):** akış 0.42/sn; 45° ideal, >60° döker, 88° tamamı ziyan; dik tutuş köpük %78 → yatık %4; köpük bandı **0.08–0.20** (ideal 0.14); çökme `0.16/sn`, çöken köpüğün %35'i sıvıya döner. `Preparations.Draught` damgası yargıca "köpüğü puanla" der.
 - **Hazırlıklar:** shaken/stirred (tek yuva, sonuncu kazanır), ice, lemon_twist, salt_rim, sugar_rim, draught.
 
@@ -1520,6 +1525,34 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
+
+### 9.56 · Dökme v2: boyundan tutuş, akışın yasası, ip akış, sıvının dokusu, düz yüzey, düşük sistem (2026-09-11/12)
+
+Yazar: "uzun bardağa şişeyi yukarı çıkaramadığımızdan sıvı dökemiyoruz ... daha çok hacim düşsün ve daha çok sıvı
+gibi hareket etsin ... dümdüz boyalı alan gibi gözükmesin; oyundaki ana ve en önemli mekanik bu olacak", sonra "sıvılar
+ve şişeler daha hareketli olmalı", "bardağa koyarken sıvılar yere damlıyor gibi gözüküyor" ve "oyun çok düşük
+sistemlerde de çalışmalı". Faz kaydı ve ölçümler: `Docs/PLAN_pour_v2.md`.
+
+- **Boyundan tutuş (`PourHand`):** şişe ve tin artık imlecin tuttuğu boyundan döner; yaylar (takip ω28 ζ0.75, eğim ω18
+  ζ0.62, eve dönüş ω16 ζ0.9), yataydaki ivmeden sallanma, bırakınca yerine döner. Uzun bardağa dökme penceresi 10 → 108 birim.
+- **Akışın yasası Core'da** (§4, `BottlePour`).
+- **İp akış:** damla ZAMANLA değil MESAFEYLE bırakılır (yarıçapın 0.3'ü), 96 akış + 64 sıçrama yuvası, akış kendi alfasıyla
+  (boş bardağın silik alfasıyla değil). Bardağın dışına düşen damla YOK: boş bardağın da tabanı var, tin'in ağzı bir yutak.
+- **Sıvının dokusu — YAZAR SEÇTİ (2026-09-12, "Yenisi güzel"):** sıvı, içinde durduğu kabın KENDİ piksel ızgarasında çizilir
+  (highball'da 4.375 px, tin'de 2.0; `MetaballFluid.SetPixelGrid`). İçkinin rengini ÇARPAN beş ton (beyaza asla), alanın kendi
+  eğiminden bir texel'lik ışık/gölge kenarı, gerçek yüzeyde menisküs, derinlikte koyulaşma ve yoğunlaşma, bantlar arası
+  ince dama dikişi, parçacıkların taşıdığı parıltılar (hareket eden içkide gövdenin İÇİNDE akış görünür). `LiquidTexel = 0`
+  eski düz görünümü bütün olarak geri getirir. Bilinen, bu işin değil: kola+votka iki görünümde de gri-mor okunuyor (palet).
+- **Sıvı düzleşir ve durur:** yığılan yüzey akışın düştüğü tarafta 8–14 px yüksek kalıyordu ve gövde hiç durulmuyordu (5 sn
+  sonra 332 parçacığın 245'i kıpırdıyordu). Yüzey katmanı yerel eğimden aşağı itilir (cebinden çıkaracak kadar; statik
+  sürtünme bandıyla), sakinleşince ortalama seviyenin 2.5 sıra altı, döküş sırasında 5 sıra altı TUTULUR. Sonuç: sol-sağ farkı
+  **0.5 px**, ~5.4 sn'de tamamen uyuyor.
+- **Düşük sistem:** sıvı ekranın her pikseli yerine texel başına bir piksel küçük bir dokuya çizilir (`FluidTexture`, shader
+  geçişi 1) ve yalnız değişince — 1080p'de **4.48 → 0.07 ms**, duran içki 0. Döküş fiziği tepe **3.0 → 1.55 ms**. Odanın
+  kamerasında post-process ve HDR KAPALI (`DiegeticStage.RoomBloom`): bloom eşiğine (1.1) hiçbir piksel ulaşmıyordu, gecenin
+  dört anında **0 piksel** fark. Pencere gökyüzü bir kez okunur (31 × 620 KB çöp yerine). Oyun sürümü ekranla senkron
+  (`vSyncCount = 1`; önce sınırsız 160–260 fps); editör ve PlayMode kendi hızında.
+- **Doğrulama:** EditMode 518/518, PlayMode 13/13.
 
 ### 9.55 · Bitkiler yerine, televizyon oynuyor (2026-09-09)
 

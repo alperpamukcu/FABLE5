@@ -82,6 +82,16 @@ The vessel on screen has to agree with that number, so the drawn liquid is measu
 it: at `F = 1` the fluid stands at its rim, and the stages no longer shave a fraction off
 the fill to flatter the solver (see 24 §3.5).
 
+**A bottle pours by how far it is tipped, and by how full it is (2026-09-11, `BottlePour`).**
+The fixed 42° onset is gone. A full bottle starts to run at **24°**; the onset climbs to
+**102°** as it empties (curve 1.3), so a nearly empty bottle has to be turned right over. Past
+the onset the flow ramps over **30°** (power 1.25) from a **trickle of 8%** to full; the volume is
+the full rate × that share × the time. The rates are Core's, not the benches': a hand pour runs at
+`TycoonConfig.HandPourScale` (0.60) and the tin into the serving glass at `ServePourMax` (0.45).
+`PourTick(seconds, tilt)` returns nothing under the onset without letting go of the chosen bottle
+or un-mixing the tin, and `PourOutTilted(seconds, tilt)` is the serve's verb. The aim stays a
+gate: a stream that misses the glass is a stream that does not pour, and none is drawn.
+
 **Garnishes go in by the pinch (2026-07-20).** One tap of a garnish jar drops a fixed
 **5% of the glass** (`GarnishClickFraction`), however long the button was held; taps stack.
 Trickling out 1% slivers of mint by timing a held jar was busywork with no read behind it —

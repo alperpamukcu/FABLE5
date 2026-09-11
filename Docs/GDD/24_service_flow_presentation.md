@@ -132,9 +132,9 @@ you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
 - **The liquid gains volume and takes the glass shape**: the pooled body is a soft-topped
   rectangle clipped to the glass interior, its surface line set from the glass's real
   fill fraction — pour and the level rises like water filling a vessel.
-- **The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate): a pour is
-  a held, deliberate motion. Only the drawn volume slows; the floor's patience clock is
-  untouched (it runs on its own tick).
+- ~~**The fill is slower** (`PourTimeScale` on the shaker, a gentler serve rate)~~ —
+  *superseded 2026-09-11:* the rates are Core's (`BottlePour`, `TycoonConfig.HandPourScale`
+  / `ServePourMax`) and `PourTimeScale` is gone; see §12.1.
 - **The surface behaves like water in a glass** (2026-07-22): the pool's top is a live water
   line driven by a **shallow-water height-field** — a row of columns coupled as a wave
   equation, so a disturbance travels, **reflects off the glass walls**, and settles back
@@ -160,8 +160,10 @@ you hold."* Addressed on the placeholder art, ahead of the P8 re-skin:
   **springs after the cursor with overshoot** (it lags and jiggles) and the body hangs
   and **swings from that grip** — grab a lemon by one end and the free end sways, then
   settles.
-- The spill still lives in the **serve** aim: off-target, the stream drifts wide, misses
-  the rim and falls past onto the counter. GDD 21 §3 brim holds inside the glass.
+- ~~The spill still lives in the **serve** aim: off-target, the stream drifts wide, misses
+  the rim and falls past onto the counter.~~ — *superseded:* the aim is a GATE (GDD 21), and
+  since 2026-09-11 no liquid is drawn that does not pour — see §12.1. GDD 21 §3 brim holds
+  inside the glass.
 
 **The drawn level has to equal the stated one (2026-07-28).** Player note: *"the poured
 amount doesn't show the vessel as full."* It didn't: a tin the rules called 100% drew to
@@ -547,3 +549,30 @@ tipped, thinner when the aim is off), a drop lands on the DRAWN surface (`Surfac
 than the nominal line, and it splashes and punches the surface harder the further it has fallen.
 The serving glass stands on the bench line whatever its height (a rocks tumbler used to float at
 the tall glass's centre).
+
+### 12.1 Pour v2 (2026-09-11/12) — the main mechanic, rebuilt
+
+The author: the tall glass could not be poured into; more volume should fall and it should move
+like liquid; the drink should not read as a flat painted area; drinks looked as if they dripped on
+the floor; and the game must run on very low-end machines. Phase log and every measurement:
+`Docs/PLAN_pour_v2.md`. As built:
+
+- **Held by the neck** (`PourHand`): the bottle and the tin turn about the grip, on springs, swing
+  from the hand's own acceleration and go home when released. The tall glass's pour window went
+  from 10 to 108 units.
+- **The pour's law is Core's** (`BottlePour`, GDD 21 §3): tilt past a fill-dependent onset.
+- **The stream is a rope**: nodes leave by distance, not by time, carry the source's own alpha,
+  land in the vessel with mass, and none falls outside one (an empty glass has a floor; the
+  steel tin's mouth is a sink).
+- **The drink has a texture — the author's choice, 2026-09-12 ("Yenisi güzel")**: drawn on the
+  vessel's own pixel grid, five value bands that multiply the drink's colour, a one-texel lit and
+  shaded rim from the field's gradient, a meniscus on the real surface, depth, a checker seam, and
+  flecks the particles carry. `MetaballFluid.LiquidTexel = 0` keeps the smooth look whole.
+- **It finds its level and goes still**: the surface layer runs downhill, the body below it is
+  held once the drink is calm (and below five rows during a pour); level to 0.5 px, asleep in ~5 s.
+- **It is drawn small**: into a texture at one pixel per texel, and only when it changed —
+  4.48 ms → 0.07 ms at 1080p, nothing at rest.
+
+Rules this overturns: the stream's 55% alpha; the white top-face disc and the fwidth soft edge
+(hard texel edges in the textured look); the drawn "miss" stream; the fixed 42° onset; UI-owned
+pour rates (`PourTimeScale`).

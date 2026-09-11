@@ -63,10 +63,10 @@ already burns 11.7 ms; (3) phases are re-cut so the two things broken today ship
 | **P1b** ✅ | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | **done 2026-09-11** — see §4 |
 | **P2** ✅ | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | **done 2026-09-11** — see §5 |
 | **P3** ✅ | The rope stream, split budgets, drops-only gravity, landing into the vessel, tin sink, source alpha | **done 2026-09-11** — see §6 |
-| **P4** ◐ | Pixel-art shading on the vessel's own grid: bands, checker seam, lit rim, depth, meniscus, flecks, agitation | **in the game 2026-09-11, provisional** — A/B report sent; `LiquidTexel = 0` restores the smooth look — see §7 |
+| **P4** ✅ | Pixel-art shading on the vessel's own grid: bands, checker seam, lit rim, depth, meniscus, flecks, agitation | **approved 2026-09-12** (the author: "Yenisi güzel") — see §7 |
 | **P5** ◐ | A liquid finds its level; the still body is held; frozen core during pours | **done 2026-09-11** (slosh of the bottle's line still open) — see §8 |
 | **P5b** ✅ | The author: "oyun çok düşük sistemlerde de çalışmalı" — the drink drawn small, the room's dead passes cut, frames paced | **done 2026-09-11** — see §9 |
-| **P6** | Docs: GDD 24 §2/§3/§3.5/§12, GDD 21 §3, GDD_MEVCUT | — |
+| **P6** ✅ | Docs: GDD 24 §3.5/§12.1, GDD 21 §3, GDD_MEVCUT §4/§9.56, changelog | **done 2026-09-12** |
 
 **Rules this overturns, for the author to know:** the stream's 55% alpha (it draws at the
 source's alpha now); the white-lerped top-face disc (becomes a multiply-only ellipse in the
@@ -216,7 +216,7 @@ smoothly, 6 → 18 px, inside 19 all the way down.
 The pint is unchanged (197 beer / 34 foam / 0 sunk); the tap's stream is width 0.8.
 Suites: EditMode **518/518**, PlayMode **13/13**.
 
-## 7 · P4 — the drink has a texture (2026-09-11, provisional until the author picks)
+## 7 · P4 — the drink has a texture (2026-09-11; the author chose it 2026-09-12)
 
 The author: "dökülen sıvıların sıvı dokusu olması için bir yol düşünelim, dümdüz boyalı alan gibi
 gözükmesin". The shader's pixel look, behind `MetaballFluid.LiquidTexel` (0 = the smooth look,
@@ -240,7 +240,8 @@ kept whole):
   a settled glass is the same picture every frame.
 
 The comparison (orange, soda, cola; mid-pour and settled; the SAME particle state drawn both ways)
-went to the author as an HTML report. Known, not this change: a cola + vodka reads grey-mauve in
+went to the author as an HTML report, and the author chose B — the texture — on 2026-09-12:
+"Yenisi güzel". The smooth path stays whole behind `LiquidTexel = 0` and costs nothing. Known, not this change: a cola + vodka reads grey-mauve in
 both looks — the drink palette's, not the shader's.
 
 ## 8 · P5 — a liquid finds its level, and a still drink is still (2026-09-11)
