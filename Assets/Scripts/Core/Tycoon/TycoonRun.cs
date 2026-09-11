@@ -2490,6 +2490,77 @@ namespace LastCall.Core
         /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
         public int OwnedFixtureCount => _fixtures.Count;
 
+        // ── WHAT THE ROOM WEARS (2026-09-12) ────────────────────────────────────
+        // The author: "oyuncu bir sonraki geliştirmeyi almak zorunda ama görsel olarak önceki
+        // görselleri beğendiyse onları kullanabilecek ve konforu düşmeyecek — yani satın alınan
+        // geliştirmelerde değişiklik yapabilecek."
+        //
+        // A ladder is still climbed one rung at a time and nothing is ever sold back, so a bar
+        // that paid its way to the harlequin paper owns the cracked plaster, the fresh plaster
+        // and the panelling as well. It may now SHOW any of them. What the room is WORTH does
+        // not move with taste: comfort reads the tallest rung owned (FixtureComfort), never the
+        // one on the wall — buying is progress, wearing is preference. That split is the whole
+        // rule, and it lives here because the room, the market and any future caller must all
+        // get the same answer to "what is on this wall".
+        private readonly Dictionary<string, string> _worn = new Dictionary<string, string>();
+
+        /// <summary>Bumped whenever the room's LOOK changes without its ownership changing —
+        /// the stage watches this alongside <see cref="OwnedFixtureCount"/>, which cannot see
+        /// a swap between two rungs the bar already owns.</summary>
+        public int LookRevision { get; private set; }
+
+        /// <summary>
+        /// Wear an owned rung. Refused for anything the bar does not own: the room may only
+        /// show what it paid for, and a look is not a way around a ladder.
+        /// </summary>
+        public bool WearFixture(string fixtureId)
+        {
+            if (string.IsNullOrWhiteSpace(fixtureId) || !_fixtures.Contains(fixtureId)) return false;
+            var def = FixtureById(fixtureId);
+            if (def == null || def.Level <= 0) return false;     // unranked pieces have no ladder
+            _worn[def.Slot] = fixtureId;
+            LookRevision++;
+            return true;
+        }
+
+        /// <summary>Put a slot back to the rung it climbed to.</summary>
+        public bool WearTopRung(string slot)
+        {
+            if (!_worn.Remove(slot ?? "")) return false;
+            LookRevision++;
+            return true;
+        }
+
+        /// <summary>
+        /// What this slot SHOWS: the rung the player chose, while they still own it, and the
+        /// tallest owned rung otherwise — which is what every ladder did before taste existed.
+        /// Null for a slot with no rung standing in it at all.
+        /// </summary>
+        public FixtureDefinition WornRung(string slot)
+        {
+            if (_worn.TryGetValue(slot ?? "", out var id) && _fixtures.Contains(id))
+            {
+                var chosen = FixtureById(id);
+                if (chosen != null) return chosen;
+            }
+            FixtureDefinition top = null;
+            foreach (var f in _fixtureCatalogue)
+                if (f.Slot == slot && f.Level > 0 && _fixtures.Contains(f.Id)
+                    && (top == null || f.Level > top.Level)) top = f;
+            return top;
+        }
+
+        /// <summary>Every rung of this slot the bar owns, lowest first: what the player may
+        /// choose between, and nothing else.</summary>
+        public IReadOnlyList<FixtureDefinition> OwnedRungs(string slot)
+        {
+            var rungs = new List<FixtureDefinition>();
+            foreach (var f in _fixtureCatalogue)
+                if (f.Slot == slot && f.Level > 0 && _fixtures.Contains(f.Id)) rungs.Add(f);
+            rungs.Sort((a, b) => a.Level.CompareTo(b.Level));
+            return rungs;
+        }
+
         /// <summary>
         /// Dev tooling (2026-09-06): stands a catalogue piece in the room for nothing, any
         /// phase, no gate — the way <see cref="DevPreset"/> hands out glass tiers. The room

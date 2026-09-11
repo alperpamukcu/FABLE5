@@ -1764,6 +1764,9 @@ namespace LastCall.UI
         // sprites at most. -1 forces the first sync of a run, so a fresh bar starts
         // bare even when the last one was furnished.
         private int _lastFixtureCount = -1;
+        /// <summary>The look the room was last dressed in (TycoonRun.LookRevision): a swap
+        /// between two owned rungs changes nothing the fixture COUNT can see.</summary>
+        private int _lastLookRevision = -1;
 
         // ── the till that counts (2026-08-10) ───────────────────────────────────
         // Buying used to be a number swapping for another number, which is not something

@@ -570,6 +570,180 @@
       "sprite": "Tools/room_variants5/picS_trioB.png",
       "like": "flamingo_triptych",
       "round": 5
+    },
+    {
+      "id": "rug6_memphis",
+      "name": "Memphis Rug",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants6/piece_rug_memphis.png",
+      "like": "floor_rug",
+      "round": 6
+    },
+    {
+      "id": "rug6_sunset",
+      "name": "Sunset Bands",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants6/piece_rug_sunset.png",
+      "like": "floor_rug",
+      "round": 6
+    },
+    {
+      "id": "rug6_palm",
+      "name": "Palm Leaf Rug",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants6/piece_rug_palm.png",
+      "like": "floor_rug",
+      "round": 6
+    },
+    {
+      "id": "floor6_grid",
+      "name": "Neon Grid",
+      "slot": "floor",
+      "layer": "Tools/room_variants6/fx_floor_grid.png",
+      "round": 6
+    },
+    {
+      "id": "floor6_chip",
+      "name": "Miami Terrazzo",
+      "slot": "floor",
+      "layer": "Tools/room_variants6/fx_floor_chip.png",
+      "round": 6
+    },
+    {
+      "id": "floor6_wave",
+      "name": "Wave Tiles",
+      "slot": "floor",
+      "layer": "Tools/room_variants6/fx_floor_wave.png",
+      "round": 6
+    },
+    {
+      "id": "ceil6_grid",
+      "name": "Rosette Panels",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants6/fx_ceil_grid.png",
+      "round": 6
+    },
+    {
+      "id": "ceil6_ray",
+      "name": "Sunray Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants6/fx_ceil_ray.png",
+      "round": 6
+    },
+    {
+      "id": "ceil6_stars",
+      "name": "Star Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants6/fx_ceil_stars.png",
+      "round": 6
+    },
+    {
+      "id": "back6_chevron",
+      "name": "Chevron Wall",
+      "slot": "walls",
+      "layer": "Tools/room_variants6/fx_back_chevron.png",
+      "round": 6
+    },
+    {
+      "id": "back6_arch",
+      "name": "Neon Arches",
+      "slot": "walls",
+      "layer": "Tools/room_variants6/fx_back_arch.png",
+      "round": 6
+    },
+    {
+      "id": "back6_palmw",
+      "name": "Palm Wallpaper",
+      "slot": "walls",
+      "layer": "Tools/room_variants6/fx_back_palmw.png",
+      "round": 6
+    },
+    {
+      "id": "rwall6_stripe",
+      "name": "Flamingo Stripes",
+      "slot": "walls_right",
+      "layer": "Tools/room_variants6/fx_rwall_stripe.png",
+      "round": 6
+    },
+    {
+      "id": "rwall6_tile",
+      "name": "Turquoise Diamonds",
+      "slot": "walls_right",
+      "layer": "Tools/room_variants6/fx_rwall_tile.png",
+      "round": 6
+    },
+    {
+      "id": "rwall6_sunray",
+      "name": "Sunray Wall",
+      "slot": "walls_right",
+      "layer": "Tools/room_variants6/fx_rwall_sunray.png",
+      "round": 6
+    },
+    {
+      "id": "lamp6_scallop",
+      "name": "Scallop Sconce",
+      "slot": "wall_lamps",
+      "layer": "Tools/room_variants6/fx_lamp_scallop.png",
+      "round": 6
+    },
+    {
+      "id": "lamp6_neonbar",
+      "name": "Neon Bar Lamp",
+      "slot": "wall_lamps",
+      "layer": "Tools/room_variants6/fx_lamp_neonbar.png",
+      "round": 6
+    },
+    {
+      "id": "lamp6_shell",
+      "name": "Shell Lamp",
+      "slot": "wall_lamps",
+      "layer": "Tools/room_variants6/fx_lamp_shell.png",
+      "round": 6
+    },
+    {
+      "id": "neon6_sun",
+      "name": "Neon Sunset",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants6/neon_sun.png",
+      "like": "neon_martini",
+      "round": 6
+    },
+    {
+      "id": "neon6_glass",
+      "name": "Neon Glass",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants6/neon_glass.png",
+      "like": "neon_martini",
+      "round": 6
+    },
+    {
+      "id": "neon6_bird",
+      "name": "Neon Pelican",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants6/neon_bird.png",
+      "like": "neon_martini",
+      "round": 6
+    },
+    {
+      "id": "picR6_sunset",
+      "name": "Ocean Sunset",
+      "slot": "wall_right_art",
+      "layer": "Tools/room_variants6/fx_picR_sunset.png",
+      "round": 6
+    },
+    {
+      "id": "picR6_conv",
+      "name": "Coast Road",
+      "slot": "wall_right_art",
+      "layer": "Tools/room_variants6/fx_picR_conv.png",
+      "round": 6
+    },
+    {
+      "id": "picR6_shapes",
+      "name": "Memphis Shapes",
+      "slot": "wall_right_art",
+      "layer": "Tools/room_variants6/fx_picR_shapes.png",
+      "round": 6
     }
   ]
 }

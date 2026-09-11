@@ -36,6 +36,15 @@ musluğu; artı iki yeni üçlü tablo (altı küçük tablo, çerçeveleri pros
 kesimi çerçeveyi alıyor). Hepsi upgrade ağacında "aday" olarak duruyor; seçilenler buraya
 "Seçilenler" tablosuna taşınır.
 
+## Altıncı tur — değerlendirmede (2026-09-12)
+
+80'ler Miami desenleri, üçer adet (`Tools/room_variants6_gen.py`): halı (memphis, gün batımı
+bantları, palmiye), zemin (neon ızgara, terrazzo, dalga karo), tavan (rozetli panel, ışın,
+yıldız), arka duvar (chevron, neon kemerler, palmiye duvar kâğıdı), **sağ duvar** (flamingo
+şeritler, turkuaz baklava, ışın), duvar lambası (tarak, neon çubuk, deniz kabuğu), sağ duvar
+neonu (gün batımı, kadeh, pelikan) ve sağ duvar tablosu (okyanus, sahil yolu, memphis).
+Hepsi ağaçta "aday"; perspektifleri odanın kendi haritalamalarıyla verildi.
+
 ## Reddedilenler (tekrar üretilmeyecek, arşiv)
 
 Tur 2: `art_flamingo_neon`, `art_palms`, `table_v3`, `counter_v1/v2/v3`, `pic_*` ilk çekimler,

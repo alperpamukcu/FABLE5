@@ -630,6 +630,54 @@ namespace LastCall.Tests
             Assert.AreEqual(0, run.TapLevel, "and the taps never heard about any of it");
         }
 
+        /// <summary>A rung of a ladder that is worth something to the room, for the wearing
+        /// tests: what is bought and what is SHOWN are two different questions (2026-09-12).</summary>
+        private static FixtureDefinition Rung(int level, double comfort, bool startsOwned = false) =>
+            new FixtureDefinition("wall_" + level, "Mark " + level + " Wall", "s1",
+                20 * level, 0, "A wall.", "fx_walls_" + level,
+                startsInTheRoom: startsOwned, level: level, comfort: comfort);
+
+        [Test]
+        public void ABoughtRung_CanBeWornAfterTheLadderClimbsPastIt_AndTheRoomKeepsItsComfort()
+        {
+            // The author, 2026-09-12: "oyuncu bir sonraki geliştirmeyi almak zorunda ama görsel
+            // olarak önceki görselleri beğendiyse onları kullanabilecek ve konforu düşmeyecek."
+            var run = RunAtDayEnd(fixtures: new[] { Rung(1, 0, startsOwned: true),
+                                                    Rung(2, 1.0), Rung(3, 2.0) });
+            run.BuyFixture("wall_2");
+            run.BuyFixture("wall_3");
+            Assert.AreEqual("wall_3", run.WornRung("s1").Id, "a ladder shows what it climbed to");
+            double climbed = run.FixtureComfort;
+            Assert.AreEqual(2.0, climbed, 1e-9, "and is worth the top rung");
+
+            Assert.IsTrue(run.WearFixture("wall_1"), "the cracked wall is still the bar's own");
+            Assert.AreEqual("wall_1", run.WornRung("s1").Id, "so it may go back on the wall");
+            Assert.AreEqual(climbed, run.FixtureComfort, 1e-9,
+                "and taste costs the room nothing: comfort is the rung it CLIMBED to");
+            Assert.AreEqual(3, run.LadderLevel("s1"), "which is still mark 3");
+
+            Assert.AreEqual(3, run.OwnedRungs("s1").Count, "three marks bought, three to choose from");
+            Assert.IsTrue(run.WearTopRung("s1"));
+            Assert.AreEqual("wall_3", run.WornRung("s1").Id, "and it goes back to the top");
+        }
+
+        [Test]
+        public void ARung_TheBarNeverBought_CannotBeWorn()
+        {
+            // A look is not a way round a ladder: the room may only show what it paid for.
+            var run = RunAtDayEnd(fixtures: new[] { Rung(1, 0, startsOwned: true),
+                                                    Rung(2, 1.0), Rung(3, 2.0) });
+            Assert.IsFalse(run.WearFixture("wall_3"), "mark 3 was never bought");
+            Assert.IsFalse(run.WearFixture("nothing_at_all"));
+            Assert.AreEqual("wall_1", run.WornRung("s1").Id, "the wall is what it was");
+            int look = run.LookRevision;
+            run.BuyFixture("wall_2");
+            Assert.AreEqual("wall_2", run.WornRung("s1").Id, "a bought rung goes up by itself");
+            Assert.AreEqual(look, run.LookRevision, "buying is not wearing");
+            Assert.IsTrue(run.WearFixture("wall_1"));
+            Assert.Greater(run.LookRevision, look, "and a swap tells the room to re-dress");
+        }
+
         [Test]
         public void ALampRung_CannotBeTakenBack_FromUnderTheOneAboveIt()
         {

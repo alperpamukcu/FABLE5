@@ -2520,6 +2520,50 @@ namespace LastCall.UI
                 // Nothing left to raise: say so, rather than an aisle with three signs and no
                 // cards under any of them.
                 if (raised == 0) _cardTarget = ShopSection("THE ROOM IS FITTED — NOTHING LEFT TO RAISE");
+
+                // WHAT THE ROOM WEARS (2026-09-12, the author: "oyuncu bir sonraki
+                // geliştirmeyi almak zorunda ama görsel olarak önceki görselleri beğendiyse
+                // onları kullanabilecek ve konforu düşmeyecek"). Every rung the bar climbed is
+                // still its own — nothing is ever sold back — so this shelf is where it says
+                // which of them is on the wall. It sells nothing: one click wears the next look
+                // it owns, and the room keeps the comfort of the rung it CLIMBED to.
+                var wearable = new List<string>();
+                foreach (var f in run.FixtureCatalogue)
+                    if (f.Level > 0 && !wearable.Contains(f.Slot) && run.OwnedRungs(f.Slot).Count > 1)
+                        wearable.Add(f.Slot);
+                if (wearable.Count > 0)
+                {
+                    _cardTarget = ShopSection("WHAT THE ROOM WEARS — BOUGHT ALREADY, YOURS TO CHOOSE");
+                    foreach (var slot in wearable)
+                    {
+                        var rungs = run.OwnedRungs(slot);
+                        var worn = run.WornRung(slot);
+                        if (worn == null) continue;
+                        int at = 0;
+                        for (int i = 0; i < rungs.Count; i++) if (rungs[i].Id == worn.Id) at = i;
+                        var next = rungs[(at + 1) % rungs.Count];
+                        int climbed = run.LadderLevel(slot);
+                        var wear = new TileSpec
+                        {
+                            Name = worn.Name,
+                            Meta = "Mark " + worn.Level + " of " + climbed + " worn",
+                            Art = UpgradeIcon(worn.Group),
+                            CardArt = FixtureArt(worn.Swatch ?? worn.Sprite),
+                            ArtH = IconH,
+                            Identity = worn.Name.ToUpperInvariant(),
+                            MetaLine = RungPlace(worn),
+                            Body = "On the wall now. Click to wear " + next.Name + " instead — "
+                                   + rungs.Count + " marks bought, and the room is worth mark "
+                                   + climbed + " whichever one it shows.",
+                            BuffA = new Buff(BuffKind.Gain, "Comfort stays at mark " + climbed),
+                            BuffB = new Buff(BuffKind.Gain, "Next look · " + next.Name),
+                            State = TileState.Orderable,
+                            PillVerb = "WEAR",
+                            OnClick = () => { run.WearFixture(next.Id); RebuildDayEnd(); },
+                        };
+                        AddTile(wear);
+                    }
+                }
             }
 
             // WHAT THE NEXT STAR OPENS, IN EVERY DEPARTMENT (the author, 2026-08-10).

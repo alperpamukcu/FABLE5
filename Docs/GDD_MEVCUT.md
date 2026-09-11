@@ -1526,6 +1526,26 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.58 · Oda giydiğini seçiyor, ve altıncı tur desenler (2026-09-12)
+
+- **Satın alınan her basamak giyilebilir** (yazar: "oyuncu bir sonraki geliştirmeyi almak zorunda
+  ama görsel olarak önceki görselleri beğendiyse onları kullanabilecek ve konforu düşmeyecek").
+  Merdiven hâlâ sırayla tırmanılıyor ve hiçbir basamak geri satılmıyor; dolayısıyla harlequin
+  kâğıda çıkmış bir bar çatlak sıvayı da, düz sıvayı da, lambriyi de sahipleniyor — ve hangisini
+  DUVARDA göstereceğini seçebiliyor. `TycoonRun.WearFixture(id)` yalnız sahip olunanı kabul eder,
+  `WornRung(slot)` seçilen (yoksa en üst) basamağı verir, `OwnedRungs(slot)` seçenekleri sıralar.
+  **Konfor kıpırdamaz:** `FixtureComfort` tırmanılan en üst basamağı okur, duvardakini değil —
+  satın alma ilerleme, giymek zevk. Oda `LookRevision` ile yeniden giydiriliyor (sahiplik sayısı
+  değişmediği için eski sinyal görmezdi). Markette yeni raf: **WHAT THE ROOM WEARS** — iki ya da
+  daha fazla basamağı olan her yuva için bir kart, tıklayınca bir sonraki sahip olunan görünüme
+  geçer, fiyat yok.
+- **Altıncı tur, 80'ler Miami desenleri** (`Tools/room_variants6_gen.py`, 24 üretim, üçer adet):
+  halı, zemin, tavan, arka duvar, **sağ duvar**, duvar lambaları (çift — tek çizim iki brakete,
+  sağdaki aynalanmış), sağ duvar neonu ve sağ duvar tablosu. Hepsi kendi perspektifine oturuyor:
+  yüzeyler odanın haritalamalarıyla (tavan yamuğu, yer düzlemi), sağ duvar **devrik warp**'la
+  (yan duvar yana doğru kaçtığı için zemin haritalaması transpoze edilerek uygulanıyor) ve
+  yazarın kendi kapısı/çerçevesi/eşiği korunarak; sağ duvar tablosu `hang_right` ile.
+
 ### 9.57 · Sağ duvar kendi merdiveni oldu, ve odanın upgrade ağacı (2026-09-12)
 
 - **Sağ duvar dört basamak** (yazar: "4 tier sağ duvar getirdim bunları da ekleyeceğiz"): `walls_right`

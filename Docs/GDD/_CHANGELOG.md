@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The room wears what it likes (2026-09-12):** a ladder is still climbed one rung at a
+  time and nothing is sold back, so every rung the bar bought stays its own — and it may
+  now WEAR any of them. What the room is worth does not move with taste: comfort reads the
+  rung it climbed to, never the one on the wall. The market grew a shelf for it (WHAT THE
+  ROOM WEARS), one card per slot with more than one mark bought. And a sixth round of
+  drawings — three each of rug, floor, ceiling, back wall, right wall, wall lamps, neon and
+  right-wall picture, in 1980s Miami patterns, each landing in its own perspective.
 - **The right wall climbs its own ladder (2026-09-12):** the author drew the side wall four
   ways, so it is no longer whatever the back wall's plate happened to carry. A backdrop slot
   that OVERLAYS the plate rather than replacing it (`walls_right`, drawn at order 12 on the

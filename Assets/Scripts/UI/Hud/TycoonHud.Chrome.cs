@@ -1073,7 +1073,11 @@ namespace LastCall.UI
             var stage = _stage != null ? _stage : FindFirstObjectByType<DiegeticStage>();
             _stage = stage;
             if (stage == null) return;
-            if (run.OwnedFixtureCount == _lastFixtureCount) return;
+            // The room is re-dressed when what the bar OWNS changes — and when what it WEARS
+            // does (2026-09-12), which ownership cannot see: swapping the harlequin paper back
+            // for the panelling buys nothing and changes the whole wall.
+            if (run.OwnedFixtureCount == _lastFixtureCount && run.LookRevision == _lastLookRevision) return;
+            _lastLookRevision = run.LookRevision;
             bool firstSync = _lastFixtureCount < 0;
             int gained = run.OwnedFixtureCount - _lastFixtureCount;
             _lastFixtureCount = run.OwnedFixtureCount;
@@ -1087,7 +1091,14 @@ namespace LastCall.UI
             foreach (var f in run.FixtureCatalogue)
             {
                 if (!run.OwnsFixture(f.Id)) continue;
-                if (f.Level > 0 && f.Level < run.LadderLevel(f.Slot)) continue;
+                // A LADDER SHOWS THE RUNG THE BAR WEARS (2026-09-12): the tallest it owns
+                // unless the player picked another of the ones they bought. Comfort is not
+                // this question's business — it reads the tallest either way.
+                if (f.Level > 0)
+                {
+                    var worn = run.WornRung(f.Slot);
+                    if (worn == null || worn.Id != f.Id) continue;
+                }
                 owned.Add(f);
             }
             // The room is handed its hooks before anything is stood in them. Cheap enough

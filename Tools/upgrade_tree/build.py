@@ -161,7 +161,14 @@ def main():
         layers = []
         if 'layer' in c:
             art = Image.open(os.path.join(ROOT, c['layer'])).convert('RGBA')
-            lay = cropped(art, cand_order.get(c['slot'], 15))
+            # A whole-room layer sorts where its slot sorts: a candidate slot says so itself,
+            # and a slot the game already has is read off the rungs standing in it (the back
+            # wall's plate at 10, the right wall's layer at 12, the lamps at 20).
+            order = cand_order.get(c['slot'])
+            if order is None:
+                order = min((l['order'] for rid in lad['rungs'] for l in rungs[rid]['layers']),
+                            default=15)
+            lay = cropped(art, order)
             th = thumb(art)
         else:
             spr = Image.open(os.path.join(ROOT, c['sprite'])).convert('RGBA')
