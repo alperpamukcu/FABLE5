@@ -2156,7 +2156,25 @@ namespace LastCall.UI
             if (ppc != null && ppc.enabled) ppc.enabled = false;
             cam.orthographic = true;
             cam.orthographicSize = Reference.y * 0.5f;
+            // NO POST, NO HDR (2026-09-11, the author: "oyun çok düşük sistemlerde de
+            // çalışmalı"). Both were switched on for the bloom LastCallVolume wires into the
+            // pipeline — "only HDR light blooms", above 1.1. None ever does: 2D light
+            // MULTIPLIES a sprite's own colour, and the room never lands a pixel past 1.1.
+            // Measured by rendering one frame three ways inside one call — at the start of a
+            // night, twice later in it, and at the closing beat at full strength (the guest's
+            // lamp at 2.1x): 0 pixels differ with post-processing off, 0 with HDR off too. What
+            // they did cost was GPU: the bloom chain and the HDR resolve are full-screen passes
+            // at double-width pixels, a quarter to a third of the room's GPU frame on an
+            // RTX 4070 — and memory bandwidth is what a cheap laptop's graphics lack most.
+            // Bloom comes back with RoomBloom, and only means anything once a light is pushed
+            // past 1.1.
+            var data = cam.GetUniversalAdditionalCameraData();
+            if (data != null) data.renderPostProcessing = RoomBloom;
+            cam.allowHDR = RoomBloom;
         }
+
+        /// <summary>Post-processing and HDR on the room's camera — see FillTheWindow.</summary>
+        private const bool RoomBloom = false;
 
         /// <summary>The width the room is BUILT at — the reference, always. The window is not
         /// the room's business any more: everything under the stage root is laid out at
@@ -3257,11 +3275,31 @@ namespace LastCall.UI
                 _skyMid = new Color[n];
             }
 
-            if (!_skyRead[frame])
+            if (_skyRead[frame]) return;
+            // THE WHOLE SHEET, ONCE (2026-09-11, the author: "oyun çok düşük sistemlerde de
+            // çalışmalı"). Each frame used to be read the first time the window reached it — a
+            // 141x274 GetPixels, some 620 KB of garbage — thirty-one times through a night, each
+            // one a collection waiting to land in the middle of service on a weak machine. The
+            // sheet is read once, whole, the first time any frame is asked for; every frame's
+            // light is taken from that one copy IN ORDER (which is the order the evening's
+            // one-way clamp below was written for); and the copy is let go.
+            var sheet = _windowFrames[0].texture;
+            Color32[] all = null;
+            try { all = sheet.GetPixels32(); } catch (UnityException) { }
+            for (int f = 0; f < _windowFrames.Length; f++)
+                if (!_skyRead[f]) ReadSkyFrame(f, all, sheet.width);
+        }
+
+        /// <summary>One frame's light, from the sheet read whole — or, from a sheet that will
+        /// not give its pixels up whole, from this frame's own block the old way.</summary>
+        private void ReadSkyFrame(int frame, Color32[] all, int sheetW)
+        {
             {
                 var sp = _windowFrames[frame];
                 var r = sp.textureRect;
-                var px = sp.texture.GetPixels((int)r.x, (int)r.y, (int)r.width, (int)r.height);
+                int rx = (int)r.x, ry = (int)r.y;
+                Color[] block = all == null
+                    ? sp.texture.GetPixels(rx, ry, (int)r.width, (int)r.height) : null;
                 float sr = 0f, sg = 0f, sb = 0f, sl = 0f;
                 int seen = 0;
                 // The WASH is the SKYLIGHT, and skylight is the sky ABOVE the sun (see
@@ -3276,12 +3314,16 @@ namespace LastCall.UI
                 float mr = 0f, mg = 0f, mb = 0f;
                 int midn = 0;
                 int pw = (int)r.width, ph = (int)r.height;
+                int count = pw * ph;
+                // p runs over the frame's block bottom-up, row by row, as GetPixels lays it out.
+                Color At(int i) => block != null ? block[i]
+                    : (Color)all[(ry + i / pw) * sheetW + rx + i % pw];
                 // Two passes over the same sample: the second wants the mean's own luma to
                 // know what "the brightest few per cent" even means, so it cannot be folded
                 // into the first.
-                for (int p = 0; p < px.Length; p += 9)
+                for (int p = 0; p < count; p += 9)
                 {
-                    var c = px[p];
+                    var c = At(p);
                     // Under 0.5 is the mullions and the frame; under the cut is the city,
                     // marked at alpha 254 by the build. Neither is sky.
                     if (c.a < SkyAlphaCut) continue;
@@ -3318,9 +3360,9 @@ namespace LastCall.UI
                     float cut = meanL + (1f - meanL) * SkyHotCut;
                     float hr = 0f, hg = 0f, hb = 0f; int hot = 0, litSeen = 0;
                     int rw = (int)r.width, rh = (int)r.height;
-                    for (int p = 0; p < px.Length; p += 9)
+                    for (int p = 0; p < count; p += 9)
                     {
-                        var c = px[p];
+                        var c = At(p);
                         if (c.a < 0.5f) continue;             // the mullions and the frame
                         // GetPixels counts up from the BOTTOM; the art is measured from the top.
                         if (rh - 1 - p / rw > SkyKeyRows) continue;

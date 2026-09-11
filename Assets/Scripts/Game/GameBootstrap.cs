@@ -87,6 +87,23 @@ namespace LastCall.Game
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void PinCulture() => RunCulture.Pin();
 
+        private void Awake()
+        {
+            // A STEADY FRAME, NOT THE MOST FRAMES (2026-09-11, the author: "Oyunda FPS sorunu
+            // yaşanmamalı ... oyun çok düşük sistemlerde de çalışmalı"). Both quality levels
+            // ship with vSync off and nothing capped the frame rate, so a build ran as fast as
+            // the machine would go — 160-260 fps measured in the editor, the CPU and the GPU
+            // flat out for a picture that moves at the speed of a bar. On a cheap laptop that
+            // is heat, then throttling, then exactly the dropped frames this is meant to
+            // prevent. At the display's own rate the pacing is smooth and the machine idles.
+            // Player builds only: the editor and the PlayMode suite keep their own pacing
+            // (the suite counts on fast frames — CLAUDE.md, "Verifying changes").
+#if !UNITY_EDITOR
+            QualitySettings.vSyncCount = 1;
+            Application.targetFrameRate = -1;
+#endif
+        }
+
         private void Start()
         {
             StartNewRun(seed);
