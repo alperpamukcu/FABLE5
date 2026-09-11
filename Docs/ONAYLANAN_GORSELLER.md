@@ -27,6 +27,15 @@ sağ poster televizyonun yerini kaplıyor.
 | 4 | `fx_floor_check`, `fx_floor_carpet`, `fx_floor_marble` | **yeni yuva** `floor` | 640×360 plaka, zemin düzlemi projeksiyonu |
 | 4 | `post_malibu`, `post_surf`, `post_pier`, `post_coast` | **yeni yuva** (poster) | **AÇIK SORU:** sağ duvar mı, sol mu, ikisi de? Her ikisi de basıldı (`fx_R_*`, `fx_L_*`) |
 
+## Beşinci tur — değerlendirmede (2026-09-12)
+
+Yazarın istediği yeni adaylar (`Tools/room_variants5_gen.py`, 39 üretim): üçer tavan, zemin,
+**bar üstü tablası** (mahzen rafları elleniyor değil), halı, paspas dokusu (her dokudan hem damla
+hem garnitür paspası), sağ duvar posteri, neon, televizyon, masa (mat, yansımasız), bitki, bira
+musluğu; artı iki yeni üçlü tablo (altı küçük tablo, çerçeveleri prosedürel çizildi — üretici
+kesimi çerçeveyi alıyor). Hepsi upgrade ağacında "aday" olarak duruyor; seçilenler buraya
+"Seçilenler" tablosuna taşınır.
+
 ## Reddedilenler (tekrar üretilmeyecek, arşiv)
 
 Tur 2: `art_flamingo_neon`, `art_palms`, `table_v3`, `counter_v1/v2/v3`, `pic_*` ilk çekimler,

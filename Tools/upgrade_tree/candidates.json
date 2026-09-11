@@ -1,44 +1,575 @@
 {
   "note": "Approved in the room-art rounds but not in the game yet (Docs/ONAYLANAN_GORSELLER.md). Each shows in the upgrade tree as a rung of the slot it is meant for, so it can be tried in the room and given a tier before it ships. 'layer' is a whole 640x360 picture of the room; 'sprite' is a single drawing stood where the game stands the fixture named in 'like'. A slot listed here that the game does not have yet is drawn at 'order' (the stage's sorting bands: plate 10, window glass 11, right wall 12, hangers 15, mats 16, dressing 20, counter 30).",
   "slots": [
-    {"id": "ceiling", "title": "Tavan", "group": "walls", "order": 13},
-    {"id": "floor", "title": "Zemin", "group": "furniture", "order": 13},
-    {"id": "wall_right_art", "title": "Sağ duvar tablosu", "group": "wall_art", "order": 15},
-    {"id": "poster_left", "title": "Poster · sol duvar", "group": "wall_art", "order": 15},
-    {"id": "poster_right", "title": "Poster · sağ duvar", "group": "wall_art", "order": 15}
+    {
+      "id": "ceiling",
+      "title": "Tavan",
+      "group": "walls",
+      "order": 13
+    },
+    {
+      "id": "floor",
+      "title": "Zemin",
+      "group": "furniture",
+      "order": 13
+    },
+    {
+      "id": "wall_right_art",
+      "title": "Sağ duvar tablosu",
+      "group": "wall_art",
+      "order": 15
+    },
+    {
+      "id": "poster_left",
+      "title": "Poster · sol duvar",
+      "group": "wall_art",
+      "order": 15
+    },
+    {
+      "id": "poster_right",
+      "title": "Poster · sağ duvar",
+      "group": "wall_art",
+      "order": 15
+    },
+    {
+      "id": "bar_top",
+      "title": "Bar üstü (tezgâh tablası)",
+      "group": "counter",
+      "order": 31
+    }
   ],
   "items": [
-    {"id": "ceil_deco", "name": "Deco Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_deco.png", "round": 3},
-    {"id": "ceil_stucco", "name": "Stucco Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_stucco.png", "round": 3},
-    {"id": "ceil_palm", "name": "Palm Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_palm.png", "round": 3},
-    {"id": "ceil_beams", "name": "Beamed Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_beams.png", "round": 3},
-
-    {"id": "floor_check", "name": "Checker Floor", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_check.png", "round": 4},
-    {"id": "floor_carpet", "name": "Carpet", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_carpet.png", "round": 4},
-    {"id": "floor_marble", "name": "Marble Floor", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_marble.png", "round": 4},
-
-    {"id": "art_city", "name": "City Triptych", "slot": "wall_center", "sprite": "Tools/room_variants/art_city.png", "like": "flamingo_triptych", "round": 1},
-    {"id": "picS_trio", "name": "Small Trio", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_trio.png", "like": "flamingo_triptych", "round": 3},
-
-    {"id": "pic_pelican", "name": "Pelican", "slot": "wall_right_art", "layer": "Tools/room_variants3/fx_picR_pelican.png", "round": 3},
-
-    {"id": "post_malibu_L", "name": "Malibu", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_malibu.png", "round": 4},
-    {"id": "post_surf_L", "name": "Surf", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_surf.png", "round": 4},
-    {"id": "post_pier_L", "name": "Pier", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_pier.png", "round": 4},
-    {"id": "post_coast_L", "name": "Coast", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_coast.png", "round": 4},
-    {"id": "post_malibu_R", "name": "Malibu", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_malibu.png", "round": 4},
-    {"id": "post_surf_R", "name": "Surf", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_surf.png", "round": 4},
-    {"id": "post_pier_R", "name": "Pier", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_pier.png", "round": 4},
-    {"id": "post_coast_R", "name": "Coast", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_coast.png", "round": 4},
-
-    {"id": "table_v1_L", "name": "Table v1", "slot": "table_left", "sprite": "Tools/room_variants/table_v1.png", "like": "table_left_1", "round": 1},
-    {"id": "table_v2_L", "name": "Table v2", "slot": "table_left", "sprite": "Tools/room_variants/table_v2.png", "like": "table_left_1", "round": 1},
-    {"id": "table_v1_R", "name": "Table v1", "slot": "table_right", "sprite": "Tools/room_variants/table_v1.png", "like": "table_right_1", "round": 1},
-    {"id": "table_v2_R", "name": "Table v2", "slot": "table_right", "sprite": "Tools/room_variants/table_v2.png", "like": "table_right_1", "round": 1},
-
-    {"id": "plant_monstera_L", "name": "Monstera", "slot": "plant_left", "sprite": "Tools/room_variants2/plant_monstera.png", "like": "plant_palm", "round": 2},
-    {"id": "plant_bird_L", "name": "Bird of Paradise", "slot": "plant_left", "sprite": "Tools/room_variants2/plant_bird.png", "like": "plant_palm", "round": 2},
-    {"id": "plant_monstera_R", "name": "Monstera", "slot": "plant_right", "sprite": "Tools/room_variants2/plant_monstera.png", "like": "plant_snake", "round": 2},
-    {"id": "plant_bird_R", "name": "Bird of Paradise", "slot": "plant_right", "sprite": "Tools/room_variants2/plant_bird.png", "like": "plant_snake", "round": 2}
+    {
+      "id": "ceil_deco",
+      "name": "Deco Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants3/fx_ceil_deco.png",
+      "round": 3
+    },
+    {
+      "id": "ceil_stucco",
+      "name": "Stucco Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants3/fx_ceil_stucco.png",
+      "round": 3
+    },
+    {
+      "id": "ceil_palm",
+      "name": "Palm Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants3/fx_ceil_palm.png",
+      "round": 3
+    },
+    {
+      "id": "ceil_beams",
+      "name": "Beamed Ceiling",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants3/fx_ceil_beams.png",
+      "round": 3
+    },
+    {
+      "id": "floor_check",
+      "name": "Checker Floor",
+      "slot": "floor",
+      "layer": "Tools/room_variants4/fx_floor_check.png",
+      "round": 4
+    },
+    {
+      "id": "floor_carpet",
+      "name": "Carpet",
+      "slot": "floor",
+      "layer": "Tools/room_variants4/fx_floor_carpet.png",
+      "round": 4
+    },
+    {
+      "id": "floor_marble",
+      "name": "Marble Floor",
+      "slot": "floor",
+      "layer": "Tools/room_variants4/fx_floor_marble.png",
+      "round": 4
+    },
+    {
+      "id": "art_city",
+      "name": "City Triptych",
+      "slot": "wall_center",
+      "sprite": "Tools/room_variants/art_city.png",
+      "like": "flamingo_triptych",
+      "round": 1
+    },
+    {
+      "id": "picS_trio",
+      "name": "Small Trio",
+      "slot": "wall_center",
+      "sprite": "Tools/room_variants3/picS_trio.png",
+      "like": "flamingo_triptych",
+      "round": 3
+    },
+    {
+      "id": "pic_pelican",
+      "name": "Pelican",
+      "slot": "wall_right_art",
+      "layer": "Tools/room_variants3/fx_picR_pelican.png",
+      "round": 3
+    },
+    {
+      "id": "post_malibu_L",
+      "name": "Malibu",
+      "slot": "poster_left",
+      "layer": "Tools/room_variants4/fx_L_post_malibu.png",
+      "round": 4
+    },
+    {
+      "id": "post_surf_L",
+      "name": "Surf",
+      "slot": "poster_left",
+      "layer": "Tools/room_variants4/fx_L_post_surf.png",
+      "round": 4
+    },
+    {
+      "id": "post_pier_L",
+      "name": "Pier",
+      "slot": "poster_left",
+      "layer": "Tools/room_variants4/fx_L_post_pier.png",
+      "round": 4
+    },
+    {
+      "id": "post_coast_L",
+      "name": "Coast",
+      "slot": "poster_left",
+      "layer": "Tools/room_variants4/fx_L_post_coast.png",
+      "round": 4
+    },
+    {
+      "id": "post_malibu_R",
+      "name": "Malibu",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants4/fx_R_post_malibu.png",
+      "round": 4
+    },
+    {
+      "id": "post_surf_R",
+      "name": "Surf",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants4/fx_R_post_surf.png",
+      "round": 4
+    },
+    {
+      "id": "post_pier_R",
+      "name": "Pier",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants4/fx_R_post_pier.png",
+      "round": 4
+    },
+    {
+      "id": "post_coast_R",
+      "name": "Coast",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants4/fx_R_post_coast.png",
+      "round": 4
+    },
+    {
+      "id": "table_v1_L",
+      "name": "Table v1",
+      "slot": "table_left",
+      "sprite": "Tools/room_variants/table_v1.png",
+      "like": "table_left_1",
+      "round": 1
+    },
+    {
+      "id": "table_v2_L",
+      "name": "Table v2",
+      "slot": "table_left",
+      "sprite": "Tools/room_variants/table_v2.png",
+      "like": "table_left_1",
+      "round": 1
+    },
+    {
+      "id": "table_v1_R",
+      "name": "Table v1",
+      "slot": "table_right",
+      "sprite": "Tools/room_variants/table_v1.png",
+      "like": "table_right_1",
+      "round": 1
+    },
+    {
+      "id": "table_v2_R",
+      "name": "Table v2",
+      "slot": "table_right",
+      "sprite": "Tools/room_variants/table_v2.png",
+      "like": "table_right_1",
+      "round": 1
+    },
+    {
+      "id": "plant_monstera_L",
+      "name": "Monstera",
+      "slot": "plant_left",
+      "sprite": "Tools/room_variants2/plant_monstera.png",
+      "like": "plant_palm",
+      "round": 2
+    },
+    {
+      "id": "plant_bird_L",
+      "name": "Bird of Paradise",
+      "slot": "plant_left",
+      "sprite": "Tools/room_variants2/plant_bird.png",
+      "like": "plant_palm",
+      "round": 2
+    },
+    {
+      "id": "plant_monstera_R",
+      "name": "Monstera",
+      "slot": "plant_right",
+      "sprite": "Tools/room_variants2/plant_monstera.png",
+      "like": "plant_snake",
+      "round": 2
+    },
+    {
+      "id": "plant_bird_R",
+      "name": "Bird of Paradise",
+      "slot": "plant_right",
+      "sprite": "Tools/room_variants2/plant_bird.png",
+      "like": "plant_snake",
+      "round": 2
+    },
+    {
+      "id": "ceil_coffer",
+      "name": "Coffered",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants5/fx_ceil_coffer.png",
+      "round": 5
+    },
+    {
+      "id": "ceil_press",
+      "name": "Pressed Tin",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants5/fx_ceil_press.png",
+      "round": 5
+    },
+    {
+      "id": "ceil_cane",
+      "name": "Cane Panels",
+      "slot": "ceiling",
+      "layer": "Tools/room_variants5/fx_ceil_cane.png",
+      "round": 5
+    },
+    {
+      "id": "floor_terra",
+      "name": "Terracotta",
+      "slot": "floor",
+      "layer": "Tools/room_variants5/fx_floor_terra.png",
+      "round": 5
+    },
+    {
+      "id": "floor_teal",
+      "name": "Teal Diamonds",
+      "slot": "floor",
+      "layer": "Tools/room_variants5/fx_floor_teal.png",
+      "round": 5
+    },
+    {
+      "id": "floor_board",
+      "name": "Walnut Boards",
+      "slot": "floor",
+      "layer": "Tools/room_variants5/fx_floor_board.png",
+      "round": 5
+    },
+    {
+      "id": "bar_terrazzo",
+      "name": "Terrazzo Top",
+      "slot": "bar_top",
+      "layer": "Tools/room_variants5/fx_bar_terrazzo.png",
+      "round": 5
+    },
+    {
+      "id": "bar_marble",
+      "name": "Marble Top",
+      "slot": "bar_top",
+      "layer": "Tools/room_variants5/fx_bar_marble.png",
+      "round": 5
+    },
+    {
+      "id": "bar_zinc",
+      "name": "Zinc Top",
+      "slot": "bar_top",
+      "layer": "Tools/room_variants5/fx_bar_zinc.png",
+      "round": 5
+    },
+    {
+      "id": "rug_kilim",
+      "name": "Kilim Rug",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants5/piece_rug_kilim.png",
+      "like": "floor_rug",
+      "round": 5
+    },
+    {
+      "id": "rug_wave",
+      "name": "Wave Rug",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants5/piece_rug_wave.png",
+      "like": "floor_rug",
+      "round": 5
+    },
+    {
+      "id": "rug_leopard",
+      "name": "Leopard Rug",
+      "slot": "floor_rug",
+      "sprite": "Tools/room_variants5/piece_rug_leopard.png",
+      "like": "floor_rug",
+      "round": 5
+    },
+    {
+      "id": "drip_ribbed",
+      "name": "Ribbed Rubber",
+      "slot": "beer_mat",
+      "sprite": "Tools/room_variants5/piece_mat_ribbed_drip.png",
+      "like": "beer_mat",
+      "round": 5
+    },
+    {
+      "id": "prep_ribbed",
+      "name": "Ribbed Rubber",
+      "slot": "prep_mat",
+      "sprite": "Tools/room_variants5/piece_mat_ribbed_prep.png",
+      "like": "prep_mat",
+      "round": 5
+    },
+    {
+      "id": "drip_cork",
+      "name": "Cork",
+      "slot": "beer_mat",
+      "sprite": "Tools/room_variants5/piece_mat_cork_drip.png",
+      "like": "beer_mat",
+      "round": 5
+    },
+    {
+      "id": "prep_cork",
+      "name": "Cork",
+      "slot": "prep_mat",
+      "sprite": "Tools/room_variants5/piece_mat_cork_prep.png",
+      "like": "prep_mat",
+      "round": 5
+    },
+    {
+      "id": "drip_towel",
+      "name": "Bar Towel",
+      "slot": "beer_mat",
+      "sprite": "Tools/room_variants5/piece_mat_towel_drip.png",
+      "like": "beer_mat",
+      "round": 5
+    },
+    {
+      "id": "prep_towel",
+      "name": "Bar Towel",
+      "slot": "prep_mat",
+      "sprite": "Tools/room_variants5/piece_mat_towel_prep.png",
+      "like": "prep_mat",
+      "round": 5
+    },
+    {
+      "id": "post5_neon",
+      "name": "Neon Avenue",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants5/fx_post5_neon.png",
+      "round": 5
+    },
+    {
+      "id": "post5_car",
+      "name": "Convertible",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants5/fx_post5_car.png",
+      "round": 5
+    },
+    {
+      "id": "post5_diver",
+      "name": "Diver",
+      "slot": "poster_right",
+      "layer": "Tools/room_variants5/fx_post5_diver.png",
+      "round": 5
+    },
+    {
+      "id": "neon_flamingo",
+      "name": "Neon Flamingo",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants5/neon_flamingo.png",
+      "like": "neon_martini",
+      "round": 5
+    },
+    {
+      "id": "neon_palm",
+      "name": "Neon Palm",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants5/neon_palm.png",
+      "like": "neon_martini",
+      "round": 5
+    },
+    {
+      "id": "neon_wave",
+      "name": "Neon Wave",
+      "slot": "wall_right",
+      "sprite": "Tools/room_variants5/neon_wave.png",
+      "like": "neon_martini",
+      "round": 5
+    },
+    {
+      "id": "tv_crt",
+      "name": "Boxy CRT",
+      "slot": "wall_tv",
+      "sprite": "Tools/room_variants5/tv_crt.png",
+      "like": "wall_tv",
+      "round": 5
+    },
+    {
+      "id": "tv_wood",
+      "name": "Wood Case",
+      "slot": "wall_tv",
+      "sprite": "Tools/room_variants5/tv_wood.png",
+      "like": "wall_tv",
+      "round": 5
+    },
+    {
+      "id": "tv_portable",
+      "name": "Portable",
+      "slot": "wall_tv",
+      "sprite": "Tools/room_variants5/tv_portable.png",
+      "like": "wall_tv",
+      "round": 5
+    },
+    {
+      "id": "table5_cane_L",
+      "name": "Cane Table",
+      "slot": "table_left",
+      "sprite": "Tools/room_variants5/table5_cane.png",
+      "like": "table_left_1",
+      "round": 5
+    },
+    {
+      "id": "table5_cane_R",
+      "name": "Cane Table",
+      "slot": "table_right",
+      "sprite": "Tools/room_variants5/table5_cane.png",
+      "like": "table_right_1",
+      "round": 5
+    },
+    {
+      "id": "table5_tile_L",
+      "name": "Tiled Table",
+      "slot": "table_left",
+      "sprite": "Tools/room_variants5/table5_tile.png",
+      "like": "table_left_1",
+      "round": 5
+    },
+    {
+      "id": "table5_tile_R",
+      "name": "Tiled Table",
+      "slot": "table_right",
+      "sprite": "Tools/room_variants5/table5_tile.png",
+      "like": "table_right_1",
+      "round": 5
+    },
+    {
+      "id": "table5_bistro_L",
+      "name": "Bistro Table",
+      "slot": "table_left",
+      "sprite": "Tools/room_variants5/table5_bistro.png",
+      "like": "table_left_1",
+      "round": 5
+    },
+    {
+      "id": "table5_bistro_R",
+      "name": "Bistro Table",
+      "slot": "table_right",
+      "sprite": "Tools/room_variants5/table5_bistro.png",
+      "like": "table_right_1",
+      "round": 5
+    },
+    {
+      "id": "plant5_banana_L",
+      "name": "Banana Plant",
+      "slot": "plant_left",
+      "sprite": "Tools/room_variants5/plant5_banana.png",
+      "like": "plant_palm",
+      "round": 5
+    },
+    {
+      "id": "plant5_banana_R",
+      "name": "Banana Plant",
+      "slot": "plant_right",
+      "sprite": "Tools/room_variants5/plant5_banana.png",
+      "like": "plant_snake",
+      "round": 5
+    },
+    {
+      "id": "plant5_yucca_L",
+      "name": "Yucca",
+      "slot": "plant_left",
+      "sprite": "Tools/room_variants5/plant5_yucca.png",
+      "like": "plant_palm",
+      "round": 5
+    },
+    {
+      "id": "plant5_yucca_R",
+      "name": "Yucca",
+      "slot": "plant_right",
+      "sprite": "Tools/room_variants5/plant5_yucca.png",
+      "like": "plant_snake",
+      "round": 5
+    },
+    {
+      "id": "plant5_fern_L",
+      "name": "Hanging Fern",
+      "slot": "plant_left",
+      "sprite": "Tools/room_variants5/plant5_fern.png",
+      "like": "plant_palm",
+      "round": 5
+    },
+    {
+      "id": "plant5_fern_R",
+      "name": "Hanging Fern",
+      "slot": "plant_right",
+      "sprite": "Tools/room_variants5/plant5_fern.png",
+      "like": "plant_snake",
+      "round": 5
+    },
+    {
+      "id": "tap5_swan",
+      "name": "Swan Neck",
+      "slot": "taps",
+      "sprite": "Tools/room_variants5/tap5_swan.png",
+      "like": "taps_one",
+      "round": 5
+    },
+    {
+      "id": "tap5_deco",
+      "name": "Deco Column",
+      "slot": "taps",
+      "sprite": "Tools/room_variants5/tap5_deco.png",
+      "like": "taps_one",
+      "round": 5
+    },
+    {
+      "id": "tap5_dolphin",
+      "name": "Dolphin Font",
+      "slot": "taps",
+      "sprite": "Tools/room_variants5/tap5_dolphin.png",
+      "like": "taps_one",
+      "round": 5
+    },
+    {
+      "id": "picS_trioA",
+      "name": "Trio · cocktail, palm, sun",
+      "slot": "wall_center",
+      "sprite": "Tools/room_variants5/picS_trioA.png",
+      "like": "flamingo_triptych",
+      "round": 5
+    },
+    {
+      "id": "picS_trioB",
+      "name": "Trio · vinyl, parrot, wave",
+      "slot": "wall_center",
+      "sprite": "Tools/room_variants5/picS_trioB.png",
+      "like": "flamingo_triptych",
+      "round": 5
+    }
   ]
 }
