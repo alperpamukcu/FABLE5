@@ -97,7 +97,9 @@ namespace LastCall.UI
         private const float ServeGripDepth = 60f, ServeLiftRange = 170f;
         /// <summary>A tin that ran dry leaves the bench — but only once it is standing on it.</summary>
         private bool _serveTinLeaving;
-        private const float ServePourRate = 0.34f;   // glass-fractions per second (slower, 2026-07-22)
+        /// <summary>The share of full flow the tin is giving this frame — Core's BottlePour, read
+        /// off the tin's own level (the rate itself is TycoonConfig.ServePourMax).</summary>
+        private float _tinShare;
 
         // The way out: SERVE only means something once a drink stands in the glass, so
         // the key dims until one does — the ToGlass key's own law, applied here.
@@ -263,16 +265,20 @@ namespace LastCall.UI
                 Vector2 mouth = ServeSpoutNow();
                 var (opening, rimHalf) = ServeRim();
                 bool clear = mouth.y > opening.y + 2f;
+                // THE LIP DECIDES (2026-09-11): a full tin runs from 24 degrees, its last drops
+                // need nearly a hundred — Core's BottlePour, off the tin's own level.
+                _tinShare = (float)BottlePour.Share(tilt, run.Glass.FillFraction);
+                bool running = _tinShare > 0f;
 
                 // The glass is full: the pour stops there rather than running a stream into a
                 // vessel that cannot take it (GDD 21 §3, 2026-07-28).
-                if (run.ServingGlass.IsFull && tilt > 42f && clear)
+                if (run.ServingGlass.IsFull && running && clear)
                 {
                     _serveGrabbed = false;
                     _serveHand.Release();
                     ShowGlassFull();
                 }
-                else if (tilt > 42f && clear && !run.CanPourOut)
+                else if (running && clear && !run.CanPourOut)
                 {
                     // THE MANDATORY MIX (GDD 21 §14): two spirits may not leave the tin
                     // unmixed. Core refuses in PourIntoServingGlass — which this stage
@@ -284,7 +290,7 @@ namespace LastCall.UI
                     if (_aimText != null)
                         _aimText.text = "THIS ONE NEEDS MIXING — BACK TO THE SHAKER";
                 }
-                else if (tilt > 42f && clear)
+                else if (running && clear)
                 {
                     // Aim: how well the mouth is centred over the glass. Within ~half the
                     // glass width is a clean pour; beyond that the stream drifts wide.
@@ -305,9 +311,9 @@ namespace LastCall.UI
                     var streamVel = new Vector2((landX - mouth.x) * 1.8f, -225f);
                     // A fatter rope the further the tin is tipped (2026-09-07): the pour
                     // is read off the stream, and a stream that never changes is a line.
-                    float over = Mathf.Clamp01((tilt - 42f) / (MaxTilt - 42f));
+                    // As thick as the pour is heavy: Core's share of full flow, not the angle.
                     _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime,
-                        pourNow ? 0.8f + 0.7f * over : 0.6f);
+                        pourNow ? 0.6f + 0.9f * _tinShare : 0.6f);
                     if (!pourNow) RefreshServeText(run, accuracy);
                 }
             }
@@ -316,7 +322,7 @@ namespace LastCall.UI
             {
                 _servePouringNow = true;
                 double before = run.ServingGlass.TotalVolume;
-                run.PourIntoServingGlass(ServePourRate * Time.deltaTime, accuracy);
+                run.PourOutTilted(Time.deltaTime, _serveHand.Tilt);   // Core's lip, Core's rate
                 // The GLASS's colour as the tin goes into it. Only the refresh set this, and the
                 // refresh reads the tin when the glass is empty — so tipping a shaken drink into
                 // a glass that already held something left the pool at the old drink's colour

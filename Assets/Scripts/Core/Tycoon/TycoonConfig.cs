@@ -104,6 +104,24 @@ namespace LastCall.Core
         /// capacities are scaled against this, so a highball is 1.0 and the rest read off it.</summary>
         public double GlassCapacity { get; } = 1.0;
 
+        /// <summary>
+        /// The hand pour's full flow, as a share of a bottle's own PourRate (2026-09-11, see
+        /// BottlePour). The UI used to set this itself — the shaker bench ran every bottle at
+        /// 0.45 of its rate, flat, from 42 degrees — which is a rule living where the house says
+        /// rules may not. At a full lean a standard bottle now runs 0.55 x 0.60 = 0.33 tin/s, a
+        /// little more than the old flat 0.2475; near the lip it is a trickle, so a small share
+        /// is still a second of steady hand.
+        /// </summary>
+        public double HandPourScale { get; } = 0.60;
+
+        /// <summary>
+        /// The tin's full flow into the serving glass, tins per second at a full lean (see
+        /// BottlePour). It was the serving bench's own flat constant, 0.34 from any angle past 42.
+        /// A full tin empties in a little over two seconds tipped right over, and far slower held
+        /// at the lip.
+        /// </summary>
+        public double ServePourMax { get; } = 0.45;
+
         /// <summary>The glass a drink lands in when its recipe names none (v5 P14 / C9).</summary>
         public string DefaultGlassId { get; } = "highball";
 

@@ -61,7 +61,7 @@ already burns 11.7 ms; (3) phases are re-cut so the two things broken today ship
 |---|---|---|
 | **P1a** ✅ | The shader ships (Resources material + `LogError` + `ShipTests`); the tall glass's solver fixed; rest early-out; profiler markers | **done 2026-09-11** — see §3 |
 | **P1b** ✅ | Neck grip + springs + release-home on both benches; drawn spout and drawn rim on the serve bench | **done 2026-09-11** — see §4 |
-| **P2** | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | EditMode law tests; sim report unchanged |
+| **P2** ✅ | `BottlePour` Core law; `PourTick(dt, tilt)`, `PourOutTilted`; rates into `TycoonConfig`; `PourTick` picks the recipe's glass | **done 2026-09-11** — see §5 |
 | **P3** | The rope stream, split budgets, drops-only gravity, landing into the vessel with mass, tin sink, source alpha | no drop leaves a vessel; stream area ≈ Core's delivered area |
 | **P4** | Pixel-art shading: bands, dither, walls, depth, meniscus, top face, rope stripes, pixel splash, agitation | A/B look report to the author BEFORE locking |
 | **P5** | Slosh (bottle + pool, dt-correct damping); frozen solver core if P3 is over budget | pouring full glass ≤ 3.5 ms |
@@ -142,3 +142,35 @@ work surface. `A_released_bottle_goes_back_where_it_stood` (new): exact to 1e-4 
 The existing bottle sweep passed unchanged under the springs.
 
 Suites: EditMode **505/505**, PlayMode **13/13**.
+
+## 5 · P2 — the pour's own law, in Core (2026-09-11)
+
+`BottlePour` (`Assets/Scripts/Core/Pour/BottlePour.cs`), pure, beside `TapPour`:
+
+| | value | why |
+|---|---|---|
+| onset, full vessel | **24°** | the liquid is already at the neck |
+| onset, emptying | climbs to **102°** (curve 1.3) | the last drops need the vessel nearly upside down |
+| past the onset | **8% trickle → 100%** over 30° (power 1.25) | a weir: flow grows with the head over the lip |
+| hand pour full flow | bottle `PourRate` × `TycoonConfig.HandPourScale` **0.60** = 0.33 tin/s | was the UI's flat 0.45 × 0.55 = 0.2475 from 42° |
+| serve pour full flow | `TycoonConfig.ServePourMax` **0.45** tin/s | was the UI's flat 0.34 from 42° |
+
+GDD 24 §2's "more tilt = faster pour" (2026-07) is built at last, and the rates left the UI —
+"rules never trust the UI". A 5% dash is ≥ 0.9 s of steady hand at the lip; one 30-fps frame at
+full flow is under half the judge's precision window. Verbs: `PourTick(seconds, tilt)` (a lean under
+the lip pours nothing, keeps the pour and does NOT un-mix the tin; what runs picks the serving glass
+while it is empty — the sim's `PourMeasure` always did, the player's pour never had) and
+`PourOutTilted(seconds, tilt)` (through `PourIntoServingGlass`, so the mix gate, the first-drop glass
+and one-tin-one-portion all hold). The flat `PourTick(seconds)` stays for the verbs that pour a known time.
+
+Both benches read the lip from `BottlePour.Share` — Core's function, read, never re-derived — and the
+fixed 42° gate is gone from both. The stream's girth follows the share until P3 sizes it from Core's
+delivered volume.
+
+`BottlePourTests` (13): the onset, monotonicity, saturation, the empty vessel, the 5% dash, frame
+quantisation, purity; and the verbs — under the lip, tipped further, the brim, the glass before the
+serve, the mix refusal (on a book that cannot name the build: a matched recipe's method decides the
+mix, so under the full catalogue gin with a liqueur is a Built drink and needs none), one tin one portion.
+
+The sim pours through `PourMeasure` and `PourIntoServingGlass`, neither of which changed behaviour, so
+its report is unchanged by construction. Suites: EditMode **518/518**, PlayMode **13/13**.

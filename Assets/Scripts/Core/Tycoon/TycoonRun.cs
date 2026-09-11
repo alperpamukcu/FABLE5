@@ -1558,6 +1558,60 @@ namespace LastCall.Core
             ServingGlass = next;
         }
 
+        /// <summary>
+        /// The hand pour from the bottle in hand into the tin, at a lean (2026-09-11). How much
+        /// runs is <see cref="BottlePour"/>'s: nothing under the lip's onset for this bottle's
+        /// level, a trickle at it, the bottle's full hand rate tipped well over. A lean that runs
+        /// nothing changes nothing — it does not end the pour and it does not un-mix the tin,
+        /// because nothing entered it. What does run picks the serving glass while it is still
+        /// empty, as the measured pour always has, so the glass bench opens on the drink's own
+        /// vessel instead of changing it under the first drop.
+        /// </summary>
+        public double PourTick(double seconds, double tiltDegrees)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (PouringId == null || seconds <= 0) return 0;
+
+            var bottle = _shelf.Find(PouringId);
+            double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
+            double volume = BottlePour.Volume(ClampTilt(tiltDegrees), fill,
+                bottle.PourRate * Config.HandPourScale, seconds);
+            if (volume <= 0) return 0;
+
+            double poured = _shelf.PourInto(Glass, PouringId, volume);
+            if (poured > 0)
+            {
+                UnmixTin();
+                if (ServingGlass.IsEmpty)
+                    SelectGlassFor(RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe);
+            }
+            if (poured <= 0 || bottle.IsEmpty) PouringId = null;
+            return poured;
+        }
+
+        /// <summary>
+        /// The tin tipped over the serving glass, at a lean (2026-09-11): how much leaves it is
+        /// <see cref="BottlePour"/>'s, off the TIN's own level, at the bar's full serve rate. Below
+        /// the onset nothing leaves — and nothing is refused either, because nothing tried to.
+        /// Everything that does leave goes through <see cref="PourIntoServingGlass"/>, so the
+        /// mandatory mix, the glass chosen on the first drop and one-tin-one-portion all hold.
+        /// </summary>
+        public double PourOutTilted(double seconds, double tiltDegrees)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (seconds <= 0 || Glass.IsEmpty) return 0;
+            double volume = BottlePour.Volume(ClampTilt(tiltDegrees), Glass.FillFraction,
+                Config.ServePourMax, seconds);
+            if (volume <= 0) return 0;
+            return PourIntoServingGlass(volume, 1.0);
+        }
+
+        /// <summary>A lean is between upright and upside down; the tap's own clamp.</summary>
+        private static double ClampTilt(double degrees) => degrees < 0 ? 0 : (degrees > 180 ? 180 : degrees);
+
+        /// <summary>The flat pour: the bottle's own rate for <paramref name="seconds"/>, whatever the
+        /// lean. The hand no longer uses it (see the tilted overload); kept for the verbs and tests
+        /// that pour a known time.</summary>
         public double PourTick(double seconds)
         {
             EnsurePhase(TycoonPhase.DayOpen);
@@ -1919,9 +1973,10 @@ namespace LastCall.Core
 
         /// <summary>
         /// The serve pour (GDD 24 §3): moves <paramref name="volume"/> from the shaker into
-        /// the serving glass. <paramref name="accuracy"/> (0…1) is the aim — a share lands,
-        /// the rest spills and is lost. Returns the volume that landed. The UI drives this
-        /// per frame from where the pour is aimed; the sim and the quick path pour perfectly.
+        /// the serving glass and returns what landed. <paramref name="accuracy"/> no longer
+        /// costs anything — since 2026-09-07 the aim GATES the pour in the UI instead of
+        /// spilling a share of it, so one tin is always one portion. The hand pours through
+        /// <see cref="PourOutTilted"/>; the sim and the quick path pour a known volume here.
         /// </summary>
         public double PourIntoServingGlass(double volume, double accuracy)
         {

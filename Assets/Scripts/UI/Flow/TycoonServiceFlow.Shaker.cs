@@ -63,7 +63,9 @@ namespace LastCall.UI
         // The pour fills slower than the raw bottle rate so the stream reads as a real pour
         // (GDD 24 §2, 2026-07-22 — "doluş hızı çok hızlı"). Only the drawn volume slows; the
         // floor's patience clock runs on its own tick, untouched.
-        private const float PourTimeScale = 0.45f;
+        /// <summary>The share of full flow the bottle in hand is giving this frame (Core's
+        /// BottlePour, read — never recomputed here), for the stream to be drawn at.</summary>
+        private float _bottleShare;
 
         // NO DRINKS STAND ON THIS BENCH (2026-08-13, the author: "shakerin doldurulduğu
         // sahnede de içecekler olmayacak, oyuncu içecek seçmek için back bar sahnesine
@@ -870,8 +872,14 @@ namespace LastCall.UI
                 // a guard kept for safety after the rule it guards has been overturned is a
                 // rule of its own that nobody wrote down. Core takes fizz in the tin now, so
                 // the hand pours it.
-                pourNow = tilt > 42f && over && !full;
-                if (full && tilt > 42f && over) ShowShakerFull();
+                // THE LIP DECIDES, not a fixed 42 degrees (2026-09-11): Core says at what lean
+                // THIS bottle, at its own level, starts to run, and how much it gives past that.
+                var held = run.Shelf.Find(_focusBottle.Id);
+                double level = held != null && held.Capacity > 0 ? held.Remaining / held.Capacity : 0;
+                _bottleShare = (float)BottlePour.Share(tilt, level);
+                bool running = _bottleShare > 0f;
+                pourNow = running && over && !full;
+                if (full && running && over) ShowShakerFull();
 
                 if (pourNow)
                 {
@@ -884,14 +892,17 @@ namespace LastCall.UI
                     _shakerFluid.SetStreamColor(
                         UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type));
                     var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
-                    _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime);
+                    // A rope as thick as the pour is heavy: the lip's trickle is a thread, a
+                    // bottle tipped right over a full rope (the girth P3 will take from Core's
+                    // own delivered volume).
+                    _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.55f + 0.95f * _bottleShare);
                 }
             }
 
             if (pourNow)
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
-                run.PourTick(Time.deltaTime * PourTimeScale);   // slower, deliberate pour
+                run.PourTick(Time.deltaTime, _bottleHand.Tilt);   // Core's lip, Core's rate
                 // The tin's own colour, every frame it changes. RefreshShaker sets this once on
                 // the way in, and on the way in the tin is EMPTY — so without this the body kept
                 // DrinkColor's empty-glass cream while the stream poured pink into it (the
