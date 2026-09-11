@@ -1491,7 +1491,8 @@ namespace LastCall.UI
             if (slots != null)
                 foreach (var s in slots)
                     if (s.Id == f.Slot) { slot = s; break; }
-            string where = slot != null && slot.OnCounter ? "The counter" : "The back wall";
+            string where = slot != null && slot.Place != null ? slot.Place
+                         : slot != null && slot.OnCounter ? "The counter" : "The back wall";
             return where + (slot != null && slot.PairSpreadPx > 0f
                 ? " · both of them, one fitting"
                 : " · fitted over the mark below");

@@ -153,9 +153,12 @@ namespace LastCall.Tests
             string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
             var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
             var given = loaded.Fixtures.Where(f => f.StartsInTheRoom).Select(f => f.Id).OrderBy(s => s).ToArray();
-            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "prep_mat", "shaker_steel", "taps_one", "walls_1" }, given,
-                "the room opens with the two mats, the sink, the steel tin, one tap and the cracked "
-                + "wall — nothing else (the snack mat became a fixture on 2026-09-06)");
+            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "prep_mat", "shaker_steel", "taps_one",
+                                    "walls_1", "walls_right_1" }, given,
+                "the room opens with the two mats, the sink, the steel tin, one tap and the walls it "
+                + "already has — the cracked back wall and the peeling right one — nothing else (the "
+                + "snack mat became a fixture on 2026-09-06; the right wall became its own ladder "
+                + "on 2026-09-12, and the rung the bar opens with is the wall that was already there)");
             foreach (var id in given)
                 Assert.AreEqual(0, loaded.Fixtures.First(f => f.Id == id).Comfort, id + " is the FreeBase");
             foreach (var id in new[] { "flamingo_triptych", "wall_lamps_one", "floor_rug", "wall_tv" })
@@ -231,6 +234,50 @@ namespace LastCall.Tests
                 Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + r.Swatch),
                     r.Id + "'s swatch is not cut");
             }
+        }
+
+        [Test]
+        public void TheShippedRightWall_IsALadderOfItsOwn_LaidOverThePlate()
+        {
+            // The author's right wall, drawn four ways (2026-09-12): it climbs its own ladder
+            // instead of changing with the back wall, and its rungs are LAYERS over the plate
+            // rather than plates. Read off the real file, like the back wall's own test.
+            string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
+            var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
+            var slot = loaded.Slots.First(s => s.Id == "walls_right");
+            Assert.IsTrue(slot.Backdrop && slot.Overlay, "a layer of the room's picture, laid over it");
+            Assert.AreEqual("The right wall", slot.Place, "the market says where the rung goes");
+            var rungs = loaded.Fixtures.Where(f => f.Slot == "walls_right").OrderBy(f => f.Level).ToList();
+            Assert.AreEqual(new[] { 1, 2, 3, 4 }, rungs.Select(r => r.Level).ToArray());
+            Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens with the wall it has");
+            Assert.AreEqual(0, rungs[0].Comfort, "and the wall it has is worth nothing");
+            for (int i = 1; i < rungs.Count; i++)
+            {
+                Assert.Greater(rungs[i].Comfort, rungs[i - 1].Comfort, rungs[i].Id + " is worth more");
+                Assert.Greater(rungs[i].Price, rungs[i - 1].Price, rungs[i].Id + " costs more");
+                Assert.IsFalse(rungs[i].StartsInTheRoom);
+            }
+            foreach (var r in rungs)
+            {
+                var art = UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + r.Sprite);
+                Assert.IsNotNull(art, r.Id + "'s layer is not drawn");
+                Assert.AreEqual(new UnityEngine.Vector2(640, 360), art.rect.size,
+                    r.Id + " is off the plate's canvas — it would not land on the wall it was cut from");
+                Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + r.Swatch),
+                    r.Id + "'s swatch is not cut");
+            }
+        }
+
+        [Test]
+        public void AnOverlay_IsALayerOfThePicture_SoItMustBeABackdrop()
+        {
+            // An overlay laid over a hook would be a 640x360 canvas stood on its feet at x, y.
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""slots"": [
+                    { ""id"": ""walls"", ""x"": 320, ""y"": 180, ""backdrop"": true },
+                    { ""id"": ""odd"", ""x"": 10, ""y"": 10, ""overlay"": true } ],
+                ""fixtures"": [
+                    { ""id"": ""w1"", ""name"": ""Cracked"", ""slot"": ""walls"",
+                      ""price"": 40, ""sprite"": ""fx_walls_1"" }]}"));
         }
 
         [Test]

@@ -273,7 +273,8 @@ namespace LastCall.Game
                     throw new FormatException($"Fixtures file declares slot '{sl.id}' twice.");
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
                                               sl.pairSpreadPx, sl.houseLight, sl.hangs,
-                                              sl.flat, sl.backdrop, sl.carried)); }
+                                              sl.flat, sl.backdrop, sl.carried,
+                                              sl.overlay, sl.place)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -819,6 +820,10 @@ namespace LastCall.Game
             // Whatever stands here is CARRIED: a tool the room does not stand (2026-09-06,
             // the shaker). Absent is false.
             public bool carried;
+            // A backdrop laid OVER the plate instead of replacing it (2026-09-12, the right
+            // wall ladder), and the market's name for where its rungs go. Absent: false / null.
+            public bool overlay;
+            public string place;
             // Whatever stands here hangs on the wall: no contact shadow, and it draws
             // behind the floor dressing (2026-08-24, the flamingo triptych).
             public bool hangs;

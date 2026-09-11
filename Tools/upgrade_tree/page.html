@@ -1,0 +1,445 @@
+<title>Barın Upgrade Ağacı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+  /* One committed look: the bar after dark. The room's own art is dark pixel work and reads
+     best on a dark ground, so there is no light theme to switch to. */
+  :root {
+    --ground: #16111b;
+    --panel: #1f1826;
+    --panel-2: #291f31;
+    --line: #3a2e44;
+    --ink: #f3e9dd;
+    --muted: #b3a2b3;
+    --amber: #f7b11b;
+    --pink: #f0475d;
+    --teal: #3fb6a8;
+    --display: "Pixelify Sans", "Courier New", monospace;
+    --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font: 15px/1.55 var(--body); margin: 0; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding-inline: 18px; padding-block: 26px 60px; }
+  a { color: var(--amber); }
+  h1 { font: 700 clamp(28px, 3.6vw, 40px)/1.05 var(--display); margin: 0 0 8px; }
+  .eyebrow { font: 400 12px/1 var(--mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+  .lead { color: var(--muted); max-width: 74ch; margin: 0 0 20px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 22px; align-items: start; }
+  @media (max-width: 980px) { .cols { grid-template-columns: minmax(0, 1fr); } .stageCol { position: static !important; } }
+
+  /* ── the room ───────────────────────────────────────────────────────────── */
+  .stageCol { position: sticky; top: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .room { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0d0a10;
+          border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .room img { position: absolute; image-rendering: pixelated; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; }
+  .stat b { display: block; font: 700 20px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+  .stat span { font: 400 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  button { font: 700 12px/1 var(--body); background: var(--panel-2); color: var(--ink);
+           border: 1px solid var(--line); border-radius: 3px; padding: 8px 10px; cursor: pointer; }
+  button:hover { border-color: var(--amber); }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button.primary { background: var(--amber); color: #2a1c08; border-color: var(--amber); }
+  input[type=text] { font: 400 13px var(--body); background: #140f19; color: var(--ink);
+                     border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; min-width: 0; }
+  .save { display: flex; gap: 6px; }
+  .save input { flex: 1; }
+  .combos { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow: auto; }
+  .combo { display: flex; align-items: center; gap: 6px; background: var(--panel); border: 1px solid var(--line);
+           border-radius: 3px; padding: 5px 8px; font-size: 13px; }
+  .combo b { flex: 1; font-weight: 700; }
+  .combo button { padding: 4px 7px; font-size: 11px; }
+  .note { font-size: 12px; color: var(--muted); }
+
+  /* ── the tree ───────────────────────────────────────────────────────────── */
+  details.group { border: 1px solid var(--line); border-radius: 4px; background: var(--panel); margin-bottom: 10px; }
+  details.group > summary { cursor: pointer; list-style: none; padding: 10px 12px; display: flex; align-items: baseline; gap: 10px; }
+  details.group > summary::-webkit-details-marker { display: none; }
+  details.group > summary::before { content: "▸"; color: var(--amber); font-size: 12px; }
+  details.group[open] > summary::before { content: "▾"; }
+  .gTitle { font: 700 18px/1 var(--display); }
+  .gShelf { font: 400 11px/1 var(--mono); letter-spacing: .08em; color: var(--muted); }
+  .ladders { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .ladder { border: 1px solid var(--line); border-radius: 4px; background: var(--panel-2); }
+  .lHead { display: flex; align-items: baseline; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .lHead b { font: 700 15px/1 var(--display); }
+  .lHead .slot { font: 400 11px var(--mono); color: var(--muted); }
+  .lHead .count { margin-left: auto; font: 400 11px var(--mono); color: var(--muted); }
+  ul.rungs { list-style: none; margin: 0; padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+  li.rung { display: grid; grid-template-columns: 20px 76px 34px minmax(0, 1fr) auto; align-items: center; gap: 8px;
+            padding: 5px 6px; border-radius: 3px; border: 1px solid transparent; cursor: pointer; }
+  li.rung:hover { background: #2f2439; }
+  li.rung.picked { border-color: var(--amber); background: #32241c; }
+  li.rung.out { opacity: .45; }
+  li.rung .th { width: 72px; height: 48px; object-fit: contain; image-rendering: pixelated;
+                background: #120e17; border-radius: 2px; }
+  li.rung .tier { font: 700 12px var(--mono); color: var(--amber); text-align: center; }
+  li.rung.out .tier { color: var(--muted); text-decoration: line-through; }
+  .nm { min-width: 0; }
+  .nm b { font-weight: 700; }
+  .nm .meta { display: block; font: 400 11px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .badge { font: 400 10px/1.4 var(--mono); letter-spacing: .05em; text-transform: uppercase;
+           border: 1px solid currentColor; border-radius: 2px; padding: 0 4px; margin-left: 6px; }
+  .b-game { color: var(--teal); }
+  .b-cand { color: var(--pink); }
+  .b-start { color: var(--amber); }
+  .ctl { display: flex; align-items: center; gap: 3px; }
+  .ctl button { padding: 3px 6px; font: 700 11px var(--mono); }
+  .ctl label { font: 400 10px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 3px; cursor: pointer; }
+  .none .nm b { color: var(--muted); font-style: italic; }
+  footer { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 12px; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Last Call · odanın geliştirmeleri · <span id="stamp"></span></p>
+  <h1>Barın upgrade ağacı</h1>
+  <p class="lead">Odanın her yüzeyi bir merdiven. Bir basamağa tıkla, odada görürsün; ok tuşlarıyla sırayı değiştir,
+    sıra tier'i belirler; beğendiğin kombinasyonu kaydet. <b>Oyunda</b> rozetli olanlar şu an oyunda,
+    <b>aday</b> olanlar onayladığın ama henüz girmemiş görseller. Görseller ışıksız, çizildikleri
+    hâlleriyle duruyor; oyunda odanın ışığı üstlerine biner.</p>
+
+  <div class="cols">
+    <div id="tree"></div>
+
+    <div class="stageCol">
+      <div class="room" id="room"></div>
+      <div class="stats">
+        <div class="stat"><b id="sComfort">0.0</b><span>konfor (tavan 5)</span></div>
+        <div class="stat"><b id="sCost">$0</b><span>merdiven maliyeti</span></div>
+        <div class="stat"><b id="sStars">0.0</b><span>gereken yıldız</span></div>
+      </div>
+      <div class="row">
+        <button data-preset="open">Oyunun açılışı</button>
+        <button data-preset="t1">Hepsi tier 1</button>
+        <button data-preset="top">Hepsi en üst</button>
+        <button data-preset="game">Oyundakiler en üst</button>
+        <button data-preset="random">Rastgele</button>
+      </div>
+      <div class="save">
+        <input type="text" id="comboName" placeholder="Kombinasyon adı" maxlength="60">
+        <button class="primary" id="saveCombo">Kaydet</button>
+      </div>
+      <div class="combos" id="combos"></div>
+      <p class="note" id="dbNote">Kayıt bağlanıyor…</p>
+    </div>
+  </div>
+
+  <footer>
+    Sayfa <code>Tools/upgrade_tree/build.py</code> ile üretiliyor: yeni bir upgrade eklendiğinde
+    (<code>fixtures.json</code> ya da <code>candidates.json</code>) betik yeniden çalıştırılır.
+    Odanın parçaları <code>LastCall → Export Room Layers</code> ile oyundan çıkarılıyor, yani her parça
+    oyunda durduğu yerde duruyor.
+  </footer>
+</div>
+
+<script>
+const D = /*DATA*/null;
+const S = { picks: {}, order: {}, excluded: {} };
+const imgCache = new Map();
+let db = null, dbCombos = null;
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+function active(sid) { return (S.order[sid] || []).filter(id => !(S.excluded[sid] || []).includes(id)); }
+function tierOf(id) { const r = D.rungs[id]; const i = active(r.slot).indexOf(id); return i < 0 ? null : i + 1; }
+function money(v) { return v == null ? '—' : '$' + v; }
+
+/* ── the room ─────────────────────────────────────────────────────────────── */
+function renderRoom() {
+  const layers = D.base.slice();
+  for (const sid of Object.keys(S.picks)) {
+    const id = S.picks[sid];
+    if (!id || !D.rungs[id]) continue;
+    for (const l of D.rungs[id].layers) layers.push(l);
+  }
+  layers.sort((a, b) => (a.order - b.order) || (a.foot - b.foot));
+  const room = document.getElementById('room');
+  const kids = layers.map(l => {
+    let img = imgCache.get(l.src);
+    if (!img) {
+      img = new Image();
+      img.src = l.src;
+      img.alt = '';
+      img.style.left = (l.x / D.size[0] * 100) + '%';
+      img.style.top = (l.y / D.size[1] * 100) + '%';
+      img.style.width = (l.w / D.size[0] * 100) + '%';
+      imgCache.set(l.src, img);
+    }
+    return img;
+  });
+  room.replaceChildren(...kids);
+}
+
+function renderStats() {
+  let comfort = 0, cost = 0, stars = 0, unknown = 0;
+  for (const sid of Object.keys(S.picks)) {
+    const id = S.picks[sid];
+    if (!id) continue;
+    const rungsHere = active(sid);
+    const upto = rungsHere.slice(0, rungsHere.indexOf(id) + 1);
+    for (const rid of upto) {
+      const r = D.rungs[rid];
+      if (r.price == null) { unknown++; continue; }
+      cost += r.price;
+    }
+    const r = D.rungs[id];
+    if (r.comfort != null) comfort += r.comfort;
+    if (r.stars != null) stars = Math.max(stars, r.stars);
+  }
+  document.getElementById('sComfort').textContent = Math.min(comfort, 5).toFixed(2).replace(/0$/, '')
+    + (comfort > 5 ? ' ▲' : '');
+  document.getElementById('sCost').textContent = money(cost) + (unknown ? ' +' + unknown + '?' : '');
+  document.getElementById('sStars').textContent = stars.toFixed(1);
+}
+
+/* ── the tree ─────────────────────────────────────────────────────────────── */
+function rungRow(sid, id) {
+  const r = D.rungs[id];
+  const li = el('li', 'rung');
+  li.dataset.id = id;
+  if (S.picks[sid] === id) li.classList.add('picked');
+  if ((S.excluded[sid] || []).includes(id)) li.classList.add('out');
+
+  const radio = el('input');
+  radio.type = 'radio';
+  radio.name = 'pick-' + sid;
+  radio.checked = S.picks[sid] === id;
+  radio.addEventListener('change', () => { S.picks[sid] = id; sync(); });
+  li.appendChild(radio);
+
+  const th = el('img', 'th');
+  if (r.thumb) th.src = r.thumb;
+  th.alt = '';
+  li.appendChild(th);
+
+  const t = tierOf(id);
+  li.appendChild(el('span', 'tier', t ? 'T' + t : '—'));
+
+  const nm = el('div', 'nm');
+  const b = el('b', null, r.name);
+  nm.appendChild(b);
+  nm.appendChild(el('span', 'badge ' + (r.candidate ? 'b-cand' : 'b-game'), r.candidate ? 'aday' : 'oyunda'));
+  if (r.starts) nm.appendChild(el('span', 'badge b-start', 'açılışta'));
+  if (r.carried) nm.appendChild(el('span', 'badge', 'elde'));
+  const bits = [];
+  bits.push(money(r.price));
+  if (r.comfort) bits.push('+' + r.comfort.toFixed(2).replace(/0$/, '') + ' konfor');
+  if (r.stars) bits.push(r.stars.toFixed(1) + '★ kapı');
+  nm.appendChild(el('span', 'meta', bits.join(' · ')));
+  li.appendChild(nm);
+
+  const ctl = el('div', 'ctl');
+  const up = el('button', null, '↑'); up.title = 'Yukarı';
+  const dn = el('button', null, '↓'); dn.title = 'Aşağı';
+  up.addEventListener('click', e => { e.stopPropagation(); move(sid, id, -1); });
+  dn.addEventListener('click', e => { e.stopPropagation(); move(sid, id, +1); });
+  const lab = el('label');
+  const cb = el('input');
+  cb.type = 'checkbox';
+  cb.checked = !(S.excluded[sid] || []).includes(id);
+  cb.addEventListener('click', e => e.stopPropagation());
+  cb.addEventListener('change', () => {
+    const ex = S.excluded[sid] || (S.excluded[sid] = []);
+    if (cb.checked) S.excluded[sid] = ex.filter(x => x !== id);
+    else { ex.push(id); if (S.picks[sid] === id) S.picks[sid] = null; }
+    saveDecisions(); sync();
+  });
+  lab.appendChild(cb);
+  lab.appendChild(document.createTextNode('merdivende'));
+  ctl.append(up, dn, lab);
+  li.appendChild(ctl);
+
+  li.addEventListener('click', () => { S.picks[sid] = id; sync(); });
+  return li;
+}
+
+function noneRow(sid) {
+  const li = el('li', 'rung none');
+  if (!S.picks[sid]) li.classList.add('picked');
+  const radio = el('input');
+  radio.type = 'radio';
+  radio.name = 'pick-' + sid;
+  radio.checked = !S.picks[sid];
+  radio.addEventListener('change', () => { S.picks[sid] = null; sync(); });
+  li.appendChild(radio);
+  li.appendChild(el('span'));
+  li.appendChild(el('span', 'tier', '—'));
+  const nm = el('div', 'nm');
+  nm.appendChild(el('b', null, 'Yok'));
+  nm.appendChild(el('span', 'meta', 'bu yuva boş'));
+  li.appendChild(nm);
+  li.appendChild(el('span'));
+  li.addEventListener('click', () => { S.picks[sid] = null; sync(); });
+  return li;
+}
+
+function move(sid, id, d) {
+  const list = S.order[sid];
+  const i = list.indexOf(id);
+  const j = i + d;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  list[i] = list[j];
+  list[j] = id;
+  saveDecisions();
+  sync();
+}
+
+function renderTree() {
+  const root = document.getElementById('tree');
+  root.replaceChildren(...D.groups.map(g => {
+    const det = el('details', 'group');
+    det.open = true;
+    const sum = el('summary');
+    sum.appendChild(el('span', 'gTitle', g.title));
+    sum.appendChild(el('span', 'gShelf', g.shelf));
+    det.appendChild(sum);
+    const box = el('div', 'ladders');
+    for (const sid of g.ladders) {
+      const L = D.ladders[sid];
+      const card = el('div', 'ladder');
+      const head = el('div', 'lHead');
+      head.appendChild(el('b', null, L.title));
+      head.appendChild(el('span', 'slot', sid));
+      const n = active(sid).length;
+      head.appendChild(el('span', 'count', n + ' tier' + (L.candidateSlot ? ' · yeni yuva' : '')));
+      card.appendChild(head);
+      const ul = el('ul', 'rungs');
+      if (!L.backdrop) ul.appendChild(noneRow(sid));
+      for (const id of S.order[sid]) ul.appendChild(rungRow(sid, id));
+      card.appendChild(ul);
+      box.appendChild(card);
+    }
+    det.appendChild(box);
+    return det;
+  }));
+}
+
+function sync() { renderTree(); renderRoom(); renderStats(); saveCurrent(); }
+
+/* ── presets ──────────────────────────────────────────────────────────────── */
+function preset(kind) {
+  for (const sid of Object.keys(D.ladders)) {
+    const L = D.ladders[sid];
+    const a = active(sid).filter(id => !D.rungs[id].carried && D.rungs[id].layers.length);
+    let pick = null;
+    if (!a.length) { S.picks[sid] = null; continue; }
+    if (kind === 'open') pick = a.find(id => D.rungs[id].starts) || (L.backdrop ? a[0] : null);
+    else if (kind === 't1') pick = a[0];
+    else if (kind === 'top') pick = a[a.length - 1];
+    else if (kind === 'game') { const g = a.filter(id => !D.rungs[id].candidate); pick = g[g.length - 1] || null; }
+    else if (kind === 'random') pick = (!L.backdrop && Math.random() < 0.2) ? null : a[Math.floor(Math.random() * a.length)];
+    S.picks[sid] = pick;
+  }
+  sync();
+}
+
+/* ── keeping the choices ──────────────────────────────────────────────────── */
+const LS = 'lastcall_upgrade_tree_v1';
+function localSave() {
+  try { localStorage.setItem(LS, JSON.stringify({ order: S.order, excluded: S.excluded, picks: S.picks })); } catch (e) {}
+}
+function localLoad() {
+  try {
+    const raw = localStorage.getItem(LS);
+    if (!raw) return;
+    const v = JSON.parse(raw);
+    applyDecisions(v);
+  } catch (e) {}
+}
+function applyDecisions(v) {
+  if (!v) return;
+  if (v.order) for (const sid of Object.keys(S.order))
+    if (Array.isArray(v.order[sid])) {
+      const known = v.order[sid].filter(id => D.rungs[id] && D.rungs[id].slot === sid);
+      const rest = S.order[sid].filter(id => !known.includes(id));
+      S.order[sid] = known.concat(rest);
+    }
+  if (v.excluded) for (const sid of Object.keys(S.excluded))
+    if (Array.isArray(v.excluded[sid])) S.excluded[sid] = v.excluded[sid].filter(id => D.rungs[id]);
+  if (v.picks) for (const sid of Object.keys(S.picks))
+    if (v.picks[sid] === null || D.rungs[v.picks[sid]]) S.picks[sid] = v.picks[sid];
+}
+let saveTimer = null;
+function saveDecisions() {
+  localSave();
+  if (!db) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    db.doc('tree/decisions').set({ order: S.order, excluded: S.excluded, updated: new Date().toISOString() })
+      .catch(() => {});
+  }, 400);
+}
+let curTimer = null;
+function saveCurrent() {
+  localSave();
+  if (!db) return;
+  clearTimeout(curTimer);
+  curTimer = setTimeout(() => {
+    db.doc('tree/current').set({ picks: S.picks, updated: new Date().toISOString() }).catch(() => {});
+  }, 600);
+}
+
+function renderCombos(list) {
+  const box = document.getElementById('combos');
+  box.replaceChildren(...list.map(c => {
+    const row = el('div', 'combo');
+    row.appendChild(el('b', null, c.name || '(adsız)'));
+    const load = el('button', null, 'Yükle');
+    load.addEventListener('click', () => {
+      for (const sid of Object.keys(S.picks)) S.picks[sid] = (c.picks && c.picks[sid]) || null;
+      sync();
+    });
+    const del = el('button', null, 'Sil');
+    del.addEventListener('click', () => { if (db) db.doc('combos/' + c.id).delete().catch(() => {}); });
+    row.append(load, del);
+    return row;
+  }));
+  if (!list.length) box.appendChild(el('p', 'note', 'Kayıtlı kombinasyon yok.'));
+}
+
+document.getElementById('saveCombo').addEventListener('click', () => {
+  const input = document.getElementById('comboName');
+  const name = (input.value || '').trim() || 'Kombinasyon';
+  if (!db) { document.getElementById('dbNote').textContent = 'Kaydedilemedi: bu görünümde veritabanı yok.'; return; }
+  db.collection('combos').add({ name: name, picks: S.picks, created: new Date().toISOString() })
+    .then(() => { input.value = ''; })
+    .catch(() => { document.getElementById('dbNote').textContent = 'Kaydedilemedi.'; });
+});
+for (const b of document.querySelectorAll('[data-preset]'))
+  b.addEventListener('click', () => preset(b.dataset.preset));
+
+/* ── start ────────────────────────────────────────────────────────────────── */
+for (const sid of Object.keys(D.ladders)) {
+  S.order[sid] = D.ladders[sid].rungs.slice();
+  S.excluded[sid] = [];
+  S.picks[sid] = null;
+}
+document.getElementById('stamp').textContent = new Date().toLocaleDateString('tr-TR');
+localLoad();
+preset('open');
+
+(async () => {
+  try { db = window.claude && window.claude.use ? await window.claude.use('db') : null; } catch (e) { db = null; }
+  const note = document.getElementById('dbNote');
+  if (!db) { note.textContent = 'Seçimler yalnız bu tarayıcıda saklanıyor (veritabanı yok).'; return; }
+  note.textContent = 'Seçimler kaydediliyor.';
+  try {
+    const snap = await db.doc('tree/decisions').get();
+    if (snap.exists) { applyDecisions(snap.data()); sync(); }
+  } catch (e) {}
+  try {
+    db.collection('combos').onSnapshot(qs => {
+      renderCombos(qs.docs.map(d => Object.assign({ id: d.id }, d.data())));
+    }, () => {});
+  } catch (e) {}
+})();
+</script>

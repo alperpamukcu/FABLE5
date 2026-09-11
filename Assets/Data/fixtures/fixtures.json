@@ -89,6 +89,14 @@
       "backdrop": true
     },
     {
+      "id": "walls_right",
+      "x": 533,
+      "y": 180,
+      "backdrop": true,
+      "overlay": true,
+      "place": "The right wall"
+    },
+    {
       "id": "shaker",
       "x": 430,
       "y": 74,
@@ -488,6 +496,58 @@
       "flavor": "Pink and lilac diamonds over the panelling. The wall the postcards are of.",
       "sprite": "fx_walls_4",
       "swatch": "fx_walls_swatch_4",
+      "level": 4,
+      "group": "walls"
+    },
+    {
+      "id": "walls_right_1",
+      "name": "Peeling Purple",
+      "slot": "walls_right",
+      "price": 25,
+      "stars": 0,
+      "flavor": "The last tenant's purple, peeling where the damp got in. The boards show through in three places, and nobody has asked about them.",
+      "sprite": "fx_walls_right_1",
+      "swatch": "fx_walls_right_swatch_1",
+      "level": 1,
+      "startsInTheRoom": true,
+      "group": "walls"
+    },
+    {
+      "id": "walls_right_2",
+      "name": "Plum Coat",
+      "slot": "walls_right",
+      "price": 30,
+      "comfort": 0.5,
+      "stars": 0,
+      "flavor": "One coat of plum from the corner to the door. It hides the patches and nothing else.",
+      "sprite": "fx_walls_right_2",
+      "swatch": "fx_walls_right_swatch_2",
+      "level": 2,
+      "group": "walls"
+    },
+    {
+      "id": "walls_right_3",
+      "name": "Bubble Paper",
+      "slot": "walls_right",
+      "price": 75,
+      "comfort": 1.0,
+      "stars": 1.0,
+      "flavor": "Dark rounds on the purple and a run of stripes into the corner. It makes the door look like somebody meant it.",
+      "sprite": "fx_walls_right_3",
+      "swatch": "fx_walls_right_swatch_3",
+      "level": 3,
+      "group": "walls"
+    },
+    {
+      "id": "walls_right_4",
+      "name": "Sunset Panelling",
+      "slot": "walls_right",
+      "price": 120,
+      "comfort": 1.5,
+      "stars": 2.0,
+      "flavor": "Cream above a coral wainscot, a stripe at the cornice. The side wall finally matches the postcards.",
+      "sprite": "fx_walls_right_4",
+      "swatch": "fx_walls_right_swatch_4",
       "level": 4,
       "group": "walls"
     },

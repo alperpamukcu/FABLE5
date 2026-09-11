@@ -2361,6 +2361,10 @@ namespace LastCall.UI
 
         /// <summary>One world-space stage sprite on the shared lit material, standing on
         /// the sorting layer its order band belongs to.</summary>
+        /// <summary>Where an overlay backdrop sorts: over the plate (10) and the window's
+        /// glass (11), under the hangers (15). See SyncFixtures.</summary>
+        private const int OverlayOrder = 12;
+
         private SpriteRenderer WorldSprite(string name, Sprite sprite, int order)
         {
             var go = new GameObject(name);
@@ -2830,7 +2834,23 @@ namespace LastCall.UI
                 // A stage built without a plate has nowhere to put it and skips it.
                 if (slot.Backdrop)
                 {
-                    if (_backgroundSr != null) _backgroundSr.sprite = sprite;
+                    if (_backgroundSr == null) continue;
+                    if (!slot.Overlay) { _backgroundSr.sprite = sprite; continue; }
+                    // AN OVERLAY IS A LAYER OF THE PICTURE (2026-09-12, the right wall
+                    // ladder): the same 640x360 canvas as the plate, on the plate's own
+                    // transform — so the cover fit that sizes the plate sizes it too, and it
+                    // can never drift off the wall it was cut from — over the plate (10) and
+                    // the window's glass (11), which is at the far side and never meets it,
+                    // and under every hook (15).
+                    // Kept with the placed pieces so a re-dress clears it like the rest, and
+                    // skipped by PlaceFixtures, which stands things on their feet.
+                    var layer = new GameObject("Fx_" + def.Id).AddComponent<SpriteRenderer>();
+                    layer.transform.SetParent(_backgroundSr.transform, false);
+                    layer.sprite = sprite;
+                    layer.sortingLayerID = _backgroundSr.sortingLayerID;
+                    layer.sortingOrder = OverlayOrder;
+                    if (_litMaterial != null) layer.sharedMaterial = _litMaterial;
+                    _placedFixtures.Add((def, layer.transform, null, 0f));
                     continue;
                 }
                 // A CARRIED piece is not room dressing (2026-09-06, the shaker): the bar
@@ -3078,6 +3098,7 @@ namespace LastCall.UI
             {
                 LastCall.Game.StageSlot slot;
                 if (!_slots.TryGetValue(placed.Def.Slot, out slot)) continue;
+                if (slot.Backdrop) continue;   // a layer of the picture rides the plate itself
                 // THE ROOM'S OWN OFFSET, like the cellar's stock (see PlaceCellarSlot).
                 // These are art/stage points, but the DRAWER moves the world root every
                 // fixture hangs under, so re-dressing the room while the cellar is open —

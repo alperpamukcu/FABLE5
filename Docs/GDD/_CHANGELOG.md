@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The right wall climbs its own ladder (2026-09-12):** the author drew the side wall four
+  ways, so it is no longer whatever the back wall's plate happened to carry. A backdrop slot
+  that OVERLAYS the plate rather than replacing it (`walls_right`, drawn at order 12 on the
+  plate's own transform) takes the four rungs; the room's own door, with the "+20 ONLY" sign
+  the age law hangs on, shows through every one of them. And the room now has an UPGRADE TREE
+  (`Tools/upgrade_tree/`): every ladder and rung on one page, the room built from whatever is
+  clicked, rungs reordered to set tiers, combinations saved — with the approved art that has
+  not shipped yet standing in it as candidates. Its pieces come out of the game itself
+  (`LastCall → Export Room Layers`), so each stands where the game stands it.
 - **Pour v2 (2026-09-11/12):** the main mechanic, rebuilt at the author's request. The bottle
   and the tin are held by the neck on springs, so the tall glass can be poured into; the pour's
   law moved into Core (`BottlePour`: a fill-dependent onset, 24° full to 102° empty, a 30° ramp

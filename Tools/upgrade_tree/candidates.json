@@ -1,0 +1,46 @@
+{
+  "note": "Approved in the room-art rounds but not in the game yet (Docs/ONAYLANAN_GORSELLER.md). Each shows in the upgrade tree as a rung of the slot it is meant for, so it can be tried in the room and given a tier before it ships. 'layer' is a whole 640x360 picture of the room; 'sprite' is a single drawing stood where the game stands the fixture named in 'like'. A slot listed here that the game does not have yet is drawn at 'order' (the stage's sorting bands: plate 10, window glass 11, right wall 12, hangers 15, mats 16, dressing 20, counter 30).",
+  "slots": [
+    {"id": "ceiling", "title": "Tavan", "group": "walls", "order": 13},
+    {"id": "floor", "title": "Zemin", "group": "furniture", "order": 13},
+    {"id": "wall_right_art", "title": "Sağ duvar tablosu", "group": "wall_art", "order": 15},
+    {"id": "poster_left", "title": "Poster · sol duvar", "group": "wall_art", "order": 15},
+    {"id": "poster_right", "title": "Poster · sağ duvar", "group": "wall_art", "order": 15}
+  ],
+  "items": [
+    {"id": "ceil_deco", "name": "Deco Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_deco.png", "round": 3},
+    {"id": "ceil_stucco", "name": "Stucco Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_stucco.png", "round": 3},
+    {"id": "ceil_palm", "name": "Palm Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_palm.png", "round": 3},
+    {"id": "ceil_beams", "name": "Beamed Ceiling", "slot": "ceiling", "layer": "Tools/room_variants3/fx_ceil_beams.png", "round": 3},
+
+    {"id": "floor_check", "name": "Checker Floor", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_check.png", "round": 4},
+    {"id": "floor_carpet", "name": "Carpet", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_carpet.png", "round": 4},
+    {"id": "floor_marble", "name": "Marble Floor", "slot": "floor", "layer": "Tools/room_variants4/fx_floor_marble.png", "round": 4},
+
+    {"id": "art_city", "name": "City Triptych", "slot": "wall_center", "sprite": "Tools/room_variants/art_city.png", "like": "flamingo_triptych", "round": 1},
+    {"id": "picS_flamingo", "name": "Flamingo (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_flamingo.png", "like": "flamingo_triptych", "round": 3},
+    {"id": "picS_cherry", "name": "Cherry (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_cherry.png", "like": "flamingo_triptych", "round": 3},
+    {"id": "picS_lips", "name": "Lips (small)", "slot": "wall_center", "sprite": "Tools/room_variants3/picS_lips.png", "like": "flamingo_triptych", "round": 3},
+
+    {"id": "pic_pelican", "name": "Pelican", "slot": "wall_right_art", "layer": "Tools/room_variants3/fx_picR_pelican.png", "round": 3},
+
+    {"id": "post_malibu_L", "name": "Malibu", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_malibu.png", "round": 4},
+    {"id": "post_surf_L", "name": "Surf", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_surf.png", "round": 4},
+    {"id": "post_pier_L", "name": "Pier", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_pier.png", "round": 4},
+    {"id": "post_coast_L", "name": "Coast", "slot": "poster_left", "layer": "Tools/room_variants4/fx_L_post_coast.png", "round": 4},
+    {"id": "post_malibu_R", "name": "Malibu", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_malibu.png", "round": 4},
+    {"id": "post_surf_R", "name": "Surf", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_surf.png", "round": 4},
+    {"id": "post_pier_R", "name": "Pier", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_pier.png", "round": 4},
+    {"id": "post_coast_R", "name": "Coast", "slot": "poster_right", "layer": "Tools/room_variants4/fx_R_post_coast.png", "round": 4},
+
+    {"id": "table_v1_L", "name": "Table v1", "slot": "table_left", "sprite": "Tools/room_variants/table_v1.png", "like": "table_left_1", "round": 1},
+    {"id": "table_v2_L", "name": "Table v2", "slot": "table_left", "sprite": "Tools/room_variants/table_v2.png", "like": "table_left_1", "round": 1},
+    {"id": "table_v1_R", "name": "Table v1", "slot": "table_right", "sprite": "Tools/room_variants/table_v1.png", "like": "table_right_1", "round": 1},
+    {"id": "table_v2_R", "name": "Table v2", "slot": "table_right", "sprite": "Tools/room_variants/table_v2.png", "like": "table_right_1", "round": 1},
+
+    {"id": "plant_monstera_L", "name": "Monstera", "slot": "plant_left", "sprite": "Tools/room_variants2/plant_monstera.png", "like": "plant_palm", "round": 2},
+    {"id": "plant_bird_L", "name": "Bird of Paradise", "slot": "plant_left", "sprite": "Tools/room_variants2/plant_bird.png", "like": "plant_palm", "round": 2},
+    {"id": "plant_monstera_R", "name": "Monstera", "slot": "plant_right", "sprite": "Tools/room_variants2/plant_monstera.png", "like": "plant_snake", "round": 2},
+    {"id": "plant_bird_R", "name": "Bird of Paradise", "slot": "plant_right", "sprite": "Tools/room_variants2/plant_bird.png", "like": "plant_snake", "round": 2}
+  ]
+}

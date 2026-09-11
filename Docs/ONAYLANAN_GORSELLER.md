@@ -6,6 +6,12 @@ Ev kuralı: yazar seçmeden hiçbir üretim `Assets`'e girmez (bkz. hafıza `bot
 Aşağıdakiler **seçildi ama hâlâ girmedi** — hepsi `Tools/room_variants*/` altında duruyor.
 Bu dosya seçimlerin kaybolmaması için var; bir satır oyuna indiği gün buradan silinir.
 
+**Hepsini odada görmek için:** `Tools/upgrade_tree/` — barın bütün merdivenlerini ağaç hâlinde
+gösteren, tıklayınca odayı kuran sayfa (aşağıdaki bekleyenler "aday" rozetiyle orada duruyor).
+Üretimi: `LastCall → Export Room Layers` (play modunda, oda ekranda) + `py Tools/upgrade_tree/build.py`.
+Poster sorusu (sağ duvar mı sol mu) orada denenerek cevaplanır: sol poster pencereye biniyor,
+sağ poster televizyonun yerini kaplıyor.
+
 ---
 
 ## Seçilenler

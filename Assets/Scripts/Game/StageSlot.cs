@@ -65,9 +65,21 @@ namespace LastCall.Game
         /// to know, and the market still sells the ladder; the stage simply skips it.</summary>
         public bool Carried { get; }
 
+        /// <summary>A backdrop LAID OVER the room's plate rather than replacing it (2026-09-12,
+        /// the author's right wall ladder: "4 tier sağ duvar getirdim"). The piece is a whole
+        /// 640x360 layer, mostly transparent, drawn on the plate's own transform just above it —
+        /// under the window's glass and everything that hangs or stands — so one surface of the
+        /// room climbs its own ladder while the back wall climbs another.</summary>
+        public bool Overlay { get; }
+
+        /// <summary>Where a rung of this slot goes, in the market's words ("The right wall");
+        /// null lets the market say what it always has (the counter, or the back wall).</summary>
+        public string Place { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
                          float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
-                         bool flat = false, bool backdrop = false, bool carried = false)
+                         bool flat = false, bool backdrop = false, bool carried = false,
+                         bool overlay = false, string place = null)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -81,6 +93,10 @@ namespace LastCall.Game
             Flat = flat;
             Backdrop = backdrop;
             Carried = carried;
+            if (overlay && !backdrop)
+                throw new ArgumentException($"Slot '{id}' is an overlay but not a backdrop — an overlay is a layer OF the room's picture.");
+            Overlay = overlay;
+            Place = string.IsNullOrWhiteSpace(place) ? null : place.Trim();
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

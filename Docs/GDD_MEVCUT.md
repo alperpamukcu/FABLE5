@@ -1526,6 +1526,29 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.57 · Sağ duvar kendi merdiveni oldu, ve odanın upgrade ağacı (2026-09-12)
+
+- **Sağ duvar dört basamak** (yazar: "4 tier sağ duvar getirdim bunları da ekleyeceğiz"): `walls_right`
+  yuvası — `backdrop` + **`overlay`**, yani plakayı DEĞİŞTİRMEZ, plakanın kendi transformunda onun
+  ÜSTÜNE serilen 640×360'lık bir katman (sıra 12: plakanın 10'u ve pencere camının 11'i üstünde, asılan
+  her şeyin 15'i altında). Böylece sağ duvar arka duvardan bağımsız tırmanıyor; eskiden dört plakanın
+  her biri kendi sağ duvarını taşıyordu. Basamaklar: Peeling Purple (açılışta, odanın zaten sahip olduğu
+  duvar) · Plum Coat · Bubble Paper · Sunset Panelling. Fiyat/konfor/yıldız **geçici**, yazarın ayarına açık.
+- **Kapı odanın kalıyor:** çizimlerin kapı boşluğundaki düz bej panel (dördünde de aynı 8.580 piksel)
+  saydamlaştırılıyor, böylece plakanın kendi kapı girintisi ve "+20 ONLY" tabelası (GDD 28) her basamakta
+  duruyor. `Tools/right_wall_ship.py` sürüyor: kaynak `Tools/AssetPipeline/sources/konsept_art/right_wall_t*.png`,
+  yerleşim (426, 0) — tier 1'in plakanın kendi sağ duvarı olmasından ölçüldü; birinci basamak eski odadan
+  yalnız 63 kenar pikseliyle ayrılıyor. `KEEP_DRAWN_DOOR = True` bej kapıyı çizdirir.
+- **Yuva iki şey daha öğrendi:** `overlay` (bir backdrop'un plakayı değiştirmek yerine üstüne serilmesi) ve
+  `place` (markette basamağın nereye gittiğinin adı — "The right wall"; yoksa eskisi gibi "The back wall").
+- **Upgrade ağacı** (`Tools/upgrade_tree/`): odanın her merdiveni ve her basamağı tek sayfada; basamağa
+  tıklayınca oda kuruluyor, sıra değiştirilerek tier belirleniyor, kombinasyon kaydediliyor (sayfa
+  seçimleri artifact veritabanında tutuyor). Parçalar oyundan çıkarılıyor — `LastCall → Export Room Layers`
+  (play modunda) her fikstürü tek tek, düz beyaz ışık altında, 640×360 saydam PNG olarak alıyor ve
+  sıralamasını yazıyor; tezgâhı kesen parçalar (masanın gölgesi 31'de, gövdesi 20'de) iki parçaya ayrılıyor.
+  Oyuna girmemiş onaylı görseller `candidates.json` üzerinden aynı ağaçta "aday" olarak duruyor.
+- **Doğrulama:** EditMode 520/520, PlayMode 13/13.
+
 ### 9.56 · Dökme v2: boyundan tutuş, akışın yasası, ip akış, sıvının dokusu, düz yüzey, düşük sistem (2026-09-11/12)
 
 Yazar: "uzun bardağa şişeyi yukarı çıkaramadığımızdan sıvı dökemiyoruz ... daha çok hacim düşsün ve daha çok sıvı
