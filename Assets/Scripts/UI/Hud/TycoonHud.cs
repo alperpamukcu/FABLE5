@@ -266,7 +266,9 @@ namespace LastCall.UI
         /// balonları üst bara taşıyor; küçülecek ve tezgah ile üst bar arasında
         /// konumlandırılacak"). Two thirds is small enough to clear the band and still be
         /// read — measured against the bold face's own 16.</summary>
-        private const float CellarSayScale = 0.66f, CellarSayClear = 10f;
+        // 0.55, not 0.66 (2026-09-13, the author: "o sahnede yazı balonları ... daha ufak ve dikey
+        // baloncukları olabilir").
+        private const float CellarSayScale = 0.55f, CellarSayClear = 10f;
 
         /// <summary>The air inside the plate, past its 5-unit border. Both axes.</summary>
         private const float TagPad = 10f;    // 7 until 2026-09-08 (the author: "balonlar çok sıkışık")
@@ -1268,6 +1270,10 @@ namespace LastCall.UI
         /// <summary>What the balloons were laid out for last, so a settled row is not
         /// re-solved every frame (2026-09-07: the drift).</summary>
         private string _saysSig;
+
+        /// <summary>Whether the balloons were last laid out narrow — the cellar's tall, thin
+        /// shape (2026-09-13) — so a change of drawer re-measures them once.</summary>
+        private bool _saysNarrow;
 
         /// <summary>
         /// The basket (the author, 2026-08-07: "önce ürünü seç, sepete ekle, sepeti öde").

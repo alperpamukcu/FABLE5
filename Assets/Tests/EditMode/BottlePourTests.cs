@@ -6,58 +6,66 @@ using NUnit.Framework;
 namespace LastCall.Tests
 {
     /// <summary>
-    /// The pour's own law (2026-09-11): how much a tipped bottle or tin gives up at a lean.
-    /// GDD 24 §2 wrote "more tilt = faster pour" in 2026-07 and nothing built it until
-    /// <see cref="BottlePour"/>; the rate lived in the UI as a flat constant from 42 degrees.
-    /// These pin the shape — an onset that follows the level, a trickle at the lip, full flow
-    /// tipped over — and the two verbs the hand now pours through.
+    /// The pour's own law: how much a tipped bottle or tin gives up at a lean. Since 2026-09-13
+    /// (the author: "şişeyi 90 dereceden sonra ne kadar yatırıyorsa o kadar hızlı dolsun, tam 90
+    /// derece şişe ise en hızlı şekilde; yere paralelleşiyorsa yavaşlasın, paralelleştiğinde
+    /// dursun") nothing runs until the vessel is past level, the flow grows with the lean to its
+    /// fullest neck-down, and it slows and stops again as the vessel comes back level. These pin
+    /// that shape and the verbs the hand pours through.
     /// </summary>
     public sealed class BottlePourTests
     {
         // ── the law ─────────────────────────────────────────────────────────────
 
         [Test]
-        public void NothingRunsUnderTheLip_AtAnyLevel()
+        public void NothingRuns_UntilTheVesselIsPastLevel_AtAnyFill()
         {
             for (double fill = 0.05; fill <= 1.0001; fill += 0.05)
             {
-                double onset = BottlePour.OnsetDeg(fill);
-                Assert.AreEqual(0.0, BottlePour.Share(onset - 0.5, fill), 1e-12,
-                    $"a vessel {fill:P0} full ran half a degree under its own lip");
-                Assert.Greater(BottlePour.Share(onset + 0.5, fill), 0.0,
-                    $"a vessel {fill:P0} full gave nothing half a degree past its lip");
+                Assert.AreEqual(0.0, BottlePour.Share(30, fill), 1e-12, $"{fill:P0} full ran at 30 degrees");
+                Assert.AreEqual(0.0, BottlePour.Share(BottlePour.OnsetDeg, fill), 1e-12,
+                    $"{fill:P0} full ran lying exactly level");
+                Assert.Greater(BottlePour.Share(BottlePour.OnsetDeg + 1.0, fill), 0.0,
+                    $"{fill:P0} full gave nothing a degree past level");
             }
         }
 
         [Test]
-        public void AFullerVessel_TipsEarlier()
+        public void TheLevelInTheVessel_NoLongerMovesTheLip()
         {
-            double last = double.MaxValue;
-            for (double fill = 0.02; fill <= 1.0001; fill += 0.02)
-            {
-                double onset = BottlePour.OnsetDeg(fill);
-                Assert.Less(onset, last, $"the lip did not come down as the level rose, at {fill:P0}");
-                last = onset;
-            }
-            Assert.AreEqual(BottlePour.OnsetFullDeg, BottlePour.OnsetDeg(1.0), 1e-9);
-            Assert.AreEqual(BottlePour.OnsetEmptyDeg, BottlePour.OnsetDeg(0.0), 1e-9);
+            for (double t = 0; t <= 360; t += 5)
+                Assert.AreEqual(BottlePour.Share(t, 1.0), BottlePour.Share(t, 0.15), 1e-12,
+                    $"a full and a nearly empty vessel poured differently at {t} degrees");
         }
 
         [Test]
-        public void TippingFurther_NeverPoursLess_AndFullFlowIsReached()
+        public void TippingTowardsStraightDown_NeverPoursLess_AndIsFastestStraightDown()
         {
-            foreach (double fill in new[] { 1.0, 0.6, 0.25 })
+            double last = 0;
+            for (double t = BottlePour.OnsetDeg; t <= BottlePour.FullDeg; t += 0.25)
             {
-                double onset = BottlePour.OnsetDeg(fill), last = 0;
-                for (double t = onset; t <= onset + BottlePour.RampDeg + 20; t += 0.25)
-                {
-                    double s = BottlePour.Share(t, fill);
-                    Assert.GreaterOrEqual(s, last - 1e-12, $"leaning to {t:0.00} deg poured less at {fill:P0}");
-                    last = s;
-                }
-                Assert.AreEqual(1.0, BottlePour.Share(onset + BottlePour.RampDeg, fill), 1e-9,
-                    "full flow is reached a ramp past the lip");
+                double s = BottlePour.Share(t, 0.7);
+                Assert.GreaterOrEqual(s, last - 1e-12, $"leaning on to {t:0.00} degrees poured less");
+                last = s;
             }
+            Assert.AreEqual(1.0, BottlePour.Share(BottlePour.FullDeg, 0.7), 1e-12, "neck down is full flow");
+            Assert.AreEqual(0.5, BottlePour.Share(135, 0.7), 1e-12, "half way from level to neck down is half the flow");
+        }
+
+        [Test]
+        public void PastStraightDown_TheFlowSlows_AndStopsLyingLevelAgain()
+        {
+            double last = 1;
+            for (double t = BottlePour.FullDeg; t <= 270; t += 0.25)
+            {
+                double s = BottlePour.Share(t, 0.7);
+                Assert.LessOrEqual(s, last + 1e-12, $"coming back towards level at {t:0.00} poured more");
+                last = s;
+            }
+            Assert.AreEqual(0.0, BottlePour.Share(270, 0.7), 1e-12, "lying level the other way it stops");
+            for (double d = 0; d <= 90; d += 7.5)
+                Assert.AreEqual(BottlePour.Share(180 - d, 0.7), BottlePour.Share(180 + d, 0.7), 1e-12,
+                    "the same lean either side of straight down pours the same");
         }
 
         [Test]
@@ -70,13 +78,13 @@ namespace LastCall.Tests
         /// <summary>
         /// A small share must still be a thing a hand can do. The ratio boxes are twenty points
         /// wide with a five-point floor, so a 5% dash of something poured from a fresh bottle held
-        /// just past its lip has to take the best part of a second — not a single frame.
+        /// just past level has to take the best part of a second — not a single frame.
         /// </summary>
         [Test]
-        public void AFivePercentDash_IsASecondOfSteadyHand_AtTheLip()
+        public void AFivePercentDash_IsASecondOfSteadyHand_JustPastLevel()
         {
             double fullRate = ShelfBottle.BottlePourRate * TycoonConfig.Default.HandPourScale;
-            double atTheLip = BottlePour.Volume(BottlePour.OnsetDeg(1.0) + 3.0, 1.0, fullRate, 1.0);
+            double atTheLip = BottlePour.Volume(BottlePour.OnsetDeg + 3.0, 1.0, fullRate, 1.0);
             Assert.GreaterOrEqual(0.05 / atTheLip, 0.9,
                 $"a 5% dash takes only {0.05 / atTheLip:0.00} s at the lip — too fast to steer");
         }
@@ -159,7 +167,7 @@ namespace LastCall.Tests
             run.PourMeasure("vermouth_b", 0.3);
             run.Shake(1.0);
             run.BeginPour("gin_b");
-            double got = run.PourTick(0.5, 10.0);   // a fresh bottle's lip is 24 degrees
+            double got = run.PourTick(0.5, 80.0);   // nothing runs until the bottle is past level
             Assert.AreEqual(0.0, got, 1e-12, "the bottle ran under its own lip");
             Assert.IsTrue(run.IsShaken, "a pour that poured nothing un-mixed the tin");
             Assert.AreEqual("gin_b", run.PouringId, "a lean under the lip ended the pour");
@@ -170,11 +178,11 @@ namespace LastCall.Tests
         {
             var lip = BenchRun();
             lip.BeginPour("gin");
-            double atTheLip = lip.PourTick(0.5, BottlePour.OnsetFullDeg + 3.0);
+            double atTheLip = lip.PourTick(0.5, BottlePour.OnsetDeg + 3.0);
 
             var over = BenchRun();
             over.BeginPour("gin");
-            double tippedOver = over.PourTick(0.5, 100.0);
+            double tippedOver = over.PourTick(0.5, 170.0);
 
             Assert.Greater(atTheLip, 0.0, "nothing ran just past the lip");
             Assert.Greater(tippedOver, 4.0 * atTheLip,
@@ -186,10 +194,10 @@ namespace LastCall.Tests
         {
             var run = BenchRun();
             run.BeginPour("gin");
-            for (int i = 0; i < 600; i++) run.PourTick(1.0 / 60.0, 110.0);
+            for (int i = 0; i < 600; i++) run.PourTick(1.0 / 60.0, 180.0);
             Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9, "the tin runs past its brim");
             run.BeginPour("gin");
-            Assert.AreEqual(0.0, run.PourTick(0.5, 110.0), 1e-12, "a full tin took more");
+            Assert.AreEqual(0.0, run.PourTick(0.5, 180.0), 1e-12, "a full tin took more");
         }
 
         [Test]
@@ -198,10 +206,10 @@ namespace LastCall.Tests
             var run = SpritzRun();
             Assert.AreEqual("highball", run.ServingGlassware.Id, "an empty counter holds the default");
             run.BeginPour("gin");
-            run.PourTick(1.0, 60.0);
+            run.PourTick(1.0, 180.0);   // neck down: a full second of full flow each
             run.EndPour();
             run.BeginPour("soda");
-            run.PourTick(1.0, 60.0);
+            run.PourTick(1.0, 180.0);
             run.EndPour();
             Assert.IsTrue(run.ServingGlass.IsEmpty, "nothing has been poured out of the tin yet");
             Assert.AreEqual("coupe", run.ServingGlassware.Id,
@@ -217,8 +225,8 @@ namespace LastCall.Tests
             Assert.IsTrue(run.MixRequired, "the setup: an unnamed two-spirit tin must want a mix");
             Assert.Throws<InvalidOperationException>(() => run.PourOutTilted(0.1, 100.0),
                 "two spirits may not leave the tin unmixed, however far it is tipped");
-            Assert.AreEqual(0.0, run.PourOutTilted(0.1, 10.0), 1e-12,
-                "and a tin held under its lip is not pouring, so there is nothing to refuse");
+            Assert.AreEqual(0.0, run.PourOutTilted(0.1, 60.0), 1e-12,
+                "and a tin not yet past level is not pouring, so there is nothing to refuse");
         }
 
         [Test]
@@ -227,8 +235,8 @@ namespace LastCall.Tests
             var run = BenchRun();
             run.PourMeasure("gin", 0.4);
             run.PourMeasure("soda", 0.6);
-            for (int i = 0; i < 60 * 6 && !run.Glass.IsEmpty; i++) run.PourOutTilted(1.0 / 60.0, 118.0);
-            Assert.IsTrue(run.Glass.IsEmpty, "a full tin tipped right over for six seconds did not run dry");
+            for (int i = 0; i < 60 * 6 && !run.Glass.IsEmpty; i++) run.PourOutTilted(1.0 / 60.0, 180.0);
+            Assert.IsTrue(run.Glass.IsEmpty, "a full tin held neck-down for six seconds did not run dry");
             Assert.AreEqual(1.0, run.ServingGlass.FillFraction, 1e-9, "one tin is one portion");
         }
     }

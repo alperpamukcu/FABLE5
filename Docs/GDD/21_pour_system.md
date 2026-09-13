@@ -82,11 +82,16 @@ The vessel on screen has to agree with that number, so the drawn liquid is measu
 it: at `F = 1` the fluid stands at its rim, and the stages no longer shave a fraction off
 the fill to flatter the solver (see 24 §3.5).
 
-**A bottle pours by how far it is tipped, and by how full it is (2026-09-11, `BottlePour`).**
-The fixed 42° onset is gone. A full bottle starts to run at **24°**; the onset climbs to
-**102°** as it empties (curve 1.3), so a nearly empty bottle has to be turned right over. Past
-the onset the flow ramps over **30°** (power 1.25) from a **trickle of 8%** to full; the volume is
-the full rate × that share × the time. The rates are Core's, not the benches': a hand pour runs at
+**A bottle pours by how far past level it is tipped (2026-09-13, `BottlePour`; the author:
+"şişeyi 90 dereceden sonra ne kadar yatırıyorsa o kadar hızlı dolsun, tam 90 derece şişe ise en
+hızlı şekilde; yere paralelleşiyorsa yavaşlasın, paralelleştiğinde dursun").** Leans are measured
+from upright. Nothing runs until the vessel is past **level (90°)**; from there the share of full
+flow grows in proportion to the lean and is **1 with the neck straight down (180°)**; tipped on past
+that it slows the same way and **stops lying level again (270°)**. The level in the vessel no
+longer moves the lip. The volume is the full rate × that share × the time. The hand reaches 180°
+(`MaxTilt`), and the first 35% of its lift lays the vessel level (`PourHand.Lean`) so the travel
+that pours is the travel that is spread out. ~~A full bottle starts to run at 24°; the onset climbs
+to 102° as it empties; a 30° ramp from an 8% trickle (2026-09-11).~~ The rates are Core's, not the benches': a hand pour runs at
 `TycoonConfig.HandPourScale` (0.60) and the tin into the serving glass at `ServePourMax` (0.45).
 `PourTick(seconds, tilt)` returns nothing under the onset without letting go of the chosen bottle
 or un-mixing the tin, and `PourOutTilted(seconds, tilt)` is the serve's verb. The aim stays a

@@ -1206,6 +1206,9 @@ namespace LastCall.UI
                 ? "HIGHBALL" : r.GlassId.Replace('_', ' ').ToUpperInvariant();
             way.text = PrepWord(r) + " · " + glassWord + " GLASS";
             y += 24f;
+            // HOW HARD IT IS, on every page, bought or not (2026-09-13, the author:
+            // "kokteyllere zorluk seviyesi ekleyelim").
+            y += DifficultyRow(print, r, BkColW, y, dark: false) + 2f;
 
             // THE DRINK ITSELF, BIGGER (2026-09-06, the author: "yapılan kokteylin görseli
             // biraz daha büyültülsün"), with what it sells for beside it — the one number a
@@ -1241,6 +1244,11 @@ namespace LastCall.UI
             priceCap.text = "ON THE TAB";
             y += 84f;
 
+            // WHAT GOES IN IT IS SEALED ON A PAGE NOT BOUGHT (2026-09-13, the author: "satın
+            // alınmayan tariflerin içeriği gözükmemeli menüde"). The legend and the pours
+            // print only for a drink the bar owns; a locked page says it is sealed.
+            if (!page.Locked)
+            {
             // ── the gauge's own legend (the author: the bar must SAY what it means
             // and which %-band each colour owns) ─────────────────────────────────
             // READ AT THE BOOK'S OWN SIZE (2026-09-06, the author: "menüde daha okunaklı bir
@@ -1438,7 +1446,21 @@ namespace LastCall.UI
                 }
             }
 
-            if (r.MinFill > 0)
+            }
+            else
+            {
+                var sealedT = NewText("Sealed", print, _body, 16, TextAnchor.MiddleCenter, quiet);
+                sealedT.rectTransform.anchorMin = sealedT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                sealedT.rectTransform.pivot = new Vector2(0.5f, 1f);
+                sealedT.rectTransform.sizeDelta = new Vector2(BkColW, 44f);
+                sealedT.rectTransform.anchoredPosition = new Vector2(0, -(y + 6f));
+                sealedT.horizontalOverflow = HorizontalWrapMode.Wrap;
+                sealedT.raycastTarget = false;
+                sealedT.text = "WHAT GOES IN IT IS SEALED\nBUY THE PAGE TO READ IT";
+                y += 52f;
+            }
+
+            if (r.MinFill > 0 && !page.Locked)
             {
                 var fillLine = NewText("Fill", print, _body, 16, TextAnchor.MiddleCenter, figure);
                 fillLine.rectTransform.anchorMin = fillLine.rectTransform.anchorMax = new Vector2(0.5f, 1f);

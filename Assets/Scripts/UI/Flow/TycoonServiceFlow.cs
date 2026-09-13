@@ -129,8 +129,31 @@ namespace LastCall.UI
             return head + (1f - head) * Tweening.OutCubic(t);
         }
         private const float SlideDist = 1280f;
-        private bool InTransit => _slideOutRt != null || _slideInRt != null;
+        private bool InTransit => _slideOutRt != null || _slideInRt != null || _closing;
         private CanvasGroup _rootGroup;     // raycasts off while the field is moving
+
+        /// <summary>
+        /// THE ROOM DIMS WHILE A DRINK IS MADE (2026-09-13, the author: "alkol yapma esnasında ana
+        /// sahne biraz karartılabilir"). Overturns 2026-08-22's "karartma olmasın" by the author's
+        /// own word, and only by a little: a veil over the room below the top bar, under the
+        /// bench, so the counter you are working at is the bright thing on the screen and the
+        /// drinkers are still there to be seen.
+        /// </summary>
+        private Image _roomDim;
+        private const float RoomDimAlpha = 0.5f;   // 0.34 measured as a 14% drop on the wall — too faint to read
+        /// <summary>The HUD's top bar, which the veil stops under (TycoonHud.TopBarH).</summary>
+        private const float HudTopBarH = 54f;
+
+        // THE BENCH CLOSES, IT DOES NOT VANISH (2026-09-13, the author: "her şeyin kapanma
+        // animasyonu atlanmamalı"). Closing used to switch the whole flow off in one frame; it
+        // fades and sinks now, and only then goes off. The STATE is closed at once — the room is
+        // live under the fade — only the picture takes its time.
+        private bool _closing, _fadeRoot;
+        private float _closeT;
+        private RectTransform _closePanel;
+        private float _benchCounterTop = -1f;     // the drawer height the bench bands were last lined up to
+        private static float CloseDur = 0.24f;   // a field for the same reason as BenchSlideDur
+        private const float CloseDrop = 36f;
         private RectTransform _shakerPanel;
         private RectTransform _servePanel;
 
@@ -299,6 +322,10 @@ namespace LastCall.UI
             // that gates input must never be starved by an early return.
             StepStageSlide();
             StepBenchLurch();
+            // The band rides the drawer while a bench is up (2026-09-13): the tin's door on the
+            // counter opens the drawer and the bench in the same frame, and a band lined up once
+            // stayed at the shut room's height behind a room that then rose.
+            if (_stage != Stage.Closed && !_closing) AlignBenchCounters();
 
             var run = Run;
             if (run == null) return;
@@ -401,12 +428,16 @@ namespace LastCall.UI
             _serveFluid?.Clear();
             if (Run != null && Run.PouringId != null) Run.EndPour();
 
-            _root.gameObject.SetActive(stage != Stage.Closed);
+            // A closing bench keeps its panel up for the fade (2026-09-13); the settle takes it down.
+            bool closing = stage == Stage.Closed && previous != Stage.Closed && !Motion.Reduced
+                           && _root != null && _root.gameObject.activeSelf;
+            _root.gameObject.SetActive(stage != Stage.Closed || closing);
             // A sliding stage keeps its OUTGOING panel alive for the transit; the slide's
             // settle turns it off. Everything else applies exactly as it always has.
-            _shakerPanel.gameObject.SetActive(stage == Stage.Shaker || (slide && previous == Stage.Shaker));
-            _servePanel.gameObject.SetActive(stage == Stage.Serve || (slide && previous == Stage.Serve));
-            _tapPanel.gameObject.SetActive(stage == Stage.Tap || (slide && previous == Stage.Tap));
+            bool keepOut = slide || closing;
+            _shakerPanel.gameObject.SetActive(stage == Stage.Shaker || (keepOut && previous == Stage.Shaker));
+            _servePanel.gameObject.SetActive(stage == Stage.Serve || (keepOut && previous == Stage.Serve));
+            _tapPanel.gameObject.SetActive(stage == Stage.Tap || (keepOut && previous == Stage.Tap));
             _glassHeld = false;
             _glassTilt = 0f;
             if (_tapGlass != null)
@@ -417,7 +448,9 @@ namespace LastCall.UI
             _tapFluid?.Clear();
             if (Run != null && Run.PullingId != null) Run.EndPull();
 
-            AlignBenchCounters();
+            // Not while closing: the band follows the drawer, and the drawer shuts on the same
+            // click, so it snapped up over the room on the fade's first frame (measured 2026-09-13).
+            if (!closing) AlignBenchCounters();
             // THE TIN THE BAR OWNS, not the one it opened with (2026-09-06): the gold shaker
             // is a rung, and a rung can be bought between two visits to this bench.
             if (stage == Stage.Shaker || stage == Stage.Serve) DressShakerArt();
@@ -438,6 +471,8 @@ namespace LastCall.UI
             }
             else if (fade)
                 PlayStageFade(PanelOf(stage));
+            else if (closing)
+                PlayStageClose(PanelOf(previous));
         }
 
         // ── the two-slot stage slide ────────────────────────────────────────────
@@ -478,7 +513,28 @@ namespace LastCall.UI
             _transT = 0f;
             _transDur = SlideDur;
             inRt.anchoredPosition = Vector2.zero;
+            if (_rootGroup != null) { _rootGroup.blocksRaycasts = false; _rootGroup.alpha = 0f; }
+            _fadeRoot = true;   // the veil and the counter come up with the bench (2026-09-13)
+        }
+
+        /// <summary>Stage→Closed: the whole flow fades out while the bench sinks a little, then
+        /// switches off. The pointer is the room's from the first frame of it.</summary>
+        private void PlayStageClose(RectTransform outRt)
+        {
+            _closing = true;
+            _closeT = 0f;
+            _closePanel = outRt;
             if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
+        }
+
+        private void StepStageClose()
+        {
+            _closeT += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(_closeT / CloseDur);
+            float e = k * k;
+            if (_rootGroup != null) _rootGroup.alpha = 1f - e;
+            if (_closePanel != null) _closePanel.anchoredPosition = new Vector2(0f, -CloseDrop * e);
+            if (k >= 1f) SettleStageSlide();
         }
 
         /// <summary>Everything home, the outgoing panel off, the pointer back on. Called
@@ -486,6 +542,19 @@ namespace LastCall.UI
         /// can never become a panel's new resting place.</summary>
         private void SettleStageSlide()
         {
+            if (_closing)
+            {
+                _closing = false;
+                if (_closePanel != null)
+                {
+                    _closePanel.anchoredPosition = Vector2.zero;
+                    if (_closePanel != PanelOf(_stage)) _closePanel.gameObject.SetActive(false);
+                }
+                _closePanel = null;
+                if (_stage == Stage.Closed && _root != null) _root.gameObject.SetActive(false);
+            }
+            if (_rootGroup != null) _rootGroup.alpha = 1f;
+            _fadeRoot = false;
             if (_slideOutRt != null)
             {
                 _slideOutRt.anchoredPosition = Vector2.zero;
@@ -545,13 +614,16 @@ namespace LastCall.UI
         private void StepStageSlide()
         {
             if (!InTransit) return;
+            if (_closing) { StepStageClose(); return; }
             StepFixedChrome();
             _transT += Time.unscaledDeltaTime;
             float k = _transDur <= 0f ? 1f : Mathf.Clamp01(_transT / _transDur);
             if (k >= 1f) { SettleStageSlide(); return; }
             if (_slideFade)
             {
-                if (_slideInGroup != null) _slideInGroup.alpha = k * k * (3f - 2f * k);
+                float s = k * k * (3f - 2f * k);
+                if (_slideInGroup != null) _slideInGroup.alpha = s;
+                if (_fadeRoot && _rootGroup != null) _rootGroup.alpha = s;
                 return;
             }
             float e = _benchSlide ? Brake(k) : Tweening.OutCubic(k);
@@ -757,12 +829,21 @@ namespace LastCall.UI
             // that has stopped sliding, and without it a click between panels reaches the room.
             var scrim = _root.gameObject.AddComponent<Image>();
             scrim.color = new Color(0f, 0f, 0f, 0f);
-            // Clicking outside a panel used to back out of the flow. The panels are the full
-            // field now, so there is no outside to click — the key on the left edge is the
-            // way out, and a hidden second door that only fires in the letterbox is worse
-            // than none.
+            // CLICKING OFF THE BENCH GOES BACK TO THE BAR (2026-09-13, the author: "ekran dışına
+            // tıklandığında direkt ana sahneye dönülmeli"). The room above the counter is the
+            // outside: a click there that lands on nothing of the bench's own closes the flow —
+            // with its fade — and shuts the cellar, the way SERVE IT leaves the room. The
+            // letterbox counts as outside too. See OnBackgroundClick.
             var scrimBtn = _root.gameObject.AddComponent<Button>();
             scrimBtn.transition = Selectable.Transition.None;
+            scrimBtn.onClick.AddListener(OnBackgroundClick);
+
+            // The veil over the room, under everything the bench draws (see _roomDim).
+            var dimRt = NewRect("RoomDim", _root);
+            Stretch(dimRt, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0f, -HudTopBarH));
+            _roomDim = dimRt.gameObject.AddComponent<Image>();
+            _roomDim.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, RoomDimAlpha);
+            _roomDim.raycastTarget = false;
 
             // The scrim keeps the whole screen — a dimmed room with undimmed corners is
             // not dimmed. The STAGES go in a fixed field instead, so the back bar packs
@@ -945,12 +1026,50 @@ namespace LastCall.UI
             return button;
         }
 
-        /// <summary>Stops a panel's own clicks from falling through to the scrim's close.</summary>
-        private static void Swallow(RectTransform panel)
+        /// <summary>The panel's own floor: it catches every press nothing on the bench took, and
+        /// a click on it above the counter is a click off the bench (2026-09-13).</summary>
+        private void Swallow(RectTransform panel)
         {
             var block = panel.gameObject.GetComponent<Image>();
             if (block != null) block.raycastTarget = true;
-            panel.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+            var btn = panel.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(OnBackgroundClick);
+        }
+
+        /// <summary>
+        /// A click that reached the floor under the bench. Above the counter it is a click on
+        /// the ROOM, and the room is where it takes you: the flow closes (and fades), the cellar
+        /// shuts. On the counter itself it does nothing — the counter is where the work lies,
+        /// and a stray click beside the tin must not throw the drink's bench away. Nothing held
+        /// counts: a hand carrying a bottle over the room is pouring, not leaving.
+        /// </summary>
+        private void OnBackgroundClick()
+        {
+            if (_stage == Stage.Closed || InTransit) return;
+            if (_bottleGrabbed || _serveGrabbed || _capGrabbed || _spoonHeld || _glassHeld || _shaking) return;
+            var mouse = Mouse.current;
+            if (mouse == null || !AboveTheCounter(mouse.position.ReadValue())) return;
+            LeaveForTheRoom();
+        }
+
+        private bool AboveTheCounter(Vector2 screen)
+        {
+            RectTransform band = null;
+            foreach (var b in _benchCounters) if (b != null) { band = b; break; }
+            if (band == null) return true;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(band, screen, null, out Vector2 local))
+                return true;
+            return local.y > band.rect.yMax;
+        }
+
+        /// <summary>Straight back to the bar: the bench closes with its fade and the cellar
+        /// rolls shut, so the room is the room again. The tin or the glass left standing on the
+        /// counter is the door back in, as it always was.</summary>
+        private void LeaveForTheRoom()
+        {
+            GoTo(Stage.Closed);
+            GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
         }
 
         private static RectTransform NewRect(string name, Transform parent)

@@ -71,9 +71,9 @@ namespace LastCall.UI
         {
             Rest = rest; Spout = spout; GripDepth = gripDepth;
             LiftRange = Mathf.Max(liftRange, 1f); MaxTilt = maxTilt;
-            // Never let the bracket turn: d(spout.y)/d(lift) = 1 − g·sinθ·(MaxTilt/LiftRange in rad)
-            // must stay positive at every angle, or raising the hand lowers the mouth again.
-            float maxG = 0.8f * LiftRange / (MaxTilt * Mathf.Deg2Rad);
+            // Never let the bracket turn: d(spout.y)/d(lift) = 1 − g·sinθ·dθ/dlift must stay
+            // positive at every angle, or raising the hand lowers the mouth again.
+            float maxG = MaxGripDepth(LiftRange, MaxTilt);
             if (GripDepth > maxG) GripDepth = maxG;
             if (!Held) SnapHome();
         }
@@ -148,9 +148,40 @@ namespace LastCall.UI
                 SnapHome();
         }
 
-        /// <summary>The lean the grip's height asks for — the rule GDD 24 §2.2 wrote.</summary>
-        private float TiltFor(Vector2 w) =>
-            MaxTilt * Mathf.Clamp01((w.y - GripRest.y) / LiftRange);
+        /// <summary>The lean the grip's height asks for — the rule GDD 24 §2.2 wrote: higher
+        /// tips further.</summary>
+        private float TiltFor(Vector2 w) => Lean(Mathf.Clamp01((w.y - GripRest.y) / LiftRange), MaxTilt);
+
+        /// <summary>
+        /// THE FIRST PART OF THE LIFT LAYS THE VESSEL LEVEL (2026-09-13). The pour runs only past
+        /// level now (BottlePour: nothing until 90 degrees, full flow neck-down at 180), so a lift
+        /// that tipped evenly all the way would spend half the hand's travel on angles that pour
+        /// nothing. The first <see cref="KneeLift"/> of the lift brings the vessel to level, and
+        /// the rest — where every degree changes the flow — is spread over the remaining travel.
+        /// The author's "şişeyi yukarı kaydırdıkça şişe dikleşsin": lift more and it stands on
+        /// its neck.
+        /// </summary>
+        public const float KneeLift = 0.35f, KneeTilt = 90f;
+
+        public static float Lean(float lift01, float maxTilt)
+        {
+            float f = Mathf.Clamp01(lift01);
+            if (maxTilt <= KneeTilt) return maxTilt * f;
+            return f <= KneeLift
+                ? KneeTilt * f / KneeLift
+                : KneeTilt + (maxTilt - KneeTilt) * (f - KneeLift) / (1f - KneeLift);
+        }
+
+        /// <summary>The deepest grip that keeps raising the hand raising the mouth at every angle
+        /// of <see cref="Lean"/>: its steepest degrees-per-unit of lift decides it.</summary>
+        public static float MaxGripDepth(float liftRange, float maxTilt)
+        {
+            float lr = Mathf.Max(liftRange, 1f);
+            float steepest = maxTilt <= KneeTilt
+                ? maxTilt / lr
+                : Mathf.Max(KneeTilt / (KneeLift * lr), (maxTilt - KneeTilt) / ((1f - KneeLift) * lr));
+            return 0.8f / Mathf.Max(1e-5f, steepest * Mathf.Deg2Rad);
+        }
 
         /// <summary>Where the drawn spout is right now, in surface space.</summary>
         public Vector2 SpoutNow => _w + Rotate(Spout - G, _tilt);

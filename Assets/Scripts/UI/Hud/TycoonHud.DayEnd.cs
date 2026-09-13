@@ -2287,11 +2287,15 @@ namespace LastCall.UI
                     // on the card (2026-08-10, the author). A recipe you cannot make is still
                     // worth buying — the stock comes later — but that has to be a decision,
                     // not a surprise on the first night it is ordered.
-                    var lacking = MissingStyles(r);
+                    // WHAT GOES IN IT STAYS SEALED UNTIL IT IS BOUGHT (2026-09-13, the author:
+                    // "satın alınmayan tariflerin içeriği gözükmemeli ... market hoverında da
+                    // zorluğu gözüksün"). The card used to print the shopping list and which
+                    // of it the shelf was missing; it says how hard the drink is instead.
+                    var hard = RecipeDifficulty.Of(r);
                     var spec = new TileSpec
                     {
                         Name = r.Name,
-                        Meta = PrepWord(r) + " · " + GlassNameFor(r),
+                        Meta = DifficultyWord(hard) + " · " + PrepWord(r),
                         Art = DrinkIcon.For(r, _bootstrap.Glassware),
                         ArtH = IconH,
                         Recipe = r,
@@ -2300,13 +2304,12 @@ namespace LastCall.UI
                         // that explains the order of the aisle.
                         RungStars = run.RecipeStarGate(r),
                         Identity = r.Name.ToUpperInvariant(),
-                        MetaLine = PrepWord(r) + " · served in a " + GlassNameFor(r),
-                        Body = BandLine(r),
+                        MetaLine = DifficultyWord(hard) + " · " + PrepWord(r) + " · served in a " + GlassNameFor(r),
+                        Body = DifficultySentence(hard),
                         BuffA = new Buff(BuffKind.Gain, "On the menu tomorrow — one more drink to sell"),
-                        BuffB = lacking.Count == 0
-                            ? new Buff(BuffKind.Gain, "Your shelf can pour it tonight")
-                            : new Buff(BuffKind.Bad, "Nothing on the shelf pours "
-                                + string.Join(" or ", lacking)),
+                        BuffB = new Buff(hard == DrinkDifficulty.Hard ? BuffKind.Bad
+                                         : hard == DrinkDifficulty.Medium ? BuffKind.Cost : BuffKind.Gain,
+                                         "Difficulty · " + DifficultyWord(hard)),
                     };
                     DressBuyable(spec, run.RecipePrice(r), "recipe:" + r.Id, false,
                         () => run.UnlockRecipe(r.Id));

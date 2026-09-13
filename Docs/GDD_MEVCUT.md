@@ -56,8 +56,10 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Servis dökümü zorunlu:** içki shaker'da servis edilemez; `PourIntoServingGlass(hacim, isabet)` — isabet dışı kısım dökülür, oranlar bozulmadan (TransferInto brim'e kadar, hazırlıklar bardağa taşınır).
 - **Zorunlu karıştırma (GDD 21 §14; tarife bağlandı 2026-08-14):** önce **tarif** konuşur — `TinMethod`, tin'in kendi içeriğinin eşleştiği tarifin `prepMethod`'u: `Shaken`/`Stirred` çalışmayı zorunlu kılar, `Built` asla. Kitap içeceği adlandıramıyorsa eski yapısal kural devreye girer: tin'de ≥%3 payla **2+ alkollü** içerik (kategori testi — likörler sayılır, ABV asla kural beslemez) varsa dışa döküm `Shake` ya da `Stir` ister; red `PourIntoServingGlass`'ta, UI `CanPourOut` okur. Bardakta inşa muaf (kural tin hakkında); bin her zaman açık; Info'suz test kartları bilerek muaf. `Stir(enerji)` = `Shake`'in aynası (`IsStirred/StirEnergy`, tek yuva son kazanır). Hakem yöntemi aynı gün öğrendi (§6 zanaat): Martini'yi çalkalamak hâlâ YASAL (kapı "karışsın" der, "doğru karışsın" demez) ama bahşişten öder.
 - **Bardak otomatiği:** eşleşen tarifin `GlassId`'si ilk dışa dökümde seçilir; sıvı varken kap değişmez. Kapasiteler: pint 1.6 · highball 1.0 (varsayılan) · rocks 0.7 · martini 0.6 · coupe 0.55.
-- **Şişe ve tin dökme yasası (`BottlePour`, Core, 2026-09-11):** akış eğimle ve kabın doluluğuyla gelir — eşik dolu kapta
-  **24°**, boşalırken **102°**'ye kayar (eğri 1.3); eşiği geçince 30°'lik rampa (üs 1.25), eşiğin hemen üstünde %8'lik damla.
+- **Şişe ve tin dökme yasası (`BottlePour`, Core, 2026-09-13):** dikten ölçülen eğim **90°'yi (yere paralel) geçene kadar
+  hiçbir şey akmaz**; oradan eğimle orantılı artar, **boyun dümdüz aşağıdayken (180°) tam akış**; öteye devrilince aynı şekilde
+  yavaşlar ve **yine yere paralelken (270°) durur**. Doluluk artık eşiği oynatmaz. El 180°'ye kadar yatırır, kaldırmanın ilk
+  %35'i şişeyi yataya getirir (`PourHand.Lean`). (Eski yasa 2026-09-11: dolu 24°, boş 102°, 30°'lik rampa, %8 damla.)
   Hacim = tam hız × pay × süre; tezgâh hızları `TycoonConfig.HandPourScale` 0.60 ve `ServePourMax` 0.45. `PourTick(sn, eğim)`
   eşiğin altındaki bir yatırışta 0 döner (seçili şişeyi bırakmaz, karışımı bozmaz); servis `PourOutTilted(sn, eğim)`.
   Sabit 42° eşik ve UI'ya ait hızlar KALKTI. Nişan bir KAPI (GDD 21): bardağı ıskalayan akış dökülmez, çizilmez de.
@@ -1525,6 +1527,46 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
+
+### 9.60 · Kokteyl zorluğu, mühürlü tarifler, dökmenin açı yasası, tezgâhın yeni düzeni (2026-09-13)
+
+Yazar: "Kokteyllere zorluk seviyesi ekleyelim ... Satın alınmayan tariflerin içeriği gözükmemeli ... Dökülme
+mekaniğine güncelleme şişeyi 90 dereceden sonra ne kadar yatırıyorsa o kadar hızlı dolsun ... Built sahnesinin
+düzeni tekrardan tasarlansın ... ekran dışına tıklandığında direkt ana sahneye dönülmeli."
+
+- **Zorluk Core'dan okunuyor** (`RecipeDifficulty`): iş = dökülecek malzeme sayısı + (Built değilse 1 — shake ya da
+  stir de bir iş). **≤3 KOLAY (yeşil) · 4 ORTA (turuncu) · ≥5 ZOR (kırmızı).** Vodka soda kolay, gin sour orta,
+  Long Island zor. Her yerde aynı çiziliyor: üç nokta (basamağa kadar kendi renginde) + kelime — renk, sayı ve kelime
+  birlikte, hiçbiri tek başına okunmak zorunda değil. Nerede: menü defterinin sayfası, marketin tarif hover kartı,
+  gün sonu tarif kutusu (meta satırı, gövde cümlesi, "Difficulty · HARD" çipi).
+- **Satın alınmamış tarifin içeriği yok.** Defterde kilitli sayfa zorluğu gösteriyor, malzeme satırları / oranlar /
+  en az dolum yerine "WHAT GOES IN IT IS SEALED · BUY THE PAGE TO READ IT"; marketin hover kartı zorluk +
+  "INGREDIENTS SEALED · BUY THE PAGE TO READ IT" (kart yazının sarıldığı yüksekliğe göre boylanıyor — sabit 40
+  birim dört satırı karttan taşırıyordu, ölçüldü).
+- **Dökmenin açı yasası** (`BottlePour.Share`, eski yasanın yerine; GDD 21): açı dikten ölçülür. **90°'ye (yere
+  paralel) kadar hiç akmaz; 90→180 doğrusal artar, 180°'de (ağız dik aşağı) en hızlı; 180'i geçince simetrik
+  yavaşlar, 270°'de (yeniden paralel) durur.** Şişenin doluluğu artık dudağı oynatmıyor. El: kaldırma aralığının
+  ilk %35'i şişeyi 90°'ye getiriyor (diz), kalanı 180°'ye — "yukarı kaydırdıkça dikleşsin". Tenekeden bardağa
+  aynı yasa. İnce akarken ip de ince (`0.2 + 1.3 × pay`), ağızdan (ölçülen boyundan) çıkıyor.
+- **Tutmak için nesnenin üstünde olmak gerek:** şişe ve teneke yalnız çizili piksellerinden tutuluyor
+  (`alphaHitTestMinimumThreshold 0.1`); dokusu okunamayan kartta eski yuva kalıyor.
+- **Tezgâh yeniden dizildi:** yönergeler tezgâhın önüne gömülü adım şeridi (1 FILL THE TIN ✓ · 2 CAP IT · …),
+  altında tek satır okuma. Doluluk barı büyüdü ve bir **ölçü camı** oldu (150×300, sağda): her bant malzemenin
+  küçük şişe resmi ve adıyla ("SHIRKOFF 30%"), toplam % camın üstünde, doluluğa göre 16→24→32 büyüyor, siyah
+  kenarlı beyaz yazı. Bardak tezgâhında aynı cam "GLASS" diyor.
+- **Oda kararıyor:** tezgâh açıkken üst barın altındaki oda gece örtüsünün altında (alfa 0.5 — 0.34 duvarda
+  yalnız %14 düşüş verdi, ölçüldü), tezgâhla birlikte beliriyor ve sönüyor.
+- **Tezgâh dışına tıkla, odaya dön:** tezgâh bandının üstündeki odaya tıklamak mahzeni kapatıyor ve tezgâhı
+  **kapanış animasyonuyla** kapatıyor (0.24 s solma + 36 birim iniş; eskiden kapanış kesikti). Elde bir şey
+  varken tık sayılmıyor. Tezgâhtaki shaker / bardak yeniden açıyor (mevcut kapılar). İki ölçülmüş hata birlikte
+  gitti: kapanışın ilk karesinde tezgâh bandı açık çekmecenin hizasına sıçrıyordu, ve **sayaçtaki shakerdan
+  açılınca bant kapalı odanın hizasında kalıyordu** (0.339; çekmece açılırken artık takip ediyor → 0.703).
+- **Balonlar tezgâh açıkken:** %55 ölçek ve dar (koltuk aralığının 0.7'si — daha dikey), üst barın 4 birim altına
+  kırpılıyor; üstüne ya da altına geçmiyor.
+- **Doğrulama:** EditMode 586/586 (yeni: zorluk kuralı ve katalog örnekleri, dökmenin açı yasası; sayıya başka
+  oturumun commit edilmemiş L0 testleri de dahil), PlayMode 13/13 (tezgâhın görüntü tabanı yeni düzen için yeniden
+  onaylandı — fark tam olarak adım şeridi ve ölçü camıydı). Oyunda ölçüldü: iki eğimde döküm, bardak tezgâhı, kilitli sayfa, hover
+  kartı, örtü açık/kapalı karşılaştırması, 3 s'ye uzatılmış kapanış (alfa 0.73, iniş −9.9), bandın çekmeceyi takibi.
 
 ### 9.59 · Ağaç oyuna indi: açılış v2, dekor kataloğu, aletler hızlanıyor (2026-09-13)
 

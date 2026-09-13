@@ -1033,7 +1033,9 @@ namespace LastCall.UI
             // sideways kick, which frayed it. Now a node leaves each time the last one has gone a
             // fraction of its own radius, so the column stays joined, and the stream sways as ONE
             // thing on a slow wave — a real pour waves, it does not fray.
-            width = Mathf.Clamp(width, 0.5f, 1.8f);
+            // A THREAD WHEN LITTLE IS POURING (2026-09-13, the author: "az dökülüyorken şişenin
+            // ucundan dökülen sıvı az gözükmeli"): the floor came down from half the rest girth.
+            width = Mathf.Clamp(width, 0.18f, 1.8f);
             float r = StreamRadius * width;
             float interval = Mathf.Clamp(StreamSpacing * r / Mathf.Max(vel.magnitude, 60f), 0.004f, 0.05f);
             _emitAccum = Mathf.Min(_emitAccum + dt, interval * 4f);   // a hitch never fires a burst

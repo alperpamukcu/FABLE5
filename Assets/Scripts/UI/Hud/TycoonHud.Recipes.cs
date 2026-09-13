@@ -450,6 +450,7 @@ namespace LastCall.UI
             var way = Centred("Way", _body, 16, prepInk, 20f);
             way.text = PrepWord(r) + " · " + glassWord + " GLASS";
             y += 24f;
+            y += DifficultyRow(host, r, width, y, dark: false) + 2f;   // how hard it is (2026-09-13)
 
             // the drink and what it sells for, the way the page pairs them
             var icon = NewRect("I", host);
@@ -570,6 +571,96 @@ namespace LastCall.UI
             rt.sizeDelta = new Vector2(rt.sizeDelta.x, h);
             rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, -(y + gap));
             return h + gap + 2f;
+        }
+
+        // ── HOW HARD A DRINK IS (2026-09-13) ─────────────────────────────────────
+        // The author: "kokteyllere zorluk seviyesi ekleyelim, örneğin çok malzeme isteyen zaman
+        // alan kokteyller 3. seviye kırmızı zorluk, daha azı turuncu, daha azı yeşil ... market
+        // hoverında da zorluğu gözüksün." Core reads it off the recipe (RecipeDifficulty); this
+        // draws it the same way everywhere a drink is shown: three pips lit up to the step in
+        // the step's own colour, and the word — colour AND count AND word, so no one of the
+        // three has to be read alone.
+
+        private static Color DifficultyInk(DrinkDifficulty d, bool dark) =>
+            d == DrinkDifficulty.Hard ? (dark ? UITheme.ViceRed[3] : UITheme.ViceRed[2])
+            : d == DrinkDifficulty.Medium ? (dark ? UITheme.Amber[3] : UITheme.Amber[2])
+            : (dark ? UITheme.Lime[3] : UITheme.Lime[1]);
+
+        private static string DifficultyWord(DrinkDifficulty d) =>
+            d == DrinkDifficulty.Hard ? "HARD" : d == DrinkDifficulty.Medium ? "MEDIUM" : "EASY";
+
+        private static string DifficultySentence(DrinkDifficulty d) =>
+            d == DrinkDifficulty.Hard ? "Hard to make — a lot to pour, and plenty of work in it."
+            : d == DrinkDifficulty.Medium ? "Medium — more to pour, or it has to be worked."
+            : "Easy to make — a few pours and nothing to work.";
+
+        /// <summary>The difficulty row, centred across <paramref name="width"/> with its top at
+        /// <paramref name="y"/> from the host's top. Returns the height it took.</summary>
+        private float DifficultyRow(RectTransform host, RecipeDefinition r, float width, float y,
+            bool dark, int size = 16)
+        {
+            var d = RecipeDifficulty.Of(r);
+            var ink = DifficultyInk(d, dark);
+            float rowH = size + 4f;
+            var row = NewRect("Difficulty", host);
+            row.anchorMin = row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            row.sizeDelta = new Vector2(width, rowH);
+            row.anchoredPosition = new Vector2(0f, -y);
+
+            var word = NewText("W", row, _body, size, TextAnchor.MiddleLeft, ink);
+            word.horizontalOverflow = HorizontalWrapMode.Overflow;
+            word.raycastTarget = false;
+            word.text = DifficultyWord(d);
+            float pip = size >= 16 ? 10f : 6f, gap = size >= 16 ? 4f : 3f;
+            float total = 3f * pip + 2f * gap + 8f + word.preferredWidth;
+            float x = -total * 0.5f;
+            var socket = dark ? new Color(1f, 1f, 1f, 0.18f) : new Color(0.36f, 0.22f, 0.08f, 0.22f);
+            for (int i = 0; i < 3; i++)
+            {
+                var p = NewRect("P" + i, row);
+                p.anchorMin = p.anchorMax = new Vector2(0.5f, 0.5f);
+                p.pivot = new Vector2(0f, 0.5f);
+                p.sizeDelta = new Vector2(pip, pip);
+                p.anchoredPosition = new Vector2(x + i * (pip + gap), 0f);
+                var img = p.gameObject.AddComponent<Image>();
+                img.color = i < (int)d ? ink : socket;
+                img.raycastTarget = false;
+            }
+            var wrt = word.rectTransform;
+            wrt.anchorMin = wrt.anchorMax = new Vector2(0.5f, 0.5f);
+            wrt.pivot = new Vector2(0f, 0.5f);
+            wrt.sizeDelta = new Vector2(word.preferredWidth + 4f, rowH);
+            wrt.anchoredPosition = new Vector2(x + 3f * pip + 2f * gap + 8f, 0f);
+            return rowH;
+        }
+
+        /// <summary>
+        /// A DRINK THE BAR HAS NOT BOUGHT (2026-09-13, the author: "satın alınmayan tariflerin
+        /// içeriği gözükmemeli menüde veya market hoverında da"). What goes in it is the thing
+        /// being sold, so it is not printed; how hard it is to make is, because that is what the
+        /// player is deciding on. Replaces the pour rows on the market's hover card.
+        /// </summary>
+        private float DrawRecipeSealed(RectTransform host, RecipeDefinition r, bool dark, float width)
+        {
+            for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
+            if (r == null) return 0f;
+            float y = 2f;
+            y += DifficultyRow(host, r, width, y, dark) + 4f;
+            var note = NewText("Sealed", host, _body, 16, TextAnchor.UpperCenter,
+                dark ? new Color(0.61f, 0.58f, 0.66f) : new Color(0.52f, 0.44f, 0.36f));
+            note.rectTransform.anchorMin = note.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            note.rectTransform.pivot = new Vector2(0.5f, 1f);
+            note.rectTransform.anchoredPosition = new Vector2(0f, -y);
+            note.horizontalOverflow = HorizontalWrapMode.Wrap;
+            note.raycastTarget = false;
+            note.text = "INGREDIENTS SEALED\nBUY THE PAGE TO READ IT";
+            // Sized to what it wraps to: the market's card is narrower than the book's page,
+            // and a fixed 40 let four wrapped lines run out of the card (measured 2026-09-13).
+            note.rectTransform.sizeDelta = new Vector2(width, 1000f);
+            float noteH = Mathf.Max(40f, note.preferredHeight + 2f);
+            note.rectTransform.sizeDelta = new Vector2(width, noteH);
+            return y + noteH;
         }
 
         private static string TierName(int rank) =>

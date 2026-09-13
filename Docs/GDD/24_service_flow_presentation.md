@@ -55,7 +55,7 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    left-to-right (Menu→station, Shaker→Serve), every back edge reverses it. The way back
    is ONE key in ONE place: a left-edge-centre BACK TO BAR plate on every station, the
    mirror of the shaker's right-edge TO THE GLASS. Opening from the bar fades; closing
-   snaps (the pivot into serving). State stays synchronous — only the visuals animate —
+   fades too since 2026-09-13 (it used to snap) — see item 8. State stays synchronous — only the visuals animate —
    and a half-slid stage takes no input (raycasts off at the root, verbs gated).
 1. Click a bottle in the menu → the screen **dims**; a focus vignette shows the **open
    shaker** and the chosen bottle, big.
@@ -63,6 +63,11 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    the further it tips** toward the shaker. Liquid streams from the neck only while the
    mouth lines up over the shaker's opening; more tilt = faster pour (and a jumpier
    stream — speed is risk). Lower the bottle to stop.
+   **The angle law (2026-09-13, the author, GDD 21):** nothing runs until the bottle is past
+   level (90°); the flow climbs linearly to its fastest with the neck straight down (180°) and
+   slows back to nothing at level again (270°). The first 35% of the lift brings the bottle to
+   level, the rest tips it to straight down. A thin pour draws a thin stream. The bottle (and the
+   tin on the glass bench) is grabbed only on its drawn pixels.
    **The neck it streams from is MEASURED (2026-08-11, the author: "sıvının çıkış yerini
    kapak olarak ayarla"):** the vessel in hand stands at the size its own drawing asks for
    and pours from its own cap, both read off the art rather than assumed at the top of the
@@ -88,6 +93,16 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    `CanPourOut` holds, a right-edge **TO THE GLASS** key lights (with a pulse) and moves
    the flow straight to the serve stage — the Shaker→Serve edge the fast-slide
    navigation rework runs on.
+8. **The bench reads as part of the counter, and the room is one click away (2026-09-13,
+   the author).** The steps are a strip set into the counter's front (number, word, a tick
+   when done) with one reading line under it; the gauge is a 150×300 measuring glass whose
+   bands carry each bottle's small picture and name ("SHIRKOFF 30%"), with the total in
+   black-outlined white above the liquid, growing 16→24→32 as the glass fills. While a bench
+   is up the room behind it sits under a night veil (alpha 0.5), and the guests' balloons
+   shrink and narrow so they stay under the top bar. A click on the room above the counter
+   band — nothing held — shuts the cellar and closes the bench with a 0.24 s fade and a small
+   drop; the tin or glass standing on the counter opens it again. The counter band follows
+   the drawer every frame while a bench is up, and holds still while it closes.
 
 ## 3. Serving: the glass and the pour
 

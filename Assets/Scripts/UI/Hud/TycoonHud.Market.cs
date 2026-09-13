@@ -531,8 +531,12 @@ namespace LastCall.UI
             // which is what the purchase decision needs, and keeps the proportions for the
             // page you have actually bought. A recipe already on the menu never reaches here.
             bool unowned = Run != null && r.Locked && !Run.MenuRecipes.Contains(r);
-            float h = DrawRecipeSpec(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f,
-                locked: unowned);
+            // ...AND SINCE 2026-09-13 NOT EVEN THE SHOPPING LIST (the author: "satın alınmayan
+            // tariflerin içeriği gözükmemeli ... market hoverında da zorluğu gözüksün"): a page
+            // you do not own shows how hard the drink is and nothing of what goes in it.
+            float h = unowned
+                ? DrawRecipeSealed(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f)
+                : DrawRecipeSpec(_shopSpecBody, r, dark: true, width: ShopSpecW - 20f);
             _shopSpec.sizeDelta = new Vector2(ShopSpecW, h + 16f);
             _shopSpec.gameObject.SetActive(true);
             _shopSpec.SetAsLastSibling();

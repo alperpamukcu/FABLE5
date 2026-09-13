@@ -315,7 +315,8 @@ namespace LastCall.UI
                         _serveFluid.SetStreamColor(DrinkColor(run.Glass));
                         var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
                         // As thick as the pour is heavy: Core's share of full flow, not the angle.
-                        _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.6f + 0.9f * _tinShare);
+                        // A thread when little is running (2026-09-13), a rope neck-down.
+                        _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.2f + 1.3f * _tinShare);
                     }
                     else RefreshServeText(run, accuracy);
                 }
@@ -584,23 +585,23 @@ namespace LastCall.UI
             // TWO steps, because that is what this bench does now (2026-08-26): the ice
             // and the garnish moved to the room's own counter with the rail, and a card
             // that still listed them here would be directions to a station that left.
-            BuildStepCard(_servePanel, "THE COUNTER",
-                new[] { "toglass", "serve" },
-                new[] { "TIP THE TIN", "SERVE IT" },
-                _serveStepRows, new Vector2(130, CardSeat(110f)));
+            // Cut into the counter like the tin bench's (2026-09-13).
+            BuildStepStrip(_servePanel, new[] { "TIP THE TIN", "SERVE IT" }, _serveStepRows);
 
             // ON THE BAND (2026-08-26): what is left in the tin reads under the step
             // card in the left column, what is in the glass reads over the name plate on
             // the right — each beside the object it is a number for.
             _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
+            // On the counter front at the left, level with the strip (2026-09-13).
             Place(_serveShakerText.rectTransform, new Vector2(0, 0), new Vector2(280, 12),
-                  new Vector2(70, 228));
+                  new Vector2(24, 104));
             _serveShakerText.rectTransform.pivot = new Vector2(0, 0);
             _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.LowerRight, UITheme.TextPrimary);
-            // Under its own gauge's foot, so the number and the column read as one meter.
             Place(_serveGlassText.rectTransform, new Vector2(1, 0), new Vector2(280, 12),
                   new Vector2(-66, 130));
             _serveGlassText.rectTransform.pivot = new Vector2(1, 0);
+            // The measuring glass carries the glass's reading on its own surface now.
+            _serveGlassText.gameObject.SetActive(false);
 
             // VERTICAL and engine-drawn (2026-08-02): the GLASS's contents as shares of
             // the vessel, magenta-edged where the shaker's column is cyan. Against the
@@ -611,8 +612,7 @@ namespace LastCall.UI
             // 550, -60: at 575 its right edge stood past the author's 1149-wide working
             // area, and at -8 its head poked over the counter rail (2026-08-26).
             // The tin bench's instrument, with the other word on its cap (2026-09-04).
-            _serveMixBar = BuildStandingGauge(_servePanel, new Vector2(522, -74),
-                                              new Vector2(96, 212), "GLASS");
+            _serveMixBar = BuildStandingGauge(_servePanel, MeasureAt, MeasureSize, "GLASS");
 
             // NO FURNITURE ON THIS STAGE AT ALL (2026-08-13, the author: "bardak
             // sahnesindeki masa assetini kaldır, zaten mor alan tezgahmış gibi olmalı").
@@ -628,7 +628,7 @@ namespace LastCall.UI
             // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
             // so the eye finds the bench's one sentence in one place on both screens.
             Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
-                    new Vector2(16, 78), new Vector2(-16, 104));
+                    new Vector2(16, 74), new Vector2(-16, 97));
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -706,7 +706,8 @@ namespace LastCall.UI
             // else's shaker. It is the tin bench's own body and cap now, at the tin
             // bench's own 200×358, with the cap SEATED: this bench only ever meets the
             // tin closed.
-            _serveShakerRest = new Vector2(190, BenchFootY + 0.22f * ServeVesselH);
+            // 150, not 190 (2026-09-13): the measuring glass stands at the right of the bench now.
+            _serveShakerRest = new Vector2(150, BenchFootY + 0.22f * ServeVesselH);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
             _serveShaker.sizeDelta = new Vector2(TinW, ServeVesselH);
@@ -724,6 +725,11 @@ namespace LastCall.UI
                 _serveShakerBody.sprite = serveTin;
                 _serveShakerBody.preserveAspect = true;
                 _serveShakerBody.color = Color.white;
+                // TAKEN ON ITS OWN STEEL (2026-09-13, the author: "nesnenin üzerinden tutmamız
+                // gereksin"): the 232x416 rect is mostly air round a tin, and a press in that
+                // air used to pick the tin up.
+                if (serveTin.texture != null && serveTin.texture.isReadable)
+                    _serveShakerBody.alphaHitTestMinimumThreshold = 0.1f;
                 // ...AND ITS CAP IS OFF (2026-09-04, the author: "bardağa koyarken
                 // ucundaki kapak açık olmalı"). A cobbler shaker does not pour through
                 // its cap: you lift the little cap and the drink comes out of the

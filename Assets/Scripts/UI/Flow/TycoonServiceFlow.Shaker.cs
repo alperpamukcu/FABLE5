@@ -51,7 +51,10 @@ namespace LastCall.UI
         private const float BottleGripDepth = 60f;
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
-        private const float MaxTilt = 118f;    // degrees the bottle leans at full lift
+        // 180, NECK STRAIGHT DOWN (2026-09-13): the pour runs past level and is fullest with the
+        // vessel on its neck (BottlePour), so the hand has to be able to get it there. The first
+        // part of the lift lays it level (PourHand.Lean). Was 118.
+        private const float MaxTilt = 180f;    // degrees the vessel leans at full lift
         // 230 → 300 (the author, 2026-08-05: "shakera dökme sahnesinde tüm alkol
         // şişelerinin boyutunu büyüt") — the v3 masters are slimmer than the old art,
         // and at 230 a 3.7:1 bottle read as a wand. The mouth offset and the tilt
@@ -66,6 +69,16 @@ namespace LastCall.UI
         /// <summary>The share of full flow the bottle in hand is giving this frame (Core's
         /// BottlePour, read — never recomputed here), for the stream to be drawn at.</summary>
         private float _bottleShare;
+
+        /// <summary>
+        /// WHERE THE BOTTLE IS TAKEN: ON ITS OWN PIXELS (2026-09-13, the author: "bir şeyi
+        /// dökerken nesnenin üzerinden tutmamız gereksin"). The grab used to be the whole
+        /// 180-wide slot the bottle stands in, so a press in the air beside a slim bottle picked
+        /// it up. This invisible copy of the drawing answers the pointer only where the drawing
+        /// is opaque; the slot itself no longer takes a raycast.
+        /// </summary>
+        private Image _pourGrip;
+        private Image _pourSlotHit;
 
         // NO DRINKS STAND ON THIS BENCH (2026-08-13, the author: "shakerin doldurulduğu
         // sahnede de içecekler olmayacak, oyuncu içecek seçmek için back bar sahnesine
@@ -275,117 +288,63 @@ namespace LastCall.UI
 
         private void BuildStepCard(RectTransform panel)
         {
-            string[] marks = { "pour", "cap", "mix", "toglass" };
-            string[] words = { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" };
-            // Left column of the band, over the BACK key. THE CAP CARRIES THE BOTTLE'S
-            // NAME (2026-08-26): the bench used to hang the name on its own plate, and on
-            // a band this full a second plate was one instrument too many — the card's
-            // teal head sat beside it saying "THE BENCH", which the player already knows.
-            // RefreshShaker writes whatever is in hand over it.
-            _shakerTitle = BuildStepCard(panel, "THE BENCH", marks, words, _stepRows,
-                                         new Vector2(130, CardSeat(162f)));
+            // The bottle's name used to ride the card's head; the strip has no head, so the
+            // name goes to a quiet text the bench still writes to (see BuildStepStrip).
+            _shakerTitle = BuildStepStrip(panel,
+                new[] { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" }, _stepRows);
         }
 
-        /// <summary>
-        /// The card itself, for whichever station asks for one (2026-08-14, the author:
-        /// "Shake veya karıştırma yapması gerektiği sahnede sol üstte belirtilsin, aynı
-        /// öğreticiyi bardağa koyma sahnesi içinde oluştur"). Same corner, same 8px rows,
-        /// same tick — a player who learns to read it at the bench can read it at the
-        /// counter without being taught twice.
-        /// </summary>
-        // (BenchTopClear is gone with the last thing pinned to the top of the field:
-        //  since 2026-08-26 every control and reading on a bench lives ON the counter band
-        //  — the author's own 1149×426 — and the room above it belongs to the room.)
+        // ── THE STEPS ARE CUT INTO THE COUNTER (2026-09-13) ─────────────────────
+        //
+        // The author: "Built sahnesinin düzeni tekrardan tasarlansın, doluluk barları ve
+        // yönergeler sanki arkaplana dahilmiş gibi gözüksün." The checklist was a dark card
+        // standing up from the counter over the room — over the very drinkers the night is
+        // about — which is a panel, whatever it is inlaid to look like. It is a line of the
+        // counter's own front now: a numbered socket, the words engraved beside it, a tick
+        // when the step is done, side by side under the props' feet and above the keys. No
+        // plate, no box: the same ink rules as ever (PaintSteps), on the stone itself.
 
-        private Text BuildStepCard(RectTransform panel, string head, string[] marks,
-            string[] words, List<(Image icon, Text label, Image tick)> rows, Vector2 at)
+        /// <summary>The strip's baseline on the counter front, over the key row and under the
+        /// readout's shelf... and the height of one step.</summary>
+        private const float StepStripY = 100f, StepStripH = 20f;
+
+        private Text BuildStepStrip(RectTransform panel, string[] words,
+            List<(Image icon, Text label, Image tick)> rows)
         {
-            const float CardW = 246f, RowH = 26f;
-            // The plate's drawn head is 60 units at its 2× (see ItemArt.BoardPlate), and
-            // the rows stand under it, over the bottom frame.
-            const float HeadH = 34f;
-            var card = NewRect("Steps", panel);
-            // ON THE COUNTER, standing up from its foot (2026-08-26, the author: "üst
-            // barın üstüne denk geliyor ... tüm butonlar barlar nesneler 1149x426'lık
-            // alanda olmalı"). It was pinned to the panel's TOP-left, which the flow draws
-            // over the room's fascia; the bench's working area is the counter band, so the
-            // card is bottom-anchored and rises from the bar like everything else on it.
-            card.anchorMin = card.anchorMax = new Vector2(0f, 0f);
-            card.pivot = new Vector2(0f, 0f);
-            card.sizeDelta = new Vector2(CardW, HeadH + 8f + marks.Length * RowH + 16f);
-            card.anchoredPosition = at;
-            // SET INTO THE COUNTER, NOT STOOD ON IT (2026-09-04, the author: "Sol en üstte
-            // adımları tarif eden kutucuk masa arkaplanına gömülü hissi verilsin. Masaya
-            // uygun bir tasarımla güncelle").
-            //
-            // It wore the invoice boards' navy instrument plate, which is right for a board
-            // that hangs on a wall and wrong for something the counter is supposed to own:
-            // a bright panel laid on dark stone reads as a sticker on the bar. Inlaid is
-            // the opposite construction and it is drawn the opposite way round — the
-            // counter's own colour in the middle, a DARK inner edge along the top and left
-            // where the stone's cut face falls into shadow, and a LIT edge along the bottom
-            // and right where the light climbs back out. Same trick as a sunk gauge tube,
-            // which is why this reads immediately: the eye already knows that shape.
-            var bg = card.gameObject.AddComponent<Image>();
-            bg.sprite = ChromeArt.Inlay(48, 48);
-            bg.type = Image.Type.Sliced;
-            bg.pixelsPerUnitMultiplier = 0.5f;
-            bg.raycastTarget = false;
-
-            // There is no teal cap to write on any more — the plate became a recess — so
-            // the title is set on the stone in the bar's own brass, with a hairline under
-            // it standing in for the cap's edge. Amber on #1A141F clears contrast at 8px
-            // where Night ink would have vanished into the floor it is printed on.
-            var title = NewText("H", card, _body, 8, TextAnchor.MiddleLeft, UITheme.Amber[3]);
-            Place(title.rectTransform, new Vector2(0, 1), new Vector2(CardW - 52f, 14),
-                  new Vector2(14, -14f));
-            title.rectTransform.pivot = new Vector2(0, 0.5f);
-            title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.text = head;
-
-            var rule = NewRect("Rule", card);
-            rule.anchorMin = new Vector2(0, 1); rule.anchorMax = new Vector2(1, 1);
-            rule.pivot = new Vector2(0.5f, 1);
-            rule.offsetMin = new Vector2(10, -HeadH + 6f);
-            rule.offsetMax = new Vector2(-10, -HeadH + 7f);
-            var rimg = rule.gameObject.AddComponent<Image>();
-            rimg.color = new Color(UITheme.Amber[1].r, UITheme.Amber[1].g, UITheme.Amber[1].b, 0.55f);
-            rimg.raycastTarget = false;
-
-            for (int i = 0; i < marks.Length; i++)
+            var strip = NewRect("Steps", panel);
+            Place(strip, new Vector2(0.5f, 0f), new Vector2(1100f, StepStripH), new Vector2(0f, StepStripY));
+            for (int i = 0; i < words.Length; i++)
             {
-                float y = -HeadH - 4f - i * RowH;
-                var row = NewRect("Step" + i, card);
-                Place(row, new Vector2(0, 1), new Vector2(CardW - 28f, RowH - 2f),
-                      new Vector2(14, y));
+                var cell = NewRect("Step" + i, strip);
+                cell.anchorMin = cell.anchorMax = new Vector2(0.5f, 0.5f);
+                cell.pivot = new Vector2(0f, 0.5f);
+                cell.sizeDelta = new Vector2(10f, StepStripH);
 
-                // NUMBERED, NOT PICTURED (2026-08-26, the author: "oluşturulan iconlar
-                // anlaşılır değil"). Four 16px silhouettes were asked to say "fill the tin",
-                // "cap it", "shake or stir" and "take it over"; at that size a shaker and a
-                // lid are the same blob, and a picture that has to be decoded is worse than
-                // no picture at all beside the words that already say it. The mark is the
-                // STEP NUMBER now, in a socket — which is the one thing about a checklist
-                // that a glance actually needs: where you are in it.
-                var mark = NewRect("I", row);
-                Place(mark, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(2, 0));
+                // THE NUMBER, IN A SOCKET — where you are in a checklist is the one thing a
+                // glance needs (2026-08-26's reason, kept).
+                var mark = NewRect("I", cell);
+                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), Vector2.zero);
                 var mimg = mark.gameObject.AddComponent<Image>();
                 mimg.sprite = ChromeArt.Card();
                 mimg.type = Image.Type.Sliced;
                 mimg.color = UITheme.Night[3];
                 mimg.raycastTarget = false;
-                var num = NewText("N", mark, _display, 8, TextAnchor.MiddleCenter,
-                                  UITheme.TextSecondary);
+                var num = NewText("N", mark, _display, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
                 Stretch(num.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 num.text = (i + 1).ToString();
                 num.raycastTarget = false;
 
-                var text = NewText("L", row, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(178, 14),
-                      new Vector2(28, 0));
+                var text = NewText("L", cell, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(240, 14), new Vector2(22, 0));
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
                 text.text = words[i];
+                // ENGRAVED: a dark edge under the letters, the way a cut in stone catches shadow.
+                var cut = text.gameObject.AddComponent<Shadow>();
+                cut.effectColor = new Color(0f, 0f, 0f, 0.85f);
+                cut.effectDistance = new Vector2(1f, -1f);
 
-                var tick = NewRect("T", row);
-                Place(tick, new Vector2(1, 0.5f), new Vector2(12, 12), new Vector2(-4, 0));
+                var tick = NewRect("T", cell);
+                Place(tick, new Vector2(0, 0.5f), new Vector2(10, 10), Vector2.zero);
                 var timg = tick.gameObject.AddComponent<Image>();
                 timg.sprite = ChromeArt.Mark("tick");
                 timg.preserveAspect = true;
@@ -394,8 +353,36 @@ namespace LastCall.UI
 
                 rows.Add((mimg, text, timg));
             }
-        
+            LayOutStrip(rows);
+            // What the bench still writes the bottle's name to. Not drawn: the measuring glass
+            // names every bottle that went in, in its own band.
+            var title = NewText("H", strip, _body, 8, TextAnchor.MiddleCenter, UITheme.Amber[3]);
+            title.gameObject.SetActive(false);
             return title;
+        }
+
+        /// <summary>Stands the strip's steps side by side and centred, each as wide as its own
+        /// words. Called again whenever a step's words change (the third names the method).</summary>
+        private static void LayOutStrip(List<(Image icon, Text label, Image tick)> rows)
+        {
+            const float Socket = 16f, Gap = 6f, TickGap = 4f, TickW = 10f, Between = 28f;
+            var widths = new float[rows.Count];
+            float total = 0f;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                widths[i] = Socket + Gap + rows[i].label.preferredWidth + TickGap + TickW;
+                total += widths[i] + (i > 0 ? Between : 0f);
+            }
+            float x = -total * 0.5f;
+            for (int i = 0; i < rows.Count; i++)
+            {
+                var cell = (RectTransform)rows[i].label.transform.parent;
+                cell.anchoredPosition = new Vector2(x, 0f);
+                cell.sizeDelta = new Vector2(widths[i], cell.sizeDelta.y);
+                var tick = (RectTransform)rows[i].tick.transform;
+                tick.anchoredPosition = new Vector2(Socket + Gap + rows[i].label.preferredWidth + TickGap, 0f);
+                x += widths[i] + Between;
+            }
         }
 
         /// <summary>
@@ -438,11 +425,13 @@ namespace LastCall.UI
             bool optionalDone = false;
             if (_stepRows.Count > 2)
             {
+                string wasThird = _stepRows[2].label.text;
                 _stepRows[2].label.text =
                     method == PrepMethod.Shaken ? "SHAKE IT"
                     : method == PrepMethod.Stirred ? "STIR IT"
                     : method == PrepMethod.Built ? "BUILT, NO MIXING"
                     : "SHAKE OR STIR";
+                if (_stepRows[2].label.text != wasThird) LayOutStrip(_stepRows);
                 if (method == PrepMethod.Built) { optional = 2; optionalDone = true; }
             }
             PaintSteps(_stepRows, at, optional, optionalDone);
@@ -472,24 +461,25 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// THE LABELS STAND BESIDE THE COLUMN, NOT INSIDE IT (2026-08-14, the author's
-        /// screenshot: "68% EMPTY" and "32% SMIRKOFF" running out of both sides of a 44-unit
-        /// bar). A gauge this narrow can carry a colour and nothing else; the words go in the
-        /// clear air next to it, each one level with the band it names, and the band keeps the
-        /// hairline that ties them together. Nothing is clipped and nothing overlaps, at any
-        /// mix, because the text was never asked to fit somewhere it cannot.
+        /// THE MEASURE'S CONTENTS (2026-09-13, the author: "doluluk barı büyütülsün ve hangi
+        /// alkol olduğu ismi ve küçük görseliyle gözüksün, % gösteren sayı doluluk barının
+        /// üstünde olsun ve doluluk miktarına göre sayısı o barın üstünde büyüsün, o sayının
+        /// tipi siyah kenarlıklı içi beyaz olacak").
         ///
-        /// One drawing for both benches: the tin's gauge and the glass's are the same object
-        /// with different contents, and they were the same forty lines twice.
+        /// Each bottle that went in is a band of its own liquid colour, as before — and it is
+        /// NAMED IN ITS BAND now, with the bottle's own small picture, rather than by a caption
+        /// hung in the air beside the column with a hairline back to it. The vessel's reading
+        /// rides the liquid: the figure stands on the surface, white ringed in black, and grows
+        /// a size as the vessel fills (16, 24, 32 — the faces' own multiples), so how full it is
+        /// reads from across the bench before a word of it is read.
+        ///
+        /// One drawing for both benches: the tin's measure and the glass's are the same object
+        /// with different contents.
         /// </summary>
         private void FillGauge(RectTransform bar, GlassContents glass, TycoonRun run, bool labelsLeft)
         {
             foreach (Transform child in bar) Destroy(child.gameObject);
-            // The labels' host: the rig's own "Labels" rect, outside the cavity's mask.
-            var host = bar.parent != null && bar.parent.parent != null
-                ? bar.parent.parent.Find("Labels") as RectTransform : null;
-            if (host != null) foreach (Transform child in host) Destroy(child.gameObject);
-            float h = bar.rect.height, y = 0f;
+            float h = bar.rect.height, w = bar.rect.width, y = 0f;
             foreach (var id in glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
@@ -497,32 +487,49 @@ namespace LastCall.UI
                 float segH = share * h;
                 var tone = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
                 var seg = GaugeBand(bar, $"S_{id}", segH, y, tone);
-                // THE MENISCUS. A drink in a tube has a surface, and a stack of flat
-                // blocks does not — one lit row at the top of each measure is the whole
-                // difference between "a bar chart" and "something poured".
+                // THE MENISCUS: one lit row at the top of each measure.
                 if (segH >= 3f)
                 {
                     var top = NewRect("M", seg);
                     top.anchorMin = new Vector2(0, 1); top.anchorMax = Vector2.one;
                     top.pivot = new Vector2(0.5f, 1);
-                    top.sizeDelta = new Vector2(0, 1);
+                    top.sizeDelta = new Vector2(0, 2);
                     top.anchoredPosition = Vector2.zero;
                     var mimg = top.gameObject.AddComponent<Image>();
                     mimg.color = Color.Lerp(tone, UITheme.Cream[4], 0.55f);
                     mimg.raycastTarget = false;
                 }
-                GaugeLabel(host ?? seg, host != null ? y : 0f, segH, labelsLeft, UITheme.TextPrimary,
-                    $"{share:P0} {(card?.Name ?? id).ToUpperInvariant().Split(' ')[0]}");
+                // WHAT IT IS, in the band: a band too thin to hold its picture is a colour.
+                if (segH >= 14f && card != null)
+                {
+                    float iconH = Mathf.Min(30f, segH - 2f), iconW = iconH * 0.55f;
+                    var icon = NewRect("Icon", seg);
+                    Place(icon, new Vector2(0f, 0.5f), new Vector2(iconW, iconH), new Vector2(5f, 0f));
+                    var iimg = icon.gameObject.AddComponent<Image>();
+                    iimg.sprite = ItemArt.Bottle(card);
+                    iimg.preserveAspect = true;
+                    iimg.raycastTarget = false;
+                    iimg.enabled = iimg.sprite != null;
+                    var name = NewText("Name", seg, _body, 8, TextAnchor.MiddleLeft, Color.white);
+                    Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(w - iconW - 12f, 12f),
+                        new Vector2(iconW + 9f, 0f));
+                    name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    Outlined(name, 1f);
+                    name.text = $"{(card.Name ?? id).ToUpperInvariant().Split(' ')[0]} {share:P0}";
+                }
                 y += segH;
             }
 
-            float free = Mathf.Max(0f, 1f - (float)glass.FillFraction);
-            if (free <= 0.001f) return;
-            // The headroom is EMPTY GLASS now, not a pale block: the tube's own bore is
-            // already drawn dark behind this, and painting over it hid the measures. The
-            // band survives only as something for its caption to hang off.
-            var room = GaugeBand(bar, "S_empty", free * h, y, new Color(1f, 1f, 1f, 0.02f));
-            GaugeLabel(host ?? room, host != null ? y : 0f, free * h, labelsLeft, UITheme.TextSecondary, $"{free:P0} EMPTY");
+            // THE READING, ON THE SURFACE.
+            var totalRt = bar.parent != null ? bar.parent.Find("Total") as RectTransform : null;
+            var total = totalRt != null ? totalRt.GetComponent<Text>() : null;
+            if (total != null)
+            {
+                float fill = Mathf.Clamp01((float)glass.FillFraction);
+                total.fontSize = fill < 0.34f ? 16 : fill < 0.67f ? 24 : 32;
+                total.text = Mathf.RoundToInt(fill * 100f) + "%";
+                totalRt.anchoredPosition = new Vector2(0f, bar.offsetMin.y + y + 4f);
+            }
         }
 
         private RectTransform GaugeBand(RectTransform bar, string name, float height, float y, Color fill)
@@ -530,7 +537,7 @@ namespace LastCall.UI
             var seg = NewRect(name, bar);
             seg.anchorMin = new Vector2(0, 0); seg.anchorMax = new Vector2(1, 0);
             seg.pivot = new Vector2(0.5f, 0);
-            seg.sizeDelta = new Vector2(-2, height);
+            seg.sizeDelta = new Vector2(0, height);
             seg.anchoredPosition = new Vector2(0, y);
             var img = seg.gameObject.AddComponent<Image>();
             img.color = fill;
@@ -538,115 +545,89 @@ namespace LastCall.UI
             return seg;
         }
 
-        /// <summary>A band's caption, out in the air beside it, with a hairline back to it.
-        /// Bands too thin to hold a line of type get no caption — a 2% splash is a colour.</summary>
-        /// <param name="host">where the label is written: the gauge's Labels rect (then
-        /// <paramref name="y"/> is the band's foot in it) or the band itself (then y is 0).</param>
-        private void GaugeLabel(RectTransform host, float y, float segH, bool onLeft, Color ink, string text)
-        {
-            if (segH < 11f) return;
-            float side = onLeft ? 0f : 1f;
-            float mid = y + segH * 0.5f;
-            // Clear of the VESSEL, not of the old column: the gauge went from 44 units
-            // wide to 96 when it became a shaker, and a tick measured from the band's
-            // edge now starts inside the tin's shoulder. The captions stand off by the
-            // shaker's own half-width instead.
+        // ── THE MEASURE STANDS ON THE COUNTER (2026-09-13) ──────────────────────
+        //
+        // The standing gauge was a small tin outline floating over the room at the right,
+        // 96 by 212, its captions in 8px in the air beside it. The author asked for the gauge
+        // to be bigger, to belong to the scene rather than float over it, and to say which
+        // bottle is which: so it is a MEASURING GLASS standing on the counter like the tin and
+        // the bottle do — its foot on the props' own line, a shadow under it, a pale glass body
+        // with lit walls and a graduation every tenth, the drink standing inside it in bands.
 
-            var tick = NewRect("Tick", host);
-            tick.anchorMin = tick.anchorMax = new Vector2(side, 0f);
-            tick.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
-            tick.sizeDelta = new Vector2(8, 1);
-            tick.anchoredPosition = new Vector2(onLeft ? -GaugeLabelGap : GaugeLabelGap, mid);
-            var timg = tick.gameObject.AddComponent<Image>();
-            timg.color = new Color(ink.r, ink.g, ink.b, 0.45f);
-            timg.raycastTarget = false;
+        /// <summary>Where the measure stands on both benches (panel-centred): its foot on the
+        /// bench line the props stand on, right of the work, inside the working area.</summary>
+        private static readonly Vector2 MeasureAt = new Vector2(485f, -87f);
+        private static readonly Vector2 MeasureSize = new Vector2(150f, 300f);
 
-            var label = NewText("L", host, _body, 8,
-                onLeft ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, ink);
-            var rt = label.rectTransform;
-            rt.anchorMin = rt.anchorMax = new Vector2(side, 0f);
-            rt.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
-            rt.sizeDelta = new Vector2(170, 12);
-            rt.anchoredPosition = new Vector2(onLeft ? -(GaugeLabelGap + 10f) : GaugeLabelGap + 10f, mid);
-            label.horizontalOverflow = HorizontalWrapMode.Overflow;
-            label.text = text;
-        }
-
-        /// <summary>
-        /// THE STANDING GAUGE (2026-09-04, the author: "sahnedeki doluluk barı değişmeli").
-        ///
-        /// What both benches had was a 44×300 rectangle of near-black with a one-pixel
-        /// neon hairline round it and flat blocks of colour stacked inside — a bar chart,
-        /// and the only bar chart in the game. The horizontal work meter had already been
-        /// through exactly this complaint a week earlier and came out of it by using the
-        /// house's own instrument; the standing column never was changed.
-        ///
-        /// So it is that instrument, stood up (see <see cref="ChromeArt.GaugeColumn"/>):
-        /// a steel body with a dark bore, a brass ring at its foot, a teal cap at its head
-        /// carrying the one word that says what is being measured, and the measures cut
-        /// across the glass OVER the drink rather than under it. Three layers, the same
-        /// three the work meter uses — body, contents, glass — because a scratch that
-        /// disappears the moment the tube fills is not a scratch in the glass.
-        ///
-        /// Returns the BORE: the rect the contents are stacked in, inset from the walls
-        /// and standing between the cap and the foot, so <see cref="FillGauge"/> never has
-        /// to know how the instrument is built.
-        /// </summary>
         private RectTransform BuildStandingGauge(RectTransform panel, Vector2 at,
                                                  Vector2 size, string head)
         {
             var rig = NewRect("MixTrack", panel);
             Place(rig, new Vector2(0.5f, 0.5f), size, at);
+            // It takes a press, so a click on the measure is not a click off the bench.
+            var catcher = rig.gameObject.AddComponent<Image>();
+            catcher.color = new Color(0f, 0f, 0f, 0.001f);
+            rig.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
-            // The CONTENTS go in first and the outline over them, so the drink is inside
-            // the shaker rather than a block sitting on top of a drawing of one.
-            // ...and they are CUT TO THE SILHOUETTE. A shaker tapers, so square bands
-            // inside it would hang over the tin's shoulders — the drink has to stop where
-            // the steel does. The mask is the outline's own sprite, so the two can never
-            // disagree about where the wall is.
-            var maskRt = NewRect("Cavity", rig);
-            Stretch(maskRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var mimg = maskRt.gameObject.AddComponent<Image>();
-            mimg.sprite = ItemArt.Load("gauge_tin_solid") ?? ChromeArt.ShakerSolid((int)size.x, (int)size.y);
-            mimg.preserveAspect = true;
-            mimg.raycastTarget = false;
-            var mask = maskRt.gameObject.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
+            Image Slab(string name, Vector2 aMin, Vector2 aMax, Vector2 oMin, Vector2 oMax, Color c)
+            {
+                var rt = NewRect(name, rig);
+                Stretch(rt, aMin, aMax, oMin, oMax);
+                var img = rt.gameObject.AddComponent<Image>();
+                img.color = c;
+                img.raycastTarget = false;
+                return img;
+            }
 
-            var bore = NewRect("MixSegs", maskRt);
-            var cavity = ChromeArt.ShakerGaugeCavity;    // top / bottom, as fractions from the top
-            Stretch(bore, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
-                    Vector2.zero, Vector2.zero);
-            // THE LABELS LIVE OUTSIDE THE MASK (2026-09-06, the author: "doluluğun oranını
-            // gösteren shakerda hangi alkolden % kaç koyulduğu gözükmüyor"). FillGauge wrote
-            // "40% VODKA" beside every band — as a child of the band, inside the cavity's
-            // Mask, which cut off everything past the tin's silhouette. This rect has the
-            // bore's anchors and sits on the rig, so what is written at a band's height
-            // stands beside the tin where it can be read.
-            var labels = NewRect("Labels", rig);
-            Stretch(labels, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
-                    Vector2.zero, Vector2.zero);
+            // On the counter: the shadow first, under the foot.
+            Slab("Shadow", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(-14f, -7f), new Vector2(14f, 5f),
+                 new Color(0f, 0f, 0f, 0.32f));
+            // The glass: a pale body, two lit walls, a heavy foot and a rim.
+            Slab("Body", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.78f, 0.87f, 1f, 0.10f));
+            Slab("WallL", new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(3f, 0f), new Color(1f, 1f, 1f, 0.38f));
+            Slab("WallR", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-3f, 0f), Vector2.zero, new Color(1f, 1f, 1f, 0.26f));
+            Slab("Foot", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(-6f, 0f), new Vector2(6f, 7f), new Color(1f, 1f, 1f, 0.45f));
+            Slab("Rim", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-3f, -4f), new Vector2(3f, 0f), new Color(1f, 1f, 1f, 0.55f));
 
-            var shell = NewRect("Outline", rig);
-            Stretch(shell, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var simg = shell.gameObject.AddComponent<Image>();
-            // The author may draw the tin (2026-09-06): Items/gauge_tin.png (48x106, shown at
-            // 2x) replaces the drawn outline, gauge_tin_solid.png its silhouette for the mask.
-            simg.sprite = ItemArt.Load("gauge_tin") ?? ChromeArt.ShakerOutline((int)size.x, (int)size.y);
-            simg.preserveAspect = true;
-            simg.raycastTarget = false;
+            // The drink stands in the bore, cut to it.
+            var bore = NewRect("MixSegs", rig);
+            Stretch(bore, Vector2.zero, Vector2.one, new Vector2(5f, 8f), new Vector2(-5f, -14f));
+            bore.gameObject.AddComponent<RectMask2D>();
 
-            // The one word that says which vessel this is. Under the outline's foot, in
-            // the air the shaker's taper leaves — inside it there is no room for type at
-            // any size the pixel faces rasterise cleanly at.
+            // A graduation every tenth on the left wall, a long one at the half, over the drink.
+            float boreH = size.y - 8f - 14f;
+            for (int i = 1; i < 10; i++)
+                Slab("Tick" + i, new Vector2(0f, 0f), new Vector2(0f, 0f),
+                     new Vector2(3f, 8f + boreH * i / 10f), new Vector2(3f + (i == 5 ? 22f : 11f), 9f + boreH * i / 10f),
+                     new Color(1f, 1f, 1f, i == 5 ? 0.55f : 0.35f));
+            // The glass's sheen down the front, over the drink.
+            Slab("Sheen", new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(14f, 18f), new Vector2(19f, -24f),
+                 new Color(1f, 1f, 1f, 0.12f));
+
+            // The reading: white, ringed in black, standing on the surface (FillGauge moves it).
+            var total = NewText("Total", rig, _display, 16, TextAnchor.LowerCenter, Color.white);
+            total.rectTransform.anchorMin = total.rectTransform.anchorMax = new Vector2(0.5f, 0f);
+            total.rectTransform.pivot = new Vector2(0.5f, 0f);
+            total.rectTransform.sizeDelta = new Vector2(size.x + 90f, 40f);
+            total.rectTransform.anchoredPosition = new Vector2(0f, 12f);
+            total.horizontalOverflow = HorizontalWrapMode.Overflow;
+            total.verticalOverflow = VerticalWrapMode.Overflow;
+            total.raycastTarget = false;
+            Outlined(total, 2f);
+            total.text = "0%";
+
+            // Which vessel it measures, cut into the counter under its foot.
             var label = NewText("Head", rig, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             label.rectTransform.anchorMin = new Vector2(0, 0);
             label.rectTransform.anchorMax = new Vector2(1, 0);
             label.rectTransform.pivot = new Vector2(0.5f, 1);
-            label.rectTransform.offsetMin = new Vector2(0, -14);
-            label.rectTransform.offsetMax = new Vector2(0, -2);
+            label.rectTransform.offsetMin = new Vector2(0, -24);
+            label.rectTransform.offsetMax = new Vector2(0, -12);
             label.text = head;
             label.raycastTarget = false;
+            var cut = label.gameObject.AddComponent<Shadow>();
+            cut.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            cut.effectDistance = new Vector2(1f, -1f);
             return bore;
         }
 
@@ -764,6 +745,17 @@ namespace LastCall.UI
                 BottleH, Vector2.zero,
                 plates != null || master ? bottleSprite : ItemArt.Bottle(_focusBottle),
                 fixedScale: plates != null || master ? BottleH / 192f : 0f);
+            // The bottle is taken where it is drawn: the open master (or the sandwich's front
+            // plate), hit-tested on its alpha. A card with no drawing at all keeps the slot.
+            var gripArt = bottleSprite ?? (plates != null ? plates.Front ?? plates.Back : null);
+            bool readable = gripArt != null && gripArt.texture != null && gripArt.texture.isReadable;
+            if (_pourGrip != null)
+            {
+                _pourGrip.sprite = readable ? gripArt : null;
+                _pourGrip.alphaHitTestMinimumThreshold = readable ? 0.1f : 0f;
+                _pourGrip.enabled = readable;
+            }
+            if (_pourSlotHit != null) _pourSlotHit.raycastTarget = !readable;
             PushPourFill(run);
         }
 
@@ -897,7 +889,9 @@ namespace LastCall.UI
                     // A rope as thick as the pour is heavy: the lip's trickle is a thread, a
                     // bottle tipped right over a full rope (the girth P3 will take from Core's
                     // own delivered volume).
-                    _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.55f + 0.95f * _bottleShare);
+                    // ...and a THREAD when little is running (2026-09-13, the author: "az
+                    // dökülüyorken şişenin ucundan dökülen sıvı az gözükmeli").
+                    _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.2f + 1.3f * _bottleShare);
                 }
             }
 
@@ -1036,7 +1030,7 @@ namespace LastCall.UI
             float clampTop = _pourSurface.rect.height * 0.5f - 20f;
             float g = BottleGripDepth;
             float lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
-            g = Mathf.Min(g, 0.8f * lr / (MaxTilt * Mathf.Deg2Rad));
+            g = Mathf.Min(g, PourHand.MaxGripDepth(lr, MaxTilt));
             lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
             _bottleHand.Configure(_bottleRest, _pourMouth, g, lr, MaxTilt);
             _bottleHand.Apply(_pourBottle);
@@ -1558,6 +1552,8 @@ namespace LastCall.UI
             var room = GetComponent<TycoonHud>()?.Room;
             if (room == null) return;
             float fromY = room.BenchSurfaceFraction;
+            if (Mathf.Approximately(fromY, _benchCounterTop)) return;
+            _benchCounterTop = fromY;
             foreach (var band in _benchCounters)
             {
                 if (band == null) continue;
@@ -1696,6 +1692,9 @@ namespace LastCall.UI
             Stretch(_shakerHint.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
                     new Vector2(16, 114), new Vector2(-16, 128));
             _shakerHint.text = ShakerHintFor(null);
+            // Off since 2026-09-13: the strip cut into the counter names the method on its
+            // third step, and a line under it saying it again was the card's double.
+            _shakerHint.gameObject.SetActive(false);
 
             // NO PAINTED WALL ANY MORE. It was here because "a bench standing in a void
             // reads as a diagram of a bench" — and the void is gone: the real room stands
@@ -1881,8 +1880,8 @@ namespace LastCall.UI
             // stencil removes: the grab rect is a fixed 180 wide and the art is
             // letterboxed inside it, so a plain rectangle of drink had nothing to stop it
             // at the glass. See BottleFill.
-            var hitBottle = _pourBottle.gameObject.AddComponent<Image>();
-            hitBottle.color = new Color(0, 0, 0, 0.001f);   // invisible, still grabbable
+            var hitBottle = _pourSlotHit = _pourBottle.gameObject.AddComponent<Image>();
+            hitBottle.color = new Color(0, 0, 0, 0.001f);   // invisible; the fallback grab for a bottle with no art
 
             // The BOTTLE inside the grab plate. The plate is a fixed slot because a hand needs
             // one; the vessel is sized per bottle by VesselArt when the stage refreshes, so a
@@ -1898,6 +1897,13 @@ namespace LastCall.UI
             _pourBottleBody.preserveAspect = true;    // the real bottle art, set per focus in RefreshShaker
             _pourBottleBody.color = UITheme.Cyan[3];
             _pourBottleBody.raycastTarget = false;
+            // The grip: the drawing again, over everything, invisible, hit-tested on its alpha.
+            var grip = NewRect("Grip", _pourVessel);
+            Stretch(grip, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _pourGrip = grip.gameObject.AddComponent<Image>();
+            _pourGrip.color = new Color(1f, 1f, 1f, 0.001f);
+            _pourGrip.raycastTarget = true;
+            _pourGrip.enabled = false;
             // The house vodka's plate stands for the whole set: no v4 art, no bottles.
             if (ItemArt.Load("v4_vodka_astra_front") == null)      // no art available → keep a procedural neck
             {
@@ -1936,7 +1942,8 @@ namespace LastCall.UI
             // 13 → 16: pinned to the pixel faces' 8px grid (CLAUDE.md), like every other
             // size in the rebuild.
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 84), new Vector2(-16, 110));
+            // Under the strip, over the keys (2026-09-13).
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 74), new Vector2(-16, 97));
 
             // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
             // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and
@@ -1949,8 +1956,7 @@ namespace LastCall.UI
             // column did but wide enough to BE a shaker. Its right edge lands at 510,
             // inside the 1149-wide working area the serve bench measures against, and
             // its captions still have their air to the left.
-            _shakerMixBar = BuildStandingGauge(_shakerPanel, new Vector2(462, -74),
-                                               new Vector2(96, 212), "TIN");
+            _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, "TIN");
 
             // THE WORK METER (2026-08-26, the author: "doluluk barlarını tamamen tekrardan
             // tasarla, çok amatörce duruyor").
@@ -1973,8 +1979,10 @@ namespace LastCall.UI
             var meterRig = _shakeMeterRig = NewRect("WorkMeter", _shakerPanel);
             // Fourth shelf of the bottom stack: keys, the readout, the hint, then the
             // meter — measured so no shelf touches the next (2026-08-26).
+            // OVER THE TIN since 2026-09-13: the counter front belongs to the strip and the
+            // readout now, and the capped tin being worked stands in the middle under this.
             Place(meterRig, new Vector2(0.5f, 0), new Vector2(ShakeMeterW, MeterH),
-                  new Vector2(0, 134));
+                  new Vector2(0, 556));
             meterRig.pivot = new Vector2(0.5f, 0);
             var tube = meterRig.gameObject.AddComponent<Image>();
             tube.sprite = ChromeArt.GaugeTube((int)ShakeMeterW, (int)MeterH);

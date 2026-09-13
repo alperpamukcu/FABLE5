@@ -242,6 +242,8 @@ namespace LastCall.UI
         // A balloon is up for a few seconds and it is the thing being read, so it is
         // allowed to overhang a neighbour's head by half a stool while it is.
         private const float SayMaxW = SeatGap * 1.5f;
+        /// <summary>The balloon's width cap while a bench is open over a lifted room (2026-09-13).</summary>
+        private const float SayNarrowW = SeatGap * 0.7f;
 
         /// <summary>
         /// Puts one line in a drinker's balloon and starts its clock. An empty line says
@@ -402,7 +404,9 @@ namespace LastCall.UI
         {
             var text = view.SayText;
             float widest = text.preferredWidth;
-            float cardW = Mathf.Clamp(widest + TagPad * 2f, TagMinW, SayMaxW);
+            // TALL AND THIN WHILE THE CELLAR IS OPEN (2026-09-13, the author: "daha ufak ve dikey
+            // baloncukları olabilir"): the line wraps into a narrow column instead of a wide strip.
+            float cardW = Mathf.Clamp(widest + TagPad * 2f, TagMinW, CellarOpen ? SayNarrowW : SayMaxW);
             float textW = cardW - TagPad * 2f;
             // MEASURED, NOT ESTIMATED (2026-09-06). Dividing the widest line by the card's
             // width guesses the row count, and a balloon that now holds THREE sentences —
@@ -473,6 +477,14 @@ namespace LastCall.UI
             // çalışmıyordu ve balonlar ne küçülüyor ne de banda taşınıyordu. Faz onda birlik
             // adımlarla imzaya giriyor: açılış boyunca birkaç kez çözülür, açıldıktan sonra
             // yine tek imzada durur.
+            // Narrow or wide is decided by the drawer, so a change of drawer re-measures every
+            // live balloon once before the row is solved (2026-09-13).
+            if (CellarOpen != _saysNarrow)
+            {
+                _saysNarrow = CellarOpen;
+                foreach (var v in live) LayOutSay(v);
+                sig.Append('n');
+            }
             sig.Append('|').Append(Mathf.RoundToInt((stage != null ? stage.DrawerPhase : 0f) * 10f));
             string now = sig.ToString();
             if (now == _saysSig) return;
@@ -574,6 +586,22 @@ namespace LastCall.UI
                     // ...ama mahzen açıkken yukarı tırmanmasın: balonu başın altına indiren
                     // şeyin tamamı bu, tırmanan bir balon onu geri bozar.
                     if (homeY + dy > ceiling) { dy = ceiling - homeY; break; }
+                }
+                // NEVER OVER OR UNDER THE TOP BAR (2026-09-13, the author: "o sahnede yazı balonları
+                // üstbarın üstüne veya altına geçmemeli"). The balloon's top is held under the bar's
+                // underside, measured through the transforms themselves — the origins of the seat
+                // and the HUD have been got wrong by arithmetic twice (see the band note above).
+                if (_hudRoot != null)
+                {
+                    var rootRect = v.Root.rect;
+                    var topLocal = new Vector3(rootRect.center.x + dx, rootRect.yMin + homeY + dy + h, 0f);
+                    var inHud = _hudRoot.InverseTransformPoint(v.Root.TransformPoint(topLocal));
+                    float roof = _hudRoot.rect.yMax - TopBarH - 4f;
+                    if (inHud.y > roof)
+                    {
+                        float unit = Mathf.Max(0.0001f, v.Root.lossyScale.y / Mathf.Max(0.0001f, _hudRoot.lossyScale.y));
+                        dy -= (inHud.y - roof) / unit;
+                    }
                 }
                 v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
                 placed.Add(new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h));

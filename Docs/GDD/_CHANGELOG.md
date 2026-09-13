@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Drinks have a difficulty, pages you don't own are sealed, and a bottle pours by its angle
+  (2026-09-13):** Core rates every recipe by its work — the pours plus one for a shake or stir —
+  EASY (green) to HARD (red), shown as three pips and a word on the menu book, the market's hover
+  and the day-end tile. An unbought page shows how hard the drink is and nothing of what goes in it.
+  The pour law is the author's: nothing runs until the vessel is past level, the flow climbs to its
+  fastest with the neck straight down and slows back to nothing at level again; the fill no longer
+  moves the lip, and a thin pour draws a thin stream. Vessels are grabbed on their drawn pixels.
+  The bench was re-laid: the steps are a strip set into the counter, the gauge is a large measuring
+  glass whose bands carry each bottle's name and picture under a growing outlined total. The room
+  dims behind the bench; a click on the room closes it with a fade instead of a cut.
+
 - **The tree ships, and the upgrade screen becomes a catalogue (2026-09-13):** the author's tiers
   and cuts in the upgrade tree are the game's ladders now (`Tools/upgrade_tree/ship.py` reads
   `decisions.json`): 81 fixtures in 20 slots, with a new ceiling, floor and picture-over-the-screen,

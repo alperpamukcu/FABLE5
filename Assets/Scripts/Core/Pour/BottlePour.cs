@@ -7,48 +7,43 @@ namespace LastCall.Core
     /// glass. The keg's sibling (<see cref="TapPour"/>): pure and stateless, the caller owns the
     /// vessel, the hand and the clock, and this only says how much a given lean lets out.
     ///
-    /// GDD 24 §2 has said "more tilt = faster pour" since 2026-07 and nothing ever built it: the
-    /// bottle poured at one rate the moment it passed 42 degrees, and so did the tin, however far
-    /// either was tipped. The rate lived in the UI (a time scale on the shaker bench, a constant
-    /// on the serving bench), which is the one place the house says a rule may not live. It lives
-    /// here now, and it has two parts, both the shape of a real pour:
+    /// THE LEAN PAST LEVEL (2026-09-13, the author: "şişeyi 90 dereceden sonra ne kadar
+    /// yatırıyorsa o kadar hızlı dolsun, tam 90 derece şişe ise en hızlı şekilde; eğer yere
+    /// paralelleşiyorsa dökülme hızı yavaşlamaya başlasın ve paralelleştiğinde dursun").
     ///
-    ///   * THE ONSET follows the level. A full bottle runs the moment it leans — the liquid is
-    ///     already at the neck — and an emptying one has to be tipped further and further before
-    ///     anything reaches the lip. Full: 24 degrees. Nearly empty: about 100.
-    ///   * PAST THE ONSET the flow grows with the lean, from a TRICKLE to the vessel's full rate
-    ///     over <see cref="RampDeg"/> — a weir, the flow rising with the head of liquid over the
-    ///     lip. The trickle is deliberate: a 5% share is still a second of steady hand near the
-    ///     lip, so the ratio boxes (20 points wide, 5% floor) stay something a player can hit.
+    /// Leans are measured from upright. Nothing runs until the vessel is past LEVEL (90 degrees
+    /// — lying parallel to the floor); from there the flow grows in proportion to the lean and
+    /// is at its fastest with the neck pointing STRAIGHT DOWN (180, the bottle perpendicular to
+    /// the floor, which is the author's "tam 90 derece"). Tipped on past straight down it comes
+    /// back towards level on the far side, slows the same way, and stops when it lies level
+    /// again (270). The level in the vessel no longer moves the lip: the rule is the angle, so a
+    /// hand that learns one bottle has learned every bottle.
+    ///
+    /// The old law (a lip that followed the level, 24 degrees full to 102 empty, a 30-degree ramp
+    /// from an 8% trickle) is what this replaced. The proportional start keeps the small shares a
+    /// hand can hit: three degrees past level gives a thirtieth of full flow.
     /// </summary>
     public static class BottlePour
     {
-        /// <summary>The lean, in degrees, at which a FULL vessel starts to run.</summary>
-        public const double OnsetFullDeg = 24.0;
-        /// <summary>The lean at which the last of an EMPTYING vessel reaches the lip.</summary>
-        public const double OnsetEmptyDeg = 102.0;
-        /// <summary>How the onset climbs as the vessel empties: over 1 it holds low while the
-        /// vessel is well filled and rises fastest near the bottom, the way a neck behaves.</summary>
-        public const double OnsetCurve = 1.3;
-        /// <summary>Degrees past the onset over which the flow grows from the trickle to full.</summary>
-        public const double RampDeg = 30.0;
-        public const double RampPower = 1.25;
-        /// <summary>The share of full flow the lip gives the instant it runs at all.</summary>
-        public const double TrickleShare = 0.08;
+        /// <summary>The lean at which anything runs at all: level with the floor.</summary>
+        public const double OnsetDeg = 90.0;
 
-        /// <summary>The lean, in degrees, at which a vessel <paramref name="fill"/> full starts to run.</summary>
-        public static double OnsetDeg(double fill) =>
-            OnsetFullDeg + (OnsetEmptyDeg - OnsetFullDeg) * Math.Pow(1.0 - Clamp01(fill), OnsetCurve);
+        /// <summary>The lean of full flow: the neck straight down.</summary>
+        public const double FullDeg = 180.0;
 
-        /// <summary>The share of full flow (0..1) at a lean of <paramref name="tiltDegrees"/> from a
-        /// vessel <paramref name="fill"/> full. Zero under the onset, and zero from an empty vessel.</summary>
+        /// <summary>
+        /// The share of full flow (0..1) at a lean of <paramref name="tiltDegrees"/> from upright.
+        /// Zero at or under level, one straight down, zero again lying level the other way — and
+        /// zero from an empty vessel however it is held.
+        /// </summary>
         public static double Share(double tiltDegrees, double fill)
         {
-            if (fill <= 0) return 0;
-            double over = tiltDegrees - OnsetDeg(fill);
-            if (over <= 0) return 0;
-            double x = Clamp01(over / RampDeg);
-            return TrickleShare + (1.0 - TrickleShare) * Math.Pow(x, RampPower);
+            if (fill <= 0 || double.IsNaN(tiltDegrees) || double.IsInfinity(tiltDegrees)) return 0;
+            double t = tiltDegrees % 360.0;
+            if (t < 0) t += 360.0;
+            double fromStraightDown = Math.Abs(t - FullDeg);   // 0 neck down .. 90 lying level
+            double share = 1.0 - fromStraightDown / (FullDeg - OnsetDeg);
+            return share <= 0 ? 0 : (share >= 1 ? 1 : share);
         }
 
         /// <summary>The volume that runs in <paramref name="seconds"/> at a lean, from a vessel
@@ -58,7 +53,5 @@ namespace LastCall.Core
             if (seconds <= 0 || fullRate <= 0) return 0;
             return fullRate * Share(tiltDegrees, fill) * seconds;
         }
-
-        private static double Clamp01(double v) => v < 0 ? 0 : (v > 1 ? 1 : v);
     }
 }
