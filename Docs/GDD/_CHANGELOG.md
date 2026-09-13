@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The tree ships, and the upgrade screen becomes a catalogue (2026-09-13):** the author's tiers
+  and cuts in the upgrade tree are the game's ladders now (`Tools/upgrade_tree/ship.py` reads
+  `decisions.json`): 81 fixtures in 20 slots, with a new ceiling, floor and picture-over-the-screen,
+  the posters folded into the television's ladder and re-hung at its size. The room opens as the
+  author's "Oyun açılış v2" — cracked walls, bistro tables, the steel sink, both mats, and the tap
+  and tin, which are tools and are only ever upgraded: a taller tower POURS faster and the gold
+  tin SHAKES faster (`WorkSpeed`, read off the rung climbed to, not the one worn). The UPGRADES
+  department is laid out like a build catalogue: a rail of the room's parts, and for the open one
+  every ladder as a row of pattern cards — worn, wear, buy, or locked with its gate. Two rules are
+  overturned on purpose: owned pieces stay on the shelf (you wear from it), and rungs past the
+  next one are shown (the author: "tüm seçenekler gözükmeli").
 - **The room wears what it likes (2026-09-12):** a ladder is still climbed one rung at a
   time and nothing is sold back, so every rung the bar bought stays its own — and it may
   now WEAR any of them. What the room is worth does not move with taste: comfort reads the

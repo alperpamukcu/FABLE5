@@ -1,0 +1,60 @@
+{
+  "note": "The author's choices in the upgrade tree (artifact d9a53053, db tree/decisions v98 and combos 'Oyun açılış v2'), read back 2026-09-13. 'order' is each ladder's tier order, 'excluded' is what stays out of the game, 'opening' is the room the bar opens in. Tools/upgrade_tree/ship.py reads this.",
+  "excluded": {
+    "bar_top": ["bar_zinc", "bar_marble", "bar_terrazzo"],
+    "beer_mat": ["drip_ribbed", "drip_cork", "drip_towel"],
+    "ceiling": ["ceil_cane", "ceil_press", "ceil_coffer"],
+    "floor": ["floor_teal", "floor_board"],
+    "floor_rug": ["rug_kilim"],
+    "plant_left": ["plant_fiddle", "plant_bird_L", "plant_monstera_L", "plant5_fern_L", "plant5_banana_L"],
+    "plant_right": ["plant_monstera_R", "plant_snake", "plant_bird_R", "plant5_banana_R", "plant5_yucca_R", "plant5_fern_R"],
+    "poster_left": ["post_pier_L", "post_surf_L", "post_coast_L", "post_malibu_L"],
+    "poster_right": [],
+    "prep_mat": ["prep_ribbed", "prep_cork", "prep_towel"],
+    "shaker": [],
+    "sink": [],
+    "table_left": ["table_left_2", "table_left_1", "table5_tile_L", "table5_cane_L"],
+    "table_right": ["table_right_1", "table_right_2", "table5_tile_R", "table5_cane_R"],
+    "taps": ["tap5_swan", "tap5_deco", "tap5_dolphin"],
+    "wall_center": [],
+    "wall_lamps": [],
+    "wall_right": ["neon_wave", "neon_palm"],
+    "wall_right_art": [],
+    "wall_tv": ["tv_portable", "tv_wood", "tv_crt"],
+    "walls": ["back6_arch", "back6_palmw"],
+    "walls_right": []
+  },
+  "order": {
+    "bar_top": ["bar_terrazzo", "bar_marble", "bar_zinc"],
+    "beer_mat": ["beer_mat", "drip_ribbed", "drip_cork", "drip_towel"],
+    "ceiling": ["ceil_beams", "ceil_deco", "ceil_palm", "ceil_stucco", "ceil_coffer", "ceil_press", "ceil_cane", "ceil6_grid", "ceil6_ray", "ceil6_stars"],
+    "floor": ["floor_terra", "floor_carpet", "floor_marble", "floor_check", "floor_teal", "floor_board", "floor6_grid", "floor6_chip", "floor6_wave"],
+    "floor_rug": ["floor_rug", "rug_kilim", "rug_leopard", "rug_wave", "rug6_memphis", "rug6_sunset", "rug6_palm"],
+    "plant_left": ["plant_palm", "plant5_yucca_L", "plant_pothos", "plant_fiddle", "plant_monstera_L", "plant_bird_L", "plant5_banana_L", "plant5_fern_L"],
+    "plant_right": ["plant_snake", "plant_agave", "plant_monstera_R", "plant_bird_R", "plant5_banana_R", "plant5_yucca_R", "plant5_fern_R"],
+    "poster_left": ["post_malibu_L", "post_surf_L", "post_pier_L", "post_coast_L"],
+    "poster_right": ["post_malibu_R", "post_surf_R", "post_pier_R", "post_coast_R", "post5_neon", "post5_car", "post5_diver"],
+    "prep_mat": ["prep_mat", "prep_ribbed", "prep_cork", "prep_towel"],
+    "shaker": ["shaker_steel", "shaker_gold"],
+    "sink": ["counter_sink", "sink_brass"],
+    "table_left": ["table_left_1", "table_left_2", "table5_bistro_L", "table_v1_L", "table_v2_L", "table_left_3", "table5_cane_L", "table5_tile_L"],
+    "table_right": ["table_right_1", "table_right_2", "table5_bistro_R", "table_v1_R", "table_v2_R", "table_right_3", "table5_cane_R", "table5_tile_R"],
+    "taps": ["taps_one", "taps_two", "taps_three", "tap5_swan", "tap5_deco", "tap5_dolphin"],
+    "wall_center": ["art_city", "picS_trio", "picS_trioA", "picS_trioB", "flamingo_triptych"],
+    "wall_lamps": ["wall_lamps_one", "wall_lamps_two", "wall_lamps_three", "lamp6_scallop", "lamp6_neonbar", "lamp6_shell"],
+    "wall_right": ["neon_martini", "neon_flamingo", "neon_palm", "neon_wave", "neon6_sun", "neon6_glass", "neon6_bird"],
+    "wall_right_art": ["pic_pelican", "picR6_sunset", "picR6_conv", "picR6_shapes"],
+    "wall_tv": ["wall_tv", "tv_crt", "tv_wood", "tv_portable"],
+    "walls": ["walls_1", "walls_2", "walls_3", "back6_chevron", "walls_4", "back6_arch", "back6_palmw"],
+    "walls_right": ["walls_right_1", "walls_right_2", "walls_right_3", "walls_right_4", "rwall6_stripe", "rwall6_tile", "rwall6_sunray"]
+  },
+  "opening": {
+    "beer_mat": "beer_mat", "prep_mat": "prep_mat", "sink": "counter_sink",
+    "table_left": "table5_bistro_L", "table_right": "table5_bistro_R",
+    "walls": "walls_1", "walls_right": "walls_right_1"
+  },
+  "answers_2026_09_13": {
+    "right_wall": "Posterlerle televizyon aynı klasmanda olacak fakat diğer sağ duvar tablosu televizyonun altında üstünde gözükecek duvar kalabalıklaşıcak.",
+    "tools": "Musluk ve shaker olacak onlar sadece upgrade edilecek upgrade etmenin üretime buffu olacak örneğin musluk hızlı temizlerken shaker hızlı çalkalayacak vs."
+  }
+}

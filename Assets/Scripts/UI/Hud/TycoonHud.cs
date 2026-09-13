@@ -936,6 +936,15 @@ namespace LastCall.UI
 
         private int _shopTab;
 
+        /// <summary>The shelf the upgrade screen's rail has open (2026-09-13, the decor
+        /// catalogue): "bar" or a fixture group. Kept across rebuilds and nights, so buying
+        /// a rung does not throw the player back to the first shelf.</summary>
+        private string _decorSection = "walls";
+
+        /// <summary>The upgrade screen's rail of shelves, left of the aisle; built on first
+        /// use and shown only while that department is open.</summary>
+        private RectTransform _decorRail;
+
         private Text _tabletTill;
         /// <summary>The carried glass's rim strip, over the liquid (2026-09-08).</summary>
         private Image _drinkGlassLip;

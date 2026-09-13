@@ -199,7 +199,9 @@ namespace LastCall.UI
 
         /// <summary>The tier's suffix on a shaker plate: "" for the steel one the bar opened
         /// with, "_t2" once the gold rung is fitted. Read off Core's own ladder.</summary>
-        private string ShakerTier => Run != null && Run.LadderLevel("shaker") >= 2 ? "_t2" : "";
+        // The tin the bar WEARS (2026-09-13): a player who climbed to gold may still pick the
+        // steel one's look, and keeps the gold one's speed (TycoonRun.WorkSpeed).
+        private string ShakerTier => Run != null && (Run.WornRung("shaker")?.Level ?? 0) >= 2 ? "_t2" : "";
 
         /// <summary>Puts the owned tin on both benches. Called on the way into either one, so
         /// a rung bought at the market is on the counter the next time the tin is opened.</summary>
@@ -1480,7 +1482,9 @@ namespace LastCall.UI
             // Cursor travel builds the shake energy.
             float travel = (mouse - _lastShakeMouse).magnitude;
             _lastShakeMouse = mouse;
-            _shakeEnergy = Mathf.Clamp01((float)_shakeEnergy + travel / ShakeFullTravel);
+            // A better tin takes less arm (2026-09-13): the shaker ladder's WorkSpeed.
+            _shakeEnergy = Mathf.Clamp01((float)_shakeEnergy
+                + travel * (float)run.WorkSpeed("shaker") / ShakeFullTravel);
 
             // The shaker springs loosely after the cursor and overshoots — throw it around.
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(

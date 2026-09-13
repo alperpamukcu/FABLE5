@@ -1,6 +1,14 @@
 # ONAYLANAN GÖRSELLER — OYUNA GİRMEYİ BEKLEYENLER
 
-*Son güncelleme 2026-09-10.*
+*Son güncelleme 2026-09-13.*
+
+> **2026-09-13: AĞAÇ OYUNA İNDİ.** Aşağıdaki "Seçilenler", beşinci ve altıncı turlardan yazarın ağaçta
+> sıraya koyup dışarıda bırakmadığı her şey `Tools/upgrade_tree/ship.py` ile `Assets`'e girdi
+> (GDD_MEVCUT §9.59): tavan, zemin, sağ duvar tablosu (TV'nin üstünde), posterler (TV ile aynı
+> merdivende, TV boyunda yeniden asıldı), halılar, masalar, yucca, orta tablo üçlüleri, çevron arka
+> duvar, üç yeni sağ duvar, üç lamba, üç neon. Oyuna GİRMEYENLER ağaçta aday olarak duruyor: bar
+> üstü tablaları, sol duvar posterleri, eski musluklar/TV'ler/paspaslar/masalar/bitkiler (hepsi
+> yazarın elemesi) ve oyundan çıkan fiddle, snake, masa 1–2. Aşağıdaki tablolar tarih kaydı.
 
 Ev kuralı: yazar seçmeden hiçbir üretim `Assets`'e girmez (bkz. hafıza `bottle-art-v3-respec`).
 Aşağıdakiler **seçildi ama hâlâ girmedi** — hepsi `Tools/room_variants*/` altında duruyor.

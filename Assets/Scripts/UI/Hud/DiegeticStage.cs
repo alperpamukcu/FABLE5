@@ -2848,7 +2848,9 @@ namespace LastCall.UI
                     layer.transform.SetParent(_backgroundSr.transform, false);
                     layer.sprite = sprite;
                     layer.sortingLayerID = _backgroundSr.sortingLayerID;
-                    layer.sortingOrder = OverlayOrder;
+                    // ...at its slot's own order when it names one (2026-09-13: the ceiling
+                    // and the floor lie over the right wall at 13).
+                    layer.sortingOrder = slot.Order != 0 ? slot.Order : OverlayOrder;
                     if (_litMaterial != null) layer.sharedMaterial = _litMaterial;
                     _placedFixtures.Add((def, layer.transform, null, 0f));
                     continue;

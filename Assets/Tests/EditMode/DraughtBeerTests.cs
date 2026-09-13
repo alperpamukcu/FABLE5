@@ -248,6 +248,32 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void ATallerTower_PoursThePintFaster()
+        {
+            // The tools are only ever upgraded, and the upgrade is WORK (2026-09-13, the author:
+            // "upgrade etmenin üretime buffu olacak"). The angle still decides where it lands.
+            TycoonRun Under(double speed)
+            {
+                var shelf = new Shelf(new[] { new ShelfBottle(Keg()) });
+                var tower = new FixtureDefinition("tower", "Tower", "taps", 35, 0, "", "fx_tap_single",
+                    startsInTheRoom: true, tapLevel: 1, workSpeed: speed);
+                var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("tower"),
+                    fixtures: new[] { tower });
+                run.BeginPull("beer_test");
+                return run;
+            }
+            var plain = Under(0);
+            var fast = Under(1.4);
+            Assert.AreEqual(1.0, plain.TapSpeed, 1e-9, "no speed named is the plain speed");
+            Assert.AreEqual(1.4, fast.TapSpeed, 1e-9);
+            double slow = plain.PourTilted(0.5, TapPour.IdealTilt);
+            double quick = fast.PourTilted(0.5, TapPour.IdealTilt);
+            Assert.AreEqual(1.4, quick / slow, 1e-6, "the same half second pours 40% more beer");
+            Assert.AreEqual(plain.ServingGlass.Head / slow, fast.ServingGlass.Head / quick, 1e-6,
+                "and the same share of it is head — speed is not a worse pour");
+        }
+
+        [Test]
         public void PullingDrawsFromTheKegAndStopsWhenItRunsDry()
         {
             var shelf = new Shelf(new[] { new ShelfBottle(Keg(), capacity: 0.2) });

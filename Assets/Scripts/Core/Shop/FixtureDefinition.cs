@@ -194,8 +194,9 @@ namespace LastCall.Core
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
             string swatch = null, string group = null, double washSeconds = 0,
-            float x = float.NaN, float y = float.NaN, int order = 0)
+            float x = float.NaN, float y = float.NaN, int order = 0, double workSpeed = 0)
         {
+            if (workSpeed < 0) throw new ArgumentOutOfRangeException(nameof(workSpeed), $"Fixture '{id}' works at a negative speed.");
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
             if ((cellW > 0) != (cellH > 0)) throw new ArgumentException("A cell has both a width and a height.", nameof(cellH));
             if (!string.IsNullOrEmpty(water) && cellW == 0)
@@ -253,7 +254,19 @@ namespace LastCall.Core
             Swatch = string.IsNullOrWhiteSpace(swatch) ? null : swatch;
             Group = string.IsNullOrWhiteSpace(group) ? null : group.Trim().ToLowerInvariant();
             X = x; Y = y; Order = order;
+            WorkSpeed = workSpeed > 0 ? workSpeed : 1.0;
         }
+
+        /// <summary>
+        /// How much faster the job this piece does goes, 1 for the plain speed (2026-09-13, the
+        /// author: "musluk ve shaker ... sadece upgrade edilecek, upgrade etmenin üretime buffu
+        /// olacak — musluk hızlı temizlerken shaker hızlı çalkalayacak"). The tools are the one
+        /// part of the room a player WORKS with, so their rungs buy speed: a tower's rung pours
+        /// the pint faster (<see cref="TycoonRun.TapSpeed"/>), a tin's rung shakes the drink in
+        /// less arm. The basin's own answer came first and keeps its own field
+        /// (<see cref="WashSeconds"/>). Content, like the price.
+        /// </summary>
+        public double WorkSpeed { get; }
 
         public override string ToString() => $"{Name} ({Id}, ${Price}, slot {Slot})";
     }

@@ -153,12 +153,12 @@ namespace LastCall.Tests
             string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
             var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
             var given = loaded.Fixtures.Where(f => f.StartsInTheRoom).Select(f => f.Id).OrderBy(s => s).ToArray();
-            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "prep_mat", "shaker_steel", "taps_one",
+            Assert.AreEqual(new[] { "beer_mat", "counter_sink", "prep_mat", "shaker_steel",
+                                    "table5_bistro_L", "table5_bistro_R", "taps_one",
                                     "walls_1", "walls_right_1" }, given,
-                "the room opens with the two mats, the sink, the steel tin, one tap and the walls it "
-                + "already has — the cracked back wall and the peeling right one — nothing else (the "
-                + "snack mat became a fixture on 2026-09-06; the right wall became its own ladder "
-                + "on 2026-09-12, and the rung the bar opens with is the wall that was already there)");
+                "the room opens as the author's 'Oyun açılış v2' (2026-09-13): the cracked back wall, "
+                + "the peeling right wall, the two bistro tables, the steel sink and both mats — and "
+                + "the tools, one tap and the steel tin, which are only ever upgraded");
             foreach (var id in given)
                 Assert.AreEqual(0, loaded.Fixtures.First(f => f.Id == id).Comfort, id + " is the FreeBase");
             foreach (var id in new[] { "flamingo_triptych", "wall_lamps_one", "floor_rug", "wall_tv" })
@@ -207,7 +207,7 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheShippedWalls_AreAFourRungLadder_ThatOpensCracked()
+        public void TheShippedWalls_AreALadder_ThatOpensCracked()
         {
             // The author's four plates, as content (2026-09-06): club_room4 is the bar the
             // run opens in and the others climb from it. Read off the real file, because a
@@ -217,7 +217,9 @@ namespace LastCall.Tests
             var walls = loaded.Slots.First(s => s.Id == "walls");
             Assert.IsTrue(walls.Backdrop);
             var rungs = loaded.Fixtures.Where(f => f.Slot == "walls").OrderBy(f => f.Level).ToList();
-            Assert.AreEqual(new[] { 1, 2, 3, 4 }, rungs.Select(r => r.Level).ToArray());
+            // FIVE since the tree shipped (2026-09-13): the chevron went in under the harlequin.
+            Assert.AreEqual(new[] { 1, 2, 3, 4, 5 }, rungs.Select(r => r.Level).ToArray());
+            Assert.AreEqual("back6_chevron", rungs[3].Id, "the author's tier order");
             Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens in the cracked room");
             Assert.AreEqual(0, rungs[0].Comfort, "and what it opens with is the FreeBase");
             for (int i = 1; i < rungs.Count; i++)
@@ -248,7 +250,8 @@ namespace LastCall.Tests
             Assert.IsTrue(slot.Backdrop && slot.Overlay, "a layer of the room's picture, laid over it");
             Assert.AreEqual("The right wall", slot.Place, "the market says where the rung goes");
             var rungs = loaded.Fixtures.Where(f => f.Slot == "walls_right").OrderBy(f => f.Level).ToList();
-            Assert.AreEqual(new[] { 1, 2, 3, 4 }, rungs.Select(r => r.Level).ToArray());
+            // SEVEN since the tree shipped (2026-09-13): the author's four and round six's three.
+            Assert.AreEqual(new[] { 1, 2, 3, 4, 5, 6, 7 }, rungs.Select(r => r.Level).ToArray());
             Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens with the wall it has");
             Assert.AreEqual(0, rungs[0].Comfort, "and the wall it has is worth nothing");
             for (int i = 1; i < rungs.Count; i++)
@@ -715,6 +718,151 @@ namespace LastCall.Tests
                 new FixtureDefinition("both", "Confused", "s1", 10, 0, "", "fx",
                     tapLevel: 1, level: 2),
                 "a tower's rung IS its tap level — carrying both is a content bug");
+        }
+
+        // ── the tree, shipped (2026-09-13) ──────────────────────────────────────
+
+        private static LoadedFixtures ShippedRoom() =>
+            DataLoader.ParseFixtures(System.IO.File.ReadAllText(
+                UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json"));
+
+        [Test]
+        public void EveryShippedLadder_CostsMore_AndIsWorthMore_AsItClimbs()
+        {
+            // The author set each ladder's tiers in the upgrade tree; a rung that cost less or
+            // gave less than the one under it would make the order a lie the player pays for.
+            var loaded = ShippedRoom();
+            foreach (var slot in loaded.Fixtures.Where(f => f.Level > 0).Select(f => f.Slot).Distinct())
+            {
+                var rungs = loaded.Fixtures.Where(f => f.Slot == slot).OrderBy(f => f.Level).ToList();
+                for (int i = 1; i < rungs.Count; i++)
+                {
+                    Assert.Greater(rungs[i].Price, rungs[i - 1].Price, rungs[i].Id + " costs more than " + rungs[i - 1].Id);
+                    Assert.Greater(rungs[i].Comfort, rungs[i - 1].Comfort, rungs[i].Id + " is worth more than " + rungs[i - 1].Id);
+                    Assert.GreaterOrEqual(rungs[i].Stars, rungs[i - 1].Stars, rungs[i].Id + " asks no less of the room");
+                    Assert.IsFalse(rungs[i].StartsInTheRoom, rungs[i].Id + " is bought, not given");
+                }
+            }
+        }
+
+        [Test]
+        public void EveryShippedPiece_HasItsPicture_AndEveryLayerIsTheWholeRoom()
+        {
+            // The market shows every rung now, bought or not (the decor catalogue), so a rung
+            // with no picture is a hole in the shelf as well as in the room.
+            var loaded = ShippedRoom();
+            var slots = loaded.Slots.ToDictionary(s => s.Id);
+            foreach (var f in loaded.Fixtures)
+            {
+                var slot = slots[f.Slot];
+                var art = UnityEngine.Resources.Load<UnityEngine.Sprite>((slot.Carried ? "Items/" : "Fixtures/") + f.Sprite);
+                Assert.IsNotNull(art, f.Id + "'s picture " + f.Sprite + " is not on its shelf");
+                if (slot.Overlay)
+                    Assert.AreEqual(new UnityEngine.Vector2(640, 360), art.rect.size,
+                        f.Id + " is off the plate's canvas — it would not land where it was cut from");
+                if (f.Swatch != null)
+                    Assert.IsNotNull(UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + f.Swatch),
+                        f.Id + "'s swatch " + f.Swatch + " is not cut");
+                if (slot.Backdrop)
+                    Assert.IsNotNull(f.Swatch, f.Id + " is a whole-room picture and needs a swatch for the market");
+            }
+        }
+
+        [Test]
+        public void TheCeilingAndTheFloor_AreLayersOverTheRightWall()
+        {
+            var loaded = ShippedRoom();
+            foreach (var id in new[] { "ceiling", "floor" })
+            {
+                var slot = loaded.Slots.First(s => s.Id == id);
+                Assert.IsTrue(slot.Backdrop && slot.Overlay, id + " is a layer of the room's picture");
+                Assert.AreEqual(13, slot.Order, id + " lies over the right wall's 12");
+                Assert.IsNotNull(slot.Title, id + " has a name on the market's shelf");
+            }
+            Assert.AreEqual(0, loaded.Slots.First(s => s.Id == "walls_right").Order, "the right wall keeps the default");
+            Assert.IsFalse(loaded.Fixtures.Any(f => (f.Slot == "ceiling" || f.Slot == "floor") && f.StartsInTheRoom),
+                "the bar opens under the plate's own ceiling, on its own boards");
+        }
+
+        [Test]
+        public void TheScreenAndThePosters_ShareASpot_AndThePictureHangsAboveThem()
+        {
+            // The author, 2026-09-13: "posterlerle televizyon aynı klasmanda olacak fakat diğer
+            // sağ duvar tablosu televizyonun altında üstünde gözükecek, duvar kalabalıklaşacak."
+            var loaded = ShippedRoom();
+            var screenSpot = loaded.Fixtures.Where(f => f.Slot == "wall_tv").OrderBy(f => f.Level).ToList();
+            Assert.Greater(screenSpot.Count, 1, "one ladder: the set and the posters");
+            Assert.IsTrue(screenSpot[0].IsScreen, "the set is its first rung");
+            Assert.IsTrue(screenSpot.Skip(1).All(f => !f.IsScreen), "and the rest are posters");
+
+            var tvSlot = loaded.Slots.First(s => s.Id == "wall_tv");
+            float spotTop = 0f;
+            foreach (var f in screenSpot)
+            {
+                var art = UnityEngine.Resources.Load<UnityEngine.Sprite>("Fixtures/" + f.Sprite);
+                float h = f.IsScreen ? f.CellH : art.rect.height;
+                float y = float.IsNaN(f.Y) ? tvSlot.Y : f.Y;
+                spotTop = Math.Max(spotTop, y + h);
+            }
+            var pictures = loaded.Fixtures.Where(f => f.Slot == "wall_right_art").ToList();
+            Assert.Greater(pictures.Count, 0);
+            var picSlot = loaded.Slots.First(s => s.Id == "wall_right_art");
+            foreach (var p in pictures)
+            {
+                float bottom = float.IsNaN(p.Y) ? picSlot.Y : p.Y;
+                Assert.GreaterOrEqual(bottom, spotTop, p.Id + " hangs over the screen's spot, not on it");
+            }
+        }
+
+        [Test]
+        public void TheTools_WorkFasterAsTheyClimb()
+        {
+            // "Musluk ve shaker ... sadece upgrade edilecek, upgrade etmenin üretime buffu olacak."
+            var loaded = ShippedRoom();
+            foreach (var slot in new[] { "taps", "shaker" })
+            {
+                var rungs = loaded.Fixtures.Where(f => f.Slot == slot).OrderBy(f => f.Level).ToList();
+                Assert.IsTrue(rungs[0].StartsInTheRoom, slot + " comes with the room");
+                Assert.AreEqual(1.0, rungs[0].WorkSpeed, 1e-9, "at the plain speed");
+                for (int i = 1; i < rungs.Count; i++)
+                    Assert.Greater(rungs[i].WorkSpeed, rungs[i - 1].WorkSpeed, rungs[i].Id + " works faster");
+            }
+            var sinks = loaded.Fixtures.Where(f => f.Slot == "sink").OrderBy(f => f.Level).ToList();
+            Assert.IsTrue(sinks[0].StartsInTheRoom);
+            Assert.Greater(sinks[1].WashSeconds, 0);
+            Assert.Less(sinks[1].WashSeconds, Housekeeping.WashSeconds, "the better basin washes faster");
+        }
+
+        [Test]
+        public void AToolsSpeed_IsTheRungItClimbedTo_NotTheOneItWears()
+        {
+            var steel = new FixtureDefinition("tin_1", "Steel", "s1", 35, 0, "", "shaker_prop",
+                startsInTheRoom: true, level: 1);
+            var gold = new FixtureDefinition("tin_2", "Gold", "s1", 140, 0, "", "shaker_prop_t2",
+                level: 2, comfort: 0.4, workSpeed: 1.5);
+            var run = RunAtDayEnd(fixtures: new[] { steel, gold });
+            Assert.AreEqual(1.0, run.WorkSpeed("s1"), 1e-9, "the tin the bar opened with");
+            Assert.AreEqual(1.0, run.WorkSpeed("nowhere"), 1e-9, "a slot with nothing in it works at the plain speed");
+            run.BuyFixture("tin_2");
+            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "the gold tin shakes faster");
+            Assert.IsTrue(run.WearFixture("tin_1"));
+            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "and wearing the steel one's look keeps the gold one's speed");
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new FixtureDefinition("x", "X", "s1", 10, 0, "", "fx", workSpeed: -1));
+        }
+
+        [Test]
+        public void AnOrder_BelongsToALayerOfThePicture()
+        {
+            var layer = DataLoader.ParseFixtures(@"{ ""slots"": [
+                { ""id"": ""ceiling"", ""x"": 0, ""y"": 0, ""backdrop"": true, ""overlay"": true, ""order"": 13, ""title"": ""Ceiling"" }],
+                ""fixtures"": [ { ""id"": ""c1"", ""name"": ""Beams"", ""slot"": ""ceiling"", ""price"": 40, ""sprite"": ""fx_ceil_beams"" }] }");
+            Assert.AreEqual(13, layer.Slots[0].Order);
+            Assert.AreEqual("Ceiling", layer.Slots[0].Title);
+            Assert.Throws<FormatException>(() => DataLoader.ParseFixtures(@"{ ""slots"": [
+                { ""id"": ""hook"", ""x"": 0, ""y"": 0, ""order"": 13 }],
+                ""fixtures"": [ { ""id"": ""c1"", ""name"": ""Fern"", ""slot"": ""hook"", ""price"": 40, ""sprite"": ""fx_fern"" }] }"),
+                "a hook's order is decided by what stands on it");
         }
     }
 }

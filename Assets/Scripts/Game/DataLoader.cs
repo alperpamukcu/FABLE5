@@ -274,7 +274,7 @@ namespace LastCall.Game
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
                                               sl.pairSpreadPx, sl.houseLight, sl.hangs,
                                               sl.flat, sl.backdrop, sl.carried,
-                                              sl.overlay, sl.place)); }
+                                              sl.overlay, sl.place, sl.title, sl.order)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -335,7 +335,8 @@ namespace LastCall.Game
                         f.lightR, f.lightG, f.lightB, f.lightIntensity, f.lightRadius,
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
                         f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group,
-                        f.washSeconds, f.hasX ? f.x : float.NaN, f.hasY ? f.y : float.NaN, f.order));
+                        f.washSeconds, f.hasX ? f.x : float.NaN, f.hasY ? f.y : float.NaN, f.order,
+                        f.workSpeed));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -744,6 +745,9 @@ namespace LastCall.Game
             public string swatch;
             /// <summary>The shelf of the upgrade screen it is sold from (2026-09-06).</summary>
             public string group;
+            /// <summary>How much faster a TOOL works on this rung (2026-09-13): the tower pours,
+            /// the tin shakes. Absent (0) is the plain speed.</summary>
+            public double workSpeed;
             // WHERE THIS ONE PIECE STANDS (2026-09-09). JsonUtility cannot tell a missing
             // number from a zero, so the flags say whether the author wrote one.
             public float x;
@@ -824,6 +828,10 @@ namespace LastCall.Game
             // wall ladder), and the market's name for where its rungs go. Absent: false / null.
             public bool overlay;
             public string place;
+            // The market shelf's name for the slot, and the order an overlay is laid at
+            // (2026-09-13). Absent: null / 0 (the right wall's 12).
+            public string title;
+            public int order;
             // Whatever stands here hangs on the wall: no contact shadow, and it draws
             // behind the floor dressing (2026-08-24, the flamingo triptych).
             public bool hangs;

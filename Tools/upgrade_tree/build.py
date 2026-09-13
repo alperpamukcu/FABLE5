@@ -120,7 +120,7 @@ def main():
         layers, th = [], None
         if s.get('backdrop'):
             art = Image.open(os.path.join(FIXT, f['sprite'] + '.png'))
-            c = cropped(art, 12 if s.get('overlay') else 10)
+            c = cropped(art, s.get('order') or (12 if s.get('overlay') else 10))
             if c:
                 layers.append(c)
             sw = f.get('swatch')

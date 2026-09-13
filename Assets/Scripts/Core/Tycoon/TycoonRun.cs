@@ -1730,7 +1730,8 @@ namespace LastCall.Core
             if (ServingGlass.IsFull) return 0;
 
             var keg = _shelf.Find(PullingId);
-            var flow = TapPour.Flow(tiltDegrees, seconds);
+            // A taller tower pours faster (2026-09-13): the flow runs on the tap's own clock.
+            var flow = TapPour.Flow(tiltDegrees, seconds * TapSpeed);
             if (flow.Total <= 0) return 0;
 
             // The keg gives up beer, foam and spill alike; the glass only limits what it catches.
@@ -2489,6 +2490,33 @@ namespace LastCall.Core
         /// <summary>How many pieces of dressing the bar owns — the cheap change-detection
         /// handle the stage watches, so it only rebuilds the room when the room changed.</summary>
         public int OwnedFixtureCount => _fixtures.Count;
+
+        // ── THE TOOLS WORK FASTER AS THEY CLIMB (2026-09-13) ─────────────────────
+        // The author: "musluk ve shaker olacak, onlar sadece upgrade edilecek; upgrade etmenin
+        // üretime buffu olacak." The speed is the CLIMB's, like comfort: a bar that wears the
+        // steel tin because it likes the look still shakes at the gold one's pace.
+
+        /// <summary>How much faster this slot's job goes: the <see cref="FixtureDefinition.WorkSpeed"/>
+        /// of the tallest rung owned there, 1 for a slot with nothing faster in it.</summary>
+        public double WorkSpeed(string slot)
+        {
+            FixtureDefinition top = null;
+            foreach (var f in _fixtureCatalogue)
+                if (f.Slot == slot && _fixtures.Contains(f.Id) && (top == null || f.Level > top.Level))
+                    top = f;
+            return top != null ? top.WorkSpeed : 1.0;
+        }
+
+        /// <summary>How fast the tower pours: its <see cref="FixtureDefinition.WorkSpeed"/>, 1
+        /// with none. <see cref="PourTilted"/> runs the tap's flow on this clock.</summary>
+        public double TapSpeed
+        {
+            get
+            {
+                var tower = StandingTap();
+                return tower != null ? tower.WorkSpeed : 1.0;
+            }
+        }
 
         // ── WHAT THE ROOM WEARS (2026-09-12) ────────────────────────────────────
         // The author: "oyuncu bir sonraki geliştirmeyi almak zorunda ama görsel olarak önceki

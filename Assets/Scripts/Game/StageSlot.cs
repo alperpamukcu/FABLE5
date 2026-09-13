@@ -76,10 +76,21 @@ namespace LastCall.Game
         /// null lets the market say what it always has (the counter, or the back wall).</summary>
         public string Place { get; }
 
+        /// <summary>What the market's shelf calls this slot ("Back wall", "Screen &amp; posters")
+        /// — the head of the ladder it sells (2026-09-13, the decor catalogue). Null lets the
+        /// market fall back on the slot's id.</summary>
+        public string Title { get; }
+
+        /// <summary>The sorting order an OVERLAY is laid at, or 0 for the right wall's 12
+        /// (2026-09-13: the ceiling and the floor lie over the right wall at 13). Only a layer
+        /// of the picture has one — a hook's order is decided by what stands on it.</summary>
+        public int Order { get; }
+
         public StageSlot(string id, float x, float y, bool onCounter,
                          float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
                          bool flat = false, bool backdrop = false, bool carried = false,
-                         bool overlay = false, string place = null)
+                         bool overlay = false, string place = null, string title = null,
+                         int order = 0)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -97,6 +108,12 @@ namespace LastCall.Game
                 throw new ArgumentException($"Slot '{id}' is an overlay but not a backdrop — an overlay is a layer OF the room's picture.");
             Overlay = overlay;
             Place = string.IsNullOrWhiteSpace(place) ? null : place.Trim();
+            Title = string.IsNullOrWhiteSpace(title) ? null : title.Trim();
+            if (order != 0 && !overlay)
+                throw new ArgumentException($"Slot '{id}' names an order but is not an overlay — only a layer of the picture is laid at one.");
+            if (order < 0)
+                throw new ArgumentException($"Slot '{id}' has a negative order.");
+            Order = order;
         }
 
         public override string ToString() => $"{Id} ({X}, {Y}){(OnCounter ? " on the counter" : "")}";

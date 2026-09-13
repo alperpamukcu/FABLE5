@@ -1526,6 +1526,59 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.59 · Ağaç oyuna indi: açılış v2, dekor kataloğu, aletler hızlanıyor (2026-09-13)
+
+Yazar: "Mevcut oyun açılış v2 gerçekleştirilsin. Mekan geliştirme sistemine güncelleme ... Her bölümün ayrı
+kısmı olmalı markette. Örneğin duvar dendiğinde tüm seçenekler desen png si ile gözükmeli ... Örneğin Sims'in
+dekorasyon UI'ı güzeldi."
+
+- **Ağacın kararları oyunda.** Yazarın upgrade ağacında verdiği sıra ve eleme (`Tools/upgrade_tree/decisions.json`,
+  sayfanın kendi veritabanından okundu) `Tools/upgrade_tree/ship.py` ile görsele ve veriye dönüşüyor: her kalan
+  basamak verilen sırayla, katman (640×360, yuvanın sırasında), plaka (arka duvar yamasını altındaki basamağın
+  plakasına basar), sprite (çizilen kısmına kırpılmış) ya da sağ duvara yeniden asılmış resim olarak
+  `Assets/Resources/Fixtures`'a; pazarın gösterdiği **desen** (`swatch`: düz dokunun en hareketli 64×48 penceresi,
+  poster/tablo/halıda düz resmin kendisi) yanında. Script tekrar koşulabilir: her şey kaynağından yeniden
+  üretiliyor. **81 fikstür, 20 yuva:** arka duvar 5 (çevron 4. basamak, harlequin 5.) · sağ duvar 7 · **tavan 7** ·
+  **zemin 7** · halı 6 · sol/sağ masa 4 · sol bitki 3 (yucca 2.) · sağ bitki 1 (agave) · orta tablo 5 (şehir →
+  üçlü → kokteyl → vinil → flamingo) · **TV ve posterler 8** · **TV'nin üstündeki tablo 4** · duvar lambası 6 ·
+  neon 5 · musluk 3 · lavabo 2 · shaker 2 · iki paspas. Oyundan çıkanlar (ağaçta dışarıda bırakılanlar):
+  fiddle, snake, sol/sağ masa 1–2 — ağaçta aday olarak görünmeye devam ediyorlar.
+- **Açılış v2:** çatlak arka duvar, soyulmuş mor sağ duvar, iki bistro masa, çelik lavabo, iki paspas — ve
+  **aletler**: tek musluk ve çelik shaker (yazar: "musluk ve shaker olacak, onlar sadece upgrade edilecek").
+  Bistro masalar konfor 0 (FreeBase); tavan ve zemin açılışta plakanın kendisi.
+- **Sağ duvar kalabalıklaştı** (yazar: "posterlerle televizyon aynı klasmanda olacak fakat diğer sağ duvar tablosu
+  televizyonun altında üstünde gözükecek"): posterler televizyonun merdiveninde (set 1. basamak, yedi poster
+  arkasından), TV'nin kendi yerine ve boyuna yeniden asıldı (`POSTER_HANG`); dört tablo yeni `wall_right_art`
+  kancasında onların ÜSTÜNDE (`PICTURE_HANG`), araya hava bırakılarak. Test: her tablonun alt kenarı TV/poster
+  noktasının üst kenarının üstünde.
+- **Aletler tırmandıkça hızlanıyor** (yazar: "upgrade etmenin üretime buffu olacak — musluk hızlı temizlerken
+  shaker hızlı çalkalayacak"): `FixtureDefinition.WorkSpeed` (veride `workSpeed`, yoksa 1). İki kat kule 1.2,
+  üç kat 1.4 — `TycoonRun.PourTilted` akışı `TapSpeed` saatinde koşuyor (aynı sürede %40 fazla bira, köpük payı
+  aynı); altın shaker 1.5 — tezgâhta aynı enerjiye daha az kol hareketi (`WorkSpeed("shaker")`). Lavabonun
+  karşılığı zaten vardı (`washSeconds`, pirinç 2.5 s). **Hız tırmanılanın, giyilenin değil**: çelik tenekeyi
+  giyen bar altının hızıyla sallar (tezgâhtaki teneke giyileni çiziyor).
+- **Market: UPGRADES bir katalog oldu** (`TycoonHud.Decor.cs`). Solda raf: BAR & GLASS (tabure, tezgâh, cam
+  hatları — dört sütun), WALLS, ON THE WALL, LIGHTS, FLOOR, PLANTS, COUNTER; her tuşta grubun piktogramı ve bu
+  gece satılabilecek basamak sayısı; açık raf sekmenin pembe kenarını taşıyor, çıplak barda WALLS amber.
+  Sağda her merdiven bir başlık (ad, "MARK 3 OF 5 · +2.25 COMFORT" ya da aletin hızı) ve **bütün basamakları**
+  birer kart: pencerede deseni ya da çizimi (2× tam kat), köşede basamak numarası, adı, bir satır değeri, tek
+  kontrol — **WORN** (yeşil plaka, ON SHOW) · **WEAR** (satın alınmış; tıkla, bedava, konfor tırmanılan
+  basamakta kalır) · **fiyat + ADD** (sıradaki, sepete) · **LOCKED** (soluk; "MARK n FIRST" ya da yıldız
+  kapısı). Üzerine gelince okuma kartı: yer · basamak, hikâye, değer, durum. **İki eski kural bilerek bozuldu**,
+  ikisi de yazarın: sahip olunanın raftan kalkması (2026-09-06) ve N+2 basamağın gizlenmesi (2026-08-26) —
+  giyilen raf sahip olunanı göstermek zorunda, ve "tüm seçenekler gözükmeli". WHAT THE ROOM WEARS rafı ve
+  UPGRADES'in "n more waiting" kasası kartların içine eridi.
+- **Yuva iki alan daha öğrendi:** `title` (rafın merdivene verdiği ad) ve `order` (yalnız overlay'de — tavan ve
+  zemin 13'te, sağ duvar varsayılan 12'de; kancaya order yazmak yükleme hatası).
+- **Fiyat/konfor/yıldız ilk taslak** (`ship.py` SPEC): her merdiven basamak basamak pahalanıyor, değerleniyor ve
+  en az aynı yıldızı istiyor (test bunu bütün gönderilen merdivenlerde tutuyor); arka duvar hâlâ en büyük konfor.
+  **Sim ile ölçülmedi** — `tycoon_sim_report.md` 2026-09-06'dan beri koşulmadı, yeni koşu bir haftalık başka
+  değişikliği de karıştırır; ayar sim'e bırakıldı.
+- **Doğrulama:** EditMode 530/530 (8 yeni: gönderilen merdivenlerin fiyat/konfor/yıldız sırası, her parçanın resmi
+  ve 640×360 katmanları, tavan/zemin sırası, TV-poster-tablo yerleşimi, aletlerin hızı, hızın giyilenden değil
+  tırmanılandan gelmesi, `order`'ın yalnız overlay'de olması, uzun kulenin daha hızlı dökmesi), PlayMode 13/13.
+  Oyunda bakıldı: açılış odası, orta oyun odası, katalogdaki yedi rafın hepsi, sepet ve okuma kartı.
+
 ### 9.58 · Oda giydiğini seçiyor, ve altıncı tur desenler (2026-09-12)
 
 - **Satın alınan her basamak giyilebilir** (yazar: "oyuncu bir sonraki geliştirmeyi almak zorunda

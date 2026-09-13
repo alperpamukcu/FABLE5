@@ -828,7 +828,33 @@ namespace LastCall.UI
         /// <param name="hot">The shelf the player is being SENT to (2026-09-06, the author:
         /// "markette oyuncuya walls upgrade'i daha çok göze sokulmalı ona yönlendirilmeli"):
         /// the band goes amber and the sign says so, until the rung it points at is bought.</param>
-        private RectTransform ShopSection(string title, bool hot = false)
+        private RectTransform ShopSection(string title, bool hot = false, int columns = 5)
+        {
+            ShopSign(title, hot);
+            var sec = NewRect("Sec", _offerRow);
+            var g = sec.gameObject.AddComponent<GridLayoutGroup>();
+            // SIX across, and the arithmetic is the point: 6*160 + 5*8 = 1000 in a 1004
+            // viewport. The grid runs from screen x 8 to 1008, the mask cuts at 1012 and the
+            // scroll track begins at 1022 — 4 units inside the mask, 14 units of air before
+            // the bar. The old line claimed "leaving 790" against a viewport that has never
+            // been 790: it was 730, so a third of every fourth card — its whole pill and
+            // pick-mark — was masked away, which is what the author saw run under the bar.
+            // No padding and no centring: the 4 units of slack must stay on the right.
+            // FIVE across since the card grew to 176 (2026-09-08): 5*176 + 4*12 = 928 in
+            // the 1004 viewport, the slack on the right as before. FOUR beside the upgrade
+            // screen's rail (2026-09-13): 4*176 + 3*12 = 740 in its 796.
+            g.cellSize = new Vector2(TileW, TileH);
+            g.spacing = new Vector2(12, 12);
+            g.padding = new RectOffset(0, 0, 0, 0);
+            g.childAlignment = TextAnchor.UpperLeft;
+            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            g.constraintCount = columns;
+            return sec;
+        }
+
+        /// <summary>The band that heads a shelf, alone — the upgrade screen's ladders stand
+        /// their own rows of cards under it (2026-09-13).</summary>
+        private RectTransform ShopSign(string title, bool hot = false)
         {
             // An aisle sign: a coloured tick, the name in the signage colour, and a rule
             // running out to the edge — how a storefront heads a shelf.
@@ -847,25 +873,7 @@ namespace LastCall.UI
             Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(700, 18), new Vector2(26, 0));
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.text = title;
-
-            var sec = NewRect("Sec", _offerRow);
-            var g = sec.gameObject.AddComponent<GridLayoutGroup>();
-            // SIX across, and the arithmetic is the point: 6*160 + 5*8 = 1000 in a 1004
-            // viewport. The grid runs from screen x 8 to 1008, the mask cuts at 1012 and the
-            // scroll track begins at 1022 — 4 units inside the mask, 14 units of air before
-            // the bar. The old line claimed "leaving 790" against a viewport that has never
-            // been 790: it was 730, so a third of every fourth card — its whole pill and
-            // pick-mark — was masked away, which is what the author saw run under the bar.
-            // No padding and no centring: the 4 units of slack must stay on the right.
-            // FIVE across since the card grew to 176 (2026-09-08): 5*176 + 4*12 = 928 in
-            // the 1004 viewport, the slack on the right as before.
-            g.cellSize = new Vector2(TileW, TileH);
-            g.spacing = new Vector2(12, 12);
-            g.padding = new RectOffset(0, 0, 0, 0);
-            g.childAlignment = TextAnchor.UpperLeft;
-            g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            g.constraintCount = 5;
-            return sec;
+            return h;
         }
 
         /// <summary>
