@@ -237,7 +237,7 @@ namespace LastCall.UI
         private void StepCurtain()
         {
             if (_curtain == null || _curtainT >= CurtainTotal) return;
-            _curtainT += Time.unscaledDeltaTime;
+            _curtainT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;   // 1 in the game (Ceremony)
             float t = _curtainT;
 
             // The black itself: full until the lift, then eased away.

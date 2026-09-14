@@ -40,7 +40,7 @@ namespace LastCall.UI
                 if (Time.unscaledTime - _dayEndDueAt < DayEndPatience) return;
             }
             else if (_dayEndClearAt < 0f) { _dayEndClearAt = Time.unscaledTime; return; }
-            else if (Time.unscaledTime - _dayEndClearAt < DayEndBeat) return;
+            else if (Time.unscaledTime - _dayEndClearAt < DayEndBeat / LastCall.Game.Ceremony.Pace) return;
             _dayEndDue = false;
             _dayEndClearAt = -1f;
             ShowDayEnd();
@@ -94,7 +94,7 @@ namespace LastCall.UI
         private void StepDayEndBeats()
         {
             if (_endBeat == 0) return;
-            _endT += Time.unscaledDeltaTime;
+            _endT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
 
             if (_endBeat == 1)
             {
@@ -158,7 +158,7 @@ namespace LastCall.UI
             // Beat 3: the shake lives here, so the paper is only ever moved by one thing.
             if (_billShake > 0f)
             {
-                _billShake = Mathf.Max(0f, _billShake - Time.unscaledDeltaTime * 4.5f);
+                _billShake = Mathf.Max(0f, _billShake - Time.unscaledDeltaTime * 4.5f * LastCall.Game.Ceremony.Pace);
                 float amp = _billShake * _billShake * 7f;   // dies away fast, like a strike
                 _dayEndBill.anchoredPosition = _billHome + new Vector2(
                     Mathf.Sin(Time.unscaledTime * 62f) * amp * 0.5f,
@@ -217,7 +217,7 @@ namespace LastCall.UI
         private void StepStarDrop()
         {
             if (_starT < 0f || _billStars.Count == 0) return;
-            _starT += Time.unscaledDeltaTime;
+            _starT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             bool running = false;
             for (int i = 0; i < _billStars.Count; i++)
             {
@@ -401,7 +401,7 @@ namespace LastCall.UI
         private void StepStamp()
         {
             if (_stampT < 0f || _billStamp == null) return;
-            _stampT += Time.unscaledDeltaTime;
+            _stampT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             float k = Mathf.Clamp01(_stampT / StampFall);
             float e = k * k * k;                            // gathers pace all the way down
             float scale = Mathf.Lerp(3.4f, 1f, e);
@@ -1575,7 +1575,7 @@ namespace LastCall.UI
         private void StepStandingClimb()
         {
             if (_standT < 0f) return;
-            _standT += Time.unscaledDeltaTime;
+            _standT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             float k = Mathf.Clamp01(_standT / StandClimb);
             float e = k * k * (3f - 2f * k);
             ApplyStanding(Mathf.Lerp((float)_standFrom, (float)_standTo, e));
@@ -1788,7 +1788,7 @@ namespace LastCall.UI
         private void StepSlide()
         {
             if (_slideRt == null) return;
-            _slideT += Time.unscaledDeltaTime;
+            _slideT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             float k = _slideDur <= 0f ? 1f : Mathf.Clamp01(_slideT / _slideDur);
             if (_slideOut)
             {

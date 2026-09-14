@@ -88,6 +88,14 @@ four tests, and the rest is still caught by entering play mode and LOOKING. Meas
 you changed in play (`execute_code` reads live rects and fields) rather than trusting that it
 compiles. Run both suites before a push; PlayMode needs the editor OUT of play mode first.
 
+**The suite keeps its own clock** (2026-09-14): every PlayMode test appends its total, its frame
+rate and the laps between its doors (scene, dealt, open, slip, market, sweep) to
+`Temp/PlayTestTimes.txt` — read it before cutting a wait. Both fixtures run the ceremonies (the
+curtain between nights, the night's slip, stars and stamp) at `LastCall.Game.Ceremony.Pace = 8`
+and put it back; nothing that decides anything reads the pace, and it resets to 1 on every play.
+With the tall-glass sweep finding its pour window first, that took PlayMode from ~260 s to ~95 s. While iterating on one screen, run only its tests
+(`run_tests` takes `test_names`) and leave the whole suite for the push.
+
 **A killed PlayMode run poisons the editor** (2026-08-13): the suite drives a VIRTUAL mouse and
 `InputTestFixture` only takes it away in teardown, so a cancelled or wedged run leaves that fake
 device as the editor's only pointer — the game then ignores the real mouse and appears to play

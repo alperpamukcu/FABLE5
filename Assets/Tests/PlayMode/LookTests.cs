@@ -47,9 +47,14 @@ namespace LastCall.PlayTests
         private uint _windowW, _windowH;
 #endif
 
+        private const float SuitePace = 8f;
+
         [OneTimeSetUp]
         public void PinTheWindow()
         {
+            // THE CEREMONIES AT PACE 8 (2026-09-14, LastCall.Game.Ceremony): the curtain and the night's
+            // slip were 120 s of a 272 s run. Their end states are the same at any pace.
+            LastCall.Game.Ceremony.Pace = SuitePace;
             // The baselines were drawn in English; a Turkish desktop must not repaint them.
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
 #if UNITY_EDITOR
@@ -61,6 +66,7 @@ namespace LastCall.PlayTests
         [OneTimeTearDown]
         public void GiveTheWindowBack()
         {
+            LastCall.Game.Ceremony.Pace = 1f;
 #if UNITY_EDITOR
             if (_windowW > 0 && _windowH > 0)
                 UnityEditor.PlayModeWindow.SetCustomRenderingResolution(_windowW, _windowH, "LastCall");
@@ -71,6 +77,7 @@ namespace LastCall.PlayTests
         {
             base.Setup();
             _mouse = InputSystem.AddDevice<Mouse>();
+            SuiteClock.Start();
         }
 
         public override void TearDown()
@@ -80,6 +87,7 @@ namespace LastCall.PlayTests
             // leaves its virtual mouse as the editor's ONLY pointer, at which point the game
             // appears to play itself and ignore the player (2026-08-13). Removing the device
             // explicitly costs nothing and shortens the window in which that can happen.
+            SuiteClock.End(TestContext.CurrentContext.Test.Name);
             if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
             _mouse = null;
             base.TearDown();
@@ -237,6 +245,7 @@ namespace LastCall.PlayTests
                 yield return null;
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
+            SuiteClock.Mark("slip");
             var clickedAt = RectTransformUtility.WorldToScreenPoint(null, next.position);
 
             // PRESSED UNTIL IT OPENS, like every other door this suite walks (2026-09-05).
@@ -380,7 +389,11 @@ namespace LastCall.PlayTests
                 yield return ClickOn(key);
                 yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
             }
-            Assert.Fail("six presses of the roller never opened it onto " + doorName);
+            var lostDoor = Find(doorName);
+            var stuckKey = HostKey();
+            Assert.Fail("six presses of the roller never opened it onto " + doorName
+                + " · under the door: " + (lostDoor != null ? WhatIsUnder(RectTransformUtility.WorldToScreenPoint(null, lostDoor.position)) : "no door")
+                + " · host key still up: " + (stuckKey != null ? stuckKey.name : "no"));
         }
 
         /// <summary>
@@ -588,6 +601,7 @@ namespace LastCall.PlayTests
                 "the Game view never became the design width — the pictures would not match anything");
 
             yield return SceneManager.LoadSceneAsync("Main", LoadSceneMode.Single);
+            SuiteClock.Mark("scene");
             float waited = 0f;
             while (waited < 20f)
             {
@@ -598,6 +612,7 @@ namespace LastCall.PlayTests
             }
             Assert.That(_boot, Is.Not.Null, "the scene has no GameBootstrap in it");
             Assert.That(_boot.Tycoon, Is.Not.Null, "the run never started");
+            SuiteClock.Mark("dealt");
 
             // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13, and the same fix is in
             // the smoke suite). The room opens behind a CURTAIN on a canvas above everything,
@@ -619,6 +634,7 @@ namespace LastCall.PlayTests
                 "the curtain never lifted — the night's clock never started");
             Assert.That(_boot.Tycoon.Phase, Is.EqualTo(TycoonPhase.DayOpen),
                 "the run never reached DayOpen — a press before that is swallowed in silence");
+            SuiteClock.Mark("open");
             yield return null;
             yield return null;
         }
@@ -641,6 +657,8 @@ namespace LastCall.PlayTests
                 yield return ClickCentre(key);
                 yield return new WaitForSecondsRealtime(0.2f);
             }
+            var stuck = HostKey();
+            if (stuck != null) SuiteClock.Mark("host key still up after 12 presses (" + stuck.name + ")");
         }
 
         private static RectTransform HostKey()

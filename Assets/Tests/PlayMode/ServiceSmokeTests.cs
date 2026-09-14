@@ -69,9 +69,14 @@ namespace LastCall.PlayTests
         /// past the edge of the world. The first run of this suite failed exactly there, on a
         /// 903x508 window, and the raycast said so: zero hits at a live bottle's position.
         /// </summary>
+        private const float SuitePace = 8f;
+
         [OneTimeSetUp]
         public void PinTheWindow()
         {
+            // THE CEREMONIES AT PACE 8 (2026-09-14, LastCall.Game.Ceremony): the curtain and the night's
+            // slip were 120 s of a 272 s run. Their end states are the same at any pace.
+            LastCall.Game.Ceremony.Pace = SuitePace;
             // The captions these tests read are English; a Turkish desktop must not translate them away.
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
 #if UNITY_EDITOR
@@ -83,6 +88,7 @@ namespace LastCall.PlayTests
         [OneTimeTearDown]
         public void GiveTheWindowBack()
         {
+            LastCall.Game.Ceremony.Pace = 1f;
 #if UNITY_EDITOR
             if (_windowW > 0 && _windowH > 0)
                 UnityEditor.PlayModeWindow.SetCustomRenderingResolution(_windowW, _windowH, "LastCall");
@@ -95,6 +101,7 @@ namespace LastCall.PlayTests
             // The fixture wipes the input system, so the hand is made here, after the wipe and
             // before the scene builds its EventSystem against it.
             _mouse = InputSystem.AddDevice<Mouse>();
+            SuiteClock.Start();
         }
 
         public override void TearDown()
@@ -104,6 +111,7 @@ namespace LastCall.PlayTests
             // leaves its virtual mouse as the editor's ONLY pointer, at which point the game
             // appears to play itself and ignore the player (2026-08-13). Removing the device
             // explicitly costs nothing and shortens the window in which that can happen.
+            SuiteClock.End(TestContext.CurrentContext.Test.Name);
             if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
             _mouse = null;
             base.TearDown();
@@ -256,6 +264,8 @@ namespace LastCall.PlayTests
         /// counts how many rows pour. A glass or a grip that narrows the window again turns
         /// this red long before a player has to find it.
         /// </summary>
+        private const int EnoughRows = 4;
+
         [UnityTest]
         public IEnumerator Tipping_the_tin_pours_into_the_tall_glass()
         {
@@ -264,6 +274,10 @@ namespace LastCall.PlayTests
 
             yield return OpenTheCellar("CellarDoor_vodka_astra");
             yield return ClickOn(Find("CellarDoor_vodka_astra"));
+            // HER WORD ON THE BENCH FIRST (2026-09-14): run on its own this test is the session's
+            // first bench, the host speaks up over it, and the lid was dragged into her box — "the
+            // bench never moved to the glass". In the whole suite an earlier test had heard her out.
+            yield return LetTheHostFinish();
             // The tin is filled through Core: the bottle's pour is the test above. This one is
             // about what happens after the lid goes on.
             run.PourMeasure("vodka_astra", 0.4);
@@ -328,15 +342,24 @@ namespace LastCall.PlayTests
             Press(_mouse.leftButton, ScreenPointOf(serveTin));
             yield return new WaitForSecondsRealtime(0.1f);
             int rowsThatPoured = 0;
+            var pouredRows = new System.Text.StringBuilder();
             float maxLean = 0f, maxMove = 0f;
             // 28 rows, not 14 (2026-09-13): past level the neck is in the hand now (PourHand), so
             // the tin pours into the tall glass with the HAND over the rim — the rows have to reach
             // up there, where before they only had to lift a grip that rode 250 units above them.
-            for (int row = 0; row < 28; row++)
+            //
+            // FIND THE WINDOW, THEN MEASURE IT (2026-09-14). Row by row from the bottom, the dry rows
+            // under the window cost 2.3 s each: rows 20-23 poured and the sweep was 55 s of the
+            // suite's 133 (Temp/PlayTestTimes.txt). So every fourth row first, until one pours; then
+            // up from that row and down from it, one row at a time, while they keep pouring. The count
+            // still means what it meant — neighbouring 15-unit rows that pour — wherever the window
+            // sits in the 28, and the sweep stops once the verdict is in (four rows).
+            int row = 0, hit = -1, pass = 0;   // pass 0: every fourth row · 1: up from the hit · 2: down
+            while (row >= 0 && row < 28)
             {
                 float y = start.y + 15f + row * 15f;
                 double before = run.ServingGlass.TotalVolume;
-                bool first = true;
+                bool first = true, poured = false;
                 for (float x = start.x; x >= start.x - 560f; x -= 35f)
                 {
                     Set(_mouse.position, ScreenPointIn(surface, new Vector2(x, y)));
@@ -346,11 +369,26 @@ namespace LastCall.PlayTests
                     first = false;
                     maxLean = Mathf.Max(maxLean, Mathf.Abs(Mathf.DeltaAngle(serveTin.localEulerAngles.z, 0f)));
                     maxMove = Mathf.Max(maxMove, (serveTin.anchoredPosition - tinRest).magnitude);
-                    if (run.ServingGlass.TotalVolume > before) { rowsThatPoured++; break; }
+                    if (run.ServingGlass.TotalVolume > before) { poured = true; break; }
                 }
-                if (run.ServingGlass.IsFull || run.Glass.IsEmpty) break;
+                if (poured) { rowsThatPoured++; pouredRows.Append(row).Append(' '); }
+                if (run.ServingGlass.IsFull || run.Glass.IsEmpty || rowsThatPoured >= EnoughRows) break;
+                if (pass == 0)
+                {
+                    if (poured) { hit = row; pass = 1; }
+                    else { row += 4; continue; }
+                }
+                if (pass == 1)
+                {
+                    if (poured && row + 1 < 28) { row++; continue; }
+                    pass = 2; row = hit - 1;       // the rows under the hit, down to the last dry one
+                    continue;
+                }
+                if (poured && row - 1 > hit - 4) row--;
+                else break;
             }
             Release(_mouse.leftButton);
+            SuiteClock.Mark("sweep (rows that poured: " + pouredRows + ")");
             yield return new WaitForSecondsRealtime(0.2f);
 
             Assert.That(run.ServingGlass.IsEmpty, Is.False,
@@ -359,7 +397,7 @@ namespace LastCall.PlayTests
                 + $" at most {maxLean:0} deg · tin fill {run.Glass.FillFraction:0.00}");
             Assert.That(run.ServingGlassware.Id, Is.EqualTo("highball"),
                 "the drink should have stayed in its tall glass");
-            Assert.That(rowsThatPoured, Is.GreaterThanOrEqualTo(4),
+            Assert.That(rowsThatPoured, Is.GreaterThanOrEqualTo(EnoughRows),
                 $"only {rowsThatPoured} rows of hand height poured into the tall glass — the pour "
                 + "window has narrowed again (it was 10 units wide before the neck grip)");
         }
@@ -651,6 +689,7 @@ namespace LastCall.PlayTests
                 yield return null;
             }
             Assert.That(next, Is.Not.Null, "the night's slip never offered a way on");
+            SuiteClock.Mark("slip");
 
             // PRESSED UNTIL IT OPENS (2026-09-05). One press was the rule here and it is not
             // enough: the first press of a play-mode session is the slow one — everything
@@ -687,7 +726,10 @@ namespace LastCall.PlayTests
                 else yield return null;
             }
             Assert.That(basket, Is.Not.Null,
-                "the market never opened after the slip (" + presses + " presses)");
+                "the market never opened after the slip (" + presses + " presses)"
+                + " · BillNext " + (Find("BillNext") != null && Find("BillNext").gameObject.activeInHierarchy ? "still up, under it " + WhatIsUnder(ScreenPointOf(Find("BillNext"))) : "gone")
+                + " · host key still up: " + (HostKey() != null ? HostKey().name : "no"));
+            SuiteClock.Mark("market");
             yield return new WaitForSecondsRealtime(0.5f);   // it slides in from the right
             yield return LetTheHostFinish();                   // her word on the market, read
         }
@@ -745,6 +787,7 @@ namespace LastCall.PlayTests
                 "the Game view never became the design width — the layout cannot be trusted");
 
             yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            SuiteClock.Mark("scene");
 
             float waited = 0f;
             while (waited < BootTimeout)
@@ -757,6 +800,7 @@ namespace LastCall.PlayTests
             Assert.That(_boot, Is.Not.Null, $"'{SceneName}' has no GameBootstrap in it");
             Assert.That(_boot.Tycoon, Is.Not.Null,
                 $"the run never started within {BootTimeout}s — the boot is half-loaded");
+            SuiteClock.Mark("dealt");
 
             // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13). A quarter of a second
             // was the wait, and the suite's first test kept failing on a press that landed
@@ -782,6 +826,7 @@ namespace LastCall.PlayTests
             Assert.That(_boot.Tycoon.Phase, Is.EqualTo(TycoonPhase.DayOpen),
                 "the run never reached DayOpen — every door in the flow refuses a press "
                 + "before that, and refuses it without a sound");
+            SuiteClock.Mark("open");
             yield return WaitFrames(2);
         }
 
@@ -938,7 +983,11 @@ namespace LastCall.PlayTests
                 yield return ClickOn(key);
                 yield return new WaitForSecondsRealtime(0.6f);      // the roller's own travel
             }
-            Assert.Fail("six presses of the roller never opened it onto " + doorName);
+            var lostDoor = Find(doorName);
+            var stuckKey = HostKey();
+            Assert.Fail("six presses of the roller never opened it onto " + doorName
+                + " · under the door: " + (lostDoor != null ? WhatIsUnder(ScreenPointOf(lostDoor)) : "no door")
+                + " · host key still up: " + (stuckKey != null ? stuckKey.name + " under it " + WhatIsUnder(ScreenPointOf(stuckKey)) : "no"));
         }
 
         // ── the host, heard out ──────────────────────────────────────────────────
@@ -964,6 +1013,8 @@ namespace LastCall.PlayTests
                 yield return ClickOn(key, centre - ScreenPointOf(key));
                 yield return new WaitForSecondsRealtime(0.2f);
             }
+            var stuck = HostKey();
+            if (stuck != null) SuiteClock.Mark("host key still up after 12 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ")");
         }
 
         /// <summary>The one key the host is waiting on, or null when she is not talking.</summary>
