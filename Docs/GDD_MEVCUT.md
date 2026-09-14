@@ -1550,6 +1550,17 @@ kaldırma aralığını genişletip büyütebiliriz böylece"
   hıza ve hızlanmaya göre eğilen, az sönümlü bir yay (en çok 10°). Teneke kapanınca eski tezgâh çizgisinin ortasına
   çıkıyor. Bardak yalpalarken içindeki gövde de dönüyor (`MetaballFluid.SetBodyTurn`, shader `_BodyTurn`); ön kenar
   parçası dönen camın ağzında kalıyor. Serviste nişan kapısı ve "ağız kenarı geçsin" koşulu kalktı.
+- **Kap sıvının kendisini takip ediyor (ikinci geçiş; yazar: "yakalaması için sıvıyı takip etmesi gerekiyor yoksa böyle
+  dökülebiliyor sıvı").** İlk hâlinde akış kaba doğru bükülerek çıkıyor, kap ağzı 9'luk bir yayla izliyordu; havadaki
+  damlalar çıktıkları bükülmeyi koruyup kayan kabın yanına düşüyordu (yazarın ekran görüntüsü: tenekenin yanından
+  boncuk boncuk akan akış). Şimdi akış dümdüz aşağı düşüyor, kap ağız hizasına İLK İNECEK damlanın varacağı x'e gidiyor
+  (`MetaballFluid.NextLandingX`), şişe bırakılsa bile havada kalanları yakalıyor. Yay 18'e sertleşti ve hedefin kendi
+  hızıyla önden sürülüyor (sabit hızla süpürülen akışın altında gecikme kalmıyor). Yalpalama en çok 6°. Kap artık bütün
+  tezgâh boyunca gidiyor (kapağın, kaşığın, ölçünün, SERVE IT'in arkasından geçerek), el de ağız kabın gidebileceği
+  yerde kalacak kadar içeride tutuluyor; tenekenin ağzı yalpayla birlikte dönerek hesaplanıyor. Benzetimle ölçüldü
+  (oyunun sabitleriyle; saniyede 2500 birime kadar düz ve ileri-geri süpürme, 65 ve 200 birim düşüş): düz yay saniyede
+  1500'de damlaların neredeyse tamamını kaçırıyordu, önden sürülen yay hiçbirini kaçırmıyor, en kötü sapma 50 (ağzın
+  yarı genişliği 90).
 - **Akış tenekenin arkasından önüne:** akışı yutan ağız çizili ağzın 56 birim altına indi (`TinStreamDepth`), yani akış
   tenekenin arka duvarının önünden geçip ön plakanın dudağının arkasında kayboluyor.
 - **Kaldırma aralığı büyüdü:** kap alta inince üstündeki yer arttı; `LiftRange` 260→320, `ServeLiftRange` 220→300.

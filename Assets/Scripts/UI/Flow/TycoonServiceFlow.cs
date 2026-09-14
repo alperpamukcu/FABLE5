@@ -765,20 +765,32 @@ namespace LastCall.UI
         private const float GlassFootLift = 16f;
         /// <summary>A vessel is pouring from this lean on (level, less the lean's own spring).</summary>
         private const float PourFromTilt = 85f;
-        private const float CatchOmega = 9f, CatchZeta = 0.8f;                  // follows the stream, no overshoot
+        // 18, not 9 (2026-09-14, second pass): at 9 the tin was a quarter of a second behind a pour that moved, and the
+        // drops already falling came down beside it — the author's screenshot of a stream spilling past the tin.
+        private const float CatchOmega = 18f, CatchZeta = 0.9f;                 // follows the liquid, no overshoot
+        /// <summary>The fastest the liquid's own speed may lead the catcher (units a second): a target that jumps — the
+        /// pour starting, a stream ending — is a spring's job, not a lead's.</summary>
+        private const float CatchLeadMax = 1600f;
         private const float SwayOmega = 11f, SwayZeta = 0.25f;                   // rocks, and wobbles when it stops
         // Measured in play at 0.0005 per px/s² alone: the tin following a pour rocked 1.3 degrees at most, which does not
         // read as a sway. The lean now takes the speed as well as the push, and the push counts for more.
-        private const float SwayPerAccel = 0.0012f, SwayPerSpeed = 0.004f, MaxSway = 10f;
+        // Smaller since the follow got stiffer (2026-09-14, second pass): the same gains on a spring twice as quick rocked the
+        // tin past fifteen degrees in the author's screenshot, and a tin leaning that far is a mouth moved off the stream.
+        private const float SwayPerAccel = 0.0003f, SwayPerSpeed = 0.0015f, MaxSway = 6f;
 
         /// <summary>One frame of a catcher: its x follows <paramref name="target"/> on a spring, and it rocks on
         /// its foot with the push — an underdamped lean off its low-passed sideways acceleration, so it wobbles
         /// as it stops. Positive sway leans the top left (Unity's counter-clockwise).</summary>
         private static void StepCatch(ref float x, ref float v, ref float ax, ref float sway, ref float swayV,
-            float target, float dt)
+            ref float lastTarget, float target, float dt)
         {
             float was = v;
-            v += (CatchOmega * CatchOmega * (target - x) - 2f * CatchZeta * CatchOmega * v) * dt;
+            // LED BY THE LIQUID'S OWN SPEED (2026-09-14, second pass): a plain spring trails a target moving at a steady
+            // pace by 2ζ/ω of it — at 18 a tenth of a second, a hundred units behind a pour swept at a thousand a second,
+            // wider than the tin's mouth. Damping toward the target's velocity instead of toward rest takes that lag out.
+            float targetV = Mathf.Clamp((target - lastTarget) / dt, -CatchLeadMax, CatchLeadMax);
+            lastTarget = target;
+            v += (CatchOmega * CatchOmega * (target - x) + 2f * CatchZeta * CatchOmega * (targetV - v)) * dt;
             x += v * dt;
             ax = Mathf.Lerp(ax, (v - was) / dt, 1f - Mathf.Exp(-14f * dt));
             float want = Mathf.Clamp(ax * SwayPerAccel + v * SwayPerSpeed, -MaxSway, MaxSway);

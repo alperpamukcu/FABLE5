@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The vessel follows the liquid, not the mouth (2026-09-14):** the stream falls straight down and
+  the tin or glass goes to where the next drop in the air will come down, on a stiffer spring led by
+  that point's speed. It travels the whole bench, and the hand keeps the mouth within its reach. A
+  pour swept fast no longer spills past the tin.
+
 - **The pour runs by the lift in Fibonacci steps, and the vessel catches it (2026-09-14, sixth
   pass):** past level the hand's lift is nine bands whose flows go 1, 1, 2, 3, 5, 8, 13, 21, 34,
   from about a percent of the tin a second to full flow. The open tin and the serving glass stand

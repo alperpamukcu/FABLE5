@@ -834,7 +834,7 @@ namespace LastCall.UI
             _shakerFluid.SetColor(DrinkColor(run.Glass));
             _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
-            _tinCatchX = _shakerHome.x; _tinCatchV = 0f; _tinAx = 0f; _tinSway = 0f; _tinSwayV = 0f;
+            _tinCatchX = _shakerHome.x; _tinCatchV = 0f; _tinAx = 0f; _tinSway = 0f; _tinSwayV = 0f; _tinCatchLast = _shakerHome.x;
             _capped = false; _capGrabbed = false; _capT = 0f;
             _spoonHeld = false; _stirEnergy = 0; _stirHasPrev = false;
             _toGlassWasOn = false; _toGlassPulse = 0f;
@@ -895,8 +895,11 @@ namespace LastCall.UI
             {
                 float halfW = _pourSurface.rect.width * 0.5f;
                 float halfH = _pourSurface.rect.height * 0.5f;
+                // THE MOUTH STAYS WHERE THE TIN CAN GO (2026-09-14, second pass): a bottle tipped left carries its mouth
+                // up to its hold's lever left of the hand, so the hand stops that far in from the left edge.
+                float leftmost = -halfW + TinCatchInset - 70f + _bottleHand.HoldBelowSpout;
                 _bottleHand.Step(Time.deltaTime, pointer,
-                    Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH + HandAbove));
+                    Rect.MinMaxRect(Mathf.Max(-halfW + 30f, leftmost), -halfH + 20f, halfW - 30f, halfH + HandAbove));
                 _bottleHand.Apply(_pourBottle);
             }
 
@@ -946,7 +949,10 @@ namespace LastCall.UI
                     // contains, which then snapped to the true colour on the next refresh.
                     _shakerFluid.SetStreamColor(
                         UITheme.LiquidColor(_focusBottle.Info?.Style, _focusBottle.Type));
-                    var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
+                    // STRAIGHT DOWN (2026-09-14, second pass): the stream used to be bent toward the tin, and every drop
+                    // kept the bend it left with while the tin moved — the curve of beads that missed. It falls where the
+                    // mouth is, and the tin goes there (StepTinCatch follows the liquid).
+                    var streamVel = new Vector2(0f, -225f);
                     // A rope as thick as the pour is heavy: the lip's trickle is a thread, a
                     // bottle tipped right over a full rope (the girth P3 will take from Core's
                     // own delivered volume).
@@ -980,9 +986,17 @@ namespace LastCall.UI
             if (pourNow) RefreshShakerMixBar(run);          // the gauge follows the stream
             _pouring = pourNow;
 
-            // The tin follows the mouth once the bottle is well on its way over, and goes home when it is not.
-            StepTinCatch(!_capped && _capT <= 0f && _bottleGrabbed && _bottleHand.Held && _bottleHand.Tilt > 40f
-                ? _bottleHand.SpoutNow.x : _shakerHome.x);
+            // THE TIN FOLLOWS THE LIQUID (2026-09-14, second pass): where the next drop in the air comes down at its
+            // mouth; before anything is falling, the mouth of a bottle well on its way over; home otherwise — and a pour
+            // let go of mid-stream is still caught.
+            float catchTo = _shakerHome.x;
+            if (!_capped && _capT <= 0f)
+            {
+                float rimY = TinMouth().Centre.y;
+                if (_shakerFluid.NextLandingX(rimY, out float falling)) catchTo = falling;
+                else if (_bottleGrabbed && _bottleHand.Held && _bottleHand.Tilt > 40f) catchTo = _bottleHand.SpoutNow.x;
+            }
+            StepTinCatch(catchTo);
 
             // Every frame, not only the pouring ones: the bottle in hand is the same bottle
             // that stands on the rail, and it drains while you hold it over the tin. Setting
@@ -990,10 +1004,11 @@ namespace LastCall.UI
             PushPourFill(run);
         }
 
-        private float _tinCatchX = -120f, _tinCatchV, _tinAx, _tinSway, _tinSwayV;
-        /// <summary>How far the catching tin may travel: from its home, where the lid stands to its left, to the
-        /// measuring glass on the right (surface-local, the tin's centre).</summary>
-        private const float TinCatchMinX = -122f, TinCatchMaxX = 325f;
+        private float _tinCatchX = -120f, _tinCatchV, _tinAx, _tinSway, _tinSwayV, _tinCatchLast = -120f;
+        /// <summary>How far in from the surface's edges the catching tin stops (its centre, surface-local): the whole
+        /// bench (2026-09-14, second pass) — it passes behind the lid, the spoon and the measure rather than leave a
+        /// stream it cannot reach. The hand keeps the mouth inside it (UpdateTiltPour).</summary>
+        private const float TinCatchInset = 92f;
         /// <summary>How far under the drawn mouth the stream is swallowed: past the front plate's lip (26 sheet rows,
         /// 52 units, at the middle), so the stream is seen going in — over the tin's back, under its front (2026-09-14,
         /// the author: "şişelerden dökülen sıvı shaker.png nin önünde shaker_Front.png nin arkasında olacak").</summary>
@@ -1003,8 +1018,9 @@ namespace LastCall.UI
         {
             float dt = Mathf.Min(Time.deltaTime, 1f / 30f);
             if (dt <= 0f) return;
-            StepCatch(ref _tinCatchX, ref _tinCatchV, ref _tinAx, ref _tinSway, ref _tinSwayV,
-                Mathf.Clamp(targetX, TinCatchMinX, TinCatchMaxX), dt);
+            float reach = _pourSurface.rect.width * 0.5f - TinCatchInset;
+            StepCatch(ref _tinCatchX, ref _tinCatchV, ref _tinAx, ref _tinSway, ref _tinSwayV, ref _tinCatchLast,
+                Mathf.Clamp(targetX, -reach, reach), dt);
         }
 
         /// <summary>The focus bottle's v4 plates, resolved once per card: PushPourFill runs
@@ -1134,7 +1150,9 @@ namespace LastCall.UI
             float k = rt.rect.height / sp.rect.height;              // the drawing fills the rect
             float drop = (sp.rect.height - (ob.y + ob.height)) * k; // empty canvas over the rim
             // The mouth's own width plus a little slack: threading a rim is not the game.
-            return (new Vector2(rt.anchoredPosition.x, top - drop), ob.width * k * 0.5f + 8f);
+            // TURNED WITH THE TIN (2026-09-14): a tin rocking as it catches carries its mouth round its centre.
+            var up = rt.localRotation * new Vector3(0f, rt.rect.height * 0.5f - drop, 0f);
+            return (rt.anchoredPosition + (Vector2)up, ob.width * k * 0.5f + 8f);
         }
 
         /// <summary>Places the shaker's pooled liquid from the glass interior and its live fill,

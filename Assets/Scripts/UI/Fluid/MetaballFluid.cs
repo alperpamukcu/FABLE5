@@ -500,6 +500,32 @@ namespace LastCall.UI
 
         public void ClearSink() => _sinkSet = false;
 
+        /// <summary>
+        /// WHERE THE STREAM COMES DOWN NEXT (2026-09-14, the author: "yakalaması için sıvıyı takip etmesi gerekiyor
+        /// yoksa böyle dökülebiliyor sıvı"): the x at which the lowest stream drop still above
+        /// <paramref name="aboveY"/> will reach that height, carried on at its own speed under gravity. A vessel that
+        /// follows this is under the liquid itself — the drops already in the air — not under the mouth they left.
+        /// False when nothing is falling.
+        /// </summary>
+        public bool NextLandingX(float aboveY, out float x)
+        {
+            x = 0f;
+            float lowest = float.PositiveInfinity;
+            bool found = false;
+            for (int i = 0; i < StreamMax; i++)
+            {
+                if (!_drops[i].Active || !_drops[i].Merges) continue;
+                var d = _drops[i];
+                if (d.Pos.y < aboveY || d.Pos.y >= lowest) continue;
+                lowest = d.Pos.y;
+                float h = d.Pos.y - aboveY, down = -d.Vel.y;
+                float t = (-down + Mathf.Sqrt(Mathf.Max(0f, down * down + 2f * StreamGravity * h))) / Mathf.Max(StreamGravity, 1f);
+                x = d.Pos.x + d.Vel.x * t;
+                found = true;
+            }
+            return found;
+        }
+
         // What became of every drop that left the air — the evidence for "nothing drips onto
         // the counter". Landed: melted into the drink. Swallowed: went into a sink. Lost: a
         // stream node that fell out of the viewport or ran out of life without landing anywhere,

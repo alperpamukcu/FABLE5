@@ -136,7 +136,7 @@ namespace LastCall.UI
             _serveFluid.SetColor(DrinkColor(run.ServingGlass.IsEmpty ? run.Glass : run.ServingGlass));
             ShowServingGlassware(run);
             RefreshServeMixBar(run);
-            _glassCatchX = ServeGlassRestX; _glassCatchV = 0f; _glassAx = 0f; _glassSway = 0f; _glassSwayV = 0f;
+            _glassCatchX = ServeGlassRestX; _glassCatchV = 0f; _glassAx = 0f; _glassSway = 0f; _glassSwayV = 0f; _glassCatchLast = ServeGlassRestX;
             PushServePool(run);
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
             // Steel is steel whatever is in it. This used to multiply the tin sprite by the
@@ -212,9 +212,11 @@ namespace LastCall.UI
             return (new Vector2(c.x, c.y - h * 0.5f + h * piece.RimY), w * 0.5f * piece.InteriorHalf);
         }
 
-        private float _glassCatchX = ServeGlassRestX, _glassCatchV, _glassAx, _glassSway, _glassSwayV;
+        private float _glassCatchX = ServeGlassRestX, _glassCatchV, _glassAx, _glassSway, _glassSwayV, _glassCatchLast = ServeGlassRestX;
         private const float ServeGlassRestX = -110f;
-        private static readonly Vector3[] DoneCorners = new Vector3[4];
+        /// <summary>How far either side of the surface's middle the glass's centre may go.</summary>
+        private float GlassReach() =>
+            Mathf.Max(0f, _serveSurface.rect.width * 0.5f - _serveGlass.rect.width * 0.5f - 10f);
 
         /// <summary>The serving glass catches (2026-09-14): it follows the tin's mouth along the bottom, between the
         /// bench's left edge and SERVE IT, rocked on its foot; the back sheet and the shadow go with it.</summary>
@@ -223,15 +225,11 @@ namespace LastCall.UI
             if (_serveGlass == null || _serveSurface == null) return;
             float dt = Mathf.Min(Time.deltaTime, 1f / 30f);
             if (dt <= 0f) return;
-            float half = _serveGlass.rect.width * 0.5f;
-            float min = -_serveSurface.rect.width * 0.5f + half + 10f, max = float.PositiveInfinity;
-            if (_serveDoneGroup != null)
-            {
-                ((RectTransform)_serveDoneGroup.transform).GetWorldCorners(DoneCorners);
-                max = _serveSurface.InverseTransformPoint(DoneCorners[0]).x - half - 8f;
-            }
-            StepCatch(ref _glassCatchX, ref _glassCatchV, ref _glassAx, ref _glassSway, ref _glassSwayV,
-                Mathf.Clamp(targetX, min, Mathf.Max(min, max)), dt);
+            // THE WHOLE BENCH (2026-09-14, second pass): it passes behind SERVE IT rather than leave a stream it cannot
+            // reach; the hand keeps the tin's mouth inside this (UpdateServeTilt).
+            float reach = GlassReach();
+            StepCatch(ref _glassCatchX, ref _glassCatchV, ref _glassAx, ref _glassSway, ref _glassSwayV, ref _glassCatchLast,
+                Mathf.Clamp(targetX, -reach, reach), dt);
             var rock = Quaternion.Euler(0f, 0f, _glassSway);
             float h = _serveGlass.rect.height;
             _serveGlass.anchoredPosition = new Vector2(_glassCatchX, CatchFootY + GlassFootLift)
@@ -308,8 +306,12 @@ namespace LastCall.UI
                 pointer = ptr;
             float halfW = _serveSurface.rect.width * 0.5f;
             float halfH = _serveSurface.rect.height * 0.5f;
+            // The tin's mouth stays where the glass can go (2026-09-14, second pass): tipped left it runs up to its grip
+            // left of the hand, so the hand keeps inside the glass's reach by that much on the left.
+            float glassReach = _serveGlass != null ? GlassReach() : halfW;
             _serveHand.Step(Time.deltaTime, pointer,
-                Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH + HandAbove));
+                Rect.MinMaxRect(Mathf.Max(-halfW + 30f, -glassReach + _serveHand.HoldBelowSpout),
+                                -halfH + 20f, Mathf.Min(halfW - 30f, glassReach + 20f), halfH + HandAbove));
             _serveHand.Apply(_serveShaker);
             if (_serveTinLeaving && _serveHand.AtRest)
             {
@@ -376,7 +378,7 @@ namespace LastCall.UI
                     if (pourNow)
                     {
                         _serveFluid.SetStreamColor(DrinkColor(run.Glass));
-                        var streamVel = new Vector2((opening.x - mouth.x) * 1.8f, -225f);
+                        var streamVel = new Vector2(0f, -225f);   // straight down: the glass follows the liquid (2026-09-14)
                         // As thick as the pour is heavy: Core's share of full flow, not the angle.
                         // A thread when little is running (2026-09-13), a rope neck-down.
                         _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.2f + 1.3f * _tinShare);
@@ -404,7 +406,12 @@ namespace LastCall.UI
             // counter can change in the middle of this stage. Checked every frame; it costs a
             // reference compare until the day it actually changes.
             ShowServingGlassware(run);
-            StepGlassCatch(_serveGrabbed && _serveHand.Held && _serveHand.Tilt > 40f ? ServeSpoutNow().x : ServeGlassRestX);
+            // THE GLASS FOLLOWS THE LIQUID (2026-09-14, second pass): where the next drop comes down at its top, else the
+            // mouth of a tin well on its way over, else home.
+            float glassTo = ServeGlassRestX;
+            if (_serveFluid.NextLandingX(ServeGlassTop(), out float falling)) glassTo = falling;
+            else if (_serveGrabbed && _serveHand.Held && _serveHand.Tilt > 40f) glassTo = ServeSpoutNow().x;
+            StepGlassCatch(glassTo);
             PushServePool(run);
             _serveFluid.Step(Time.deltaTime);
         }
