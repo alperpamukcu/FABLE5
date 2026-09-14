@@ -1781,7 +1781,7 @@ namespace LastCall.UI
                     try
                     {
                         run.Wipe(mk.Mess);
-                        Sfx.Play("rim_done", 0.45f);
+                        Sfx.Play("cloth_wipe", 0.6f);   // the rag's own sound, three takes in turn (2026-09-15)
                         if (held)
                             for (int i = 0; i < 4; i++) ShedDrop(at + new Vector2((i - 1.5f) * 7f, -16f));
                     }
@@ -3662,6 +3662,22 @@ namespace LastCall.UI
             far.effectDistance = new Vector2(3.5f, -3.5f);
         }
 
+        /// <summary>
+        /// WHAT THE BAR IS PLAYING (2026-09-15, the author: "arkaplanda biraz daha 80ler elektronik jazz olmalı rahatlatıcı
+        /// bir oyun olmalı"): the night while it is open, its late mood over the last stretch of the shift and past closing,
+        /// the story's own while the last customer is on their stool, the books after, and a closed bar's. Sfx.Music turns
+        /// a mood into tracks.
+        /// </summary>
+        private static string MusicMood(TycoonRun run) =>
+            run.Phase == TycoonPhase.Closed ? "closed"
+            : run.Phase == TycoonPhase.DayEnd ? "dayend"
+            : run.LastCustomer != null ? "story"
+            : run.Floor != null && run.Floor.NightFraction >= LateNight ? "lastcall"
+            : "night";
+
+        /// <summary>The share of the shift after which the music turns late.</summary>
+        private const double LateNight = 0.85;
+
         private void RefreshSeats()
         {
             var run = Run;
@@ -3871,9 +3887,11 @@ namespace LastCall.UI
 
             RefreshSnackRow(run);
             RefreshDirtyGlasses(run);
-            // The bar bed (P17): always on, muffled while a stage or the licence is open.
-            Sfx.Ambience(ducked: (_flow != null && _flow.IsOpen) ||
-                                 (_idRoot != null && _idRoot.gameObject.activeSelf));
+            // The bar bed (P17): always on, muffled while a stage or the licence is open — and, since 2026-09-15, the
+            // music over it, which follows the night (MusicMood). The mood goes first: the bed is chosen by it.
+            bool attention = (_flow != null && _flow.IsOpen) || (_idRoot != null && _idRoot.gameObject.activeSelf);
+            Sfx.Music(MusicMood(run), attention);
+            Sfx.Ambience(ducked: attention);
 
             // 3) Render each stool from its assigned patron.
             for (int i = 0; i < _seats.Count; i++)

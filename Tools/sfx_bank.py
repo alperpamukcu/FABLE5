@@ -25,6 +25,7 @@ The bar's voice is deliberately WARM: almost everything is low-passed under 8 kH
 because a pixel-art bar at 2am is not a bright room, and unfiltered noise is the
 'harsh' the brief forbids. Levels differ by design — see LEVELS in sfx_dsp.
 """
+import json
 import os
 import sys
 
@@ -1530,12 +1531,30 @@ def space_of(name, level):
     return SPACE.get(name, SPACE_BY_LEVEL.get(level, 'prop'))
 
 
+def recorded():
+    """Names a recording has taken over (2026-09-15, Tools/sfx_picks.json via sfx_ingest.py): a take `click_2` takes
+    over `click`. A full build skips them, so running this bank again cannot paint a synthesised clip over a real one;
+    naming one on the command line still builds it."""
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sfx_picks.json')
+    if not os.path.exists(p):
+        return set()
+    names = set()
+    for n in json.load(open(p, encoding='utf-8')).get('clips', {}):
+        tail = n.rsplit('_', 1)
+        names.add(tail[0] if len(tail) == 2 and tail[1].isdigit() else n)
+    return names
+
+
 def build(names=None):
+    skip = set() if names else recorded()
     names = names or sorted(BANK)
     rows = []
     for n in names:
         if n not in BANK:
             print('  ?? no such clip: %s' % n)
+            continue
+        if n in skip:
+            print('  -- %-16s a recording now (sfx_picks.json); name it to build the synthesised one' % n)
             continue
         fn, level, loop, drive = BANK[n]
         x = render(fn(), level=level, name=n, loop=loop, drive=drive,

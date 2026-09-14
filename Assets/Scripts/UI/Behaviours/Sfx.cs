@@ -65,6 +65,17 @@ namespace LastCall.UI
         private AudioSource _motion;       // the vessel moving under the pour (2026-09-15)
         private AudioLowPassFilter _loopLp, _motionLp;
         private float _ambienceTarget;     // ducked while a stage is open
+        private AudioSource _rain;         // the city through the window, under everything (2026-09-15)
+        private float _rainTarget;
+        private AudioSource[] _music;      // two, so a track fades into the next (2026-09-15)
+        private int _musicActive;
+        private string _mood;
+        private bool _musicDucked;
+        private float _trackStartedAt;
+        private readonly Dictionary<string, List<AudioClip>> _playlists = new Dictionary<string, List<AudioClip>>();
+        private readonly Dictionary<string, int> _musicCursor = new Dictionary<string, int>();
+        private readonly Dictionary<string, AudioClip[]> _takes = new Dictionary<string, AudioClip[]>();
+        private readonly Dictionary<string, int> _takeAt = new Dictionary<string, int>();
 
         /// <summary>A low-pass this high passes everything the bank holds.</summary>
         private const float OpenCutoff = 22000f;
@@ -128,6 +139,14 @@ namespace LastCall.UI
             }
             _ambience = gameObject.AddComponent<AudioSource>();
             _ambience.loop = true; _ambience.playOnAwake = false; _ambience.volume = 0f;
+            _rain = gameObject.AddComponent<AudioSource>();
+            _rain.loop = true; _rain.playOnAwake = false; _rain.volume = 0f;
+            var oldMusic = transform.Find("Music");
+            if (oldMusic != null) Destroy(oldMusic.gameObject);
+            var musicHost = new GameObject("Music");
+            musicHost.transform.SetParent(transform, false);
+            _music = new[] { musicHost.AddComponent<AudioSource>(), musicHost.AddComponent<AudioSource>() };
+            foreach (var m in _music) { m.playOnAwake = false; m.loop = false; m.volume = 0f; }
             _loop = HeldSource("HeldLoop", out _loopLp);
             _loopFar = HeldSource("HeldLoopFar", out _);
             _motion = HeldSource("HeldMotion", out _motionLp);
@@ -192,7 +211,7 @@ namespace LastCall.UI
         public static void Play(string name, float volume = 1f, float pitch = 0f)
         {
             var i = Instance;
-            var clip = i.Clip(name);
+            var clip = i.Take(name);
             if (clip == null) return;
             var v = i._voices[i._next];
             i._next = (i._next + 1) % OneShotVoices;
@@ -313,8 +332,25 @@ namespace LastCall.UI
         public static void Ambience(bool ducked)
         {
             var i = Instance;
-            if (i._ambience.clip == null) i._ambience.clip = i.Clip("ambience_loop");
-            if (i._ambience.clip == null) return;
+            // THE ROOM, NOT THE MUSIC (2026-09-15): this bed WAS the music until the music got a channel of its own
+            // (Music). It is the bar's murmur while the night is on and the empty room once it is over, with the rain on
+            // the window under both. A bed with no file stays silent, as every clip here does.
+            var rain = i.Clip("ambience_rain");
+            if (rain != null)
+            {
+                if (i._rain.clip != rain) i._rain.clip = rain;
+                if (!i._rain.isPlaying) i._rain.Play();
+                i._rainTarget = RainLevel * (ducked ? BedDuck : 1f) * Sound.Effective;
+            }
+            var bed = i.Clip(i._mood == "dayend" || i._mood == "closed" ? "ambience_empty" : "ambience_crowd");
+            if (i._ambience.clip != bed)
+            {
+                i._ambienceTarget = 0f;                                   // the old bed goes before the new one comes
+                if (i._ambience.clip != null && i._ambience.isPlaying && i._ambience.volume > 0.001f) return;
+                i._ambience.clip = bed;
+                i._ambience.volume = 0f;
+            }
+            if (bed == null) return;
             // KEEP IT PLAYING, not merely ASSIGNED (2026-08-27). This started the bed
             // only on the frame the clip was first loaded, so anything that stopped the
             // source afterwards stopped the music for the rest of the session and
@@ -323,7 +359,122 @@ namespace LastCall.UI
             // would a device change or a scene load. Checked every frame because this is
             // already called every frame, and isPlaying is a field read.
             if (!i._ambience.isPlaying) i._ambience.Play();
-            i._ambienceTarget = (ducked ? 0.25f : 0.7f) * Sound.Effective;
+            i._ambienceTarget = BedLevel * (ducked ? BedDuck : 1f) * (i._mood == "story" ? 0.5f : 1f) * Sound.Effective;
+        }
+
+        /// <summary>
+        /// A clip recorded in takes — `name_1`, `name_2` ... up to the first missing number — plays them in turn, so five
+        /// clinks in a row are five glasses (SES_LISTESI §2.5); in order, never rolled, the house rule. Without takes, the
+        /// one clip by its own name.
+        /// </summary>
+        private AudioClip Take(string name)
+        {
+            if (!_takes.TryGetValue(name, out var takes))
+            {
+                var found = new List<AudioClip>();
+                for (int n = 1; n <= 8; n++)
+                {
+                    var c = Clip(name + "_" + n);
+                    if (c == null) break;
+                    found.Add(c);
+                }
+                takes = found.ToArray();
+                _takes[name] = takes;
+            }
+            if (takes.Length == 0) return Clip(name);
+            _takeAt.TryGetValue(name, out int at);
+            _takeAt[name] = at + 1;
+            return takes[at % takes.Length];
+        }
+
+        // ── THE MUSIC (2026-09-15, the author: "Eksik olan sesleri ve müzikleri güncelleyelim ... arkaplanda biraz daha
+        // 80ler elektronik jazz olmalı rahatlatıcı bir oyun olmalı") ─────────────────────────────────────────────────
+        /// <summary>The music's level at full, under the effects: a bed you notice is too loud.</summary>
+        private const float MusicLevel = 0.55f;
+        /// <summary>How much of the music stays while a bench or a card has the player's attention.</summary>
+        private const float MusicDuck = 0.6f;
+        /// <summary>Seconds a track takes to fade into the next, and one mood into another.</summary>
+        private const float MusicFade = 3f;
+        /// <summary>The room's murmur and the rain under it at full; both drop to BedDuck while a stage is open.</summary>
+        private const float BedLevel = 0.35f, RainLevel = 0.18f, BedDuck = 0.4f;
+        private const int MaxTracks = 12;
+
+        /// <summary>
+        /// The bar's music, called every frame with its mood — "night", "lastcall", "story", "dayend" or "closed". A
+        /// mood's tracks are `music_{mood}_1`, `_2` ... in Resources/Audio, up to the first missing number. They play in
+        /// that order, never shuffled (the house rule), each fading into the next, and a mood keeps its place, so the
+        /// night picks up where it left off after the books. A mood with no tracks borrows the nearest one's (closed →
+        /// dayend → night, story → lastcall → night), and a game with no music at all keeps the old synthesised bed.
+        /// </summary>
+        public static void Music(string mood, bool ducked)
+        {
+            var i = Instance;
+            i._musicDucked = ducked;
+            if (mood == i._mood) return;
+            i._mood = mood;
+            i.NextTrack();
+        }
+
+        private List<AudioClip> Playlist(string mood)
+        {
+            if (_playlists.TryGetValue(mood, out var list)) return list;
+            list = new List<AudioClip>();
+            for (int n = 1; n <= MaxTracks; n++)
+            {
+                var c = Clip("music_" + mood + "_" + n);
+                if (c == null) break;
+                list.Add(c);
+            }
+            _playlists[mood] = list;
+            return list;
+        }
+
+        private static string MusicFallback(string mood) =>
+            mood == "closed" ? "dayend" : mood == "story" ? "lastcall" : mood == "night" ? null : "night";
+
+        /// <summary>Starts the mood's next track on the quiet source; StepMusic fades it up and the other down.</summary>
+        private void NextTrack()
+        {
+            string from = _mood;
+            var list = from != null ? Playlist(from) : null;
+            while (from != null && list.Count == 0)
+            {
+                from = MusicFallback(from);
+                list = from != null ? Playlist(from) : null;
+            }
+            AudioClip clip;
+            if (from != null)
+            {
+                _musicCursor.TryGetValue(from, out int at);
+                clip = list[at % list.Count];
+                _musicCursor[from] = at + 1;
+            }
+            else clip = Clip("ambience_loop");
+            if (clip == null) return;
+            var incoming = _music[1 - _musicActive];
+            incoming.clip = clip;
+            incoming.volume = 0f;
+            incoming.loop = clip.length <= MusicFade * 2f;
+            incoming.Play();
+            _musicActive = 1 - _musicActive;
+            _trackStartedAt = Time.unscaledTime;
+        }
+
+        private void StepMusic(float dt)
+        {
+            if (_music == null || _mood == null) return;
+            var active = _music[_musicActive];
+            var fading = _music[1 - _musicActive];
+            float rate = dt * MusicLevel / MusicFade;
+            active.volume = Mathf.MoveTowards(active.volume,
+                MusicLevel * Sound.Effective * (_musicDucked ? MusicDuck : 1f), rate);
+            fading.volume = Mathf.MoveTowards(fading.volume, 0f, rate);
+            if (fading.isPlaying && fading.volume <= 0.0001f) fading.Stop();
+            // The next track begins its fade before this one ends, so the night never stops; a track that stopped anyway
+            // (a device change, a reimport in play) is picked up the same way — once it has had time to start.
+            if (active.clip != null && !active.loop && Time.unscaledTime - _trackStartedAt > MusicFade
+                && (!active.isPlaying || active.clip.length - active.time <= MusicFade))
+                NextTrack();
         }
 
         private void Update()
@@ -332,6 +483,9 @@ namespace LastCall.UI
             if (_ambience != null && _ambience.clip != null)
                 _ambience.volume = Mathf.MoveTowards(_ambience.volume, _ambienceTarget,
                     dt * 0.9f);
+            if (_rain != null && _rain.clip != null)
+                _rain.volume = Mathf.MoveTowards(_rain.volume, _rainTarget, dt * 0.5f);
+            StepMusic(dt);
             // The held loop chases its level and its pitch instead of jumping to them.
             // Pitch is chased HALF as fast as volume: a level that lags is unnoticeable,
             // while a pitch that snaps is a warble you cannot un-hear.

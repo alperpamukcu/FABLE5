@@ -12,10 +12,10 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Klasör** | `Assets/Resources/Audio/` — başka yere konan dosya yüklenmez |
 | **Çağırma** | `Sfx.Play("dosya_adi")` — uzantısız, isimle. Dosya yoksa **sessizlik** (hata değil), yani ses ses eklenebilir |
 | **Format** | 44.1 kHz, **mono**, 16-bit WAV. Stereo/48k da çalışır ama bank tek düzende |
-| **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) |
+| **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) + **müzik kanalı** (iki kaynak, parçadan parçaya geçiş) + 2 **ortam yatağı** (kalabalık, yağmur) |
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume` |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
-| **Şu anki kaynak** | 77 klibin **tamamı sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py` ile üretildi). Yani hepsi yer tutucu; gerçekleriyle değiştirilebilir |
+| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **48 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **44 klip sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py`), **10 müzik parçası** ve **2 ortam yatağı** CC0 |
 | **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
@@ -25,7 +25,9 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 
 ---
 
-## 1 · Şu an oyunda olan 77 klip
+## 1 · Şu an oyunda olan klipler
+
+> 2026-09-15: aşağıdaki süreler sentetik bankın. Kayda dönen 48 klip, üçer kayıtlı olanlar ve müzik `Docs/SES_KAYNAKLARI.md`'de.
 
 ### 1.1 Oda ve gece döngüsü
 
@@ -169,7 +171,9 @@ istemiyorsak bu beş dosya silinir.
 
 ## 2 · İhtiyaç listesi — bulunacaklar
 
-### 2.1 MÜZİK (oyunda hiç yok — en büyük eksik)
+### 2.1 MÜZİK
+
+> **Durum (2026-09-15):** kanal kuruldu (`Sfx.Music`), oyunda `music_night_1..6`, `music_lastcall_1`, `music_story_1`, `music_dayend_1..2` (CC0; GDD_MEVCUT §9.68). Menü ekranı olmadığı için ana tema yok; yoğun gece B ayrıca bağlanmadı, gece listesi sırayla dönüyor.
 
 | İhtiyaç | Uzunluk | Nerede | Not |
 |---|---|---|---|
@@ -185,6 +189,8 @@ istemiyorsak bu beş dosya silinir.
 > Klipler `Assets/Resources/Audio/` içine `music_*` adıyla konursa kanalı bağlarım.
 
 ### 2.2 Ortam yatakları (mevcut tek yatağın yerine/yanına)
+
+> **Durum (2026-09-15):** `ambience_crowd` ve `ambience_rain` oyunda. Boş bar (buzdolabı) ve neon vızıltısı bilerek yok: sabit uğultu 2026-08-27'de kaldırılan şeydi.
 
 | İhtiyaç | Uzunluk | Not |
 |---|---|---|
@@ -209,6 +215,8 @@ En çok duyulan 10 klip — **önce bunlar** değişsin:
 
 ### 2.4 Henüz sesi olmayan eylemler (yeni dosya gerekiyor)
 
+> **Durum (2026-09-15):** `bin_drop`, `cloth_wipe` (3 kayıt) ve `kick_out` bağlandı; lavabo dolma kaydı `tap_water` oldu. `snack_crunch`, `till_open`, `neon_buzz`, `fixture_install`, `paper_stamp_fail`, `ui_error` hâlâ yok.
+
 | Önerilen ad | Nerede olacak | Karakter |
 |---|---|---|
 | `bin_drop` | Çöpe atma | Metal kapak + sıvı |
@@ -223,6 +231,8 @@ En çok duyulan 10 klip — **önce bunlar** değişsin:
 | `ui_error` | Yasak işlem | `deny`den daha yumuşak bir varyant |
 
 ### 2.5 Varyant ihtiyacı (tekdüzelik kırmak için)
+
+> **Durum (2026-09-15):** `Sfx.Play` `ad_1, ad_2 …` varsa sırayla çalıyor; `click`, `page_turn`, `glass_down`, `bottle_set`, `serve_clink`, `cloth_wipe` üçer kayıt.
 
 Aynı sesin 3 varyantı olursa oyun çok daha az "yapay" duyulur. Öncelik:
 `click`, `bottle_set`, `glass_down`, `serve_clink`, `dish_down`, `page_turn`.

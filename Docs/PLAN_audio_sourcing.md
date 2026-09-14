@@ -82,3 +82,5 @@ seçilerek kullanılırsa "ucuz" değil "üslup" olur.
 ---
 
 *Bu bir öneri belgesidir; hiçbir ses dosyası değiştirilmedi.*
+
+*2026-09-15: yazar internetten ücretsiz sesleri istedi. CC0 kayıtlar, müzik ve ortam yatakları `Tools/sfx_ingest.py` ile oyuna girdi (GDD_MEVCUT §9.68); kaynakların listesi `Docs/SES_KAYNAKLARI.md`.*

@@ -1530,6 +1530,47 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.68 · Dokuzuncu geçiş: müzik kanalı, barın kendi sesi, gerçek kayıtlar (2026-09-15)
+
+Yazar: "Eksik olan sesleri ve müzikleri güncelleyelim internetten ücretsiz cozy, pixel game soundlardan faydalanabilirsin
+arkplanda biraz daha 80ler elektronik jazz olmalı rahatlatıcı bir oyun olmalı ona göre ses seçimi yap."
+
+- **Müzik kanalı** (`Sfx.Music(mood, ducked)`, her kare `TycoonHud.RefreshSeats`'ten): ruh hali `MusicMood` — bar açıkken
+  `night`, vardiyanın son %15'inde ve kapanıştan sonra `lastcall`, son müşteri taburedeyken `story`, hesap ve market
+  boyunca `dayend`, kapanan barda `closed`. Bir ruh halinin parçaları `music_{mood}_1, _2 …`; sırayla çalıyor
+  (karıştırma yok, evin kuralı), her biri bir sonrakine 3 saniyede geçiyor ve ruh hali yerini hatırlıyor (hesaptan sonra
+  gece kaldığı parçadan sürüyor). Parçası olmayan ruh hali en yakınınkini ödünç alıyor (closed → dayend → night, story
+  → lastcall → night); hiç müzik yoksa eski sentetik `ambience_loop` çalıyor. Seviye 0.55; tezgâh ya da kimlik açıkken
+  %60'ına iniyor. Müzik diskten akıyor (`LastCallImporter.OnPreprocessAudio`: `music_*` Streaming, Vorbis 0.7;
+  `ambience_*` belleğe sıkıştırılmış, Vorbis 0.5). Oyunda menü ekranı olmadığı için menü teması yok.
+- **Parçalar** (10 parça, hepsi CC0; kaynaklar `Docs/SES_KAYNAKLARI.md`): gece altı parça — Pro Sensory'nin synth caz ve
+  "elevator" cazı ile HoliznaCC0'ın *City Slacker* albümünün cazlı lo-fi parçaları sırayla; son sipariş Pro Sensory
+  "Jazz Slower"; hikâye anı Some Weirdo "Complicated Feelings" (e-piyano ve pad); gün sonu Holizna "On Foot" ve Pro
+  Sensory "Lydian Synth Jazz". Baş ve son sessizlikleri kırpılıp −18 LUFS'e getirildi. Kendini açıkça "80'ler smooth
+  jazz" diye tanımlayan CC0 parça bulunamadı; o tarifteki iki aday yazarın kararını bekliyor: Pixabay "Working the
+  Night" (Pixabay lisansı, yayıncılarda Content ID riski) ve Kevin MacLeod "Airport Lounge" (CC-BY, atıf şart). Pro
+  Sensory CC0 olsa da adının (Alex McCulloch) anılmasını rica ediyor.
+- **Barın kendi sesi** (`Sfx.Ambience`): gece boyunca gerçek bir barın uğultusu (Glasgow'da kaydedilmiş sohbet, −26 LUFS,
+  seviye 0.35, hikâye anında yarısı), hesapla birlikte sönüyor; altında her zaman kapalı bir pencereden hafif yağmur
+  (−28 LUFS, seviye 0.18). İkisi de tezgâh açıkken %40'a iniyor. Buzdolabı ve neon vızıltısı adayları bilerek alınmadı:
+  sabit uğultu, 2026-08-27'de yazarın kaldırttığı şeydi.
+- **Gerçek kayıtlar** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`): 48 klip sentetik bankadan CC0 kayda geçti —
+  Kenney'nin arayüz ve kitap sesleri; Freesound'dan bar foley'si (bardak, şişe, tokuşturma, buz, shaker, döküm ve uzak
+  ikizleri, çalkalanma, fıçı, lavabo suyu, mantar, kapak, kasa, bozuk para, kapı zili, çekmece, kart, damga, fiş
+  yazıcısı); yeni üç eylem (`bin_drop` bench'in çöp tuşunda, `cloth_wipe` bez silişinde, `kick_out` KICK'te) ve iki caz
+  jingle'ı (`star_earn` saksafon, `level_up` vibrafon). Kayıtları kimse dinlemediği için kesim sayılarla yapılıyor ve
+  yeniden koşulabilir: `whole` (sessizlik kırpılır), `event` (uzun kayıttan en yüksek ya da n'inci vuruş, istenirse en
+  kısa süreyle), `steady` (seviyesi en yüksek ve en düzgün pencere, kendi içine geçişli döngü). Seviye bankanın merdiveni
+  (aynı adlı sentetik klibin seviyesi), ton bankanın `cozy` sesi. `click`, `page_turn`, `glass_down`, `bottle_set`,
+  `serve_clink` ve `cloth_wipe` üçer kayıt: `Sfx.Play` `ad_1, ad_2 …` bulursa sırayla çalıyor (SES_LISTESI §2.5) ve düz
+  adlı sentetik dosyalar silindi. `sfx_bank.py` toplu basmada kayda dönen adları atlıyor, adıyla istenirse basıyor.
+- Freesound kayıtları sitenin yüksek kaliteli önizlemeleri (lossy); kayıpsız asıllar giriş istiyor. Sentetik kalanlar
+  (44): `ambience_loop`, `another_round`, `bar_closed`, `bill_slip`, `blowout`, `bowl_down`, `buy`, `cheer_sfx`, `curtain`, `day_close`, `day_open`, `debt_alarm`, `dish_down`, `drain`, `garnish`, `glass_pickup`, `grain_pinch`, `head_settle`, `id_card_away`, `last_call_bell`, `order_ready`, `patience_warn`, `pour_cutoff`, `pour_floor`, `rim_done`, `rim_turn`, `screen_off`, `screen_on`, `serve_it`, `stir_commit`, `stir_loop`, `stool_take`, `synth_swell`, `tap_handle`, `tin_set_down`, `tin_tip`, `upset_sfx`, `verdict_bad`, `verdict_flat`, `verdict_good`, `voice_greet`, `voice_happy`, `voice_order`, `voice_upset`.
+- Oyunda ölçüldü: açılış gecesinde `music_night_1` akıyor, altında kalabalık ve yağmur çalıyor; gün sonuna geçince
+  `music_dayend_1` 3 saniyede devralıyor, kalabalık sönüp duruyor, yağmur sürüyor; `click` ve `glass_down` kayıtları
+  sırayla dönüyor.
+- Doğrulama: EditMode 598/598, PlayMode 13/13 (görünüm testlerinde fark yok). Oyunda müzik, ruh hali geçişi, ortam katmanları ve kayıtların sırası probe'la okundu; konsol temiz.
+
 ### 9.67 · Sekizinci geçiş: taban camın piksel eğrisinde, döküm düşüşüne ve kabın hareketine göre sesleniyor (2026-09-15)
 
 Yazar: "Bardakların tabanında da ovallik gerekiyor bardağın pexel eğrisine böre. Bardağın hareketine ve suyun yakından ya

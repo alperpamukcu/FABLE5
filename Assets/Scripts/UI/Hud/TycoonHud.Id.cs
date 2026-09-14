@@ -575,7 +575,7 @@ namespace LastCall.UI
             try { run.Kick(visit); }
             catch (InvalidOperationException e) { Toast(UIText.Refusal(e)); return; }
             CloseId();
-            Sfx.Play("deny", 0.8f);
+            Sfx.Play("kick_out", 0.8f);   // shown the door, and the door shuts behind them (2026-09-15)
             Toast(UIText.T("id.kick.shown_door", ("reason", UIText.Caps(KickReason(truth)))),
                 visit.OffTheBooks ? (Color?)UITheme.Lime[3] : UITheme.ViceRed[3]);
         }

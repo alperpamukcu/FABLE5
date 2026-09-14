@@ -39,4 +39,27 @@ public class LastCallImporter : AssetPostprocessor
         ti.textureCompression = TextureImporterCompression.Uncompressed;
         ti.maxTextureSize = 2048;
     }
+
+    // THE MUSIC STREAMS, THE BEDS STAY SMALL (2026-09-15). Resources/Audio's music_* tracks are minutes of stereo:
+    // loaded whole they would sit in memory all session, so they stream from disk. The ambience_* beds are shorter
+    // loops, kept compressed in memory so a loop point never waits on a read. Every other clip there keeps the
+    // defaults the synthesised bank was tuned under — and so does the old ambience_loop, which is one of them.
+    void OnPreprocessAudio()
+    {
+        var path = assetPath.Replace("\\", "/").ToLower();
+        if (!path.Contains("/resources/audio/")) return;
+        string file = System.IO.Path.GetFileNameWithoutExtension(path);
+        bool music = file.StartsWith("music_");
+        bool bed = file.StartsWith("ambience_") && file != "ambience_loop";
+        if (!music && !bed) return;
+        var ai = (AudioImporter)assetImporter;
+        var s = ai.defaultSampleSettings;
+        s.loadType = music ? AudioClipLoadType.Streaming : AudioClipLoadType.CompressedInMemory;
+        s.compressionFormat = AudioCompressionFormat.Vorbis;
+        s.quality = music ? 0.7f : 0.5f;
+        s.preloadAudioData = !music;
+        ai.defaultSampleSettings = s;
+        ai.forceToMono = false;
+        ai.loadInBackground = music;
+    }
 }

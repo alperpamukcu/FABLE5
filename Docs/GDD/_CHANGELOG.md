@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bar has music, a room and real sounds (2026-09-15):** a music channel follows the night — CC0 synth-jazz
+  and jazz-lofi tracks in turn while the bar is open, a slower one for its last stretch, an e-piano piece while the
+  last customer is at the bar and two for the books — each fading into the next. Under it, the bar's own murmur while
+  the night is on and light rain on the window. Most everyday effects are CC0 recordings now, cut and levelled into the
+  synthesised bank's ladder by Tools/sfx_ingest.py; six of them are sets of takes played in turn, and the bin, the
+  cloth and the kick have sounds of their own.
+
 - **The drink stands on its glass's own curve, and a pour is heard by its drop and its vessel (2026-09-15):**
   the drink's floor in a serving glass follows the drawing's bottom edge, scaled to the drink, so it arcs up to the
   walls the way the base does. A pour crossfades from a soft near clip to a splashing far one as the stream's drop to

@@ -1078,6 +1078,7 @@ namespace LastCall.UI
             btn.onClick.AddListener(() =>
             {
                 int fee = Run.DiscardGlass();
+                Sfx.Play("bin_drop", 0.85f);   // the drink goes in the bin, and is heard going (2026-09-15)
                 // Redraw whatever bench it is standing on: the tin and the glass both have
                 // to come back empty, and which one is on screen is the stage's business.
                 if (_stage == Stage.Shaker) RefreshShaker();
