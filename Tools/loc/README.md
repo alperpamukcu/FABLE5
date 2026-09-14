@@ -57,7 +57,10 @@ A fragment is `{"group": "<name>", "strings": [{"key", "text", "note"}]}`, store
 from every part are kept, so a delta pass only needs parts for the new keys.
 
 **`check_tables.py [codes] [--list-untranslated]`** checks written tables against `en.json`: keys,
-placeholders, CLDR plural forms, key syntax and glyphs in the language's planned pixel face.
+placeholders, CLDR plural forms, key syntax and glyphs in the body face the language ships with
+(`Assets/Scripts/UI/Text/LanguageFonts.cs`: Silkscreen for Latin-1, Galmuri7 / Galmuri9 / Galmuri11 /
+Fusion Pixel 12 from `Assets/Resources/Fonts/` for the rest). A character English itself shows is not
+reported, since it already falls back the same way in English.
 
 **`ps2p_caps.py [--out path]`** builds `Assets/Fonts/MalibuArcade-Regular.ttf`, the game's heading face:
 Press Start 2P (the untouched original lives in `Tools/steam_kit/fonts/`) with its accented Latin and

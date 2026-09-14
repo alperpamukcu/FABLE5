@@ -209,7 +209,7 @@ namespace LastCall.UI
             tillCoinImg.sprite = ItemArt.Coin(24f);
             tillCoinImg.preserveAspect = true;
             tillCoinImg.raycastTarget = false;
-            _beamTillText = NewText("Figure", tillCard, _display, 24, TextAnchor.MiddleRight,
+            _beamTillText = NewText("Figure", tillCard, _figures, 24, TextAnchor.MiddleRight,
                                     UITheme.Amber[4]);
             Place(_beamTillText.rectTransform, new Vector2(1, 0.5f), new Vector2(100f, 30f),
                   new Vector2(-14f, 0f));
@@ -1083,7 +1083,7 @@ namespace LastCall.UI
                 new Color(0.667f, 0.702f, 0.847f, 1f));   // 6.2:1 on the well
             Place(balanceLabel.rectTransform, new Vector2(0, 1), new Vector2(80, 10), new Vector2(10, -6));
             balanceLabel.text = UIText.T("build.tablet.account");
-            _tabletTill = NewText("Till", balance, _display, 16, TextAnchor.MiddleRight, Color.white);
+            _tabletTill = NewText("Till", balance, _figures, 16, TextAnchor.MiddleRight, Color.white);
             Place(_tabletTill.rectTransform, new Vector2(1, 0), new Vector2(126, 18), new Vector2(-10, 6));
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Wrap;
             _tabletTill.verticalOverflow = VerticalWrapMode.Truncate;
@@ -1616,7 +1616,7 @@ namespace LastCall.UI
             var rt = NewRect(name, parent);
             var text = rt.gameObject.AddComponent<Text>();
             text.font = font;
-            text.fontSize = size;
+            text.fontSize = LanguageFonts.Size(font, size);   // a 10/12 px face's own steps (L3)
             text.alignment = anchor;
             text.color = color;
             text.raycastTarget = false;

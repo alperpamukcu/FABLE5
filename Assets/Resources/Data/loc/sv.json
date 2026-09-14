@@ -1873,7 +1873,7 @@
     {"key": "seats.tap.finish_first", "text": "GÖR KLART COCKTAILEN FÖRST", "src": "FINISH THE COCKTAIL FIRST"},
     {"key": "seats.tap.serve_first", "text": "SERVERA DEN DRINKEN FÖRST", "src": "SERVE THAT DRINK FIRST"},
     {"key": "seats.ticket.drinking", "text": "Dricker", "src": "Drinking"},
-    {"key": "seats.ticket.ready", "text": "Redo att beställa", "src": "Ready to order"},
+    {"key": "seats.ticket.ready", "text": "Vill beställa", "src": "Ready to order"},
     {"key": "seats.ticket.talk", "text": "Prata med gästen", "src": "Talk to them"},
     {"key": "seats.tin.label", "text": "TILL SHAKERN", "src": "BACK TO THE TIN"},
     {"key": "seats.tin.tipped", "text": "TÖMD", "src": "TIPPED OUT"},

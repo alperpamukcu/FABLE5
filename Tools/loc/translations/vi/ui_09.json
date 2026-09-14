@@ -1,0 +1,21 @@
+{"strings": [
+{"key": "seats.tap.serve_first", "text": "PHỤC VỤ LY ĐÓ TRƯỚC ĐÃ", "src": "SERVE THAT DRINK FIRST"},
+{"key": "seats.ticket.drinking", "text": "Đang uống", "src": "Drinking"},
+{"key": "seats.ticket.ready", "text": "Sẵn sàng gọi món", "src": "Ready to order"},
+{"key": "seats.ticket.talk", "text": "Nói chuyện với họ", "src": "Talk to them"},
+{"key": "seats.tin.label", "text": "QUAY LẠI BÌNH LẮC", "src": "BACK TO THE TIN"},
+{"key": "seats.tin.tipped", "text": "ĐÃ ĐỔ BÌNH", "src": "TIPPED OUT"},
+{"key": "seats.tin.tipped_fee", "text": "ĐÃ ĐỔ BÌNH · {fee}", "src": "TIPPED OUT · {fee}"},
+{"key": "seats.tip.carry_to_sink", "text": "ĐEM TỚI BỒN RỬA", "src": "CARRY IT TO THE SINK"},
+{"key": "seats.tip.cloth", "text": "KHĂN LAU", "src": "THE CLOTH"},
+{"key": "seats.tip.glass", "text": "BẤM ĐỂ SỬA · KÉO ĐỂ PHỤC VỤ", "src": "CLICK TO EDIT · DRAG TO SERVE"},
+{"key": "seats.tip.mark", "text": "VẾT BẨN — LAU ĐI", "src": "A MARK — WIPE IT"},
+{"key": "settings.language", "text": "NGÔN NGỮ", "src": "LANGUAGE"},
+{"key": "stage.door.sink", "text": "ĐỔ BỎ · RỬA LY", "src": "POUR IT AWAY · WASH UP"},
+{"key": "stage.door.tap", "text": "RÓT BIA", "src": "PULL A PINT"},
+{"key": "unlock.all", "text": "{first}  ·  {next}", "src": "{first}  ·  {next}"},
+{"key": "unlock.last_call", "text": "NHẬN ĐƯỢC Ở LƯỢT GỌI CUỐI", "src": "EARNED AT THE LAST CALL"},
+{"key": "unlock.serve_who", "text": "PHỤC VỤ {who} ĐÚNG MÓN HỌ GỌI", "src": "SERVE {who} WHAT THEY ASK FOR"},
+{"key": "unlock.stars", "text": "CẦN {stars} SAO", "src": "NEEDS {stars} STARS"},
+{"key": "unlock.tap_lines", "text": "CẦN THÁP BIA {lines} ĐƯỜNG", "src": "NEEDS THE {lines}-LINE TOWER"}
+]}

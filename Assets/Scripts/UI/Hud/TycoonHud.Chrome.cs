@@ -460,6 +460,10 @@ namespace LastCall.UI
                 y += CardRowGap;
                 _cellarCardMarkRow.anchoredPosition = new Vector2(x, -y);
                 _cellarCardMarkRow.sizeDelta = new Vector2(22f + _cellarCardMark.preferredWidth, 16f);
+                // The card holds its mark line too (L2, 2026-09-14): NEVER SHAKEN · BUILT IN THE GLASS
+                // runs 324–370 wide in Turkish, Russian and Japanese against a 178 text box, and
+                // the row alone grew past the card's edge.
+                widest = Mathf.Max(widest, 22f + _cellarCardMark.preferredWidth);
                 y += 16f;
             }
             y += CardPad;

@@ -47,15 +47,26 @@ def possible_forms(code):   # forms PluralRules.For can return for whole numbers
     return required_forms(code) | {'other'}
 
 
-# the planned body face per language (LOCALIZATION_PLAN §5): Galmuri11 everywhere but Chinese
+# the body face each language is drawn in (UI/Text/LanguageFonts.cs, localization L3 2026-09-14): the
+# shipped files, so the check proves what the player gets
+RES_FONTS = os.path.join(ROOT, 'Assets', 'Resources', 'Fonts')
+HOUSE_BODY = os.path.join(ROOT, 'Assets', 'Fonts', 'Silkscreen-Regular.ttf')
+
+
 def face_for(code):
-    if code == 'zh-CN':
-        return os.path.join(FONTS, 'fusion-pixel-12px-proportional-zh_hans.ttf')
-    if code == 'zh-TW':
-        return os.path.join(FONTS, 'fusion-pixel-12px-proportional-zh_hant.ttf')
+    if code in ('tr', 'pl', 'cs', 'hu', 'ro', 'vi', 'ko'):
+        return os.path.join(RES_FONTS, 'Galmuri7.ttf')
+    if code in ('ru', 'uk', 'bg'):
+        return os.path.join(RES_FONTS, 'Galmuri9.ttf')
+    if code == 'el':
+        return os.path.join(RES_FONTS, 'Galmuri11.ttf')
     if code == 'ja':
-        return os.path.join(FONTS, 'fusion-pixel-12px-proportional-ja.ttf')
-    return os.path.join(FONTS, 'Galmuri11.ttf')
+        return os.path.join(RES_FONTS, 'FusionPixel12-ja.ttf')
+    if code == 'zh-CN':
+        return os.path.join(RES_FONTS, 'FusionPixel12-zh_hans.ttf')
+    if code == 'zh-TW':
+        return os.path.join(RES_FONTS, 'FusionPixel12-zh_hant.ttf')
+    return HOUSE_BODY
 
 
 PLACEHOLDER = re.compile(r'\{([^{}]*)\}')
@@ -125,6 +136,11 @@ def check(code, en, list_untranslated=False):
         en_bases.setdefault(base(k), set()).update(placeholders(e['text']))
     en_counted = {base(k) for k in en if '#' in k}
     face = cmap(face_for(code))
+    # a character English itself shows (a hometown's İ, the ▶ on a key) already falls back the same
+    # way in English; only what this language adds beyond that is this table's problem
+    en_chars = set()
+    for e in en.values():
+        en_chars.update(TAG.sub('', PLACEHOLDER.sub('', e['text'])))
     missing_glyphs = {}
     for k, e in table.items():
         text = e.get('text')
@@ -151,7 +167,7 @@ def check(code, en, list_untranslated=False):
         for ch in set(TAG.sub('', PLACEHOLDER.sub('', text))):
             if ch in '\n\t' or ord(ch) < 32:
                 continue
-            if ord(ch) not in face:
+            if ord(ch) not in face and ch not in en_chars:
                 missing_glyphs.setdefault(ch, []).append(k)
     for b in sorted({base(k) for k in table if '#' in k} | ({base(k) for k in table} & en_counted)):
         for form in sorted(required_forms(code)):

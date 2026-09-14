@@ -1459,12 +1459,21 @@ namespace LastCall.UI
         /// notice borrows the channel for one message and this hands it back.</summary>
         private Color _toastInk = UITheme.ViceRed[3];
 
+        /// <summary>The house heading face for labels that are only figures — the day, the till,
+        /// a price. Digits and $ are Latin in every language, so they keep the arcade face even where
+        /// <see cref="_display"/> has handed headings to a Japanese or Korean one (L2, 2026-09-14:
+        /// the till read "480" in the thin CJK face).</summary>
+        private Font _figures;
+
         private void Awake()
         {
             var legacy = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            _body = bodyFont != null ? bodyFont : legacy;
-            _display = displayFont != null ? displayFont : legacy;
-            _shop = shopFont != null ? shopFont : _body;
+            // A language the house faces cannot draw gets its own (localization L3, LanguageFonts);
+            // English and the other Latin-1 languages get these serialized faces back unchanged.
+            _body = LanguageFonts.Body(bodyFont != null ? bodyFont : legacy);
+            _display = LanguageFonts.Display(displayFont != null ? displayFont : legacy);
+            _figures = displayFont != null ? displayFont : legacy;
+            _shop = LanguageFonts.Body(shopFont != null ? shopFont : _body);
             // THE CROWD'S OWN FACE (2026-09-08, the author: "konuşmalarda kullanılan fontlar
             // iyi değil, küçük harf yok, keskin değil — lokalizasyonda sıkıntı çıkarmayacak bir
             // font bul"). Silkscreen has no lowercase and no ğ ı İ ş at all. Sixteen
@@ -2747,7 +2756,7 @@ namespace LastCall.UI
             cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = UIText.T("hud.day_well.caption");
-            _dayLabel = NewText("Day", well, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
+            _dayLabel = NewText("Day", well, _figures, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
             Place(_dayLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18), new Vector2(WeekHeadCx, -7f));
             _dayLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             _dayLabel.horizontalOverflow = HorizontalWrapMode.Overflow;

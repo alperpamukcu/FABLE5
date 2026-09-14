@@ -244,8 +244,8 @@ namespace LastCall.UI
         private void Awake()
         {
             var legacy = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            _body = bodyFont != null ? bodyFont : legacy;
-            _display = displayFont != null ? displayFont : legacy;
+            _body = LanguageFonts.Body(bodyFont != null ? bodyFont : legacy);          // L3
+            _display = LanguageFonts.Display(displayFont != null ? displayFont : legacy);
             _bootstrap = GetComponent<GameBootstrap>();
             BuildUi();
         }
@@ -1111,7 +1111,7 @@ namespace LastCall.UI
         {
             var rt = NewRect(name, parent);
             var text = rt.gameObject.AddComponent<Text>();
-            text.font = font; text.fontSize = size; text.alignment = anchor; text.color = color;
+            text.font = font; text.fontSize = LanguageFonts.Size(font, size); text.alignment = anchor; text.color = color;
             text.raycastTarget = false;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;

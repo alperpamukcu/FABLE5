@@ -647,12 +647,12 @@ namespace LastCall.UI
             bool dim = spec.State == TileState.Unaffordable;
             if (!string.IsNullOrEmpty(spec.Money))
             {
-                var sign = NewText("Sign", card, _display, 16, TextAnchor.MiddleLeft,
+                var sign = NewText("Sign", card, _figures, 16, TextAnchor.MiddleLeft,
                     dim ? new Color(UITheme.Lime[2].r, UITheme.Lime[2].g, UITheme.Lime[2].b, 0.55f) : UITheme.Lime[2]);
                 Place(sign.rectTransform, new Vector2(0, 1), new Vector2(18f, 26f), new Vector2(8f, -CardFootTop));
                 sign.horizontalOverflow = HorizontalWrapMode.Overflow;
                 sign.text = "$";
-                var money = NewText("Money", card, _display, 16, TextAnchor.MiddleLeft, dim ? ShopInkSoft : ShopInk);
+                var money = NewText("Money", card, _figures, 16, TextAnchor.MiddleLeft, dim ? ShopInkSoft : ShopInk);
                 Place(money.rectTransform, new Vector2(0, 1), new Vector2(60f, 26f), new Vector2(24f, -CardFootTop));
                 money.horizontalOverflow = HorizontalWrapMode.Overflow;
                 money.text = spec.Money.Replace("$", "");

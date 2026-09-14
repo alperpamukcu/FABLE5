@@ -533,7 +533,7 @@ namespace LastCall.UI
             if (total != null)
             {
                 float fill = Mathf.Clamp01((float)glass.FillFraction);
-                total.fontSize = fill < 0.34f ? 16 : fill < 0.67f ? 24 : 32;
+                total.fontSize = LanguageFonts.Size(total.font, fill < 0.34f ? 16 : fill < 0.67f ? 24 : 32);
                 total.text = Mathf.RoundToInt(fill * 100f) + "%";
                 float boreFoot = rig.rect.height * (1f - ChromeArt.ShakerGaugeCavity.y);
                 totalRt.anchoredPosition = new Vector2(0f, boreFoot + y + 4f);

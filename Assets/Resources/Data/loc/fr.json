@@ -1873,7 +1873,7 @@
     {"key": "seats.tap.finish_first", "text": "TERMINE D'ABORD LE COCKTAIL", "src": "FINISH THE COCKTAIL FIRST"},
     {"key": "seats.tap.serve_first", "text": "SERS D'ABORD CETTE BOISSON", "src": "SERVE THAT DRINK FIRST"},
     {"key": "seats.ticket.drinking", "text": "Déguste", "src": "Drinking"},
-    {"key": "seats.ticket.ready", "text": "Veut commander", "src": "Ready to order"},
+    {"key": "seats.ticket.ready", "text": "Va commander", "src": "Ready to order"},
     {"key": "seats.ticket.talk", "text": "Parle-lui", "src": "Talk to them"},
     {"key": "seats.tin.label", "text": "RETOUR AU SHAKER", "src": "BACK TO THE TIN"},
     {"key": "seats.tin.tipped", "text": "SHAKER VIDÉ", "src": "TIPPED OUT"},

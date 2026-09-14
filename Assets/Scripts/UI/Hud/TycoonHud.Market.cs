@@ -1267,14 +1267,14 @@ namespace LastCall.UI
                 // A PLAIN GREEN $ (2026-09-08, the author: "markette kartların üstündeki $
                 // iconunu normal yeşil $ yapalım"): the typed sign in the display face, in
                 // the house green, before the figure — the drawn dollar stays on the boards.
-                var sign = NewText("Sign", rt, _display, 16, TextAnchor.MiddleLeft,
+                var sign = NewText("Sign", rt, _figures, 16, TextAnchor.MiddleLeft,
                     dim ? new Color(UITheme.Lime[2].r, UITheme.Lime[2].g, UITheme.Lime[2].b, 0.55f) : UITheme.Lime[2]);
                 Place(sign.rectTransform, new Vector2(0, 1), new Vector2(20f, TileFootH), new Vector2(TilePad, -TileFootTop));
                 sign.rectTransform.pivot = new Vector2(0, 1);
                 sign.horizontalOverflow = HorizontalWrapMode.Overflow;
                 sign.raycastTarget = false;
                 sign.text = "$";
-                var money = NewText("Money", rt, _display, 16, TextAnchor.MiddleLeft, dim ? ShopInkSoft : ShopInk);
+                var money = NewText("Money", rt, _figures, 16, TextAnchor.MiddleLeft, dim ? ShopInkSoft : ShopInk);
                 Place(money.rectTransform, new Vector2(0, 1), new Vector2(ContentW - 20f - 74f, TileFootH),
                     new Vector2(TilePad + 20f, -TileFootTop));
                 money.rectTransform.pivot = new Vector2(0, 1);

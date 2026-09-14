@@ -1,5 +1,12 @@
 # FONT PLANI — "POPÜLER TÜM DİLLER" (2026-09-10)
 
+> **DÜZELTME (2026-09-13, `Docs/steam/research/loc_tech.json`):** aşağıda CJK için önerilen
+> **Zpix OFL DEĞİL** — ticari kullanım ürün başına $1.000 ve fontun dönüştürülmesi yasak.
+> Yerine OFL aileleri: **Fusion Pixel 8/12 px** (Basit Çince %97,6 GB2312, Japonca %99,6,
+> Gel. Çince %92 Big5), **Galmuri7/9/11** (11.172 Hangul, Vietnamca tam), **Ark Pixel 12**
+> (Kiril gövde). Ayrıca gövde yuvası bugün **Silkscreen** (Türkçe ĞğİıŞş ve çoğu Lehçe harf
+> yok). Güncel dil ve faz kararı: `Docs/marketing/LOCALIZATION_PLAN.md`.
+
 Yazar: *"Popüler tüm dilleri ekleyeceğiz ona göre fontlar seçmen lazım."*
 
 Bu belge **yalnızca yazı tipi** kararını veriyor. Çeviri katmanı (string tablosu, dil

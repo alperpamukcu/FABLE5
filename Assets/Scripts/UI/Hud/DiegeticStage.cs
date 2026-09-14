@@ -2102,8 +2102,8 @@ namespace LastCall.UI
         {
             Application.runInBackground = true; // keep animations advancing unfocused
             FillTheWindow();
-            _display = displayFont != null
-                ? displayFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _display = LanguageFonts.Display(displayFont != null                         // L3
+                ? displayFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
             BuildScene();
         }
 
@@ -3990,7 +3990,7 @@ namespace LastCall.UI
             var rt = NewRect(name, parent);
             var text = rt.gameObject.AddComponent<Text>();
             text.font = font;
-            text.fontSize = size;
+            text.fontSize = LanguageFonts.Size(font, size);   // L3
             text.alignment = anchor;
             text.color = color;
             text.raycastTarget = false;

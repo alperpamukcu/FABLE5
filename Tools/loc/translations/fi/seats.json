@@ -64,7 +64,7 @@
 {"key": "seats.tap.finish_first", "text": "VIIMEISTELE COCKTAIL ENSIN", "src": "FINISH THE COCKTAIL FIRST"},
 {"key": "seats.tap.serve_first", "text": "TARJOILE TUO JUOMA ENSIN", "src": "SERVE THAT DRINK FIRST"},
 {"key": "seats.ticket.drinking", "text": "Juo", "src": "Drinking"},
-{"key": "seats.ticket.ready", "text": "Valmis tilaamaan", "src": "Ready to order"},
+{"key": "seats.ticket.ready", "text": "Haluaa tilata", "src": "Ready to order"},
 {"key": "seats.ticket.talk", "text": "Juttele ensin", "src": "Talk to them"},
 {"key": "seats.tin.label", "text": "TAKAISIN SHAKERILLE", "src": "BACK TO THE TIN"},
 {"key": "seats.tin.tipped", "text": "TYHJENNETTY", "src": "TIPPED OUT"},

@@ -1873,7 +1873,7 @@
     {"key": "seats.tap.finish_first", "text": "GØR COCKTAILEN FÆRDIG FØRST", "src": "FINISH THE COCKTAIL FIRST"},
     {"key": "seats.tap.serve_first", "text": "SERVÉR DEN DRINK FØRST", "src": "SERVE THAT DRINK FIRST"},
     {"key": "seats.ticket.drinking", "text": "Drikker", "src": "Drinking"},
-    {"key": "seats.ticket.ready", "text": "Klar til at bestille", "src": "Ready to order"},
+    {"key": "seats.ticket.ready", "text": "Vil bestille", "src": "Ready to order"},
     {"key": "seats.ticket.talk", "text": "Snak med gæsten", "src": "Talk to them"},
     {"key": "seats.tin.label", "text": "TILBAGE TIL SHAKEREN", "src": "BACK TO THE TIN"},
     {"key": "seats.tin.tipped", "text": "TØMT UD", "src": "TIPPED OUT"},

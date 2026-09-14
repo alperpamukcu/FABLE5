@@ -98,7 +98,7 @@
 {"key": "seats.tap.finish_first", "text": "СНАЧАЛА ДОДЕЛАЙ КОКТЕЙЛЬ", "src": "FINISH THE COCKTAIL FIRST"},
 {"key": "seats.tap.serve_first", "text": "СНАЧАЛА ПОДАЙ НАПИТОК", "src": "SERVE THAT DRINK FIRST"},
 {"key": "seats.ticket.drinking", "text": "Пьёт", "src": "Drinking"},
-{"key": "seats.ticket.ready", "text": "Хочет заказать", "src": "Ready to order"},
+{"key": "seats.ticket.ready", "text": "Ждёт вас", "src": "Ready to order"},
 {"key": "seats.ticket.talk", "text": "Поговори с гостем", "src": "Talk to them"},
 {"key": "seats.tin.label", "text": "НАЗАД К ШЕЙКЕРУ", "src": "BACK TO THE TIN"},
 {"key": "seats.tin.tipped", "text": "СЛИТО", "src": "TIPPED OUT"},

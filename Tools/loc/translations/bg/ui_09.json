@@ -1,0 +1,21 @@
+{"strings": [
+{"key": "seats.tap.serve_first", "text": "ПЪРВО СЕРВИРАЙ ТОВА ПИТИЕ", "src": "SERVE THAT DRINK FIRST"},
+{"key": "seats.ticket.drinking", "text": "Пие", "src": "Drinking"},
+{"key": "seats.ticket.ready", "text": "Ще поръча", "src": "Ready to order"},
+{"key": "seats.ticket.talk", "text": "Говори с госта", "src": "Talk to them"},
+{"key": "seats.tin.label", "text": "КЪМ ШЕЙКЪРА", "src": "BACK TO THE TIN"},
+{"key": "seats.tin.tipped", "text": "ИЗХВЪРЛЕНО", "src": "TIPPED OUT"},
+{"key": "seats.tin.tipped_fee", "text": "ИЗХВЪРЛЕНО · {fee}", "src": "TIPPED OUT · {fee}"},
+{"key": "seats.tip.carry_to_sink", "text": "ЗАНЕСИ Я ДО МИВКАТА", "src": "CARRY IT TO THE SINK"},
+{"key": "seats.tip.cloth", "text": "КЪРПАТА", "src": "THE CLOTH"},
+{"key": "seats.tip.glass", "text": "КЛИК: ПРОМЯНА · ПЛЪЗНИ: СЕРВИРАЙ", "src": "CLICK TO EDIT · DRAG TO SERVE"},
+{"key": "seats.tip.mark", "text": "ПЕТНО — ИЗБЪРШИ ГО", "src": "A MARK — WIPE IT"},
+{"key": "settings.language", "text": "ЕЗИК", "src": "LANGUAGE"},
+{"key": "stage.door.sink", "text": "ИЗЛЕЙ · ИЗМИЙ", "src": "POUR IT AWAY · WASH UP"},
+{"key": "stage.door.tap", "text": "НАТОЧИ БИРА", "src": "PULL A PINT"},
+{"key": "unlock.all", "text": "{first}  ·  {next}", "src": "{first}  ·  {next}"},
+{"key": "unlock.last_call", "text": "ЗАСЛУЖЕНО ПРИ ПОСЛЕДНАТА ПОРЪЧКА", "src": "EARNED AT THE LAST CALL"},
+{"key": "unlock.serve_who", "text": "СЕРВИРАЙ НА {who} КАКВОТО ПОИСКА", "src": "SERVE {who} WHAT THEY ASK FOR"},
+{"key": "unlock.stars", "text": "ТРЯБВАТ {stars} ЗВЕЗДИ", "src": "NEEDS {stars} STARS"},
+{"key": "unlock.tap_lines", "text": "ТРЯБВА КУЛА С {lines} ЛИНИИ", "src": "NEEDS THE {lines}-LINE TOWER"}
+]}

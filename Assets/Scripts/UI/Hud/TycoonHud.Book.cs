@@ -1195,8 +1195,8 @@ namespace LastCall.UI
             // back to the page's own 16 when it must be.
             if (head.preferredWidth > head.rectTransform.sizeDelta.x)
             {
-                head.fontSize = 16;
                 head.font = _display;
+                head.fontSize = LanguageFonts.Size(_display, 16);   // a 12 px face's own step (L3)
             }
             head.horizontalOverflow = HorizontalWrapMode.Overflow;
 
