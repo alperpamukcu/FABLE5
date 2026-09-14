@@ -17,6 +17,18 @@ namespace LastCall.Core
         public int Age { get; }
         public string Hometown { get; }
 
+        /// <summary>What a person with no hometown of record is from, on the licence.</summary>
+        internal const string UnknownHometown = "this side of town";
+
+        /// <summary>
+        /// <see cref="Hometown"/> as a string-table line (localization L1): the words for nowhere in
+        /// particular when nobody wrote one down, and the place as the data wrote it otherwise —
+        /// a town's name is not translated.
+        /// </summary>
+        public Line HometownLine => Hometown == UnknownHometown
+            ? Line.Of("papers.hometown.unknown")
+            : Line.Of("papers.hometown.named").With("town", Hometown);
+
         public int Visits { get; private set; }
         public int SatisfiedCount { get; private set; }
         public Relationship Relationship { get; private set; } = Relationship.Stranger;

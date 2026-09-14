@@ -239,7 +239,7 @@ namespace LastCall.UI
 
             var hint = NewText("Hint", _tapPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -68), new Vector2(0, -44));
-            hint.text = "HOLD THE GLASS AND AIM · TILT IT TO FILL, HOLD IT STRAIGHT FOR FOAM · CLICK A KEG TO SWAP";
+            hint.text = UIText.T("bench.tap.hint");
 
             _tapSurface = NewRect("TapSurface", _tapPanel);
             Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));
@@ -431,7 +431,7 @@ namespace LastCall.UI
             // from the draught station it leads to the ROOM: the font on the counter is this
             // stage's only door, so the back-bar wall is not behind it and landing there is a
             // room the player never walked into.
-            AddEdgeBack(_tapPanel, Stage.Closed, "◀  BACK TO THE ROOM");
+            AddEdgeBack(_tapPanel, Stage.Closed, UIText.T("bench.tap.back_to_room"));
 
             var done = NewRect("Done", _tapPanel);
             Place(done, new Vector2(0.5f, 0), new Vector2(240, 34), new Vector2(130, 12));
@@ -447,7 +447,7 @@ namespace LastCall.UI
             var doneLabel = NewText("Label", doneFace, _body, 8, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            doneLabel.text = "SERVE IT · CLICK A CUSTOMER";
+            doneLabel.text = UIText.T("bench.tap.serve_key");
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace LastCall.UI
             kl.anchorMin = new Vector2(0.08f, KegLabelCentreY - KegLabelH * 0.5f);
             kl.anchorMax = new Vector2(0.92f, KegLabelCentreY + KegLabelH * 0.5f);
             kl.offsetMin = Vector2.zero; kl.offsetMax = Vector2.zero;
-            _kegLabel.text = (_tapKegCard?.Name ?? "DRAUGHT").ToUpperInvariant();
+            _kegLabel.text = KegTitle();
             var ink = UITheme.StyleColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
             // Printed ink on a cream label: the style's hue, taken well down so it reads as
             // print rather than as a glow.
@@ -519,7 +519,7 @@ namespace LastCall.UI
                 bl.anchorMin = new Vector2(0.08f, KegLabelCentreY - KegLabelH * 0.5f);
                 bl.anchorMax = new Vector2(0.92f, KegLabelCentreY + KegLabelH * 0.5f);
                 bl.offsetMin = Vector2.zero; bl.offsetMax = Vector2.zero;
-                brand.text = card.Name.ToUpperInvariant();
+                brand.text = UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name));
                 // DARKER than the on-tap keg's ink, not lighter: the whole spare is
                 // multiplied down into the shade, so its label is a mid grey — ink that
                 // was merely dimmed with it disappeared into the label it is printed on.
@@ -552,8 +552,8 @@ namespace LastCall.UI
             if (!run.CanPull(card.Id))
             {
                 _tapVerdict.text = !run.Glass.IsEmpty
-                    ? "A COCKTAIL IS IN THE TIN — POUR IT OUT FIRST"
-                    : "FINISH THE PINT IN THE GLASS BEFORE CHANGING KEGS";
+                    ? UIText.T("bench.tap.swap.cocktail")
+                    : UIText.T("bench.tap.swap.pint");
                 _tapVerdict.color = UITheme.Amber[3];
                 Sfx.Play("deny", 0.8f);
                 return;
@@ -614,6 +614,13 @@ namespace LastCall.UI
             CoupleTheKeg(entryRun);
         }
 
+        /// <summary>The coupled keg's name as the title and the label print it: the bottle's
+        /// data line in capitals, or DRAUGHT when no keg (or no name) is on the line.</summary>
+        private string KegTitle() =>
+            _tapKegCard?.Name != null
+                ? UIText.Caps(UIText.Data("bottle", _tapKegCard.Id, "name", _tapKegCard.Name))
+                : UIText.T("bench.tap.draught");
+
         /// <summary>Is this keg still one the bar could pour — on the shelf and not run dry?
         /// A remembered keg that has since emptied would otherwise hold the line against the
         /// full one standing next to it.</summary>
@@ -638,7 +645,7 @@ namespace LastCall.UI
         private void CoupleTheKeg(TycoonRun run)
         {
             if (run == null) return;
-            _tapTitle.text = (_tapKegCard?.Name ?? "DRAUGHT").ToUpperInvariant();
+            _tapTitle.text = KegTitle();
 
             // The cellar: the keg on tap in the plumbed bay, the spares in theirs.
             BuildTapKegs(run);
@@ -971,32 +978,37 @@ namespace LastCall.UI
             int fillPct = (int)System.Math.Round(glass.FillFraction * 100);
             int headPct = (int)System.Math.Round(head * 100);
             double left = run.Shelf.Find(_tapKegCard?.Id ?? "")?.Remaining ?? 0;
-            string spilt = run.SpilledBeer > 0.02 ? $" · {run.SpilledBeer:0.0} spilled" : "";
-            _tapReadout.text =
-                $"tilt {(int)_glassTilt}° · pint {fillPct}% full · head {headPct}%{spilt} · {left:0.#} left in the keg";
+            // Numbers go in formatted exactly as the interpolation did (current culture); the
+            // spilled clause is its own whole line so a translator can move it.
+            string tiltS = ((int)_glassTilt).ToString(), fillS = fillPct.ToString(),
+                   headS = headPct.ToString(), leftS = left.ToString("0.#");
+            _tapReadout.text = run.SpilledBeer > 0.02
+                ? UIText.T("bench.tap.readout_spilled", ("tilt", tiltS), ("fill", fillS), ("head", headS),
+                    ("spilled", run.SpilledBeer.ToString("0.0")), ("left", leftS))
+                : UIText.T("bench.tap.readout", ("tilt", tiltS), ("fill", fillS), ("head", headS), ("left", leftS));
 
             // While it is running, the glass's angle is the live thing to say; once it is down,
             // the pint is what there is to judge.
             if (_glassHeld && !_pouringNow && Run != null && !Run.ServingGlass.IsEmpty)
-            { _tapVerdict.text = "HOLD IT UNDER THE TAP"; _tapVerdict.color = UITheme.Amber[3]; }
+            { _tapVerdict.text = UIText.T("bench.tap.verdict.hold_under"); _tapVerdict.color = UITheme.Amber[3]; }
             else if (_glassHeld && _glassTilt > TapPour.SpillTilt)
-            { _tapVerdict.text = "SPILLING — STAND IT UP"; _tapVerdict.color = UITheme.ViceRed[3]; }
+            { _tapVerdict.text = UIText.T("bench.tap.verdict.spilling"); _tapVerdict.color = UITheme.ViceRed[3]; }
             // The glass holds SOMEONE ELSE'S beer, so this keg's tap is shut. Said only for
             // that one case: "the tap is closed" is also true of a full glass and of a tin
             // with a cocktail in it, and testing the whole of CanPull here put this line
             // over the player's own finished pint and told them to bin it.
             else if (run.PullingId == null && !glass.IsEmpty && _tapKegCard != null
                      && glass.VolumeOf(_tapKegCard.Id) <= 0)
-            { _tapVerdict.text = "ANOTHER BEER IS IN THE GLASS — SERVE IT OR BIN IT"; _tapVerdict.color = UITheme.ViceRed[3]; }
-            else if (glass.IsEmpty) { _tapVerdict.text = "TAKE THE GLASS TO THE TAP"; _tapVerdict.color = UITheme.TextSecondary; }
+            { _tapVerdict.text = UIText.T("bench.tap.verdict.other_beer"); _tapVerdict.color = UITheme.ViceRed[3]; }
+            else if (glass.IsEmpty) { _tapVerdict.text = UIText.T("bench.tap.verdict.take_glass"); _tapVerdict.color = UITheme.TextSecondary; }
             // Beer and foam share the same room, so a glass at the brim takes neither — say it,
             // because otherwise holding it under a running tap looks like the tap has died.
             else if (glass.IsFull && score < 1.0)
-            { _tapVerdict.text = "THE GLASS IS FULL — LET IT SETTLE"; _tapVerdict.color = UITheme.Amber[3]; }
-            else if (glass.FillFraction < 0.75) { _tapVerdict.text = "SHORT POUR"; _tapVerdict.color = UITheme.Amber[3]; }
-            else if (score >= 1.0) { _tapVerdict.text = "GOOD PINT"; _tapVerdict.color = UITheme.Lime[3]; }
-            else if (head > TapPour.GoodHeadMax) { _tapVerdict.text = "TOO MUCH HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
-            else { _tapVerdict.text = "FLAT — NEEDS A HEAD"; _tapVerdict.color = UITheme.ViceRed[3]; }
+            { _tapVerdict.text = UIText.T("bench.tap.verdict.settle"); _tapVerdict.color = UITheme.Amber[3]; }
+            else if (glass.FillFraction < 0.75) { _tapVerdict.text = UIText.T("bench.tap.verdict.short"); _tapVerdict.color = UITheme.Amber[3]; }
+            else if (score >= 1.0) { _tapVerdict.text = UIText.T("bench.tap.verdict.good"); _tapVerdict.color = UITheme.Lime[3]; }
+            else if (head > TapPour.GoodHeadMax) { _tapVerdict.text = UIText.T("bench.tap.verdict.too_much_head"); _tapVerdict.color = UITheme.ViceRed[3]; }
+            else { _tapVerdict.text = UIText.T("bench.tap.verdict.flat"); _tapVerdict.color = UITheme.ViceRed[3]; }
 
             SpeakVerdict(_tapVerdict.text);
         }
@@ -1023,9 +1035,10 @@ namespace LastCall.UI
             if (_pouringNow) { _spokenVerdict = line; return; }   // mid-pull: watch, don't speak
             if (line == _spokenVerdict) return;
             _spokenVerdict = line;
-            if (line == "GOOD PINT") Sfx.Play("verdict_good", 0.85f);
-            else if (line == "TOO MUCH HEAD") Sfx.Play("verdict_bad", 0.7f);
-            else if (line == "FLAT — NEEDS A HEAD") Sfx.Play("verdict_flat", 0.7f);
+            // Compared against the same keys the verdict was set from, so the chime survives a language.
+            if (line == UIText.T("bench.tap.verdict.good")) Sfx.Play("verdict_good", 0.85f);
+            else if (line == UIText.T("bench.tap.verdict.too_much_head")) Sfx.Play("verdict_bad", 0.7f);
+            else if (line == UIText.T("bench.tap.verdict.flat")) Sfx.Play("verdict_flat", 0.7f);
         }
 
         private string _spokenVerdict;

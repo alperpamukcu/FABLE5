@@ -1,0 +1,95 @@
+{
+  "group": "seats",
+  "strings": [
+    { "key": "seats.tap.serve_first", "text": "SERVE THAT DRINK FIRST", "note": "Toast when the beer font is clicked while a finished cocktail is still waiting to be served. Toast line, one line, ~24 characters." },
+    { "key": "seats.tap.finish_first", "text": "FINISH THE COCKTAIL FIRST", "note": "Toast when the beer font is clicked while a cocktail is still being built in the shaker. Toast line, one line, ~24 characters." },
+
+    { "key": "seats.plain.perfect", "text": "Perfect!", "note": "Fallback reaction a customer shouts over a serve that was exactly right, in the pop-up over the stool, when the bar has no voice lines loaded. Sentence case, display face 14 px in a 178 px strip, ~14 characters." },
+    { "key": "seats.plain.another", "text": "Another round!", "note": "Fallback reaction over a serve that earns another round (no voice lines loaded). Sentence case, display face 14 px in a 178 px strip, ~14 characters." },
+    { "key": "seats.plain.close", "text": "Thanks.", "note": "Fallback reaction over a serve that was close enough (no voice lines loaded). Sentence case, display face 14 px in a 178 px strip, ~14 characters." },
+    { "key": "seats.plain.wrong", "text": "Not what I asked.", "note": "Fallback reaction over a serve of the wrong drink (no voice lines loaded). Sentence case, display face 14 px in a 178 px strip, ~18 characters." },
+    { "key": "seats.plain.praise", "text": "Perfect pour. Not a thing I would change.", "note": "Fallback first-sip line in a customer's speech balloon for a flawless pour (no voice lines loaded). Sentence case; the balloon wraps, a few short lines." },
+
+    { "key": "seats.snack.on_tab", "text": "{snack} — ON THE TAB", "note": "Toast when a bowl of snacks is put down in front of a customer. {snack} = the snack's name in capitals. Toast line, one line, ~28 characters." },
+    { "key": "seats.snack.take", "text": "TAKE THE {snack}", "note": "Hover tip over a snack bowl on the counter. {snack} = the snack's name in capitals. Prop tip plate, one line, ~20 characters." },
+    { "key": "seats.snack.bowl_empty", "text": "THE {snack} BOWL IS EMPTY TODAY", "note": "Toast when an empty snack bowl on the counter is clicked. {snack} = the snack's name in capitals. Toast line, one line, ~32 characters." },
+    { "key": "seats.snack.in_hand", "text": "{snack} IN HAND — CLICK A CUSTOMER", "note": "Toast when a snack bowl is picked up: click a customer to give it to them. {snack} = the snack's name in capitals. Toast line, one line, ~34 characters." },
+    { "key": "seats.snack.put_back", "text": "PUT IT BACK", "note": "Toast when the snack bowl in hand is clicked again and set back down. Toast line, ~14 characters." },
+    { "key": "seats.snack.stock", "text": "{snack} · {left}", "note": "Label under a snack bowl on the counter. {snack} = the snack's name in capitals; {left} = servings left (whole number). Body face 8 px in a 96 px label, ~14 characters." },
+    { "key": "seats.snack.out", "text": "{snack} · OUT", "note": "Label under a snack bowl with nothing left. {snack} = the snack's name in capitals. Body face 8 px in a 96 px label, ~14 characters." },
+
+    { "key": "seats.garnish.purpose.ice", "text": "KEEPS IT COLD · DROP IT IN BEFORE THE POUR", "note": "Fallback 'what it is for' line on the garnish card over the ice bucket, used only when the preparation carries no description. Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.lemon_twist", "text": "A TWIST OF PEEL · SHARPENS A SOUR DRINK", "note": "Fallback 'what it is for' line on the garnish card over the lemon dish. Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.salt_rim", "text": "SALT ROUND THE RIM · TURN THE GLASS IN THE DISH", "note": "Fallback 'what it is for' line on the garnish card over the salt dish. Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.sugar_rim", "text": "SUGAR ROUND THE RIM · TURN THE GLASS IN THE DISH", "note": "Fallback 'what it is for' line on the garnish card over the sugar dish. Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.olive", "text": "AN OLIVE · THE SAVOURY GARNISH", "note": "'What it is for' line on the garnish card over the olive jar (the olive has no preparation description, so this always shows). Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.mint", "text": "FRESH MINT · SLAPPED, NOT STIRRED", "note": "'What it is for' line on the garnish card over the mint dish (always shows). Capitals; wraps on the card, two short lines." },
+    { "key": "seats.garnish.purpose.other", "text": "A GARNISH THE ORDER MAY ASK FOR", "note": "Fallback 'what it is for' line on the garnish card for a garnish with no line of its own. Capitals; wraps on the card, two short lines." },
+
+    { "key": "seats.rail.ice", "text": "ICE", "note": "Short caption of the ice bucket on the counter's garnish rail; fills {word} in chrome.garnish.meta_ice on the garnish card. Capitals, ~12 characters." },
+    { "key": "seats.rail.lemon", "text": "LEMON", "note": "Short caption of the lemon dish on the counter's garnish rail; fills {word} in chrome.garnish.meta_garnish. Capitals, ~12 characters." },
+    { "key": "seats.rail.salt", "text": "TURN IT IN THE SALT", "note": "Short verb caption of the salt dish on the garnish rail (the glass is turned in it for a salt rim); fills {word} in chrome.garnish.meta_rim. Capitals, ~20 characters." },
+    { "key": "seats.rail.sugar", "text": "TURN IT IN THE SUGAR", "note": "Short verb caption of the sugar dish on the garnish rail (sugar rim); fills {word} in chrome.garnish.meta_rim. Capitals, ~20 characters." },
+    { "key": "seats.rail.olive", "text": "OLIVE", "note": "Short caption of the olive jar on the counter's garnish rail; fills {word} in chrome.garnish.meta_garnish. Capitals, ~12 characters." },
+    { "key": "seats.rail.mint", "text": "MINT", "note": "Short caption of the mint dish on the counter's garnish rail; fills {word} in chrome.garnish.meta_garnish. Capitals, ~12 characters." },
+
+    { "key": "seats.tip.carry_to_sink", "text": "CARRY IT TO THE SINK", "note": "Hover tip over an empty glass a customer left on the counter: drag it to the sink. Prop tip plate, one line, ~22 characters." },
+    { "key": "seats.tip.cloth", "text": "THE CLOTH", "note": "Hover tip over the bar towel hanging on the counter rail (used to wipe marks). Prop tip plate, one line, ~14 characters." },
+    { "key": "seats.tip.mark", "text": "A MARK — WIPE IT", "note": "Hover tip over a dirty mark left on the counter: wipe it with the cloth. Prop tip plate, one line, ~18 characters." },
+    { "key": "seats.tip.glass", "text": "CLICK TO EDIT · DRAG TO SERVE", "note": "Hover tip over the finished drink standing on the counter's coaster: a click goes back to the bench, a drag carries it to a customer. Prop tip plate, one line, ~30 characters." },
+    { "key": "seats.glass.hint", "text": "CLICK A CUSTOMER TO SERVE", "note": "Small hint label on top of the finished drink on the counter. Body face 10 px in a 190 px strip, one line, ~26 characters." },
+
+    { "key": "seats.sink.put_back", "text": "PUT BACK — CARRY IT TO THE SINK", "note": "Toast when a carried empty glass is let go somewhere other than the sink and goes back on the counter. Toast line, one line, ~32 characters." },
+    { "key": "seats.sink.tap_running", "text": "THE TAP IS RUNNING", "note": "Toast when the sink is used (washing glasses, pouring a drink away) while its tap is still running from the last use. Toast line, ~20 characters." },
+    { "key": "seats.sink.washing_up", "text": "WASHING UP", "note": "Toast when glasses go into the sink and the wash starts. Toast line, ~14 characters." },
+    { "key": "seats.sink.nothing_to_wash", "text": "NOTHING TO WASH", "note": "Toast when the sink is clicked with no dirty glasses in hand. Toast line, ~16 characters." },
+    { "key": "seats.sink.secs", "text": "{secs}s", "note": "Seconds left on the sink's wash timer, on a small badge at the dial's corner. {secs} = whole seconds (1-9 usually). Display face 16 px on a 30x20 badge: ~3 characters at most — keep the unit to one letter." },
+
+    { "key": "seats.strip.last_call", "text": "LAST CALL · CLEAR THE COUNTER TO CLOSE", "note": "Line over the sink when every customer has left but glasses or marks remain on the counter: the night will not close until it is clean. Body face 8 px, one line over a 240 px strip (may overhang), ~40 characters." },
+    { "key": "seats.strip.washing", "text": "WASHING", "note": "Line over the sink while its tap runs. May be followed by seats.strip.held. Body face 8 px, one line, ~12 characters." },
+    { "key": "seats.strip.in_hand#one", "text": "{n} IN HAND · CLICK THE SINK", "note": "Line over the sink while the player holds dirty glasses. {n} = glasses in hand. May be followed by seats.strip.held. Body face 8 px, one line, ~28 characters." },
+    { "key": "seats.strip.in_hand#other", "text": "{n} IN HAND · CLICK THE SINK", "note": "As seats.strip.in_hand#one." },
+    { "key": "seats.strip.held#one", "text": "{line} · {n} STOOL HELD", "note": "Line over the sink: {line} (seats.strip.washing or seats.strip.in_hand) followed by how many stools are blocked until those glasses are washed. {n} = stools held. Body face 8 px, one line, ~44 characters in all." },
+    { "key": "seats.strip.held#other", "text": "{line} · {n} STOOLS HELD", "note": "As seats.strip.held#one." },
+
+    { "key": "seats.garnish.none_left", "text": "NONE LEFT", "note": "Toast when a garnish jar (olive, mint) is dropped into a drink but the bar's stock of it has run out. Toast line, ~12 characters." },
+    { "key": "seats.garnish.glass_full", "text": "THE GLASS IS FULL", "note": "Toast when a garnish from a jar is dropped into a glass that is already full. Toast line, ~18 characters." },
+    { "key": "seats.garnish.in_drink", "text": "{bottle} IN THE DRINK", "note": "Toast when an olive or mint garnish lands in the glass. {bottle} = the garnish product's name in capitals. Toast line, one line, ~30 characters." },
+    { "key": "seats.garnish.already_on", "text": "ALREADY ON THAT DRINK", "note": "Toast when a garnish the drink already has is dropped on it again. Toast line, ~22 characters." },
+    { "key": "seats.garnish.ice_in", "text": "ICE IN THE GLASS x{cubes}", "note": "Toast when an ice cube is dropped into the glass. {cubes} = cubes now in it (whole number); 'x' is a multiplier sign, keep it next to the number. Toast line, ~22 characters." },
+    { "key": "seats.garnish.on_drink", "text": "{garnish} ON THE DRINK", "note": "Toast when a garnish (lemon twist...) is put on the drink. {garnish} = the garnish's name in capitals. Toast line, one line, ~26 characters." },
+    { "key": "seats.rim.salt_done", "text": "SALT ON THE RIM", "note": "Toast when the salt-rim circling mini-game is completed. Toast line, ~18 characters." },
+    { "key": "seats.rim.sugar_done", "text": "SUGAR ON THE RIM", "note": "Toast when the sugar-rim circling mini-game is completed. Toast line, ~18 characters." },
+    { "key": "seats.rim.percent", "text": "{pct}%", "note": "Progress of the rim circling mini-game, in the middle of the ring over the glass. {pct} = 0-100. Display face 8 px, ~5 characters; put the % sign where the language writes it." },
+
+    { "key": "seats.drain.poured", "text": "POURED AWAY", "note": "Toast when a finished drink is dragged into the sink and poured away for free. Toast line, ~14 characters." },
+    { "key": "seats.drain.poured_fee", "text": "POURED AWAY · {fee}", "note": "Toast when a finished drink is poured away and its ingredients are written off. {fee} = the cost with minus and currency sign, e.g. -$4. Toast line, ~22 characters." },
+    { "key": "seats.tin.label", "text": "BACK TO THE TIN", "note": "Hover label over the shaker standing on the counter: click to go back to the shaker bench. Display face 8 px on a 160x22 plate, ~18 characters." },
+    { "key": "seats.tin.tipped", "text": "TIPPED OUT", "note": "Toast when the shaker with a half-built drink is dragged into the sink and emptied for free. Toast line, ~14 characters." },
+    { "key": "seats.tin.tipped_fee", "text": "TIPPED OUT · {fee}", "note": "Toast when the shaker is emptied into the sink and its contents written off. {fee} = the cost with minus and currency sign, e.g. -$4. Toast line, ~22 characters." },
+
+    { "key": "seats.serve.read_id_first", "text": "READ THEIR ID FIRST", "note": "Toast when a drink is dragged onto a customer whose ID card has not been read yet. Toast line, ~20 characters." },
+    { "key": "seats.serve.they_left", "text": "THEY LEFT — YOU GET THE DRINK BACK", "note": "Toast when the customer a drink was sliding toward is gone by the time it arrives; the drink returns to the counter. Toast line, one line, ~36 characters." },
+    { "key": "seats.tab.tip", "text": "{tip} TIP", "note": "Floating figure rising off a stool when a customer leaves a tip. {tip} = the amount with plus and currency sign, e.g. +$3. Display face 16 px, one line, ~10 characters." },
+
+    { "key": "seats.log.poured_away", "text": "<color=#F27D8A>POURED AWAY</color> a built drink · {fee}", "note": "Service log line (the LOG sheet) when a finished drink is poured away at a cost. Keep the <color> tags around the first words. {fee} = the cost with minus and currency sign, e.g. -$4. Body face 8 px, one line, ~40 characters." },
+    { "key": "seats.log.tipped_out", "text": "<color=#F27D8A>TIPPED OUT</color> a half-built drink · {fee}", "note": "Service log line when the shaker's half-built drink is emptied at a cost. Keep the <color> tags. {fee} = the cost with minus and currency sign, e.g. -$4. Body face 8 px, one line, ~40 characters." },
+    { "key": "seats.log.shown_door", "text": "<color=#F27D8A>SHOWN THE DOOR</color> · {reason}", "note": "Service log line when a customer is thrown out and the kick does not count against the night. Keep the <color> tags. {reason} = why (id.kick_reason.*). Body face 8 px, one line, ~40 characters." },
+    { "key": "seats.log.shown_door_stars", "text": "<color=#F27D8A>SHOWN THE DOOR</color> · {reason} · {stars}", "note": "Service log line when a customer is thrown out and scores the night. Keep the <color> tags. {reason} = why (id.kick_reason.*); {stars} = the score as asterisks (empty for zero). Body face 8 px, one line, ~44 characters." },
+    { "key": "seats.log.storm_off", "text": "<color=#F27D8A>STORM-OFF</color> {drink} · patience ran out · {paid} · {stars}", "note": "Service log line when a customer walks out before being served. Keep the <color> tags. {drink} = the ordered drink's name in capitals, or ? if the card was never read; {paid} = the money taken with currency sign ($0); {stars} = the score as asterisks (empty). Body face 8 px, one line, ~50 characters." },
+    { "key": "seats.log.tab", "text": "<color=#F5C97B>TAB</color> settled {paid} · leaves {stars}", "note": "Service log line when a customer pays their tab and leaves. Keep the <color> tags. {paid} = the total with currency sign, e.g. $14; {stars} = their score as one to five asterisks. Body face 8 px, one line, ~40 characters." },
+    { "key": "seats.log.tab_snacks#one", "text": "<color=#F5C97B>TAB</color> settled {paid} (+{n} snack) · leaves {stars}", "note": "As seats.log.tab, for a customer who also had snacks. {n} = snack bowls served to them. Body face 8 px, one line, ~50 characters." },
+    { "key": "seats.log.tab_snacks#other", "text": "<color=#F5C97B>TAB</color> settled {paid} (+{n} snack) · leaves {stars}", "note": "As seats.log.tab_snacks#one." },
+
+    { "key": "seats.ticket.drinking", "text": "Drinking", "note": "Order balloon over a customer's head while they drink; one to three animated dots are added after it. Sentence case, body face, ~12 characters (the balloon sizes to it, max ~200 px)." },
+    { "key": "seats.ticket.ready", "text": "Ready to order", "note": "Order balloon over a customer who has decided but whose ID card has not been read yet. Sentence case, body face, ~16 characters." },
+    { "key": "seats.ticket.talk", "text": "Talk to them", "note": "Order balloon over the story's guest of the house: the ask is in the dialogue, not on the ticket. Sentence case, body face, ~16 characters." },
+
+    { "key": "seats.crowd.high_rollers", "text": "HIGH ROLLERS", "note": "Name of tonight's or tomorrow's crowd (the wealthy one) on the day-end slip's date line and the standing board's TOMORROW row. Capitals, ~14 characters." },
+    { "key": "seats.crowd.broke", "text": "BROKE", "note": "Name of the poor crowd on the day-end slip's date line and the standing board's TOMORROW row. Capitals, ~14 characters." },
+    { "key": "seats.crowd.regulars", "text": "REGULARS", "note": "Name of the ordinary crowd on the day-end slip's date line and the standing board's TOMORROW row. Not the relationship 'regular' on the ID card. Capitals, ~14 characters." },
+
+    { "key": "stage.door.tap", "text": "PULL A PINT", "note": "Hover tip over the beer font standing on the counter in the room: click to go to the draught station. Prop tip plate, one line, ~14 characters." },
+    { "key": "stage.door.sink", "text": "POUR IT AWAY · WASH UP", "note": "Hover tip over the sink on the counter: a drink dragged there is poured away, a click washes the glasses in hand. Prop tip plate, one line, ~24 characters." }
+  ]
+}

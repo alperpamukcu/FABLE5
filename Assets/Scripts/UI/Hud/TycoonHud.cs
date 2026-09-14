@@ -923,8 +923,14 @@ namespace LastCall.UI
         // which reads the CATEGORY rather than the ABV — strength is display-only and an
         // aisle must not make it load-bearing. Beer stays on the liquor side under its own
         // section: a keg is booze, and the split being asked for is booze against soft.
-        private static readonly string[] ShopTabs =
-            { "RESTOCK", "LIQUOR", "MIXERS", "RECIPES", "UPGRADES" };
+        // A PROPERTY, read when the tablet is built — never a static field: the string table
+        // cannot be reached from a static initialiser or the constructor (localization L1).
+        // Same order as ShopTabIcons, which is what sizes the arrays below.
+        private static string[] ShopTabs => new[]
+        {
+            UIText.T("hud.shop.tab.restock"), UIText.T("hud.shop.tab.liquor"), UIText.T("hud.shop.tab.mixers"),
+            UIText.T("hud.shop.tab.recipes"), UIText.T("hud.shop.tab.upgrades"),
+        };
 
         // Recut on ONE 24x24 canvas (2026-08-09). The old four were 16x26, 24x26,
         // 25x24 and 20x19, so in a single 20x20 preserveAspect rect they drew between
@@ -932,13 +938,16 @@ namespace LastCall.UI
         private static readonly string[] ShopTabIcons =
             { "sh_i2_restock", "sh_i2_bottles", "sh_i2_mixers", "sh_i2_recipes", "sh_i2_upgrades" };
 
-        private readonly Image[] _shopTabKeys = new Image[ShopTabs.Length];
+        // Sized off the ICONS, never off the captions (localization L1, 2026-09-14): these
+        // initialisers run inside the MonoBehaviour's constructor, off the main thread, where
+        // reading the string table would touch PlayerPrefs/Resources and throw.
+        private readonly Image[] _shopTabKeys = new Image[ShopTabIcons.Length];
 
-        private readonly Text[] _shopTabLabels = new Text[ShopTabs.Length];
+        private readonly Text[] _shopTabLabels = new Text[ShopTabIcons.Length];
 
-        private readonly Image[] _shopTabIcons = new Image[ShopTabs.Length];
+        private readonly Image[] _shopTabIcons = new Image[ShopTabIcons.Length];
 
-        private readonly Image[] _shopTabLits = new Image[ShopTabs.Length];
+        private readonly Image[] _shopTabLits = new Image[ShopTabIcons.Length];
 
         private int _shopTab;
 
@@ -1235,8 +1244,7 @@ namespace LastCall.UI
 
         private const float TileFootTop = 216f, TileFootH = 30f;
 
-        private const string ShopIdleTip =
-            "Point at anything to read it. You only pay when you place the order.";
+        private static string ShopIdleTip => UIText.T("hud.shop.idle_tip");
 
         private Text _fittingNote, _marketKeyLabel, _cartHeadLabel, _osClock;
 
@@ -1640,7 +1648,7 @@ namespace LastCall.UI
             // is left looking for a glass that was never filled.
             bool flowOpen = _flow != null && _flow.IsOpen;
             if (_flowWasOpen && !flowOpen && run.DrinkWaitingInShaker)
-                Toast("STILL IN THE SHAKER — POUR IT INTO A GLASS");
+                Toast(UIText.T("hud.toast.still_in_shaker"));
             _flowWasOpen = flowOpen;
 
             RefreshTopBar();
@@ -2390,6 +2398,8 @@ namespace LastCall.UI
         private Image[] _settingsMeter;     // the volume, five blocks
 
         private Text _settingsVolume, _settingsMute, _settingsMotion;
+        private Text _settingsLanguage, _settingsLanguageNote;   // the picked language, and "from the next start"
+        private string _languageNoteCode, _languageNoteText;     // that note, said in the picked language, cached
 
         // ── THE DEV BENCH (2026-08-14) ──────────────────────────────────────────
         //
@@ -2438,7 +2448,7 @@ namespace LastCall.UI
             _dayEndPanel.gameObject.SetActive(false);
             CloseId();
             _bannerText.gameObject.SetActive(true);
-            _bannerText.text = "THE BAR IS CLOSED\nthree days losing money — NEW RUN to try again";
+            _bannerText.text = UIText.T("hud.closed.banner");
         }
 
         // ── the order tip: hover a decided customer's ticket ─────────────────────
@@ -2713,7 +2723,7 @@ namespace LastCall.UI
             Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12), new Vector2(WeekHeadCx, 7f));
             cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cap.text = "NIGHT";
+            cap.text = UIText.T("hud.day_well.caption");
             _dayLabel = NewText("Day", well, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
             Place(_dayLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18), new Vector2(WeekHeadCx, -7f));
             _dayLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
@@ -2734,11 +2744,12 @@ namespace LastCall.UI
             Place(_crowdText.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, 12), new Vector2(WeekDaysX + 4f, -8f));
             _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            HoverTip(well, ItemArt.Star(true, 16f), "TONIGHT", () =>
+            HoverTip(well, ItemArt.Star(true, 16f), UIText.T("hud.day_well.tip_title"), () =>
             {
                 var r = Run;
                 if (r == null) return "";
-                return $"DAY {r.Day}  ·  WEEK {BarCalendar.WeekOf(r.Day)}  ·  {BarCalendar.Name(BarCalendar.NightOf(r.Day)).ToUpperInvariant()}";
+                return UIText.T("hud.day_well.tip", ("day", r.Day), ("week", BarCalendar.WeekOf(r.Day)),
+                    ("night", UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(r.Day))))));
             });
         }
 
@@ -2766,7 +2777,7 @@ namespace LastCall.UI
             List<(Image sign, Image bloom, Text name)> cells, out Text weekLabel, out int vipCell)
         {
             vipCell = -1;
-            var names = BarCalendar.WeekColumns;
+            var names = BarCalendar.WeekColumnLines;
             // The generated plate lasted one build ("Oluşturulan takvim görseli bozuk
             // duruyor, elinden geldiğince kendin tasarımını yap") — the exception to
             // chrome-is-never-generated was tried on the author's sentence and withdrawn
@@ -2790,7 +2801,7 @@ namespace LastCall.UI
                 new Vector2(WeekHeadCx, 7f));
             cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cap.text = "WEEK";
+            cap.text = UIText.T("hud.week_well.caption");
 
             weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
             Place(weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
@@ -2823,7 +2834,7 @@ namespace LastCall.UI
                     new Vector2(cx, WeekNameY));
                 name.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                name.text = names[i];
+                name.text = UIText.T(names[i]);
 
                 Image sign = null, bloom = null;
                 if (!open)
@@ -3009,7 +3020,7 @@ namespace LastCall.UI
                 UITheme.TextOnAmber);
             Stretch(_plateKeyLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            _plateKeyLabel.text = "GO ON";
+            _plateKeyLabel.text = UIText.T("chrome.story.go_on");   // the same key Chrome.cs sets it to
 
             _plateNoKey = NewRect("SayNo", _plate);
             Place(_plateNoKey, new Vector2(1, 0.5f), new Vector2(150, 32), new Vector2(-24, -26));
@@ -3022,7 +3033,7 @@ namespace LastCall.UI
                 UITheme.TextPrimary);
             Stretch(noLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            noLabel.text = "SAY NO TONIGHT";
+            noLabel.text = UIText.T("hud.plate.say_no");
             _plate.gameObject.SetActive(false);
 
             // The post-it, top right, ABOVE THE BENCH (14): the note you work from.
@@ -3267,11 +3278,11 @@ namespace LastCall.UI
         /// same fact twice (16 §6.5). The row appears when there is something to say.
         /// </summary>
         private static string StateWordOf(TileState s) =>
-            s == TileState.Picked ? "IN BASKET"
-            : s == TileState.Ordered ? "ON THE VAN"
-            : s == TileState.Refundable ? "SEND BACK"
-            : s == TileState.NoFitting ? "NO ROOM"
-            : s == TileState.Held ? "SHELF FULL"
+            s == TileState.Picked ? UIText.T("decor.stamp.in_basket")   // the upgrade cards' own stamp, same words
+            : s == TileState.Ordered ? UIText.T("hud.tile.state.on_the_van")
+            : s == TileState.Refundable ? UIText.T("hud.tile.state.send_back")
+            : s == TileState.NoFitting ? UIText.T("hud.tile.state.no_room")
+            : s == TileState.Held ? UIText.T("hud.tile.state.shelf_full")
             // Sealed is the THIRD state that already says it (2026-08-19, seen in play): a
             // sealed crate is laid out on its own — chains corner to corner, a padlock where
             // they cross, and a tag hung under it reading the star gate — so a state row put

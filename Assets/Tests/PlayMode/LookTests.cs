@@ -50,6 +50,8 @@ namespace LastCall.PlayTests
         [OneTimeSetUp]
         public void PinTheWindow()
         {
+            // The baselines were drawn in English; a Turkish desktop must not repaint them.
+            LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");

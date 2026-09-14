@@ -1,0 +1,629 @@
+{
+ "strings": [
+  {
+   "key": "decor.card.given",
+   "text": "開店附贈",
+   "src": "Given with the room"
+  },
+  {
+   "key": "decor.card.mark",
+   "text": "第 {mark} 階",
+   "src": "Mark {mark}"
+  },
+  {
+   "key": "decor.card.mark_of",
+   "text": "第 {mark}/{total} 階",
+   "src": "mark {mark} of {total}"
+  },
+  {
+   "key": "decor.card.no_upgrade_spent",
+   "text": "不佔用今晚唯一的升級名額",
+   "src": "Never spends the night's one upgrade"
+  },
+  {
+   "key": "decor.card.owned",
+   "text": "已購買 · 任何一晚都能免費換上 — 店面價值維持第 {mark} 階",
+   "src": "Bought already · wear it any night, free — the room stays worth mark {mark}"
+  },
+  {
+   "key": "decor.card.place_counter",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "decor.card.place_room",
+   "text": "店內",
+   "src": "The room"
+  },
+  {
+   "key": "decor.card.rung_lock",
+   "text": "先裝第 {next} 階 · 目前在第 {mark} 階",
+   "src": "Fit mark {next} first · this bar is at mark {mark}"
+  },
+  {
+   "key": "decor.card.star_lock",
+   "text": "需要 {stars} 星的店面 · 目前 {have} 星",
+   "src": "Needs a {stars}-star room · you are at {have}"
+  },
+  {
+   "key": "decor.card.to_room",
+   "text": "為店內帶來 {comfort}",
+   "src": "{comfort} to the room"
+  },
+  {
+   "key": "decor.card.worn",
+   "text": "目前擺在店裡",
+   "src": "In the room now"
+  },
+  {
+   "key": "decor.card.worn_stays",
+   "text": "目前擺在店裡 · 店面價值維持第 {mark} 階",
+   "src": "In the room now · the room stays worth mark {mark}"
+  },
+  {
+   "key": "decor.comfort",
+   "text": "+{comfort} 舒適",
+   "src": "+{comfort} comfort"
+  },
+  {
+   "key": "decor.fit.all_fitted",
+   "text": "酒吧設備已全數升滿 — 沒有能再升的了",
+   "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"
+  },
+  {
+   "key": "decor.fit.bar.body",
+   "text": "更好的吧檯檯面讓每位客人都更開心，連你調錯酒的那些也是。",
+   "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."
+  },
+  {
+   "key": "decor.fit.bar.gain",
+   "text": "每次成功服務 +0.03，最多 +0.06",
+   "src": "+0.03 on every served visit, up to +0.06"
+  },
+  {
+   "key": "decor.fit.bar.identity",
+   "text": "翻新吧檯",
+   "src": "RESURFACE THE BAR"
+  },
+  {
+   "key": "decor.fit.bar.meta_line",
+   "text": "店內 · 第 {rung}/{max} 階",
+   "src": "The room · rung {rung} of {max}"
+  },
+  {
+   "key": "decor.fit.bar.name",
+   "text": "翻新吧檯",
+   "src": "Resurface the Bar"
+  },
+  {
+   "key": "decor.fit.glass.body",
+   "text": "更好的杯子讓每位客人都更開心，也幫你贏得星星。",
+   "src": "Better glasses make every customer happier, and win you stars."
+  },
+  {
+   "key": "decor.fit.glass.gain",
+   "text": "{glass}系列 +1 階 · 每杯用它裝的酒都算",
+   "src": "+1 rung on the {glass} line · every drink served in one"
+  },
+  {
+   "key": "decor.fit.glass.identity",
+   "text": "{glass}系列",
+   "src": "{glass} GLASSWARE"
+  },
+  {
+   "key": "decor.fit.rung_of",
+   "text": "第 {rung}/{max} 階",
+   "src": "Rung {rung} of {max}"
+  },
+  {
+   "key": "decor.fit.section_glass",
+   "text": "杯具",
+   "src": "GLASSWARE"
+  },
+  {
+   "key": "decor.fit.section_seats",
+   "text": "座位與吧檯",
+   "src": "SEATS & BAR"
+  },
+  {
+   "key": "decor.fit.stool.body",
+   "text": "吧檯可以多坐一位客人。",
+   "src": "One more customer can sit at the bar."
+  },
+  {
+   "key": "decor.fit.stool.gain",
+   "text": "+1 座位 · +0.25 星",
+   "src": "+1 seat · +0.25 stars"
+  },
+  {
+   "key": "decor.fit.stool.identity",
+   "text": "多一張吧檯椅",
+   "src": "ONE MORE STOOL"
+  },
+  {
+   "key": "decor.fit.stool.meta",
+   "text": "座位 {seat}/{max}",
+   "src": "Seat {seat} of {max}"
+  },
+  {
+   "key": "decor.fit.stool.meta_line",
+   "text": "地板 · 座位 {seat}/{max}",
+   "src": "The floor · seat {seat} of {max}"
+  },
+  {
+   "key": "decor.fit.stool.name",
+   "text": "多一張吧檯椅",
+   "src": "One More Stool"
+  },
+  {
+   "key": "decor.fit.uses_upgrade",
+   "text": "會用掉今晚唯一的升級名額",
+   "src": "Uses tonight's one upgrade"
+  },
+  {
+   "key": "decor.foot.in_room",
+   "text": "擺在店裡",
+   "src": "IN THE ROOM"
+  },
+  {
+   "key": "decor.foot.mark_first",
+   "text": "先買第 {mark} 階",
+   "src": "MARK {mark} FIRST"
+  },
+  {
+   "key": "decor.foot.on_show",
+   "text": "展示中",
+   "src": "ON SHOW"
+  },
+  {
+   "key": "decor.foot.wear",
+   "text": "換上",
+   "src": "WEAR"
+  },
+  {
+   "key": "decor.ladder.mark_of",
+   "text": "第 {mark}/{total} 階",
+   "src": "MARK {mark} OF {total}"
+  },
+  {
+   "key": "decor.ladder.nothing_fitted",
+   "text": "尚未安裝",
+   "src": "NOTHING FITTED YET"
+  },
+  {
+   "key": "decor.rail.bar_title",
+   "text": "座位、吧檯與杯具",
+   "src": "SEATS, THE BAR & THE GLASSWARE"
+  },
+  {
+   "key": "decor.rail.body_bar",
+   "text": "吧檯椅、吧檯檯面和各系列杯具。每一項都會用掉當晚唯一的升級名額。",
+   "src": "Stools, the bar top and the glass lines. Each one uses the night's one upgrade."
+  },
+  {
+   "key": "decor.rail.body_room",
+   "text": "店內這一區的所有樣式：你已經買的、接下來的，還有還沒解鎖的。",
+   "src": "Every look for this part of the room: what you have bought, what comes next, and what is still to earn."
+  },
+  {
+   "key": "decor.rail.open_count#other",
+   "text": "這一區今晚有 {n} 件可以買",
+   "src": "{n} things on this shelf can be bought tonight"
+  },
+  {
+   "key": "decor.rail.open_none",
+   "text": "這一區今晚沒有東西可以買",
+   "src": "Nothing on this shelf can be bought tonight"
+  },
+  {
+   "key": "decor.shelf.bar",
+   "text": "吧檯與杯具",
+   "src": "BAR & GLASS"
+  },
+  {
+   "key": "decor.shelf.counter",
+   "text": "吧檯",
+   "src": "COUNTER"
+  },
+  {
+   "key": "decor.shelf.furniture",
+   "text": "地板",
+   "src": "FLOOR"
+  },
+  {
+   "key": "decor.shelf.greenery",
+   "text": "植栽",
+   "src": "PLANTS"
+  },
+  {
+   "key": "decor.shelf.light",
+   "text": "燈具",
+   "src": "LIGHTS"
+  },
+  {
+   "key": "decor.shelf.wall_art",
+   "text": "牆上",
+   "src": "ON THE WALL"
+  },
+  {
+   "key": "decor.shelf.walls",
+   "text": "牆面",
+   "src": "WALLS"
+  },
+  {
+   "key": "decor.shelf_empty",
+   "text": "這一區還沒有東西",
+   "src": "NOTHING ON THIS SHELF YET"
+  },
+  {
+   "key": "decor.sign.start_here",
+   "text": "從這裡開始  ▸  牆面 — 店內的舒適度",
+   "src": "START HERE  ▸  THE WALLS — THE ROOM'S COMFORT"
+  },
+  {
+   "key": "decor.stamp.in_basket",
+   "text": "已加入",
+   "src": "IN BASKET"
+  },
+  {
+   "key": "decor.stamp.locked",
+   "text": "未解鎖",
+   "src": "LOCKED"
+  },
+  {
+   "key": "decor.stamp.worn",
+   "text": "使用中",
+   "src": "WORN"
+  },
+  {
+   "key": "decor.tool.drains_free",
+   "text": "排水免費",
+   "src": "drains free"
+  },
+  {
+   "key": "decor.tool.house_tin",
+   "text": "店裡的雪克杯",
+   "src": "The house tin"
+  },
+  {
+   "key": "decor.tool.kegs_on_tap#other",
+   "text": "{n} 個酒頭",
+   "src": "{n} kegs on tap"
+  },
+  {
+   "key": "decor.tool.pours_faster",
+   "text": "倒酒快 {percent}%",
+   "src": "Pours {percent}% faster"
+  },
+  {
+   "key": "decor.tool.shakes_faster",
+   "text": "搖盪快 {percent}%",
+   "src": "Shakes {percent}% faster"
+  },
+  {
+   "key": "decor.tool.tin_you_shake",
+   "text": "你手上搖的那支雪克杯",
+   "src": "The tin you shake with"
+  },
+  {
+   "key": "decor.tool.washes",
+   "text": "{seconds} 秒洗好",
+   "src": "Washes up in {seconds} s"
+  },
+  {
+   "key": "decor.tool.washes_brief",
+   "text": "洗杯 {seconds} 秒",
+   "src": "Washes in {seconds} s"
+  },
+  {
+   "key": "market.basket.chip_body",
+   "text": "點一下就拿出來。下單時才會付款。",
+   "src": "Click to take it back out. You only pay when you place the order."
+  },
+  {
+   "key": "market.basket.chip_meta",
+   "text": "{price}  ·  在購物籃裡",
+   "src": "{price}  ·  in the basket"
+  },
+  {
+   "key": "market.basket.more_body",
+   "text": "這一排放滿了，購物籃還沒滿。你挑的東西都算在總額裡。",
+   "src": "The row is full, the basket is not. Everything you picked is in the total."
+  },
+  {
+   "key": "market.basket.more_identity#other",
+   "text": "還有 {n} 件",
+   "src": "AND {n} MORE"
+  },
+  {
+   "key": "market.basket.more_meta",
+   "text": "購物籃全都裝得下",
+   "src": "the basket holds them all"
+  },
+  {
+   "key": "market.bottle.abv",
+   "text": "酒精濃度 {abv}%",
+   "src": "{abv}% ABV"
+  },
+  {
+   "key": "market.bottle.abv_short",
+   "text": "{abv}%",
+   "src": "{abv}%"
+  },
+  {
+   "key": "market.bottle.joins_shelf",
+   "text": "加入酒架；原本的基本款照樣留著",
+   "src": "Joins the shelf; the well bottle stays"
+  },
+  {
+   "key": "market.bottle.left",
+   "text": "吧檯後還剩 {percent}%",
+   "src": "{percent}% left behind the bar"
+  },
+  {
+   "key": "market.bottle.menu_calls#other",
+   "text": "酒單上有 {n} 款酒用得到它",
+   "src": "{n} drinks on the menu call for it"
+  },
+  {
+   "key": "market.bottle.menu_calls_none",
+   "text": "今晚的酒單沒有酒用得到它",
+   "src": "Nothing on tonight's menu calls for it"
+  },
+  {
+   "key": "market.bottle.no_drink_yet",
+   "text": "酒譜裡還沒有酒用得到它。",
+   "src": "No drink on the book calls for it yet."
+  },
+  {
+   "key": "market.bottle.poured_into",
+   "text": "用於：{drinks}。",
+   "src": "Poured into: {drinks}."
+  },
+  {
+   "key": "market.bottle.pulled_at_tap",
+   "text": "從酒頭倒出。",
+   "src": "Pulled at the tap."
+  },
+  {
+   "key": "market.bottle.rung",
+   "text": "等級 {rung}/{top}",
+   "src": "Rung {rung} of {top}"
+  },
+  {
+   "key": "market.bottle.small_bottle",
+   "text": "小瓶裝 — {measures} 份，烈酒的一半",
+   "src": "A small bottle — {measures} measures, half a spirit's"
+  },
+  {
+   "key": "market.gate.any.at_stars",
+   "text": "{stars} 星解鎖更多{noun}",
+   "src": "MORE {noun}S AT {stars} STARS"
+  },
+  {
+   "key": "market.gate.any.to_earn",
+   "text": "更多{noun}待解鎖",
+   "src": "MORE {noun}S TO EARN"
+  },
+  {
+   "key": "market.gate.any.van#other",
+   "text": "還有 {n} 件{noun}，貨車暫時還不送",
+   "src": "{n} {noun}s the van will not bring you yet"
+  },
+  {
+   "key": "market.gate.bottle.at_stars",
+   "text": "{stars} 星解鎖更多酒",
+   "src": "MORE BOTTLES AT {stars} STARS"
+  },
+  {
+   "key": "market.gate.bottle.to_earn",
+   "text": "更多酒款待解鎖",
+   "src": "MORE BOTTLES TO EARN"
+  },
+  {
+   "key": "market.gate.bottle.van#other",
+   "text": "還有 {n} 瓶酒，貨車暫時還不送",
+   "src": "{n} bottles the van will not bring you yet"
+  },
+  {
+   "key": "market.gate.earned_body",
+   "text": "這些要靠表現贏得，買不到。",
+   "src": "These are earned, not bought."
+  },
+  {
+   "key": "market.gate.earned_buff",
+   "text": "只能贏得，不能購買",
+   "src": "Earned, not bought"
+  },
+  {
+   "key": "market.gate.garnish.at_stars",
+   "text": "{stars} 星解鎖更多裝飾",
+   "src": "MORE GARNISHS AT {stars} STARS"
+  },
+  {
+   "key": "market.gate.garnish.to_earn",
+   "text": "更多裝飾待解鎖",
+   "src": "MORE GARNISHS TO EARN"
+  },
+  {
+   "key": "market.gate.garnish.van#other",
+   "text": "還有 {n} 種裝飾，貨車暫時還不送",
+   "src": "{n} garnishs the van will not bring you yet"
+  },
+  {
+   "key": "market.gate.get_stars",
+   "text": "達到 {stars} 星，這裡就會出現更多。",
+   "src": "Get {stars} stars and more of these show up here."
+  },
+  {
+   "key": "market.gate.keg.at_stars",
+   "text": "{stars} 星解鎖更多酒桶",
+   "src": "MORE KEGS AT {stars} STARS"
+  },
+  {
+   "key": "market.gate.keg.to_earn",
+   "text": "更多酒桶待解鎖",
+   "src": "MORE KEGS TO EARN"
+  },
+  {
+   "key": "market.gate.keg.van#other",
+   "text": "還有 {n} 桶酒，貨車暫時還不送",
+   "src": "{n} kegs the van will not bring you yet"
+  },
+  {
+   "key": "market.gate.mixer.at_stars",
+   "text": "{stars} 星解鎖更多副材料",
+   "src": "MORE MIXERS AT {stars} STARS"
+  },
+  {
+   "key": "market.gate.mixer.to_earn",
+   "text": "更多副材料待解鎖",
+   "src": "MORE MIXERS TO EARN"
+  },
+  {
+   "key": "market.gate.mixer.van#other",
+   "text": "還有 {n} 種副材料，貨車暫時還不送",
+   "src": "{n} mixers the van will not bring you yet"
+  },
+  {
+   "key": "market.gate.more_waiting#other",
+   "text": "還有 {n} 項待解鎖",
+   "src": "{n} more waiting"
+  },
+  {
+   "key": "market.gate.needs_stars",
+   "text": "需要 {stars} 星 · 目前 {have} 星",
+   "src": "Needs {stars} stars · you have {have}"
+  },
+  {
+   "key": "market.gate.still_locked",
+   "text": "仍未解鎖",
+   "src": "STILL LOCKED"
+  },
+  {
+   "key": "market.glass.serves",
+   "text": "{drinks}。",
+   "src": "{drinks}."
+  },
+  {
+   "key": "market.glass.serves_none",
+   "text": "酒譜裡還沒有。",
+   "src": "NOTHING ON THE BOOK YET."
+  },
+  {
+   "key": "market.glass_fallback",
+   "text": "杯子",
+   "src": "glass"
+  },
+  {
+   "key": "market.group.counter",
+   "text": "吧檯",
+   "src": "THE COUNTER"
+  },
+  {
+   "key": "market.group.furniture",
+   "text": "家具與地板",
+   "src": "FURNITURE & FLOOR"
+  },
+  {
+   "key": "market.group.greenery",
+   "text": "綠色植栽",
+   "src": "GREENERY"
+  },
+  {
+   "key": "market.group.light",
+   "text": "燈光",
+   "src": "THE LIGHT"
+  },
+  {
+   "key": "market.group.room",
+   "text": "店內",
+   "src": "THE ROOM"
+  },
+  {
+   "key": "market.group.wall_art",
+   "text": "牆上",
+   "src": "ON THE WALL"
+  },
+  {
+   "key": "market.group.walls",
+   "text": "牆面",
+   "src": "THE WALLS"
+  },
+  {
+   "key": "market.key.open_tomorrow",
+   "text": "明天\n開店",
+   "src": "OPEN\nTOMORROW"
+  },
+  {
+   "key": "market.key.ordered",
+   "text": "已下單",
+   "src": "ORDERED"
+  },
+  {
+   "key": "market.key.place_order",
+   "text": "送出\n訂單",
+   "src": "PLACE\nORDER"
+  },
+  {
+   "key": "market.key.start_tuesday",
+   "text": "開始\n星期二",
+   "src": "START\nTUESDAY"
+  },
+  {
+   "key": "market.pill.add",
+   "text": "加入",
+   "src": "ADD"
+  },
+  {
+   "key": "market.pill.no_cash",
+   "text": "錢不夠",
+   "src": "NO CASH"
+  },
+  {
+   "key": "market.pill.no_slot",
+   "text": "沒名額",
+   "src": "NO SLOT"
+  },
+  {
+   "key": "market.pill.take_out",
+   "text": "拿出",
+   "src": "TAKE OUT"
+  },
+  {
+   "key": "market.tile.new",
+   "text": "新品！",
+   "src": "NEW!"
+  },
+  {
+   "key": "market.tile.stars_to_open",
+   "text": "星解鎖",
+   "src": "STARS TO OPEN"
+  },
+  {
+   "key": "market.toast.basket_empty",
+   "text": "購物籃是空的",
+   "src": "BASKET IS EMPTY"
+  },
+  {
+   "key": "market.toast.not_enough_money",
+   "text": "錢不夠",
+   "src": "NOT ENOUGH MONEY"
+  },
+  {
+   "key": "market.toast.one_upgrade",
+   "text": "一晚只能升級一次",
+   "src": "ONE UPGRADE A NIGHT"
+  },
+  {
+   "key": "market.toast.order_stopped",
+   "text": "訂單中止 — {item}",
+   "src": "ORDER STOPPED — {item}"
+  },
+  {
+   "key": "market.word.sold",
+   "text": "售出",
+   "src": "SOLD"
+  }
+ ]
+}

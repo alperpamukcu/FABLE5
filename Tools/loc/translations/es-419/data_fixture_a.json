@@ -1,0 +1,404 @@
+{
+  "strings": [
+    {
+      "key": "data.fixture.art_city.blurb",
+      "text": "El horizonte de noche en tres cuadros. La única vista del salón que no está del otro lado de la ventana.",
+      "src": "The skyline at night in three frames. The only view in the room that is not out of the window."
+    },
+    {
+      "key": "data.fixture.art_city.name",
+      "text": "Tríptico urbano",
+      "src": "City Triptych"
+    },
+    {
+      "key": "data.fixture.back6_chevron.blurb",
+      "text": "Zigzags coral, crema y turquesa de esquina a esquina sobre los paneles. El salón deja de quedarse quieto.",
+      "src": "Coral, cream and teal zigzags from corner to corner over the panelling. The room stops standing still."
+    },
+    {
+      "key": "data.fixture.back6_chevron.name",
+      "text": "Pared chevrón",
+      "src": "Chevron Wall"
+    },
+    {
+      "key": "data.fixture.beer_mat.blurb",
+      "text": "Goma negra bajo la torre. Atrapa lo que el vaso no.",
+      "src": "Black rubber under the font. It catches what the glass does not."
+    },
+    {
+      "key": "data.fixture.beer_mat.name",
+      "text": "Tapete de goteo",
+      "src": "Drip Mat"
+    },
+    {
+      "key": "data.fixture.ceil6_grid.blurb",
+      "text": "Casetones cuadrados, cada uno con un rosetón rosa en el centro. Un techo que se nota a la segunda ronda.",
+      "src": "Square coffers, each with a pink rosette at its heart. A ceiling you notice on your second drink."
+    },
+    {
+      "key": "data.fixture.ceil6_grid.name",
+      "text": "Paneles con rosetón",
+      "src": "Rosette Panels"
+    },
+    {
+      "key": "data.fixture.ceil6_ray.blurb",
+      "text": "Rayos coral y magenta desde el centro del salón hacia afuera. Todo el lugar se inclina hacia la barra.",
+      "src": "Coral and magenta rays from the middle of the room outward. The whole place leans towards the bar."
+    },
+    {
+      "key": "data.fixture.ceil6_ray.name",
+      "text": "Techo de rayos",
+      "src": "Sunray Ceiling"
+    },
+    {
+      "key": "data.fixture.ceil6_stars.blurb",
+      "text": "Azul noche con estrellas doradas perforadas. Afuera ya es hora de cerrar; aquí adentro, hora feliz.",
+      "src": "Night blue with gold stars pricked through it. Closing time outside, happy hour in here."
+    },
+    {
+      "key": "data.fixture.ceil6_stars.name",
+      "text": "Techo estrellado",
+      "src": "Star Ceiling"
+    },
+    {
+      "key": "data.fixture.ceil_beams.blurb",
+      "text": "Vigas oscuras sobre el yeso. El salón gana una tapa, y las lámparas algo que iluminar.",
+      "src": "Dark beams across the plaster. The room gets a lid, and the lamps something to throw light at."
+    },
+    {
+      "key": "data.fixture.ceil_beams.name",
+      "text": "Techo con vigas",
+      "src": "Beamed Ceiling"
+    },
+    {
+      "key": "data.fixture.ceil_deco.blurb",
+      "text": "Molduras escalonadas color crema en paneles largos. Parece el techo de un lugar que cobra más caro.",
+      "src": "Stepped cream mouldings in long panels. It looks like the ceiling of somewhere that charges more."
+    },
+    {
+      "key": "data.fixture.ceil_deco.name",
+      "text": "Techo déco",
+      "src": "Deco Ceiling"
+    },
+    {
+      "key": "data.fixture.ceil_palm.blurb",
+      "text": "Hojas de palma pintadas arriba, como si el bar estuviera bajo un árbol. El humo pasa entre ellas.",
+      "src": "Fronds painted overhead, as if the bar were under a tree. The smoke drifts through them."
+    },
+    {
+      "key": "data.fixture.ceil_palm.name",
+      "text": "Techo de palmas",
+      "src": "Palm Ceiling"
+    },
+    {
+      "key": "data.fixture.ceil_stucco.blurb",
+      "text": "Yeso con remolinos hechos a mano, en blanco cálido. Todas las lámparas del salón se ven más suaves debajo.",
+      "src": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it."
+    },
+    {
+      "key": "data.fixture.ceil_stucco.name",
+      "text": "Techo de estuco",
+      "src": "Stucco Ceiling"
+    },
+    {
+      "key": "data.fixture.counter_sink.blurb",
+      "text": "Agua fría, un desagüe despostillado y un dueño que cuenta lo que se va por ahí.",
+      "src": "Cold water, a chipped drain, and a landlord who counts what goes down it."
+    },
+    {
+      "key": "data.fixture.counter_sink.name",
+      "text": "Fregadero de acero",
+      "src": "Steel Sink"
+    },
+    {
+      "key": "data.fixture.flamingo_triptych.blurb",
+      "text": "La costa en tres cuadros. El flamenco se queda después del cierre.",
+      "src": "The coast in three frames. The flamingo stays past closing."
+    },
+    {
+      "key": "data.fixture.flamingo_triptych.name",
+      "text": "Tríptico de flamencos",
+      "src": "Flamingo Triptych"
+    },
+    {
+      "key": "data.fixture.floor6_chip.blurb",
+      "text": "Trocitos coral, turquesa y crema sobre crema pulido. Un piso de lobby de hotel para un salón que no lo es.",
+      "src": "Chips of coral, teal and cream set in polished cream. A hotel lobby floor for a room that is not one."
+    },
+    {
+      "key": "data.fixture.floor6_chip.name",
+      "text": "Terrazo Miami",
+      "src": "Miami Terrazzo"
+    },
+    {
+      "key": "data.fixture.floor6_grid.blurb",
+      "text": "Baldosas oscuras con líneas rosas y cian, salidas de un videojuego. Caminar hasta la barra se siente como el nivel uno.",
+      "src": "Dark tiles lined in pink and cyan, straight out of a video game. Walking to the bar feels like level one."
+    },
+    {
+      "key": "data.fixture.floor6_grid.name",
+      "text": "Cuadrícula neón",
+      "src": "Neon Grid"
+    },
+    {
+      "key": "data.fixture.floor6_wave.blurb",
+      "text": "Olas turquesa que ruedan por todo el piso. La marea llegó y se quedó a tomar algo.",
+      "src": "Teal waves rolling across the whole floor. The tide came in and stayed for a drink."
+    },
+    {
+      "key": "data.fixture.floor6_wave.name",
+      "text": "Baldosas de olas",
+      "src": "Wave Tiles"
+    },
+    {
+      "key": "data.fixture.floor_carpet.blurb",
+      "text": "Alfombra ciruela de dibujo cargado, de esas que lo perdonan todo. El salón se queda en silencio bajo los pies.",
+      "src": "Plum carpet with a busy pattern, the kind that forgives everything. The room goes quiet underfoot."
+    },
+    {
+      "key": "data.fixture.floor_carpet.name",
+      "text": "Alfombrado",
+      "src": "Carpet"
+    },
+    {
+      "key": "data.fixture.floor_check.blurb",
+      "text": "Cuadros blancos y negros hasta la pared del fondo. Todas las cafeterías de todas las películas tenían uno.",
+      "src": "Black and white squares running to the back wall. Every diner in every film had one."
+    },
+    {
+      "key": "data.fixture.floor_check.name",
+      "text": "Piso a cuadros",
+      "src": "Checker Floor"
+    },
+    {
+      "key": "data.fixture.floor_marble.blurb",
+      "text": "Piedra blanca y fría con vetas grises. Los tacones suenan caros ahí.",
+      "src": "Cold white stone with grey veins. Heels sound expensive on it."
+    },
+    {
+      "key": "data.fixture.floor_marble.name",
+      "text": "Piso de mármol",
+      "src": "Marble Floor"
+    },
+    {
+      "key": "data.fixture.floor_rug.blurb",
+      "text": "Naranja que corre entre turquesa, una costa vista desde el aire. Le quita el eco a las tablas.",
+      "src": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards."
+    },
+    {
+      "key": "data.fixture.floor_rug.name",
+      "text": "Alfombra Marea",
+      "src": "Tide Rug"
+    },
+    {
+      "key": "data.fixture.floor_terra.blurb",
+      "text": "Baldosas cálidas de barro sobre las tablas. Disimula un trago derramado mejor que la madera.",
+      "src": "Warm clay tiles over the boards. It hides a spilled drink better than wood ever did."
+    },
+    {
+      "key": "data.fixture.floor_terra.name",
+      "text": "Terracota",
+      "src": "Terracotta"
+    },
+    {
+      "key": "data.fixture.lamp6_neonbar.blurb",
+      "text": "Un tubo rosa y uno cian, lado a lado en cada soporte. La pared zumba, y el salón también.",
+      "src": "A pink tube and a cyan tube side by side on each bracket. The wall hums, and so does the room."
+    },
+    {
+      "key": "data.fixture.lamp6_neonbar.name",
+      "text": "Apliques de tubo neón",
+      "src": "Neon Tube Sconces"
+    },
+    {
+      "key": "data.fixture.lamp6_scallop.blurb",
+      "text": "Pantallas crema en brazos de latón que bañan la pared de luz cálida. El tipo de lámpara que tiene un bar de hotel.",
+      "src": "Cream shades on brass arms, washing the wall in warm light. The kind of lamp a hotel bar has."
+    },
+    {
+      "key": "data.fixture.lamp6_scallop.name",
+      "text": "Apliques de abanico",
+      "src": "Scallop Sconces"
+    },
+    {
+      "key": "data.fixture.lamp6_shell.blurb",
+      "text": "Caracolas coral que brillan por dentro. Todos los que están debajo parecen recién llegados de vacaciones.",
+      "src": "Coral seashells glowing from inside. Everybody under them looks like they have been on holiday."
+    },
+    {
+      "key": "data.fixture.lamp6_shell.name",
+      "text": "Lámparas de caracola",
+      "src": "Shell Lamps"
+    },
+    {
+      "key": "data.fixture.neon6_bird.blurb",
+      "text": "Un pelícano en tubo blanco y rosa, con el pico lleno. En el barrio le dicen así al bar.",
+      "src": "A pelican in white and pink tube, beak full. The locals call the bar after it."
+    },
+    {
+      "key": "data.fixture.neon6_bird.name",
+      "text": "Pelícano neón",
+      "src": "Neon Pelican"
+    },
+    {
+      "key": "data.fixture.neon6_glass.blurb",
+      "text": "Un vaso alto en cian con rosa adentro y una cereza en el borde. El letrero dice para qué es el bar.",
+      "src": "A tall glass in cyan with pink inside and a cherry on the rim. The sign says what the bar is for."
+    },
+    {
+      "key": "data.fixture.neon6_glass.name",
+      "text": "Vaso neón",
+      "src": "Neon Glass"
+    },
+    {
+      "key": "data.fixture.neon6_sun.blurb",
+      "text": "Medio sol que se hunde en líneas rosas. Se pone cada noche a la misma hora en que abre el bar.",
+      "src": "A half sun sinking into pink lines. It sets every night at the same time the bar opens."
+    },
+    {
+      "key": "data.fixture.neon6_sun.name",
+      "text": "Atardecer neón",
+      "src": "Neon Sunset"
+    },
+    {
+      "key": "data.fixture.neon_flamingo.blurb",
+      "text": "Un flamenco rosa en una pata, zumbando bajito. Nunca se cansa de estar ahí parado.",
+      "src": "A pink flamingo on one leg, buzzing faintly. It never gets tired of standing there."
+    },
+    {
+      "key": "data.fixture.neon_flamingo.name",
+      "text": "Flamenco neón",
+      "src": "Neon Flamingo"
+    },
+    {
+      "key": "data.fixture.neon_martini.blurb",
+      "text": "El letrero clásico: una copa que nunca se vacía.",
+      "src": "The classic sign: a glass that never empties."
+    },
+    {
+      "key": "data.fixture.neon_martini.name",
+      "text": "Martini neón",
+      "src": "Neon Martini"
+    },
+    {
+      "key": "data.fixture.picR6_conv.blurb",
+      "text": "Un convertible blanco en un camino junto al mar. Alguien lo pintó de memoria.",
+      "src": "A white convertible on a road along the sea. Somebody painted it from memory."
+    },
+    {
+      "key": "data.fixture.picR6_conv.name",
+      "text": "Carretera costera",
+      "src": "Coast Road"
+    },
+    {
+      "key": "data.fixture.picR6_shapes.blurb",
+      "text": "Triángulos, círculos y garabatos en los colores del salón. Nadie se pone de acuerdo en qué es.",
+      "src": "Triangles, circles and squiggles in the colours of the room. Nobody agrees what it is."
+    },
+    {
+      "key": "data.fixture.picR6_shapes.name",
+      "text": "Formas Memphis",
+      "src": "Memphis Shapes"
+    },
+    {
+      "key": "data.fixture.picR6_sunset.blurb",
+      "text": "Dos palmeras, un sol rosa y un mar turquesa, en un marco dorado fino.",
+      "src": "Two palms, a pink sun and a turquoise sea, in a thin gold frame."
+    },
+    {
+      "key": "data.fixture.picR6_sunset.name",
+      "text": "Atardecer en el mar",
+      "src": "Ocean Sunset"
+    },
+    {
+      "key": "data.fixture.picS_trio.blurb",
+      "text": "Un flamenco, dos cerezas y unos labios, cada uno en su cuadrito. Siempre hay alguien que pregunta de dónde son.",
+      "src": "A flamingo, two cherries and a pair of lips, one small frame each. Somebody always asks where they are from."
+    },
+    {
+      "key": "data.fixture.picS_trio.name",
+      "text": "Trío pop",
+      "src": "Pop Trio"
+    },
+    {
+      "key": "data.fixture.picS_trioA.blurb",
+      "text": "Un cóctel, una palmera y un sol en marcos dorados. El estilo de la casa, colgado donde todos puedan leerlo.",
+      "src": "A cocktail, a palm and a sun in gold frames. The house style, hung where everybody can read it."
+    },
+    {
+      "key": "data.fixture.picS_trioA.name",
+      "text": "Trío cóctel",
+      "src": "Cocktail Trio"
+    },
+    {
+      "key": "data.fixture.picS_trioB.blurb",
+      "text": "Un disco, un loro y una ola, enmarcados en turquesa y rojo. La pared más ruidosa del salón, sin un solo altavoz.",
+      "src": "A record, a parrot and a wave, framed in teal and red. The loudest wall in the room without a speaker on it."
+    },
+    {
+      "key": "data.fixture.picS_trioB.name",
+      "text": "Trío vinilo",
+      "src": "Vinyl Trio"
+    },
+    {
+      "key": "data.fixture.pic_pelican.blurb",
+      "text": "Un pelícano sobre un poste, en un marco de madera oscura. Vigila la puerta para que el bartender no tenga que hacerlo.",
+      "src": "A pelican on a post in a dark wood frame. It watches the door so the bartender does not have to."
+    },
+    {
+      "key": "data.fixture.pic_pelican.name",
+      "text": "Pelícano",
+      "src": "Pelican"
+    },
+    {
+      "key": "data.fixture.plant5_yucca_L.blurb",
+      "text": "Una corona de puntas sobre un tallo pelado, en maceta de barro. Hace guardia junto a la ventana.",
+      "src": "A spiky crown on a bare cane, in a terracotta pot. It stands guard by the window."
+    },
+    {
+      "key": "data.fixture.plant5_yucca_L.name",
+      "text": "Yuca",
+      "src": "Yucca"
+    },
+    {
+      "key": "data.fixture.plant_agave.blurb",
+      "text": "Verdiazul, baja y ancha, en un cuenco poco hondo. Se queda debajo del neón, no delante.",
+      "src": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it."
+    },
+    {
+      "key": "data.fixture.plant_agave.name",
+      "text": "Agave en cuenco",
+      "src": "Agave Bowl"
+    },
+    {
+      "key": "data.fixture.plant_palm.blurb",
+      "text": "Hojas finas y una maceta de barro. La forma más barata de que un rincón no parezca un pasillo.",
+      "src": "Thin fronds and a clay pot. The cheapest way to stop a corner looking like a corridor."
+    },
+    {
+      "key": "data.fixture.plant_palm.name",
+      "text": "Palma areca",
+      "src": "Areca Palm"
+    },
+    {
+      "key": "data.fixture.plant_pothos.blurb",
+      "text": "Crece hacia abajo en vez de hacia arriba, sobre tres patas de latón. La única planta de aquí que busca el piso.",
+      "src": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor."
+    },
+    {
+      "key": "data.fixture.plant_pothos.name",
+      "text": "Potus colgante",
+      "src": "Trailing Pothos"
+    },
+    {
+      "key": "data.fixture.post5_car.blurb",
+      "text": "Un convertible turquesa estacionado frente al atardecer, con el techo abierto. El auto que el dueño dice que casi compra.",
+      "src": "A teal convertible parked facing the sunset, top down. The car the owner says he nearly bought."
+    },
+    {
+      "key": "data.fixture.post5_car.name",
+      "text": "Póster del convertible",
+      "src": "Convertible Poster"
+    }
+  ]
+}

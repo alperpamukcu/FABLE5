@@ -1,0 +1,379 @@
+{
+ "strings": [
+  {
+   "key": "data.recipe.bahama_mama.lore",
+   "text": "蘭姆酒疊蘭姆酒，上面再蓋滿水果。那把小傘是結構的一部分。",
+   "src": "Rum stacked on rum under fruit. The umbrella is structural."
+  },
+  {
+   "key": "data.recipe.bahama_mama.name",
+   "text": "巴哈馬媽媽",
+   "src": "Bahama Mama"
+  },
+  {
+   "key": "data.recipe.bahama_mama.origin",
+   "text": "拿索，二十世紀中葉",
+   "src": "NASSAU, MIDCENTURY"
+  },
+  {
+   "key": "data.recipe.black_russian.lore",
+   "text": "伏特加加咖啡香甜酒，為一位得熬夜工作的大使而發明。",
+   "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+  },
+  {
+   "key": "data.recipe.black_russian.name",
+   "text": "黑色俄羅斯",
+   "src": "Black Russian"
+  },
+  {
+   "key": "data.recipe.black_russian.origin",
+   "text": "布魯塞爾，1949",
+   "src": "BRUSSELS, 1949"
+  },
+  {
+   "key": "data.recipe.boulevardier.lore",
+   "text": "把琴酒換成波本、搬到巴黎當作家的尼格羅尼。",
+   "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+  },
+  {
+   "key": "data.recipe.boulevardier.name",
+   "text": "花花公子",
+   "src": "Boulevardier"
+  },
+  {
+   "key": "data.recipe.boulevardier.origin",
+   "text": "巴黎，1927",
+   "src": "PARIS, 1927"
+  },
+  {
+   "key": "data.recipe.cape_codder.lore",
+   "text": "伏特加加蔓越莓，名字來自產蔓越莓的沼澤。廣告詞根本不用想。",
+   "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+  },
+  {
+   "key": "data.recipe.cape_codder.name",
+   "text": "鱈魚角",
+   "src": "Cape Codder"
+  },
+  {
+   "key": "data.recipe.cape_codder.origin",
+   "text": "新英格蘭，1945",
+   "src": "NEW ENGLAND, 1945"
+  },
+  {
+   "key": "data.recipe.cosmopolitan.lore",
+   "text": "粉紅色的那杯。蔓越莓讓伏特加乖乖的，也讓杯子很上鏡。",
+   "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+  },
+  {
+   "key": "data.recipe.cosmopolitan.name",
+   "text": "柯夢波丹",
+   "src": "Cosmopolitan"
+  },
+  {
+   "key": "data.recipe.cosmopolitan.origin",
+   "text": "南灘，1980 年代",
+   "src": "SOUTH BEACH, 1980S"
+  },
+  {
+   "key": "data.recipe.cuba_libre.lore",
+   "text": "蘭姆酒、可樂，再加一角萊姆，敬自由的古巴。萊姆不是裝飾，它才是重點。",
+   "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+  },
+  {
+   "key": "data.recipe.cuba_libre.name",
+   "text": "自由古巴",
+   "src": "Cuba Libre"
+  },
+  {
+   "key": "data.recipe.cuba_libre.origin",
+   "text": "哈瓦那，1900",
+   "src": "HAVANA, 1900"
+  },
+  {
+   "key": "data.recipe.daiquiri.lore",
+   "text": "蘭姆酒、萊姆、糖，搖到冰涼。海明威在這杯上一直掛著帳。",
+   "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+  },
+  {
+   "key": "data.recipe.daiquiri.name",
+   "text": "黛綺莉",
+   "src": "Daiquiri"
+  },
+  {
+   "key": "data.recipe.daiquiri.origin",
+   "text": "古巴聖地牙哥，1898",
+   "src": "SANTIAGO DE CUBA, 1898"
+  },
+  {
+   "key": "data.recipe.dark_stormy.lore",
+   "text": "黑蘭姆酒倒在薑汁汽水上 — 一朵能喝的烏雲。這個名字還牽扯到律師。",
+   "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."
+  },
+  {
+   "key": "data.recipe.dark_stormy.name",
+   "text": "月黑風高",
+   "src": "Dark 'n' Stormy"
+  },
+  {
+   "key": "data.recipe.dark_stormy.origin",
+   "text": "百慕達，1920 年代",
+   "src": "BERMUDA, 1920S"
+  },
+  {
+   "key": "data.recipe.dirty_martini.lore",
+   "text": "加進了橄欖罐意見的馬丁尼。原本清澈透亮的地方，換成了鹹鹹的醃汁。",
+   "src": "A martini with the olive jar's opinion. Brine where the daylight was."
+  },
+  {
+   "key": "data.recipe.dirty_martini.name",
+   "text": "髒馬丁尼",
+   "src": "Dirty Martini"
+  },
+  {
+   "key": "data.recipe.dirty_martini.origin",
+   "text": "紐約，1901",
+   "src": "NEW YORK, 1901"
+  },
+  {
+   "key": "data.recipe.draught.lore",
+   "text": "杯子斜放，讓酒桶說話，再扶正做出泡沫。泡沫就是功夫。",
+   "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+  },
+  {
+   "key": "data.recipe.draught.name",
+   "text": "生啤酒",
+   "src": "Draught"
+  },
+  {
+   "key": "data.recipe.draught.origin",
+   "text": "酒窖，每個晚上",
+   "src": "THE CELLAR, EVERY NIGHT"
+  },
+  {
+   "key": "data.recipe.dry_martini.lore",
+   "text": "琴酒幾乎沒被香艾酒打擾，攪拌到冰涼。每間酒吧都拿它來衡量。",
+   "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."
+  },
+  {
+   "key": "data.recipe.dry_martini.name",
+   "text": "不甜馬丁尼",
+   "src": "Dry Martini"
+  },
+  {
+   "key": "data.recipe.dry_martini.origin",
+   "text": "紐約，1900 年代",
+   "src": "NEW YORK, 1900S"
+  },
+  {
+   "key": "data.recipe.el_presidente.lore",
+   "text": "古巴的政治家：蘭姆酒、香艾酒、柑橘香甜酒，再加一絲紅石榴糖漿。穿上碟型杯，就像穿上官服。",
+   "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+  },
+  {
+   "key": "data.recipe.el_presidente.name",
+   "text": "總統",
+   "src": "El Presidente"
+  },
+  {
+   "key": "data.recipe.el_presidente.origin",
+   "text": "哈瓦那，1920 年代",
+   "src": "HAVANA, 1920S"
+  },
+  {
+   "key": "data.recipe.espresso_martini.lore",
+   "text": "「讓我醒過來，再把我搞亂。」Dick Bradsell 拿起雪克杯，照辦了。",
+   "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."
+  },
+  {
+   "key": "data.recipe.espresso_martini.name",
+   "text": "濃縮咖啡馬丁尼",
+   "src": "Espresso Martini"
+  },
+  {
+   "key": "data.recipe.espresso_martini.origin",
+   "text": "倫敦，1983",
+   "src": "LONDON, 1983"
+  },
+  {
+   "key": "data.recipe.gimlet.lore",
+   "text": "琴酒加萊姆糖漿，起初拿來對抗壞血病，後來拿來對抗無聊。",
+   "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+  },
+  {
+   "key": "data.recipe.gimlet.name",
+   "text": "琴蕾",
+   "src": "Gimlet"
+  },
+  {
+   "key": "data.recipe.gimlet.origin",
+   "text": "英國皇家海軍，1800 年代",
+   "src": "THE ROYAL NAVY, 1800S"
+  },
+  {
+   "key": "data.recipe.gin_fizz.lore",
+   "text": "打開蘇打大門的琴酒酸酒。Ramos 的那杯要搖上十二分鐘。",
+   "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+  },
+  {
+   "key": "data.recipe.gin_fizz.name",
+   "text": "琴費士",
+   "src": "Gin Fizz"
+  },
+  {
+   "key": "data.recipe.gin_fizz.origin",
+   "text": "紐奧良，1880 年代",
+   "src": "NEW ORLEANS, 1880S"
+  },
+  {
+   "key": "data.recipe.gin_sour.lore",
+   "text": "烈酒、檸檬、糖 — 這本酒譜有一半的酒，背後都是這道最古老的公式。",
+   "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+  },
+  {
+   "key": "data.recipe.gin_sour.name",
+   "text": "琴酒酸酒",
+   "src": "Gin Sour"
+  },
+  {
+   "key": "data.recipe.gin_sour.origin",
+   "text": "酸酒家族，1860 年代",
+   "src": "THE SOUR FAMILY, 1860S"
+  },
+  {
+   "key": "data.recipe.gin_tonic.lore",
+   "text": "奎寧對抗瘧疾，琴酒對抗奎寧。大英帝國最有用的意外。",
+   "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+  },
+  {
+   "key": "data.recipe.gin_tonic.name",
+   "text": "琴通寧",
+   "src": "Gin & Tonic"
+  },
+  {
+   "key": "data.recipe.gin_tonic.origin",
+   "text": "英屬印度，1850 年代",
+   "src": "BRITISH INDIA, 1850S"
+  },
+  {
+   "key": "data.recipe.kamikaze.lore",
+   "text": "伏特加、橙皮酒、萊姆，片甲不留。一口杯文化的調酒畢業證書。",
+   "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."
+  },
+  {
+   "key": "data.recipe.kamikaze.name",
+   "text": "神風特攻隊",
+   "src": "Kamikaze"
+  },
+  {
+   "key": "data.recipe.kamikaze.origin",
+   "text": "港口酒吧，1970 年代",
+   "src": "THE PORT BARS, 1970S"
+  },
+  {
+   "key": "data.recipe.last_call.lore",
+   "text": "今晚最後一位客人的招牌酒。酒譜留著這一頁；吧檯記得原因。",
+   "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+  },
+  {
+   "key": "data.recipe.last_call.name",
+   "text": "最後一輪",
+   "src": "Last Call"
+  },
+  {
+   "key": "data.recipe.last_call.origin",
+   "text": "這間酒吧，今晚",
+   "src": "THIS BAR, TONIGHT"
+  },
+  {
+   "key": "data.recipe.lemon_drop.lore",
+   "text": "穿著糖口檸檬西裝的伏特加。一份以飲料名義報帳的甜點。",
+   "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+  },
+  {
+   "key": "data.recipe.lemon_drop.name",
+   "text": "檸檬糖",
+   "src": "Lemon Drop"
+  },
+  {
+   "key": "data.recipe.lemon_drop.origin",
+   "text": "舊金山，1970 年代",
+   "src": "SAN FRANCISCO, 1970S"
+  },
+  {
+   "key": "data.recipe.long_island.lore",
+   "text": "五種烈酒串通好假扮冰紅茶。每晚只騙得了一次。",
+   "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+  },
+  {
+   "key": "data.recipe.long_island.name",
+   "text": "長島冰茶",
+   "src": "Long Island"
+  },
+  {
+   "key": "data.recipe.long_island.origin",
+   "text": "長島，1972",
+   "src": "LONG ISLAND, 1972"
+  },
+  {
+   "key": "data.recipe.mai_tai.lore",
+   "text": "Trader Vic 調出這杯；一位大溪地朋友說「maita'i」— 好得不像人間的東西。",
+   "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."
+  },
+  {
+   "key": "data.recipe.mai_tai.name",
+   "text": "邁泰",
+   "src": "Mai Tai"
+  },
+  {
+   "key": "data.recipe.mai_tai.origin",
+   "text": "奧克蘭，1944",
+   "src": "OAKLAND, 1944"
+  },
+  {
+   "key": "data.recipe.manhattan.lore",
+   "text": "威士忌加甜香艾酒，攪拌。掛著這座城市名牌的調酒。",
+   "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+  },
+  {
+   "key": "data.recipe.manhattan.name",
+   "text": "曼哈頓",
+   "src": "Manhattan"
+  },
+  {
+   "key": "data.recipe.manhattan.origin",
+   "text": "紐約，1870 年代",
+   "src": "NEW YORK, 1870S"
+  },
+  {
+   "key": "data.recipe.margarita.lore",
+   "text": "龍舌蘭、柳橙和萊姆，躲在鹽口杯後面。沒人說得準是誰發明的，但大家都懂為什麼。",
+   "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+  },
+  {
+   "key": "data.recipe.margarita.name",
+   "text": "瑪格麗特",
+   "src": "Margarita"
+  },
+  {
+   "key": "data.recipe.margarita.origin",
+   "text": "美墨邊境，1940 年代",
+   "src": "THE BORDER, 1940S"
+  },
+  {
+   "key": "data.recipe.martinez.lore",
+   "text": "曼哈頓和馬丁尼之間失落的那一環，用淘金熱時代的琴酒調成。",
+   "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."
+  },
+  {
+   "key": "data.recipe.martinez.name",
+   "text": "馬丁尼茲",
+   "src": "Martinez"
+  },
+  {
+   "key": "data.recipe.martinez.origin",
+   "text": "舊金山，1880 年代",
+   "src": "SAN FRANCISCO, 1880S"
+  }
+ ]
+}

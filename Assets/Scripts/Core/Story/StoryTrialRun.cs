@@ -71,7 +71,8 @@ namespace LastCall.Core
         public void Begin()
         {
             if (State != TrialState.Talking)
-                throw new InvalidOperationException("That trial has already started.");
+                throw Said.With(new InvalidOperationException("That trial has already started."),
+                    Line.Of("rule.trial_started"));
             State = TrialState.Pouring;
         }
 
@@ -109,10 +110,11 @@ namespace LastCall.Core
         private void RequirePouring()
         {
             if (State != TrialState.Pouring)
-                throw new InvalidOperationException(
+                throw Said.With(new InvalidOperationException(
                     State == TrialState.Talking
                         ? "They have not asked for anything yet."
-                        : "That trial is already over.");
+                        : "That trial is already over."),
+                    Line.Of(State == TrialState.Talking ? "rule.trial_not_asked" : "rule.trial_over"));
         }
 
         public override string ToString() => $"{State} {Done}/{Total} ({Mistakes} wrong)";

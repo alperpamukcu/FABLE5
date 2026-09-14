@@ -305,32 +305,40 @@ namespace LastCall.UI
             // bir açıklama yapılsın"). One word beside each strip — the least text that
             // names a reading — and under the pointer, for all three, the mark it is about
             // with one line saying what it measures.
-            StripCaption(house, "SERVICE", RowY - 9f);
-            StripCaption(house, "COMFORT", RowY + 9f);
+            StripCaption(house, "SERVICE", UIText.T("build.house.service"), RowY - 9f);
+            StripCaption(house, "COMFORT", UIText.T("build.house.comfort"), RowY + 9f);
             // WITH THEIR NUMBERS (second pass, the author: "yıldızın nelere bağlı
             // arttığını servis ve konforun ne kadar etkilediğini ... üstüne gelerek
             // öğrenebilmeliyiz"): the lines are read off the run every frame the tip is up.
+            // The readings go in pre-formatted ("0.0" in the current culture, as the old
+            // interpolation did): the table would format a bare number invariantly.
             HoverTip(house.Find("Service") as RectTransform, ItemArt.Heart(true, 16f),
-                "SERVICE", () =>
+                UIText.T("build.house.service.tip_title"), () =>
                 {
                     var r = Run;
-                    return r == null ? "WHAT TONIGHT'S DRINKS ARE WORTH"
-                        : $"TONIGHT'S DRINKS: {r.ServiceTonight:0.0} OF 5";
+                    return r == null ? UIText.T("build.house.service.tip_idle")
+                        : UIText.T("build.house.service.tip", ("rating", r.ServiceTonight.ToString("0.0")));
                 });
             HoverTip(house.Find("Comfort") as RectTransform, ItemArt.Medal(true, 16f),
-                "COMFORT", () =>
+                UIText.T("build.house.comfort.tip_title"), () =>
                 {
                     var r = Run;
-                    return r == null ? "WHAT THE ROOM IS WORTH: WALLS, LIGHT, FURNITURE"
-                        : $"THE ROOM NOW: {r.ComfortNow:0.0} OF 5 - WALLS, LIGHT, FURNITURE";
+                    return r == null ? UIText.T("build.house.comfort.tip_idle")
+                        : UIText.T("build.house.comfort.tip", ("rating", r.ComfortNow.ToString("0.0")));
                 });
+            // ONE SENTENCE OVER THE CARD'S TWO ROWS: the key carries it whole with a \n, and
+            // it is split here into the title row and the detail row the card draws.
+            string[] standingTip = UIText.T("build.standing.tip").Split(new[] { '\n' }, 2);
             HoverTip(starsRow, ItemArt.Star(true, 16f),
-                "STANDING - A STEP A NIGHT TOWARD THE LOWER OF", () =>
+                standingTip[0], () =>
                 {
                     var r = Run;
-                    if (r == null) return "SERVICE AND COMFORT";
+                    if (r == null) return standingTip.Length > 1 ? standingTip[1] : "";
                     double lower = System.Math.Min(r.ServiceTonight, r.ComfortNow);
-                    return $"SERVICE {r.ServiceTonight:0.0}  ·  COMFORT {r.ComfortNow:0.0}  =  TONIGHT {lower:0.0}";
+                    return UIText.T("build.standing.tip_reading",
+                        ("service", r.ServiceTonight.ToString("0.0")),
+                        ("comfort", r.ComfortNow.ToString("0.0")),
+                        ("tonight", lower.ToString("0.0")));
                 });
 
             // The crowd caption moved into the night's well (BuildDayWell, 2026-09-07).
@@ -364,7 +372,8 @@ namespace LastCall.UI
                 var mi = cogMark.GetComponent<Image>();
                 if (mi != null) mi.color = cogArt != null ? Color.white : UITheme.Amber[4];
             }
-            HoverTip(cogKey, cogArt ?? ChromeArt.Mark("cog"), "SETTINGS", "SOUND, MOTION, THE BOOK, A NEW RUN");
+            HoverTip(cogKey, cogArt ?? ChromeArt.Mark("cog"), UIText.T("build.settings.tip_title"),
+                UIText.T("build.settings.tip"));
             BuildSettings(root);
             BuildOrderTip(root);
 
@@ -854,7 +863,7 @@ namespace LastCall.UI
 
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));
-            title.text = "LAST CALL — THE BOOKS";
+            title.text = UIText.T("build.dayend.title");
 
             // THE NIGHT IS CALLED BEFORE IT IS COUNTED (2026-08-11, the author: at two in
             // the morning a line says the day is over, the room goes dark behind it, and
@@ -866,14 +875,14 @@ namespace LastCall.UI
             Place(_lastCallCard.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 40),
                 new Vector2(0, 10f));
             _lastCallCard.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _lastCallCard.text = "THAT'S LAST CALL";
+            _lastCallCard.text = UIText.T("build.dayend.called");
             _lastCallCard.raycastTarget = false;
             var calledUnder = NewText("CalledSub", _dayEndPanel, _body, 16, TextAnchor.MiddleCenter,
                 new Color(0.72f, 0.68f, 0.62f));
             Place(calledUnder.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 20),
                 new Vector2(0, -22f));
             calledUnder.horizontalOverflow = HorizontalWrapMode.Overflow;
-            calledUnder.text = "doors shut · counting the money";
+            calledUnder.text = UIText.T("build.dayend.called_sub");
             calledUnder.raycastTarget = false;
             _lastCallRt = NewRect("Call", _dayEndPanel);   // one group carries both lines
             Stretch(_lastCallRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -907,7 +916,7 @@ namespace LastCall.UI
             Place(headTitle.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 26),
                 new Vector2(0, -30f));
             headTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
-            headTitle.text = "LAST CALL";
+            headTitle.text = UIText.T("build.bill.head");
             _billWhen = NewText("W", bill, _body, 16, TextAnchor.MiddleCenter, BillQuiet);
             Place(_billWhen.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 20),
                 new Vector2(0, -54f));
@@ -943,7 +952,7 @@ namespace LastCall.UI
             Stretch(_billNextLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(10, 0), new Vector2(-10, 0));
             _billNextLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _billNextLabel.text = "CONTINUE";
+            _billNextLabel.text = UIText.T("build.bill.continue");
 
             // The slip is the night's money; these two are the night's PLACE — where it sits
             // in the week, and what it did to the bar. See the block above RebuildDayEnd.
@@ -996,7 +1005,7 @@ namespace LastCall.UI
             Place(_osClock.rectTransform, new Vector2(0, 0.5f), new Vector2(120, 12), new Vector2(12, 0));
             var osCarrier = NewText("OsCarrier", osBar, _body, 8, TextAnchor.MiddleCenter, ShopInkSoft);
             Place(osCarrier.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(200, 12), Vector2.zero);
-            osCarrier.text = "TRADE NET";
+            osCarrier.text = UIText.T("build.tablet.carrier");
             var osWifi = NewRect("OsWifi", osBar);
             Place(osWifi, new Vector2(1, 0.5f), new Vector2(20, 14), new Vector2(-52, 0));
             var wifiImg = osWifi.gameObject.AddComponent<Image>();
@@ -1073,7 +1082,7 @@ namespace LastCall.UI
             var balanceLabel = NewText("BalanceL", balance, _body, 8, TextAnchor.MiddleLeft,
                 new Color(0.667f, 0.702f, 0.847f, 1f));   // 6.2:1 on the well
             Place(balanceLabel.rectTransform, new Vector2(0, 1), new Vector2(80, 10), new Vector2(10, -6));
-            balanceLabel.text = "ACCOUNT";
+            balanceLabel.text = UIText.T("build.tablet.account");
             _tabletTill = NewText("Till", balance, _display, 16, TextAnchor.MiddleRight, Color.white);
             Place(_tabletTill.rectTransform, new Vector2(1, 0), new Vector2(126, 18), new Vector2(-10, 6));
             _tabletTill.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -1130,7 +1139,8 @@ namespace LastCall.UI
             tabBarImg.color = new Color(1f, 1f, 1f, 0f);
             tabBarImg.raycastTarget = false;
 
-            for (int i = 0; i < ShopTabs.Length; i++)
+            var tabNames = ShopTabs;   // read once: it is a property over the string table
+            for (int i = 0; i < ShopTabIcons.Length; i++)
             {
                 int tab = i;
                 // DRAWN, NOT DRAWN-ON (2026-08-10, the author's file brief). A sprite
@@ -1200,7 +1210,7 @@ namespace LastCall.UI
                     new Vector2(40, 0), new Vector2(-6, 0));
                 label.horizontalOverflow = HorizontalWrapMode.Wrap;
                 label.verticalOverflow = VerticalWrapMode.Truncate;
-                label.text = ShopTabs[i];
+                label.text = tabNames[i];
                 _shopTabKeys[i] = bg;
                 _shopTabLabels[i] = label;
                 MarkHoverable(key, bg);
@@ -1414,7 +1424,7 @@ namespace LastCall.UI
                 new Vector2(38, 0));
             _cartHeadLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _cartHeadLabel.verticalOverflow = VerticalWrapMode.Overflow;
-            _cartHeadLabel.text = "BASKET";
+            _cartHeadLabel.text = UIText.T("dayend.basket.head");   // what DayEnd.cs sets the empty basket to
 
             // TWO NUMBERS, RIGHT TO LEFT: what the order comes to, and what the till has
             // left after it. The band used to carry the total alone beside a PLACE ORDER
@@ -1431,7 +1441,7 @@ namespace LastCall.UI
             _cartTotalLabel = NewText("TotalL", orderHead, _shop, 8, TextAnchor.MiddleRight, ShopPaper);
             Place(_cartTotalLabel.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 12),
                 new Vector2(-138f, 0));
-            _cartTotalLabel.text = "TOTAL";
+            _cartTotalLabel.text = UIText.T("build.basket.total");
             _cartTotal = NewText("BasketTotal", orderHead, _display, 16, TextAnchor.MiddleRight,
                 Color.white);
             Place(_cartTotal.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
@@ -1442,7 +1452,7 @@ namespace LastCall.UI
             _cartLeftLabel = NewText("LeftL", orderHead, _shop, 8, TextAnchor.MiddleRight, ShopPaper);
             Place(_cartLeftLabel.rectTransform, new Vector2(1, 0.5f), new Vector2(130, 12),
                 new Vector2(-334f, 0));
-            _cartLeftLabel.text = "LEFT IN THE TILL";
+            _cartLeftLabel.text = UIText.T("build.basket.left");
             _cartLeft = NewText("BasketLeft", orderHead, _display, 16, TextAnchor.MiddleRight,
                 Color.white);
             Place(_cartLeft.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
@@ -1509,7 +1519,7 @@ namespace LastCall.UI
                 new Vector2(4, 0), new Vector2(-4, 0));
             _marketKeyLabel.horizontalOverflow = HorizontalWrapMode.Wrap;
             _marketKeyLabel.verticalOverflow = VerticalWrapMode.Truncate;
-            _marketKeyLabel.text = "OPEN\nTOMORROW";
+            _marketKeyLabel.text = UIText.T("market.key.open_tomorrow");   // the caption Market.cs sets it to
             var otPress = _marketKey.gameObject.AddComponent<Win98Press>();
             otPress.Face = otImg;
             otPress.Caption = _marketKeyLabel.rectTransform;
@@ -1650,9 +1660,11 @@ namespace LastCall.UI
         }
 
         /// <summary>One word to the left of a reading's strip.</summary>
-        private void StripCaption(RectTransform block, string word, float y)
+        /// <summary>The GameObject is named by <paramref name="name"/>, not by the word, so the
+        /// hierarchy does not change with the player's language.</summary>
+        private void StripCaption(RectTransform block, string name, string word, float y)
         {
-            var t = NewText("Cap_" + word, block, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
+            var t = NewText("Cap_" + name, block, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
             Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(70, 12), new Vector2(-8f, y));
             t.rectTransform.pivot = new Vector2(1, 0.5f);
             t.horizontalOverflow = HorizontalWrapMode.Overflow;

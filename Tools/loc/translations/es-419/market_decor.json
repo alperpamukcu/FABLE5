@@ -1,0 +1,679 @@
+{
+  "strings": [
+    {
+      "key": "decor.card.given",
+      "text": "Venía con el salón",
+      "src": "Given with the room"
+    },
+    {
+      "key": "decor.card.mark",
+      "text": "Nivel {mark}",
+      "src": "Mark {mark}"
+    },
+    {
+      "key": "decor.card.mark_of",
+      "text": "nivel {mark} de {total}",
+      "src": "mark {mark} of {total}"
+    },
+    {
+      "key": "decor.card.no_upgrade_spent",
+      "text": "No gasta la mejora de la noche",
+      "src": "Never spends the night's one upgrade"
+    },
+    {
+      "key": "decor.card.owned",
+      "text": "Ya es tuyo · ponlo cualquier noche, gratis — el salón sigue valiendo el nivel {mark}",
+      "src": "Bought already · wear it any night, free — the room stays worth mark {mark}"
+    },
+    {
+      "key": "decor.card.place_counter",
+      "text": "La barra",
+      "src": "The counter"
+    },
+    {
+      "key": "decor.card.place_room",
+      "text": "El salón",
+      "src": "The room"
+    },
+    {
+      "key": "decor.card.rung_lock",
+      "text": "Primero instala el nivel {next} · este bar está en el nivel {mark}",
+      "src": "Fit mark {next} first · this bar is at mark {mark}"
+    },
+    {
+      "key": "decor.card.star_lock",
+      "text": "Necesita un salón de {stars} estrellas · tienes {have}",
+      "src": "Needs a {stars}-star room · you are at {have}"
+    },
+    {
+      "key": "decor.card.to_room",
+      "text": "{comfort} al salón",
+      "src": "{comfort} to the room"
+    },
+    {
+      "key": "decor.card.worn",
+      "text": "En el salón ahora",
+      "src": "In the room now"
+    },
+    {
+      "key": "decor.card.worn_stays",
+      "text": "En el salón ahora · el salón sigue valiendo el nivel {mark}",
+      "src": "In the room now · the room stays worth mark {mark}"
+    },
+    {
+      "key": "decor.comfort",
+      "text": "+{comfort} comodidad",
+      "src": "+{comfort} comfort"
+    },
+    {
+      "key": "decor.fit.all_fitted",
+      "text": "EL BAR ESTÁ EQUIPADO — NO QUEDA NADA POR MEJORAR",
+      "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"
+    },
+    {
+      "key": "decor.fit.bar.body",
+      "text": "Una barra mejor pone más contento a cada cliente. Incluso a los que les sirves mal el trago.",
+      "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."
+    },
+    {
+      "key": "decor.fit.bar.gain",
+      "text": "+0.03 por cada visita atendida, hasta +0.06",
+      "src": "+0.03 on every served visit, up to +0.06"
+    },
+    {
+      "key": "decor.fit.bar.identity",
+      "text": "RENOVAR LA BARRA",
+      "src": "RESURFACE THE BAR"
+    },
+    {
+      "key": "decor.fit.bar.meta_line",
+      "text": "El salón · nivel {rung} de {max}",
+      "src": "The room · rung {rung} of {max}"
+    },
+    {
+      "key": "decor.fit.bar.name",
+      "text": "Renovar la barra",
+      "src": "Resurface the Bar"
+    },
+    {
+      "key": "decor.fit.glass.body",
+      "text": "Mejores vasos ponen más contento a cada cliente y te dan estrellas.",
+      "src": "Better glasses make every customer happier, and win you stars."
+    },
+    {
+      "key": "decor.fit.glass.gain",
+      "text": "+1 nivel en {glass} · cada trago que se sirva ahí",
+      "src": "+1 rung on the {glass} line · every drink served in one"
+    },
+    {
+      "key": "decor.fit.glass.identity",
+      "text": "CRISTALERÍA: {glass}",
+      "src": "{glass} GLASSWARE"
+    },
+    {
+      "key": "decor.fit.rung_of",
+      "text": "Nivel {rung} de {max}",
+      "src": "Rung {rung} of {max}"
+    },
+    {
+      "key": "decor.fit.section_glass",
+      "text": "CRISTALERÍA",
+      "src": "GLASSWARE"
+    },
+    {
+      "key": "decor.fit.section_seats",
+      "text": "BANCOS Y BARRA",
+      "src": "SEATS & BAR"
+    },
+    {
+      "key": "decor.fit.stool.body",
+      "text": "Un cliente más puede sentarse en la barra.",
+      "src": "One more customer can sit at the bar."
+    },
+    {
+      "key": "decor.fit.stool.gain",
+      "text": "+1 asiento · +0.25 estrellas",
+      "src": "+1 seat · +0.25 stars"
+    },
+    {
+      "key": "decor.fit.stool.identity",
+      "text": "UN BANCO MÁS",
+      "src": "ONE MORE STOOL"
+    },
+    {
+      "key": "decor.fit.stool.meta",
+      "text": "Asiento {seat} de {max}",
+      "src": "Seat {seat} of {max}"
+    },
+    {
+      "key": "decor.fit.stool.meta_line",
+      "text": "El piso · asiento {seat} de {max}",
+      "src": "The floor · seat {seat} of {max}"
+    },
+    {
+      "key": "decor.fit.stool.name",
+      "text": "Un banco más",
+      "src": "One More Stool"
+    },
+    {
+      "key": "decor.fit.uses_upgrade",
+      "text": "Usa la mejora de esta noche",
+      "src": "Uses tonight's one upgrade"
+    },
+    {
+      "key": "decor.foot.in_room",
+      "text": "EN EL SALÓN",
+      "src": "IN THE ROOM"
+    },
+    {
+      "key": "decor.foot.mark_first",
+      "text": "ANTES NIVEL {mark}",
+      "src": "MARK {mark} FIRST"
+    },
+    {
+      "key": "decor.foot.on_show",
+      "text": "A LA VISTA",
+      "src": "ON SHOW"
+    },
+    {
+      "key": "decor.foot.wear",
+      "text": "PONER",
+      "src": "WEAR"
+    },
+    {
+      "key": "decor.ladder.mark_of",
+      "text": "NIVEL {mark} DE {total}",
+      "src": "MARK {mark} OF {total}"
+    },
+    {
+      "key": "decor.ladder.nothing_fitted",
+      "text": "NADA INSTALADO AÚN",
+      "src": "NOTHING FITTED YET"
+    },
+    {
+      "key": "decor.rail.bar_title",
+      "text": "BANCOS, BARRA Y CRISTALERÍA",
+      "src": "SEATS, THE BAR & THE GLASSWARE"
+    },
+    {
+      "key": "decor.rail.body_bar",
+      "text": "Bancos, la barra y las líneas de cristalería. Cada uno usa la mejora de la noche.",
+      "src": "Stools, the bar top and the glass lines. Each one uses the night's one upgrade."
+    },
+    {
+      "key": "decor.rail.body_room",
+      "text": "Todos los estilos para esta parte del salón: lo que compraste, lo que sigue y lo que aún falta ganar.",
+      "src": "Every look for this part of the room: what you have bought, what comes next, and what is still to earn."
+    },
+    {
+      "key": "decor.rail.open_count#one",
+      "text": "{n} cosa de este estante se puede comprar esta noche",
+      "src": "One thing on this shelf can be bought tonight"
+    },
+    {
+      "key": "decor.rail.open_count#other",
+      "text": "{n} cosas de este estante se pueden comprar esta noche",
+      "src": "{n} things on this shelf can be bought tonight"
+    },
+    {
+      "key": "decor.rail.open_none",
+      "text": "Nada de este estante se puede comprar esta noche",
+      "src": "Nothing on this shelf can be bought tonight"
+    },
+    {
+      "key": "decor.shelf.bar",
+      "text": "BAR Y VASOS",
+      "src": "BAR & GLASS"
+    },
+    {
+      "key": "decor.shelf.counter",
+      "text": "SOBRE LA BARRA",
+      "src": "COUNTER"
+    },
+    {
+      "key": "decor.shelf.furniture",
+      "text": "PISO",
+      "src": "FLOOR"
+    },
+    {
+      "key": "decor.shelf.greenery",
+      "text": "PLANTAS",
+      "src": "PLANTS"
+    },
+    {
+      "key": "decor.shelf.light",
+      "text": "LUCES",
+      "src": "LIGHTS"
+    },
+    {
+      "key": "decor.shelf.wall_art",
+      "text": "EN LA PARED",
+      "src": "ON THE WALL"
+    },
+    {
+      "key": "decor.shelf.walls",
+      "text": "PAREDES",
+      "src": "WALLS"
+    },
+    {
+      "key": "decor.shelf_empty",
+      "text": "AÚN NO HAY NADA EN ESTE ESTANTE",
+      "src": "NOTHING ON THIS SHELF YET"
+    },
+    {
+      "key": "decor.sign.start_here",
+      "text": "EMPIEZA AQUÍ  ▸  LAS PAREDES — LA COMODIDAD DEL SALÓN",
+      "src": "START HERE  ▸  THE WALLS — THE ROOM'S COMFORT"
+    },
+    {
+      "key": "decor.stamp.in_basket",
+      "text": "EN CANASTA",
+      "src": "IN BASKET"
+    },
+    {
+      "key": "decor.stamp.locked",
+      "text": "BLOQUEADO",
+      "src": "LOCKED"
+    },
+    {
+      "key": "decor.stamp.worn",
+      "text": "PUESTO",
+      "src": "WORN"
+    },
+    {
+      "key": "decor.tool.drains_free",
+      "text": "desagüe gratis",
+      "src": "drains free"
+    },
+    {
+      "key": "decor.tool.house_tin",
+      "text": "La coctelera de la casa",
+      "src": "The house tin"
+    },
+    {
+      "key": "decor.tool.kegs_on_tap#one",
+      "text": "{n} barril conectado",
+      "src": "{n} keg on tap"
+    },
+    {
+      "key": "decor.tool.kegs_on_tap#other",
+      "text": "{n} barriles conectados",
+      "src": "{n} kegs on tap"
+    },
+    {
+      "key": "decor.tool.pours_faster",
+      "text": "Sirve {percent}% más rápido",
+      "src": "Pours {percent}% faster"
+    },
+    {
+      "key": "decor.tool.shakes_faster",
+      "text": "Agita {percent}% más rápido",
+      "src": "Shakes {percent}% faster"
+    },
+    {
+      "key": "decor.tool.tin_you_shake",
+      "text": "La coctelera con la que agitas",
+      "src": "The tin you shake with"
+    },
+    {
+      "key": "decor.tool.washes",
+      "text": "Lava los vasos en {seconds} s",
+      "src": "Washes up in {seconds} s"
+    },
+    {
+      "key": "decor.tool.washes_brief",
+      "text": "Lava en {seconds} s",
+      "src": "Washes in {seconds} s"
+    },
+    {
+      "key": "market.basket.chip_body",
+      "text": "Haz clic para sacarlo. Solo pagas cuando haces el pedido.",
+      "src": "Click to take it back out. You only pay when you place the order."
+    },
+    {
+      "key": "market.basket.chip_meta",
+      "text": "{price}  ·  en la canasta",
+      "src": "{price}  ·  in the basket"
+    },
+    {
+      "key": "market.basket.more_body",
+      "text": "La fila está llena, la canasta no. Todo lo que elegiste está en el total.",
+      "src": "The row is full, the basket is not. Everything you picked is in the total."
+    },
+    {
+      "key": "market.basket.more_identity#one",
+      "text": "Y {n} MÁS",
+      "src": "AND {n} MORE"
+    },
+    {
+      "key": "market.basket.more_identity#other",
+      "text": "Y {n} MÁS",
+      "src": "AND {n} MORE"
+    },
+    {
+      "key": "market.basket.more_meta",
+      "text": "la canasta los guarda todos",
+      "src": "the basket holds them all"
+    },
+    {
+      "key": "market.bottle.abv",
+      "text": "{abv}% alc.",
+      "src": "{abv}% ABV"
+    },
+    {
+      "key": "market.bottle.abv_short",
+      "text": "{abv}%",
+      "src": "{abv}%"
+    },
+    {
+      "key": "market.bottle.joins_shelf",
+      "text": "Se suma al estante; la botella de la casa se queda",
+      "src": "Joins the shelf; the well bottle stays"
+    },
+    {
+      "key": "market.bottle.left",
+      "text": "Queda {percent}% detrás de la barra",
+      "src": "{percent}% left behind the bar"
+    },
+    {
+      "key": "market.bottle.menu_calls#one",
+      "text": "{n} trago del menú la pide",
+      "src": "{n} drink on the menu call for it"
+    },
+    {
+      "key": "market.bottle.menu_calls#other",
+      "text": "{n} tragos del menú la piden",
+      "src": "{n} drinks on the menu call for it"
+    },
+    {
+      "key": "market.bottle.menu_calls_none",
+      "text": "Ningún trago del menú de hoy la pide",
+      "src": "Nothing on tonight's menu calls for it"
+    },
+    {
+      "key": "market.bottle.no_drink_yet",
+      "text": "Ningún trago del recetario la usa todavía.",
+      "src": "No drink on the book calls for it yet."
+    },
+    {
+      "key": "market.bottle.poured_into",
+      "text": "Va en: {drinks}.",
+      "src": "Poured into: {drinks}."
+    },
+    {
+      "key": "market.bottle.pulled_at_tap",
+      "text": "Se sirve del barril.",
+      "src": "Pulled at the tap."
+    },
+    {
+      "key": "market.bottle.rung",
+      "text": "Nivel {rung} de {top}",
+      "src": "Rung {rung} of {top}"
+    },
+    {
+      "key": "market.bottle.small_bottle",
+      "text": "Botella chica — {measures} medidas, la mitad que un destilado",
+      "src": "A small bottle — {measures} measures, half a spirit's"
+    },
+    {
+      "key": "market.gate.any.at_stars",
+      "text": "MÁS {noun} CON {stars} ESTRELLAS",
+      "src": "MORE {noun}S AT {stars} STARS"
+    },
+    {
+      "key": "market.gate.any.to_earn",
+      "text": "MÁS {noun} POR GANAR",
+      "src": "MORE {noun}S TO EARN"
+    },
+    {
+      "key": "market.gate.any.van#one",
+      "text": "{n} {noun} que la camioneta aún no te trae",
+      "src": "{n} {noun} the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.any.van#other",
+      "text": "{n} {noun} que la camioneta aún no te trae",
+      "src": "{n} {noun}s the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.bottle.at_stars",
+      "text": "MÁS BOTELLAS CON {stars} ESTRELLAS",
+      "src": "MORE BOTTLES AT {stars} STARS"
+    },
+    {
+      "key": "market.gate.bottle.to_earn",
+      "text": "MÁS BOTELLAS POR GANAR",
+      "src": "MORE BOTTLES TO EARN"
+    },
+    {
+      "key": "market.gate.bottle.van#one",
+      "text": "{n} botella que la camioneta aún no te trae",
+      "src": "{n} bottle the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.bottle.van#other",
+      "text": "{n} botellas que la camioneta aún no te trae",
+      "src": "{n} bottles the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.earned_body",
+      "text": "Estas se ganan, no se compran.",
+      "src": "These are earned, not bought."
+    },
+    {
+      "key": "market.gate.earned_buff",
+      "text": "Se gana, no se compra",
+      "src": "Earned, not bought"
+    },
+    {
+      "key": "market.gate.garnish.at_stars",
+      "text": "MÁS DECORACIONES CON {stars} ESTRELLAS",
+      "src": "MORE GARNISHS AT {stars} STARS"
+    },
+    {
+      "key": "market.gate.garnish.to_earn",
+      "text": "MÁS DECORACIONES POR GANAR",
+      "src": "MORE GARNISHS TO EARN"
+    },
+    {
+      "key": "market.gate.garnish.van#one",
+      "text": "{n} decoración que la camioneta aún no te trae",
+      "src": "{n} garnish the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.garnish.van#other",
+      "text": "{n} decoraciones que la camioneta aún no te trae",
+      "src": "{n} garnishs the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.get_stars",
+      "text": "Llega a {stars} estrellas y aquí aparecerán más.",
+      "src": "Get {stars} stars and more of these show up here."
+    },
+    {
+      "key": "market.gate.keg.at_stars",
+      "text": "MÁS BARRILES CON {stars} ESTRELLAS",
+      "src": "MORE KEGS AT {stars} STARS"
+    },
+    {
+      "key": "market.gate.keg.to_earn",
+      "text": "MÁS BARRILES POR GANAR",
+      "src": "MORE KEGS TO EARN"
+    },
+    {
+      "key": "market.gate.keg.van#one",
+      "text": "{n} barril que la camioneta aún no te trae",
+      "src": "{n} keg the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.keg.van#other",
+      "text": "{n} barriles que la camioneta aún no te trae",
+      "src": "{n} kegs the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.mixer.at_stars",
+      "text": "MÁS MEZCLADORES CON {stars} ESTRELLAS",
+      "src": "MORE MIXERS AT {stars} STARS"
+    },
+    {
+      "key": "market.gate.mixer.to_earn",
+      "text": "MÁS MEZCLADORES POR GANAR",
+      "src": "MORE MIXERS TO EARN"
+    },
+    {
+      "key": "market.gate.mixer.van#one",
+      "text": "{n} mezclador que la camioneta aún no te trae",
+      "src": "{n} mixer the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.mixer.van#other",
+      "text": "{n} mezcladores que la camioneta aún no te trae",
+      "src": "{n} mixers the van will not bring you yet"
+    },
+    {
+      "key": "market.gate.more_waiting#one",
+      "text": "{n} más en espera",
+      "src": "{n} more waiting"
+    },
+    {
+      "key": "market.gate.more_waiting#other",
+      "text": "{n} más en espera",
+      "src": "{n} more waiting"
+    },
+    {
+      "key": "market.gate.needs_stars",
+      "text": "Necesitas {stars} estrellas · tienes {have}",
+      "src": "Needs {stars} stars · you have {have}"
+    },
+    {
+      "key": "market.gate.still_locked",
+      "text": "AÚN BLOQUEADO",
+      "src": "STILL LOCKED"
+    },
+    {
+      "key": "market.glass.serves",
+      "text": "{drinks}.",
+      "src": "{drinks}."
+    },
+    {
+      "key": "market.glass.serves_none",
+      "text": "NADA EN EL RECETARIO AÚN.",
+      "src": "NOTHING ON THE BOOK YET."
+    },
+    {
+      "key": "market.glass_fallback",
+      "text": "vaso",
+      "src": "glass"
+    },
+    {
+      "key": "market.group.counter",
+      "text": "SOBRE LA BARRA",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "market.group.furniture",
+      "text": "MUEBLES Y PISO",
+      "src": "FURNITURE & FLOOR"
+    },
+    {
+      "key": "market.group.greenery",
+      "text": "PLANTAS",
+      "src": "GREENERY"
+    },
+    {
+      "key": "market.group.light",
+      "text": "LA LUZ",
+      "src": "THE LIGHT"
+    },
+    {
+      "key": "market.group.room",
+      "text": "EL SALÓN",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "market.group.wall_art",
+      "text": "EN LA PARED",
+      "src": "ON THE WALL"
+    },
+    {
+      "key": "market.group.walls",
+      "text": "LAS PAREDES",
+      "src": "THE WALLS"
+    },
+    {
+      "key": "market.key.open_tomorrow",
+      "text": "ABRIR\nMAÑANA",
+      "src": "OPEN\nTOMORROW"
+    },
+    {
+      "key": "market.key.ordered",
+      "text": "ENVIADO",
+      "src": "ORDERED"
+    },
+    {
+      "key": "market.key.place_order",
+      "text": "HACER\nPEDIDO",
+      "src": "PLACE\nORDER"
+    },
+    {
+      "key": "market.key.start_tuesday",
+      "text": "EMPEZAR\nMARTES",
+      "src": "START\nTUESDAY"
+    },
+    {
+      "key": "market.pill.add",
+      "text": "AGREGAR",
+      "src": "ADD"
+    },
+    {
+      "key": "market.pill.no_cash",
+      "text": "SIN DINERO",
+      "src": "NO CASH"
+    },
+    {
+      "key": "market.pill.no_slot",
+      "text": "SIN CUPO",
+      "src": "NO SLOT"
+    },
+    {
+      "key": "market.pill.take_out",
+      "text": "QUITAR",
+      "src": "TAKE OUT"
+    },
+    {
+      "key": "market.tile.new",
+      "text": "NUEVO",
+      "src": "NEW!"
+    },
+    {
+      "key": "market.tile.stars_to_open",
+      "text": "ESTRELLAS PARA ABRIR",
+      "src": "STARS TO OPEN"
+    },
+    {
+      "key": "market.toast.basket_empty",
+      "text": "LA CANASTA ESTÁ VACÍA",
+      "src": "BASKET IS EMPTY"
+    },
+    {
+      "key": "market.toast.not_enough_money",
+      "text": "NO ALCANZA EL DINERO",
+      "src": "NOT ENOUGH MONEY"
+    },
+    {
+      "key": "market.toast.one_upgrade",
+      "text": "UNA MEJORA POR NOCHE",
+      "src": "ONE UPGRADE A NIGHT"
+    },
+    {
+      "key": "market.toast.order_stopped",
+      "text": "PEDIDO DETENIDO — {item}",
+      "src": "ORDER STOPPED — {item}"
+    },
+    {
+      "key": "market.word.sold",
+      "text": "TUYO",
+      "src": "SOLD"
+    }
+  ]
+}

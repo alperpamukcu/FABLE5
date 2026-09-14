@@ -73,7 +73,7 @@ namespace LastCall.UI
             var papers = PapersFor(look);
             if (papers != null && !string.IsNullOrEmpty(papers.Name)) return papers.Name;
             return visit?.Regular != null && !string.IsNullOrEmpty(visit.Regular.Name)
-                ? visit.Regular.Name : "Customer";
+                ? visit.Regular.Name : UIText.T("id.customer_fallback");
         }
 
         // ── the licence: read the customer (GDD 24 §5) ───────────────────────────
@@ -142,10 +142,14 @@ namespace LastCall.UI
             // the photo, the name, the age and the citizenship, and the archetype keeps only
             // what it is actually about — how they came in, and how well you know them.
             var idPapers = PapersFor(idLook);
-            string idFullName = NameOn(visit, idLook).ToUpperInvariant();
+            // A person's name is not translated, only set in this language's capitals. The
+            // licence number hashes the invariant capitals, so the same person carries the
+            // same number whatever language the game is in.
+            string idPersonName = NameOn(visit, idLook);
+            string idFullName = idPersonName.ToUpperInvariant();
             // Bold: the name is the headline of the document, and it was printing at the
             // same weight as the age on the rule under it.
-            _idName.text = "<b>" + idFullName + "</b>";
+            _idName.text = "<b>" + UIText.Caps(idPersonName) + "</b>";
             // An honest minor's card says how old they are (GDD 28 §2.1): the printed age is
             // the tell, and it is the truth's, not the face's.
             // ...and an ALTERED card prints the bumped year on their own face (H6): both are
@@ -153,7 +157,9 @@ namespace LastCall.UI
             int shownAge = truth != null && truth.IsMinor && truth.Forgery != Forgery.Borrowed
                 ? truth.PrintedAge : (idPapers != null ? idPapers.Age : reg.Age);
             _idAgeFrom.text = shownAge.ToString();
-            _idCitizen.text = (idPapers != null ? idPapers.Country : reg.Hometown).ToUpperInvariant();
+            _idCitizen.text = UIText.Caps(idPapers == null ? UIText.T(reg.HometownLine)
+                : string.IsNullOrEmpty(idPapers.Iso) ? idPapers.Country
+                : UIText.Data("country", idPapers.Iso, "name", idPapers.Country));
             _idNumber.text = LicenceNumber(idLook, idFullName);
             if (_idFlag != null)
             {
@@ -179,8 +185,8 @@ namespace LastCall.UI
                         _idPunches[i].color = i < visits ? UITheme.Magenta[3] : new Color(0.62f, 0.58f, 0.50f, 0.55f);
             if (_idVisitMore != null) _idVisitMore.text = visits > 5 ? "+" + (visits - 5) : "";
             _idRel.text = rec.Visits == 0
-                ? "FIRST TIME"
-                : reg.Relationship.ToString().ToUpperInvariant();
+                ? UIText.T("id.standing.first_time")
+                : StandingWord(reg.Relationship);
             // …and the same fact as a bond: a stranger lights none of the three.
             int bond = rec.Visits == 0 ? 0 : (int)reg.Relationship;
             if (_idBond != null)
@@ -210,7 +216,7 @@ namespace LastCall.UI
 
             // No price, anywhere on the card (C3): the licence says who they are and what they
             // want, and what a drink costs is the menu's business.
-            _idOrder.text = $"<b>{visit.Order.Wanted.Name.ToUpperInvariant()}</b>";
+            _idOrder.text = $"<b>{UIText.Caps(RecipeTitle(visit.Order.Wanted))}</b>";
             // WHAT GOES IN IT, IN THE MENU'S OWN LANGUAGE (2026-09-08, the author:
             // "kimliklerdeki tarif ön izlemesini de menüdeki yeni tarif göstergesine uygun
             // yap"). This was a string join set at 8 — "GIN · VERMOUTH · BITTERS" — while the
@@ -266,7 +272,7 @@ namespace LastCall.UI
             // The chip is a pictogram, which says WHICH of the four this is; hovering it
             // shows the dish as it stands on the counter, which says where to go and get it.
             foreach (var g in visit.Order.Garnishes)
-                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant(),
+                chips += PrefChip(PrefArt.ForPreparation(g.Id), GarnishWord(g),
                                   picture: GarnishCounterArt(g.Id), detail: GarnishPurpose(g.Id));
             // (The SHAKEN HARD chip retired 2026-08-11: the method is the recipe's demand
             // now, printed where the recipe is — the spec panel and the book.)
@@ -274,7 +280,7 @@ namespace LastCall.UI
             // only fill rule is the house floor, and it lives in the judge, not the licence.
             // A licence says NONE in an empty endorsements field rather than leaving it
             // blank, because blank means "not filled in" and NONE means "there are none".
-            _idIntent.text = chips == 0 ? "NONE  ·  SERVE IT CLEAN" : "";
+            _idIntent.text = chips == 0 ? UIText.T("id.endorsements.none") : "";
         }
 
         private void BuildOrderTip(RectTransform root)
@@ -394,7 +400,7 @@ namespace LastCall.UI
             {
                 // Unread. The card is the only thing that may answer, so this says where the
                 // answer is and stops — no name, no drink, no hint of either.
-                _orderTipTitle.text = "READY TO ORDER";
+                _orderTipTitle.text = UIText.T("id.tip.ready");
                 y += TitleH + Gap;
                 foreach (Transform old in _orderTipBody) Destroy(old.gameObject);
                 _orderTipBody.gameObject.SetActive(false);
@@ -402,14 +408,14 @@ namespace LastCall.UI
                 _orderTipPrefs.gameObject.SetActive(false);
                 _orderTipHint.gameObject.SetActive(true);
                 _orderTipHint.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipHint.text = "CLICK THEM TO READ THEIR ID";
+                _orderTipHint.text = UIText.T("id.tip.click_to_read");
                 y += 13f + Pad;
                 SizeTip(OrderTipW, y);
                 Show();
                 return;
             }
 
-            _orderTipTitle.text = visit.Order.Wanted.Name.ToUpperInvariant();
+            _orderTipTitle.text = UIText.Caps(RecipeTitle(visit.Order.Wanted));
             y += TitleH + Gap;
             // The heading may be wider than the pours under it — SEX ON THE BEACH in the
             // display face is. The box takes the widest thing it holds rather than clipping
@@ -430,7 +436,7 @@ namespace LastCall.UI
             foreach (Transform old in _orderTipPrefs) Destroy(old.gameObject);
             int chips = 0;
             foreach (var g in visit.Order.Garnishes)
-                chips += PrefChip(PrefArt.ForPreparation(g.Id), g.Name.ToUpperInvariant(),
+                chips += PrefChip(PrefArt.ForPreparation(g.Id), GarnishWord(g),
                                   _orderTipPrefs);
 
             // Asking for nothing is said by there being nothing there. A line announcing that
@@ -443,7 +449,7 @@ namespace LastCall.UI
             {
                 y += Gap;
                 _orderTipPrefHead.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipPrefHead.text = "HOW THEY WANT IT";
+                _orderTipPrefHead.text = UIText.T("id.tip.how_they_want_it");
                 y += 12f + 2f;
                 _orderTipPrefs.anchoredPosition = new Vector2(Pad, -y);
                 _orderTipPrefs.sizeDelta = new Vector2(w - Pad * 2f, 38f);
@@ -567,10 +573,10 @@ namespace LastCall.UI
             IdPapers truth = null;
             try { truth = visit.Papers; } catch (InvalidOperationException) { }
             try { run.Kick(visit); }
-            catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); return; }
+            catch (InvalidOperationException e) { Toast(UIText.Refusal(e)); return; }
             CloseId();
             Sfx.Play("deny", 0.8f);
-            Toast("SHOWN THE DOOR · " + KickReason(truth).ToUpperInvariant(),
+            Toast(UIText.T("id.kick.shown_door", ("reason", UIText.Caps(KickReason(truth)))),
                 visit.OffTheBooks ? (Color?)UITheme.Lime[3] : UITheme.ViceRed[3]);
         }
 
@@ -578,9 +584,22 @@ namespace LastCall.UI
         /// behind the card, which a kick has always read.</summary>
         private static string KickReason(IdPapers truth)
         {
-            if (truth == null || !truth.ShouldBeKicked) return "they were of age";
-            return truth.Forgery == Forgery.Altered ? "altered card"
-                 : truth.IsForged ? "borrowed card" : "under age";
+            if (truth == null || !truth.ShouldBeKicked) return UIText.T("id.kick_reason.of_age");
+            return truth.Forgery == Forgery.Altered ? UIText.T("id.kick_reason.altered")
+                 : truth.IsForged ? UIText.T("id.kick_reason.borrowed") : UIText.T("id.kick_reason.under_age");
+        }
+
+        /// <summary>How well the bar knows them, as the licence's standing line says it.</summary>
+        private static string StandingWord(Relationship relationship)
+        {
+            switch (relationship)
+            {
+                case Relationship.Stranger: return UIText.T("id.standing.stranger");
+                case Relationship.Familiar: return UIText.T("id.standing.familiar");
+                case Relationship.Regular: return UIText.T("id.standing.regular");
+                case Relationship.Confidant: return UIText.T("id.standing.confidant");
+                default: return UIText.Caps(relationship.ToString());
+            }
         }
 
         /// <summary>A flag that is NOT the country's, for an altered card: any other flag the
@@ -656,16 +675,17 @@ namespace LastCall.UI
         /// Returns the value; the label comes back through <paramref name="labelText"/> so a
         /// row that is sometimes empty (a stranger has no rating yet) can hide whole.
         /// </summary>
-        private Text LicenceField(RectTransform card, string label, float x, float lineY,
+        /// <param name="id">Names the two GameObjects (L_ and V_); never shown.</param>
+        private Text LicenceField(RectTransform card, string id, string label, float x, float lineY,
             float w, out Text labelText, int valueSize = 16)
         {
             float vh = valueSize + 6f;
-            labelText = NewText("L_" + label, card, _body, 8, TextAnchor.LowerLeft, UITheme.ClubBlue[2]);
+            labelText = NewText("L_" + id, card, _body, 8, TextAnchor.LowerLeft, UITheme.ClubBlue[2]);
             Place(labelText.rectTransform, new Vector2(0, 1), new Vector2(w, 12), Vector2.zero);
             labelText.rectTransform.pivot = new Vector2(0, 0);
             labelText.rectTransform.anchoredPosition = new Vector2(x, -lineY + vh + 2f);
             labelText.text = label;
-            var val = NewText("V_" + label, card, _display, valueSize, TextAnchor.LowerLeft, UITheme.Night[1]);
+            var val = NewText("V_" + id, card, _display, valueSize, TextAnchor.LowerLeft, UITheme.Night[1]);
             val.supportRichText = true;
             val.horizontalOverflow = HorizontalWrapMode.Overflow;   // a licence never wraps; it runs
             Place(val.rectTransform, new Vector2(0, 1), new Vector2(w, vh), Vector2.zero);
@@ -808,13 +828,13 @@ namespace LastCall.UI
             Place(authority.rectTransform, new Vector2(0, 1), new Vector2(240, 18),
                 new Vector2(LicPad + 4f, bandMid + 8f));
             authority.horizontalOverflow = HorizontalWrapMode.Overflow;
-            authority.text = "MALIBU CLUB";
+            authority.text = "MALIBU CLUB";   // the house's own name, a brand: never translated
             var docType = NewText("DocType", card, _body, 8, TextAnchor.MiddleLeft,
                 new Color(0.80f, 0.86f, 0.96f, 1f));
             Place(docType.rectTransform, new Vector2(0, 1), new Vector2(170, 12),
                 new Vector2(LicPad + 4f, bandMid - 9f));
             docType.horizontalOverflow = HorizontalWrapMode.Overflow;
-            docType.text = "MIAMI  ·  PATRON LICENCE  ·";
+            docType.text = UIText.T("id.card.class");
             // The document number, on the band's second line (v4): the one header field
             // that differs on every card, beside the class.
             _idNumber = NewText("Num", card, _body, 8, TextAnchor.MiddleLeft,
@@ -885,7 +905,7 @@ namespace LastCall.UI
             var kickWord = NewText("L", kickFace, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
             Stretch(kickWord.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            kickWord.text = "KICK";
+            kickWord.text = UIText.T("id.card.kick");
             kickWord.raycastTarget = false;
             kickBtn.onClick.AddListener(KickTheOneOnTheCard);
             _idKick = kick;
@@ -941,7 +961,7 @@ namespace LastCall.UI
             Place(_idRelLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
                 new Vector2(stampX, stampTop));
             _idRelLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _idRelLabel.text = "VISITS";
+            _idRelLabel.text = UIText.T("id.stamps.visits");
             // ONE CAPTION PER ROW, because two do not fit (2026-09-07, measured in play).
             // The strip is LicRailW = 144 art px wide; at the readable 16 the two words are
             // 59 and 89 units of ink, which is 148 before either gets a gap, so side by side
@@ -955,7 +975,7 @@ namespace LastCall.UI
             Place(_idRatesLabel.rectTransform, new Vector2(0, 1), new Vector2(64, 16),
                 new Vector2(stampX, stampTop - LicStampRow));
             _idRatesLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _idRatesLabel.text = "RATED";
+            _idRatesLabel.text = UIText.T("id.stamps.rated");
 
             // ON THE GRID (2026-09-07, the author: "ikonografi hd durmuyor, yamuk pixelli
             // duruyor"). ChromeArt.Punch is drawn at 6x6, so it may be shown at 6, 12, 18 -
@@ -1075,10 +1095,14 @@ namespace LastCall.UI
             // ── the numbered field grid ───────────────────────────────────────────
             // The numbers are what make a form read as a licence rather than as a label
             // printed on card stock, and they cost one character each.
-            _idName = LicenceField(card, "1   NAME", LicFieldsX, LicLines[0], LicFieldsW, out _);
-            _idAgeFrom = LicenceField(card, "2   AGE", LicFieldsX, LicLines[1], 100f, out _);
-            _idCitizen = LicenceField(card, "3   CITIZEN OF", LicFieldsX + 100f, LicLines[1],
-                LicFieldsW - 100f, out _);
+            // The first argument names the GameObjects (unchanged since the card was built);
+            // the second is the printed caption.
+            _idName = LicenceField(card, "1   NAME", UIText.T("id.field.name"),
+                LicFieldsX, LicLines[0], LicFieldsW, out _);
+            _idAgeFrom = LicenceField(card, "2   AGE", UIText.T("id.field.age"),
+                LicFieldsX, LicLines[1], 100f, out _);
+            _idCitizen = LicenceField(card, "3   CITIZEN OF", UIText.T("id.field.citizen"),
+                LicFieldsX + 100f, LicLines[1], LicFieldsW - 100f, out _);
 
             // The order, seated on its own rule with the glass drawn beside it.
             var idIcon = NewRect("OrderIcon", card);
@@ -1088,8 +1112,8 @@ namespace LastCall.UI
             _idOrderIcon = idIcon.gameObject.AddComponent<Image>();
             _idOrderIcon.preserveAspect = true;
             _idOrderIcon.raycastTarget = false;
-            _idOrder = LicenceField(card, "4   ORDER", LicFieldsX + 40f, LicLines[2],
-                LicFieldsW - 40f, out _, 16);
+            _idOrder = LicenceField(card, "4   ORDER", UIText.T("id.field.order"),
+                LicFieldsX + 40f, LicLines[2], LicFieldsW - 40f, out _, 16);
             // What is IN it, under the name (v5 P16): the menu speaks styles now, so the
             // licence has to say gin-and-tonic, not just "Gin & Tonic" — this line is the
             // player's recipe knowledge since the band rows left with v2.
@@ -1171,8 +1195,8 @@ namespace LastCall.UI
             // Serving preferences — the endorsements, drawn as pictograms (the author,
             // 2026-08-01) in the free band under the rule; the field text only survives to
             // say SERVE IT CLEAN when there is nothing to draw.
-            _idIntent = LicenceField(card, "5   ENDORSEMENTS", LicFieldsX, LicLines[3],
-                LicFieldsW, out _idIntentLabel, 8);
+            _idIntent = LicenceField(card, "5   ENDORSEMENTS", UIText.T("id.field.endorsements"),
+                LicFieldsX, LicLines[3], LicFieldsW, out _idIntentLabel, 8);
             // THE CHIPS SIT IN THE ROW, right of the caption (v3, 2026-09-06). They hung
             // under the fourth rule, which is under the card: 44 units of chip below a rule
             // 24 units from the paper's edge. The row is 81 tall and the caption is 12 of
@@ -1190,7 +1214,7 @@ namespace LastCall.UI
             var hint = NewText("Hint", _idRoot, _body, 12, TextAnchor.MiddleCenter, UITheme.TextSecondary);
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(400, 20),
                 new Vector2(0, -(LicH * 0.5f) - 16f));
-            hint.text = "CLICK OUTSIDE TO GIVE IT BACK";
+            hint.text = UIText.T("id.card.give_back_hint");
 
             _idRoot.gameObject.SetActive(false);
         }

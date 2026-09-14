@@ -1,0 +1,709 @@
+{
+ "strings": [
+  {
+   "key": "book.contents.all_chapters",
+   "text": "< 全部章節",
+   "src": "< ALL CHAPTERS"
+  },
+  {
+   "key": "book.contents.chapter_locked#other",
+   "text": "{n} 款未解鎖",
+   "src": "{n} LOCKED"
+  },
+  {
+   "key": "book.contents.chapter_note",
+   "text": "點選章節，清單會在這裡展開",
+   "src": "A CHAPTER OPENS ITS OWN LIST HERE"
+  },
+  {
+   "key": "book.contents.chapter_perfect#other",
+   "text": "{n} 款完美",
+   "src": "{n} PERFECT"
+  },
+  {
+   "key": "book.contents.chapter_pours#other",
+   "text": "{n} 款酒",
+   "src": "{n} POURS"
+  },
+  {
+   "key": "book.contents.head",
+   "text": "目錄",
+   "src": "CONTENTS"
+  },
+  {
+   "key": "book.contents.no_hits",
+   "text": "找不到這個名字",
+   "src": "NOTHING BY THAT NAME"
+  },
+  {
+   "key": "book.contents.search_placeholder",
+   "text": "搜尋酒譜…",
+   "src": "SEARCH THE BOOK…"
+  },
+  {
+   "key": "book.gate.not_listed",
+   "text": "尚未列入本店酒單",
+   "src": "NOT ON THE HOUSE LIST YET"
+  },
+  {
+   "key": "book.gate.opens",
+   "text": "解鎖條件：{sentence}",
+   "src": "OPENS: {sentence}"
+  },
+  {
+   "key": "book.gate.opens_at",
+   "text": "解鎖門檻",
+   "src": "OPENS AT"
+  },
+  {
+   "key": "book.gate.you_have",
+   "text": "目前評分",
+   "src": "YOU HAVE"
+  },
+  {
+   "key": "book.index.ampersand",
+   "text": "與",
+   "src": " AND "
+  },
+  {
+   "key": "book.index.locked",
+   "text": "未解鎖",
+   "src": "LOCKED"
+  },
+  {
+   "key": "book.index.perfect",
+   "text": "完美",
+   "src": "PERFECT"
+  },
+  {
+   "key": "book.page.bottle_locked",
+   "text": "未解鎖",
+   "src": "LOCKED"
+  },
+  {
+   "key": "book.page.chapter_locked",
+   "text": "{chapter} · 未解鎖",
+   "src": "{chapter} · LOCKED"
+  },
+  {
+   "key": "book.page.fill",
+   "text": "倒滿杯子的 {pct}% 以上",
+   "src": "FILL {pct}%+ OF THE GLASS"
+  },
+  {
+   "key": "book.page.on_the_tab",
+   "text": "記在帳上",
+   "src": "ON THE TAB"
+  },
+  {
+   "key": "book.page.perfect_tag",
+   "text": "完美",
+   "src": "PERFECT"
+  },
+  {
+   "key": "book.page.pour_legend",
+   "text": "倒酒比例 · 一點＝五分之一",
+   "src": "THE POUR · ONE DOT IS A FIFTH"
+  },
+  {
+   "key": "book.page.sealed",
+   "text": "配方還是祕密\n買下這一頁就能看",
+   "src": "WHAT GOES IN IT IS SEALED\nBUY THE PAGE TO READ IT"
+  },
+  {
+   "key": "book.page.your_best",
+   "text": "你的最佳成績 · {pct}%",
+   "src": "YOUR BEST MAKE · {pct}%"
+  },
+  {
+   "key": "book.prop.open_menu",
+   "text": "打開酒單",
+   "src": "OPEN THE MENU"
+  },
+  {
+   "key": "book.tab.get_style",
+   "text": "備好 {style} · {who} {night}會來",
+   "src": "GET {style} IN · {who} COMES {night}"
+  },
+  {
+   "key": "book.tab.wants",
+   "text": "{who} 想喝 {drink} · {night}",
+   "src": "{who} WANTS {drink} · {night}"
+  },
+  {
+   "key": "book.title.contents_hint",
+   "text": "目錄在對面那一頁",
+   "src": "THE CONTENTS FACE THIS PAGE"
+  },
+  {
+   "key": "book.title.house_menu",
+   "text": "本店酒單",
+   "src": "HOUSE MENU"
+  },
+  {
+   "key": "book.title.news_head#other",
+   "text": "最新 · {n} 款酒譜達到完美",
+   "src": "NEW · {n} PERFECT RECIPES"
+  },
+  {
+   "key": "book.title.open_tab",
+   "text": "還欠著的",
+   "src": "OPEN TAB"
+  },
+  {
+   "key": "book.title.tagline",
+   "text": "調酒 · 酒譜 · 來歷",
+   "src": "POURS · PAGES · PROVENANCE"
+  },
+  {
+   "key": "calendar.column.fri",
+   "text": "五",
+   "src": "FRI"
+  },
+  {
+   "key": "calendar.column.mon",
+   "text": "一",
+   "src": "MON"
+  },
+  {
+   "key": "calendar.column.sat",
+   "text": "六",
+   "src": "SAT"
+  },
+  {
+   "key": "calendar.column.sun",
+   "text": "日",
+   "src": "SUN"
+  },
+  {
+   "key": "calendar.column.thu",
+   "text": "四",
+   "src": "THU"
+  },
+  {
+   "key": "calendar.column.tue",
+   "text": "二",
+   "src": "TUE"
+  },
+  {
+   "key": "calendar.column.wed",
+   "text": "三",
+   "src": "WED"
+  },
+  {
+   "key": "calendar.day_off",
+   "text": "星期日",
+   "src": "SUNDAY"
+  },
+  {
+   "key": "calendar.night.friday",
+   "text": "星期五",
+   "src": "FRIDAY"
+  },
+  {
+   "key": "calendar.night.monday",
+   "text": "星期一",
+   "src": "MONDAY"
+  },
+  {
+   "key": "calendar.night.saturday",
+   "text": "星期六",
+   "src": "SATURDAY"
+  },
+  {
+   "key": "calendar.night.thursday",
+   "text": "星期四",
+   "src": "THURSDAY"
+  },
+  {
+   "key": "calendar.night.tuesday",
+   "text": "星期二",
+   "src": "TUESDAY"
+  },
+  {
+   "key": "calendar.night.wednesday",
+   "text": "星期三",
+   "src": "WEDNESDAY"
+  },
+  {
+   "key": "calendar.week_night",
+   "text": "第 {week} 週 · {night}",
+   "src": "WEEK {week} · {night}"
+  },
+  {
+   "key": "common.close",
+   "text": "關閉",
+   "src": "CLOSE"
+  },
+  {
+   "key": "id.card.class",
+   "text": "邁阿密  ·  酒客證  ·",
+   "src": "MIAMI  ·  PATRON LICENCE  ·"
+  },
+  {
+   "key": "id.card.give_back_hint",
+   "text": "點一下外面就把證件還給對方",
+   "src": "CLICK OUTSIDE TO GIVE IT BACK"
+  },
+  {
+   "key": "id.card.kick",
+   "text": "請出",
+   "src": "KICK"
+  },
+  {
+   "key": "id.customer_fallback",
+   "text": "客人",
+   "src": "Customer"
+  },
+  {
+   "key": "id.endorsements.none",
+   "text": "無  ·  什麼都不加",
+   "src": "NONE  ·  SERVE IT CLEAN"
+  },
+  {
+   "key": "id.field.age",
+   "text": "2   年齡",
+   "src": "2   AGE"
+  },
+  {
+   "key": "id.field.citizen",
+   "text": "3   國籍",
+   "src": "3   CITIZEN OF"
+  },
+  {
+   "key": "id.field.endorsements",
+   "text": "5   註記",
+   "src": "5   ENDORSEMENTS"
+  },
+  {
+   "key": "id.field.name",
+   "text": "1   姓名",
+   "src": "1   NAME"
+  },
+  {
+   "key": "id.field.order",
+   "text": "4   點單",
+   "src": "4   ORDER"
+  },
+  {
+   "key": "id.kick.shown_door",
+   "text": "已請出 · {reason}",
+   "src": "SHOWN THE DOOR · {reason}"
+  },
+  {
+   "key": "id.kick_reason.altered",
+   "text": "改過的證",
+   "src": "altered card"
+  },
+  {
+   "key": "id.kick_reason.borrowed",
+   "text": "借來的證",
+   "src": "borrowed card"
+  },
+  {
+   "key": "id.kick_reason.of_age",
+   "text": "對方其實已成年",
+   "src": "they were of age"
+  },
+  {
+   "key": "id.kick_reason.under_age",
+   "text": "未達飲酒年齡",
+   "src": "under age"
+  },
+  {
+   "key": "id.stamps.rated",
+   "text": "評分",
+   "src": "RATED"
+  },
+  {
+   "key": "id.stamps.visits",
+   "text": "來訪",
+   "src": "VISITS"
+  },
+  {
+   "key": "id.standing.confidant",
+   "text": "知己",
+   "src": "CONFIDANT"
+  },
+  {
+   "key": "id.standing.familiar",
+   "text": "面熟",
+   "src": "FAMILIAR"
+  },
+  {
+   "key": "id.standing.first_time",
+   "text": "初次來訪",
+   "src": "FIRST TIME"
+  },
+  {
+   "key": "id.standing.regular",
+   "text": "熟客",
+   "src": "REGULAR"
+  },
+  {
+   "key": "id.standing.stranger",
+   "text": "陌生人",
+   "src": "STRANGER"
+  },
+  {
+   "key": "id.tip.click_to_read",
+   "text": "點一下客人，查看證件",
+   "src": "CLICK THEM TO READ THEIR ID"
+  },
+  {
+   "key": "id.tip.how_they_want_it",
+   "text": "客人的要求",
+   "src": "HOW THEY WANT IT"
+  },
+  {
+   "key": "id.tip.ready",
+   "text": "準備點單",
+   "src": "READY TO ORDER"
+  },
+  {
+   "key": "job.name.clean",
+   "text": "整潔打烊",
+   "src": "CLEAN NIGHTS"
+  },
+  {
+   "key": "job.name.perfect",
+   "text": "完美出杯",
+   "src": "PERFECT POURS"
+  },
+  {
+   "key": "job.owed.clean#other",
+   "text": "還差 {n} 晚整潔打烊",
+   "src": "{n} MORE CLEAN NIGHTS"
+  },
+  {
+   "key": "job.owed.perfect#other",
+   "text": "還差 {n} 杯完美出杯",
+   "src": "{n} MORE PERFECT POURS"
+  },
+  {
+   "key": "job.owed.serve#other",
+   "text": "還差 {n} 杯 {drink}",
+   "src": "{n} MORE {drink}"
+  },
+  {
+   "key": "night.count#other",
+   "text": "{n} 晚",
+   "src": "{n} nights"
+  },
+  {
+   "key": "papers.hometown.named",
+   "text": "{town}",
+   "src": "{town}"
+  },
+  {
+   "key": "papers.hometown.unknown",
+   "text": "城裡這一帶",
+   "src": "this side of town"
+  },
+  {
+   "key": "prep.draught.description",
+   "text": "從酒頭倒出。",
+   "src": "Pulled from the tap."
+  },
+  {
+   "key": "prep.draught.name",
+   "text": "生啤",
+   "src": "Draught"
+  },
+  {
+   "key": "prep.ice.description",
+   "text": "加冰塊上桌。",
+   "src": "Served over cubes."
+  },
+  {
+   "key": "prep.ice.name",
+   "text": "加冰",
+   "src": "On Ice"
+  },
+  {
+   "key": "prep.lemon_twist.description",
+   "text": "在杯口上方扭一段檸檬皮。",
+   "src": "A curl of peel over the top."
+  },
+  {
+   "key": "prep.lemon_twist.name",
+   "text": "檸檬皮捲",
+   "src": "Lemon Twist"
+  },
+  {
+   "key": "prep.salt_rim.description",
+   "text": "杯緣沾一圈鹽。",
+   "src": "The rim run through salt."
+  },
+  {
+   "key": "prep.salt_rim.name",
+   "text": "鹽口杯",
+   "src": "Salt Rim"
+  },
+  {
+   "key": "prep.shaken.description",
+   "text": "在雪克杯裡用力搖勻。",
+   "src": "Mixed hard in the shaker."
+  },
+  {
+   "key": "prep.shaken.name",
+   "text": "搖盪",
+   "src": "Shaken"
+  },
+  {
+   "key": "prep.stirred.description",
+   "text": "用吧叉匙輕輕攪拌。",
+   "src": "Turned gently over a bar spoon."
+  },
+  {
+   "key": "prep.stirred.name",
+   "text": "攪拌",
+   "src": "Stirred"
+  },
+  {
+   "key": "prep.sugar_rim.description",
+   "text": "杯緣沾一圈糖。",
+   "src": "The rim run through sugar."
+  },
+  {
+   "key": "prep.sugar_rim.name",
+   "text": "糖口杯",
+   "src": "Sugar Rim"
+  },
+  {
+   "key": "recipes.band_fill",
+   "text": "倒滿 {pct}%+",
+   "src": "FILL {pct}%+"
+  },
+  {
+   "key": "recipes.card.on_the_tab",
+   "text": "記在帳上",
+   "src": "ON THE TAB"
+  },
+  {
+   "key": "recipes.card.one_dot",
+   "text": "一點＝五分之一",
+   "src": "ONE DOT IS A FIFTH"
+  },
+  {
+   "key": "recipes.difficulty.easy",
+   "text": "簡單",
+   "src": "EASY"
+  },
+  {
+   "key": "recipes.difficulty.hard",
+   "text": "困難",
+   "src": "HARD"
+  },
+  {
+   "key": "recipes.difficulty.medium",
+   "text": "中等",
+   "src": "MEDIUM"
+  },
+  {
+   "key": "recipes.difficulty_sentence.easy",
+   "text": "好調 — 倒幾樣就好，不用多費工。",
+   "src": "Easy to make — a few pours and nothing to work."
+  },
+  {
+   "key": "recipes.difficulty_sentence.hard",
+   "text": "難調 — 要倒的東西多，工序也不少。",
+   "src": "Hard to make — a lot to pour, and plenty of work in it."
+  },
+  {
+   "key": "recipes.difficulty_sentence.medium",
+   "text": "中等 — 要倒的比較多，或是得多下點功夫。",
+   "src": "Medium — more to pour, or it has to be worked."
+  },
+  {
+   "key": "recipes.garnish.draught",
+   "text": "生啤",
+   "src": "DRAUGHT"
+  },
+  {
+   "key": "recipes.garnish.ice",
+   "text": "加冰",
+   "src": "ON ICE"
+  },
+  {
+   "key": "recipes.garnish.lemon_twist",
+   "text": "檸檬皮捲",
+   "src": "LEMON TWIST"
+  },
+  {
+   "key": "recipes.garnish.salt_rim",
+   "text": "鹽口杯",
+   "src": "SALT RIM"
+  },
+  {
+   "key": "recipes.garnish.shaken",
+   "text": "搖盪",
+   "src": "SHAKEN"
+  },
+  {
+   "key": "recipes.garnish.stirred",
+   "text": "攪拌",
+   "src": "STIRRED"
+  },
+  {
+   "key": "recipes.garnish.sugar_rim",
+   "text": "糖口杯",
+   "src": "SUGAR RIM"
+  },
+  {
+   "key": "recipes.prep.built",
+   "text": "直調",
+   "src": "BUILT"
+  },
+  {
+   "key": "recipes.prep.neat",
+   "text": "純飲",
+   "src": "NEAT"
+  },
+  {
+   "key": "recipes.prep.on_tap",
+   "text": "生啤",
+   "src": "ON TAP"
+  },
+  {
+   "key": "recipes.prep.shaken",
+   "text": "搖盪",
+   "src": "SHAKEN"
+  },
+  {
+   "key": "recipes.prep.stirred",
+   "text": "攪拌",
+   "src": "STIRRED"
+  },
+  {
+   "key": "recipes.sealed",
+   "text": "配方未公開\n買下這一頁就能看",
+   "src": "INGREDIENTS SEALED\nBUY THE PAGE TO READ IT"
+  },
+  {
+   "key": "recipes.spec.fill",
+   "text": "份量",
+   "src": "FILL"
+  },
+  {
+   "key": "recipes.spec.label_tier",
+   "text": "{label}  {tier}級+",
+   "src": "{label}  T{tier}+"
+  },
+  {
+   "key": "recipes.spec.none",
+   "text": "沒貨",
+   "src": "NONE"
+  },
+  {
+   "key": "recipes.spec.perfected",
+   "text": "已達完美",
+   "src": "PERFECTED"
+  },
+  {
+   "key": "recipes.spec.your_best",
+   "text": "最佳 · {pct}%",
+   "src": "YOUR BEST · {pct}%"
+  },
+  {
+   "key": "recipes.tier.house_pride",
+   "text": "鎮店之寶",
+   "src": "HOUSE PRIDE"
+  },
+  {
+   "key": "recipes.tier.mid_shelf",
+   "text": "中階款",
+   "src": "MID SHELF"
+  },
+  {
+   "key": "recipes.tier.starter",
+   "text": "入門款",
+   "src": "STARTER"
+  },
+  {
+   "key": "recipes.tier.top_shelf",
+   "text": "頂級款",
+   "src": "TOP SHELF"
+  },
+  {
+   "key": "recipes.type.beer",
+   "text": "任何啤酒",
+   "src": "ANY BEER"
+  },
+  {
+   "key": "recipes.type.bitter",
+   "text": "任何苦味",
+   "src": "ANY BITTER"
+  },
+  {
+   "key": "recipes.type.bubbly",
+   "text": "任何氣泡",
+   "src": "ANY FIZZ"
+  },
+  {
+   "key": "recipes.type.garnish",
+   "text": "任何裝飾",
+   "src": "ANY GARNISH"
+  },
+  {
+   "key": "recipes.type.sour",
+   "text": "任何酸味",
+   "src": "ANY SOUR"
+  },
+  {
+   "key": "recipes.type.spirit",
+   "text": "任何烈酒",
+   "src": "ANY SPIRIT"
+  },
+  {
+   "key": "recipes.type.sweet",
+   "text": "任何甜味",
+   "src": "ANY SWEET"
+  },
+  {
+   "key": "recipes.type_hint.beer",
+   "text": "啤酒＝拉格·司陶特·淡色艾爾",
+   "src": "BEER = LAGER·STOUT·PALE ALE"
+  },
+  {
+   "key": "recipes.type_hint.spirit",
+   "text": "烈酒＝伏特加·琴酒·蘭姆酒·威士忌·龍舌蘭",
+   "src": "SPIRIT = VODKA·GIN·RUM·WHISKEY·TEQUILA"
+  },
+  {
+   "key": "recipes.way_line",
+   "text": "{prep} · {glass}",
+   "src": "{prep} · {glass} GLASS"
+  },
+  {
+   "key": "settings.language",
+   "text": "語言",
+   "src": "LANGUAGE"
+  },
+  {
+   "key": "unlock.all",
+   "text": "{first}  ·  {next}",
+   "src": "{first}  ·  {next}"
+  },
+  {
+   "key": "unlock.last_call",
+   "text": "最後一輪時贏得",
+   "src": "EARNED AT THE LAST CALL"
+  },
+  {
+   "key": "unlock.serve_who",
+   "text": "送上 {who} 點的酒",
+   "src": "SERVE {who} WHAT THEY ASK FOR"
+  },
+  {
+   "key": "unlock.stars",
+   "text": "需要 {stars} 星",
+   "src": "NEEDS {stars} STARS"
+  },
+  {
+   "key": "unlock.tap_lines",
+   "text": "需要 {lines} 頭酒塔",
+   "src": "NEEDS THE {lines}-LINE TOWER"
+  }
+ ]
+}

@@ -491,11 +491,17 @@ namespace LastCall.Core
             // comparison and a second sentence, and the two would have drifted.
             var lockedBy = RecipeUnlock(recipe);
             if (!lockedBy.MetBy(this))
-                throw new InvalidOperationException(
-                    $"{recipe.Name} is not earned yet — {lockedBy.Sentence}.");
+                throw Said.With(new InvalidOperationException(
+                    $"{recipe.Name} is not earned yet — {lockedBy.Sentence}."),
+                    Line.Of("rule.recipe_not_earned")
+                        .With("recipe", RecipeNameLine(recipe))
+                        .With("lock", lockedBy.SentenceLine));
             int price = RecipePrice(recipe);
             if (Money < price)
-                throw new InvalidOperationException($"Not enough money — {recipe.Name} costs ${price}.");
+                throw Said.With(new InvalidOperationException($"Not enough money — {recipe.Name} costs ${price}."),
+                    Line.Of("rule.recipe_short_money")
+                        .With("recipe", RecipeNameLine(recipe))
+                        .With("price", "$" + price));
 
             Money -= price;
             DayUpgrades += price;
@@ -597,10 +603,16 @@ namespace LastCall.Core
             {
                 var rung = FixtureById(p.Id);
                 if (rung != null && rung.Level > 0 && LadderLevel(rung.Slot) > rung.Level)
-                    throw new InvalidOperationException(rung.IsTap
+                    throw Said.With(new InvalidOperationException(rung.IsTap
                         ? $"{rung.Name} is under the {LadderLevel(rung.Slot)}-line tower; " +
                           "take that one back first."
-                        : $"{rung.Name} is under a higher rung; take that one back first.");
+                        : $"{rung.Name} is under a higher rung; take that one back first."),
+                        rung.IsTap
+                            ? Line.Of("rule.refund_under_tower")
+                                .With("fixture", FixtureNameLine(rung))
+                                .With("lines", LadderLevel(rung.Slot))
+                            : Line.Of("rule.refund_under_rung")
+                                .With("fixture", FixtureNameLine(rung)));
             }
             switch (p.What)
             {
@@ -916,17 +928,20 @@ namespace LastCall.Core
             if (snack == null)
                 throw new InvalidOperationException($"No bowl of '{snackId}' at this bar.");
             if (SnackLeft(snackId) <= 0)
-                throw new InvalidOperationException($"The {snack.Name} bowl is empty today.");
+                throw Said.With(new InvalidOperationException($"The {snack.Name} bowl is empty today."),
+                    Line.Of("rule.snack_bowl_empty").With("snack", DataNameLine("snack", snack.Id)));
 
             bool atTheBar = (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
                             && Floor.Seated.Contains(visit);
             if (!atTheBar)
-                throw new InvalidOperationException("They are not at the bar.");
+                throw Said.With(new InvalidOperationException("They are not at the bar."),
+                    Line.Of("rule.snack_not_at_bar"));
             // Never alone (GDD 23, the pairing rule): a snack rides an alcoholic order. A
             // customer still reading the menu has not ordered one, so the bowl waits.
             if (!visit.HasOrdered)
-                throw new InvalidOperationException(
-                    "Snacks ride a drink order — they have not ordered one yet.");
+                throw Said.With(new InvalidOperationException(
+                    "Snacks ride a drink order — they have not ordered one yet."),
+                    Line.Of("rule.snack_needs_order"));
 
             _snackLeft[snackId]--;
             visit.AddSnack(snack.Price);
@@ -1289,7 +1304,8 @@ namespace LastCall.Core
             // Whoever dismisses the dialogue must not have to know which kind of night it is.
             if (LastCallWithheld) return;
             if (LastCustomer == null || Trial == null)
-                throw new InvalidOperationException("Nobody is waiting on the last call.");
+                throw Said.With(new InvalidOperationException("Nobody is waiting on the last call."),
+                    Line.Of("rule.no_last_call"));
             Trial.Begin();
             LastCustomer.ReleaseClock();
         }
@@ -1367,7 +1383,8 @@ namespace LastCall.Core
         public ServiceVerdict DeclineLastCall()
         {
             if (LastCustomer == null)
-                throw new InvalidOperationException("Nobody is waiting on the last call.");
+                throw Said.With(new InvalidOperationException("Nobody is waiting on the last call."),
+                    Line.Of("rule.no_last_call"));
             return DeclineOrder(LastCustomer);
         }
 
@@ -1681,19 +1698,22 @@ namespace LastCall.Core
             if (keg.Ingredient.Type != IngredientType.Beer)
                 throw new ArgumentException($"'{kegId}' is not a keg — it cannot be pulled.", nameof(kegId));
             if (!Glass.IsEmpty)
-                throw new InvalidOperationException("Finish or bin the cocktail before you pull a pint.");
+                throw Said.With(new InvalidOperationException("Finish or bin the cocktail before you pull a pint."),
+                    Line.Of("rule.pull_cocktail_in_tin"));
             // A pint goes into a clean glass. Topping up the same pint is fine — that is what a
             // second pull IS — but anything else already standing in it is a different drink, and
             // beer poured on top of it would go out as one (2026-07-28). This became reachable
             // the moment the serve pour stopped being optional: the finished cocktail now waits
             // in the serving glass rather than in the shaker, where !Glass.IsEmpty caught it.
             if (!ServingGlass.IsEmpty && ServingGlass.VolumeOf(kegId) <= 0)
-                throw new InvalidOperationException(
-                    "There is already a drink in that glass — serve it or bin it before pulling a pint.");
+                throw Said.With(new InvalidOperationException(
+                    "There is already a drink in that glass — serve it or bin it before pulling a pint."),
+                    Line.Of("rule.pull_glass_taken"));
             // The matched pair holds (audit 2026-08-11): CanPull greys the key on a full
             // glass, so the verb refuses the same fact instead of being quietly looser.
             if (ServingGlass.IsFull)
-                throw new InvalidOperationException("The glass is full. Serve it or bin it.");
+                throw Said.With(new InvalidOperationException("The glass is full. Serve it or bin it."),
+                    Line.Of("rule.pull_glass_full"));
             // Beer goes in a pint (v5 P14 / C9) — the one glass the bar reaches for without
             // being told, and the reason draught is the drink you can put down in four seconds.
             SelectGlassFor(DraughtRecipe);
@@ -1860,7 +1880,9 @@ namespace LastCall.Core
         public void Shake(double energy = 1.0)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to shake.");
+            if (Glass.IsEmpty)
+                throw Said.With(new InvalidOperationException("Nothing in the shaker to shake."),
+                    Line.Of("rule.shake_empty"));
             if (ShakeBlowsTheTin)
             {
                 Blowouts++;
@@ -1884,7 +1906,9 @@ namespace LastCall.Core
         public void Stir(double energy = 1.0)
         {
             EnsurePhase(TycoonPhase.DayOpen);
-            if (Glass.IsEmpty) throw new InvalidOperationException("Nothing in the shaker to stir.");
+            if (Glass.IsEmpty)
+                throw Said.With(new InvalidOperationException("Nothing in the shaker to stir."),
+                    Line.Of("rule.stir_empty"));
             Glass.AddPreparation(Preparations.Stirred);
             IsStirred = true;
             StirEnergy = energy < 0 ? 0 : energy > 1 ? 1 : energy;
@@ -1989,8 +2013,9 @@ namespace LastCall.Core
             // verb. Drinks built directly at the glass are exempt by design: the rule is
             // about the tin. The UI reads CanPourOut and stops the stream instead.
             if (!CanPourOut)
-                throw new InvalidOperationException(
-                    "Two spirits in the tin — shake it or stir it before it goes to the glass.");
+                throw Said.With(new InvalidOperationException(
+                    "Two spirits in the tin — shake it or stir it before it goes to the glass."),
+                    Line.Of("rule.pour_unmixed"));
             // The glass is chosen here, on the first pour out (v5 P14 / C9): the shaker is what
             // knows the drink, so this is the last moment the bar can reach for the right vessel
             // and the first moment it has anything to reach for it WITH. Whatever the shaker
@@ -2042,7 +2067,8 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayOpen);
             if (Floor.House.SinkBusy)
-                throw new InvalidOperationException("The sink is running — wait for it.");
+                throw Said.With(new InvalidOperationException("The sink is running — wait for it."),
+                    Line.Of("rule.sink_running"));
             int fee = WriteOffVessels();
             Floor.House.RunTheTap();
             return fee;
@@ -2102,13 +2128,16 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
-                throw new InvalidOperationException("They are not waiting at the bar.");
+                throw Said.With(new InvalidOperationException("They are not waiting at the bar."),
+                    Line.Of("rule.not_waiting_at_bar"));
             if (!visit.HasOrdered)
-                throw new InvalidOperationException("They are still choosing.");
+                throw Said.With(new InvalidOperationException("They are still choosing."),
+                    Line.Of("rule.still_choosing"));
             if (ServingGlass.IsEmpty)
-                throw new InvalidOperationException(Glass.IsEmpty
+                throw Said.With(new InvalidOperationException(Glass.IsEmpty
                     ? "Nothing to serve."
-                    : "That drink is still in the shaker — pour it into a glass first.");
+                    : "That drink is still in the shaker — pour it into a glass first."),
+                    Line.Of(Glass.IsEmpty ? "rule.nothing_to_serve" : "rule.drink_in_shaker"));
 
             PouringId = null;
             var delivered = ServingGlass;
@@ -2120,7 +2149,8 @@ namespace LastCall.Core
             if (Trial != null && !Trial.IsOver && ReferenceEquals(visit, LastCustomer))
             {
                 if (Trial.State == TrialState.Talking)
-                    throw new InvalidOperationException("They are still talking. Nothing ordered yet.");
+                    throw Said.With(new InvalidOperationException("They are still talking. Nothing ordered yet."),
+                        Line.Of("rule.still_talking"));
                 return ServeTheTrial(visit, delivered);
             }
 
@@ -2228,9 +2258,11 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
-                throw new InvalidOperationException("They are not waiting at the bar.");
+                throw Said.With(new InvalidOperationException("They are not waiting at the bar."),
+                    Line.Of("rule.not_waiting_at_bar"));
             if (!visit.HasOrdered)
-                throw new InvalidOperationException("They have not ordered yet.");
+                throw Said.With(new InvalidOperationException("They have not ordered yet."),
+                    Line.Of("rule.not_ordered"));
 
             var verdict = ServiceJudge.Declined();
 
@@ -2322,7 +2354,9 @@ namespace LastCall.Core
             if (offerIndex < 0 || offerIndex >= _marketOffers.Count)
                 throw new ArgumentOutOfRangeException(nameof(offerIndex));
             var offer = _marketOffers[offerIndex];
-            if (offer.Sold) throw new InvalidOperationException("That bottle is already yours.");
+            if (offer.Sold)
+                throw Said.With(new InvalidOperationException("That bottle is already yours."),
+                    Line.Of("rule.bottle_owned"));
 
             Spend(offer.Price);
             var incoming = new ShelfBottle(offer.Bottle.Clone());
@@ -2344,7 +2378,8 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayEnd);
             if (Seats >= _config.MaxSeats)
-                throw new InvalidOperationException("No room for another stool.");
+                throw Said.With(new InvalidOperationException("No room for another stool."),
+                    Line.Of("rule.no_room_stool"));
             EnsureUpgradeRoom();
             int price = _config.SeatPrice(Seats);
             Spend(price);
@@ -2370,7 +2405,8 @@ namespace LastCall.Core
                 throw new InvalidOperationException($"No glass line called '{glassId}'.");
             int tier = GlassTier(glassId);
             if (tier >= MaxGlassTier)
-                throw new InvalidOperationException($"The {def.Name} line is already the finest.");
+                throw Said.With(new InvalidOperationException($"The {def.Name} line is already the finest."),
+                    Line.Of("rule.glass_line_finest").With("glass", DataNameLine("glass", def.Id)));
             EnsureUpgradeRoom();
             int price = def.TierPrices[tier - 1];
             Spend(price);
@@ -2390,7 +2426,8 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayEnd);
             if (CounterTier >= _config.MaxAmbienceTier)
-                throw new InvalidOperationException("The bar top is already the best one.");
+                throw Said.With(new InvalidOperationException("The bar top is already the best one."),
+                    Line.Of("rule.bar_top_best"));
             EnsureUpgradeRoom();
             int price = _config.CounterPrice(CounterTier);
             Spend(price);
@@ -2624,20 +2661,34 @@ namespace LastCall.Core
             if (def == null)
                 throw new InvalidOperationException($"No fixture '{fixtureId}' in the catalogue.");
             if (_fixtures.Contains(fixtureId))
-                throw new InvalidOperationException($"The bar already has {def.Name}.");
+                throw Said.With(new InvalidOperationException($"The bar already has {def.Name}."),
+                    Line.Of("rule.fixture_owned").With("fixture", FixtureNameLine(def)));
             if (Rating.Average < def.Stars)
-                throw new InvalidOperationException(
-                    $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}.");
+                throw Said.With(new InvalidOperationException(
+                    $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}."),
+                    Line.Of("rule.fixture_needs_stars")
+                        .With("fixture", FixtureNameLine(def))
+                        .With("stars", def.Stars.ToString("0.0"))
+                        .With("rating", Rating.Average.ToString("0.0")));
             // A ladder is bought one rung at a time. Buying the triple over a bar that
             // never ran two lines would hand it every keg in the catalogue for one payment
             // — the whole ladder skipped in a single click — and the wall lamps climb the
             // same way for the same reason.
             if (def.Level > 0 && !CanBuyRung(def))
-                throw new InvalidOperationException(def.IsTap
+                throw Said.With(new InvalidOperationException(def.IsTap
                     ? $"{def.Name} runs {def.TapLevel} lines; this bar runs " +
                       $"{LadderLevel(def.Slot)}. A tower is fitted one line at a time."
                     : $"{def.Name} is rung {def.Level} of its ladder; the bar stands on " +
-                      $"rung {LadderLevel(def.Slot)}. It climbs one rung at a time.");
+                      $"rung {LadderLevel(def.Slot)}. It climbs one rung at a time."),
+                    def.IsTap
+                        ? Line.Of("rule.fixture_tower_one_line")
+                            .With("fixture", FixtureNameLine(def))
+                            .With("lines", def.TapLevel)
+                            .With("bar_lines", LadderLevel(def.Slot))
+                        : Line.Of("rule.fixture_rung_one_at_a_time")
+                            .With("fixture", FixtureNameLine(def))
+                            .With("level", def.Level)
+                            .With("bar_level", LadderLevel(def.Slot)));
             int price = FixturePrice(def);
             Spend(price);
             _fixtures.Add(fixtureId);
@@ -2671,8 +2722,9 @@ namespace LastCall.Core
         private void EnsureUpgradeRoom()
         {
             if (!CanFitTonight)
-                throw new InvalidOperationException(
-                    "One fitting a night — the rest keeps until tomorrow.");
+                throw Said.With(new InvalidOperationException(
+                    "One fitting a night — the rest keeps until tomorrow."),
+                    Line.Of("rule.one_fitting_a_night"));
         }
 
         private void Spend(int price)
@@ -2690,7 +2742,10 @@ namespace LastCall.Core
         private void EnsureAffordable(int price)
         {
             if (Money < price)
-                throw new InvalidOperationException($"Not enough money (${Money} < ${price}).");
+                throw Said.With(new InvalidOperationException($"Not enough money (${Money} < ${price})."),
+                    Line.Of("rule.not_enough_money")
+                        .With("money", "$" + Money)
+                        .With("price", "$" + price));
         }
 
         /// <summary>
@@ -2850,6 +2905,18 @@ namespace LastCall.Core
         private const double GarnishClickFraction = 0.05;
 
         private IngredientCard IngredientOf(string id) => _shelf.Find(id)?.Ingredient;
+
+        // ── names inside a refusal's line (localization L1) ─────────────────────
+        // A name whose English lives in a data file rides as that file's data line
+        // (data.<kind>.<id>.name, written by Tools/loc/data_keys.py), so a translated
+        // refusal names the thing in the same language as the rest of the sentence.
+
+        private static Line DataNameLine(string kind, string id) =>
+            Line.Of("data." + kind + "." + id + ".name");
+
+        private static Line RecipeNameLine(RecipeDefinition recipe) => DataNameLine("recipe", recipe.Id);
+
+        private static Line FixtureNameLine(FixtureDefinition fixture) => DataNameLine("fixture", fixture.Id);
 
         private void EnsurePhase(TycoonPhase expected)
         {

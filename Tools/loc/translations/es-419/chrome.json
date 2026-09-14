@@ -1,0 +1,524 @@
+{
+  "strings": [
+    {
+      "key": "chrome.cellar.group.bitters",
+      "text": "AMARGOS",
+      "src": "BITTERS"
+    },
+    {
+      "key": "chrome.cellar.group.gin",
+      "text": "GINEBRA",
+      "src": "GIN"
+    },
+    {
+      "key": "chrome.cellar.group.juice",
+      "text": "JUGOS",
+      "src": "JUICES"
+    },
+    {
+      "key": "chrome.cellar.group.liqueur",
+      "text": "LICORES",
+      "src": "LIQUEURS"
+    },
+    {
+      "key": "chrome.cellar.group.mixer",
+      "text": "MEZCLADORES",
+      "src": "MIXERS"
+    },
+    {
+      "key": "chrome.cellar.group.rum",
+      "text": "RON",
+      "src": "RUM"
+    },
+    {
+      "key": "chrome.cellar.group.soda",
+      "text": "SODA Y TÓNICA",
+      "src": "SODA & TONIC"
+    },
+    {
+      "key": "chrome.cellar.group.sour",
+      "text": "ÁCIDOS",
+      "src": "SOUR"
+    },
+    {
+      "key": "chrome.cellar.group.syrup",
+      "text": "JARABES",
+      "src": "SYRUPS"
+    },
+    {
+      "key": "chrome.cellar.group.tequila",
+      "text": "TEQUILA",
+      "src": "TEQUILA"
+    },
+    {
+      "key": "chrome.cellar.group.vodka",
+      "text": "VODKA",
+      "src": "VODKA"
+    },
+    {
+      "key": "chrome.cellar.group.whiskey",
+      "text": "WHISKY",
+      "src": "WHISKY"
+    },
+    {
+      "key": "chrome.cellar.meta",
+      "text": "{style}  ·  NIVEL {tier}",
+      "src": "{style}  ·  TIER {tier}"
+    },
+    {
+      "key": "chrome.cellar.never_shaken",
+      "text": "NUNCA SE AGITA · SE ARMA EN EL VASO",
+      "src": "NEVER SHAKEN · BUILT AT THE GLASS"
+    },
+    {
+      "key": "chrome.cellar.on_the_house",
+      "text": "GRATIS",
+      "src": "ON THE HOUSE"
+    },
+    {
+      "key": "chrome.cellar.price_bottle",
+      "text": "{price} LA BOTELLA",
+      "src": "{price} A BOTTLE"
+    },
+    {
+      "key": "chrome.cellar.price_box",
+      "text": "{price} LA CAJA",
+      "src": "{price} A BOX"
+    },
+    {
+      "key": "chrome.cellar.stock",
+      "text": "QUEDAN {left} DE {capacity}",
+      "src": "{left} OF {capacity} LEFT"
+    },
+    {
+      "key": "chrome.cellar.stock_low",
+      "text": "SE ACABA  ·  QUEDAN {left} DE {capacity}",
+      "src": "ALMOST OUT  ·  {left} OF {capacity} LEFT"
+    },
+    {
+      "key": "chrome.cellar.uses",
+      "text": "EN EL RECETARIO",
+      "src": "IN THE BOOK"
+    },
+    {
+      "key": "chrome.cellar.uses_more#one",
+      "text": "EN EL RECETARIO  ·  Y {n} MÁS",
+      "src": "IN THE BOOK  ·  AND {n} MORE"
+    },
+    {
+      "key": "chrome.cellar.uses_more#other",
+      "text": "EN EL RECETARIO  ·  Y {n} MÁS",
+      "src": "IN THE BOOK  ·  AND {n} MORE"
+    },
+    {
+      "key": "chrome.cellar.uses_none",
+      "text": "AÚN EN NINGÚN TRAGO",
+      "src": "IN NO HOUSE DRINK YET"
+    },
+    {
+      "key": "chrome.crowd.broke",
+      "text": "POCA PLATA",
+      "src": "BROKE CROWD"
+    },
+    {
+      "key": "chrome.crowd.high_rollers",
+      "text": "GASTADORES",
+      "src": "HIGH ROLLERS"
+    },
+    {
+      "key": "chrome.crowd.last_call",
+      "text": "ÚLTIMA RONDA",
+      "src": "LAST CALL"
+    },
+    {
+      "key": "chrome.crowd.regulars",
+      "text": "LOS DE SIEMPRE",
+      "src": "REGULARS"
+    },
+    {
+      "key": "chrome.garnish.meta_garnish",
+      "text": "DECORACIÓN  ·  {word}",
+      "src": "GARNISH  ·  {word}"
+    },
+    {
+      "key": "chrome.garnish.meta_ice",
+      "text": "HIELO  ·  {word}",
+      "src": "ICE  ·  {word}"
+    },
+    {
+      "key": "chrome.garnish.meta_rim",
+      "text": "ESCARCHADO  ·  {word}",
+      "src": "RIM  ·  {word}"
+    },
+    {
+      "key": "chrome.garnish.tell_garnish",
+      "text": "EN EL BORDE O DENTRO DEL TRAGO",
+      "src": "ON THE RIM OR IN THE DRINK"
+    },
+    {
+      "key": "chrome.garnish.tell_ice",
+      "text": "ÉCHALO ANTES DE SERVIR",
+      "src": "DROP IT IN BEFORE THE POUR"
+    },
+    {
+      "key": "chrome.garnish.tell_rim",
+      "text": "GIRA EL VASO EN EL PLATITO",
+      "src": "TURN THE GLASS IN THE DISH"
+    },
+    {
+      "key": "chrome.job.clean_nights",
+      "text": "NOCHES LIMPIAS",
+      "src": "CLEAN NIGHTS"
+    },
+    {
+      "key": "chrome.job.done",
+      "text": "{who} · {target}/{target} · LISTO · +${reward}",
+      "src": "{who} · {target}/{target} · DONE · +${reward}"
+    },
+    {
+      "key": "chrome.job.perfect_pours",
+      "text": "TRAGOS PERFECTOS",
+      "src": "PERFECT POURS"
+    },
+    {
+      "key": "chrome.ledger.drinks",
+      "text": "tragos ${amount}",
+      "src": "drinks ${amount}"
+    },
+    {
+      "key": "chrome.ledger.empty",
+      "text": "Aún no hay días. Primero cierra una noche.",
+      "src": "No days yet. Close a night first."
+    },
+    {
+      "key": "chrome.ledger.fines",
+      "text": "multas ${amount}",
+      "src": "fines ${amount}"
+    },
+    {
+      "key": "chrome.ledger.fittings",
+      "text": "mobiliario ${amount}",
+      "src": "fittings ${amount}"
+    },
+    {
+      "key": "chrome.ledger.header",
+      "text": "DÍA        INGRESOS    GASTOS           NETO       CAJA",
+      "src": "DAY        TOOK        PAID OUT         NET        TILL"
+    },
+    {
+      "key": "chrome.ledger.kicked#one",
+      "text": "{n} a la calle",
+      "src": "{n} shown the door"
+    },
+    {
+      "key": "chrome.ledger.kicked#other",
+      "text": "{n} a la calle",
+      "src": "{n} shown the door"
+    },
+    {
+      "key": "chrome.ledger.night_stars",
+      "text": "{stars} estrellas esa noche",
+      "src": "{stars} stars on the night"
+    },
+    {
+      "key": "chrome.ledger.nobody_walked",
+      "text": "nadie se fue sin atender",
+      "src": "nobody left thirsty"
+    },
+    {
+      "key": "chrome.ledger.rent",
+      "text": "alquiler ${amount}",
+      "src": "rent ${amount}"
+    },
+    {
+      "key": "chrome.ledger.row_bare",
+      "text": "noche {mood} · sin desglose",
+      "src": "{mood} night · no breakdown kept"
+    },
+    {
+      "key": "chrome.ledger.row_head",
+      "text": "DÍA {day}   ${income} ${expenses} {net} {till}",
+      "src": "DAY {day}   ${income} ${expenses} {net} {till}"
+    },
+    {
+      "key": "chrome.ledger.served#one",
+      "text": "{n} atendido",
+      "src": "{n} served"
+    },
+    {
+      "key": "chrome.ledger.served#other",
+      "text": "{n} atendidos",
+      "src": "{n} served"
+    },
+    {
+      "key": "chrome.ledger.stock",
+      "text": "reposición ${amount}",
+      "src": "stock ${amount}"
+    },
+    {
+      "key": "chrome.ledger.thanks",
+      "text": "gracias ${amount}",
+      "src": "thanks ${amount}"
+    },
+    {
+      "key": "chrome.ledger.tips",
+      "text": "propinas ${amount}",
+      "src": "tips ${amount}"
+    },
+    {
+      "key": "chrome.ledger.title",
+      "text": "LA CAJA — DÍAS HASTA HOY",
+      "src": "THE REGISTER — DAYS SO FAR"
+    },
+    {
+      "key": "chrome.ledger.walked_out#one",
+      "text": "{n} se fue sin nada",
+      "src": "{n} left without one"
+    },
+    {
+      "key": "chrome.ledger.walked_out#other",
+      "text": "{n} se fueron sin nada",
+      "src": "{n} left without one"
+    },
+    {
+      "key": "chrome.log.job_done",
+      "text": "<color=#6FCC4B>ENCARGO DE {who}</color> listo · +${reward}",
+      "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"
+    },
+    {
+      "key": "chrome.log.key",
+      "text": "NOTAS",
+      "src": "LOG"
+    },
+    {
+      "key": "chrome.log.match_close",
+      "text": "CASI",
+      "src": "CLOSE"
+    },
+    {
+      "key": "chrome.log.match_exact",
+      "text": "EXACTO",
+      "src": "EXACT"
+    },
+    {
+      "key": "chrome.log.match_wrong",
+      "text": "ERROR",
+      "src": "WRONG"
+    },
+    {
+      "key": "chrome.log.nothing_named",
+      "text": "ALGO SIN NOMBRE",
+      "src": "NOTHING NAMED"
+    },
+    {
+      "key": "chrome.log.why_fill",
+      "text": "llenado {pct}",
+      "src": "fill {pct}"
+    },
+    {
+      "key": "chrome.log.why_made",
+      "text": "hiciste {drink}",
+      "src": "made {drink}"
+    },
+    {
+      "key": "chrome.log.why_measures",
+      "text": "medidas mal",
+      "src": "measures off"
+    },
+    {
+      "key": "chrome.log.why_spec",
+      "text": "detalles {pct}",
+      "src": "spec {pct}"
+    },
+    {
+      "key": "chrome.mood.great",
+      "text": "GENIAL",
+      "src": "GREAT"
+    },
+    {
+      "key": "chrome.mood.ok",
+      "text": "NORMAL",
+      "src": "OK"
+    },
+    {
+      "key": "chrome.mood.sour",
+      "text": "AMARGA",
+      "src": "SOUR"
+    },
+    {
+      "key": "chrome.rung.back_wall",
+      "text": "La pared del fondo",
+      "src": "The back wall"
+    },
+    {
+      "key": "chrome.rung.counter",
+      "text": "La barra",
+      "src": "The counter"
+    },
+    {
+      "key": "chrome.rung.place_over",
+      "text": "{place} · va sobre el nivel anterior",
+      "src": "{place} · fitted over the mark below"
+    },
+    {
+      "key": "chrome.rung.place_pair",
+      "text": "{place} · el par, una sola mejora",
+      "src": "{place} · both of them, one fitting"
+    },
+    {
+      "key": "chrome.settings.audio",
+      "text": "AUDIO",
+      "src": "AUDIO"
+    },
+    {
+      "key": "chrome.settings.book",
+      "text": "LIBRO DE CUENTAS",
+      "src": "TONIGHT'S BOOK"
+    },
+    {
+      "key": "chrome.settings.book_note",
+      "text": "CADA LÍNEA QUE ENTRÓ EN LA CAJA",
+      "src": "EVERY LINE THE TILL HAS TAKEN"
+    },
+    {
+      "key": "chrome.settings.display",
+      "text": "PANTALLA",
+      "src": "DISPLAY"
+    },
+    {
+      "key": "chrome.settings.full",
+      "text": "COMPLETO",
+      "src": "FULL"
+    },
+    {
+      "key": "chrome.settings.motion",
+      "text": "MOVIMIENTO",
+      "src": "MOTION"
+    },
+    {
+      "key": "chrome.settings.motion_note",
+      "text": "REDUCIDO: SIN DESLIZAR, FLOTAR NI FUNDIR",
+      "src": "REDUCED: NO SLIDES, NO FLOATS, NO FADES"
+    },
+    {
+      "key": "chrome.settings.new_run",
+      "text": "REINICIAR",
+      "src": "NEW RUN"
+    },
+    {
+      "key": "chrome.settings.off",
+      "text": "APAGADO",
+      "src": "OFF"
+    },
+    {
+      "key": "chrome.settings.on",
+      "text": "ENCENDIDO",
+      "src": "ON"
+    },
+    {
+      "key": "chrome.settings.open",
+      "text": "ABRIR",
+      "src": "OPEN"
+    },
+    {
+      "key": "chrome.settings.reduced",
+      "text": "REDUCIDO",
+      "src": "REDUCED"
+    },
+    {
+      "key": "chrome.settings.sound",
+      "text": "SONIDO",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.settings.start_over",
+      "text": "EMPEZAR DE NUEVO",
+      "src": "START OVER"
+    },
+    {
+      "key": "chrome.settings.start_over_note",
+      "text": "DÍA 1, BAR VACÍO — SE PIERDE ESTA NOCHE",
+      "src": "DAY 1, AN EMPTY BAR — THIS NIGHT IS LOST"
+    },
+    {
+      "key": "chrome.settings.the_run",
+      "text": "LA PARTIDA",
+      "src": "THE RUN"
+    },
+    {
+      "key": "chrome.settings.title",
+      "text": "AJUSTES",
+      "src": "SETTINGS"
+    },
+    {
+      "key": "chrome.settings.volume",
+      "text": "VOLUMEN",
+      "src": "VOLUME"
+    },
+    {
+      "key": "chrome.settings.volume_value",
+      "text": "{pct}%",
+      "src": "{pct}%"
+    },
+    {
+      "key": "chrome.story.count_spare#one",
+      "text": "{at} DE {total}  ·  {n} DE MARGEN",
+      "src": "{at} OF {total}  ·  {n} SPARE"
+    },
+    {
+      "key": "chrome.story.count_spare#other",
+      "text": "{at} DE {total}  ·  {n} DE MARGEN",
+      "src": "{at} OF {total}  ·  {n} SPARE"
+    },
+    {
+      "key": "chrome.story.count_strict",
+      "text": "{at} DE {total}  ·  SIN ERRORES",
+      "src": "{at} OF {total}  ·  NO MISTAKES"
+    },
+    {
+      "key": "chrome.story.gate",
+      "text": "VUELVE CON {need} ESTRELLAS  ·  TIENES {now}",
+      "src": "COMES BACK AT {need} STARS  ·  YOU HAVE {now}"
+    },
+    {
+      "key": "chrome.story.go_on",
+      "text": "SIGUE",
+      "src": "GO ON"
+    },
+    {
+      "key": "chrome.story.good_night",
+      "text": "BUENAS NOCHES",
+      "src": "GOOD NIGHT"
+    },
+    {
+      "key": "chrome.story.got_it",
+      "text": "ENTENDIDO",
+      "src": "GOT IT"
+    },
+    {
+      "key": "chrome.story.missing",
+      "text": "NO HAY {styles} EN EL ESTANTE",
+      "src": "NO {styles} ON THE SHELF"
+    },
+    {
+      "key": "chrome.story.pour_it",
+      "text": "SÍRVELO",
+      "src": "POUR IT"
+    },
+    {
+      "key": "chrome.toast.job_paid",
+      "text": "{who} TE PAGA · +${reward}",
+      "src": "{who} PAYS UP · +${reward}"
+    },
+    {
+      "key": "chrome.toast.perfect_pour",
+      "text": "TRAGO PERFECTO · {recipe} — YA ESTÁ EN EL RECETARIO",
+      "src": "PERFECT POUR · {recipe} — IN THE BOOK NOW"
+    },
+    {
+      "key": "chrome.toast.said_no",
+      "text": "LE DIJISTE QUE NO — VOLVERÁ",
+      "src": "YOU TOLD THEM NO — THEY WILL BE BACK"
+    }
+  ]
+}

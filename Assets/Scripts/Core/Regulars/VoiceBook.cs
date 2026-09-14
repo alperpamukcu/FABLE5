@@ -154,16 +154,31 @@ namespace LastCall.Core
         /// </summary>
         public string Say(VoiceDefinition voice, VoiceCue cue, SeededRng rng, string drink = null, string advice = null)
         {
+            var (_, line) = Pick(voice, cue, rng);
+            return Fill(line, drink, advice);
+        }
+
+        /// <summary>
+        /// The line <see cref="Say"/> would say, UNFILLED, and where it sits in its pool
+        /// (localization L1): the same draw on <paramref name="rng"/>, the same skip of the
+        /// line said last, and the same memory of it — Say is this and a <see cref="Fill"/>,
+        /// so the two can never pick differently. The UI looks the index up as
+        /// <c>data.voice.&lt;voice id&gt;.&lt;cue&gt;.&lt;index&gt;</c> and fills the placeholders
+        /// itself. Index −1 and an empty line only for a cue no voice has lines for, which
+        /// the constructor already refuses.
+        /// </summary>
+        public (int index, string english) Pick(VoiceDefinition voice, VoiceCue cue, SeededRng rng)
+        {
             voice = voice ?? Default;
             var pool = voice.Lines(cue);
             if (pool.Count == 0) pool = Default.Lines(cue);
-            if (pool.Count == 0) return string.Empty;
+            if (pool.Count == 0) return (-1, string.Empty);
             string key = voice.Id + ":" + cue;
             int i = rng != null ? rng.NextInt(0, pool.Count) : 0;
             if (pool.Count > 1 && _last.TryGetValue(key, out var last) && pool[i] == last)
                 i = (i + 1) % pool.Count;
             _last[key] = pool[i];
-            return Fill(pool[i], drink, advice);
+            return (i, pool[i]);
         }
 
         /// <summary>The placeholders: <c>{drink}</c>, <c>{advice}</c> and <c>{advice_l}</c> — the

@@ -68,8 +68,8 @@ namespace LastCall.UI
             var run = Run;
             if (run != null && run.BuildingACocktail)
             {
-                Toast(run.DrinkReady ? "SERVE THAT DRINK FIRST"
-                                     : "FINISH THE COCKTAIL FIRST");
+                Toast(run.DrinkReady ? UIText.T("seats.tap.serve_first")
+                                     : UIText.T("seats.tap.finish_first"));
                 return;
             }
             _flow?.OpenTap();
@@ -101,9 +101,9 @@ namespace LastCall.UI
                 {
                     run.ServeSnack(snack.Id, visit);
                     Sfx.Play("bowl_down", 0.75f);
-                    Toast($"{snack.Name.ToUpperInvariant()} — ON THE TAB");
+                    Toast(UIText.T("seats.snack.on_tab", ("snack", SnackCaps(snack))));
                 }
-                catch (InvalidOperationException e) { Toast(e.Message.ToUpperInvariant()); }
+                catch (InvalidOperationException e) { Toast(UIText.Refusal(e)); }
                 RefreshSnackRow(run);
                 return;
             }
@@ -279,8 +279,16 @@ namespace LastCall.UI
             if (book == null || run == null || visit == null) return PlainLine(cue, advice);
             var look = LookFor(visit);
             var papers = PapersFor(look);
-            var voice = book.For(look?.Slug, papers?.Iso);
-            string said = book.Say(voice, cue, run.VoiceStream, drink, advice);
+            var voice = book.For(look?.Slug, papers?.Iso) ?? book.Default;
+            // THE SAME DRAW Say MAKES (VoiceBook.Pick, localization L1), looked up in the
+            // player's language BEFORE the placeholders go in: a voice is rewritten per
+            // language rather than translated, so {drink} and {advice} land wherever that
+            // language's line puts them. The index is the line's place in its pool.
+            var (index, english) = book.Pick(voice, cue, run.VoiceStream);
+            string raw = index < 0 ? english
+                : UIText.Data("voice", voice.Id + "." + cue.ToString().ToLowerInvariant(),
+                              index.ToString(System.Globalization.CultureInfo.InvariantCulture), english);
+            string said = VoiceBook.Fill(raw, drink, advice);
             return Sentence(string.IsNullOrEmpty(said) ? PlainLine(cue, advice) : said);
         }
 
@@ -300,7 +308,7 @@ namespace LastCall.UI
             if (string.IsNullOrEmpty(line)) return line;
             var t = line.Trim();
             if (t.Length == 0) return t;
-            if (char.IsLower(t[0])) t = char.ToUpperInvariant(t[0]) + t.Substring(1);
+            if (char.IsLower(t[0])) t = UIText.Caps(t.Substring(0, 1)) + t.Substring(1);
             char end = t[t.Length - 1];
             // A line that already ends in punctuation keeps it — including the '!' and '?'
             // that carry most of this bar's character.
@@ -313,15 +321,19 @@ namespace LastCall.UI
         {
             switch (cue)
             {
-                case VoiceCue.Perfect: return "Perfect!";
-                case VoiceCue.Another: return "Another round!";
-                case VoiceCue.Close: return "Thanks.";
-                case VoiceCue.Wrong: return "Not what I asked.";
-                case VoiceCue.Praise: return "Perfect pour. Not a thing I would change.";
+                case VoiceCue.Perfect: return UIText.T("seats.plain.perfect");
+                case VoiceCue.Another: return UIText.T("seats.plain.another");
+                case VoiceCue.Close: return UIText.T("seats.plain.close");
+                case VoiceCue.Wrong: return UIText.T("seats.plain.wrong");
+                case VoiceCue.Praise: return UIText.T("seats.plain.praise");
                 case VoiceCue.Sip: return advice ?? string.Empty;
                 default: return string.Empty;
             }
         }
+
+        /// <summary>A snack's name as the bowls and toasts print it: its data name, in capitals.</summary>
+        private static string SnackCaps(SnackDefinition snack) =>
+            UIText.Caps(UIText.Data("snack", snack.Id, "name", snack.Name));
 
         /// <summary>How many sips a drinker takes, and so how many things they can say.</summary>
         private const int SipsPerDrink = 3;
@@ -624,6 +636,21 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>The "I asked for … as well." sentence riding on a sip's line, in the player's
+        /// language, or null when it carries none: the whole line when it IS that sentence
+        /// (<c>advice.missing</c>), its second half when it is a sentence followed by it
+        /// (<c>advice.then</c>) — the same tail the English used to find by searching for
+        /// "I asked for".</summary>
+        private static string MissingTail(Line line)
+        {
+            if (line.Key == "advice.missing") return UIText.T(line);
+            if (line.Key != "advice.then") return null;
+            foreach (var arg in line.Args)
+                if (arg.Key == "second" && arg.Value is Line second && second.Key == "advice.missing")
+                    return UIText.T(second);
+            return null;
+        }
+
         /// <summary>Hands the ready drink to seat <paramref name="index"/> (the glass was dragged
         /// onto them). Returns true if it was served.</summary>
         private bool ServeSeat(int index)
@@ -657,11 +684,13 @@ namespace LastCall.UI
             // toplam 3 yudum alıyor, her yudumda yeni bir cümle ekleyecekler"). Read here for
             // the same reason the note is: ServeTo empties the serving glass, so this is the
             // last frame the pour can be looked at.
-            _seats[index].SayLines = new System.Collections.Generic.List<string>(
-                PourAdvice.Lines(asked, run.ServingGlass,
-                    id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec, SipsPerDrink));
-            for (int L = 0; L < _seats[index].SayLines.Count; L++)
-                _seats[index].SayLines[L] = Sentence(_seats[index].SayLines[L]);
+            // In the player's language (localization L1): SaidLines is Lines as string-table
+            // lines — the same sips, in the same order — rendered here.
+            var sipLines = PourAdvice.SaidLines(asked, run.ServingGlass,
+                id => run.Shelf.Find(id)?.Ingredient, visit.Order.Spec, SipsPerDrink);
+            _seats[index].SayLines = new System.Collections.Generic.List<string>(sipLines.Count);
+            for (int L = 0; L < sipLines.Count; L++)
+                _seats[index].SayLines.Add(Sentence(UIText.T(sipLines[L])));
             // IN THEIR OWN VOICE (2026-09-07): the first sip is the one with the character in
             // it — a flawless pour earns the voice's own praise (keeping any "I asked for…"
             // the coaching appended), and a pour with something to fix is told the way this
@@ -672,9 +701,13 @@ namespace LastCall.UI
                 string first = sips[0];
                 if (_seats[index].Note.Flawless)
                 {
-                    int asked2 = first.IndexOf("I asked for", System.StringComparison.Ordinal);
-                    string tail = asked2 >= 0 ? " " + first.Substring(asked2) : "";
-                    sips[0] = Sentence(VoiceLine(visit, VoiceCue.Praise) + tail);
+                    // The voice's praise, then any "I asked for…" the coaching carried, joined
+                    // the way the coaching joins its own two sentences (advice.then).
+                    string praise = VoiceLine(visit, VoiceCue.Praise);
+                    string missing = MissingTail(sipLines[0]);
+                    sips[0] = Sentence(missing != null
+                        ? UIText.T("advice.then", ("first", praise), ("second", missing))
+                        : praise);
                 }
                 else sips[0] = Sentence(VoiceLine(visit, VoiceCue.Sip, advice: first));
             }
@@ -794,7 +827,7 @@ namespace LastCall.UI
                     // its Exit can fire — so the count never came back down and the basin
                     // beckoned for the rest of the night, and the next one. A reference heals
                     // itself: the prop it names is checked for life every frame.
-                    dirtyRelay.Entered = () => { ShowPropTip(dirtyRt, "CARRY IT TO THE SINK"); _emptyOver = dirtyRt; };
+                    dirtyRelay.Entered = () => { ShowPropTip(dirtyRt, UIText.T("seats.tip.carry_to_sink")); _emptyOver = dirtyRt; };
                     dirtyRelay.Exited = () => { HidePropTip(dirtyRt); if (_emptyOver == dirtyRt) _emptyOver = null; };
                     var sink = prop.gameObject.AddComponent<PressSink>();
                     sink.Face = prop; sink.Depth = 3f; sink.Lift = 3f; sink.Tint = img;
@@ -919,26 +952,25 @@ namespace LastCall.UI
 
                 var label = NewText("N", bowl, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
                 Place(label.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 24), Vector2.zero);
-                label.text = s.Name.ToUpperInvariant();
+                label.text = SnackCaps(s);
 
                 var btn = bowl.gameObject.AddComponent<Button>();
                 btn.targetGraphic = hit;
                 btn.transition = Selectable.Transition.None;
                 var snackRelay = bowl.gameObject.AddComponent<HoverRelay>();
                 var snackRt = bowl;
-                var snackName = s.Name.ToUpperInvariant();
-                snackRelay.Entered = () => ShowPropTip(snackRt, "TAKE THE " + snackName);
+                snackRelay.Entered = () => ShowPropTip(snackRt, UIText.T("seats.snack.take", ("snack", SnackCaps(s))));
                 snackRelay.Exited = () => HidePropTip(snackRt);
                 btn.onClick.AddListener(() =>
                 {
                     var r = Run;
                     if (r == null || r.Phase != TycoonPhase.DayOpen) return;
-                    if (r.SnackLeft(s.Id) <= 0) { Toast($"THE {s.Name.ToUpperInvariant()} BOWL IS EMPTY TODAY"); return; }
+                    if (r.SnackLeft(s.Id) <= 0) { Toast(UIText.T("seats.snack.bowl_empty", ("snack", SnackCaps(s)))); return; }
                     _snackInHand = _snackInHand == s ? null : s;   // click again to put it back
                     Sfx.Play(_snackInHand != null ? "garnish" : "glass_down", 0.8f);
                     Toast(_snackInHand != null
-                        ? $"{s.Name.ToUpperInvariant()} IN HAND — CLICK A CUSTOMER"
-                        : "PUT IT BACK");
+                        ? UIText.T("seats.snack.in_hand", ("snack", SnackCaps(s)))
+                        : UIText.T("seats.snack.put_back"));
                     RefreshSnackRow(r);
                 });
                 var sink = bowl.gameObject.AddComponent<PressSink>();
@@ -955,8 +987,8 @@ namespace LastCall.UI
             {
                 int left = run.SnackLeft(snack.Id);
                 stock.text = left > 0
-                    ? $"{snack.Name.ToUpperInvariant()} · {left}"
-                    : $"{snack.Name.ToUpperInvariant()} · OUT";
+                    ? UIText.T("seats.snack.stock", ("snack", SnackCaps(snack)), ("left", left))
+                    : UIText.T("seats.snack.out", ("snack", SnackCaps(snack)));
                 var baseCol = art.sprite != null ? Color.white : UITheme.Amber[2];
                 art.color = left <= 0 ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.35f)
                     : _snackInHand == snack ? new Color(1f, 1f, 0.82f, 1f)
@@ -993,13 +1025,13 @@ namespace LastCall.UI
         {
             switch (id)
             {
-                case "ice": return "KEEPS IT COLD · DROP IT IN BEFORE THE POUR";
-                case "lemon_twist": return "A TWIST OF PEEL · SHARPENS A SOUR DRINK";
-                case "salt_rim": return "SALT ROUND THE RIM · TURN THE GLASS IN THE DISH";
-                case "sugar_rim": return "SUGAR ROUND THE RIM · TURN THE GLASS IN THE DISH";
-                case "olive": return "AN OLIVE · THE SAVOURY GARNISH";
-                case "mint": return "FRESH MINT · SLAPPED, NOT STIRRED";
-                default: return "A GARNISH THE ORDER MAY ASK FOR";
+                case "ice": return UIText.T("seats.garnish.purpose.ice");
+                case "lemon_twist": return UIText.T("seats.garnish.purpose.lemon_twist");
+                case "salt_rim": return UIText.T("seats.garnish.purpose.salt_rim");
+                case "sugar_rim": return UIText.T("seats.garnish.purpose.sugar_rim");
+                case "olive": return UIText.T("seats.garnish.purpose.olive");
+                case "mint": return UIText.T("seats.garnish.purpose.mint");
+                default: return UIText.T("seats.garnish.purpose.other");
             }
         }
 
@@ -1165,28 +1197,28 @@ namespace LastCall.UI
             (string id, string art, PreparationDefinition prep,
              string style, string word, string carry, float carryH)[] rail =
             {
-                ("ice", "counter_ice", Preparations.Ice, null, "ICE",
+                ("ice", "counter_ice", Preparations.Ice, null, UIText.T("seats.rail.ice"),
                  "glass_ice", 34f),
                 ("lemon_twist", "counter_lemon", Preparations.LemonTwist,
-                 null, "LEMON", "glass_lemon", 40f),
+                 null, UIText.T("seats.rail.lemon"), "glass_lemon", 40f),
                 // A PINCH, not the dish (2026-08-26, the author: "surukledigimiz tuz ve
                 // seker daha cok tuz ve seker yumagi gibi olmali"). Carrying the whole
                 // cellar was the same mistake the bucket made, and the answer is the same:
                 // what leaves a dish of salt is salt. The lap still turns the GLASS in it —
                 // the pinch in the hand is what you are turning it through.
                 ("salt_rim", "counter_salt", Preparations.SaltRim,
-                 null, "TURN IT IN THE SALT", "carry_salt", 32f),
+                 null, UIText.T("seats.rail.salt"), "carry_salt", 32f),
                 ("sugar_rim", "counter_sugar", Preparations.SugarRim,
-                 null, "TURN IT IN THE SUGAR", "carry_sugar", 30f),
+                 null, UIText.T("seats.rail.sugar"), "carry_sugar", 30f),
                 // WHAT IS BOUGHT GOES ON THE END (2026-09-09, the author: "yeni eklenen
                 // garnishler sağa doğru eklenmeli"). The olive and the mint are the only two
                 // the bar does not start with, and they sat in the middle of the table — so
                 // buying a jar of olives opened a gap between the lemon and the salt and
                 // shoved half the rail sideways. The four the house always has keep their
                 // places; a jar arrives at the right-hand end, where a new thing belongs.
-                ("olive", "counter_olive", null, "olive", "OLIVE",
+                ("olive", "counter_olive", null, "olive", UIText.T("seats.rail.olive"),
                  "glass_olive", 52f),
-                ("mint", "counter_mint", null, "mint", "MINT",
+                ("mint", "counter_mint", null, "mint", UIText.T("seats.rail.mint"),
                  "glass_mint", 40f),
             };
             // THE MAT IS THE ROOM'S (2026-09-06, the author: "çerez paspası tezgah, oda,
@@ -1252,7 +1284,7 @@ namespace LastCall.UI
                 var theIcon = PrefArt.ForPreparation(id);
                 var theWord = word;
                 var theWhy = prep != null && !string.IsNullOrEmpty(prep.Description)
-                    ? prep.Description.ToUpperInvariant()
+                    ? UIText.Caps(UIText.T(prep.DescriptionLine))
                     : GarnishPurpose(id);
                 // The dish's caption is the bottle's card now (2026-09-08).
                 relay.Entered = () => ShowGarnishCard(theRt, prop, theWord, theIcon, theWhy);
@@ -1501,7 +1533,7 @@ namespace LastCall.UI
             down.callback.AddListener(_ => GrabCloth());
             _clothRt.gameObject.AddComponent<EventTrigger>().triggers.Add(down);
             var relay = _clothRt.gameObject.AddComponent<HoverRelay>();
-            relay.Entered = () => ShowPropTip(_clothRt, "THE CLOTH");
+            relay.Entered = () => ShowPropTip(_clothRt, UIText.T("seats.tip.cloth"));
             relay.Exited = () => HidePropTip(_clothRt);
 
             // What the hand holds, said over the sink: glasses waiting, or the wash running.
@@ -1562,7 +1594,7 @@ namespace LastCall.UI
             img.preserveAspect = true;
             rt.SetAsFirstSibling();
             var relay = rt.gameObject.AddComponent<HoverRelay>();
-            relay.Entered = () => ShowPropTip(rt, "A MARK — WIPE IT");
+            relay.Entered = () => ShowPropTip(rt, UIText.T("seats.tip.mark"));
             relay.Exited = () => HidePropTip(rt);
             mk.Prop = rt;
         }
@@ -1726,7 +1758,7 @@ namespace LastCall.UI
                     }
                     catch (System.InvalidOperationException e)
                     {
-                        if (_clothRefused != v) { _clothRefused = v; Toast(e.Message.ToUpperInvariant()); }
+                        if (_clothRefused != v) { _clothRefused = v; Toast(UIText.Refusal(e)); }
                     }
                 }
         }
@@ -1938,13 +1970,13 @@ namespace LastCall.UI
                 // Back on the counter it goes, exactly as it was. The prop is drawn from the
                 // mess every frame, so there is nothing to put back by hand.
                 if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
-                if (view != null) Toast("PUT BACK — CARRY IT TO THE SINK", UITheme.Cream[3]);
+                if (view != null) Toast(UIText.T("seats.sink.put_back"), UITheme.Cream[3]);
                 return;
             }
             if (run.SinkBusy)
             {
                 if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
-                Toast("THE TAP IS RUNNING");
+                Toast(UIText.T("seats.sink.tap_running"));
                 return;
             }
             try
@@ -1955,14 +1987,14 @@ namespace LastCall.UI
             catch (System.InvalidOperationException e)
             {
                 if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
-                Toast(e.Message.ToUpperInvariant());
+                Toast(UIText.Refusal(e));
                 return;
             }
             // INTO THE BASIN, not into thin air (the author: "bardağın lavaboya girdiği bir
             // fade animasyonu gösterilsin bardak direkt yok olmasın").
             SinkFade(_glassCarry, _glassCarryImg);
             Sfx.Play("drain", 0.5f);
-            Toast("WASHING UP", UITheme.Cyan[4]);
+            Toast(UIText.T("seats.sink.washing_up"), UITheme.Cyan[4]);
         }
 
         /// <summary>The screen point under a carried thing's centre: where the PICTURE is,
@@ -2032,12 +2064,13 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || run.Phase != TycoonPhase.DayOpen) return;
             if (_flow != null && _flow.IsOpen) return;
-            if (run.GlassesInHand == 0) { Toast("NOTHING TO WASH"); return; }
-            if (run.SinkBusy) { Toast("THE TAP IS RUNNING"); return; }
+            if (run.GlassesInHand == 0) { Toast(UIText.T("seats.sink.nothing_to_wash")); return; }
+            if (run.SinkBusy) { Toast(UIText.T("seats.sink.tap_running")); return; }
             try { run.WashGlasses(); }
-            catch (System.InvalidOperationException e) { Toast(e.Message); return; }
+            // As the rule wrote it, not in capitals: the one refusal here that never shouted.
+            catch (System.InvalidOperationException e) { Toast(Said.TryGet(e, out var l) ? UIText.T(l) : e.Message); return; }
             Sfx.Play("drain", 0.5f);
-            Toast("WASHING UP", UITheme.Cyan[4]);
+            Toast(UIText.T("seats.sink.washing_up"), UITheme.Cyan[4]);
         }
 
         /// <summary>The clock that stands over the basin while its tap runs.</summary>
@@ -2146,7 +2179,7 @@ namespace LastCall.UI
                     {
                         // Ceiling, so it reads "1s" for the whole last second and never
                         // shows a 0 over a tap that is still running.
-                        string secs = Mathf.CeilToInt((float)run.WashLeft) + "s";
+                        string secs = UIText.T("seats.sink.secs", ("secs", Mathf.CeilToInt((float)run.WashLeft)));
                         if (_sinkSecs.text != secs) _sinkSecs.text = secs;
                     }
                 }
@@ -2156,7 +2189,8 @@ namespace LastCall.UI
             // out of service holds the stool it came off until the sink hands it back, so
             // the strip counts stools rather than crockery.
             int held = run != null ? run.GlassesInHand + run.GlassesWashing : 0;
-            string seats = held == 1 ? " · 1 STOOL HELD" : held > 1 ? " · " + held + " STOOLS HELD" : "";
+            // The stools held ride on the end of whatever the strip says, as one counted line.
+            string Held(string what) => held > 0 ? UIText.N("seats.strip.held", held, ("line", what)) : what;
             // THE NIGHT WAITS ON THE COUNTER, AND SAYS SO (2026-09-08): with the last
             // drinker gone the doors used to shut at once; they wait for the glasses and the
             // marks now (BarDay.IsComplete), and a shift standing in an empty room needs to
@@ -2167,9 +2201,9 @@ namespace LastCall.UI
             string line = run == null || run.Phase != TycoonPhase.DayOpen ? ""
                 // The strip no longer counts (2026-09-08): the dial does, at the tap. What
                 // is left here is the thing only this line says — what the held glasses cost.
-                : waitingOnCounter && !busy ? "LAST CALL · CLEAR THE COUNTER TO CLOSE"
-                : busy ? "WASHING" + seats
-                : run.GlassesInHand > 0 ? run.GlassesInHand + " IN HAND · CLICK THE SINK" + seats : "";
+                : waitingOnCounter && !busy ? UIText.T("seats.strip.last_call")
+                : busy ? Held(UIText.T("seats.strip.washing"))
+                : run.GlassesInHand > 0 ? Held(UIText.N("seats.strip.in_hand", run.GlassesInHand)) : "";
             if (_handStrip.text != line) _handStrip.text = line;
             // Over the sink's own slot (stage 140, 68.5 — the basin is 35 art px tall).
             _handStrip.rectTransform.anchoredPosition = new Vector2(280f, 137f + 70f + 6f + CounterLift);
@@ -2222,25 +2256,28 @@ namespace LastCall.UI
             if (prop.Prep == null)
             {
                 var bottle = GarnishOnTheShelf(run, prop.Style);
-                if (bottle == null) { Toast("NONE LEFT"); return; }
+                if (bottle == null) { Toast(UIText.T("seats.garnish.none_left")); return; }
                 double pinch = run.ServingGlass.Capacity * GarnishPinch;
                 if (run.PourAtGlass(bottle.Id, pinch) <= 0)
-                { Toast("THE GLASS IS FULL"); return; }
+                { Toast(UIText.T("seats.garnish.glass_full")); return; }
                 Sfx.Play("garnish");
-                Toast(bottle.Name.ToUpperInvariant() + " IN THE DRINK", UITheme.Lime[3]);
+                Toast(UIText.T("seats.garnish.in_drink",
+                          ("bottle", UIText.Caps(UIText.Data("bottle", bottle.Id, "name", bottle.Name)))),
+                      UITheme.Lime[3]);
                 return;
             }
 
             if (prop.Id != "ice" && run.ServingGlass.HasPreparation(prop.Id))
             {
-                Toast("ALREADY ON THAT DRINK");
+                Toast(UIText.T("seats.garnish.already_on"));
                 return;
             }
             run.AddPreparationAtGlass(prop.Prep);
             Sfx.Play(prop.Id == "ice" ? "ice_drop" : "garnish");
             Toast(prop.Id == "ice"
-                ? "ICE IN THE GLASS x" + run.ServingGlass.IceCubes
-                : prop.Prep.Name.ToUpperInvariant() + " ON THE DRINK", UITheme.Cyan[3]);
+                ? UIText.T("seats.garnish.ice_in", ("cubes", run.ServingGlass.IceCubes))
+                : UIText.T("seats.garnish.on_drink", ("garnish", UIText.Caps(UIText.T(prop.Prep.NameLine)))),
+                UITheme.Cyan[3]);
         }
 
         /// <summary>How much of the glass one tap of a garnish is worth. The tin's own
@@ -2295,7 +2332,7 @@ namespace LastCall.UI
                         run.AddPreparationAtGlass(prop.Prep);
                         Sfx.Play("rim_done", 0.9f);
                         _rimSwept.Remove(prop.Id);
-                        Toast((prop.Id == "salt_rim" ? "SALT" : "SUGAR") + " ON THE RIM",
+                        Toast(UIText.T(prop.Id == "salt_rim" ? "seats.rim.salt_done" : "seats.rim.sugar_done"),
                               UITheme.Lime[3]);
                         _rimAngleKnown = false;
                         return true;
@@ -2397,7 +2434,7 @@ namespace LastCall.UI
             }
             if (_rimCount != null)
             {
-                _rimCount.text = Mathf.RoundToInt(ran * 100f) + "%";
+                _rimCount.text = UIText.T("seats.rim.percent", ("pct", Mathf.RoundToInt(ran * 100f)));
                 _rimCount.color = ran >= 1f ? UITheme.Lime[3] : lit;
             }
         }
@@ -2602,7 +2639,7 @@ namespace LastCall.UI
             // çıkmalı"). One line, both verbs, in the room's own tip plate.
             var glassRelay = _drinkGlass.gameObject.AddComponent<HoverRelay>();
             var glassRt = _drinkGlass;
-            glassRelay.Entered = () => ShowPropTip(glassRt, "CLICK TO EDIT · DRAG TO SERVE");
+            glassRelay.Entered = () => ShowPropTip(glassRt, UIText.T("seats.tip.glass"));
             glassRelay.Exited = () => HidePropTip(glassRt);
 
             // The layer architecture (the author, 2026-08-02): BACK face and base first,
@@ -2655,7 +2692,7 @@ namespace LastCall.UI
 
             var hint = NewText("Hint", _drinkGlass, _body, 10, TextAnchor.UpperCenter, UITheme.Cyan[4]);
             Place(hint.rectTransform, new Vector2(0.5f, 1), new Vector2(190, 18), new Vector2(0, 24));
-            hint.text = "CLICK A CUSTOMER TO SERVE";
+            hint.text = UIText.T("seats.glass.hint");
             hint.raycastTarget = false;
 
             _drinkGlass.gameObject.SetActive(false);
@@ -2721,11 +2758,11 @@ namespace LastCall.UI
             // behind it waits — and the stools those glasses came off wait with them.
             int fee;
             try { fee = run.PourAwayAtSink(); }
-            catch (InvalidOperationException) { Toast("THE TAP IS RUNNING"); return; }
+            catch (InvalidOperationException) { Toast(UIText.T("seats.sink.tap_running")); return; }
             Sfx.Play("drain", 0.9f);
-            Toast(fee > 0 ? $"POURED AWAY · -${fee}" : "POURED AWAY");
+            Toast(fee > 0 ? UIText.T("seats.drain.poured_fee", ("fee", "-$" + fee)) : UIText.T("seats.drain.poured"));
             if (fee > 0)
-                LogService($"<color=#F27D8A>POURED AWAY</color> a built drink · -${fee}");
+                LogService(UIText.T("seats.log.poured_away", ("fee", "-$" + fee)));
             _drinkGlass.gameObject.SetActive(false);
             _glassShown = false;
         }
@@ -2795,7 +2832,7 @@ namespace LastCall.UI
             var line = NewText("Line", _shakerPropLabel, _display, 8, TextAnchor.MiddleCenter,
                                UITheme.Amber[4]);
             Stretch((RectTransform)line.transform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            line.text = "BACK TO THE TIN";
+            line.text = UIText.T("seats.tin.label");
             line.raycastTarget = false;
             _shakerPropLabelGroup = _shakerPropLabel.gameObject.AddComponent<CanvasGroup>();
             _shakerPropLabelGroup.alpha = 0f;
@@ -2950,13 +2987,13 @@ namespace LastCall.UI
             catch (InvalidOperationException)
             {
                 if (_tinCarry != null) _tinCarry.gameObject.SetActive(false);
-                Toast("THE TAP IS RUNNING");
+                Toast(UIText.T("seats.sink.tap_running"));
                 return;
             }
             SinkFade(_tinCarry, _tinCarryImg);
             Sfx.Play("drain", 0.9f);
-            Toast(fee > 0 ? "TIPPED OUT · -$" + fee : "TIPPED OUT");
-            if (fee > 0) LogService("<color=#F27D8A>TIPPED OUT</color> a half-built drink · -$" + fee);
+            Toast(fee > 0 ? UIText.T("seats.tin.tipped_fee", ("fee", "-$" + fee)) : UIText.T("seats.tin.tipped"));
+            if (fee > 0) LogService(UIText.T("seats.log.tipped_out", ("fee", "-$" + fee)));
         }
 
         private void UpdateDrinkGlass()
@@ -3080,7 +3117,7 @@ namespace LastCall.UI
                     {
                         try { served = ServeSeat(seat); }
                         catch (InvalidOperationException e3)
-                        { Toast(e3.Message.ToUpperInvariant()); saidWhy = true; }
+                        { Toast(UIText.Refusal(e3)); saidWhy = true; }
                     }
                     if (served)
                     {
@@ -3088,7 +3125,7 @@ namespace LastCall.UI
                         _glassShown = false;
                         return;
                     }
-                    if (seat >= 0 && !saidWhy) Toast("READ THEIR ID FIRST");
+                    if (seat >= 0 && !saidWhy) Toast(UIText.T("seats.serve.read_id_first"));
                     // Home it goes, along the counter, by the road it already knows.
                     _glassServeFrom = GlassHome;
                     _glassServeTo = _drinkGlass.anchoredPosition;
@@ -3149,7 +3186,7 @@ namespace LastCall.UI
                 bool served = false, saidWhy = false;
                 try { served = seat >= 0 && ServeSeat(seat); }
                 catch (InvalidOperationException e2)
-                { Toast(e2.Message.ToUpperInvariant()); saidWhy = true; }
+                { Toast(UIText.Refusal(e2)); saidWhy = true; }
                 if (served)
                 {
                     _drinkGlass.gameObject.SetActive(false);   // handed over; a new drink re-shows it
@@ -3158,7 +3195,7 @@ namespace LastCall.UI
                 else
                 {
                     // Refused at the stool: the drink comes back. The player keeps it.
-                    if (!saidWhy) Toast("THEY LEFT — YOU GET THE DRINK BACK");
+                    if (!saidWhy) Toast(UIText.T("seats.serve.they_left"));
                     _glassServeT = 0f;
                     _glassReturning = true;
                 }
@@ -3455,7 +3492,7 @@ namespace LastCall.UI
                         tipText.rectTransform.pivot = new Vector2(0.5f, 1);
                         tipText.horizontalOverflow = HorizontalWrapMode.Overflow;
                         tipText.verticalOverflow = VerticalWrapMode.Overflow;
-                        tipText.text = "+$" + tip + " TIP";
+                        tipText.text = UIText.T("seats.tab.tip", ("tip", "+$" + tip));
                         Ring(tipText);
                     }));
         }
@@ -3614,16 +3651,22 @@ namespace LastCall.UI
                     }
                     if (v.Visit.OnTheHouse) { }
                     else if (kicked)
-                        LogService($"<color=#F27D8A>SHOWN THE DOOR</color> · " + KickReason(v.Visit)
-                            + (v.Visit.OffTheBooks ? "" : " · " + LogStars(0)));
+                        LogService(v.Visit.OffTheBooks
+                            ? UIText.T("seats.log.shown_door", ("reason", KickReason(v.Visit)))
+                            : UIText.T("seats.log.shown_door_stars", ("reason", KickReason(v.Visit)),
+                                       ("stars", LogStars(0))));
                     else if (v.ExitStorm)
-                        LogService($"<color=#F27D8A>STORM-OFF</color> " +
-                            (v.Visit.IdInspected ? v.Visit.Order.Wanted.Name.ToUpperInvariant() : "?") +
-                            " · patience ran out · $0 · " + LogStars(0));
+                        LogService(UIText.T("seats.log.storm_off",
+                            ("drink", v.Visit.IdInspected
+                                ? UIText.Caps(UIText.Data("recipe", v.Visit.Order.Wanted.Id, "name", v.Visit.Order.Wanted.Name))
+                                : "?"),
+                            ("paid", "$0"), ("stars", LogStars(0))));
                     else if (v.Visit.Paid > 0)
-                        LogService($"<color=#F5C97B>TAB</color> settled ${v.Visit.Paid}" +
-                            (v.Visit.SnacksTaken > 0 ? $" (+{v.Visit.SnacksTaken} snack)" : "") +
-                            $" · leaves {LogStars(v.Visit.Satisfaction)}");
+                        LogService(v.Visit.SnacksTaken > 0
+                            ? UIText.N("seats.log.tab_snacks", v.Visit.SnacksTaken,
+                                       ("paid", "$" + v.Visit.Paid), ("stars", LogStars(v.Visit.Satisfaction)))
+                            : UIText.T("seats.log.tab",
+                                       ("paid", "$" + v.Visit.Paid), ("stars", LogStars(v.Visit.Satisfaction))));
                     // The bussing beat (D2): a drinker leaves the empty glass on this stool.
                     // Core left the mess in the same tick that freed the seat (GDD 27 §4.1 —
                     // the SERVE is the signal, so an unmatched pour's glass is claimed too);
@@ -3866,7 +3909,8 @@ namespace LastCall.UI
                         view.WasKnown = true;
                         view.SpeakFrom = Time.unscaledTime;
                     }
-                    string wanted = known ? visit.Order.Wanted.Name : "";
+                    string wanted = known
+                        ? UIText.Data("recipe", visit.Order.Wanted.Id, "name", visit.Order.Wanted.Name) : "";
                     int said = Motion.Reduced ? wanted.Length
                         : Mathf.Clamp(Mathf.FloorToInt((Time.unscaledTime - view.SpeakFrom) * SpeakCps),
                                       0, wanted.Length);
@@ -3887,7 +3931,7 @@ namespace LastCall.UI
                         // this any more — a drinker's plate stands down for the whole savour
                         // (see showTag) — but the branch stays honest for the frames between
                         // a serve and the balloon coming up.
-                        view.Wants.text = "Drinking" + (Motion.Reduced ? "..."
+                        view.Wants.text = UIText.T("seats.ticket.drinking") + (Motion.Reduced ? "..."
                             : new string('.', 1 + Mathf.FloorToInt(Time.unscaledTime / DotBeat) % 3));
                         view.Wants.color = UITheme.ClubBlue[1];
                         view.Order.text = "";
@@ -3906,7 +3950,7 @@ namespace LastCall.UI
                     else if (!known)
                     {
                         // Ready, unread: the one line the author asked for, and nothing else.
-                        view.Wants.text = "Ready to order";
+                        view.Wants.text = UIText.T("seats.ticket.ready");
                         view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
                     }
@@ -3917,7 +3961,7 @@ namespace LastCall.UI
                         // moment they sit — they introduced themselves — so the ticket would
                         // otherwise print the ask over their head and hand the player the
                         // whole trial in advance, which is the one thing the reveal is for.
-                        view.Wants.text = "Talk to them";
+                        view.Wants.text = UIText.T("seats.ticket.talk");
                         view.Wants.color = UITheme.Magenta[1];
                         view.Order.text = "";
                         view.Spoken = false;
@@ -4538,7 +4582,8 @@ namespace LastCall.UI
         }
 
         private static string CrowdName(WealthTier tier) =>
-            tier == WealthTier.HighRoller ? "HIGH ROLLERS" : tier == WealthTier.Broke ? "BROKE" : "REGULARS";
+            tier == WealthTier.HighRoller ? UIText.T("seats.crowd.high_rollers")
+                : tier == WealthTier.Broke ? UIText.T("seats.crowd.broke") : UIText.T("seats.crowd.regulars");
 
         private PatronRecord LogFor(PatronLook look)
         {

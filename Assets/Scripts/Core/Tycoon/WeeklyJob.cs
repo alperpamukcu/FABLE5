@@ -137,6 +137,44 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>
+        /// <see cref="Owed"/> as a string-table line (localization L1), counted by what is left.
+        /// The drink's name is its data line and reads as the data file writes it, so render
+        /// this in capitals (the table text is already in capitals) to say what Owed says.
+        /// </summary>
+        public Line OwedLine()
+        {
+            int left = Left;
+            switch (Kind)
+            {
+                case JobKind.Perfect:
+                    return Line.Of("job.owed.perfect").Counting("n", left);
+                case JobKind.Clean:
+                    return Line.Of("job.owed.clean").Counting("n", left);
+                default:
+                    return Line.Of("job.owed.serve").Counting("n", left).With("drink", RecipeNameLine);
+            }
+        }
+
+        /// <summary>
+        /// What the job asks for, as a line: "PERFECT POURS" and "CLEAN NIGHTS" for the kinds that
+        /// name no drink (the words <see cref="WeeklyJobs.Roll"/> writes into <see cref="RecipeName"/>),
+        /// the recipe's data name for a serve job — which reads as the data file writes it, so a
+        /// caller that prints it in capitals renders it in capitals.
+        /// </summary>
+        public Line RecipeNameLine
+        {
+            get
+            {
+                switch (Kind)
+                {
+                    case JobKind.Perfect: return Line.Of("job.name.perfect");
+                    case JobKind.Clean: return Line.Of("job.name.clean");
+                    default: return Line.Of("data.recipe." + RecipeId + ".name");
+                }
+            }
+        }
+
         /// <summary>Whether this job is the one live in <paramref name="day"/>'s week.</summary>
         public bool RunsOn(int day) => BarCalendar.WeekOf(day) == Week;
 

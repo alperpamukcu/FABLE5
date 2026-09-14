@@ -1,0 +1,424 @@
+{
+ "strings": [
+  {
+   "key": "data.fixture.post5_car.blurb",
+   "text": "一輛藍綠色敞篷車面向夕陽停著，車頂敞開。老闆說他差點就買了那台。",
+   "src": "A teal convertible parked facing the sunset, top down. The car the owner says he nearly bought."
+  },
+  {
+   "key": "data.fixture.post5_car.name",
+   "text": "敞篷車海報",
+   "src": "Convertible Poster"
+  },
+  {
+   "key": "data.fixture.post5_diver.blurb",
+   "text": "一名跳水者懸在土耳其藍泳池上方的半空中。整間酒吧跟著一起屏住呼吸。",
+   "src": "A diver in mid-air over a turquoise pool. The whole bar holds its breath with them."
+  },
+  {
+   "key": "data.fixture.post5_diver.name",
+   "text": "跳水海報",
+   "src": "Diver Poster"
+  },
+  {
+   "key": "data.fixture.post5_neon.blurb",
+   "text": "雨中滿是粉紅與藍色招牌的街道。讓店裡感覺像是城市的一部分。",
+   "src": "A street of pink and blue signs in the rain. It makes the room feel like part of a city."
+  },
+  {
+   "key": "data.fixture.post5_neon.name",
+   "text": "霓虹大道海報",
+   "src": "Neon Avenue Poster"
+  },
+  {
+   "key": "data.fixture.post_coast_R.blurb",
+   "text": "從空中俯瞰的海岸公路，棕櫚、大海和一輛細細的白車。每個人都說總有一天要去開一趟的那條路。",
+   "src": "The coast road from above, palms and sea and a thin white car. The drive everybody means to take."
+  },
+  {
+   "key": "data.fixture.post_coast_R.name",
+   "text": "海岸海報",
+   "src": "Coast Poster"
+  },
+  {
+   "key": "data.fixture.post_malibu_R.blurb",
+   "text": "燃燒般的天空下，一座救生員小屋，海報的一角已經捲起來了。",
+   "src": "A lifeguard hut under a burning sky, on a poster curling at one corner."
+  },
+  {
+   "key": "data.fixture.post_malibu_R.name",
+   "text": "Malibu 海報",
+   "src": "Malibu Poster"
+  },
+  {
+   "key": "data.fixture.post_pier_R.blurb",
+   "text": "黃昏的碼頭，燈一盞盞亮起。每個觀光客都會寄的那張明信片。",
+   "src": "The pier at dusk with its lights coming on. The one postcard every tourist sends."
+  },
+  {
+   "key": "data.fixture.post_pier_R.name",
+   "text": "碼頭海報",
+   "src": "Pier Poster"
+  },
+  {
+   "key": "data.fixture.post_surf_R.blurb",
+   "text": "藍綠浪頭上的衝浪客，印得大到看得見顆粒。這裡沒有人真的衝過浪。",
+   "src": "A surfer on a teal wave, printed so big the grain shows. Nobody here has surfed."
+  },
+  {
+   "key": "data.fixture.post_surf_R.name",
+   "text": "衝浪海報",
+   "src": "Surf Poster"
+  },
+  {
+   "key": "data.fixture.prep_mat.blurb",
+   "text": "碟子底下的軟木墊。從來沒有洗過一次。",
+   "src": "Cork under the dishes. It has never once been washed."
+  },
+  {
+   "key": "data.fixture.prep_mat.name",
+   "text": "零食墊",
+   "src": "Snack Mat"
+  },
+  {
+   "key": "data.fixture.rug6_memphis.blurb",
+   "text": "波浪線、圓點和三角形，80 年代賣過的顏色全在上面。它跟牆壁吵架，而且吵贏了。",
+   "src": "Squiggles, dots and triangles in every colour the eighties sold. It argues with the walls and wins."
+  },
+  {
+   "key": "data.fixture.rug6_memphis.name",
+   "text": "曼菲斯地毯",
+   "src": "Memphis Rug"
+  },
+  {
+   "key": "data.fixture.rug6_palm.blurb",
+   "text": "奶油色底上的大片綠色棕櫚葉。整片地板都像是誰家的陽台。",
+   "src": "Big green fronds on cream. It makes the whole floor feel like somebody's verandah."
+  },
+  {
+   "key": "data.fixture.rug6_palm.name",
+   "text": "棕櫚葉地毯",
+   "src": "Palm Leaf Rug"
+  },
+  {
+   "key": "data.fixture.rug6_sunset.blurb",
+   "text": "從金色到洋紅再到夜色的條紋，把傍晚平鋪在地板上。",
+   "src": "Stripes from gold to magenta to night, the evening laid flat on the floor."
+  },
+  {
+   "key": "data.fixture.rug6_sunset.name",
+   "text": "夕陽條紋",
+   "src": "Sunset Bands"
+  },
+  {
+   "key": "data.fixture.rug_leopard.blurb",
+   "text": "滿地豹紋，靠一圈藍綠色滾邊圍住。張揚，而且以此為傲。",
+   "src": "Spots from wall to wall, with a teal border to keep them in. Loud, and proud of it."
+  },
+  {
+   "key": "data.fixture.rug_leopard.name",
+   "text": "豹紋地毯",
+   "src": "Leopard Rug"
+  },
+  {
+   "key": "data.fixture.rug_wave.blurb",
+   "text": "木地板上織著一道碎浪。桌子看起來像站在海岸邊。",
+   "src": "A breaking wave woven across the boards. The tables look like they are standing on the shore."
+  },
+  {
+   "key": "data.fixture.rug_wave.name",
+   "text": "浪花地毯",
+   "src": "Wave Rug"
+  },
+  {
+   "key": "data.fixture.rwall6_stripe.blurb",
+   "text": "粉紅與奶油色的條紋一路延伸到門口。側牆終於看起來像海邊酒吧的牆了。",
+   "src": "Pink and cream bands running back to the door. The side wall finally looks like it belongs to a bar on the coast."
+  },
+  {
+   "key": "data.fixture.rwall6_stripe.name",
+   "text": "紅鶴條紋",
+   "src": "Flamingo Stripes"
+  },
+  {
+   "key": "data.fixture.rwall6_sunray.blurb",
+   "text": "珊瑚紅與洋紅的光芒從角落迸出，像一場夕陽。從那扇門離開的人，沒有一個不回頭看。",
+   "src": "A sunset breaking out of the corner in coral and magenta rays. Nobody leaves by that door without looking at it."
+  },
+  {
+   "key": "data.fixture.rwall6_sunray.name",
+   "text": "放射光牆",
+   "src": "Sunray Wall"
+  },
+  {
+   "key": "data.fixture.rwall6_tile.blurb",
+   "text": "奶油色底上的藍綠菱格，隨著牆面往遠處延伸，排得方方正正。一座可以靠著的泳池。",
+   "src": "Teal diamonds on cream, set square to the wall as it runs away from you. A pool you can lean on."
+  },
+  {
+   "key": "data.fixture.rwall6_tile.name",
+   "text": "土耳其藍菱格",
+   "src": "Turquoise Diamonds"
+  },
+  {
+   "key": "data.fixture.shaker_gold.blurb",
+   "text": "拋光的金色，裡面的酒還是一模一樣的酒。反正大家看的也不是酒。",
+   "src": "Polished gold, and the drink inside it is exactly the same drink. That is not what anybody is looking at."
+  },
+  {
+   "key": "data.fixture.shaker_gold.name",
+   "text": "金色雪克杯",
+   "src": "Gold Shaker"
+  },
+  {
+   "key": "data.fixture.shaker_steel.blurb",
+   "text": "店裡原本就有的那支。底部凹了一塊，握在手裡冰冰涼涼，從來沒灑過一杯酒。",
+   "src": "The tin the room came with. Dented at the base, cold in the hand, and it has never lost a drink."
+  },
+  {
+   "key": "data.fixture.shaker_steel.name",
+   "text": "不鏽鋼雪克杯",
+   "src": "Steel Shaker"
+  },
+  {
+   "key": "data.fixture.sink_brass.blurb",
+   "text": "一個能留住霓虹燈光的洗手槽 — 還有一個沒人跟你收錢的排水口。",
+   "src": "A basin that catches the neon and keeps it — and a drain nobody bills you for."
+  },
+  {
+   "key": "data.fixture.sink_brass.name",
+   "text": "黃銅水槽",
+   "src": "Brass Sink"
+  },
+  {
+   "key": "data.fixture.table5_bistro_L.blurb",
+   "text": "方形桌面配兩張曲木椅，是租約附贈的。沒有人會在那裡坐很久。",
+   "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."
+  },
+  {
+   "key": "data.fixture.table5_bistro_L.name",
+   "text": "小酒館桌",
+   "src": "Bistro Table"
+  },
+  {
+   "key": "data.fixture.table5_bistro_R.blurb",
+   "text": "方形桌面配兩張曲木椅，是租約附贈的。沒有人會在那裡坐很久。",
+   "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."
+  },
+  {
+   "key": "data.fixture.table5_bistro_R.name",
+   "text": "小酒館桌",
+   "src": "Bistro Table"
+  },
+  {
+   "key": "data.fixture.table_left_3.blurb",
+   "text": "梅紫色皮面裝在拋光的立柱上。你不攔著，它就會轉。",
+   "src": "Plum vinyl on a polished column. Spins if you let it."
+  },
+  {
+   "key": "data.fixture.table_left_3.name",
+   "text": "鋼製升降椅組",
+   "src": "Steel Gaslift Set"
+  },
+  {
+   "key": "data.fixture.table_right_3.blurb",
+   "text": "梅紫色皮面裝在拋光的立柱上。你不攔著，它就會轉。",
+   "src": "Plum vinyl on a polished column. Spins if you let it."
+  },
+  {
+   "key": "data.fixture.table_right_3.name",
+   "text": "鋼製升降椅組",
+   "src": "Steel Gaslift Set"
+  },
+  {
+   "key": "data.fixture.table_v1_L.blurb",
+   "text": "黃銅支柱上的高圓桌，兩張紅色高腳椅，桌上還擺著一只杯子。客人會想多坐一會兒。",
+   "src": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round."
+  },
+  {
+   "key": "data.fixture.table_v1_L.name",
+   "text": "雞尾酒高腳桌",
+   "src": "Cocktail High-Top"
+  },
+  {
+   "key": "data.fixture.table_v1_R.blurb",
+   "text": "黃銅支柱上的高圓桌，兩張紅色高腳椅，桌上還擺著一只杯子。客人會想多坐一會兒。",
+   "src": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round."
+  },
+  {
+   "key": "data.fixture.table_v1_R.name",
+   "text": "雞尾酒高腳桌",
+   "src": "Cocktail High-Top"
+  },
+  {
+   "key": "data.fixture.table_v2_L.blurb",
+   "text": "鍍鉻底座上的藍綠色桌面，配套的高腳椅，桌上已經擺好酒瓶。客人會指名要坐的位子。",
+   "src": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for."
+  },
+  {
+   "key": "data.fixture.table_v2_L.name",
+   "text": "藍綠立柱桌組",
+   "src": "Teal Pedestal Set"
+  },
+  {
+   "key": "data.fixture.table_v2_R.blurb",
+   "text": "鍍鉻底座上的藍綠色桌面，配套的高腳椅，桌上已經擺好酒瓶。客人會指名要坐的位子。",
+   "src": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for."
+  },
+  {
+   "key": "data.fixture.table_v2_R.name",
+   "text": "藍綠立柱桌組",
+   "src": "Teal Pedestal Set"
+  },
+  {
+   "key": "data.fixture.taps_one.blurb",
+   "text": "一個酒頭，一種拉格。算是起步。",
+   "src": "One line, one lager. A start."
+  },
+  {
+   "key": "data.fixture.taps_one.name",
+   "text": "單頭啤酒塔",
+   "src": "Single Draught Tower"
+  },
+  {
+   "key": "data.fixture.taps_three.blurb",
+   "text": "一根柱子，三個出酒口，誰都不用排隊。",
+   "src": "One column, three spouts, and nothing waiting its turn."
+  },
+  {
+   "key": "data.fixture.taps_three.name",
+   "text": "三頭啤酒塔",
+   "src": "Triple Draught Tower"
+  },
+  {
+   "key": "data.fixture.taps_two.blurb",
+   "text": "兩隻腳撐起的黃銅拱橋，把手在上面排成一列。",
+   "src": "A brass bridge on two legs, handles in a row across it."
+  },
+  {
+   "key": "data.fixture.taps_two.name",
+   "text": "拱形啤酒橋",
+   "src": "Arched Draught Bridge"
+  },
+  {
+   "key": "data.fixture.wall_lamps_one.blurb",
+   "text": "頂端青色、管身粉紅，由鋼製燈架撐著。店裡最便宜、卻最跟得上時代的東西。",
+   "src": "Cyan at the cap, pink down the tube, a steel bracket holding it. The cheapest thing in the room that knows what year it is."
+  },
+  {
+   "key": "data.fixture.wall_lamps_one.name",
+   "text": "玻璃燈管壁燈",
+   "src": "Glass Tube Lamps"
+  },
+  {
+   "key": "data.fixture.wall_lamps_three.blurb",
+   "text": "黃銅棕櫚樹上掛著一顆發光的椰子。沒人需要它，人人都想要它。",
+   "src": "A brass palm with a lit coconut. Nobody needs it. Everybody wants it."
+  },
+  {
+   "key": "data.fixture.wall_lamps_three.name",
+   "text": "棕櫚壁燈",
+   "src": "Palm Lamps"
+  },
+  {
+   "key": "data.fixture.wall_lamps_two.blurb",
+   "text": "珊瑚色框裡的奶油色燈面，寬得像一扇窗。把整面牆打亮，而不是點出幾個光點。",
+   "src": "A cream face in a coral frame, wide as a window. It washes the wall instead of dotting it."
+  },
+  {
+   "key": "data.fixture.wall_lamps_two.name",
+   "text": "夕陽燈板",
+   "src": "Sunset Panels"
+  },
+  {
+   "key": "data.fixture.wall_tv.blurb",
+   "text": "方方正正的電視鎖在卡座上方，播著沒人在看、卻人人都會瞄一眼的廣告。",
+   "src": "A boxy set bolted over the booths, running adverts nobody watches and everybody looks at."
+  },
+  {
+   "key": "data.fixture.wall_tv.name",
+   "text": "壁掛電視",
+   "src": "Wall Television"
+  },
+  {
+   "key": "data.fixture.walls_1.blurb",
+   "text": "上一個房客留下的牆。大致撐得住，裂痕也不再擴大了。",
+   "src": "The wall the last tenant left. It holds, mostly, and the cracks have stopped growing."
+  },
+  {
+   "key": "data.fixture.walls_1.name",
+   "text": "龜裂灰泥",
+   "src": "Cracked Plaster"
+  },
+  {
+   "key": "data.fixture.walls_2.blurb",
+   "text": "抹平後刷成奶油色。裂痕都在底下，沒人需要知道。",
+   "src": "Skimmed flat and painted cream. The cracks are under it, and nobody has to know."
+  },
+  {
+   "key": "data.fixture.walls_2.name",
+   "text": "新抹灰泥",
+   "src": "Fresh Plaster"
+  },
+  {
+   "key": "data.fixture.walls_3.blurb",
+   "text": "整面牆鋪上珊瑚色護牆板，簷口再加一道條紋。這間店不用再覺得不好意思了。",
+   "src": "A coral wainscot along the whole wall and a stripe at the cornice. The room stops apologising."
+  },
+  {
+   "key": "data.fixture.walls_3.name",
+   "text": "護牆板牆面",
+   "src": "Panelled Wall"
+  },
+  {
+   "key": "data.fixture.walls_4.blurb",
+   "text": "粉紅與淡紫的菱格覆在護牆板上。明信片上印的就是這面牆。",
+   "src": "Pink and lilac diamonds over the panelling. The wall the postcards are of."
+  },
+  {
+   "key": "data.fixture.walls_4.name",
+   "text": "菱格壁紙",
+   "src": "Harlequin Paper"
+  },
+  {
+   "key": "data.fixture.walls_right_1.blurb",
+   "text": "上一個房客漆的紫色，受潮的地方已經剝落。有三個地方露出了木板，也沒人問過。",
+   "src": "The last tenant's purple, peeling where the damp got in. The boards show through in three places, and nobody has asked about them."
+  },
+  {
+   "key": "data.fixture.walls_right_1.name",
+   "text": "剝落紫牆",
+   "src": "Peeling Purple"
+  },
+  {
+   "key": "data.fixture.walls_right_2.blurb",
+   "text": "從牆角到門口刷了一層梅紫色。遮住了補丁，除此之外什麼都沒遮。",
+   "src": "One coat of plum from the corner to the door. It hides the patches and nothing else."
+  },
+  {
+   "key": "data.fixture.walls_right_2.name",
+   "text": "梅紫漆面",
+   "src": "Plum Coat"
+  },
+  {
+   "key": "data.fixture.walls_right_3.blurb",
+   "text": "紫色上的深色圓點，還有一排條紋延伸進角落。讓那扇門看起來像是刻意設計的。",
+   "src": "Dark rounds on the purple and a run of stripes into the corner. It makes the door look like somebody meant it."
+  },
+  {
+   "key": "data.fixture.walls_right_3.name",
+   "text": "泡泡壁紙",
+   "src": "Bubble Paper"
+  },
+  {
+   "key": "data.fixture.walls_right_4.blurb",
+   "text": "珊瑚色護牆板上方是奶油色，簷口一道條紋。側牆終於跟明信片對得上了。",
+   "src": "Cream above a coral wainscot, a stripe at the cornice. The side wall finally matches the postcards."
+  },
+  {
+   "key": "data.fixture.walls_right_4.name",
+   "text": "夕陽護牆板",
+   "src": "Sunset Panelling"
+  }
+ ]
+}

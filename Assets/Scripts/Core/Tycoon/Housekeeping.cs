@@ -50,15 +50,20 @@ namespace LastCall.Core
 
         internal void TakeGlass()
         {
-            if (!HasGlass) throw new InvalidOperationException("There is no glass here to collect.");
+            if (!HasGlass)
+                throw Said.With(new InvalidOperationException("There is no glass here to collect."),
+                    Line.Of("rule.no_glass_to_collect"));
             HasGlass = false;
         }
 
         internal void WipeAway()
         {
             if (HasGlass)
-                throw new InvalidOperationException("Collect the glass first — you cannot wipe under it.");
-            if (!Smudged) throw new InvalidOperationException("The counter is clean here.");
+                throw Said.With(new InvalidOperationException("Collect the glass first — you cannot wipe under it."),
+                    Line.Of("rule.wipe_glass_first"));
+            if (!Smudged)
+                throw Said.With(new InvalidOperationException("The counter is clean here."),
+                    Line.Of("rule.counter_clean"));
             Smudged = false;
         }
     }
@@ -248,8 +253,12 @@ namespace LastCall.Core
         /// </summary>
         public double WashGlasses()
         {
-            if (GlassesInHand <= 0) throw new InvalidOperationException("There is nothing in your hands to wash.");
-            if (SinkBusy) throw new InvalidOperationException("The sink is running — wait for it.");
+            if (GlassesInHand <= 0)
+                throw Said.With(new InvalidOperationException("There is nothing in your hands to wash."),
+                    Line.Of("rule.nothing_to_wash"));
+            if (SinkBusy)
+                throw Said.With(new InvalidOperationException("The sink is running — wait for it."),
+                    Line.Of("rule.sink_running"));
             GlassesWashing = GlassesInHand;
             GlassesInHand = 0;
             WashLeft = SinkSeconds;
@@ -265,7 +274,9 @@ namespace LastCall.Core
         /// </summary>
         public double RunTheTap()
         {
-            if (SinkBusy) throw new InvalidOperationException("The sink is running — wait for it.");
+            if (SinkBusy)
+                throw Said.With(new InvalidOperationException("The sink is running — wait for it."),
+                    Line.Of("rule.sink_running"));
             WashLeft = SinkSeconds;
             return WashLeft;
         }
@@ -324,7 +335,8 @@ namespace LastCall.Core
         {
             if (mess == null) throw new ArgumentNullException(nameof(mess));
             if (!_messes.Contains(mess))
-                throw new InvalidOperationException("That is not on this counter.");
+                throw Said.With(new InvalidOperationException("That is not on this counter."),
+                    Line.Of("rule.not_on_counter"));
             return mess;
         }
 

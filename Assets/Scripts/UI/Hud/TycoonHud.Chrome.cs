@@ -118,7 +118,8 @@ namespace LastCall.UI
         {
             if (recipe == null) return;
             if (!_perfectNews.Contains(recipe.Id)) _perfectNews.Add(recipe.Id);
-            Toast("PERFECT POUR · " + recipe.Name.ToUpperInvariant() + " — IN THE BOOK NOW",
+            Toast(UIText.T("chrome.toast.perfect_pour",
+                    ("recipe", UIText.Caps(UIText.Data("recipe", recipe.Id, "name", recipe.Name)))),
                 BkPlatinum, 3.4f);
             Sfx.Play("cheer_sfx", 0.5f);
             RefreshBookBadge();
@@ -371,7 +372,7 @@ namespace LastCall.UI
             Stretch(_cellarCardMark.rectTransform, Vector2.zero, Vector2.one, new Vector2(22f, 0f), Vector2.zero);
             _cellarCardMark.horizontalOverflow = HorizontalWrapMode.Overflow;
             _cellarCardMark.raycastTarget = false;
-            _cellarCardMark.text = "NEVER SHAKEN · BUILT AT THE GLASS";
+            _cellarCardMark.text = UIText.T("chrome.cellar.never_shaken");
 
             _cellarCardGroup = _cellarCard.gameObject.AddComponent<CanvasGroup>();
             _cellarCardGroup.alpha = 0f;
@@ -407,7 +408,7 @@ namespace LastCall.UI
             name.rectTransform.sizeDelta = new Vector2(300f, 0f);
             name.horizontalOverflow = HorizontalWrapMode.Overflow;
             name.raycastTarget = false;
-            name.text = r.Name.ToUpperInvariant();
+            name.text = UIText.Caps(UIText.Data("recipe", r.Id, "name", r.Name));
             name.rectTransform.sizeDelta = new Vector2(name.preferredWidth, 0f);   // its ink, not a guess
             float w = CardDrinkIcon + 8f + name.preferredWidth;
             row.sizeDelta = new Vector2(w, CardDrinkIcon);
@@ -508,17 +509,22 @@ namespace LastCall.UI
             SizeCardSlot(new Vector2(Mathf.Clamp(over.rect.width, 32f, 120f),
                                      Mathf.Clamp(over.rect.height, 32f, 120f)));
             LiftProp(over, true);
-            string title = card != null ? card.Name : (prop.Prep != null ? prop.Prep.Name : prop.Id.Replace('_', ' '));
-            _cellarCardName.text = title.ToUpperInvariant();
-            _cellarCardMeta.text = prop.IsRim ? "RIM  ·  " + word : (prop.Id == "ice" ? "ICE  ·  " + word : "GARNISH  ·  " + word);
+            string title = card != null ? UIText.Data("bottle", card.Id, "name", card.Name)
+                : (prop.Prep != null ? UIText.T(prop.Prep.NameLine) : prop.Id.Replace('_', ' '));
+            _cellarCardName.text = UIText.Caps(title);
+            _cellarCardMeta.text = prop.IsRim ? UIText.T("chrome.garnish.meta_rim", ("word", word))
+                : (prop.Id == "ice" ? UIText.T("chrome.garnish.meta_ice", ("word", word))
+                : UIText.T("chrome.garnish.meta_garnish", ("word", word)));
             int price = card != null ? Market.StockPrice(card) : 0;
-            _cellarCardPrice.text = card != null ? price + " A BOX" : "ON THE HOUSE";
+            _cellarCardPrice.text = card != null ? UIText.T("chrome.cellar.price_box", ("price", price))
+                : UIText.T("chrome.cellar.on_the_house");
             bool showStock = bottle != null;
             if (showStock)
             {
                 float frac = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
                 bool low = bottle.Remaining <= bottle.Capacity * 0.15;
-                _cellarCardStock.text = (low ? "ALMOST OUT  ·  " : "") + $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
+                _cellarCardStock.text = UIText.T(low ? "chrome.cellar.stock_low" : "chrome.cellar.stock",
+                    ("left", $"{bottle.Remaining:0.0}"), ("capacity", $"{bottle.Capacity:0}"));
                 _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
                 SetCardStockFill(frac, low ? UITheme.ViceRed[3] : UITheme.Lime[3]);
             }
@@ -584,8 +590,7 @@ namespace LastCall.UI
                     cImg.preserveAspect = true;
                     cImg.raycastTarget = false;
                 }
-                tell = prop.Id == "sugar_rim"
-                    ? "TURN THE GLASS IN THE DISH" : "TURN THE GLASS IN THE DISH";
+                tell = UIText.T("chrome.garnish.tell_rim");
             }
             else
             {
@@ -594,7 +599,7 @@ namespace LastCall.UI
                 img.preserveAspect = true;
                 img.raycastTarget = false;
                 img.enabled = img.sprite != null;
-                tell = prop.Id == "ice" ? "DROP IT IN BEFORE THE POUR" : "ON THE RIM OR IN THE DRINK";
+                tell = prop.Id == "ice" ? UIText.T("chrome.garnish.tell_ice") : UIText.T("chrome.garnish.tell_garnish");
             }
 
             var word = NewText("Tell", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
@@ -1220,7 +1225,9 @@ namespace LastCall.UI
             var card = _cellarCards[index];
             var run = Run;
             var bottle = run?.Shelf.Find(card.Id);
-            string style = (card.Info?.Style ?? card.Type.ToString()).Replace('_', ' ').ToUpperInvariant();
+            string style = UIText.Caps((card.Info?.Style != null
+                ? UIText.Data("bottle", card.Id, "style", card.Info.Style)
+                : card.Type.ToString()).Replace('_', ' '));
             int tier = bottle != null ? bottle.Tier : (card.Info?.Tier ?? 1);
             int price = Market.StockPrice(card);
             ClearCardUses();
@@ -1249,8 +1256,8 @@ namespace LastCall.UI
                 _cellarCardDish.enabled = _cellarCardDish.sprite != null;
             }
 
-            _cellarCardName.text = card.Name.ToUpperInvariant();
-            _cellarCardMeta.text = $"{style}  ·  TIER {tier}";
+            _cellarCardName.text = UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name));
+            _cellarCardMeta.text = UIText.T("chrome.cellar.meta", ("style", style), ("tier", tier));
             // THE RUNG'S STARS IN THE BOX (the author: "alkolün yıldız seviyesi de kutunun
             // içerisinde yer almalı"): the same star gate the market shows for it.
             double rung = RungOf(card);
@@ -1258,13 +1265,14 @@ namespace LastCall.UI
                 _cellarCardStars = StarRow(_cellarCardBody, new Vector2(0f, 1f), Vector2.zero, 16f,
                     rung, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.22f));
             if (_cellarCardStars != null) _cellarCardStars.pivot = new Vector2(0f, 1f);
-            _cellarCardPrice.text = price + " A BOTTLE";
+            _cellarCardPrice.text = UIText.T("chrome.cellar.price_bottle", ("price", price));
             bool showStock = bottle != null;
             if (showStock)
             {
                 float frac = bottle.Capacity > 0 ? (float)(bottle.Remaining / bottle.Capacity) : 0f;
                 bool low = bottle.Remaining <= bottle.Capacity * 0.15;
-                _cellarCardStock.text = (low ? "ALMOST OUT  ·  " : "") + $"{bottle.Remaining:0.0} OF {bottle.Capacity:0} LEFT";
+                _cellarCardStock.text = UIText.T(low ? "chrome.cellar.stock_low" : "chrome.cellar.stock",
+                    ("left", $"{bottle.Remaining:0.0}"), ("capacity", $"{bottle.Capacity:0}"));
                 _cellarCardStock.color = low ? UITheme.ViceRed[3] : UITheme.Cream[3];
                 SetCardStockFill(frac, low ? UITheme.ViceRed[3] : UITheme.LiquidColor(card.Info?.Style, card.Type));
             }
@@ -1282,8 +1290,8 @@ namespace LastCall.UI
                     usesW = Mathf.Max(usesW, CardUseLine(r, rows * (CardDrinkIcon + 2f)));
                     rows++;
                 }
-            _cellarCardUsesHead.text = rows == 0 ? "IN NO HOUSE DRINK YET"
-                : more > 0 ? $"IN THE BOOK  ·  AND {more} MORE" : "IN THE BOOK";
+            _cellarCardUsesHead.text = rows == 0 ? UIText.T("chrome.cellar.uses_none")
+                : more > 0 ? UIText.N("chrome.cellar.uses_more", more) : UIText.T("chrome.cellar.uses");
 
             bool fizzy = card.Type == IngredientType.Bubbly;
             LayOutCellarCard(rows, usesW, fizzy, showStock);
@@ -1323,13 +1331,19 @@ namespace LastCall.UI
         {
             switch (group)
             {
-                case "whiskey": return "WHISKY";
-                case "soda": return "SODA & TONIC";
-                case "syrup": return "SYRUPS";
-                case "juice": return "JUICES";
-                case "liqueur": return "LIQUEURS";
-                case "mixer": return "MIXERS";
-                default: return group.ToUpperInvariant();
+                case "whiskey": return UIText.T("chrome.cellar.group.whiskey");
+                case "soda": return UIText.T("chrome.cellar.group.soda");
+                case "syrup": return UIText.T("chrome.cellar.group.syrup");
+                case "juice": return UIText.T("chrome.cellar.group.juice");
+                case "liqueur": return UIText.T("chrome.cellar.group.liqueur");
+                case "mixer": return UIText.T("chrome.cellar.group.mixer");
+                case "gin": return UIText.T("chrome.cellar.group.gin");
+                case "vodka": return UIText.T("chrome.cellar.group.vodka");
+                case "rum": return UIText.T("chrome.cellar.group.rum");
+                case "tequila": return UIText.T("chrome.cellar.group.tequila");
+                case "bitters": return UIText.T("chrome.cellar.group.bitters");
+                case "sour": return UIText.T("chrome.cellar.group.sour");
+                default: return UIText.Caps(group);   // a category the data added that has no word yet
             }
         }
 
@@ -1503,10 +1517,9 @@ namespace LastCall.UI
                 foreach (var s in slots)
                     if (s.Id == f.Slot) { slot = s; break; }
             string where = slot != null && slot.Place != null ? slot.Place
-                         : slot != null && slot.OnCounter ? "The counter" : "The back wall";
-            return where + (slot != null && slot.PairSpreadPx > 0f
-                ? " · both of them, one fitting"
-                : " · fitted over the mark below");
+                         : slot != null && slot.OnCounter ? UIText.T("chrome.rung.counter") : UIText.T("chrome.rung.back_wall");
+            return UIText.T(slot != null && slot.PairSpreadPx > 0f
+                ? "chrome.rung.place_pair" : "chrome.rung.place_over", ("place", where));
         }
 
         private void WatchGlassRack()
@@ -1722,7 +1735,7 @@ namespace LastCall.UI
             // The night's well (2026-09-07): the count and the name, in place of the week.
             if (_dayLabel != null) _dayLabel.text = $"{run.Day:00}";
             if (_nightLabel != null)
-                _nightLabel.text = BarCalendar.Name(BarCalendar.NightOf(run.Day)).ToUpperInvariant();
+                _nightLabel.text = UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(run.Day))));
 
             // THE BEAM IS THE STATE LIGHT (2026-08-14; it now answers to two states, not
             // one). A 2px rule under one plaque was never going to be seen, and the board
@@ -1755,9 +1768,9 @@ namespace LastCall.UI
             // The caption line over the standing carries the crowd — and gives way to LAST
             // CALL when the room is being called, because at that point what is in front of
             // the bar matters more than who it is.
-            _crowdText.text = last ? "LAST CALL"
-                : run.CrowdToday == WealthTier.HighRoller ? "HIGH ROLLERS"
-                : run.CrowdToday == WealthTier.Broke ? "BROKE CROWD" : "REGULARS";
+            _crowdText.text = last ? UIText.T("chrome.crowd.last_call")
+                : run.CrowdToday == WealthTier.HighRoller ? UIText.T("chrome.crowd.high_rollers")
+                : run.CrowdToday == WealthTier.Broke ? UIText.T("chrome.crowd.broke") : UIText.T("chrome.crowd.regulars");
             _crowdText.color = last ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];
@@ -1786,10 +1799,10 @@ namespace LastCall.UI
             var done = run.TakeJobJustDone();
             if (done != null)
             {
-                Toast($"{done.Who} PAYS UP · +${done.Reward}", UITheme.Lime[3], 3.2f,
-                      ChromeArt.Mark("cash"));
+                Toast(UIText.T("chrome.toast.job_paid", ("who", done.Who), ("reward", done.Reward)),
+                      UITheme.Lime[3], 3.2f, ChromeArt.Mark("cash"));
                 Sfx.Play("cash", 0.9f);
-                LogService($"<color=#6FCC4B>{done.Who}'S JOB</color> done · +${done.Reward}");
+                LogService(UIText.T("chrome.log.job_done", ("who", done.Who), ("reward", done.Reward)));
             }
         }
 
@@ -1842,15 +1855,12 @@ namespace LastCall.UI
             // ve kaçta kaç olduğu yazmalı"). What is asked, as a fraction of the week —
             // "2/5" — beside the giver's name, and the plate behind the row is cut to the
             // line so the notice is a THING on the screen rather than words over the room.
-            string what;
-            switch (job.Kind)
-            {
-                case JobKind.Perfect: what = "PERFECT POURS"; break;
-                case JobKind.Clean: what = "CLEAN NIGHTS"; break;
-                default: what = (job.RecipeName ?? "").ToUpperInvariant(); break;
-            }
+            // The job's own line: "PERFECT POURS" / "CLEAN NIGHTS", or the drink's data name,
+            // which reads as the data file writes it and so is set in capitals here.
+            string what = UIText.Caps(UIText.T(job.RecipeNameLine));
             _jobStrip.text = job.IsDone
-                ? $"<color=#6FCC4B>{job.Who} · {job.Target}/{job.Target} · DONE · +${job.Reward}</color>"
+                ? "<color=#6FCC4B>" + UIText.T("chrome.job.done", ("who", job.Who), ("target", job.Target),
+                                               ("reward", job.Reward)) + "</color>"
                 : $"<color=#E84DA6>{job.Who}</color> · <color=#F2E8D5>{job.Served}/{job.Target}</color> · {what}";
             if (_jobPlate != null)
             {
@@ -1889,8 +1899,8 @@ namespace LastCall.UI
         private void BuildServiceLog(RectTransform root)
         {
             // The key stays put under the fascia; only the sheet below it comes and goes.
-            NewButton(root, "LOG", new Vector2(0, 1), new Vector2(44, 20),
-                new Vector2(10, -66), UITheme.Night[2], ToggleServiceLog);
+            NewButton(root, UIText.T("chrome.log.key"), new Vector2(0, 1), new Vector2(44, 20),
+                new Vector2(10, -66), UITheme.Night[2], ToggleServiceLog).name = "LOG";   // the name stays English
 
             // THE WEEK'S JOB, BESIDE THE LOG KEY (2026-09-04, the author: "bu görev oyun
             // içerisinde LOG'un olduğu yerde çok yer kaplamamalı"). One line, 8px, on the
@@ -1976,21 +1986,28 @@ namespace LastCall.UI
         /// <summary>The judge's verdict, said as one log line with its reasons.</summary>
         private void LogVerdict(CustomerVisit visit, ServiceVerdict verdict)
         {
-            string ordered = visit.IdInspected ? visit.Order.Wanted.Name.ToUpperInvariant() : "?";
-            string made = visit.Served != null ? visit.Served.Name.ToUpperInvariant() : "NOTHING NAMED";
+            string ordered = visit.IdInspected
+                ? UIText.Caps(UIText.Data("recipe", visit.Order.Wanted.Id, "name", visit.Order.Wanted.Name)) : "?";
+            string made = visit.Served != null
+                ? UIText.Caps(UIText.Data("recipe", visit.Served.Id, "name", visit.Served.Name))
+                : UIText.T("chrome.log.nothing_named");
             string col = verdict.Match == OrderMatch.Exact ? "8CE28C"
                 : verdict.Match == OrderMatch.Close ? "F5C97B" : "F27D8A";
             var why = new List<string>();
-            if (verdict.Match == OrderMatch.Wrong) why.Add($"made {made}");
+            if (verdict.Match == OrderMatch.Wrong) why.Add(UIText.T("chrome.log.why_made", ("drink", made)));
             // A Close line names its own reason or it is a mystery (2026-08-14). The grade is
             // "their drink, out of tolerance", and the glass usually matches no recipe at all,
             // so `made` would read NOTHING NAMED and the reasons list would come back empty —
             // a serve that paid less than the last one with nothing on the line to say why.
-            if (verdict.Match == OrderMatch.Close) why.Add("measures off");
-            if (verdict.SpecScore < 0.999) why.Add($"spec {verdict.SpecScore:P0}");
-            if (verdict.FillScore < 0.999) why.Add($"fill {verdict.FillScore:P0}");
+            if (verdict.Match == OrderMatch.Close) why.Add(UIText.T("chrome.log.why_measures"));
+            if (verdict.SpecScore < 0.999) why.Add(UIText.T("chrome.log.why_spec", ("pct", $"{verdict.SpecScore:P0}")));
+            if (verdict.FillScore < 0.999) why.Add(UIText.T("chrome.log.why_fill", ("pct", $"{verdict.FillScore:P0}")));
             string reasons = why.Count > 0 ? "  <color=#9C8F80>(" + string.Join(", ", why) + ")</color>" : "";
-            LogService($"<color=#{col}>{verdict.Match.ToString().ToUpperInvariant()}</color> {ordered}" +
+            string match = verdict.Match == OrderMatch.Exact ? UIText.T("chrome.log.match_exact")
+                : verdict.Match == OrderMatch.Close ? UIText.T("chrome.log.match_close")
+                : verdict.Match == OrderMatch.Wrong ? UIText.T("chrome.log.match_wrong")
+                : UIText.Caps(verdict.Match.ToString());
+            LogService($"<color=#{col}>{match}</color> {ordered}" +
                        $" · ${verdict.BasePaid}+${verdict.Tip} · {LogStars(verdict.Satisfaction)}{reasons}");
         }
 
@@ -2003,8 +2020,9 @@ namespace LastCall.UI
             if (show) RefreshSettings();
         }
 
-        // The menu's plate and its margins, in one place.
-        private const float SetPlateW = 520f, SetPlateH = 404f, SetInset = 24f, SetRowH = 40f;
+        // The menu's plate and its margins, in one place. 444 tall since the LANGUAGE row
+        // (2026-09-14): one row, 40 more; the foot keys keep their corners.
+        private const float SetPlateW = 520f, SetPlateH = 444f, SetInset = 24f, SetRowH = 40f;
 
         /// <summary>
         /// A MENU, NOT A LIST (2026-09-06, the author: "ayarlar menüsü tekrardan tasarlansın
@@ -2059,19 +2077,19 @@ namespace LastCall.UI
             Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 20), new Vector2(SetInset + 28f, 0));
             title.rectTransform.pivot = new Vector2(0, 0.5f);
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.text = "SETTINGS";
+            title.text = UIText.T("chrome.settings.title");
             Hairline(band, new Vector2(0, 0), new Vector2(1, 0), UITheme.Amber[3]);
 
             float y = -62f;
 
             // ── AUDIO ────────────────────────────────────────────────────────────
-            SettingsCaption(plate, "AUDIO", ref y);
-            var vol = SettingsLine(plate, "VOLUME", null, ref y);
+            SettingsCaption(plate, "AUDIO", UIText.T("chrome.settings.audio"), ref y);
+            var vol = SettingsLine(plate, "VOLUME", UIText.T("chrome.settings.volume"), null, ref y);
             // The volume is a meter with a key at each end: five blocks, a fifth apiece.
             // (It used to be one key that CYCLED 20% at a press — six presses to turn it
             // down a notch, and nothing on it said which way it was going.)
             const float VolKeyW = 36f, VolCell = 16f;
-            SettingsKey(vol, VolKeyW, 0f, "+", UITheme.Night[3], () =>
+            SettingsKey(vol, "+", VolKeyW, 0f, "+", UITheme.Night[3], () =>
             {
                 Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume + 0.2f) * 5f) / 5f);
                 Sfx.Play("click");
@@ -2087,7 +2105,7 @@ namespace LastCall.UI
                 _settingsMeter[i] = cell.gameObject.AddComponent<Image>();
                 _settingsMeter[i].raycastTarget = false;
             }
-            SettingsKey(vol, VolKeyW, VolKeyW + 8f + 5f * VolCell + 8f, "-", UITheme.Night[3], () =>
+            SettingsKey(vol, "-", VolKeyW, VolKeyW + 8f + 5f * VolCell + 8f, "-", UITheme.Night[3], () =>
             {
                 Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume - 0.2f) * 5f) / 5f);
                 Sfx.Play("click");
@@ -2099,8 +2117,8 @@ namespace LastCall.UI
             _settingsVolume.rectTransform.pivot = new Vector2(1, 0.5f);
             _settingsVolume.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            var snd = SettingsLine(plate, "SOUND", null, ref y);
-            _settingsMute = SettingsKey(snd, 96f, 0f, "ON", UITheme.Night[3], () =>
+            var snd = SettingsLine(plate, "SOUND", UIText.T("chrome.settings.sound"), null, ref y);
+            _settingsMute = SettingsKey(snd, "ON", 96f, 0f, UIText.T("chrome.settings.on"), UITheme.Night[3], () =>
             {
                 Sound.Muted = !Sound.Muted;
                 Sfx.Play("click");              // audible iff it just came back on — itself the test
@@ -2109,14 +2127,33 @@ namespace LastCall.UI
 
             // ── DISPLAY ──────────────────────────────────────────────────────────
             y -= 10f;
-            SettingsCaption(plate, "DISPLAY", ref y);
-            var mot = SettingsLine(plate, "MOTION", "REDUCED: NO SLIDES, NO FLOATS, NO FADES", ref y);
-            _settingsMotion = SettingsKey(mot, 96f, 0f, "FULL", UITheme.Night[3], () =>
+            SettingsCaption(plate, "DISPLAY", UIText.T("chrome.settings.display"), ref y);
+            var mot = SettingsLine(plate, "MOTION", UIText.T("chrome.settings.motion"),
+                UIText.T("chrome.settings.motion_note"), ref y);
+            _settingsMotion = SettingsKey(mot, "FULL", 96f, 0f, UIText.T("chrome.settings.full"), UITheme.Night[3], () =>
             {
                 Motion.Reduced = !Motion.Reduced;
                 Sfx.Play("click");
                 RefreshSettings();
             });
+
+            // LANGUAGE (2026-09-14, localization L4): the language's own name between a key at
+            // each end, the way the volume sits between - and +. Every language is named in itself
+            // (Deutsch, 日本語), so a player stranded in a language they cannot read still finds
+            // theirs. The pick is REMEMBERED, not switched to — the HUD is built once, in one
+            // language — and the note under the label says so, in the picked language.
+            var lang = SettingsLine(plate, "LANGUAGE", UIText.T("chrome.settings.language"), "", ref y);
+            const float LangKeyW = 36f, LangNameW = 150f;
+            SettingsKey(lang, "NEXT", LangKeyW, 0f, "▶", UITheme.Night[3], () => StepLanguage(+1));
+            _settingsLanguage = NewText("Name", lang, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Place(_settingsLanguage.rectTransform, new Vector2(1, 0.5f), new Vector2(LangNameW, 20f),
+                new Vector2(-(LangKeyW + 4f), 0));
+            _settingsLanguage.rectTransform.pivot = new Vector2(1, 0.5f);
+            _settingsLanguage.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _settingsLanguage.raycastTarget = false;
+            SettingsKey(lang, "PREV", LangKeyW, LangKeyW + LangNameW + 8f, "◀", UITheme.Night[3], () => StepLanguage(-1));
+            var langNote = lang.Find("Note");
+            _settingsLanguageNote = langNote != null ? langNote.GetComponent<Text>() : null;
 
             // ── THE RUN ──────────────────────────────────────────────────────────
             // THE BOOK LOST ITS DOOR WITH THE TILL (2026-08-26, the author: "kasa ve parayı
@@ -2125,28 +2162,38 @@ namespace LastCall.UI
             // NEW RUN LIVES HERE TOO (2026-08-14, the author: "new run yazısını ayarların
             // içine taşı"): a thing that throws the night away belongs behind a door.
             y -= 10f;
-            SettingsCaption(plate, "THE RUN", ref y);
-            var book = SettingsLine(plate, "TONIGHT'S BOOK", "EVERY LINE THE TILL HAS TAKEN", ref y);
-            SettingsKey(book, 96f, 0f, "OPEN", UITheme.Night[3], () => { ToggleSettings(); ToggleLedger(); });
-            var fresh = SettingsLine(plate, "START OVER", "DAY 1, AN EMPTY BAR — THIS NIGHT IS LOST", ref y);
-            SettingsKey(fresh, 96f, 0f, "NEW RUN", UITheme.Brick[2], () =>
+            SettingsCaption(plate, "THE RUN", UIText.T("chrome.settings.the_run"), ref y);
+            var book = SettingsLine(plate, "TONIGHT'S BOOK", UIText.T("chrome.settings.book"),
+                UIText.T("chrome.settings.book_note"), ref y);
+            SettingsKey(book, "OPEN", 96f, 0f, UIText.T("chrome.settings.open"), UITheme.Night[3],
+                () => { ToggleSettings(); ToggleLedger(); });
+            var fresh = SettingsLine(plate, "START OVER", UIText.T("chrome.settings.start_over"),
+                UIText.T("chrome.settings.start_over_note"), ref y);
+            SettingsKey(fresh, "NEW RUN", 96f, 0f, UIText.T("chrome.settings.new_run"), UITheme.Brick[2], () =>
             { _bootstrap.StartNewRun(null); ToggleSettings(); });
 
             // The foot: the developer's door at one corner, the way out at the other.
             // THE WORKBENCH IS NOT A SETTING (2026-08-14, the author: "ayarlarla dev toolu
             // ayır"); it keeps one small key here, for now, because the author asked for one.
+            // NOT IN A PLAYER'S BUILD (2026-09-13, localization L1): the bench is the author's
+            // own Turkish tool and is never translated, so a release build has no door to it.
+            // The key is placed on its own corner, so nothing else on the plate moves without it.
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             NewButton(plate, "DEV TOOLS", new Vector2(0, 0), new Vector2(110, 26),
                 new Vector2(SetInset, 16), UITheme.Night[2], () => { ToggleSettings(); ToggleDevBench(); });
-            NewButton(plate, "CLOSE", new Vector2(1, 0), new Vector2(120, 32),
-                new Vector2(-SetInset, 14), UITheme.PrimaryAction, ToggleSettings);
+#endif
+            NewButton(plate, UIText.T("common.close"), new Vector2(1, 0), new Vector2(120, 32),
+                new Vector2(-SetInset, 14), UITheme.PrimaryAction, ToggleSettings).name = "CLOSE";
 
             _settingsPanel.gameObject.SetActive(false);
         }
 
         /// <summary>A group's caption: small amber caps over its rows.</summary>
-        private void SettingsCaption(RectTransform plate, string text, ref float y)
+        /// <param name="id">The English word, for the GameObject's name only (it stays the same in
+        /// every language); <paramref name="text"/> is what is shown.</param>
+        private void SettingsCaption(RectTransform plate, string id, string text, ref float y)
         {
-            var t = NewText("G_" + text, plate, _body, 8, TextAnchor.LowerLeft, UITheme.Amber[3]);
+            var t = NewText("G_" + id, plate, _body, 8, TextAnchor.LowerLeft, UITheme.Amber[3]);
             Place(t.rectTransform, new Vector2(0, 1), new Vector2(300, 16), new Vector2(SetInset, y));
             t.rectTransform.pivot = new Vector2(0, 1);
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -2157,9 +2204,9 @@ namespace LastCall.UI
         /// <summary>One setting's row: its name (and a note under it, if it needs one) on
         /// the left, a hairline under the row; the control is added by the caller at the
         /// right edge.</summary>
-        private RectTransform SettingsLine(RectTransform plate, string name, string note, ref float y)
+        private RectTransform SettingsLine(RectTransform plate, string id, string name, string note, ref float y)
         {
-            var row = NewRect("R_" + name, plate);
+            var row = NewRect("R_" + id, plate);   // the English id: the name is the same in every language
             Place(row, new Vector2(0, 1), new Vector2(SetPlateW - SetInset * 2f, SetRowH), new Vector2(SetInset, y));
             row.pivot = new Vector2(0, 1);
             Hairline(row, new Vector2(0, 0), new Vector2(1, 0), new Color(1f, 1f, 1f, 0.07f));
@@ -2184,12 +2231,15 @@ namespace LastCall.UI
 
         /// <summary>A row's control: the house key, right-aligned, its word returned so the
         /// refresh can rewrite it (ON / OFF, FULL / REDUCED).</summary>
-        private Text SettingsKey(RectTransform row, float w, float rightInset, string label, Color fill, Action onClick)
+        private Text SettingsKey(RectTransform row, string id, float w, float rightInset, string label, Color fill, Action onClick)
         {
             // The helper names the rect after its label and WRITES the label, so the word
             // goes in bare (a "K_" prefix here printed itself on every key, photographed).
+            // The rect is then renamed to the English id, so the hierarchy reads the same in
+            // every language while the label is the player's.
             var key = NewButton(row, label, new Vector2(1, 0.5f), new Vector2(w, 28f),
                 new Vector2(-rightInset, 0), fill, onClick);
+            key.name = id;
             return key.GetComponentInChildren<Text>();
         }
 
@@ -2213,6 +2263,10 @@ namespace LastCall.UI
 
         private void BuildDevBench(RectTransform root)
         {
+            // A PLAYER'S BUILD HAS NO BENCH (2026-09-13, localization L1): it is the author's
+            // own tool, in Turkish, and never translated. Unbuilt, _devPanel stays null and every
+            // reader of it (Escape, ToggleDevBench, RefreshDevBench) already asks for that.
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             _devPanel = NewRect("DevBench", root);
             Place(_devPanel, new Vector2(0.5f, 0.5f), new Vector2(1180, 640), new Vector2(0, 6));
             var canvas = _devPanel.gameObject.AddComponent<Canvas>();
@@ -2301,6 +2355,7 @@ namespace LastCall.UI
             NewButton(_devPanel, "KAPAT", new Vector2(0, 0), new Vector2(300, 32),
                 new Vector2(20, 12), UITheme.Cyan[3], () => ToggleDevBench());
             _devPanel.gameObject.SetActive(false);
+#endif
         }
 
         /// <summary>The rail's pitch: one slot per heading, two per key (the key and its
@@ -2493,7 +2548,7 @@ namespace LastCall.UI
             {
                 ToggleDevBench();
                 Toast("NOTHING WRITTEN AHEAD — LAST WAS "
-                      + BarCalendar.Label(Run.Story.DueDay).ToUpperInvariant());
+                      + UIText.Caps(UIText.T(BarCalendar.LabelLine(Run.Story.DueDay))));
                 return;
             }
             // The REAL clock and the REAL verb, the same bargain DevSkipToDayEnd strikes:
@@ -2653,14 +2708,51 @@ namespace LastCall.UI
         private void RefreshSettings()
         {
             if (_settingsVolume == null) return;
-            _settingsVolume.text = Mathf.RoundToInt(Sound.Volume * 100) + "%";
+            _settingsVolume.text = UIText.T("chrome.settings.volume_value", ("pct", Mathf.RoundToInt(Sound.Volume * 100)));
             if (_settingsMeter != null)
                 for (int i = 0; i < _settingsMeter.Length; i++)
                     if (_settingsMeter[i] != null)
                         _settingsMeter[i].color = !Sound.Muted && Sound.Volume + 1e-3f >= (i + 1) / 5f
                             ? UITheme.Amber[4] : UITheme.Night[3];
-            _settingsMute.text = Sound.Muted ? "OFF" : "ON";
-            _settingsMotion.text = Motion.Reduced ? "REDUCED" : "FULL";
+            _settingsMute.text = Sound.Muted ? UIText.T("chrome.settings.off") : UIText.T("chrome.settings.on");
+            _settingsMotion.text = Motion.Reduced ? UIText.T("chrome.settings.reduced") : UIText.T("chrome.settings.full");
+            if (_settingsLanguage != null)
+            {
+                string pick = Localization.PreferredCode();
+                var info = Languages.Find(pick);
+                _settingsLanguage.text = info != null ? info.Name : pick;
+                // The note is said in the language just PICKED, not the one on screen: a player who
+                // chose Deutsch reads, in German, that it comes at the next start — the proof it took.
+                if (_settingsLanguageNote != null)
+                {
+                    if (pick == Localization.Current.Code) _settingsLanguageNote.text = "";
+                    else
+                    {
+                        if (_languageNoteCode != pick)
+                        {
+                            _languageNoteCode = pick;
+                            _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note");
+                        }
+                        _settingsLanguageNote.text = _languageNoteText;
+                    }
+                }
+            }
+        }
+
+        /// <summary>One press of the LANGUAGE row's ◀ or ▶: the next language this build has a table
+        /// for, remembered for the next start (<see cref="Localization.Choose"/>).</summary>
+        private void StepLanguage(int step)
+        {
+            var all = Localization.Available;
+            if (all.Count == 0) return;
+            string pick = Localization.PreferredCode();
+            int at = 0;
+            for (int i = 0; i < all.Count; i++)
+                if (all[i].Code == pick) { at = i; break; }
+            at = ((at + step) % all.Count + all.Count) % all.Count;
+            Localization.Choose(all[at].Code);
+            Sfx.Play("click");
+            RefreshSettings();
         }
 
         /// <summary>Leader dots so the bill columns line up in the monospace pixel font.</summary>
@@ -2681,7 +2773,7 @@ namespace LastCall.UI
         // (2026-08-13): the story schedules its guests by the weekend, so the week became a
         // RULE, and a calendar the HUD kept to itself would be a second one, free to disagree
         // with the game about what day it is. The words are unchanged.
-        private static string CalendarFor(int day) => BarCalendar.Label(day);
+        private static string CalendarFor(int day) => UIText.T(BarCalendar.LabelLine(day));
 
         /// <summary>
         /// Lights the marquee from the run: which week it is, which night is being played,
@@ -2845,17 +2937,17 @@ namespace LastCall.UI
                 var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
                 if (part == "ask")
                 {
-                    foreach (var line in beat.Lines.HostBefore) Add(host, line);
-                    foreach (var line in beat.Lines.Ask) Add(beat.Who, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "host_before", beat.Lines.HostBefore)) Add(host, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "ask", beat.Lines.Ask)) Add(beat.Who, line);
                 }
                 else if (part == "short")
                 {
                     // The guest explains, and the house has the last word — which is where the
                     // system gets taught, because the host is the one who can say what a star
                     // is and how you get another one.
-                    foreach (var line in beat.Lines.HostBefore) Add(host, line);
-                    foreach (var line in beat.Lines.ShortOfGate) Add(beat.Who, line);
-                    foreach (var line in beat.Lines.HostAfter) Add(host, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "host_before", beat.Lines.HostBefore)) Add(host, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "short_of_gate", beat.Lines.ShortOfGate)) Add(beat.Who, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "host_after", beat.Lines.HostAfter)) Add(host, line);
                 }
                 else if (part == "kept" || part == "missed")
                 {
@@ -2863,12 +2955,12 @@ namespace LastCall.UI
                     // answered by the wrong-drink line, an honest no by the declined line,
                     // and a clock that simply ran out by the nudge — because the beat never
                     // wrote a line for being ignored, and the nudge is what it has.
-                    var said = part == "kept" ? beat.Lines.ServedRight
-                        : trial.ToldNo ? beat.Lines.Declined
-                        : trial.Mistakes > 0 ? beat.Lines.ServedWrong
-                        : beat.Lines.Nudge;
-                    foreach (var line in said) Add(beat.Who, line);
-                    foreach (var line in beat.Lines.HostAfter) Add(host, line);
+                    var (saidField, said) = part == "kept" ? ("served_right", beat.Lines.ServedRight)
+                        : trial.ToldNo ? ("declined", beat.Lines.Declined)
+                        : trial.Mistakes > 0 ? ("served_wrong", beat.Lines.ServedWrong)
+                        : ("nudge", beat.Lines.Nudge);
+                    foreach (var line in UIText.DataLines("story", beat.Id, saidField, said)) Add(beat.Who, line);
+                    foreach (var line in UIText.DataLines("story", beat.Id, "host_after", beat.Lines.HostAfter)) Add(host, line);
                 }
             }
 
@@ -2877,14 +2969,14 @@ namespace LastCall.UI
             if (talking)
             {
                 var (who, look, line) = _plateScript[_plateAt];
-                _plateName.text = who.ToUpperInvariant();
-                _plateLine.text = line;
+                _plateName.text = UIText.Caps(who);
+                _plateLine.text = line;   // already in the player's language: UIText.DataLines built the script
                 var face = LookNamed(look);
                 _plateFace.sprite = face?.Face;
                 _plateFace.enabled = _plateFace.sprite != null;
                 bool last = _plateAt == _plateScript.Count - 1;
-                _plateKeyLabel.text = part == "ask" && last ? "POUR IT"
-                    : part == "short" && last ? "GOOD NIGHT" : "GO ON";
+                _plateKeyLabel.text = part == "ask" && last ? UIText.T("chrome.story.pour_it")
+                    : part == "short" && last ? UIText.T("chrome.story.good_night") : UIText.T("chrome.story.go_on");
                 // Nothing to decline on a night nothing was asked for.
                 _plateNoKey.gameObject.SetActive(part == "ask");
             }
@@ -2899,7 +2991,7 @@ namespace LastCall.UI
                 double need = beat.RequiresStars, now = run.Rating.Average;
                 _gateFill.sizeDelta = new Vector2((float)(need / BarRating.MaxStars)
                                                   * BarRating.MaxStars * 18f, 0);
-                _gateText.text = $"COMES BACK AT {need:0.0} STARS  ·  YOU HAVE {now:0.0}";
+                _gateText.text = UIText.T("chrome.story.gate", ("need", $"{need:0.0}"), ("now", $"{now:0.0}"));
             }
 
             bool working = trial != null && trial.State == TrialState.Pouring;
@@ -2907,19 +2999,20 @@ namespace LastCall.UI
             if (working)
             {
                 var ask = trial.Current;
-                _postWho.text = beat.Who.Name.ToUpperInvariant();
-                _postAsk.text = ask != null ? ask.Name.ToUpperInvariant() : "";
-                _postCount.text = $"{trial.Done + 1} OF {trial.Total}"
-                                  + (trial.Trial.AllowedMistakes > 0
-                                      ? $"  ·  {Math.Max(0, trial.Trial.AllowedMistakes - trial.Mistakes)} SPARE"
-                                      : "  ·  NO MISTAKES");
+                _postWho.text = UIText.Caps(beat.Who.Name);
+                _postAsk.text = ask != null ? UIText.Caps(UIText.Data("recipe", ask.Id, "name", ask.Name)) : "";
+                _postCount.text = trial.Trial.AllowedMistakes > 0
+                    ? UIText.N("chrome.story.count_spare",
+                               Math.Max(0, trial.Trial.AllowedMistakes - trial.Mistakes),
+                               ("at", trial.Done + 1), ("total", trial.Total))
+                    : UIText.T("chrome.story.count_strict", ("at", trial.Done + 1), ("total", trial.Total));
                 var guest = run.LastCustomer;
                 _postClock.fillAmount = guest == null || guest.PatienceMax <= 0
                     ? 0f : Mathf.Clamp01((float)(guest.PatienceLeft / guest.PatienceMax));
                 _postClock.color = _postClock.fillAmount < 0.25f ? UITheme.ViceRed[3] : UITheme.Magenta[4];
                 var lacking = ask != null ? MissingStyles(ask) : null;
                 _postMissing.text = lacking != null && lacking.Count > 0
-                    ? "NO " + string.Join(", ", lacking).ToUpperInvariant() + " ON THE SHELF" : "";
+                    ? UIText.T("chrome.story.missing", ("styles", UIText.Caps(string.Join(", ", lacking)))) : "";
             }
 
             void Add(StoryCharacter speaker, string line)
@@ -2946,7 +3039,7 @@ namespace LastCall.UI
                 _plateScript.Clear();
                 var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
                 if (host != null)
-                    foreach (var line in lesson.Say)
+                    foreach (var line in UIText.DataLines("lesson", lesson.Id, "say", lesson.Say))
                         if (!string.IsNullOrEmpty(line))
                             _plateScript.Add((host.Name, LookForStory(host)?.Slug, line));
                 // A story with no host has nobody to say it: the moment is spent silently
@@ -2958,12 +3051,13 @@ namespace LastCall.UI
             if (talking)
             {
                 var (who, look, line) = _plateScript[_plateAt];
-                _plateName.text = who.ToUpperInvariant();
-                _plateLine.text = line;
+                _plateName.text = UIText.Caps(who);
+                _plateLine.text = line;   // already in the player's language: UIText.DataLines built the script
                 var face = LookNamed(look);
                 _plateFace.sprite = face?.Face;
                 _plateFace.enabled = _plateFace.sprite != null;
-                _plateKeyLabel.text = _plateAt == _plateScript.Count - 1 ? "GOT IT" : "GO ON";
+                _plateKeyLabel.text = _plateAt == _plateScript.Count - 1
+                    ? UIText.T("chrome.story.got_it") : UIText.T("chrome.story.go_on");
                 if (_plateNoKey.gameObject.activeSelf) _plateNoKey.gameObject.SetActive(false);
             }
             if (_gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
@@ -2999,7 +3093,7 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || run.LastCustomer == null) return;
             run.DeclineLastCall();
-            Toast("YOU TOLD THEM NO — THEY WILL BE BACK");
+            Toast(UIText.T("chrome.toast.said_no"));
         }
 
         /// <summary>The register's book of past days (GDD 24 §7, 2026-07-22): a scrollable
@@ -3015,14 +3109,14 @@ namespace LastCall.UI
 
             var title = NewText("Title", _ledgerPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Stretch(title.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -44), new Vector2(0, -10));
-            title.text = "THE REGISTER — DAYS SO FAR";
+            title.text = UIText.T("chrome.ledger.title");
 
             // Column header, then the rows on cream stock beneath it. The header names the
             // TOP line of each entry; every entry now carries a second and third line under
             // it, which no fixed column head could describe.
             var header = NewText("Header", _ledgerPanel, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(header.rectTransform, new Vector2(0, 1), new Vector2(504, 20), new Vector2(28, -52));
-            header.text = "DAY        TOOK        PAID OUT         NET        TILL";
+            header.text = UIText.T("chrome.ledger.header");
 
             var sheet = NewRect("Sheet", _ledgerPanel);
             Place(sheet, new Vector2(0.5f, 1), new Vector2(508, 424), new Vector2(0, -76));
@@ -3038,8 +3132,8 @@ namespace LastCall.UI
             layout.childForceExpandWidth = true;
             layout.childAlignment = TextAnchor.UpperLeft;
 
-            NewButton(_ledgerPanel, "CLOSE", new Vector2(0.5f, 0),
-                new Vector2(200, 38), new Vector2(0, 18), UITheme.PrimaryAction, () => ToggleLedger());
+            NewButton(_ledgerPanel, UIText.T("common.close"), new Vector2(0.5f, 0),
+                new Vector2(200, 38), new Vector2(0, 18), UITheme.PrimaryAction, () => ToggleLedger()).name = "CLOSE";
 
             _ledgerPanel.gameObject.SetActive(false);
         }
@@ -3064,7 +3158,7 @@ namespace LastCall.UI
             {
                 var empty = NewText("Empty", _ledgerRows, _body, 14, TextAnchor.UpperLeft, UITheme.Night[1]);
                 empty.rectTransform.sizeDelta = new Vector2(0, 28);
-                empty.text = "No days yet. Close a night first.";
+                empty.text = UIText.T("chrome.ledger.empty");
                 return;
             }
 
@@ -3088,7 +3182,8 @@ namespace LastCall.UI
                 string net = red ? $"-${-d.Net}" : $"+${d.Net}";
                 string till = d.HasDetail
                     ? (d.TillAfter < 0 ? $"-${-d.TillAfter}" : $"${d.TillAfter}") : "";
-                head.text = $"DAY {d.Day,-3}   ${d.Income,-7} ${d.Expenses,-8} {net,-8} {till}";
+                head.text = UIText.T("chrome.ledger.row_head", ("day", $"{d.Day,-3}"), ("income", $"{d.Income,-7}"),
+                    ("expenses", $"{d.Expenses,-8}"), ("net", $"{net,-8}"), ("till", till));
 
                 if (!d.HasDetail)
                 {
@@ -3097,22 +3192,25 @@ namespace LastCall.UI
                     var bare = NewText($"Day{d.Day}Bare", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
                         UITheme.Cream[1]);
                     bare.rectTransform.sizeDelta = new Vector2(0, 16);
-                    bare.text = $"        {MoodLabel(d.AverageSatisfaction)} night · no breakdown kept";
+                    bare.text = "        " + UIText.T("chrome.ledger.row_bare", ("mood", MoodLabel(d.AverageSatisfaction)));
                     Spacer(12);
                     continue;
                 }
 
+                // Each figure is its own item and the list is joined here: " · " between items,
+                // the dash between what came in and what went out. Amounts go in pre-formatted.
                 var money = NewText($"Day{d.Day}Money", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
                     UITheme.Cream[1]);
                 money.rectTransform.sizeDelta = new Vector2(0, 16);
                 money.supportRichText = true;
                 var outgoings = new List<string>();
-                if (d.Rent > 0) outgoings.Add($"rent ${d.Rent}");
-                if (d.Stock > 0) outgoings.Add($"stock ${d.Stock}");
-                if (d.Upgrades > 0) outgoings.Add($"fittings ${d.Upgrades}");
-                if (d.Fines > 0) outgoings.Add($"fines ${d.Fines}");           // the law (GDD 28 §7)
-                money.text = $"        drinks ${d.Sales} · tips ${d.Tips}"
-                           + (d.Bonus > 0 ? $" · thanks ${d.Bonus}" : "")
+                if (d.Rent > 0) outgoings.Add(UIText.T("chrome.ledger.rent", ("amount", $"{d.Rent}")));
+                if (d.Stock > 0) outgoings.Add(UIText.T("chrome.ledger.stock", ("amount", $"{d.Stock}")));
+                if (d.Upgrades > 0) outgoings.Add(UIText.T("chrome.ledger.fittings", ("amount", $"{d.Upgrades}")));
+                if (d.Fines > 0) outgoings.Add(UIText.T("chrome.ledger.fines", ("amount", $"{d.Fines}")));   // the law (GDD 28 §7)
+                money.text = "        " + UIText.T("chrome.ledger.drinks", ("amount", $"{d.Sales}"))
+                           + " · " + UIText.T("chrome.ledger.tips", ("amount", $"{d.Tips}"))
+                           + (d.Bonus > 0 ? " · " + UIText.T("chrome.ledger.thanks", ("amount", $"{d.Bonus}")) : "")
                            + (outgoings.Count > 0 ? "   —   " + string.Join(" · ", outgoings) : "");
 
                 var room = NewText($"Day{d.Day}Room", _ledgerRows, _body, 8, TextAnchor.UpperLeft,
@@ -3120,11 +3218,11 @@ namespace LastCall.UI
                 room.rectTransform.sizeDelta = new Vector2(0, 16);
                 room.supportRichText = true;
                 string walked = d.WalkedOut > 0
-                    ? $" · {d.WalkedOut} left without one" : " · nobody left thirsty";
-                room.text = $"        {d.Served} served{walked}"
-                          + (d.RightKicks > 0 ? $" · {d.RightKicks} shown the door" : "")
-                          + $" · {d.NightStars:0.0} stars on the night"
-                          + $" · {MoodLabel(d.AverageSatisfaction)}";
+                    ? UIText.N("chrome.ledger.walked_out", d.WalkedOut) : UIText.T("chrome.ledger.nobody_walked");
+                room.text = "        " + UIText.N("chrome.ledger.served", d.Served) + " · " + walked
+                          + (d.RightKicks > 0 ? " · " + UIText.N("chrome.ledger.kicked", d.RightKicks) : "")
+                          + " · " + UIText.T("chrome.ledger.night_stars", ("stars", $"{d.NightStars:0.0}"))
+                          + " · " + MoodLabel(d.AverageSatisfaction);
 
                 Spacer(12);
             }
@@ -3139,9 +3237,9 @@ namespace LastCall.UI
         }
 
         private static string MoodLabel(double satisfaction) =>
-            satisfaction >= DayLedger.HighRollerBar ? "GREAT"
-            : satisfaction >= DayLedger.BrokeBar ? "OK"
-            : "SOUR";
+            satisfaction >= DayLedger.HighRollerBar ? UIText.T("chrome.mood.great")
+            : satisfaction >= DayLedger.BrokeBar ? UIText.T("chrome.mood.ok")
+            : UIText.T("chrome.mood.sour");
 
         // ── the state language, in one place ─────────────────────────────────────
         // Seven answers, seven rows. Keeping them as switches beside each other is what

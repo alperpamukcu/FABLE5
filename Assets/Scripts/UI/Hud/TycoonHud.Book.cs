@@ -162,7 +162,7 @@ namespace LastCall.UI
                                UITheme.Amber[4]);
             Stretch((RectTransform)line.transform, Vector2.zero, Vector2.one,
                     Vector2.zero, Vector2.zero);
-            line.text = "OPEN THE MENU";
+            line.text = UIText.T("book.prop.open_menu");
             line.raycastTarget = false;
             _bookLabelGroup = _bookLabel.gameObject.AddComponent<CanvasGroup>();
             _bookLabelGroup.alpha = 0f;
@@ -719,7 +719,7 @@ namespace LastCall.UI
             var name = NewText("House", print, _display, 24, TextAnchor.MiddleCenter, inkHead);
             Place(name.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 60f),
                 new Vector2(0, 168f));
-            name.text = "LAST CALL";
+            name.text = "MALIBU CLUB";   // the house's own name, a brand: never translated
 
             var rule = NewRect("Rule", print);
             Place(rule, new Vector2(0.5f, 0.5f), new Vector2(BkColW - 96f, 2f), new Vector2(0, 132f));
@@ -731,7 +731,7 @@ namespace LastCall.UI
                 new Color(0.11f, 0.37f, 0.40f));
             Place(sub2.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
                 new Vector2(0, 108f));
-            sub2.text = "HOUSE MENU";
+            sub2.text = UIText.T("book.title.house_menu");
 
             // The house's own drink, drawn for this page (2026-08-25, the author:
             // "kendin güzel bir kokteyl görseli oluştur") — generated at 64 art px by
@@ -749,12 +749,12 @@ namespace LastCall.UI
             var word = NewText("Word", print, _body, 16, TextAnchor.MiddleCenter, quiet);
             Place(word.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
                 new Vector2(0, -64f));
-            word.text = "POURS · PAGES · PROVENANCE";
+            word.text = UIText.T("book.title.tagline");
 
             var hint = NewText("Hint", print, _body, 16, TextAnchor.MiddleCenter, quiet);
             Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 24f),
                 new Vector2(0, -262f));
-            hint.text = "THE CONTENTS FACE THIS PAGE";
+            hint.text = UIText.T("book.title.contents_hint");
 
             // THE OPEN TAB (GDD 26 §5, PLAN_last_call S5): between visits the ask stands,
             // and the book is where it is written down — a guest who sat and was not served,
@@ -769,7 +769,7 @@ namespace LastCall.UI
                     new Color(0.42f, 0.46f, 0.55f));
                 Place(tabHead.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 12f),
                     new Vector2(0, top));
-                tabHead.text = "OPEN TAB";
+                tabHead.text = UIText.T("book.title.open_tab");
                 var tabRow = NewRect("Tab", print);
                 tabRow.anchorMin = tabRow.anchorMax = new Vector2(0.5f, 0.5f);
                 tabRow.pivot = new Vector2(0.5f, 1f);
@@ -795,8 +795,7 @@ namespace LastCall.UI
                 new Color(0.42f, 0.46f, 0.55f));
             Place(newsHead.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(BkColW, 12f),
                 new Vector2(0, top));
-            newsHead.text = _perfectNews.Count == 1
-                ? "NEW · A PERFECT RECIPE" : "NEW · " + _perfectNews.Count + " PERFECT RECIPES";
+            newsHead.text = UIText.N("book.title.news_head", _perfectNews.Count);
 
             float ny = 0f;
             for (int i = 0; i < _perfectNews.Count && i < 3; i++)
@@ -839,7 +838,7 @@ namespace LastCall.UI
                     Vector2.zero);
                 nm.rectTransform.pivot = new Vector2(0, 0.5f);
                 nm.rectTransform.anchoredPosition = new Vector2(8f, 0);
-                nm.text = pg.Recipe.Name.ToUpperInvariant().Replace(" & ", " AND ");
+                nm.text = UIText.Caps(RecipeTitle(pg.Recipe)).Replace(" & ", UIText.T("book.index.ampersand"));
                 var fo = NewText("P", row, _body, 16, TextAnchor.MiddleRight,
                     new Color(0.16f, 0.18f, 0.24f));
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(44f, 22f),
@@ -858,14 +857,16 @@ namespace LastCall.UI
             var story = run?.Story;
             var beat = story?.Current;
             if (beat == null) return null;
-            string night = BarCalendar.Name(beat.Night).ToUpperInvariant();
+            // The weekday is the calendar's own line; the guest's name is a person's and is
+            // never translated.
+            string night = UIText.Caps(UIText.T(BarCalendar.NameLine(beat.Night)));
             if (story.CurrentAsked)
-                return beat.Who.Name.ToUpperInvariant() + " WANTS " + beat.Drink.Name.ToUpperInvariant()
-                       + " · " + night;
+                return UIText.T("book.tab.wants", ("who", UIText.Caps(beat.Who.Name)),
+                    ("drink", UIText.Caps(RecipeTitle(beat.Drink))), ("night", night));
             if (beat.NeedStyle != null
                 && BarCalendar.WeekOf(story.DueDay) <= BarCalendar.WeekOf(run.Day) + 1)
-                return "GET " + beat.NeedStyle.ToUpperInvariant() + " IN · "
-                       + beat.Who.Name.ToUpperInvariant() + " COMES " + night;
+                return UIText.T("book.tab.get_style", ("style", UIText.Caps(beat.NeedStyle)),
+                    ("who", UIText.Caps(beat.Who.Name)), ("night", night));
             return null;
         }
 
@@ -883,7 +884,7 @@ namespace LastCall.UI
             head.rectTransform.pivot = new Vector2(0.5f, 1f);
             head.rectTransform.sizeDelta = new Vector2(BkColW, 54f);
             head.rectTransform.anchoredPosition = new Vector2(0, -12f);
-            head.text = "CONTENTS";
+            head.text = UIText.T("book.contents.head");
 
             // The search line (the author: "Contents'in üstünde arama kutusu olacak").
             var box = NewRect("Search", print);
@@ -903,7 +904,7 @@ namespace LastCall.UI
             st.supportRichText = false;
             var ph = NewText("P", box, _body, 16, TextAnchor.MiddleLeft, new Color(0.5f, 0.42f, 0.32f));
             Stretch(ph.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 2), new Vector2(-8, -2));
-            ph.text = "SEARCH THE BOOK…";
+            ph.text = UIText.T("book.contents.search_placeholder");
             var input = box.gameObject.AddComponent<InputField>();
             input.targetGraphic = bg;
             input.textComponent = st;
@@ -972,7 +973,7 @@ namespace LastCall.UI
                 // recipe's own page prints the true name in the display face, which
                 // draws the glyph properly; this line is the index, and an index that
                 // cannot be read is not one.
-                nm.text = pg.Recipe.Name.ToUpperInvariant().Replace(" & ", " AND ");
+                nm.text = UIText.Caps(RecipeTitle(pg.Recipe)).Replace(" & ", UIText.T("book.index.ampersand"));
                 if (pg.Locked)
                 {
                     // THE INDEX SAYS HOW FAR, NOT JUST THAT IT IS SHUT (2026-08-25). A
@@ -993,7 +994,7 @@ namespace LastCall.UI
                             new Color(0.66f, 0.12f, 0.16f));
                         Place(lk.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
                             new Vector2(-46f, 0));
-                        lk.text = "LOCKED";
+                        lk.text = UIText.T("book.index.locked");
                     }
                 }
                 // PERFECTED, SAID IN THE INDEX (2026-09-08, the author: "perfect tarifler
@@ -1007,7 +1008,7 @@ namespace LastCall.UI
                     var pf = NewText("PF", row, _body, 8, TextAnchor.MiddleRight, BkPlatinumInk);
                     Place(pf.rectTransform, new Vector2(1, 0.5f), new Vector2(60f, 22f),
                         new Vector2(-46f, 0));
-                    pf.text = "PERFECT";
+                    pf.text = UIText.T("book.index.perfect");
                     var pmark = NewRect("PerfectMark", row);
                     pmark.anchorMin = pmark.anchorMax = new Vector2(1f, 0.5f);
                     pmark.pivot = new Vector2(1f, 0.5f);
@@ -1031,7 +1032,8 @@ namespace LastCall.UI
                 {
                     var pg = _bookPages[p];
                     if (pg.Kind != BookPageKind.Recipe) continue;
-                    if (pg.Recipe.Name.IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
+                    // The name the player reads is the name the player types.
+                    if (RecipeTitle(pg.Recipe).IndexOf(q, StringComparison.OrdinalIgnoreCase) < 0) continue;
                     if (hits >= 15) break;
                     RecipeLine(pg, p);
                     hits++;
@@ -1042,7 +1044,7 @@ namespace LastCall.UI
                     Place(none.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 24f),
                         new Vector2(0, -8f));
                     none.rectTransform.pivot = new Vector2(0.5f, 1f);
-                    none.text = "NOTHING BY THAT NAME";
+                    none.text = UIText.T("book.contents.no_hits");
                 }
                 return;
             }
@@ -1052,7 +1054,7 @@ namespace LastCall.UI
                 var back = TocRow(body, y, 24f, () => { _bookTocChapter = null; BuildTocBody(body); });
                 var bt = NewText("T", back, _body, 16, TextAnchor.MiddleLeft, quiet);
                 Stretch(bt.rectTransform, Vector2.zero, Vector2.one, new Vector2(8, 0), new Vector2(-4, 0));
-                bt.text = "< ALL CHAPTERS";
+                bt.text = UIText.T("book.contents.all_chapters");
                 y += 30f;
                 for (int p = 0; p < _bookPages.Count; p++)
                 {
@@ -1086,9 +1088,11 @@ namespace LastCall.UI
                 // THE CHAPTER SAYS HOW MANY ARE MASTERED (2026-09-08, the author: "perfect
                 // tarifler içindekiler kısmında belirtilmeli"): the count beside the locks,
                 // so the index reads progress in both directions at a glance.
-                meta.text = ch.Count + " POURS"
-                    + (ch.PerfectCount > 0 ? " · " + ch.PerfectCount + " PERFECT" : "")
-                    + (ch.LockedCount > 0 ? " · " + ch.LockedCount + " LOCKED" : "");
+                // A tally, not a sentence: each count is its own counted line and the
+                // separator between them is the book's own dot.
+                meta.text = UIText.N("book.contents.chapter_pours", ch.Count)
+                    + (ch.PerfectCount > 0 ? " · " + UIText.N("book.contents.chapter_perfect", ch.PerfectCount) : "")
+                    + (ch.LockedCount > 0 ? " · " + UIText.N("book.contents.chapter_locked", ch.LockedCount) : "");
                 y += 78f;
             }
 
@@ -1098,7 +1102,7 @@ namespace LastCall.UI
             Place(note.rectTransform, new Vector2(0.5f, 1f), new Vector2(BkColW, 44f),
                 new Vector2(0, -(y + 12f)));
             note.rectTransform.pivot = new Vector2(0.5f, 1f);
-            note.text = "A CHAPTER OPENS ITS OWN LIST HERE";
+            note.text = UIText.T("book.contents.chapter_note");
         }
 
         /// <summary>One recipe, one page — the cookbook layout (2026-08-24). Top to
@@ -1159,7 +1163,9 @@ namespace LastCall.UI
             // the 296-unit column — so it wrapped onto the title and printed RECIPE across the
             // drink's name. The chapter keeps the line, the rosette stands before it, and the
             // line cannot wrap whatever a chapter is called.
-            eyebrow.text = page.Chapter + (page.Locked ? " · LOCKED" : "");
+            eyebrow.text = page.Locked
+                ? UIText.T("book.page.chapter_locked", ("chapter", page.Chapter))
+                : page.Chapter;
             eyebrow.horizontalOverflow = HorizontalWrapMode.Overflow;
             if (perfected) eyebrow.color = BkPlatinumInk;
             if (perfected)
@@ -1182,7 +1188,7 @@ namespace LastCall.UI
             head.rectTransform.pivot = new Vector2(0.5f, 1f);
             head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);
             head.rectTransform.anchoredPosition = new Vector2(0, -40f);
-            head.text = r.Name.ToUpperInvariant();
+            head.text = UIText.Caps(RecipeTitle(r));
             // THE TITLE FITS ITS COLUMN (2026-09-09). A perfected page sets the name in the
             // heavy face at 24, and a long one — SEX ON THE BEACH, TEQUILA SUNRISE — is wider
             // than the column, so it wrapped into the line under it. Measured, and stepped
@@ -1202,9 +1208,7 @@ namespace LastCall.UI
             way.rectTransform.pivot = new Vector2(0.5f, 1f);
             way.rectTransform.sizeDelta = new Vector2(BkColW, 22f);
             way.rectTransform.anchoredPosition = new Vector2(0, -y);
-            string glassWord = string.IsNullOrEmpty(r.GlassId)
-                ? "HIGHBALL" : r.GlassId.Replace('_', ' ').ToUpperInvariant();
-            way.text = PrepWord(r) + " · " + glassWord + " GLASS";
+            way.text = WayLine(r);
             y += 24f;
             // HOW HARD IT IS, on every page, bought or not (2026-09-13, the author:
             // "kokteyllere zorluk seviyesi ekleyelim").
@@ -1241,7 +1245,7 @@ namespace LastCall.UI
             priceCap.rectTransform.sizeDelta = new Vector2(120f, 12f);
             priceCap.rectTransform.anchoredPosition = new Vector2(8f, -(y + 46f));
             priceCap.raycastTarget = false;
-            priceCap.text = "ON THE TAB";
+            priceCap.text = UIText.T("book.page.on_the_tab");
             y += 84f;
 
             // WHAT GOES IN IT IS SEALED ON A PAGE NOT BOUGHT (2026-09-13, the author: "satın
@@ -1259,7 +1263,7 @@ namespace LastCall.UI
             cap.rectTransform.pivot = new Vector2(0.5f, 1f);
             cap.rectTransform.sizeDelta = new Vector2(BkColW, 22f);   // 16pt needs 20 (measured)
             cap.rectTransform.anchoredPosition = new Vector2(0, -y);
-            cap.text = "THE POUR · ONE DOT IS A FIFTH";
+            cap.text = UIText.T("book.page.pour_legend");
             y += 22f;
             // The legend is the SAME five dots the rows use, so nothing has to be learned
             // twice: all five lit, with the share each one stands for written under it.
@@ -1384,7 +1388,7 @@ namespace LastCall.UI
                 label.rectTransform.pivot = new Vector2(0, 1);
                 label.rectTransform.anchoredPosition = new Vector2(textX, -1f);
                 label.raycastTarget = false;
-                label.text = spec.Label + (spec.MinTier > 1 ? $"  T{spec.MinTier}+" : "");
+                label.text = SpecLabel(spec);
 
                 // A BOTTLE THE BAR CANNOT POUR SAYS SO (the author: "açık olmayan
                 // alkoller kilitli gözükür") — under its own name, on its own line,
@@ -1404,7 +1408,7 @@ namespace LastCall.UI
                     lockT.verticalOverflow = VerticalWrapMode.Truncate;
                     lockT.raycastTarget = false;
                     // Short, because the dots share this line now (2026-09-07).
-                    lockT.text = "LOCKED";
+                    lockT.text = UIText.T("book.page.bottle_locked");
                 }
 
                 if (spec.Amount.Length > 0)
@@ -1425,7 +1429,7 @@ namespace LastCall.UI
                         new Vector2(-4f, -21f));
                     tag.rectTransform.pivot = new Vector2(1, 1);
                     tag.raycastTarget = false;
-                    tag.text = "PERFECT";
+                    tag.text = UIText.T("book.page.perfect_tag");
                 }
                 else if (spec.Box >= 0)
                 {
@@ -1456,7 +1460,7 @@ namespace LastCall.UI
                 sealedT.rectTransform.anchoredPosition = new Vector2(0, -(y + 6f));
                 sealedT.horizontalOverflow = HorizontalWrapMode.Wrap;
                 sealedT.raycastTarget = false;
-                sealedT.text = "WHAT GOES IN IT IS SEALED\nBUY THE PAGE TO READ IT";
+                sealedT.text = UIText.T("book.page.sealed");
                 y += 52f;
             }
 
@@ -1467,7 +1471,7 @@ namespace LastCall.UI
                 fillLine.rectTransform.pivot = new Vector2(0.5f, 1f);
                 fillLine.rectTransform.sizeDelta = new Vector2(BkColW, 20f);
                 fillLine.rectTransform.anchoredPosition = new Vector2(0, -y);
-                fillLine.text = $"FILL {r.MinFill * 100:0}%+ OF THE GLASS";
+                fillLine.text = UIText.T("book.page.fill", ("pct", (r.MinFill * 100).ToString("0")));
                 y += 22f;
             }
 
@@ -1479,7 +1483,7 @@ namespace LastCall.UI
                 best.rectTransform.pivot = new Vector2(0.5f, 1f);
                 best.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
                 best.rectTransform.anchoredPosition = new Vector2(0, -y);
-                best.text = $"YOUR BEST MAKE · {bestMake.Accuracy * 100:0}%";
+                best.text = UIText.T("book.page.your_best", ("pct", (bestMake.Accuracy * 100).ToString("0")));
                 y += 16f;
             }
 
@@ -1535,17 +1539,19 @@ namespace LastCall.UI
                         n.horizontalOverflow = HorizontalWrapMode.Overflow;
                         n.text = stars.ToString("0.0");
                     }
-                    GateLine("OPENS AT", wants, 5f, UITheme.Amber[3], goneInk);
-                    GateLine("YOU HAVE", run.Rating.Average, 25f,
+                    GateLine(UIText.T("book.gate.opens_at"), wants, 5f, UITheme.Amber[3], goneInk);
+                    GateLine(UIText.T("book.gate.you_have"), run.Rating.Average, 25f,
                         new Color(0.60f, 0.52f, 0.40f), quiet);
                 }
                 else
                 {
                     var gt = NewText("T", gate, _body, 16, TextAnchor.MiddleCenter, goneInk);
                     Stretch(gt.rectTransform, Vector2.zero, Vector2.one, new Vector2(6, 2), new Vector2(-6, -2));
+                    // The condition is the lock's own line (already in capitals, a guest's name
+                    // included); the frame around it is the page's.
                     gt.text = gateLock != null && !string.IsNullOrEmpty(gateLock.Sentence)
-                        ? "OPENS: " + gateLock.Sentence
-                        : "NOT ON THE HOUSE LIST YET";
+                        ? UIText.T("book.gate.opens", ("sentence", UIText.T(gateLock.SentenceLine)))
+                        : UIText.T("book.gate.not_listed");
                 }
             }
 
@@ -1573,7 +1579,7 @@ namespace LastCall.UI
                 note.rectTransform.anchoredPosition = new Vector2(0, 66f);
                 note.horizontalOverflow = HorizontalWrapMode.Wrap;
                 note.verticalOverflow = VerticalWrapMode.Truncate;
-                note.text = lore.Note;
+                note.text = UIText.Data("recipe", r.Id, "lore", lore.Note);
 
                 var facts = NewText("Facts", print, _body, 8, TextAnchor.MiddleCenter, quiet);
                 facts.rectTransform.anchorMin = facts.rectTransform.anchorMax = new Vector2(0.5f, 0f);
@@ -1582,7 +1588,7 @@ namespace LastCall.UI
                 // it prints as struck-through provenance (seen in play, 2026-08-24).
                 facts.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
                 facts.rectTransform.anchoredPosition = new Vector2(0, 50f);
-                facts.text = lore.Origin + " · $" + DrinkOrder.MenuPrice(r);
+                facts.text = UIText.Data("recipe", r.Id, "origin", lore.Origin) + " · $" + DrinkOrder.MenuPrice(r);
             }
 
             if (perfected)

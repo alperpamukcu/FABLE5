@@ -2954,7 +2954,7 @@ namespace LastCall.UI
                     // A beer font is the door onto the draught station, and the sink is the
                     // door onto the drain, so both answer the pointer.
                     if (def.IsTap)
-                        BuildPropDoor(def, sr, () => _onTapClicked?.Invoke(), "PULL A PINT");
+                        BuildPropDoor(def, sr, () => _onTapClicked?.Invoke(), UIText.T("stage.door.tap"));
                     // THE DRAIN TAKES NO CLICK (2026-08-26). Its plate is here for two
                     // other jobs: the carried glass tests its release against it, and the
                     // pointer is told what the basin is for. A click as well would be a
@@ -2967,7 +2967,7 @@ namespace LastCall.UI
                         // Pouring a drink away is still only by carry. The water it runs
                         // is a frame sheet of its own, over the basin (BuildWater).
                         _drainDoor = BuildPropDoor(def, sr, () => _onSinkClicked?.Invoke(),
-                                                   "POUR IT AWAY · WASH UP");
+                                                   UIText.T("stage.door.sink"));
                         BuildWater(def, sr);
                     }
                 }

@@ -24,6 +24,13 @@ namespace LastCall.Core
             Description = description ?? string.Empty;
         }
 
+        /// <summary><see cref="Name"/> as a string-table line (localization L1):
+        /// <c>prep.&lt;id&gt;.name</c>. Only the built-in set in <see cref="Preparations"/> has one.</summary>
+        public Line NameLine => Line.Of("prep." + Id + ".name");
+
+        /// <summary><see cref="Description"/> as a string-table line: <c>prep.&lt;id&gt;.description</c>.</summary>
+        public Line DescriptionLine => Line.Of("prep." + Id + ".description");
+
         public override string ToString() => Name;
     }
 

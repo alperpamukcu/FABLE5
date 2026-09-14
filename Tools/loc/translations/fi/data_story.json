@@ -1,0 +1,23 @@
+{"strings": [
+{"key": "data.lesson.cannot_pour.say.0", "text": "Meillä ei ole sitä, mitä viikonloppu haluaa. Vielä.", "src": "We do not have what the weekend wants. Yet."},
+{"key": "data.lesson.cannot_pour.say.1", "text": "Kauppa aukeaa, kun ovi menee kiinni. Mene korjaamaan hylly.", "src": "The market opens when the door shuts. Go and fix the shelf."},
+{"key": "data.lesson.first_keg.say.0", "text": "Olut ei ole cocktail. Kallista lasia, sitten oikaise.", "src": "Beer is not a cocktail. Lean the glass, then straighten it."},
+{"key": "data.lesson.first_keg.say.1", "text": "Vaahto on koko homma.", "src": "The head is the whole job."},
+{"key": "data.lesson.first_licence.say.0", "text": "Klikkaa jakkaraa, älä juomaa.", "src": "Click the stool, not the drink."},
+{"key": "data.lesson.first_licence.say.1", "text": "Kukaan ei kerro, mitä haluaa, ennen kuin kysyt.", "src": "Nobody tells you what they want until you ask."},
+{"key": "data.lesson.first_market.say.0", "text": "Minkä jätimme tänään hankkimatta, sitä joku kysyy huomenna.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."},
+{"key": "data.lesson.first_market.say.1", "text": "Osta kapeasti. Leveä hylly uudessa baarissa on vain paikallaan seisovaa rahaa.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
+{"key": "data.lesson.first_night.say.0", "text": "Kuusi pulloa ja tynnyri. Teknisesti se on baari.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.1", "text": "Lue heidät ennen kuin kaadat — kortti kertoo, mitä varten he tulivat.", "src": "Read them before you pour — the licence says what they came for."},
+{"key": "data.lesson.red_night.say.0", "text": "Kassa jäi vuokran alle. Niin käy jokaiselle salille kerran.", "src": "The till is under the rent. It happens to every room once."},
+{"key": "data.lesson.red_night.say.1", "text": "Kahdesti on tapa. Kolmesti se on jo eri baari, jonka ovessa on sinun nimesi.", "src": "Twice is a habit. Three times is a different bar with your name on it."},
+{"key": "data.lesson.two_spirits.say.0", "text": "Kaksi väkevää samassa shakerissa ei muutu drinkiksi itsestään.", "src": "Two spirits in one tin do not become a drink on their own."},
+{"key": "data.lesson.two_spirits.say.1", "text": "Ravista tai sekoita. Kirja kertoo kumpi.", "src": "Shake it or stir it. The book says which."},
+{"key": "data.story.ece_1.ask.0", "text": "Ovi on kiinni. Kaada minulle jotain siitä, mitä meillä oikeasti on.", "src": "Door is shut. Pour me one of whatever we actually have."},
+{"key": "data.story.ece_1.ask.1", "text": "Omistajan ensimmäinen ilta. Se on jossain sääntönä.", "src": "Owner's first night. It is a rule somewhere."},
+{"key": "data.story.ece_1.declined.0", "text": "Kieltäydyt baarimikolta. Rohkeaa.", "src": "You are turning down the bartender. Bold."},
+{"key": "data.story.ece_1.nudge.0", "text": "Mitä tahansa siltä hyllyltä. En minä ole se hankala tyyppi.", "src": "Anything on that shelf. I am not the difficult one."},
+{"key": "data.story.ece_1.served_right.0", "text": "Ei hullumpi salille, jota ei viime viikolla ollut olemassakaan.", "src": "Not bad for a room that did not exist last week."},
+{"key": "data.story.ece_1.served_right.1", "text": "Minun jälkeeni tulevat laskevat sekuntejasi. Minä en.", "src": "The ones who come after me will count your seconds. I do not."},
+{"key": "data.story.ece_1.served_wrong.0", "text": "Tuota en pyytänyt, ja minä olen se helppo tapaus.", "src": "That is not what I asked for, and I am the easy one."}
+]}

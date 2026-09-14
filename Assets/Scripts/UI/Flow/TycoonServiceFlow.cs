@@ -728,7 +728,7 @@ namespace LastCall.UI
         private static float CardSeat(float height) => 422f - height;
 
         private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
-            string caption = "◀  BACK TO THE BAR")
+            string caption = null)   // null: bench.back_to_bar
         {
             var rt = NewRect("EdgeBack", panel);
             RegisterFixed(panel, rt);    // ...and so is the way out
@@ -746,7 +746,7 @@ namespace LastCall.UI
             var label = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            label.text = caption;
+            label.text = caption ?? UIText.T("bench.back_to_bar");
         }
 
         private void OpenBottle(IngredientCard card)
@@ -790,8 +790,8 @@ namespace LastCall.UI
             // a drink is built — and when the lid is on, the bench says so, because the
             // lid comes off there and nowhere else.
             if (!Capped) { GoTo(Stage.Shaker); return; }
-            if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run).ToUpperInvariant()); return; }
-            DemandBench("TAKE THE LID OFF TO ADD IT");
+            if (BenchUnfinished(Run)) { DemandBench(BenchOwed(Run)); return; }
+            DemandBench(UIText.T("bench.take_lid_off_to_add"));
         }
 
 
@@ -955,7 +955,7 @@ namespace LastCall.UI
             Place(word.rectTransform, new Vector2(0, 0.5f), new Vector2(BinKeyW - 68f, 18),
                   new Vector2(56, 0));
             word.rectTransform.pivot = new Vector2(0, 0.5f);
-            word.text = "ÇÖP";
+            word.text = UIText.T("bench.bin");
             word.raycastTarget = false;
 
             btn.onClick.AddListener(() =>
@@ -965,7 +965,9 @@ namespace LastCall.UI
                 // to come back empty, and which one is on screen is the stage's business.
                 if (_stage == Stage.Shaker) RefreshShaker();
                 else if (_stage == Stage.Serve) RefreshServe();
-                GetComponent<TycoonHud>()?.Toast(fee > 0 ? $"BINNED · -${fee}" : "BINNED");
+                GetComponent<TycoonHud>()?.Toast(fee > 0
+                    ? UIText.T("bench.binned_fee", ("fee", "$" + fee))
+                    : UIText.T("bench.binned"));
             });
 
             // Swapped rather than loaded: both plates are drawn in code, so this does not

@@ -228,9 +228,9 @@ namespace LastCall.UI
             // while the room is dark.
             _curtainStoryNight = Run != null ? StoryNightOf(Run, week) : -1;
             if (_curtainLeaving != null)
-                _curtainLeaving.text = BarCalendar.Name(BarCalendar.NightOf(leaving));
+                _curtainLeaving.text = UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(leaving)));
             if (_curtainArriving != null)
-                _curtainArriving.text = BarCalendar.Name(BarCalendar.NightOf(arriving));
+                _curtainArriving.text = UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(arriving)));
             StepCurtain();   // place everything before the first frame is drawn
         }
 

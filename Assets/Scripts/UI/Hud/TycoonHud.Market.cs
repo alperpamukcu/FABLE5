@@ -67,33 +67,35 @@ namespace LastCall.UI
         {
             if (card == null) return;
             string style = card.Info?.Style;
-            string styleWord = string.IsNullOrEmpty(style) ? "" : style.Replace('_', ' ');
+            string styleWord = string.IsNullOrEmpty(style) ? ""
+                : UIText.Data("bottle", card.Id, "style", style).Replace('_', ' ');
             int tier = card.Info?.Tier ?? 1;
 
             // THE NAME, ALONE, IN BOLD BESIDE ITS PICTURE (the author). The style used to
             // ride the same row — "SMIRKOFF VODKA · VODKA" — which made the heading a
             // sentence and left the mark next to a fact rather than next to a title. The
             // style is a property of the bottle, so it goes on the property row.
-            spec.Identity = card.Name.ToUpperInvariant();
+            spec.Identity = UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name));
             // The ABV lives HERE, not on the identity line: "GRAND MARINER TRIPLE SEC ·
             // TRIPLE SEC" is already 37 of the 46 characters that fit.
             var meta = new StringBuilder();
             if (styleWord.Length > 0)
-                meta.Append(char.ToUpperInvariant(styleWord[0])).Append(styleWord.Substring(1))
+                meta.Append(UIText.Caps(styleWord.Substring(0, 1))).Append(styleWord.Substring(1))
                     .Append(" · ");
-            meta.Append("Rung ").Append(tier).Append(" of 4");
+            meta.Append(UIText.T("market.bottle.rung", ("rung", tier), ("top", 4)));
+            // The strength goes in pre-formatted the way StringBuilder always printed it.
             if (card.Info != null && card.Info.Abv > 0)
-                meta.Append(" · ").Append(card.Info.Abv).Append("% ABV");
+                meta.Append(" · ").Append(UIText.T("market.bottle.abv", ("abv", card.Info.Abv.ToString())));
             if (onShelf != null && onShelf.Capacity > 0)
-                meta.Append(" · ")
-                    .Append((int)Math.Round(onShelf.Remaining / onShelf.Capacity * 100))
-                    .Append("% left behind the bar");
+                meta.Append(" · ").Append(UIText.T("market.bottle.left",
+                    ("percent", (int)Math.Round(onShelf.Remaining / onShelf.Capacity * 100))));
             spec.MetaLine = meta.ToString();
             // The tile shows the STOCK BAR, so the tile's own meta stays empty here and the
             // two never say the same thing twice.
             if (styleWord.Length > 0 && spec.StockFrac < 0f)
-                spec.Meta = char.ToUpperInvariant(styleWord[0]) + styleWord.Substring(1)
-                    + (card.Info != null && card.Info.Abv > 0 ? " · " + card.Info.Abv + "%" : "");
+                spec.Meta = UIText.Caps(styleWord.Substring(0, 1)) + styleWord.Substring(1)
+                    + (card.Info != null && card.Info.Abv > 0
+                        ? " · " + UIText.T("market.bottle.abv_short", ("abv", card.Info.Abv.ToString())) : "");
 
             // What it is FOR: the drinks whose bands name this style — and only the drinks
             // the bar can actually pour (Core filters it; see MenuDrinksUsingStyle).
@@ -101,27 +103,26 @@ namespace LastCall.UI
             if (Run != null)
                 foreach (var r in Run.MenuDrinksUsingStyle(style))
                 {
-                    if (!uses.Contains(r.Name)) uses.Add(r.Name);
+                    string drink = UIText.Data("recipe", r.Id, "name", r.Name);
+                    if (!uses.Contains(drink)) uses.Add(drink);
                     if (uses.Count >= 5) break;
                 }
-            spec.Body = uses.Count > 0 ? "Poured into: " + string.Join(", ", uses) + "."
-                : card.Type == IngredientType.Beer ? "Pulled at the tap."
-                : "No drink on the book calls for it yet.";
+            spec.Body = uses.Count > 0 ? UIText.T("market.bottle.poured_into", ("drinks", string.Join(", ", uses)))
+                : card.Type == IngredientType.Beer ? UIText.T("market.bottle.pulled_at_tap")
+                : UIText.T("market.bottle.no_drink_yet");
             spec.BuffA = uses.Count > 0
-                ? new Buff(BuffKind.Use, uses.Count + (uses.Count == 1 ? " drink" : " drinks")
-                           + " on the menu call for it")
-                : new Buff(BuffKind.Bad, "Nothing on tonight's menu calls for it");
+                ? new Buff(BuffKind.Use, UIText.N("market.bottle.menu_calls", uses.Count))
+                : new Buff(BuffKind.Bad, UIText.T("market.bottle.menu_calls_none"));
             if (tier > 1)
                 spec.BuffB = new Buff(BuffKind.Gain,
-                    "Joins the shelf; the well bottle stays");
+                    UIText.T("market.bottle.joins_shelf"));
             // WHAT SIZE IT COMES IN, said out loud for the one kind of bottle that is not
             // the size the rest of the shelf is (2026-09-04). The mixers hold half a
             // spirit's measures now; a shelf where the bar's cheapest goods quietly ran out
             // twice as fast, with nothing on the listing to say so, would read as a bug.
             else if (IngredientCategories.IsSoftDrink(card.Info?.Category))
-                spec.BuffB = new Buff(BuffKind.Cost,
-                    "A small bottle — " + ShelfBottle.MixerCapacity.ToString("0.#")
-                    + " measures, half a spirit's");
+                spec.BuffB = new Buff(BuffKind.Cost, UIText.T("market.bottle.small_bottle",
+                    ("measures", ShelfBottle.MixerCapacity.ToString("0.#"))));
         }
 
         /// <summary>
@@ -144,13 +145,13 @@ namespace LastCall.UI
             if (sold)
             {
                 spec.State = TileState.Ordered;
-                spec.Money = null; spec.Word = "SOLD";
+                spec.Money = null; spec.Word = UIText.T("market.word.sold");
                 return;
             }
-            if (picked) { spec.State = TileState.Picked; spec.PillVerb = "TAKE OUT"; }
-            else if (noRoom) { spec.State = TileState.NoFitting; spec.PillVerb = "NO SLOT"; }
-            else if (!afford) { spec.State = TileState.Unaffordable; spec.PillVerb = "NO CASH"; }
-            else { spec.State = TileState.Orderable; spec.PillVerb = "ADD"; }
+            if (picked) { spec.State = TileState.Picked; spec.PillVerb = UIText.T("market.pill.take_out"); }
+            else if (noRoom) { spec.State = TileState.NoFitting; spec.PillVerb = UIText.T("market.pill.no_slot"); }
+            else if (!afford) { spec.State = TileState.Unaffordable; spec.PillVerb = UIText.T("market.pill.no_cash"); }
+            else { spec.State = TileState.Orderable; spec.PillVerb = UIText.T("market.pill.add"); }
             string label = spec.Name;
             var art = spec.Art;                 // the basket draws what the tile drew
             spec.OnClick = () => ToggleCart(cartKey, label, price, isFitting, buy, art);
@@ -167,8 +168,8 @@ namespace LastCall.UI
         {
             if (Run != null)
                 foreach (var g in Run.Glassware)
-                    if (g.Id == r.GlassId) return g.Name;
-            return "glass";
+                    if (g.Id == r.GlassId) return UIText.Data("glass", g.Id, "name", g.Name);
+            return UIText.T("market.glass_fallback");
         }
 
         /// <summary>The picture for a refund row, resolved from what was bought. The purchase
@@ -206,13 +207,16 @@ namespace LastCall.UI
             var names = new List<string>();
             if (Run != null)
                 foreach (var r in Run.MenuDrinksInGlass(glassId))
-                    if (!names.Contains(r.Name))
+                {
+                    string drink = UIText.Data("recipe", r.Id, "name", r.Name);
+                    if (!names.Contains(drink))
                     {
-                        names.Add(r.Name);
+                        names.Add(drink);
                         if (names.Count >= 4) break;
                     }
-            return names.Count == 0 ? "NOTHING ON THE BOOK YET."
-                : string.Join(", ", names).ToUpperInvariant() + ".";
+                }
+            return names.Count == 0 ? UIText.T("market.glass.serves_none")
+                : UIText.T("market.glass.serves", ("drinks", UIText.Caps(string.Join(", ", names))));
         }
 
         // ── the basket ───────────────────────────────────────────────────────────
@@ -348,9 +352,9 @@ namespace LastCall.UI
             var hover = chip.gameObject.AddComponent<HoverRelay>();
             hover.Entered = () => ShowShopCard(new TileSpec
             {
-                Identity = (e.Label ?? "").ToUpperInvariant(),
-                MetaLine = "$" + e.Price + "  ·  in the basket",
-                Body = "Click to take it back out. You only pay when you place the order.",
+                Identity = UIText.Caps(e.Label ?? ""),
+                MetaLine = UIText.T("market.basket.chip_meta", ("price", "$" + e.Price)),
+                Body = UIText.T("market.basket.chip_body"),
                 Art = e.Art,
             });
             hover.Exited = () => ShowShopCard(null);
@@ -368,10 +372,9 @@ namespace LastCall.UI
             int n = more;
             hover.Entered = () => ShowShopCard(new TileSpec
             {
-                Identity = "AND " + n + " MORE",
-                MetaLine = "the basket holds them all",
-                Body = "The row is full, the basket is not. Everything you picked "
-                     + "is in the total.",
+                Identity = UIText.N("market.basket.more_identity", n),
+                MetaLine = UIText.T("market.basket.more_meta"),
+                Body = UIText.T("market.basket.more_body"),
             });
             hover.Exited = () => ShowShopCard(null);
         }
@@ -417,11 +420,11 @@ namespace LastCall.UI
 
             if (isFitting)
             {
-                if (!Run.CanFitTonight) { Sfx.Play("deny", 0.7f); Toast("ONE UPGRADE A NIGHT"); return; }
+                if (!Run.CanFitTonight) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.one_upgrade")); return; }
                 foreach (var e in _cart)
-                    if (e.IsFitting) { Sfx.Play("deny", 0.7f); Toast("ONE UPGRADE A NIGHT"); return; }
+                    if (e.IsFitting) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.one_upgrade")); return; }
             }
-            if (CartTotal() + price > Run.Money) { Sfx.Play("deny", 0.7f); Toast("NOT ENOUGH MONEY"); return; }
+            if (CartTotal() + price > Run.Money) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.not_enough_money")); return; }
 
             _cart.Add(new CartEntry { Key = key, Label = label, Price = price,
                                       IsFitting = isFitting, Buy = buy, Art = art });
@@ -433,7 +436,7 @@ namespace LastCall.UI
         /// A refusal stops the rest — the till is the shop's word, not the basket's.</summary>
         private void Checkout()
         {
-            if (_cart.Count == 0) { Sfx.Play("deny", 0.7f); Toast("BASKET IS EMPTY"); return; }
+            if (_cart.Count == 0) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.basket_empty")); return; }
             RememberScroll();
             _justOrdered.Clear();
             int bought = 0;
@@ -441,7 +444,7 @@ namespace LastCall.UI
             foreach (var e in _cart)
             {
                 try { e.Buy(); _justOrdered.Add(e.Key); paid.Add(e.Price); bought++; }
-                catch (InvalidOperationException) { Sfx.Play("deny", 0.8f); Toast("ORDER STOPPED — " + e.Label); break; }
+                catch (InvalidOperationException) { Sfx.Play("deny", 0.8f); Toast(UIText.T("market.toast.order_stopped", ("item", e.Label))); break; }
             }
             _cart.Clear();
             Sfx.Play("buy", 0.9f);
@@ -502,9 +505,9 @@ namespace LastCall.UI
             // A 136-wide key holds 2 lines of 8 CAPS, which is what sets every caption here.
             // NOTHING PICKED is gone with the second key: an empty basket is no longer a
             // refusal to explain, it is simply the night being over.
-            _marketKeyLabel.text = spent ? "ORDERED"
-                : buying ? "PLACE\nORDER"
-                : Run != null && Run.Day % 6 == 0 ? "START\nTUESDAY" : "OPEN\nTOMORROW";
+            _marketKeyLabel.text = spent ? UIText.T("market.key.ordered")
+                : buying ? UIText.T("market.key.place_order")
+                : Run != null && Run.Day % 6 == 0 ? UIText.T("market.key.start_tuesday") : UIText.T("market.key.open_tomorrow");
         }
 
         private void StepMarketKey()
@@ -612,7 +615,7 @@ namespace LastCall.UI
             // grey line of specifications and no name at all — which is exactly the one
             // thing the panel exists to say. The tile's own name is always there.
             _cardIdentity.text = !string.IsNullOrEmpty(spec.Identity)
-                ? spec.Identity : (spec.Name ?? "").ToUpperInvariant();
+                ? spec.Identity : UIText.Caps(spec.Name ?? "");
             _cardMeta.text = spec.MetaLine ?? "";
             _cardBody.text = spec.Body ?? "";
             WriteBuff(_cardBuffA, _cardBuffAIcon, spec.BuffA);
@@ -753,8 +756,11 @@ namespace LastCall.UI
                 // NaN is a line waiting on a person or on the room, not on a rung — it counts
                 // as held back but has no number to pull the aisle's hint towards.
                 if (!double.IsNaN(g.Stars)) { if (g.Stars < next) next = g.Stars; }
-                else if (!string.IsNullOrEmpty(g.Sentence) && !asked.Contains(g.Sentence))
-                    asked.Add(g.Sentence);
+                else if (!string.IsNullOrEmpty(g.Sentence))
+                {
+                    string said = UIText.T(Market.HeldSentenceLine(g.Card));
+                    if (!asked.Contains(said)) asked.Add(said);
+                }
             }
             if (locked == 0) return;
             // NOTHING HERE IS WAITING FOR A STAR (2026-08-19). This used to fall back to the
@@ -766,28 +772,57 @@ namespace LastCall.UI
             string wanted = asked.Count > 0 ? string.Join(" · ", asked) : "";
             var was = _cardTarget;
             _cardTarget = grid;
+            // The numbers go in pre-formatted exactly as they always printed.
+            string nextStars = next.ToString("0.0");
+            GateNounKeys(noun, out string earnKey, out string atStarsKey, out string vanKey);
             AddTile(new TileSpec
             {
-                Name = locked + " more waiting",
-                Money = starless ? locked.ToString() : next.ToString("0.0"),
+                Name = UIText.N("market.gate.more_waiting", locked),
+                Money = starless ? locked.ToString() : nextStars,
                 GateStars = starless ? double.NaN : next,
-                GateNote = starless ? "STILL LOCKED" : null,
+                GateNote = starless ? UIText.T("market.gate.still_locked") : null,
                 State = TileState.Sealed,
                 Identity = starless
-                    ? "MORE " + noun.ToUpperInvariant() + "S TO EARN"
-                    : "MORE " + noun.ToUpperInvariant() + "S AT " + next.ToString("0.0") + " STARS",
-                MetaLine = locked + " " + (locked == 1 ? noun : noun + "s")
-                           + " the van will not bring you yet",
+                    ? UIText.T(earnKey, ("noun", UIText.Caps(noun)))
+                    : UIText.T(atStarsKey, ("noun", UIText.Caps(noun)), ("stars", nextStars)),
+                MetaLine = UIText.N(vanKey, locked, ("noun", noun)),
                 Body = starless
-                    ? (wanted.Length > 0 ? wanted : "These are earned, not bought.")
-                    : "Get " + next.ToString("0.0") + " stars and more of these show up "
-                      + "here.",
+                    ? (wanted.Length > 0 ? wanted : UIText.T("market.gate.earned_body"))
+                    : UIText.T("market.gate.get_stars", ("stars", nextStars)),
                 BuffA = new Buff(BuffKind.Bad, starless
-                    ? (wanted.Length > 0 ? wanted : "Earned, not bought")
-                    : "Needs " + next.ToString("0.0")
-                      + " stars · you have " + run.Rating.Average.ToString("0.0")),
+                    ? (wanted.Length > 0 ? wanted : UIText.T("market.gate.earned_buff"))
+                    : UIText.T("market.gate.needs_stars", ("stars", nextStars),
+                        ("have", run.Rating.Average.ToString("0.0")))),
             });
             _cardTarget = was;
+        }
+
+        /// <summary>
+        /// The crate's three lines that carry its aisle's noun, as WHOLE PHRASES per noun
+        /// (localization L1): "MORE KEGS TO EARN" used to be glued out of the noun and an S,
+        /// which no translator can pluralise. The four nouns the aisles pass today have their
+        /// own keys; anything else falls back on the slotted form, which prints what the glue did.
+        /// </summary>
+        private static void GateNounKeys(string noun, out string earn, out string atStars, out string van)
+        {
+            switch (noun)
+            {
+                case "bottle":
+                    earn = "market.gate.bottle.to_earn"; atStars = "market.gate.bottle.at_stars"; van = "market.gate.bottle.van";
+                    return;
+                case "mixer":
+                    earn = "market.gate.mixer.to_earn"; atStars = "market.gate.mixer.at_stars"; van = "market.gate.mixer.van";
+                    return;
+                case "keg":
+                    earn = "market.gate.keg.to_earn"; atStars = "market.gate.keg.at_stars"; van = "market.gate.keg.van";
+                    return;
+                case "garnish":
+                    earn = "market.gate.garnish.to_earn"; atStars = "market.gate.garnish.at_stars"; van = "market.gate.garnish.van";
+                    return;
+                default:
+                    earn = "market.gate.any.to_earn"; atStars = "market.gate.any.at_stars"; van = "market.gate.any.van";
+                    return;
+            }
         }
 
         /// <summary>A titled section of the market: its header row, then its own grid.</summary>
@@ -812,13 +847,13 @@ namespace LastCall.UI
         {
             switch (group)
             {
-                case "walls": return "THE WALLS";
-                case "wall_art": return "ON THE WALL";
-                case "light": return "THE LIGHT";
-                case "furniture": return "FURNITURE & FLOOR";
-                case "greenery": return "GREENERY";
-                case "counter": return "THE COUNTER";
-                default: return "THE ROOM";
+                case "walls": return UIText.T("market.group.walls");
+                case "wall_art": return UIText.T("market.group.wall_art");
+                case "light": return UIText.T("market.group.light");
+                case "furniture": return UIText.T("market.group.furniture");
+                case "greenery": return UIText.T("market.group.greenery");
+                case "counter": return UIText.T("market.group.counter");
+                default: return UIText.T("market.group.room");
             }
         }
 
@@ -1162,7 +1197,7 @@ namespace LastCall.UI
                 var bandText = NewText("T", band, _shop, 8, TextAnchor.MiddleCenter, Color.white);
                 Stretch(bandText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 bandText.raycastTarget = false;
-                bandText.text = "NEW!";
+                bandText.text = UIText.T("market.tile.new");
                 var glow = NewRect("Glow", band);
                 Stretch(glow, Vector2.zero, Vector2.one, new Vector2(0, 0), new Vector2(0, -14f));
                 var gi = glow.gameObject.AddComponent<Image>();
@@ -1190,7 +1225,7 @@ namespace LastCall.UI
                 Place(what.rectTransform, new Vector2(0.5f, 1), new Vector2(TileW - 32f, 12), new Vector2(0, -27));
                 what.horizontalOverflow = HorizontalWrapMode.Wrap;
                 what.verticalOverflow = VerticalWrapMode.Truncate;
-                what.text = string.IsNullOrEmpty(spec.GateNote) ? "STARS TO OPEN" : spec.GateNote;
+                what.text = string.IsNullOrEmpty(spec.GateNote) ? UIText.T("market.tile.stars_to_open") : spec.GateNote;
                 if (drawnGate)
                 {
                     StarRow(tag, new Vector2(0.5f, 1), new Vector2(0, -30f), 12f,
@@ -1206,7 +1241,7 @@ namespace LastCall.UI
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.lineSpacing = 1.05f;
-            name.text = (spec.Name ?? "").ToUpperInvariant();
+            name.text = UIText.Caps(spec.Name ?? "");
 
             if (spec.StockFrac >= 0f)
             {

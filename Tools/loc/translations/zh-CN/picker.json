@@ -1,0 +1,4 @@
+{"strings": [
+{"key": "chrome.settings.language", "text": "语言", "src": "LANGUAGE"},
+{"key": "chrome.settings.language_note", "text": "下次启动时生效", "src": "SPOKEN FROM THE NEXT START"}
+]}

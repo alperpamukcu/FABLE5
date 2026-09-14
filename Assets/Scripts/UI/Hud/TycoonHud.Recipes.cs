@@ -23,9 +23,50 @@ namespace LastCall.UI
     {
         /// <summary>How a drink is worked, in one word.</summary>
         private static string PrepWord(RecipeDefinition r) =>
-            r.Id == "draught" ? "ON TAP" : r.Id == "neat_pour" ? "NEAT"
-            : r.Prep == PrepMethod.Shaken ? "SHAKEN"
-            : r.Prep == PrepMethod.Stirred ? "STIRRED" : "BUILT";
+            r.Id == "draught" ? UIText.T("recipes.prep.on_tap")
+            : r.Id == "neat_pour" ? UIText.T("recipes.prep.neat")
+            : r.Prep == PrepMethod.Shaken ? UIText.T("recipes.prep.shaken")
+            : r.Prep == PrepMethod.Stirred ? UIText.T("recipes.prep.stirred")
+            : UIText.T("recipes.prep.built");
+
+        /// <summary>A garnish or preparation ask, in capitals, the way the licence and the order
+        /// tip print it. The names live in Core's built-in set; an id this does not know keeps
+        /// the name Core gave it.</summary>
+        private static string GarnishWord(PreparationDefinition g)
+        {
+            switch (g.Id)
+            {
+                case "shaken": return UIText.T("recipes.garnish.shaken");
+                case "stirred": return UIText.T("recipes.garnish.stirred");
+                case "ice": return UIText.T("recipes.garnish.ice");
+                case "lemon_twist": return UIText.T("recipes.garnish.lemon_twist");
+                case "salt_rim": return UIText.T("recipes.garnish.salt_rim");
+                case "sugar_rim": return UIText.T("recipes.garnish.sugar_rim");
+                case "draught": return UIText.T("recipes.garnish.draught");
+                default: return UIText.Caps(g.Name);
+            }
+        }
+
+        /// <summary>A recipe's name as the player's language has it (the English is recipes.json's).</summary>
+        private static string RecipeTitle(RecipeDefinition r) =>
+            UIText.Data("recipe", r.Id, "name", r.Name);
+
+        /// <summary>"SHAKEN · COUPE GLASS": how the drink is worked, and the glass it goes in.</summary>
+        private static string WayLine(RecipeDefinition r)
+        {
+            string glassId = string.IsNullOrEmpty(r.GlassId) ? "highball" : r.GlassId;
+            string glassWord = UIText.Caps(UIText.Data("glass", glassId, "name", glassId.Replace('_', ' ')));
+            return UIText.T("recipes.way_line", ("prep", PrepWord(r)), ("glass", glassWord));
+        }
+
+        /// <summary>A style id as a word on a card: "coffee_liqueur" is COFFEE LIQUEUR.</summary>
+        private static string StyleWord(string style) => UIText.Caps(style.Replace('_', ' '));
+
+        /// <summary>A spec row's label with the tier it asks for, when it asks for more than the well.</summary>
+        private static string SpecLabel(SpecRow spec) =>
+            spec.MinTier > 1
+                ? UIText.T("recipes.spec.label_tier", ("label", spec.Label), ("tier", spec.MinTier))
+                : spec.Label;
 
         /// <summary>
         /// What a TYPE band asks for, said to somebody who has never worked a bar (the
@@ -37,13 +78,13 @@ namespace LastCall.UI
         {
             switch (type)
             {
-                case IngredientType.Spirit: return "ANY SPIRIT";
-                case IngredientType.Beer: return "ANY BEER";
-                case IngredientType.Sweet: return "ANY SWEET";
-                case IngredientType.Sour: return "ANY SOUR";
-                case IngredientType.Bitter: return "ANY BITTER";
-                case IngredientType.Bubbly: return "ANY FIZZ";
-                default: return "ANY GARNISH";
+                case IngredientType.Spirit: return UIText.T("recipes.type.spirit");
+                case IngredientType.Beer: return UIText.T("recipes.type.beer");
+                case IngredientType.Sweet: return UIText.T("recipes.type.sweet");
+                case IngredientType.Sour: return UIText.T("recipes.type.sour");
+                case IngredientType.Bitter: return UIText.T("recipes.type.bitter");
+                case IngredientType.Bubbly: return UIText.T("recipes.type.bubbly");
+                default: return UIText.T("recipes.type.garnish");
             }
         }
 
@@ -53,8 +94,8 @@ namespace LastCall.UI
             switch (type)
             {
                 case IngredientType.Spirit:
-                    return "SPIRIT = VODKA·GIN·RUM·WHISKEY·TEQUILA";
-                case IngredientType.Beer: return "BEER = LAGER·STOUT·PALE ALE";
+                    return UIText.T("recipes.type_hint.spirit");
+                case IngredientType.Beer: return UIText.T("recipes.type_hint.beer");
                 default: return null;
             }
         }
@@ -114,7 +155,7 @@ namespace LastCall.UI
                 bool banded = r.HasAuthoredRatios;
                 rows.Add(new SpecRow(
                     b.IsStyleBand ? b.Style : null,
-                    b.IsStyleBand ? b.Style.Replace('_', ' ').ToUpperInvariant() : TypeWord(b.Type),
+                    b.IsStyleBand ? StyleWord(b.Style) : TypeWord(b.Type),
                     revealed ? $"{shown[i]}%" : "",
                     b.MinTier,
                     box: banded ? r.PerfectBoxes[i] : -1,
@@ -136,9 +177,10 @@ namespace LastCall.UI
             // somebody's head at a glance — the book, the licence and the shop keep it.
             if (bestMake != null)
                 rows.Add(new SpecRow(null,
-                    revealed ? "PERFECTED" : $"YOUR BEST · {bestMake.Accuracy * 100:0}%",
+                    revealed ? UIText.T("recipes.spec.perfected")
+                        : UIText.T("recipes.spec.your_best", ("pct", (bestMake.Accuracy * 100).ToString("0"))),
                     hint: true));
-            if (r.MinFill > 0) rows.Add(new SpecRow(null, "FILL", $"{r.MinFill * 100:0}%+"));
+            if (r.MinFill > 0) rows.Add(new SpecRow(null, UIText.T("recipes.spec.fill"), $"{r.MinFill * 100:0}%+"));
             return rows;
         }
 
@@ -292,7 +334,7 @@ namespace LastCall.UI
                 label.rectTransform.anchoredPosition = new Vector2(textX, 0);
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.raycastTarget = false;
-                label.text = spec.Label + (spec.MinTier > 1 ? $"  T{spec.MinTier}+" : "");
+                label.text = SpecLabel(spec);
 
                 // NONE: the shape half of the tell. Right-aligned into the gap the share
                 // leaves, so it reads on the same sweep as the percentage rather than
@@ -304,7 +346,7 @@ namespace LastCall.UI
                         new Vector2(-SpecAmountW - 4f, 0));
                     none.horizontalOverflow = HorizontalWrapMode.Overflow;
                     none.raycastTarget = false;
-                    none.text = "NONE";
+                    none.text = UIText.T("recipes.spec.none");
                 }
 
                 if (spec.Amount.Length > 0)
@@ -442,13 +484,11 @@ namespace LastCall.UI
             y += 20f;
 
             var head = Centred("Head", perfected ? _shop : _display, 16, ink, 24f);
-            head.text = r.Name.ToUpperInvariant();
+            head.text = UIText.Caps(RecipeTitle(r));
             y += 26f;
 
-            string glassWord = string.IsNullOrEmpty(r.GlassId)
-                ? "HIGHBALL" : r.GlassId.Replace('_', ' ').ToUpperInvariant();
             var way = Centred("Way", _body, 16, prepInk, 20f);
-            way.text = PrepWord(r) + " · " + glassWord + " GLASS";
+            way.text = WayLine(r);
             y += 24f;
             y += DifficultyRow(host, r, width, y, dark: false) + 2f;   // how hard it is (2026-09-13)
 
@@ -479,14 +519,14 @@ namespace LastCall.UI
             priceCap.rectTransform.anchoredPosition = new Vector2(10f, -(y + 34f));
             priceCap.horizontalOverflow = HorizontalWrapMode.Overflow;
             priceCap.raycastTarget = false;
-            priceCap.text = "ON THE TAB";
+            priceCap.text = UIText.T("recipes.card.on_the_tab");
             y += 56f;
 
             // The book's caption is "THE POUR · ONE DOT IS A FIFTH" — 29 capitals, wider than
             // this card (measured in play 2026-09-09: it ran off both edges). Same sentence,
             // the half that carries the meaning.
             var cap = Centred("Cap", _body, 16, quiet, 22f);
-            cap.text = "ONE DOT IS A FIFTH";
+            cap.text = UIText.T("recipes.card.one_dot");
             y += 20f;
             var legend = NewRect("Legend", host);
             var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
@@ -587,12 +627,14 @@ namespace LastCall.UI
             : (dark ? UITheme.Lime[3] : UITheme.Lime[1]);
 
         private static string DifficultyWord(DrinkDifficulty d) =>
-            d == DrinkDifficulty.Hard ? "HARD" : d == DrinkDifficulty.Medium ? "MEDIUM" : "EASY";
+            d == DrinkDifficulty.Hard ? UIText.T("recipes.difficulty.hard")
+            : d == DrinkDifficulty.Medium ? UIText.T("recipes.difficulty.medium")
+            : UIText.T("recipes.difficulty.easy");
 
         private static string DifficultySentence(DrinkDifficulty d) =>
-            d == DrinkDifficulty.Hard ? "Hard to make — a lot to pour, and plenty of work in it."
-            : d == DrinkDifficulty.Medium ? "Medium — more to pour, or it has to be worked."
-            : "Easy to make — a few pours and nothing to work.";
+            d == DrinkDifficulty.Hard ? UIText.T("recipes.difficulty_sentence.hard")
+            : d == DrinkDifficulty.Medium ? UIText.T("recipes.difficulty_sentence.medium")
+            : UIText.T("recipes.difficulty_sentence.easy");
 
         /// <summary>The difficulty row, centred across <paramref name="width"/> with its top at
         /// <paramref name="y"/> from the host's top. Returns the height it took.</summary>
@@ -654,7 +696,7 @@ namespace LastCall.UI
             note.rectTransform.anchoredPosition = new Vector2(0f, -y);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
             note.raycastTarget = false;
-            note.text = "INGREDIENTS SEALED\nBUY THE PAGE TO READ IT";
+            note.text = UIText.T("recipes.sealed");
             // Sized to what it wraps to: the market's card is narrower than the book's page,
             // and a fixed 40 let four wrapped lines run out of the card (measured 2026-09-13).
             note.rectTransform.sizeDelta = new Vector2(width, 1000f);
@@ -664,7 +706,10 @@ namespace LastCall.UI
         }
 
         private static string TierName(int rank) =>
-            rank <= 8 ? "STARTER" : rank <= 14 ? "MID SHELF" : rank <= 21 ? "TOP SHELF" : "HOUSE PRIDE";
+            rank <= 8 ? UIText.T("recipes.tier.starter")
+            : rank <= 14 ? UIText.T("recipes.tier.mid_shelf")
+            : rank <= 21 ? UIText.T("recipes.tier.top_shelf")
+            : UIText.T("recipes.tier.house_pride");
 
         /// <summary>
         /// The styles this drink names that the shelf cannot pour, in the recipe's own
@@ -678,7 +723,7 @@ namespace LastCall.UI
             {
                 if (!band.IsStyleBand) continue;
                 if (InStock(band.Style, band.MinTier)) continue;
-                string word = band.Style.Replace('_', ' ').ToUpperInvariant();
+                string word = StyleWord(band.Style);
                 if (!missing.Contains(word)) missing.Add(word);
             }
             return missing;
@@ -697,10 +742,12 @@ namespace LastCall.UI
             var parts = new List<string>();
             foreach (var b in r.RatioRequirements)
                 parts.Add(b.IsStyleBand
-                    ? b.Style.Replace('_', ' ').ToUpperInvariant()
+                    ? StyleWord(b.Style)
                     : TypeWord(b.Type));
             if (r.MinFill > 0)
-                parts.Add(string.Format("<color=#1A0E06>FILL {0:0}%+</color>", r.MinFill * 100));
+                parts.Add("<color=#1A0E06>"
+                    + UIText.T("recipes.band_fill", ("pct", (r.MinFill * 100).ToString("0")))
+                    + "</color>");
             return string.Join(" · ", parts);
         }
     }

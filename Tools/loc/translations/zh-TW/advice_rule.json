@@ -1,0 +1,509 @@
+{
+ "strings": [
+  {
+   "key": "advice.degree.little",
+   "text": "一些",
+   "src": "A little"
+  },
+  {
+   "key": "advice.degree.lot",
+   "text": "很多",
+   "src": "A lot"
+  },
+  {
+   "key": "advice.degree.touch",
+   "text": "一點點",
+   "src": "A touch"
+  },
+  {
+   "key": "advice.flawless",
+   "text": "完美的一杯，我一個地方都不想改。",
+   "src": "Perfect pour. Not a thing I would change."
+  },
+  {
+   "key": "advice.flawless_stem",
+   "text": "調得剛剛好。",
+   "src": "Poured just right."
+  },
+  {
+   "key": "advice.garnish.draught",
+   "text": "生啤",
+   "src": "draught"
+  },
+  {
+   "key": "advice.garnish.ice",
+   "text": "冰塊",
+   "src": "the ice"
+  },
+  {
+   "key": "advice.garnish.lemon_twist",
+   "text": "檸檬皮捲",
+   "src": "a lemon twist"
+  },
+  {
+   "key": "advice.garnish.salt_rim",
+   "text": "鹽口杯",
+   "src": "a salted rim"
+  },
+  {
+   "key": "advice.garnish.shaken",
+   "text": "搖盪",
+   "src": "shaken"
+  },
+  {
+   "key": "advice.garnish.stirred",
+   "text": "攪拌",
+   "src": "stirred"
+  },
+  {
+   "key": "advice.garnish.sugar_rim",
+   "text": "糖口杯",
+   "src": "a sugared rim"
+  },
+  {
+   "key": "advice.head.less",
+   "text": "下次泡沫要少{degree}。",
+   "src": "{degree} less head next time."
+  },
+  {
+   "key": "advice.head.more",
+   "text": "下次泡沫要多{degree}。",
+   "src": "{degree} more head next time."
+  },
+  {
+   "key": "advice.ingredient.amaro",
+   "text": "義式苦酒",
+   "src": "amaro"
+  },
+  {
+   "key": "advice.ingredient.bourbon",
+   "text": "波本",
+   "src": "bourbon"
+  },
+  {
+   "key": "advice.ingredient.coffee_liqueur",
+   "text": "咖啡香甜酒",
+   "src": "coffee liqueur"
+  },
+  {
+   "key": "advice.ingredient.cola",
+   "text": "可樂",
+   "src": "cola"
+  },
+  {
+   "key": "advice.ingredient.cranberry",
+   "text": "蔓越莓汁",
+   "src": "cranberry"
+  },
+  {
+   "key": "advice.ingredient.energy",
+   "text": "能量飲料",
+   "src": "energy"
+  },
+  {
+   "key": "advice.ingredient.gin",
+   "text": "琴酒",
+   "src": "gin"
+  },
+  {
+   "key": "advice.ingredient.ginger",
+   "text": "薑汁汽水",
+   "src": "ginger"
+  },
+  {
+   "key": "advice.ingredient.grenadine",
+   "text": "紅石榴糖漿",
+   "src": "grenadine"
+  },
+  {
+   "key": "advice.ingredient.lager",
+   "text": "拉格",
+   "src": "lager"
+  },
+  {
+   "key": "advice.ingredient.lemon",
+   "text": "檸檬汁",
+   "src": "lemon"
+  },
+  {
+   "key": "advice.ingredient.lime",
+   "text": "萊姆汁",
+   "src": "lime"
+  },
+  {
+   "key": "advice.ingredient.mint",
+   "text": "薄荷",
+   "src": "mint"
+  },
+  {
+   "key": "advice.ingredient.olive",
+   "text": "橄欖",
+   "src": "olive"
+  },
+  {
+   "key": "advice.ingredient.orange",
+   "text": "柳橙汁",
+   "src": "orange"
+  },
+  {
+   "key": "advice.ingredient.pale_ale",
+   "text": "淡色艾爾",
+   "src": "pale ale"
+  },
+  {
+   "key": "advice.ingredient.pineapple",
+   "text": "鳳梨汁",
+   "src": "pineapple"
+  },
+  {
+   "key": "advice.ingredient.rum",
+   "text": "蘭姆酒",
+   "src": "rum"
+  },
+  {
+   "key": "advice.ingredient.soda",
+   "text": "蘇打水",
+   "src": "soda"
+  },
+  {
+   "key": "advice.ingredient.stout",
+   "text": "司陶特",
+   "src": "stout"
+  },
+  {
+   "key": "advice.ingredient.syrup",
+   "text": "糖漿",
+   "src": "syrup"
+  },
+  {
+   "key": "advice.ingredient.tequila",
+   "text": "龍舌蘭",
+   "src": "tequila"
+  },
+  {
+   "key": "advice.ingredient.tonic",
+   "text": "通寧水",
+   "src": "tonic"
+  },
+  {
+   "key": "advice.ingredient.triple_sec",
+   "text": "橙皮酒",
+   "src": "triple sec"
+  },
+  {
+   "key": "advice.ingredient.vermouth",
+   "text": "香艾酒",
+   "src": "vermouth"
+  },
+  {
+   "key": "advice.ingredient.vodka",
+   "text": "伏特加",
+   "src": "vodka"
+  },
+  {
+   "key": "advice.list.and",
+   "text": "{list}和{item}",
+   "src": "{list} and {item}"
+  },
+  {
+   "key": "advice.list.comma",
+   "text": "{list}、{item}",
+   "src": "{list}, {item}"
+  },
+  {
+   "key": "advice.missing",
+   "text": "我明明還有說要{garnishes}。",
+   "src": "I asked for {garnishes} as well."
+  },
+  {
+   "key": "advice.pour.less",
+   "text": "下次{ingredient}要少倒{degree}。",
+   "src": "{degree} less {ingredient} next time."
+  },
+  {
+   "key": "advice.pour.more",
+   "text": "下次{ingredient}要多倒{degree}。",
+   "src": "{degree} more {ingredient} next time."
+  },
+  {
+   "key": "advice.pulled_well",
+   "text": "這杯生啤倒得剛好，泡沫完美。",
+   "src": "Pulled just right. Perfect head on it."
+  },
+  {
+   "key": "advice.pulled_well_stem",
+   "text": "這杯生啤倒得剛好。",
+   "src": "Pulled just right."
+  },
+  {
+   "key": "advice.then",
+   "text": "{first}{second}",
+   "src": "{first} {second}"
+  },
+  {
+   "key": "advice.type.beer",
+   "text": "啤酒",
+   "src": "beer"
+  },
+  {
+   "key": "advice.type.bitter",
+   "text": "苦味",
+   "src": "bitter"
+  },
+  {
+   "key": "advice.type.bubbly",
+   "text": "氣泡",
+   "src": "bubbly"
+  },
+  {
+   "key": "advice.type.garnish",
+   "text": "裝飾",
+   "src": "garnish"
+  },
+  {
+   "key": "advice.type.sour",
+   "text": "酸味",
+   "src": "sour"
+  },
+  {
+   "key": "advice.type.spirit",
+   "text": "烈酒",
+   "src": "spirit"
+  },
+  {
+   "key": "advice.type.sweet",
+   "text": "甜味",
+   "src": "sweet"
+  },
+  {
+   "key": "rule.already_at_bar",
+   "text": "對方已經坐在吧檯了。",
+   "src": "They are already at the bar."
+  },
+  {
+   "key": "rule.bar_top_best",
+   "text": "吧檯檯面已經是最好的了。",
+   "src": "The bar top is already the best one."
+  },
+  {
+   "key": "rule.bottle_owned",
+   "text": "這瓶酒你已經買了。",
+   "src": "That bottle is already yours."
+  },
+  {
+   "key": "rule.card_not_read",
+   "text": "還沒看過證件；其他文件都在證件後面。",
+   "src": "The card has not been read; the papers are behind it."
+  },
+  {
+   "key": "rule.counter_clean",
+   "text": "這一塊吧檯是乾淨的。",
+   "src": "The counter is clean here."
+  },
+  {
+   "key": "rule.drink_in_shaker",
+   "text": "酒還在雪克杯裡 — 先倒進杯子。",
+   "src": "That drink is still in the shaker — pour it into a glass first."
+  },
+  {
+   "key": "rule.fixture_needs_stars",
+   "text": "{fixture}需要 {stars} 星的店面；這間酒吧目前 {rating} 星。",
+   "src": "{fixture} needs a {stars}-star room; this bar rates {rating}."
+  },
+  {
+   "key": "rule.fixture_owned",
+   "text": "酒吧已經有{fixture}了。",
+   "src": "The bar already has {fixture}."
+  },
+  {
+   "key": "rule.fixture_rung_one_at_a_time",
+   "text": "{fixture}是第 {level} 階；酒吧目前在第 {bar_level} 階。只能一階一階往上升。",
+   "src": "{fixture} is rung {level} of its ladder; the bar stands on rung {bar_level}. It climbs one rung at a time."
+  },
+  {
+   "key": "rule.fixture_tower_one_line",
+   "text": "{fixture}有 {lines} 個酒頭；這間酒吧目前只有 {bar_lines} 個。酒塔一次只能加一個酒頭。",
+   "src": "{fixture} runs {lines} lines; this bar runs {bar_lines}. A tower is fitted one line at a time."
+  },
+  {
+   "key": "rule.glass_line_finest",
+   "text": "{glass}系列已經是最高級了。",
+   "src": "The {glass} line is already the finest."
+  },
+  {
+   "key": "rule.kick_already_served",
+   "text": "已經服務過的客人不能請出；看證件的時候才是時機。",
+   "src": "You cannot show the door to someone you have already served; the card was your moment."
+  },
+  {
+   "key": "rule.kick_guest_of_house",
+   "text": "這位是本店的貴賓，輪不到你請出。",
+   "src": "The guest of the house is not yours to show the door."
+  },
+  {
+   "key": "rule.kick_read_card_first",
+   "text": "先看證件。",
+   "src": "Read the card first."
+  },
+  {
+   "key": "rule.no_glass_to_collect",
+   "text": "這裡沒有杯子可以收。",
+   "src": "There is no glass here to collect."
+  },
+  {
+   "key": "rule.no_last_call",
+   "text": "沒有人在等最後一輪。",
+   "src": "Nobody is waiting on the last call."
+  },
+  {
+   "key": "rule.no_pourable_drinks",
+   "text": "還沒有你調得出來的酒。",
+   "src": "No drinks you can pour yet."
+  },
+  {
+   "key": "rule.no_room_stool",
+   "text": "放不下更多吧檯椅了。",
+   "src": "No room for another stool."
+  },
+  {
+   "key": "rule.not_enough_money",
+   "text": "錢不夠（{money} < {price}）。",
+   "src": "Not enough money ({money} < {price})."
+  },
+  {
+   "key": "rule.not_on_counter",
+   "text": "那個已經不在吧檯上了。",
+   "src": "That is not on this counter."
+  },
+  {
+   "key": "rule.not_ordered",
+   "text": "對方還沒點單。",
+   "src": "They have not ordered yet."
+  },
+  {
+   "key": "rule.not_waiting",
+   "text": "對方已經不等了。",
+   "src": "They are not waiting any more."
+  },
+  {
+   "key": "rule.not_waiting_at_bar",
+   "text": "對方沒有在吧檯等。",
+   "src": "They are not waiting at the bar."
+  },
+  {
+   "key": "rule.nothing_to_serve",
+   "text": "沒有東西可以上。",
+   "src": "Nothing to serve."
+  },
+  {
+   "key": "rule.nothing_to_wash",
+   "text": "你手上沒有東西要洗。",
+   "src": "There is nothing in your hands to wash."
+  },
+  {
+   "key": "rule.one_fitting_a_night",
+   "text": "一晚只能加一件設備 — 其他的明天再說。",
+   "src": "One fitting a night — the rest keeps until tomorrow."
+  },
+  {
+   "key": "rule.pour_unmixed",
+   "text": "雪克杯裡有兩種烈酒 — 倒進杯子前先搖盪或攪拌。",
+   "src": "Two spirits in the tin — shake it or stir it before it goes to the glass."
+  },
+  {
+   "key": "rule.pull_cocktail_in_tin",
+   "text": "倒生啤之前，先把雪克杯裡的調酒做完或倒掉。",
+   "src": "Finish or bin the cocktail before you pull a pint."
+  },
+  {
+   "key": "rule.pull_glass_full",
+   "text": "杯子滿了。端出去或倒掉。",
+   "src": "The glass is full. Serve it or bin it."
+  },
+  {
+   "key": "rule.pull_glass_taken",
+   "text": "那個杯子裡已經有酒了 — 倒生啤之前先端出去或倒掉。",
+   "src": "There is already a drink in that glass — serve it or bin it before pulling a pint."
+  },
+  {
+   "key": "rule.recipe_not_earned",
+   "text": "{recipe}還沒解鎖 — {lock}。",
+   "src": "{recipe} is not earned yet — {lock}."
+  },
+  {
+   "key": "rule.recipe_short_money",
+   "text": "錢不夠 — {recipe}要 {price}。",
+   "src": "Not enough money — {recipe} costs {price}."
+  },
+  {
+   "key": "rule.refund_under_rung",
+   "text": "{fixture}上面還有更高的一階；先退掉那一個。",
+   "src": "{fixture} is under a higher rung; take that one back first."
+  },
+  {
+   "key": "rule.refund_under_tower",
+   "text": "{fixture}上面裝著 {lines} 頭酒塔；先退掉那一個。",
+   "src": "{fixture} is under the {lines}-line tower; take that one back first."
+  },
+  {
+   "key": "rule.shake_empty",
+   "text": "雪克杯是空的，沒東西可搖。",
+   "src": "Nothing in the shaker to shake."
+  },
+  {
+   "key": "rule.sink_running",
+   "text": "水還在流 — 等一下。",
+   "src": "The sink is running — wait for it."
+  },
+  {
+   "key": "rule.snack_bowl_empty",
+   "text": "今天的{snack}已經沒了。",
+   "src": "The {snack} bowl is empty today."
+  },
+  {
+   "key": "rule.snack_needs_order",
+   "text": "零食要跟著酒一起上 — 對方還沒點酒。",
+   "src": "Snacks ride a drink order — they have not ordered one yet."
+  },
+  {
+   "key": "rule.snack_not_at_bar",
+   "text": "對方已經不在吧檯了。",
+   "src": "They are not at the bar."
+  },
+  {
+   "key": "rule.still_choosing",
+   "text": "對方還在選。",
+   "src": "They are still choosing."
+  },
+  {
+   "key": "rule.still_talking",
+   "text": "對方還在說話，還沒點單。",
+   "src": "They are still talking. Nothing ordered yet."
+  },
+  {
+   "key": "rule.stir_empty",
+   "text": "雪克杯是空的，沒東西可攪。",
+   "src": "Nothing in the shaker to stir."
+  },
+  {
+   "key": "rule.trial_not_asked",
+   "text": "對方還沒開口要什麼。",
+   "src": "They have not asked for anything yet."
+  },
+  {
+   "key": "rule.trial_over",
+   "text": "這場考驗已經結束了。",
+   "src": "That trial is already over."
+  },
+  {
+   "key": "rule.trial_started",
+   "text": "這場考驗已經開始了。",
+   "src": "That trial has already started."
+  },
+  {
+   "key": "rule.wipe_glass_first",
+   "text": "先把杯子收走 — 杯子底下擦不到。",
+   "src": "Collect the glass first — you cannot wipe under it."
+  }
+ ]
+}

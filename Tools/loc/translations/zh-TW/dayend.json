@@ -1,0 +1,549 @@
+{
+ "strings": [
+  {
+   "key": "dayend.aisle.beer",
+   "text": "啤酒",
+   "src": "BEER"
+  },
+  {
+   "key": "dayend.aisle.garnishes",
+   "text": "裝飾",
+   "src": "GARNISHES"
+  },
+  {
+   "key": "dayend.aisle.mixers",
+   "text": "副材料、果汁與蘇打",
+   "src": "MIXERS, JUICES & SODA"
+  },
+  {
+   "key": "dayend.aisle.rest",
+   "text": "其他",
+   "src": "THE REST"
+  },
+  {
+   "key": "dayend.aisle.spirits",
+   "text": "烈酒與香甜酒",
+   "src": "SPIRITS & LIQUEURS"
+  },
+  {
+   "key": "dayend.aisle.syrups",
+   "text": "糖漿與苦精",
+   "src": "SYRUPS & BITTERS"
+  },
+  {
+   "key": "dayend.basket.head",
+   "text": "購物籃",
+   "src": "BASKET"
+  },
+  {
+   "key": "dayend.basket.head_count#other",
+   "text": "購物籃（{n}）",
+   "src": "BASKET ({n})"
+  },
+  {
+   "key": "dayend.bill.fines",
+   "text": "罰款 · {reason}",
+   "src": "FINES · {reason}"
+  },
+  {
+   "key": "dayend.bill.last_strike",
+   "text": "再一天赤字，酒吧就得關門",
+   "src": "one more red day closes the bar"
+  },
+  {
+   "key": "dayend.bill.net",
+   "text": "淨利",
+   "src": "NET"
+  },
+  {
+   "key": "dayend.bill.next",
+   "text": "前往訂貨",
+   "src": "GO TO THE ORDER"
+  },
+  {
+   "key": "dayend.bill.paid_out",
+   "text": "支出",
+   "src": "PAID OUT"
+  },
+  {
+   "key": "dayend.bill.rent",
+   "text": "房租",
+   "src": "RENT"
+  },
+  {
+   "key": "dayend.bill.sales",
+   "text": "營業額",
+   "src": "SALES"
+  },
+  {
+   "key": "dayend.bill.shop",
+   "text": "擺設",
+   "src": "SHOP"
+  },
+  {
+   "key": "dayend.bill.stock",
+   "text": "進貨",
+   "src": "STOCK"
+  },
+  {
+   "key": "dayend.bill.strike",
+   "text": "赤字 — 警告 {strikes}/{limit}",
+   "src": "IN THE RED — STRIKE {strikes}/{limit}"
+  },
+  {
+   "key": "dayend.bill.thanks#other",
+   "text": "謝禮 · 請出 {n} 位",
+   "src": "THANKS · {n} SHOWN OUT"
+  },
+  {
+   "key": "dayend.bill.till",
+   "text": "收銀機",
+   "src": "TILL"
+  },
+  {
+   "key": "dayend.bill.tips",
+   "text": "小費",
+   "src": "TIPS"
+  },
+  {
+   "key": "dayend.bill.took_in",
+   "text": "收入",
+   "src": "TOOK IN"
+  },
+  {
+   "key": "dayend.board.garnish",
+   "text": "裝飾盤",
+   "src": "THE GARNISH TRAY"
+  },
+  {
+   "key": "dayend.board.kegs",
+   "text": "酒頭 — 酒桶",
+   "src": "ON TAP — THE KEGS"
+  },
+  {
+   "key": "dayend.board.mixers",
+   "text": "副材料區",
+   "src": "THE MIXER BOARD"
+  },
+  {
+   "key": "dayend.board.new_stock",
+   "text": "今晚新上架 · {meta}",
+   "src": "New on the board tonight · {meta}"
+  },
+  {
+   "key": "dayend.board.sold",
+   "text": "售出",
+   "src": "SOLD"
+  },
+  {
+   "key": "dayend.board.spirits",
+   "text": "今晚上架",
+   "src": "TONIGHT'S BOARD"
+  },
+  {
+   "key": "dayend.closing.basket#other",
+   "text": "購物籃裡還有 {n} 件東西。",
+   "src": "{n} THINGS ARE STILL IN THE BASKET."
+  },
+  {
+   "key": "dayend.closing.go_back",
+   "text": "返回",
+   "src": "GO BACK"
+  },
+  {
+   "key": "dayend.closing.head",
+   "text": "結束訂貨？",
+   "src": "CLOSE THE ORDER?"
+  },
+  {
+   "key": "dayend.closing.open_anyway",
+   "text": "照樣開店",
+   "src": "OPEN ANYWAY"
+  },
+  {
+   "key": "dayend.closing.van_empty",
+   "text": "今晚貨車會空車離開。",
+   "src": "THE VAN LEAVES EMPTY TONIGHT."
+  },
+  {
+   "key": "dayend.critic.exactly_right",
+   "text": "恰到好處",
+   "src": "exactly right"
+  },
+  {
+   "key": "dayend.critic.fair_pour",
+   "text": "還算可以",
+   "src": "a fair pour"
+  },
+  {
+   "key": "dayend.critic.rough_pour",
+   "text": "調得很粗糙",
+   "src": "a rough pour"
+  },
+  {
+   "key": "dayend.critic.shown_door",
+   "text": "被請出門",
+   "src": "shown the door"
+  },
+  {
+   "key": "dayend.critic.someone",
+   "text": "客人",
+   "src": "a drinker"
+  },
+  {
+   "key": "dayend.critic.walked_out",
+   "text": "沒等到就走了",
+   "src": "walked out"
+  },
+  {
+   "key": "dayend.critic.wrong_drink",
+   "text": "上錯酒",
+   "src": "wrong drink"
+  },
+  {
+   "key": "dayend.fine.altered",
+   "text": "改過的證",
+   "src": "ALTERED CARD"
+  },
+  {
+   "key": "dayend.fine.borrowed",
+   "text": "借來的證",
+   "src": "BORROWED CARD"
+  },
+  {
+   "key": "dayend.fine.the_law",
+   "text": "法規",
+   "src": "THE LAW"
+  },
+  {
+   "key": "dayend.fine.under_age",
+   "text": "未達飲酒年齡",
+   "src": "UNDER AGE"
+  },
+  {
+   "key": "dayend.fine.unread",
+   "text": "沒看證件",
+   "src": "UNREAD CARD"
+  },
+  {
+   "key": "dayend.fitting.free",
+   "text": "今晚可升級 1 次",
+   "src": "1 UPGRADE TONIGHT"
+  },
+  {
+   "key": "dayend.fitting.used",
+   "text": "升級已用掉",
+   "src": "UPGRADE USED"
+  },
+  {
+   "key": "dayend.host.fallback",
+   "text": "本店",
+   "src": "THE HOUSE"
+  },
+  {
+   "key": "dayend.host.go_on",
+   "text": "繼續",
+   "src": "GO ON"
+  },
+  {
+   "key": "dayend.host.got_it",
+   "text": "知道了",
+   "src": "GOT IT"
+  },
+  {
+   "key": "dayend.house.comfort",
+   "text": "舒適 {rating}",
+   "src": "COMFORT {rating}"
+  },
+  {
+   "key": "dayend.house.service",
+   "text": "服務 {rating}",
+   "src": "SERVICE {rating}"
+  },
+  {
+   "key": "dayend.market.title",
+   "text": "最後一輪 — 訂貨時間",
+   "src": "LAST CALL — TIME TO ORDER"
+  },
+  {
+   "key": "dayend.more.body",
+   "text": "達到 {stars} 星，這裡就會出現更多。",
+   "src": "Get {stars} stars and more of these show up here."
+  },
+  {
+   "key": "dayend.more.drinks#other",
+   "text": "還有 {n} 款酒，店裡暫時還不開放給你",
+   "src": "{n} drinks the house will not open for you yet"
+  },
+  {
+   "key": "dayend.more.identity",
+   "text": "{stars} 星解鎖更多",
+   "src": "MORE AT {stars} STARS"
+  },
+  {
+   "key": "dayend.more.lines#other",
+   "text": "還有 {n} 項，貨車暫時還不送",
+   "src": "{n} lines the van will not bring you yet"
+  },
+  {
+   "key": "dayend.more.name#other",
+   "text": "還有 {n} 項待解鎖",
+   "src": "{n} more waiting"
+  },
+  {
+   "key": "dayend.more.needs",
+   "text": "需要 {stars} 星 · 目前 {have} 星",
+   "src": "Needs {stars} stars · you have {have}"
+  },
+  {
+   "key": "dayend.nothing.body",
+   "text": "會送來什麼，要看你已經有什麼，還有你有幾顆星。",
+   "src": "What it brings depends on what you already have, and on how many stars you have."
+  },
+  {
+   "key": "dayend.nothing.identity",
+   "text": "今晚這一區沒有東西",
+   "src": "NOTHING ON THIS BOARD TONIGHT"
+  },
+  {
+   "key": "dayend.nothing.meta",
+   "text": "明天再來看看",
+   "src": "Try again tomorrow"
+  },
+  {
+   "key": "dayend.nothing.meta_line",
+   "text": "貨車每晚送來的清單都不一樣",
+   "src": "The van brings a different list every night"
+  },
+  {
+   "key": "dayend.nothing.name",
+   "text": "今晚沒有",
+   "src": "Nothing tonight"
+  },
+  {
+   "key": "dayend.os_clock",
+   "text": "第 {day} 天",
+   "src": "DAY {day}"
+  },
+  {
+   "key": "dayend.recipes.difficulty",
+   "text": "難度 · {difficulty}",
+   "src": "Difficulty · {difficulty}"
+  },
+  {
+   "key": "dayend.recipes.meta_line",
+   "text": "{difficulty} · {prep} · 用{glass}裝",
+   "src": "{difficulty} · {prep} · served in a {glass}"
+  },
+  {
+   "key": "dayend.recipes.on_menu",
+   "text": "明天起列入酒單 — 多一款酒可以賣",
+   "src": "On the menu tomorrow — one more drink to sell"
+  },
+  {
+   "key": "dayend.recipes.sealed.identity",
+   "text": "密封的木箱",
+   "src": "A SEALED CRATE"
+  },
+  {
+   "key": "dayend.recipes.sealed.meta",
+   "text": "密封",
+   "src": "Sealed"
+  },
+  {
+   "key": "dayend.recipes.sealed.meta_line",
+   "text": "店裡暫時還不開放這一款給你",
+   "src": "The house will not open this one for you yet"
+  },
+  {
+   "key": "dayend.recipes.sealed.name",
+   "text": "密封木箱",
+   "src": "Sealed Crate"
+  },
+  {
+   "key": "dayend.recipes.section",
+   "text": "酒譜",
+   "src": "THE RECIPE BOOK"
+  },
+  {
+   "key": "dayend.restock.covered",
+   "text": "整排補貨已經包含 — 不必重複購買",
+   "src": "Covered by the whole-well order — no need to buy it twice"
+  },
+  {
+   "key": "dayend.restock.section",
+   "text": "基本酒架",
+   "src": "THE WELL"
+  },
+  {
+   "key": "dayend.restock.state_all_in",
+   "text": "已全加",
+   "src": "ALL IN"
+  },
+  {
+   "key": "dayend.restock.well.all_in_basket",
+   "text": "需要補的酒都已經在購物籃裡了。",
+   "src": "Every bottle that needs filling is already in the basket."
+  },
+  {
+   "key": "dayend.restock.well.at_brim",
+   "text": "沒有要補的 — 每瓶都滿到瓶口了。",
+   "src": "Nothing to pour away — every bottle is at the brim."
+  },
+  {
+   "key": "dayend.restock.well.body",
+   "text": "補滿吧檯後面的每一瓶酒。每份 {price}。",
+   "src": "Fills every bottle behind the bar. {price} per measure."
+  },
+  {
+   "key": "dayend.restock.well.cost_all",
+   "text": "每份 {price} · 補滿整個酒架共 {total}",
+   "src": "{price} a measure · {total} to fill the shelf"
+  },
+  {
+   "key": "dayend.restock.well.cost_rest",
+   "text": "每份 {price} · 購物籃以外的酒共 {total}",
+   "src": "{price} a measure · {total} for the bottles not already in the basket"
+  },
+  {
+   "key": "dayend.restock.well.identity",
+   "text": "補滿整個基本酒架",
+   "src": "RESTOCK THE WHOLE WELL"
+  },
+  {
+   "key": "dayend.restock.well.meta",
+   "text": "每瓶都補到滿",
+   "src": "Every bottle to the brim"
+  },
+  {
+   "key": "dayend.restock.well.meta_line",
+   "text": "開店前送達",
+   "src": "Delivered before you open"
+  },
+  {
+   "key": "dayend.restock.well.name",
+   "text": "補滿整個酒架",
+   "src": "Restock the Whole Well"
+  },
+  {
+   "key": "dayend.restock.well.tops_up",
+   "text": "把底下你沒單獨挑選的酒全部補滿",
+   "src": "Tops up every bottle below that you have not picked yourself"
+  },
+  {
+   "key": "dayend.restock.word_full",
+   "text": "滿",
+   "src": "FULL"
+  },
+  {
+   "key": "dayend.restock.word_in",
+   "text": "已選",
+   "src": "IN"
+  },
+  {
+   "key": "dayend.score.counts",
+   "text": "服務 {served}  ·  離開 {walked}",
+   "src": "{served} SERVED  ·  {walked} WALKED"
+  },
+  {
+   "key": "dayend.stamp.disgrace",
+   "text": "丟臉",
+   "src": "DISGRACE"
+  },
+  {
+   "key": "dayend.stamp.record",
+   "text": "新紀錄",
+   "src": "NEW RECORD"
+  },
+  {
+   "key": "dayend.stand.all_open",
+   "text": "階梯上的每一階都已解鎖",
+   "src": "EVERY RUNG ON THE LADDER IS OPEN"
+  },
+  {
+   "key": "dayend.stand.capped",
+   "text": "店面已經超出酒吧設備的上限 — 快去買擺設",
+   "src": "THE ROOM WENT HIGHER THAN THE BAR IS FITTED FOR — BUY THE FITTINGS"
+  },
+  {
+   "key": "dayend.stand.ceiling",
+   "text": "上限",
+   "src": "CEILING"
+  },
+  {
+   "key": "dayend.stand.comfort",
+   "text": "舒適",
+   "src": "COMFORT"
+  },
+  {
+   "key": "dayend.stand.head",
+   "text": "今晚過後",
+   "src": "AFTER TONIGHT"
+  },
+  {
+   "key": "dayend.stand.held",
+   "text": "持平",
+   "src": "HELD"
+  },
+  {
+   "key": "dayend.stand.next_rung#other",
+   "text": "下一階在 {stars} 星 — 解鎖 {n} 項",
+   "src": "NEXT RUNG AT {stars} STARS — {n} THINGS OPEN"
+  },
+  {
+   "key": "dayend.stand.night",
+   "text": "第 {day} 晚",
+   "src": "NIGHT {day}"
+  },
+  {
+   "key": "dayend.stand.service",
+   "text": "服務",
+   "src": "SERVICE"
+  },
+  {
+   "key": "dayend.stand.tomorrow",
+   "text": "明天",
+   "src": "TOMORROW"
+  },
+  {
+   "key": "dayend.stand.tonight",
+   "text": "今晚",
+   "src": "TONIGHT"
+  },
+  {
+   "key": "dayend.stand.was",
+   "text": "原本 {stars}",
+   "src": "WAS {stars}"
+  },
+  {
+   "key": "dayend.week.bills",
+   "text": "今晚帳單",
+   "src": "TONIGHT'S BILLS"
+  },
+  {
+   "key": "dayend.week.closed",
+   "text": "公休",
+   "src": "CLOSED"
+  },
+  {
+   "key": "dayend.week.fines",
+   "text": "今晚罰款",
+   "src": "TONIGHT'S FINES"
+  },
+  {
+   "key": "dayend.week.head",
+   "text": "本週",
+   "src": "THE WEEK"
+  },
+  {
+   "key": "dayend.week.net",
+   "text": "目前淨利",
+   "src": "NET SO FAR"
+  },
+  {
+   "key": "dayend.week.taken",
+   "text": "目前收入",
+   "src": "TAKEN SO FAR"
+  }
+ ]
+}

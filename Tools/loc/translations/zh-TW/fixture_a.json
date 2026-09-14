@@ -1,0 +1,394 @@
+{
+ "strings": [
+  {
+   "key": "data.fixture.art_city.blurb",
+   "text": "三幅畫框裡的城市夜景。店裡唯一不是從窗戶看出去的風景。",
+   "src": "The skyline at night in three frames. The only view in the room that is not out of the window."
+  },
+  {
+   "key": "data.fixture.art_city.name",
+   "text": "城市三聯畫",
+   "src": "City Triptych"
+  },
+  {
+   "key": "data.fixture.back6_chevron.blurb",
+   "text": "珊瑚紅、奶油白和藍綠色的鋸齒紋，從這個角落延伸到那個角落，蓋過整片護牆板。整個空間再也靜不下來。",
+   "src": "Coral, cream and teal zigzags from corner to corner over the panelling. The room stops standing still."
+  },
+  {
+   "key": "data.fixture.back6_chevron.name",
+   "text": "人字紋牆",
+   "src": "Chevron Wall"
+  },
+  {
+   "key": "data.fixture.beer_mat.blurb",
+   "text": "酒頭底下的黑色橡膠墊。杯子沒接住的，它接。",
+   "src": "Black rubber under the font. It catches what the glass does not."
+  },
+  {
+   "key": "data.fixture.beer_mat.name",
+   "text": "滴酒墊",
+   "src": "Drip Mat"
+  },
+  {
+   "key": "data.fixture.ceil6_grid.blurb",
+   "text": "方形藻井，每一格中央都有一朵粉紅花飾。喝到第二杯才會注意到的天花板。",
+   "src": "Square coffers, each with a pink rosette at its heart. A ceiling you notice on your second drink."
+  },
+  {
+   "key": "data.fixture.ceil6_grid.name",
+   "text": "花飾格板",
+   "src": "Rosette Panels"
+  },
+  {
+   "key": "data.fixture.ceil6_ray.blurb",
+   "text": "珊瑚紅與洋紅色的光芒從屋子正中央向外放射。整間店都朝吧檯傾斜。",
+   "src": "Coral and magenta rays from the middle of the room outward. The whole place leans towards the bar."
+  },
+  {
+   "key": "data.fixture.ceil6_ray.name",
+   "text": "放射光天花板",
+   "src": "Sunray Ceiling"
+  },
+  {
+   "key": "data.fixture.ceil6_stars.blurb",
+   "text": "夜藍色的底，扎滿金色星星。外面已經打烊，裡面還是歡樂時光。",
+   "src": "Night blue with gold stars pricked through it. Closing time outside, happy hour in here."
+  },
+  {
+   "key": "data.fixture.ceil6_stars.name",
+   "text": "星空天花板",
+   "src": "Star Ceiling"
+  },
+  {
+   "key": "data.fixture.ceil_beams.blurb",
+   "text": "深色木樑橫過灰泥。房間有了蓋子，燈也有了打光的地方。",
+   "src": "Dark beams across the plaster. The room gets a lid, and the lamps something to throw light at."
+  },
+  {
+   "key": "data.fixture.ceil_beams.name",
+   "text": "木樑天花板",
+   "src": "Beamed Ceiling"
+  },
+  {
+   "key": "data.fixture.ceil_deco.blurb",
+   "text": "奶油色的階梯狀線板，排成一長條一長條。看起來像是價位更高的店才有的天花板。",
+   "src": "Stepped cream mouldings in long panels. It looks like the ceiling of somewhere that charges more."
+  },
+  {
+   "key": "data.fixture.ceil_deco.name",
+   "text": "裝飾藝術天花板",
+   "src": "Deco Ceiling"
+  },
+  {
+   "key": "data.fixture.ceil_palm.blurb",
+   "text": "頭頂畫滿棕櫚葉，彷彿酒吧就在樹下。煙霧從葉間飄過。",
+   "src": "Fronds painted overhead, as if the bar were under a tree. The smoke drifts through them."
+  },
+  {
+   "key": "data.fixture.ceil_palm.name",
+   "text": "棕櫚天花板",
+   "src": "Palm Ceiling"
+  },
+  {
+   "key": "data.fixture.ceil_stucco.blurb",
+   "text": "手工抹出漩渦紋的暖白灰泥。在它底下，店裡每盞燈看起來都柔和了些。",
+   "src": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it."
+  },
+  {
+   "key": "data.fixture.ceil_stucco.name",
+   "text": "灰泥天花板",
+   "src": "Stucco Ceiling"
+  },
+  {
+   "key": "data.fixture.counter_sink.blurb",
+   "text": "冷水、缺了角的排水口，還有一個會計較倒掉多少的房東。",
+   "src": "Cold water, a chipped drain, and a landlord who counts what goes down it."
+  },
+  {
+   "key": "data.fixture.counter_sink.name",
+   "text": "不鏽鋼水槽",
+   "src": "Steel Sink"
+  },
+  {
+   "key": "data.fixture.flamingo_triptych.blurb",
+   "text": "三幅畫框裡的海岸。紅鶴打烊後還賴著不走。",
+   "src": "The coast in three frames. The flamingo stays past closing."
+  },
+  {
+   "key": "data.fixture.flamingo_triptych.name",
+   "text": "紅鶴三聯畫",
+   "src": "Flamingo Triptych"
+  },
+  {
+   "key": "data.fixture.floor6_chip.blurb",
+   "text": "珊瑚紅、藍綠和奶油色的碎石，嵌在拋光的奶油色地面裡。飯店大廳的地板，鋪在一間不是大廳的店裡。",
+   "src": "Chips of coral, teal and cream set in polished cream. A hotel lobby floor for a room that is not one."
+  },
+  {
+   "key": "data.fixture.floor6_chip.name",
+   "text": "邁阿密磨石子地",
+   "src": "Miami Terrazzo"
+  },
+  {
+   "key": "data.fixture.floor6_grid.blurb",
+   "text": "深色地磚鑲著粉紅與青色線條，像從電玩裡搬出來的。走到吧檯就像在玩第一關。",
+   "src": "Dark tiles lined in pink and cyan, straight out of a video game. Walking to the bar feels like level one."
+  },
+  {
+   "key": "data.fixture.floor6_grid.name",
+   "text": "霓虹格線地板",
+   "src": "Neon Grid"
+  },
+  {
+   "key": "data.fixture.floor6_wave.blurb",
+   "text": "藍綠色的浪花滾過整片地板。潮水湧了進來，就留下來喝一杯。",
+   "src": "Teal waves rolling across the whole floor. The tide came in and stayed for a drink."
+  },
+  {
+   "key": "data.fixture.floor6_wave.name",
+   "text": "波浪地磚",
+   "src": "Wave Tiles"
+  },
+  {
+   "key": "data.fixture.floor_carpet.blurb",
+   "text": "花紋繁複的梅紫色地毯，什麼髒污都能包容。腳下一下子安靜了。",
+   "src": "Plum carpet with a busy pattern, the kind that forgives everything. The room goes quiet underfoot."
+  },
+  {
+   "key": "data.fixture.floor_carpet.name",
+   "text": "地毯",
+   "src": "Carpet"
+  },
+  {
+   "key": "data.fixture.floor_check.blurb",
+   "text": "黑白方格一路鋪到後牆。每部電影裡的每間餐館都有一片。",
+   "src": "Black and white squares running to the back wall. Every diner in every film had one."
+  },
+  {
+   "key": "data.fixture.floor_check.name",
+   "text": "棋盤格地板",
+   "src": "Checker Floor"
+  },
+  {
+   "key": "data.fixture.floor_marble.blurb",
+   "text": "帶灰色紋路的冰冷白石。高跟鞋踩上去，聲音聽起來都很貴。",
+   "src": "Cold white stone with grey veins. Heels sound expensive on it."
+  },
+  {
+   "key": "data.fixture.floor_marble.name",
+   "text": "大理石地板",
+   "src": "Marble Floor"
+  },
+  {
+   "key": "data.fixture.floor_rug.blurb",
+   "text": "橙色流過藍綠色，像從空中俯瞰的海岸線。它吸掉了木地板的回音。",
+   "src": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards."
+  },
+  {
+   "key": "data.fixture.floor_rug.name",
+   "text": "潮汐地毯",
+   "src": "Tide Rug"
+  },
+  {
+   "key": "data.fixture.floor_terra.blurb",
+   "text": "暖色陶土磚鋪在木板上。藏得住灑出來的酒，比木頭強多了。",
+   "src": "Warm clay tiles over the boards. It hides a spilled drink better than wood ever did."
+  },
+  {
+   "key": "data.fixture.floor_terra.name",
+   "text": "陶磚地板",
+   "src": "Terracotta"
+  },
+  {
+   "key": "data.fixture.lamp6_neonbar.blurb",
+   "text": "每支燈架上並排一根粉紅和一根青色燈管。牆在嗡嗡作響，整間店也是。",
+   "src": "A pink tube and a cyan tube side by side on each bracket. The wall hums, and so does the room."
+  },
+  {
+   "key": "data.fixture.lamp6_neonbar.name",
+   "text": "霓虹燈管壁燈",
+   "src": "Neon Tube Sconces"
+  },
+  {
+   "key": "data.fixture.lamp6_scallop.blurb",
+   "text": "黃銅燈臂撐著奶油色燈罩，把牆面染上暖光。飯店酒吧會有的那種燈。",
+   "src": "Cream shades on brass arms, washing the wall in warm light. The kind of lamp a hotel bar has."
+  },
+  {
+   "key": "data.fixture.lamp6_scallop.name",
+   "text": "扇貝壁燈",
+   "src": "Scallop Sconces"
+  },
+  {
+   "key": "data.fixture.lamp6_shell.blurb",
+   "text": "從裡面發光的珊瑚色貝殼。坐在底下的每個人看起來都像剛度假回來。",
+   "src": "Coral seashells glowing from inside. Everybody under them looks like they have been on holiday."
+  },
+  {
+   "key": "data.fixture.lamp6_shell.name",
+   "text": "貝殼燈",
+   "src": "Shell Lamps"
+  },
+  {
+   "key": "data.fixture.neon6_bird.blurb",
+   "text": "白色和粉紅燈管勾出一隻鵜鶘，嘴裡塞得滿滿的。附近的人都用牠來稱呼這間酒吧。",
+   "src": "A pelican in white and pink tube, beak full. The locals call the bar after it."
+  },
+  {
+   "key": "data.fixture.neon6_bird.name",
+   "text": "霓虹鵜鶘",
+   "src": "Neon Pelican"
+  },
+  {
+   "key": "data.fixture.neon6_glass.blurb",
+   "text": "青色的高杯，裡面是粉紅色，杯緣掛著一顆櫻桃。招牌直接說明了這間店是做什麼的。",
+   "src": "A tall glass in cyan with pink inside and a cherry on the rim. The sign says what the bar is for."
+  },
+  {
+   "key": "data.fixture.neon6_glass.name",
+   "text": "霓虹酒杯",
+   "src": "Neon Glass"
+  },
+  {
+   "key": "data.fixture.neon6_sun.blurb",
+   "text": "半顆太陽沉進粉紅色的線條裡。每晚都在酒吧開門的那一刻落下。",
+   "src": "A half sun sinking into pink lines. It sets every night at the same time the bar opens."
+  },
+  {
+   "key": "data.fixture.neon6_sun.name",
+   "text": "霓虹夕陽",
+   "src": "Neon Sunset"
+  },
+  {
+   "key": "data.fixture.neon_flamingo.blurb",
+   "text": "單腳站立的粉紅紅鶴，微微嗡嗡作響。站在那裡從來不嫌累。",
+   "src": "A pink flamingo on one leg, buzzing faintly. It never gets tired of standing there."
+  },
+  {
+   "key": "data.fixture.neon_flamingo.name",
+   "text": "霓虹紅鶴",
+   "src": "Neon Flamingo"
+  },
+  {
+   "key": "data.fixture.neon_martini.blurb",
+   "text": "經典招牌：一個永遠不會空的杯子。",
+   "src": "The classic sign: a glass that never empties."
+  },
+  {
+   "key": "data.fixture.neon_martini.name",
+   "text": "霓虹馬丁尼",
+   "src": "Neon Martini"
+  },
+  {
+   "key": "data.fixture.picR6_conv.blurb",
+   "text": "海邊公路上的一輛白色敞篷車。有人憑記憶畫的。",
+   "src": "A white convertible on a road along the sea. Somebody painted it from memory."
+  },
+  {
+   "key": "data.fixture.picR6_conv.name",
+   "text": "海岸公路",
+   "src": "Coast Road"
+  },
+  {
+   "key": "data.fixture.picR6_shapes.blurb",
+   "text": "三角形、圓圈和波浪線，用的是店裡的配色。沒人說得出它到底畫的是什麼。",
+   "src": "Triangles, circles and squiggles in the colours of the room. Nobody agrees what it is."
+  },
+  {
+   "key": "data.fixture.picR6_shapes.name",
+   "text": "曼菲斯幾何",
+   "src": "Memphis Shapes"
+  },
+  {
+   "key": "data.fixture.picR6_sunset.blurb",
+   "text": "兩棵棕櫚、粉紅太陽和土耳其藍的海，裝在細細的金色畫框裡。",
+   "src": "Two palms, a pink sun and a turquoise sea, in a thin gold frame."
+  },
+  {
+   "key": "data.fixture.picR6_sunset.name",
+   "text": "海上夕陽",
+   "src": "Ocean Sunset"
+  },
+  {
+   "key": "data.fixture.picS_trio.blurb",
+   "text": "一隻紅鶴、兩顆櫻桃和一對嘴唇，各自一個小畫框。總會有人問是從哪裡買的。",
+   "src": "A flamingo, two cherries and a pair of lips, one small frame each. Somebody always asks where they are from."
+  },
+  {
+   "key": "data.fixture.picS_trio.name",
+   "text": "普普三連畫",
+   "src": "Pop Trio"
+  },
+  {
+   "key": "data.fixture.picS_trioA.blurb",
+   "text": "金色畫框裡的調酒、棕櫚和太陽。本店的風格，掛在大家都看得到的地方。",
+   "src": "A cocktail, a palm and a sun in gold frames. The house style, hung where everybody can read it."
+  },
+  {
+   "key": "data.fixture.picS_trioA.name",
+   "text": "調酒三連畫",
+   "src": "Cocktail Trio"
+  },
+  {
+   "key": "data.fixture.picS_trioB.blurb",
+   "text": "唱片、鸚鵡和浪花，裱在藍綠和紅色的框裡。店裡沒掛喇叭卻最吵的一面牆。",
+   "src": "A record, a parrot and a wave, framed in teal and red. The loudest wall in the room without a speaker on it."
+  },
+  {
+   "key": "data.fixture.picS_trioB.name",
+   "text": "黑膠三連畫",
+   "src": "Vinyl Trio"
+  },
+  {
+   "key": "data.fixture.pic_pelican.blurb",
+   "text": "深色木框裡，一隻站在木樁上的鵜鶘。牠替調酒師盯著門口。",
+   "src": "A pelican on a post in a dark wood frame. It watches the door so the bartender does not have to."
+  },
+  {
+   "key": "data.fixture.pic_pelican.name",
+   "text": "鵜鶘",
+   "src": "Pelican"
+  },
+  {
+   "key": "data.fixture.plant5_yucca_L.blurb",
+   "text": "光禿禿的枝幹頂著一叢尖葉，種在陶盆裡。守在窗邊站崗。",
+   "src": "A spiky crown on a bare cane, in a terracotta pot. It stands guard by the window."
+  },
+  {
+   "key": "data.fixture.plant5_yucca_L.name",
+   "text": "絲蘭",
+   "src": "Yucca"
+  },
+  {
+   "key": "data.fixture.plant_agave.blurb",
+   "text": "藍綠色、矮而寬，種在淺盆裡。它待在霓虹燈底下，而不是擋在前面。",
+   "src": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it."
+  },
+  {
+   "key": "data.fixture.plant_agave.name",
+   "text": "龍舌蘭盆栽",
+   "src": "Agave Bowl"
+  },
+  {
+   "key": "data.fixture.plant_palm.blurb",
+   "text": "細長的葉子配上陶盆。讓角落看起來不像走廊的最便宜辦法。",
+   "src": "Thin fronds and a clay pot. The cheapest way to stop a corner looking like a corridor."
+  },
+  {
+   "key": "data.fixture.plant_palm.name",
+   "text": "散尾葵",
+   "src": "Areca Palm"
+  },
+  {
+   "key": "data.fixture.plant_pothos.blurb",
+   "text": "它往下長而不是往上長，從三根黃銅腳架垂下來。店裡唯一朝地板伸手的植物。",
+   "src": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor."
+  },
+  {
+   "key": "data.fixture.plant_pothos.name",
+   "text": "垂吊黃金葛",
+   "src": "Trailing Pothos"
+  }
+ ]
+}

@@ -113,11 +113,11 @@ namespace LastCall.UI
         {
             var run = Run;
             _serveShakerText.text = run.Glass.IsEmpty
-                ? "shaker empty"
-                : $"shaker {run.Glass.FillFraction:P0} left";
+                ? UIText.T("bench.serve.shaker_empty")
+                : UIText.T("bench.serve.shaker_left", ("pct", run.Glass.FillFraction.ToString("P0")));
             _serveGlassText.text = run.ServingGlass.IsEmpty
-                ? "glass empty"
-                : $"glass {run.ServingGlass.FillFraction:P0} full";
+                ? UIText.T("bench.serve.glass_empty")
+                : UIText.T("bench.serve.glass_pct_full", ("pct", run.ServingGlass.FillFraction.ToString("P0")));
             // The hand is re-measured on the way in (the tier dresses the cap, and the cap is the
             // spout), and a hand that is not holding anything is stood back on the rest.
             ConfigureServeHand();
@@ -141,8 +141,8 @@ namespace LastCall.UI
                 ? Color.white : DrinkColor(run.Glass);
             _serveShaker.gameObject.SetActive(!run.Glass.IsEmpty);
             _aimText.text = run.Glass.IsEmpty
-                ? "NOTHING IN THE TIN · PICK A BOTTLE AT THE BACK BAR"
-                : "GRAB THE SHAKER · TIP IT OVER THE GLASS";
+                ? UIText.T("bench.serve.aim.nothing")
+                : UIText.T("bench.serve.aim.grab");
             _aimText.color = UITheme.TextSecondary;
 
 
@@ -296,7 +296,7 @@ namespace LastCall.UI
                     _serveGrabbed = false;
                     _serveHand.Release();     // set back on the bench, not snapped upright in mid-air
                     if (_aimText != null)
-                        _aimText.text = "THIS ONE NEEDS MIXING — BACK TO THE SHAKER";
+                        _aimText.text = UIText.T("bench.serve.aim.needs_mixing");
                 }
                 else if (running && clear)
                 {
@@ -479,7 +479,7 @@ namespace LastCall.UI
             RefreshServeText(run, 1.0);
             if (run.Glass.IsEmpty)
             {
-                _aimText.text = "SHAKER EMPTY — FINISH IT AND SERVE";
+                _aimText.text = UIText.T("bench.serve.aim.shaker_empty");
                 _aimText.color = UITheme.TextSecondary;
             }
         }
@@ -492,10 +492,11 @@ namespace LastCall.UI
             if (run != null)
             {
                 _serveShakerText.text = run.Glass.IsEmpty
-                    ? "shaker empty" : $"shaker {run.Glass.FillFraction:P0} left";
-                _serveGlassText.text = "glass FULL";
+                    ? UIText.T("bench.serve.shaker_empty")
+                    : UIText.T("bench.serve.shaker_left", ("pct", run.Glass.FillFraction.ToString("P0")));
+                _serveGlassText.text = UIText.T("bench.serve.glass_full");
             }
-            _aimText.text = "THE GLASS IS FULL — SERVE IT";
+            _aimText.text = UIText.T("bench.serve.aim.glass_full");
             _aimText.color = UITheme.Amber[3];
         }
 
@@ -524,12 +525,12 @@ namespace LastCall.UI
 
         private void RefreshServeText(TycoonRun run, double accuracy)
         {
-            _serveShakerText.text = $"shaker {run.Glass.FillFraction:P0} left";
-            _serveGlassText.text = $"glass {run.ServingGlass.FillFraction:P0} full";
+            _serveShakerText.text = UIText.T("bench.serve.shaker_left", ("pct", run.Glass.FillFraction.ToString("P0")));
+            _serveGlassText.text = UIText.T("bench.serve.glass_pct_full", ("pct", run.ServingGlass.FillFraction.ToString("P0")));
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
             RefreshServeMixBar(run);
-            _aimText.text = accuracy > 0.8 ? "CLEAN POUR"
-                : accuracy > AimGate ? "OVER THE GLASS — STEADY" : "MISSING THE GLASS — NOTHING POURS";
+            _aimText.text = accuracy > 0.8 ? UIText.T("bench.serve.aim.clean")
+                : accuracy > AimGate ? UIText.T("bench.serve.aim.steady") : UIText.T("bench.serve.aim.missing");
             _aimText.color = Color.Lerp(UITheme.ViceRed[3], UITheme.Lime[3], (float)accuracy);
         }
 
@@ -598,7 +599,8 @@ namespace LastCall.UI
             // and the garnish moved to the room's own counter with the rail, and a card
             // that still listed them here would be directions to a station that left.
             // Cut into the counter like the tin bench's (2026-09-13).
-            BuildStepStrip(_servePanel, new[] { "TIP THE TIN", "SERVE IT" }, _serveStepRows);
+            BuildStepStrip(_servePanel,
+                new[] { UIText.T("bench.serve.step.tip"), UIText.T("bench.serve.step.serve") }, _serveStepRows);
 
             // ON THE BAND (2026-08-26): what is left in the tin reads under the step
             // card in the left column, what is in the glass reads over the name plate on
@@ -624,7 +626,7 @@ namespace LastCall.UI
             // 550, -60: at 575 its right edge stood past the author's 1149-wide working
             // area, and at -8 its head poked over the counter rail (2026-08-26).
             // The tin bench's instrument, with the other word on its cap (2026-09-04).
-            _serveMixBar = BuildStandingGauge(_servePanel, MeasureAt, MeasureSize, "GLASS");
+            _serveMixBar = BuildStandingGauge(_servePanel, MeasureAt, MeasureSize, UIText.T("bench.serve.gauge_head"));
 
             // NO FURNITURE ON THIS STAGE AT ALL (2026-08-13, the author: "bardak
             // sahnesindeki masa assetini kaldır, zaten mor alan tezgahmış gibi olmalı").
@@ -782,7 +784,7 @@ namespace LastCall.UI
                 // with its lid still on the counter. One law, both doors.
                 if (!_capped)
                 {
-                    _aimText.text = "THE TIN IS OPEN — PUT THE LID ON AND MIX IT";
+                    _aimText.text = UIText.T("bench.serve.aim.tin_open");
                     return;
                 }
                 _serveGrabbed = true;
@@ -834,7 +836,7 @@ namespace LastCall.UI
             var doneLabel = NewText("Label", doneFace, _display, 16, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            doneLabel.text = "SERVE IT ▶";
+            doneLabel.text = UIText.T("bench.serve.serve_key");
         }
 
     }

@@ -81,6 +81,24 @@ namespace LastCall.Core
         /// and the rule behind them cannot drift apart.</summary>
         public static string Label(int day) => $"WEEK {WeekOf(day)} · {Name(NightOf(day))}";
 
+        /// <summary><see cref="Label"/> as a string-table line (localization L1).</summary>
+        public static Line LabelLine(int day) =>
+            Line.Of("calendar.week_night").With("week", WeekOf(day)).With("night", NameLine(NightOf(day)));
+
+        /// <summary><see cref="Name"/> as a string-table line: <c>calendar.night.monday</c> …</summary>
+        public static Line NameLine(BarNight night)
+        {
+            switch (night)
+            {
+                case BarNight.Monday: return Line.Of("calendar.night.monday");
+                case BarNight.Tuesday: return Line.Of("calendar.night.tuesday");
+                case BarNight.Wednesday: return Line.Of("calendar.night.wednesday");
+                case BarNight.Thursday: return Line.Of("calendar.night.thursday");
+                case BarNight.Friday: return Line.Of("calendar.night.friday");
+                default: return Line.Of("calendar.night.saturday");
+            }
+        }
+
         public static string Name(BarNight night)
         {
             switch (night)
@@ -119,6 +137,17 @@ namespace LastCall.Core
         /// Presentation asks for this; the rules only ever count the six.</summary>
         public static readonly string[] WeekColumns =
             { "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
+
+        /// <summary><see cref="DayOffName"/> as a string-table line (localization L1).</summary>
+        public static readonly Line DayOffLine = Line.Of("calendar.day_off");
+
+        /// <summary><see cref="WeekColumns"/> as string-table lines, in the same order.</summary>
+        public static readonly Line[] WeekColumnLines =
+        {
+            Line.Of("calendar.column.mon"), Line.Of("calendar.column.tue"), Line.Of("calendar.column.wed"),
+            Line.Of("calendar.column.thu"), Line.Of("calendar.column.fri"), Line.Of("calendar.column.sat"),
+            Line.Of("calendar.column.sun"),
+        };
 
         private static int Index(int day) => Math.Max(1, day) - 1;
     }

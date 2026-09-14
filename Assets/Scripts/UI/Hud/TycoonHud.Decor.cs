@@ -30,8 +30,9 @@ namespace LastCall.UI
             { "bar", "walls", "wall_art", "light", "furniture", "greenery", "counter" };
 
         // SHORT, because the rail is narrow: a word or two a line, two lines at most.
-        private static readonly string[] DecorShelfWords =
-            { "BAR & GLASS", "WALLS", "ON THE WALL", "LIGHTS", "FLOOR", "PLANTS", "COUNTER" };
+        private static readonly string[] DecorShelfWordKeys =
+            { "decor.shelf.bar", "decor.shelf.walls", "decor.shelf.wall_art", "decor.shelf.light",
+              "decor.shelf.furniture", "decor.shelf.greenery", "decor.shelf.counter" };
 
         private static readonly string[] DecorShelfIcons =
             { "up_seats", "up_walls", "up_wall_art", "up_light", "up_furniture", "up_greenery", "up_counter" };
@@ -84,14 +85,14 @@ namespace LastCall.UI
             // THE WALLS ARE WHERE A BARE BAR IS SENT (2026-09-06): until the second rung of the
             // back wall is up, the walls' sign says so, and so does their key on the rail.
             bool sendHere = _decorSection == "walls" && run.LadderLevel("walls") < 2;
-            ShopSign(sendHere ? "START HERE  ▸  THE WALLS — THE ROOM'S COMFORT"
+            ShopSign(sendHere ? UIText.T("decor.sign.start_here")
                               : GroupTitle(_decorSection), sendHere);
 
             var slots = new List<string>();
             foreach (var f in run.FixtureCatalogue)
                 if (f.Group == _decorSection && !slots.Contains(f.Slot)) slots.Add(f.Slot);
             foreach (var slot in slots) DecorLadder(run, slot);
-            if (slots.Count == 0) _cardTarget = ShopSection("NOTHING ON THIS SHELF YET");
+            if (slots.Count == 0) _cardTarget = ShopSection(UIText.T("decor.shelf_empty"));
         }
 
         // ── the rail ─────────────────────────────────────────────────────────────
@@ -146,7 +147,7 @@ namespace LastCall.UI
                 word.horizontalOverflow = HorizontalWrapMode.Wrap;
                 word.verticalOverflow = VerticalWrapMode.Overflow;
                 word.lineSpacing = 0.9f;
-                word.text = DecorShelfWords[i];
+                word.text = UIText.T(DecorShelfWordKeys[i]);
 
                 // How many rungs this shelf could sell TONIGHT — the number that says where
                 // the next thing to do is, without opening every shelf to look.
@@ -176,18 +177,17 @@ namespace LastCall.UI
                 MarkHoverable(key, face);
 
                 string title = GroupTitle(shelf == "bar" ? null : shelf);
-                if (shelf == "bar") title = "SEATS, THE BAR & THE GLASSWARE";
+                if (shelf == "bar") title = UIText.T("decor.rail.bar_title");
                 int count = open;
                 var relay = key.gameObject.AddComponent<HoverRelay>();
                 relay.Entered = () => ShowShopCard(new TileSpec
                 {
                     Identity = title,
-                    MetaLine = count == 0 ? "Nothing on this shelf can be bought tonight"
-                             : count == 1 ? "One thing on this shelf can be bought tonight"
-                             : count + " things on this shelf can be bought tonight",
+                    MetaLine = count == 0 ? UIText.T("decor.rail.open_none")
+                             : UIText.N("decor.rail.open_count", count),
                     Body = shelf == "bar"
-                        ? "Stools, the bar top and the glass lines. Each one uses the night's one upgrade."
-                        : "Every look for this part of the room: what you have bought, what comes next, and what is still to earn.",
+                        ? UIText.T("decor.rail.body_bar")
+                        : UIText.T("decor.rail.body_room"),
                     Art = ii.sprite,
                 });
                 relay.Exited = () => ShowShopCard(null);
@@ -221,19 +221,19 @@ namespace LastCall.UI
         private void BuildFittingShelves(TycoonRun run, TycoonConfig cfg)
         {
             int raised = 0;
-            _cardTarget = ShopSection("SEATS & BAR", columns: 4);
+            _cardTarget = ShopSection(UIText.T("decor.fit.section_seats"), columns: 4);
+            int seat = Math.Min(run.Seats + 1, cfg.MaxSeats);
             var stool = new TileSpec
             {
-                Name = "One More Stool",
-                Meta = "Seat " + Math.Min(run.Seats + 1, cfg.MaxSeats) + " of " + cfg.MaxSeats,
+                Name = UIText.T("decor.fit.stool.name"),
+                Meta = UIText.T("decor.fit.stool.meta", ("seat", seat), ("max", cfg.MaxSeats)),
                 Art = UpgradeIcon("seats"),
                 ArtH = IconH,
-                Identity = "ONE MORE STOOL",
-                MetaLine = "The floor · seat " + Math.Min(run.Seats + 1, cfg.MaxSeats)
-                           + " of " + cfg.MaxSeats,
-                Body = "One more customer can sit at the bar.",
-                BuffA = new Buff(BuffKind.Gain, "+1 seat · +0.25 stars"),
-                BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
+                Identity = UIText.T("decor.fit.stool.identity"),
+                MetaLine = UIText.T("decor.fit.stool.meta_line", ("seat", seat), ("max", cfg.MaxSeats)),
+                Body = UIText.T("decor.fit.stool.body"),
+                BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.stool.gain")),
+                BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
             };
             if (run.Seats < cfg.MaxSeats)
             {
@@ -248,17 +248,16 @@ namespace LastCall.UI
             // show (2026-08-09).
             var bar = new TileSpec
             {
-                Name = "Resurface the Bar",
-                Meta = "Rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
+                Name = UIText.T("decor.fit.bar.name"),
+                Meta = UIText.T("decor.fit.rung_of", ("rung", run.CounterTier), ("max", cfg.MaxAmbienceTier)),
                 Art = UpgradeIcon("bar"),
                 CardArt = ItemArt.Load("sh_p_bar"),
                 ArtH = IconH,
-                Identity = "RESURFACE THE BAR",
-                MetaLine = "The room · rung " + run.CounterTier + " of " + cfg.MaxAmbienceTier,
-                Body = "A better bar top makes every customer happier. Even the "
-                       + "ones whose drink you get wrong.",
-                BuffA = new Buff(BuffKind.Gain, "+0.03 on every served visit, up to +0.06"),
-                BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
+                Identity = UIText.T("decor.fit.bar.identity"),
+                MetaLine = UIText.T("decor.fit.bar.meta_line", ("rung", run.CounterTier), ("max", cfg.MaxAmbienceTier)),
+                Body = UIText.T("decor.fit.bar.body"),
+                BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.bar.gain")),
+                BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
             };
             if (run.CounterTier < cfg.MaxAmbienceTier)
             {
@@ -267,33 +266,35 @@ namespace LastCall.UI
                 AddTile(bar); raised++;
             }
 
-            _cardTarget = ShopSection("GLASSWARE", columns: 4);
+            _cardTarget = ShopSection(UIText.T("decor.fit.section_glass"), columns: 4);
             foreach (var g in run.Glassware)
             {
                 var glass = g;
                 int tier = run.GlassTier(glass.Id);
                 if (tier >= TycoonRun.MaxGlassTier) continue;     // a finished line is a bought one
                 int stepPrice = glass.TierPrices[tier - 1];
+                string glassName = UIText.Data("glass", glass.Id, "name", glass.Name);
+                string rungOf = UIText.T("decor.fit.rung_of", ("rung", tier), ("max", TycoonRun.MaxGlassTier));
                 var spec = new TileSpec
                 {
-                    Name = glass.Name,
-                    Meta = "Rung " + tier + " of " + TycoonRun.MaxGlassTier,
+                    Name = glassName,
+                    Meta = rungOf,
                     Art = UpgradeIcon("glass"),
                     CardArt = GlassArt.For(glass, Mathf.Min(tier + 1, TycoonRun.MaxGlassTier)).Sprite,
                     ArtH = IconH,
-                    Identity = glass.Name.ToUpperInvariant() + " GLASSWARE",
-                    MetaLine = "Rung " + tier + " of " + TycoonRun.MaxGlassTier
-                               + " · " + DrinksServedIn(glass.Id),
-                    Body = "Better glasses make every customer happier, and win you stars.",
-                    BuffA = new Buff(BuffKind.Gain, "+1 rung on the " + glass.Name.ToLowerInvariant()
-                                     + " line · every drink served in one"),
-                    BuffB = new Buff(BuffKind.Bad, "Uses tonight's one upgrade"),
+                    Identity = UIText.T("decor.fit.glass.identity", ("glass", UIText.Caps(glassName))),
+                    MetaLine = rungOf + " · " + DrinksServedIn(glass.Id),
+                    Body = UIText.T("decor.fit.glass.body"),
+                    // Lower case the invariant way, as it always was (no per-language lower yet).
+                    BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.glass.gain",
+                                     ("glass", glassName.ToLowerInvariant()))),
+                    BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
                 };
                 DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
                     () => run.BuyGlassTier(glass.Id));
                 AddTile(spec); raised++;
             }
-            if (raised == 0) _cardTarget = ShopSection("THE BAR IS FITTED — NOTHING LEFT TO RAISE");
+            if (raised == 0) _cardTarget = ShopSection(UIText.T("decor.fit.all_fitted"));
         }
 
         // ── one ladder: its head, and every rung as a card ─────────────────────
@@ -325,17 +326,19 @@ namespace LastCall.UI
             var title = NewText("T", head, _shop, 16, TextAnchor.LowerLeft, ShopInk);
             Stretch(title.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 6), new Vector2(-300, 0));
             title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.text = (where != null && where.Title != null ? where.Title : slot).ToUpperInvariant();
+            title.text = UIText.Caps(where != null && where.Title != null
+                ? UIText.Data("slot", where.Id, "title", where.Title) : slot);
 
             var status = NewText("S", head, _shop, 8, TextAnchor.LowerRight, TileMetaInk);
             Stretch(status.rectTransform, Vector2.zero, Vector2.one, new Vector2(300, 8), new Vector2(-6, 0));
             status.horizontalOverflow = HorizontalWrapMode.Overflow;
             var top = climbed > 0 ? TopRung(rungs, climbed) : null;
             string worth = top == null ? "" : ToolWords(run, top, brief: true) ?? (top.Comfort > 0
-                ? "+" + top.Comfort.ToString("0.0#", CultureInfo.InvariantCulture) + " COMFORT" : "");
+                ? UIText.T("decor.comfort", ("comfort", top.Comfort.ToString("0.0#", CultureInfo.InvariantCulture))) : "");
             status.text = total > 0
-                ? (climbed == 0 ? "NOTHING FITTED YET" : "MARK " + climbed + " OF " + total)
-                  + (worth.Length > 0 ? "  ·  " + worth.ToUpperInvariant() : "")
+                ? (climbed == 0 ? UIText.T("decor.ladder.nothing_fitted")
+                                : UIText.T("decor.ladder.mark_of", ("mark", climbed), ("total", total)))
+                  + (worth.Length > 0 ? "  ·  " + UIText.Caps(worth) : "")
                 : "";
 
             var rule = NewRect("Rule", head);
@@ -369,20 +372,26 @@ namespace LastCall.UI
         /// has room for the speed and nothing after it; the reading card gets the whole of it.</summary>
         private static string ToolWords(TycoonRun run, FixtureDefinition f, bool brief = false)
         {
-            string faster = f.WorkSpeed > 1.0001
-                ? ((int)Math.Round((f.WorkSpeed - 1.0) * 100)).ToString(CultureInfo.InvariantCulture) + "% faster"
+            string percent = f.WorkSpeed > 1.0001
+                ? ((int)Math.Round((f.WorkSpeed - 1.0) * 100)).ToString(CultureInfo.InvariantCulture)
                 : null;
-            string kegs = f.TapLevel + (f.TapLevel == 1 ? " keg on tap" : " kegs on tap");
             if (f.IsTap)
-                return brief ? (faster != null ? "Pours " + faster : kegs)
-                             : (faster != null ? "Pours " + faster + " · " : "") + kegs;
+            {
+                string kegs = UIText.N("decor.tool.kegs_on_tap", f.TapLevel);
+                string pours = percent != null ? UIText.T("decor.tool.pours_faster", ("percent", percent)) : null;
+                return brief ? (pours ?? kegs)
+                             : (pours != null ? pours + " · " : "") + kegs;
+            }
             if (f.IsDrain)
-                return (brief ? "Washes in " : "Washes up in ")
-                       + (f.WashSeconds > 0 ? f.WashSeconds : Housekeeping.WashSeconds)
-                           .ToString("0.#", CultureInfo.InvariantCulture) + " s"
-                       + (f.DrainsFree && !brief ? " · drains free" : "");
+            {
+                string seconds = (f.WashSeconds > 0 ? f.WashSeconds : Housekeeping.WashSeconds)
+                    .ToString("0.#", CultureInfo.InvariantCulture);
+                return UIText.T(brief ? "decor.tool.washes_brief" : "decor.tool.washes", ("seconds", seconds))
+                       + (f.DrainsFree && !brief ? " · " + UIText.T("decor.tool.drains_free") : "");
+            }
             if (f.Slot == "shaker")
-                return faster != null ? "Shakes " + faster : brief ? "The house tin" : "The tin you shake with";
+                return percent != null ? UIText.T("decor.tool.shakes_faster", ("percent", percent))
+                    : brief ? UIText.T("decor.tool.house_tin") : UIText.T("decor.tool.tin_you_shake");
             return null;
         }
 
@@ -405,35 +414,39 @@ namespace LastCall.UI
             bool locked = rungLock || starLock;
             var art = FixtureArt(f.Swatch ?? f.Sprite);
 
-            string place = where != null && where.Place != null ? where.Place
-                         : where != null && where.OnCounter ? "The counter" : "The room";
+            string place = where != null && where.Place != null ? UIText.Data("slot", where.Id, "place", where.Place)
+                         : where != null && where.OnCounter ? UIText.T("decor.card.place_counter")
+                         : UIText.T("decor.card.place_room");
             string tool = ToolWords(run, f);
             string comfort = f.Comfort > 0
-                ? "+" + f.Comfort.ToString("0.0#", CultureInfo.InvariantCulture) + " comfort" : null;
+                ? UIText.T("decor.comfort", ("comfort", f.Comfort.ToString("0.0#", CultureInfo.InvariantCulture))) : null;
+            string fixtureName = UIText.Data("fixture", f.Id, "name", f.Name);
             var spec = new TileSpec
             {
-                Name = f.Name,
+                Name = fixtureName,
                 Art = art,
                 CardArt = art,
-                Identity = f.Name.ToUpperInvariant(),
-                MetaLine = place + (f.Level > 0 ? " · mark " + f.Level + " of " + total : ""),
-                Body = f.Flavor,
+                Identity = UIText.Caps(fixtureName),
+                MetaLine = place + (f.Level > 0
+                    ? " · " + UIText.T("decor.card.mark_of", ("mark", f.Level), ("total", total)) : ""),
+                Body = UIText.Data("fixture", f.Id, "blurb", f.Flavor),
                 BuffA = tool != null
-                    ? new Buff(BuffKind.Gain, tool + (comfort != null ? " · " + comfort + " to the room" : ""))
-                    : comfort != null ? new Buff(BuffKind.Gain, comfort + " to the room") : null,
+                    ? new Buff(BuffKind.Gain, tool + (comfort != null
+                        ? " · " + UIText.T("decor.card.to_room", ("comfort", comfort)) : ""))
+                    : comfort != null ? new Buff(BuffKind.Gain, UIText.T("decor.card.to_room", ("comfort", comfort))) : null,
             };
 
             if (worn)
             {
                 spec.State = TileState.Ordered;
                 spec.BuffB = new Buff(BuffKind.Gain, f.Level > 0 && climbed > f.Level
-                    ? "In the room now · the room stays worth mark " + climbed
-                    : "In the room now");
+                    ? UIText.T("decor.card.worn_stays", ("mark", climbed))
+                    : UIText.T("decor.card.worn"));
             }
             else if (owned)
             {
                 spec.State = TileState.Held;
-                spec.BuffB = new Buff(BuffKind.Use, "Bought already · wear it any night, free — the room stays worth mark " + climbed);
+                spec.BuffB = new Buff(BuffKind.Use, UIText.T("decor.card.owned", ("mark", climbed)));
                 string id = f.Id;
                 spec.OnClick = () =>
                 {
@@ -446,18 +459,20 @@ namespace LastCall.UI
             else if (rungLock)
             {
                 spec.State = TileState.Sealed;
-                spec.BuffB = new Buff(BuffKind.Bad, "Fit mark " + (climbed + 1) + " first · this bar is at mark " + climbed);
+                spec.BuffB = new Buff(BuffKind.Bad, UIText.T("decor.card.rung_lock",
+                    ("next", climbed + 1), ("mark", climbed)));
             }
             else if (starLock)
             {
                 spec.State = TileState.Sealed;
-                spec.BuffB = new Buff(BuffKind.Bad, "Needs a " + f.Stars.ToString("0.0", CultureInfo.InvariantCulture)
-                    + "-star room · you are at " + run.Rating.Average.ToString("0.0", CultureInfo.InvariantCulture));
+                spec.BuffB = new Buff(BuffKind.Bad, UIText.T("decor.card.star_lock",
+                    ("stars", f.Stars.ToString("0.0", CultureInfo.InvariantCulture)),
+                    ("have", run.Rating.Average.ToString("0.0", CultureInfo.InvariantCulture))));
             }
             else
             {
                 DressBuyable(spec, run.FixturePrice(f), "fx:" + f.Id, false, () => run.BuyFixture(f.Id));
-                spec.BuffB = new Buff(BuffKind.Cost, "Never spends the night's one upgrade");
+                spec.BuffB = new Buff(BuffKind.Cost, UIText.T("decor.card.no_upgrade_spent"));
             }
 
             // ── the plate ──
@@ -510,9 +525,9 @@ namespace LastCall.UI
                 mt.text = f.Level.ToString(CultureInfo.InvariantCulture);
             }
 
-            if (worn) CardStamp(win, "WORN", ItemArt.Load("sh_g_tick"), UITheme.Lime[3]);
-            else if (spec.State == TileState.Picked) CardStamp(win, "IN BASKET", ItemArt.Load("sh_g_tick"), UITheme.Amber[3]);
-            else if (locked) CardStamp(win, "LOCKED", ItemArt.Load("sh_b_lock"), new Color(0.86f, 0.87f, 0.92f, 1f));
+            if (worn) CardStamp(win, UIText.T("decor.stamp.worn"), ItemArt.Load("sh_g_tick"), UITheme.Lime[3]);
+            else if (spec.State == TileState.Picked) CardStamp(win, UIText.T("decor.stamp.in_basket"), ItemArt.Load("sh_g_tick"), UITheme.Amber[3]);
+            else if (locked) CardStamp(win, UIText.T("decor.stamp.locked"), ItemArt.Load("sh_b_lock"), new Color(0.86f, 0.87f, 0.92f, 1f));
 
             // ── the name, and the one thing it does ──
             var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft, locked ? ShopInkSoft : ShopInk);
@@ -520,10 +535,11 @@ namespace LastCall.UI
             name.horizontalOverflow = HorizontalWrapMode.Wrap;
             name.verticalOverflow = VerticalWrapMode.Truncate;
             name.lineSpacing = 1.0f;
-            name.text = f.Name.ToUpperInvariant();
+            name.text = UIText.Caps(fixtureName);
 
             string fact = ToolWords(run, f, brief: true)
-                ?? (comfort != null ? comfort : f.Level > 0 ? "Mark " + f.Level : "Given with the room");
+                ?? (comfort != null ? comfort
+                    : f.Level > 0 ? UIText.T("decor.card.mark", ("mark", f.Level)) : UIText.T("decor.card.given"));
             float factX = 8f;
             if (tool == null && comfort != null)
             {
@@ -539,11 +555,12 @@ namespace LastCall.UI
             Place(meta.rectTransform, new Vector2(0, 1), new Vector2(CardW - factX - 8f, 16f), new Vector2(factX, -CardMetaTop));
             meta.horizontalOverflow = HorizontalWrapMode.Wrap;
             meta.verticalOverflow = VerticalWrapMode.Truncate;
-            meta.text = fact.ToUpperInvariant();
+            meta.text = UIText.Caps(fact);
 
             // ── the foot: the one control ──
             if (worn)
-                CardFootWord(rt, f.Level > 0 ? "ON SHOW" : "IN THE ROOM", ItemArt.Load("sh_g_tick"), StripStock);
+                CardFootWord(rt, f.Level > 0 ? UIText.T("decor.foot.on_show") : UIText.T("decor.foot.in_room"),
+                    ItemArt.Load("sh_g_tick"), StripStock);
             else if (owned)
             {
                 var key = NewRect("Wear", rt);
@@ -556,13 +573,13 @@ namespace LastCall.UI
                 var kt = NewText("L", key, _shop, 16, TextAnchor.MiddleCenter, Color.white);
                 Stretch(kt.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 kt.horizontalOverflow = HorizontalWrapMode.Overflow;
-                kt.text = "WEAR";
+                kt.text = UIText.T("decor.foot.wear");
                 var press = rt.gameObject.AddComponent<Win98Press>();
                 press.Face = ki;
                 press.Caption = kt.rectTransform;
             }
             else if (rungLock)
-                CardFootWord(rt, "MARK " + (climbed + 1) + " FIRST", ItemArt.Load("sh_b_lock"), StripSealed);
+                CardFootWord(rt, UIText.T("decor.foot.mark_first", ("mark", climbed + 1)), ItemArt.Load("sh_b_lock"), StripSealed);
             else if (starLock)
             {
                 StarRow(rt, new Vector2(0, 1), new Vector2(8f, -(CardFootTop + 7f)), 12f,

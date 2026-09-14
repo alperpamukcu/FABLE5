@@ -175,7 +175,8 @@ namespace LastCall.Core
             get
             {
                 if (!IdInspected)
-                    throw new InvalidOperationException("The card has not been read; the papers are behind it.");
+                    throw Said.With(new InvalidOperationException("The card has not been read; the papers are behind it."),
+                        Line.Of("rule.card_not_read"));
                 return Regular?.Papers;
             }
         }
@@ -199,7 +200,7 @@ namespace LastCall.Core
         internal void Kick(bool offTheBooks)
         {
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("They are not waiting any more.");
+                throw Said.With(new InvalidOperationException("They are not waiting any more."), Line.Of("rule.not_waiting"));
             Satisfaction = 0;
             OffTheBooks = offTheBooks;
             State = VisitState.Kicked;
@@ -321,7 +322,7 @@ namespace LastCall.Core
         {
             if (verdict == null) throw new ArgumentNullException(nameof(verdict));
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("They are not waiting any more.");
+                throw Said.With(new InvalidOperationException("They are not waiting any more."), Line.Of("rule.not_waiting"));
 
             Paid += verdict.Total;
             PaidBase += verdict.BasePaid;
@@ -359,7 +360,7 @@ namespace LastCall.Core
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("They are not waiting any more.");
+                throw Said.With(new InvalidOperationException("They are not waiting any more."), Line.Of("rule.not_waiting"));
             _order = order;
         }
 
@@ -378,7 +379,7 @@ namespace LastCall.Core
         public void GetUp(double satisfaction = 0, double lingerSeconds = 0)
         {
             if (State != VisitState.Waiting)
-                throw new InvalidOperationException("They are not waiting any more.");
+                throw Said.With(new InvalidOperationException("They are not waiting any more."), Line.Of("rule.not_waiting"));
             Satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
             if (lingerSeconds > 0)
             {

@@ -48,14 +48,18 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (ReferenceEquals(visit, LastCustomer))
-                throw new InvalidOperationException("The guest of the house is not yours to show the door.");
+                throw Said.With(new InvalidOperationException("The guest of the house is not yours to show the door."),
+                    Line.Of("rule.kick_guest_of_house"));
             if (visit.State != VisitState.Waiting || !Floor.Seated.Contains(visit))
-                throw new InvalidOperationException("They are not waiting at the bar.");
+                throw Said.With(new InvalidOperationException("They are not waiting at the bar."),
+                    Line.Of("rule.not_waiting_at_bar"));
             if (!visit.IdInspected)
-                throw new InvalidOperationException("Read the card first.");
+                throw Said.With(new InvalidOperationException("Read the card first."),
+                    Line.Of("rule.kick_read_card_first"));
             if (visit.Paid > 0)
-                throw new InvalidOperationException(
-                    "You cannot show the door to someone you have already served; the card was your moment.");
+                throw Said.With(new InvalidOperationException(
+                    "You cannot show the door to someone you have already served; the card was your moment."),
+                    Line.Of("rule.kick_already_served"));
 
             var papers = visit.Regular?.Papers;
             bool rightly = papers != null && papers.ShouldBeKicked;

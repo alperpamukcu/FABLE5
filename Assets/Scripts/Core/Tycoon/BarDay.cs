@@ -126,7 +126,8 @@ namespace LastCall.Core
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
             if (_seated.Contains(visit))
-                throw new InvalidOperationException("They are already at the bar.");
+                throw Said.With(new InvalidOperationException("They are already at the bar."),
+                    Line.Of("rule.already_at_bar"));
             _seated.Add(visit);
             Arrived++;   // they walked in; the night's count would lie without them
         }

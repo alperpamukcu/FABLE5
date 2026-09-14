@@ -31,6 +31,16 @@ namespace LastCall.Core
         /// label on a shelf, not prose.</summary>
         public abstract string Sentence { get; }
 
+        /// <summary><see cref="Sentence"/> as a string-table line (localization L1), in the same
+        /// capitals. Default (no key) for the open lock, whose sentence is empty — check
+        /// <c>string.IsNullOrEmpty(Sentence)</c> before saying it, as the shop already does.</summary>
+        public virtual Line SentenceLine => default;
+
+        /// <summary>"NEEDS 2.5 STARS" as a line; the number is formatted exactly as
+        /// <see cref="Sentence"/> formats it. Shared with the market's held-back tiles.</summary>
+        internal static Line StarsSentenceLine(double stars) =>
+            Line.Of("unlock.stars").With("stars", stars.ToString("0.0"));
+
         /// <summary>
         /// THE RUNG THIS WAITS ON, or NaN for a lock that is not about the standing at all
         /// (2026-08-14). The shop's aisle crate counts what is held back and promises the
@@ -88,6 +98,7 @@ namespace LastCall.Core
             // reached it, and floating point must not be the thing that says otherwise.
             public override bool MetBy(IUnlockState state) => state.Stars + 1e-9 >= _stars;
             public override string Sentence => $"NEEDS {_stars:0.0} STARS";
+            public override Line SentenceLine => StarsSentenceLine(_stars);
             public override double StarsWanted => _stars;
         }
 
@@ -106,6 +117,10 @@ namespace LastCall.Core
             public override string Sentence => string.IsNullOrEmpty(_who)
                 ? "EARNED AT THE LAST CALL"
                 : $"SERVE {_who.ToUpperInvariant()} WHAT THEY ASK FOR";
+            // A person's name is not translated; it rides in the capitals it is printed in.
+            public override Line SentenceLine => string.IsNullOrEmpty(_who)
+                ? Line.Of("unlock.last_call")
+                : Line.Of("unlock.serve_who").With("who", _who.ToUpperInvariant());
         }
 
         private sealed class TapLines : UnlockCondition
@@ -116,6 +131,7 @@ namespace LastCall.Core
             // Named after the thing the player buys, because "NEEDS THE 2-LINE TOWER" is a
             // shelf in the market they can walk to, and "REQUIRES TAPLEVEL 2" is not.
             public override string Sentence => $"NEEDS THE {_lines}-LINE TOWER";
+            public override Line SentenceLine => Line.Of("unlock.tap_lines").With("lines", _lines);
         }
 
         private sealed class Every : UnlockCondition
@@ -156,6 +172,24 @@ namespace LastCall.Core
                         sb.Append(p.Sentence);
                     }
                     return sb.ToString();
+                }
+            }
+
+            /// <summary>The parts folded left through <c>unlock.all</c> ("{first}  ·  {next}").
+            /// Every part is a real lock (All drops the open ones), so every part has a line.</summary>
+            public override Line SentenceLine
+            {
+                get
+                {
+                    Line said = default;
+                    bool any = false;
+                    foreach (var p in _parts)
+                    {
+                        said = any ? Line.Of("unlock.all").With("first", said).With("next", p.SentenceLine)
+                                   : p.SentenceLine;
+                        any = true;
+                    }
+                    return said;
                 }
             }
         }

@@ -1,0 +1,769 @@
+{
+ "strings": [
+  {
+   "key": "data.archetype.after_shift.name",
+   "text": "剛下晚班",
+   "src": "Off the Late Shift"
+  },
+  {
+   "key": "data.archetype.celebrating.name",
+   "text": "在慶祝什麼",
+   "src": "Celebrating Something"
+  },
+  {
+   "key": "data.archetype.deadline.name",
+   "text": "明天有東西要交",
+   "src": "Something Due Tomorrow"
+  },
+  {
+   "key": "data.archetype.long_way_from_home.name",
+   "text": "離家很遠",
+   "src": "A Long Way From Home"
+  },
+  {
+   "key": "data.archetype.nothing_much.name",
+   "text": "其實沒什麼事",
+   "src": "Nothing Much, Honestly"
+  },
+  {
+   "key": "data.archetype.recently_ended.name",
+   "text": "剛結束了什麼",
+   "src": "Something Recently Ended"
+  },
+  {
+   "key": "data.archetype.slow_burn.name",
+   "text": "還在想那件事",
+   "src": "Still Chewing On It"
+  },
+  {
+   "key": "data.archetype.wound_tight.name",
+   "text": "神經緊繃",
+   "src": "Wound Tight"
+  },
+  {
+   "key": "data.bottle.amaro_notte.name",
+   "text": "Cumpari 義式苦酒",
+   "src": "Cumpari Amaro"
+  },
+  {
+   "key": "data.bottle.amaro_notte.style",
+   "text": "義式苦酒",
+   "src": "amaro"
+  },
+  {
+   "key": "data.bottle.beer_collier.name",
+   "text": "Goodness 司陶特",
+   "src": "Goodness Stout"
+  },
+  {
+   "key": "data.bottle.beer_collier.style",
+   "text": "司陶特",
+   "src": "stout"
+  },
+  {
+   "key": "data.bottle.beer_kestrel.name",
+   "text": "Krona 拉格",
+   "src": "Krona Lager"
+  },
+  {
+   "key": "data.bottle.beer_kestrel.style",
+   "text": "拉格",
+   "src": "lager"
+  },
+  {
+   "key": "data.bottle.beer_marigold.name",
+   "text": "Brass 淡色艾爾",
+   "src": "Brass Pale Ale"
+  },
+  {
+   "key": "data.bottle.beer_marigold.style",
+   "text": "淡色艾爾",
+   "src": "pale_ale"
+  },
+  {
+   "key": "data.bottle.bourbon_ashfall.name",
+   "text": "Mason's Mark 威士忌",
+   "src": "Mason's Mark Whiskey"
+  },
+  {
+   "key": "data.bottle.bourbon_ashfall.style",
+   "text": "波本",
+   "src": "bourbon"
+  },
+  {
+   "key": "data.bottle.bourbon_hollow_oak.name",
+   "text": "Van Wrinkle 23 威士忌",
+   "src": "Van Wrinkle 23 Whiskey"
+  },
+  {
+   "key": "data.bottle.bourbon_hollow_oak.style",
+   "text": "波本",
+   "src": "bourbon"
+  },
+  {
+   "key": "data.bottle.bourbon_old_harrow.name",
+   "text": "Jack Spaniel's 威士忌",
+   "src": "Jack Spaniel's Whiskey"
+  },
+  {
+   "key": "data.bottle.bourbon_old_harrow.style",
+   "text": "波本",
+   "src": "bourbon"
+  },
+  {
+   "key": "data.bottle.bourbon_redline.name",
+   "text": "John Wanderer 威士忌",
+   "src": "John Wanderer Whiskey"
+  },
+  {
+   "key": "data.bottle.bourbon_redline.style",
+   "text": "波本",
+   "src": "bourbon"
+  },
+  {
+   "key": "data.bottle.cola_marlow.name",
+   "text": "Loca 可樂",
+   "src": "Loca Cola"
+  },
+  {
+   "key": "data.bottle.cola_marlow.style",
+   "text": "可樂",
+   "src": "cola"
+  },
+  {
+   "key": "data.bottle.cranberry_north.name",
+   "text": "蔓越莓汁",
+   "src": "Cranberry"
+  },
+  {
+   "key": "data.bottle.cranberry_north.style",
+   "text": "蔓越莓",
+   "src": "cranberry"
+  },
+  {
+   "key": "data.bottle.energy_volt.name",
+   "text": "Blue Ox",
+   "src": "Blue Ox"
+  },
+  {
+   "key": "data.bottle.energy_volt.style",
+   "text": "能量飲料",
+   "src": "energy"
+  },
+  {
+   "key": "data.bottle.gin_boothby.name",
+   "text": "Garden's 琴酒",
+   "src": "Garden's Gin"
+  },
+  {
+   "key": "data.bottle.gin_boothby.style",
+   "text": "琴酒",
+   "src": "gin"
+  },
+  {
+   "key": "data.bottle.gin_juniper_crown.name",
+   "text": "Leafeater 琴酒",
+   "src": "Leafeater Gin"
+  },
+  {
+   "key": "data.bottle.gin_juniper_crown.style",
+   "text": "琴酒",
+   "src": "gin"
+  },
+  {
+   "key": "data.bottle.gin_thornwood.name",
+   "text": "Hendrake's 琴酒",
+   "src": "Hendrake's Gin"
+  },
+  {
+   "key": "data.bottle.gin_thornwood.style",
+   "text": "琴酒",
+   "src": "gin"
+  },
+  {
+   "key": "data.bottle.gin_veilcrest.name",
+   "text": "Gibbon 48 琴酒",
+   "src": "Gibbon 48 Gin"
+  },
+  {
+   "key": "data.bottle.gin_veilcrest.style",
+   "text": "琴酒",
+   "src": "gin"
+  },
+  {
+   "key": "data.bottle.ginger_kicker.name",
+   "text": "Kicker 薑汁汽水",
+   "src": "Kicker Ginger"
+  },
+  {
+   "key": "data.bottle.ginger_kicker.style",
+   "text": "薑汁",
+   "src": "ginger"
+  },
+  {
+   "key": "data.bottle.grenadine_rubis.name",
+   "text": "Rubis 紅石榴糖漿",
+   "src": "Rubis Grenadine"
+  },
+  {
+   "key": "data.bottle.grenadine_rubis.style",
+   "text": "紅石榴",
+   "src": "grenadine"
+  },
+  {
+   "key": "data.bottle.lemon_fresh.name",
+   "text": "檸檬汁",
+   "src": "Lemonade"
+  },
+  {
+   "key": "data.bottle.lemon_fresh.style",
+   "text": "檸檬",
+   "src": "lemon"
+  },
+  {
+   "key": "data.bottle.lime_fresh.name",
+   "text": "萊姆汁",
+   "src": "Limeade"
+  },
+  {
+   "key": "data.bottle.lime_fresh.style",
+   "text": "萊姆",
+   "src": "lime"
+  },
+  {
+   "key": "data.bottle.liqueur_delia.name",
+   "text": "Grand Mariner 橙皮酒",
+   "src": "Grand Mariner Triple Sec"
+  },
+  {
+   "key": "data.bottle.liqueur_delia.style",
+   "text": "橙皮酒",
+   "src": "triple_sec"
+  },
+  {
+   "key": "data.bottle.liqueur_kafa.name",
+   "text": "Koala 咖啡香甜酒",
+   "src": "Koala Coffee Liqueur"
+  },
+  {
+   "key": "data.bottle.liqueur_kafa.style",
+   "text": "咖啡香甜酒",
+   "src": "coffee_liqueur"
+  },
+  {
+   "key": "data.bottle.mint_fresh.name",
+   "text": "新鮮薄荷",
+   "src": "Fresh Mint"
+  },
+  {
+   "key": "data.bottle.mint_fresh.style",
+   "text": "薄荷",
+   "src": "mint"
+  },
+  {
+   "key": "data.bottle.olive_luca.name",
+   "text": "Luca 橄欖",
+   "src": "Luca Olives"
+  },
+  {
+   "key": "data.bottle.olive_luca.style",
+   "text": "橄欖",
+   "src": "olive"
+  },
+  {
+   "key": "data.bottle.orange_grove.name",
+   "text": "柳橙汁",
+   "src": "Orange Juice"
+  },
+  {
+   "key": "data.bottle.orange_grove.style",
+   "text": "柳橙",
+   "src": "orange"
+  },
+  {
+   "key": "data.bottle.pineapple_isla.name",
+   "text": "Isla Piña",
+   "src": "Isla Piña"
+  },
+  {
+   "key": "data.bottle.pineapple_isla.style",
+   "text": "鳳梨",
+   "src": "pineapple"
+  },
+  {
+   "key": "data.bottle.rum_cane_coral.name",
+   "text": "White Bat 蘭姆酒",
+   "src": "White Bat Rum"
+  },
+  {
+   "key": "data.bottle.rum_cane_coral.style",
+   "text": "蘭姆酒",
+   "src": "rum"
+  },
+  {
+   "key": "data.bottle.rum_reina_del_mar.name",
+   "text": "Maliboo 蘭姆酒",
+   "src": "Maliboo Rum"
+  },
+  {
+   "key": "data.bottle.rum_reina_del_mar.style",
+   "text": "蘭姆酒",
+   "src": "rum"
+  },
+  {
+   "key": "data.bottle.rum_tidewater.name",
+   "text": "Admiral Morgan 蘭姆酒",
+   "src": "Admiral Morgan Rum"
+  },
+  {
+   "key": "data.bottle.rum_tidewater.style",
+   "text": "蘭姆酒",
+   "src": "rum"
+  },
+  {
+   "key": "data.bottle.rum_windward.name",
+   "text": "Krakatoa 蘭姆酒",
+   "src": "Krakatoa Rum"
+  },
+  {
+   "key": "data.bottle.rum_windward.style",
+   "text": "蘭姆酒",
+   "src": "rum"
+  },
+  {
+   "key": "data.bottle.soda_klara.name",
+   "text": "Klara 蘇打水",
+   "src": "Klara Soda"
+  },
+  {
+   "key": "data.bottle.soda_klara.style",
+   "text": "蘇打水",
+   "src": "soda"
+  },
+  {
+   "key": "data.bottle.syrup_house.name",
+   "text": "自家糖漿",
+   "src": "House Syrup"
+  },
+  {
+   "key": "data.bottle.syrup_house.style",
+   "text": "糖漿",
+   "src": "syrup"
+  },
+  {
+   "key": "data.bottle.tequila_alta_luna.name",
+   "text": "1810 龍舌蘭",
+   "src": "1810 Tequila"
+  },
+  {
+   "key": "data.bottle.tequila_alta_luna.style",
+   "text": "龍舌蘭",
+   "src": "tequila"
+  },
+  {
+   "key": "data.bottle.tequila_cielo_roto.name",
+   "text": "Azulejo 龍舌蘭",
+   "src": "Azulejo Tequila"
+  },
+  {
+   "key": "data.bottle.tequila_cielo_roto.style",
+   "text": "龍舌蘭",
+   "src": "tequila"
+  },
+  {
+   "key": "data.bottle.tequila_sol_viejo.name",
+   "text": "Don Julep Añejo 龍舌蘭",
+   "src": "Don Julep Añejo Tequila"
+  },
+  {
+   "key": "data.bottle.tequila_sol_viejo.style",
+   "text": "龍舌蘭",
+   "src": "tequila"
+  },
+  {
+   "key": "data.bottle.tequila_sonora.name",
+   "text": "Jose Cuerdo 龍舌蘭",
+   "src": "Jose Cuerdo Tequila"
+  },
+  {
+   "key": "data.bottle.tequila_sonora.style",
+   "text": "龍舌蘭",
+   "src": "tequila"
+  },
+  {
+   "key": "data.bottle.tonic_quinbury.name",
+   "text": "Quinn's 通寧水",
+   "src": "Quinn's Tonic"
+  },
+  {
+   "key": "data.bottle.tonic_quinbury.style",
+   "text": "通寧水",
+   "src": "tonic"
+  },
+  {
+   "key": "data.bottle.vermouth_velvet.name",
+   "text": "Canzone 香艾酒",
+   "src": "Canzone Vermouth"
+  },
+  {
+   "key": "data.bottle.vermouth_velvet.style",
+   "text": "香艾酒",
+   "src": "vermouth"
+  },
+  {
+   "key": "data.bottle.vodka_astra.name",
+   "text": "Smirkoff 伏特加",
+   "src": "Smirkoff Vodka"
+  },
+  {
+   "key": "data.bottle.vodka_astra.style",
+   "text": "伏特加",
+   "src": "vodka"
+  },
+  {
+   "key": "data.bottle.vodka_leonid.name",
+   "text": "Grey Gander 伏特加",
+   "src": "Grey Gander Vodka"
+  },
+  {
+   "key": "data.bottle.vodka_leonid.style",
+   "text": "伏特加",
+   "src": "vodka"
+  },
+  {
+   "key": "data.bottle.vodka_okhta.name",
+   "text": "White Whale 伏特加",
+   "src": "White Whale Vodka"
+  },
+  {
+   "key": "data.bottle.vodka_okhta.style",
+   "text": "伏特加",
+   "src": "vodka"
+  },
+  {
+   "key": "data.bottle.vodka_vor.name",
+   "text": "Absolve 伏特加",
+   "src": "Absolve Vodka"
+  },
+  {
+   "key": "data.bottle.vodka_vor.style",
+   "text": "伏特加",
+   "src": "vodka"
+  },
+  {
+   "key": "data.country.cn.name",
+   "text": "中國",
+   "src": "China"
+  },
+  {
+   "key": "data.country.de.name",
+   "text": "德國",
+   "src": "Germany"
+  },
+  {
+   "key": "data.country.fr.name",
+   "text": "法國",
+   "src": "France"
+  },
+  {
+   "key": "data.country.gb.name",
+   "text": "英國",
+   "src": "United Kingdom"
+  },
+  {
+   "key": "data.country.ie.name",
+   "text": "愛爾蘭",
+   "src": "Ireland"
+  },
+  {
+   "key": "data.country.it.name",
+   "text": "義大利",
+   "src": "Italy"
+  },
+  {
+   "key": "data.country.jp.name",
+   "text": "日本",
+   "src": "Japan"
+  },
+  {
+   "key": "data.country.kr.name",
+   "text": "韓國",
+   "src": "South Korea"
+  },
+  {
+   "key": "data.country.nl.name",
+   "text": "荷蘭",
+   "src": "Netherlands"
+  },
+  {
+   "key": "data.country.ph.name",
+   "text": "菲律賓",
+   "src": "Philippines"
+  },
+  {
+   "key": "data.country.pl.name",
+   "text": "波蘭",
+   "src": "Poland"
+  },
+  {
+   "key": "data.country.pt.name",
+   "text": "葡萄牙",
+   "src": "Portugal"
+  },
+  {
+   "key": "data.country.ro.name",
+   "text": "羅馬尼亞",
+   "src": "Romania"
+  },
+  {
+   "key": "data.country.se.name",
+   "text": "瑞典",
+   "src": "Sweden"
+  },
+  {
+   "key": "data.country.tr.name",
+   "text": "土耳其",
+   "src": "Turkey"
+  },
+  {
+   "key": "data.country.us.name",
+   "text": "美國",
+   "src": "United States"
+  },
+  {
+   "key": "data.glass.coupe.name",
+   "text": "碟型杯",
+   "src": "Coupe"
+  },
+  {
+   "key": "data.glass.highball.name",
+   "text": "高球杯",
+   "src": "Highball"
+  },
+  {
+   "key": "data.glass.martini.name",
+   "text": "馬丁尼杯",
+   "src": "Martini"
+  },
+  {
+   "key": "data.glass.pint.name",
+   "text": "品脫杯",
+   "src": "Pint"
+  },
+  {
+   "key": "data.glass.rocks.name",
+   "text": "古典杯",
+   "src": "Rocks"
+  },
+  {
+   "key": "data.snack.chips.name",
+   "text": "洋芋片",
+   "src": "Potato Chips"
+  },
+  {
+   "key": "data.snack.mixed_nuts.name",
+   "text": "綜合堅果",
+   "src": "Mixed Nuts"
+  },
+  {
+   "key": "data.snack.peanuts.name",
+   "text": "花生",
+   "src": "Peanuts"
+  },
+  {
+   "key": "data.snack.popcorn.name",
+   "text": "爆米花",
+   "src": "Popcorn"
+  },
+  {
+   "key": "data.slot.beer_mat.place",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "data.slot.beer_mat.title",
+   "text": "滴酒墊",
+   "src": "Drip mat"
+  },
+  {
+   "key": "data.slot.ceiling.place",
+   "text": "天花板",
+   "src": "The ceiling"
+  },
+  {
+   "key": "data.slot.ceiling.title",
+   "text": "天花板",
+   "src": "Ceiling"
+  },
+  {
+   "key": "data.slot.floor.place",
+   "text": "地板",
+   "src": "The floor"
+  },
+  {
+   "key": "data.slot.floor.title",
+   "text": "地板",
+   "src": "Floor"
+  },
+  {
+   "key": "data.slot.floor_rug.place",
+   "text": "地板",
+   "src": "The floor"
+  },
+  {
+   "key": "data.slot.floor_rug.title",
+   "text": "地毯",
+   "src": "Rug"
+  },
+  {
+   "key": "data.slot.plant_left.place",
+   "text": "窗邊",
+   "src": "By the window"
+  },
+  {
+   "key": "data.slot.plant_left.title",
+   "text": "左側植栽",
+   "src": "Left plant"
+  },
+  {
+   "key": "data.slot.plant_right.place",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "data.slot.plant_right.title",
+   "text": "右側植栽",
+   "src": "Right plant"
+  },
+  {
+   "key": "data.slot.prep_mat.place",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "data.slot.prep_mat.title",
+   "text": "零食墊",
+   "src": "Snack mat"
+  },
+  {
+   "key": "data.slot.shaker.place",
+   "text": "你的手上",
+   "src": "In your hand"
+  },
+  {
+   "key": "data.slot.shaker.title",
+   "text": "雪克杯",
+   "src": "Shaker"
+  },
+  {
+   "key": "data.slot.sink.place",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "data.slot.sink.title",
+   "text": "水槽",
+   "src": "Sink"
+  },
+  {
+   "key": "data.slot.table_left.place",
+   "text": "地板",
+   "src": "The floor"
+  },
+  {
+   "key": "data.slot.table_left.title",
+   "text": "左側桌",
+   "src": "Left table"
+  },
+  {
+   "key": "data.slot.table_right.place",
+   "text": "地板",
+   "src": "The floor"
+  },
+  {
+   "key": "data.slot.table_right.title",
+   "text": "右側桌",
+   "src": "Right table"
+  },
+  {
+   "key": "data.slot.taps.place",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "data.slot.taps.title",
+   "text": "啤酒塔",
+   "src": "Beer tower"
+  },
+  {
+   "key": "data.slot.wall_center.place",
+   "text": "後牆",
+   "src": "The back wall"
+  },
+  {
+   "key": "data.slot.wall_center.title",
+   "text": "中央掛畫",
+   "src": "Centre picture"
+  },
+  {
+   "key": "data.slot.wall_lamps.place",
+   "text": "後牆",
+   "src": "The back wall"
+  },
+  {
+   "key": "data.slot.wall_lamps.title",
+   "text": "壁燈",
+   "src": "Wall lamps"
+  },
+  {
+   "key": "data.slot.wall_right.place",
+   "text": "後牆",
+   "src": "The back wall"
+  },
+  {
+   "key": "data.slot.wall_right.title",
+   "text": "霓虹招牌",
+   "src": "Neon sign"
+  },
+  {
+   "key": "data.slot.wall_right_art.place",
+   "text": "右牆",
+   "src": "The right wall"
+  },
+  {
+   "key": "data.slot.wall_right_art.title",
+   "text": "螢幕上方掛畫",
+   "src": "Picture over the screen"
+  },
+  {
+   "key": "data.slot.wall_tv.place",
+   "text": "右牆",
+   "src": "The right wall"
+  },
+  {
+   "key": "data.slot.wall_tv.title",
+   "text": "螢幕與海報",
+   "src": "Screen & posters"
+  },
+  {
+   "key": "data.slot.walls.place",
+   "text": "後牆",
+   "src": "The back wall"
+  },
+  {
+   "key": "data.slot.walls.title",
+   "text": "後牆",
+   "src": "Back wall"
+  },
+  {
+   "key": "data.slot.walls_right.place",
+   "text": "右牆",
+   "src": "The right wall"
+  },
+  {
+   "key": "data.slot.walls_right.title",
+   "text": "右牆",
+   "src": "Right wall"
+  }
+ ]
+}

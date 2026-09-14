@@ -648,6 +648,52 @@ namespace LastCall.Game
             }
         }
 
+        /// <summary>
+        /// One language's string table (2026-09-13, localization L0) —
+        /// <c>Resources/Data/loc/&lt;code&gt;.json</c>: a code and a list of key/text lines, each with
+        /// an optional <c>note</c> for the translator (where it shows, how wide it may run) and
+        /// <c>src</c>, the English it was translated from, so a stale translation can be found.
+        /// Loud about everything <see cref="StringTable"/> refuses.
+        /// </summary>
+        public static StringTable ParseStringTable(string json)
+        {
+            var dto = FromJson<StringTableFileDto>(json, "string table");
+            if (string.IsNullOrWhiteSpace(dto.code))
+                throw new FormatException("String table names no language code.");
+            // JsonUtility hands a missing list back empty, not null, so an empty table is the tell
+            if (dto.strings == null || dto.strings.Count == 0)
+                throw new FormatException($"String table '{dto.code}' has no strings.");
+            var entries = new List<KeyValuePair<string, string>>(dto.strings.Count);
+            foreach (var line in dto.strings)
+                entries.Add(new KeyValuePair<string, string>(line.key, line.text));
+            try
+            {
+                return new StringTable(dto.code, entries);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException($"String table '{dto.code}': " + e.Message);
+            }
+        }
+
+#pragma warning disable 0649 // fields assigned by JsonUtility via reflection
+        [Serializable]
+        private sealed class StringTableFileDto
+        {
+            public string code;
+            public List<StringLineDto> strings;
+        }
+
+        [Serializable]
+        private sealed class StringLineDto
+        {
+            public string key;
+            public string text;
+            public string note;
+            public string src;
+        }
+#pragma warning restore 0649
+
         public static IReadOnlyList<ArchetypeDefinition> ParseArchetypes(string json)
         {
             var dto = FromJson<ArchetypesFileDto>(json, "archetypes");

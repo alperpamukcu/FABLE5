@@ -44,13 +44,24 @@ namespace LastCall.Core
         /// <summary>What the drinker says. Null when there is nothing to say.</summary>
         public string Sentence { get; }
 
+        /// <summary><see cref="Sentence"/> as a string-table line (localization L1). Default (no
+        /// key) exactly when <see cref="Silent"/>.</summary>
+        public Line SentenceLine { get; }
+
         public PourNote(bool flawless, string ingredient, int direction, double miss, string sentence)
+            : this(flawless, ingredient, direction, miss, sentence, default)
+        {
+        }
+
+        public PourNote(bool flawless, string ingredient, int direction, double miss, string sentence,
+            Line sentenceLine)
         {
             Flawless = flawless;
             Ingredient = ingredient ?? string.Empty;
             Direction = direction;
             Miss = miss;
             Sentence = sentence;
+            SentenceLine = sentenceLine;
         }
     }
 
@@ -121,15 +132,36 @@ namespace LastCall.Core
             Func<string, IngredientCard> lookup, ServingSpec spec = null, int max = 3)
         {
             var said = new List<string>();
-            if (glass == null || max <= 0) return said;
-            string missing = MissingLine(spec, glass);
+            Collect(recipe, glass, lookup, spec, max, said, new List<Line>());
+            return said;
+        }
+
+        /// <summary><see cref="Lines"/> as string-table lines (localization L1): the same sips, in
+        /// the same order, one line for each sentence Lines returns.</summary>
+        public static IReadOnlyList<Line> SaidLines(RecipeDefinition recipe, GlassContents glass,
+            Func<string, IngredientCard> lookup, ServingSpec spec = null, int max = 3)
+        {
+            var lines = new List<Line>();
+            Collect(recipe, glass, lookup, spec, max, new List<string>(), lines);
+            return lines;
+        }
+
+        /// <summary>The one reading behind <see cref="Lines"/> and <see cref="SaidLines"/>: every
+        /// sentence is added to <paramref name="said"/> and its line to <paramref name="lines"/>
+        /// at the same moment, so the two lists cannot disagree.</summary>
+        private static void Collect(RecipeDefinition recipe, GlassContents glass,
+            Func<string, IngredientCard> lookup, ServingSpec spec, int max,
+            List<string> said, List<Line> lines)
+        {
+            if (glass == null || max <= 0) return;
+            string missing = MissingLine(spec, glass, out Line missingLine);
 
             // Beer has one band and it is the head; it says its piece and stops.
             if (glass.HasPreparation(Preparations.Draught.Id))
             {
-                var head = Head(glass, missing);
-                if (!head.Silent) said.Add(head.Sentence);
-                return said;
+                var head = Head(glass, missing, missingLine);
+                if (!head.Silent) { said.Add(head.Sentence); lines.Add(head.SentenceLine); }
+                return;
             }
 
             if (recipe != null && lookup != null && recipe.HasAuthoredRatios)
@@ -167,18 +199,22 @@ namespace LastCall.Core
                         string degree = miss <= TouchMiss ? "A touch"
                             : miss <= LittleMiss ? "A little" : "A lot";
                         said.Add(degree + " " + (d > 0 ? "less" : "more") + " " + name + " next time.");
+                        lines.Add(PourLine(d > 0, DegreeLine(miss, TouchMiss, LittleMiss), NameLineOf(bands[i])));
                     }
-                    if (said.Count == 0 && missing == null) said.Add(FlawlessLine);
+                    if (said.Count == 0 && missing == null)
+                    {
+                        said.Add(FlawlessLine);
+                        lines.Add(Line.Of("advice.flawless"));
+                    }
                 }
             }
             if (said.Count == 0 && missing == null)
             {
                 // Nothing to coach — no authored bands. Silence is the honest answer, and
                 // the caller shows nothing rather than inventing praise.
-                return said;
+                return;
             }
-            if (missing != null && said.Count < max) said.Add(missing);
-            return said;
+            if (missing != null && said.Count < max) { said.Add(missing); lines.Add(missingLine); }
         }
 
         public static PourNote For(RecipeDefinition recipe, GlassContents glass,
@@ -188,9 +224,9 @@ namespace LastCall.Core
 
             // THE MISSING HALF IS COMPUTED FIRST and does not depend on the pour: it is the
             // one thing here a derived recipe can still get wrong.
-            string missing = MissingLine(spec, glass);
+            string missing = MissingLine(spec, glass, out Line missingLine);
             var silent = missing == null ? default
-                : new PourNote(false, string.Empty, 0, 0, missing);
+                : new PourNote(false, string.Empty, 0, 0, missing, missingLine);
 
             // A PINT HAS A CRAFT TOO, AND IT IS THE HEAD (GDD 21 §10; 2026-09-04, the
             // author: "Drinking... yerine içerken teslim edilen alkol ile ilgili bilgi
@@ -201,7 +237,7 @@ namespace LastCall.Core
             // measured band (TapPour), so it coaches the same way an ingredient does: one
             // thing, one direction, no number.
             if (glass.HasPreparation(Preparations.Draught.Id))
-                return Head(glass, missing);
+                return Head(glass, missing, missingLine);
 
             if (recipe == null || lookup == null) return silent;
             if (!recipe.HasAuthoredRatios) return silent;
@@ -239,7 +275,9 @@ namespace LastCall.Core
             // congratulating the player for half a job.
             if (worstMiss <= ServiceJudge.PerfectWindow)
                 return new PourNote(missing == null, string.Empty, 0, worstMiss,
-                    missing == null ? FlawlessLine : FlawlessStem + " " + missing);
+                    missing == null ? FlawlessLine : FlawlessStem + " " + missing,
+                    missing == null ? Line.Of("advice.flawless")
+                        : Then(Line.Of("advice.flawless_stem"), missingLine));
 
             string name = NameOf(bands[worst]);
             if (string.IsNullOrEmpty(name)) return silent;
@@ -251,8 +289,28 @@ namespace LastCall.Core
             string way = direction < 0 ? "less" : "more";
             string line = degree + " " + way + " " + name + " next time.";
             if (missing != null) line += " " + missing;
-            return new PourNote(false, name, direction, worstMiss, line);
+            var said = PourLine(direction < 0, DegreeLine(worstMiss, TouchMiss, LittleMiss), NameLineOf(bands[worst]));
+            if (missing != null) said = Then(said, missingLine);
+            return new PourNote(false, name, direction, worstMiss, line, said);
         }
+
+        // ── the same sentences as string-table lines (localization L1) ──────────
+        // Each is built beside the English it mirrors, from the same branch, so a
+        // language reads exactly the note English reads.
+
+        /// <summary>"A touch" / "A little" / "A lot", by the same two steps the English uses.</summary>
+        private static Line DegreeLine(double miss, double touch, double little) =>
+            Line.Of(miss <= touch ? "advice.degree.touch"
+                : miss <= little ? "advice.degree.little" : "advice.degree.lot");
+
+        /// <summary>"{degree} less {ingredient} next time." or its "more" twin.</summary>
+        private static Line PourLine(bool less, Line degree, Line ingredient) =>
+            Line.Of(less ? "advice.pour.less" : "advice.pour.more")
+                .With("degree", degree).With("ingredient", ingredient);
+
+        /// <summary>Two sentences said one after the other: "{first} {second}".</summary>
+        private static Line Then(Line first, Line second) =>
+            Line.Of("advice.then").With("first", first).With("second", second);
 
         /// <summary>
         /// THE PINT'S OWN NOTE. Its band is <see cref="TapPour.GoodHeadMin"/>..
@@ -263,20 +321,25 @@ namespace LastCall.Core
         /// </summary>
         public const double HeadTouch = 0.03, HeadLittle = 0.06;
 
-        private static PourNote Head(GlassContents glass, string missing)
+        private static PourNote Head(GlassContents glass, string missing, Line missingLine)
         {
             double head = glass.Capacity > 0 ? glass.Head / glass.Capacity : 0;
             double over = head - TapPour.GoodHeadMax, under = TapPour.GoodHeadMin - head;
             if (over <= 0 && under <= 0)
                 return new PourNote(missing == null, string.Empty, 0, 0,
-                    missing == null ? PulledWellLine : PulledWellStem + " " + missing);
+                    missing == null ? PulledWellLine : PulledWellStem + " " + missing,
+                    missing == null ? Line.Of("advice.pulled_well")
+                        : Then(Line.Of("advice.pulled_well_stem"), missingLine));
 
             bool tooMuch = over > 0;
             double miss = tooMuch ? over : under;
             string degree = miss <= HeadTouch ? "A touch" : miss <= HeadLittle ? "A little" : "A lot";
             string line = degree + (tooMuch ? " less" : " more") + " head next time.";
             if (missing != null) line += " " + missing;
-            return new PourNote(false, "head", tooMuch ? -1 : 1, miss, line);
+            var said = Line.Of(tooMuch ? "advice.head.less" : "advice.head.more")
+                .With("degree", DegreeLine(miss, HeadTouch, HeadLittle));
+            if (missing != null) said = Then(said, missingLine);
+            return new PourNote(false, "head", tooMuch ? -1 : 1, miss, line, said);
         }
 
         /// <summary>What a well-pulled pint gets said about it, and the short form for one
@@ -290,10 +353,12 @@ namespace LastCall.Core
         /// them — and the names are spoken rather than titled: the spec calls a lemon twist
         /// "Lemon Twist" because that is a heading on a ticket, and nobody says that out loud.
         /// </summary>
-        private static string MissingLine(ServingSpec spec, GlassContents glass)
+        private static string MissingLine(ServingSpec spec, GlassContents glass, out Line missingLine)
         {
+            missingLine = default;
             if (spec == null || spec.IsPlain || glass == null) return null;
             string list = null;
+            var items = new List<Line>();
             int n = 0;
             foreach (var want in spec.Garnishes)
             {
@@ -301,6 +366,7 @@ namespace LastCall.Core
                 string said = SpokenName(want);
                 n++;
                 list = list == null ? said : list + "|" + said;
+                items.Add(SpokenLine(want));
             }
             if (n == 0) return null;
             // "the ice", "the ice and a lemon twist", "the ice, a lemon twist and a salted
@@ -309,8 +375,26 @@ namespace LastCall.Core
             string joined = parts[0];
             for (int i = 1; i < parts.Length; i++)
                 joined += (i == parts.Length - 1 ? " and " : ", ") + parts[i];
+            // The same list as lines, folded the same way: "{list}, {item}" until the last,
+            // "{list} and {item}" for it.
+            Line joinedLine = items[0];
+            for (int i = 1; i < items.Count; i++)
+                joinedLine = Line.Of(i == items.Count - 1 ? "advice.list.and" : "advice.list.comma")
+                    .With("list", joinedLine).With("item", items[i]);
+            missingLine = Line.Of("advice.missing").With("garnishes", joinedLine);
             return "I asked for " + joined + " as well.";
         }
+
+        /// <summary><see cref="SpokenName"/> as a line: <c>advice.garnish.&lt;id&gt;</c>, whose
+        /// English is exactly what SpokenName says for that preparation.</summary>
+        private static Line SpokenLine(PreparationDefinition prep) =>
+            Line.Of("advice.garnish." + prep.Id);
+
+        /// <summary><see cref="NameOf"/> as a line: <c>advice.ingredient.&lt;style&gt;</c> for a
+        /// style band, <c>advice.type.&lt;type&gt;</c> for a band with no style.</summary>
+        private static Line NameLineOf(RatioRequirement band) =>
+            band.IsStyleBand ? Line.Of("advice.ingredient." + band.Style)
+                : Line.Of("advice.type." + band.Type.ToString().ToLowerInvariant());
 
         /// <summary>How a drinker names a preparation out loud.</summary>
         private static string SpokenName(PreparationDefinition prep)

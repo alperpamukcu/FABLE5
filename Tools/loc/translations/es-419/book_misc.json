@@ -1,0 +1,749 @@
+{
+  "strings": [
+    {
+      "key": "book.contents.all_chapters",
+      "text": "< CAPÍTULOS",
+      "src": "< ALL CHAPTERS"
+    },
+    {
+      "key": "book.contents.chapter_locked#one",
+      "text": "{n} CERRADA",
+      "src": "{n} LOCKED"
+    },
+    {
+      "key": "book.contents.chapter_locked#other",
+      "text": "{n} CERRADAS",
+      "src": "{n} LOCKED"
+    },
+    {
+      "key": "book.contents.chapter_note",
+      "text": "CADA CAPÍTULO ABRE AQUÍ SU PROPIA LISTA",
+      "src": "A CHAPTER OPENS ITS OWN LIST HERE"
+    },
+    {
+      "key": "book.contents.chapter_perfect#one",
+      "text": "{n} PERFECTA",
+      "src": "{n} PERFECT"
+    },
+    {
+      "key": "book.contents.chapter_perfect#other",
+      "text": "{n} PERFECTAS",
+      "src": "{n} PERFECT"
+    },
+    {
+      "key": "book.contents.chapter_pours#one",
+      "text": "{n} RECETA",
+      "src": "{n} POURS"
+    },
+    {
+      "key": "book.contents.chapter_pours#other",
+      "text": "{n} RECETAS",
+      "src": "{n} POURS"
+    },
+    {
+      "key": "book.contents.head",
+      "text": "ÍNDICE",
+      "src": "CONTENTS"
+    },
+    {
+      "key": "book.contents.no_hits",
+      "text": "NADA CON ESE NOMBRE",
+      "src": "NOTHING BY THAT NAME"
+    },
+    {
+      "key": "book.contents.search_placeholder",
+      "text": "BUSCAR RECETA…",
+      "src": "SEARCH THE BOOK…"
+    },
+    {
+      "key": "book.gate.not_listed",
+      "text": "AÚN NO ESTÁ EN EL MENÚ DE LA CASA",
+      "src": "NOT ON THE HOUSE LIST YET"
+    },
+    {
+      "key": "book.gate.opens",
+      "text": "SE ABRE: {sentence}",
+      "src": "OPENS: {sentence}"
+    },
+    {
+      "key": "book.gate.opens_at",
+      "text": "REQUIERE",
+      "src": "OPENS AT"
+    },
+    {
+      "key": "book.gate.you_have",
+      "text": "TIENES",
+      "src": "YOU HAVE"
+    },
+    {
+      "key": "book.index.ampersand",
+      "text": " Y ",
+      "src": " AND "
+    },
+    {
+      "key": "book.index.locked",
+      "text": "CERRADA",
+      "src": "LOCKED"
+    },
+    {
+      "key": "book.index.perfect",
+      "text": "PERFECTA",
+      "src": "PERFECT"
+    },
+    {
+      "key": "book.page.bottle_locked",
+      "text": "SIN BOTELLA",
+      "src": "LOCKED"
+    },
+    {
+      "key": "book.page.chapter_locked",
+      "text": "{chapter} · SIN COMPRAR",
+      "src": "{chapter} · LOCKED"
+    },
+    {
+      "key": "book.page.fill",
+      "text": "LLENA EL {pct}%+ DEL VASO",
+      "src": "FILL {pct}%+ OF THE GLASS"
+    },
+    {
+      "key": "book.page.on_the_tab",
+      "text": "A LA CUENTA",
+      "src": "ON THE TAB"
+    },
+    {
+      "key": "book.page.perfect_tag",
+      "text": "PERFECTO",
+      "src": "PERFECT"
+    },
+    {
+      "key": "book.page.pour_legend",
+      "text": "LA MEZCLA · CADA PUNTO ES 1/5",
+      "src": "THE POUR · ONE DOT IS A FIFTH"
+    },
+    {
+      "key": "book.page.sealed",
+      "text": "LO QUE LLEVA ESTÁ SELLADO\nCOMPRA LA PÁGINA PARA LEERLO",
+      "src": "WHAT GOES IN IT IS SEALED\nBUY THE PAGE TO READ IT"
+    },
+    {
+      "key": "book.page.your_best",
+      "text": "TU MEJOR INTENTO · {pct}%",
+      "src": "YOUR BEST MAKE · {pct}%"
+    },
+    {
+      "key": "book.prop.open_menu",
+      "text": "ABRIR EL MENÚ",
+      "src": "OPEN THE MENU"
+    },
+    {
+      "key": "book.tab.get_style",
+      "text": "CONSIGUE {style} · {who} VIENE EL {night}",
+      "src": "GET {style} IN · {who} COMES {night}"
+    },
+    {
+      "key": "book.tab.wants",
+      "text": "{who} QUIERE {drink} · {night}",
+      "src": "{who} WANTS {drink} · {night}"
+    },
+    {
+      "key": "book.title.contents_hint",
+      "text": "EL ÍNDICE ESTÁ ENFRENTE",
+      "src": "THE CONTENTS FACE THIS PAGE"
+    },
+    {
+      "key": "book.title.house_menu",
+      "text": "MENÚ DE LA CASA",
+      "src": "HOUSE MENU"
+    },
+    {
+      "key": "book.title.news_head#one",
+      "text": "NUEVO · {n} RECETA PERFECTA",
+      "src": "NEW · A PERFECT RECIPE"
+    },
+    {
+      "key": "book.title.news_head#other",
+      "text": "NUEVO · {n} RECETAS PERFECTAS",
+      "src": "NEW · {n} PERFECT RECIPES"
+    },
+    {
+      "key": "book.title.open_tab",
+      "text": "CUENTA ABIERTA",
+      "src": "OPEN TAB"
+    },
+    {
+      "key": "book.title.tagline",
+      "text": "TRAGOS · PÁGINAS · ORÍGENES",
+      "src": "POURS · PAGES · PROVENANCE"
+    },
+    {
+      "key": "calendar.column.fri",
+      "text": "VIE",
+      "src": "FRI"
+    },
+    {
+      "key": "calendar.column.mon",
+      "text": "LUN",
+      "src": "MON"
+    },
+    {
+      "key": "calendar.column.sat",
+      "text": "SÁB",
+      "src": "SAT"
+    },
+    {
+      "key": "calendar.column.sun",
+      "text": "DOM",
+      "src": "SUN"
+    },
+    {
+      "key": "calendar.column.thu",
+      "text": "JUE",
+      "src": "THU"
+    },
+    {
+      "key": "calendar.column.tue",
+      "text": "MAR",
+      "src": "TUE"
+    },
+    {
+      "key": "calendar.column.wed",
+      "text": "MIÉ",
+      "src": "WED"
+    },
+    {
+      "key": "calendar.day_off",
+      "text": "DOMINGO",
+      "src": "SUNDAY"
+    },
+    {
+      "key": "calendar.night.friday",
+      "text": "VIERNES",
+      "src": "FRIDAY"
+    },
+    {
+      "key": "calendar.night.monday",
+      "text": "LUNES",
+      "src": "MONDAY"
+    },
+    {
+      "key": "calendar.night.saturday",
+      "text": "SÁBADO",
+      "src": "SATURDAY"
+    },
+    {
+      "key": "calendar.night.thursday",
+      "text": "JUEVES",
+      "src": "THURSDAY"
+    },
+    {
+      "key": "calendar.night.tuesday",
+      "text": "MARTES",
+      "src": "TUESDAY"
+    },
+    {
+      "key": "calendar.night.wednesday",
+      "text": "MIÉRCOLES",
+      "src": "WEDNESDAY"
+    },
+    {
+      "key": "calendar.week_night",
+      "text": "SEMANA {week} · {night}",
+      "src": "WEEK {week} · {night}"
+    },
+    {
+      "key": "common.close",
+      "text": "CERRAR",
+      "src": "CLOSE"
+    },
+    {
+      "key": "id.card.class",
+      "text": "MIAMI  ·  CREDENCIAL DEL CLUB  ·",
+      "src": "MIAMI  ·  PATRON LICENCE  ·"
+    },
+    {
+      "key": "id.card.give_back_hint",
+      "text": "HAZ CLIC AFUERA PARA DEVOLVERLA",
+      "src": "CLICK OUTSIDE TO GIVE IT BACK"
+    },
+    {
+      "key": "id.card.kick",
+      "text": "FUERA",
+      "src": "KICK"
+    },
+    {
+      "key": "id.customer_fallback",
+      "text": "Cliente",
+      "src": "Customer"
+    },
+    {
+      "key": "id.endorsements.none",
+      "text": "NINGUNA  ·  SÍRVELO TAL CUAL",
+      "src": "NONE  ·  SERVE IT CLEAN"
+    },
+    {
+      "key": "id.field.age",
+      "text": "2   EDAD",
+      "src": "2   AGE"
+    },
+    {
+      "key": "id.field.citizen",
+      "text": "3   NACIONALIDAD",
+      "src": "3   CITIZEN OF"
+    },
+    {
+      "key": "id.field.endorsements",
+      "text": "5   ANOTACIONES",
+      "src": "5   ENDORSEMENTS"
+    },
+    {
+      "key": "id.field.name",
+      "text": "1   NOMBRE",
+      "src": "1   NAME"
+    },
+    {
+      "key": "id.field.order",
+      "text": "4   PEDIDO",
+      "src": "4   ORDER"
+    },
+    {
+      "key": "id.kick.shown_door",
+      "text": "A LA CALLE · {reason}",
+      "src": "SHOWN THE DOOR · {reason}"
+    },
+    {
+      "key": "id.kick_reason.altered",
+      "text": "credencial alterada",
+      "src": "altered card"
+    },
+    {
+      "key": "id.kick_reason.borrowed",
+      "text": "credencial prestada",
+      "src": "borrowed card"
+    },
+    {
+      "key": "id.kick_reason.of_age",
+      "text": "tenía la edad legal",
+      "src": "they were of age"
+    },
+    {
+      "key": "id.kick_reason.under_age",
+      "text": "sin la edad legal",
+      "src": "under age"
+    },
+    {
+      "key": "id.stamps.rated",
+      "text": "NOTA",
+      "src": "RATED"
+    },
+    {
+      "key": "id.stamps.visits",
+      "text": "VISITAS",
+      "src": "VISITS"
+    },
+    {
+      "key": "id.standing.confidant",
+      "text": "CONFIDENTE",
+      "src": "CONFIDANT"
+    },
+    {
+      "key": "id.standing.familiar",
+      "text": "CARA CONOCIDA",
+      "src": "FAMILIAR"
+    },
+    {
+      "key": "id.standing.first_time",
+      "text": "PRIMERA VEZ",
+      "src": "FIRST TIME"
+    },
+    {
+      "key": "id.standing.regular",
+      "text": "FRECUENTE",
+      "src": "REGULAR"
+    },
+    {
+      "key": "id.standing.stranger",
+      "text": "DE PASO",
+      "src": "STRANGER"
+    },
+    {
+      "key": "id.tip.click_to_read",
+      "text": "HAZ CLIC PARA VER SU CREDENCIAL",
+      "src": "CLICK THEM TO READ THEIR ID"
+    },
+    {
+      "key": "id.tip.how_they_want_it",
+      "text": "CÓMO LO QUIERE",
+      "src": "HOW THEY WANT IT"
+    },
+    {
+      "key": "id.tip.ready",
+      "text": "QUIERE PEDIR",
+      "src": "READY TO ORDER"
+    },
+    {
+      "key": "job.name.clean",
+      "text": "NOCHES LIMPIAS",
+      "src": "CLEAN NIGHTS"
+    },
+    {
+      "key": "job.name.perfect",
+      "text": "TRAGOS PERFECTOS",
+      "src": "PERFECT POURS"
+    },
+    {
+      "key": "job.owed.clean#one",
+      "text": "FALTA {n} NOCHE LIMPIA",
+      "src": "{n} MORE CLEAN NIGHT"
+    },
+    {
+      "key": "job.owed.clean#other",
+      "text": "FALTAN {n} NOCHES LIMPIAS",
+      "src": "{n} MORE CLEAN NIGHTS"
+    },
+    {
+      "key": "job.owed.perfect#one",
+      "text": "FALTA {n} TRAGO PERFECTO",
+      "src": "{n} MORE PERFECT POUR"
+    },
+    {
+      "key": "job.owed.perfect#other",
+      "text": "FALTAN {n} TRAGOS PERFECTOS",
+      "src": "{n} MORE PERFECT POURS"
+    },
+    {
+      "key": "job.owed.serve#one",
+      "text": "FALTA {n} {drink}",
+      "src": "{n} MORE {drink}"
+    },
+    {
+      "key": "job.owed.serve#other",
+      "text": "FALTAN {n} {drink}",
+      "src": "{n} MORE {drink}"
+    },
+    {
+      "key": "night.count#one",
+      "text": "{n} noche",
+      "src": "{n} night"
+    },
+    {
+      "key": "night.count#other",
+      "text": "{n} noches",
+      "src": "{n} nights"
+    },
+    {
+      "key": "papers.hometown.named",
+      "text": "{town}",
+      "src": "{town}"
+    },
+    {
+      "key": "papers.hometown.unknown",
+      "text": "de por aquí",
+      "src": "this side of town"
+    },
+    {
+      "key": "prep.draught.description",
+      "text": "Sale directo del barril.",
+      "src": "Pulled from the tap."
+    },
+    {
+      "key": "prep.draught.name",
+      "text": "De barril",
+      "src": "Draught"
+    },
+    {
+      "key": "prep.ice.description",
+      "text": "Servido con cubos de hielo.",
+      "src": "Served over cubes."
+    },
+    {
+      "key": "prep.ice.name",
+      "text": "Con hielo",
+      "src": "On Ice"
+    },
+    {
+      "key": "prep.lemon_twist.description",
+      "text": "Un rizo de cáscara por encima.",
+      "src": "A curl of peel over the top."
+    },
+    {
+      "key": "prep.lemon_twist.name",
+      "text": "Twist de limón",
+      "src": "Lemon Twist"
+    },
+    {
+      "key": "prep.salt_rim.description",
+      "text": "El borde pasado por sal.",
+      "src": "The rim run through salt."
+    },
+    {
+      "key": "prep.salt_rim.name",
+      "text": "Borde de sal",
+      "src": "Salt Rim"
+    },
+    {
+      "key": "prep.shaken.description",
+      "text": "Mezclado con fuerza en la coctelera.",
+      "src": "Mixed hard in the shaker."
+    },
+    {
+      "key": "prep.shaken.name",
+      "text": "Agitado",
+      "src": "Shaken"
+    },
+    {
+      "key": "prep.stirred.description",
+      "text": "Revuelto con calma con la cuchara de bar.",
+      "src": "Turned gently over a bar spoon."
+    },
+    {
+      "key": "prep.stirred.name",
+      "text": "Revuelto",
+      "src": "Stirred"
+    },
+    {
+      "key": "prep.sugar_rim.description",
+      "text": "El borde pasado por azúcar.",
+      "src": "The rim run through sugar."
+    },
+    {
+      "key": "prep.sugar_rim.name",
+      "text": "Borde de azúcar",
+      "src": "Sugar Rim"
+    },
+    {
+      "key": "recipes.band_fill",
+      "text": "LLENAR {pct}%+",
+      "src": "FILL {pct}%+"
+    },
+    {
+      "key": "recipes.card.on_the_tab",
+      "text": "A LA CUENTA",
+      "src": "ON THE TAB"
+    },
+    {
+      "key": "recipes.card.one_dot",
+      "text": "CADA PUNTO ES 1/5",
+      "src": "ONE DOT IS A FIFTH"
+    },
+    {
+      "key": "recipes.difficulty.easy",
+      "text": "FÁCIL",
+      "src": "EASY"
+    },
+    {
+      "key": "recipes.difficulty.hard",
+      "text": "DIFÍCIL",
+      "src": "HARD"
+    },
+    {
+      "key": "recipes.difficulty.medium",
+      "text": "MEDIA",
+      "src": "MEDIUM"
+    },
+    {
+      "key": "recipes.difficulty_sentence.easy",
+      "text": "Fácil de hacer — unos pocos chorros y nada que trabajar.",
+      "src": "Easy to make — a few pours and nothing to work."
+    },
+    {
+      "key": "recipes.difficulty_sentence.hard",
+      "text": "Difícil de hacer — mucho que servir y bastante trabajo.",
+      "src": "Hard to make — a lot to pour, and plenty of work in it."
+    },
+    {
+      "key": "recipes.difficulty_sentence.medium",
+      "text": "Dificultad media — más que servir, o hay que trabajarlo.",
+      "src": "Medium — more to pour, or it has to be worked."
+    },
+    {
+      "key": "recipes.garnish.draught",
+      "text": "DE BARRIL",
+      "src": "DRAUGHT"
+    },
+    {
+      "key": "recipes.garnish.ice",
+      "text": "CON HIELO",
+      "src": "ON ICE"
+    },
+    {
+      "key": "recipes.garnish.lemon_twist",
+      "text": "TWIST DE LIMÓN",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "recipes.garnish.salt_rim",
+      "text": "BORDE DE SAL",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "recipes.garnish.shaken",
+      "text": "AGITADO",
+      "src": "SHAKEN"
+    },
+    {
+      "key": "recipes.garnish.stirred",
+      "text": "REVUELTO",
+      "src": "STIRRED"
+    },
+    {
+      "key": "recipes.garnish.sugar_rim",
+      "text": "BORDE DE AZÚCAR",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "recipes.prep.built",
+      "text": "DIRECTO",
+      "src": "BUILT"
+    },
+    {
+      "key": "recipes.prep.neat",
+      "text": "SOLO",
+      "src": "NEAT"
+    },
+    {
+      "key": "recipes.prep.on_tap",
+      "text": "DE BARRIL",
+      "src": "ON TAP"
+    },
+    {
+      "key": "recipes.prep.shaken",
+      "text": "AGITADO",
+      "src": "SHAKEN"
+    },
+    {
+      "key": "recipes.prep.stirred",
+      "text": "REVUELTO",
+      "src": "STIRRED"
+    },
+    {
+      "key": "recipes.sealed",
+      "text": "INGREDIENTES SELLADOS\nCOMPRA LA PÁGINA PARA LEERLOS",
+      "src": "INGREDIENTS SEALED\nBUY THE PAGE TO READ IT"
+    },
+    {
+      "key": "recipes.spec.fill",
+      "text": "LLENADO",
+      "src": "FILL"
+    },
+    {
+      "key": "recipes.spec.label_tier",
+      "text": "{label}  N{tier}+",
+      "src": "{label}  T{tier}+"
+    },
+    {
+      "key": "recipes.spec.none",
+      "text": "NO HAY",
+      "src": "NONE"
+    },
+    {
+      "key": "recipes.spec.perfected",
+      "text": "DOMINADA",
+      "src": "PERFECTED"
+    },
+    {
+      "key": "recipes.spec.your_best",
+      "text": "TU MEJOR · {pct}%",
+      "src": "YOUR BEST · {pct}%"
+    },
+    {
+      "key": "recipes.tier.house_pride",
+      "text": "ORGULLO DE LA CASA",
+      "src": "HOUSE PRIDE"
+    },
+    {
+      "key": "recipes.tier.mid_shelf",
+      "text": "GAMA MEDIA",
+      "src": "MID SHELF"
+    },
+    {
+      "key": "recipes.tier.starter",
+      "text": "PARA EMPEZAR",
+      "src": "STARTER"
+    },
+    {
+      "key": "recipes.tier.top_shelf",
+      "text": "GAMA ALTA",
+      "src": "TOP SHELF"
+    },
+    {
+      "key": "recipes.type.beer",
+      "text": "UNA CERVEZA",
+      "src": "ANY BEER"
+    },
+    {
+      "key": "recipes.type.bitter",
+      "text": "UN AMARGO",
+      "src": "ANY BITTER"
+    },
+    {
+      "key": "recipes.type.bubbly",
+      "text": "ALGO CON GAS",
+      "src": "ANY FIZZ"
+    },
+    {
+      "key": "recipes.type.garnish",
+      "text": "UN ADORNO",
+      "src": "ANY GARNISH"
+    },
+    {
+      "key": "recipes.type.sour",
+      "text": "UN ÁCIDO",
+      "src": "ANY SOUR"
+    },
+    {
+      "key": "recipes.type.spirit",
+      "text": "UN DESTILADO",
+      "src": "ANY SPIRIT"
+    },
+    {
+      "key": "recipes.type.sweet",
+      "text": "UN DULCE",
+      "src": "ANY SWEET"
+    },
+    {
+      "key": "recipes.type_hint.beer",
+      "text": "CERVEZA = LAGER·STOUT·PALE ALE",
+      "src": "BEER = LAGER·STOUT·PALE ALE"
+    },
+    {
+      "key": "recipes.type_hint.spirit",
+      "text": "DESTILADO = VODKA·GINEBRA·RON·WHISKY·TEQUILA",
+      "src": "SPIRIT = VODKA·GIN·RUM·WHISKEY·TEQUILA"
+    },
+    {
+      "key": "recipes.way_line",
+      "text": "{prep} · {glass}",
+      "src": "{prep} · {glass} GLASS"
+    },
+    {
+      "key": "settings.language",
+      "text": "IDIOMA",
+      "src": "LANGUAGE"
+    },
+    {
+      "key": "unlock.all",
+      "text": "{first}  ·  {next}",
+      "src": "{first}  ·  {next}"
+    },
+    {
+      "key": "unlock.last_call",
+      "text": "GANADO EN LA ÚLTIMA RONDA",
+      "src": "EARNED AT THE LAST CALL"
+    },
+    {
+      "key": "unlock.serve_who",
+      "text": "SÍRVELE A {who} LO QUE PIDE",
+      "src": "SERVE {who} WHAT THEY ASK FOR"
+    },
+    {
+      "key": "unlock.stars",
+      "text": "NECESITA {stars} ESTRELLAS",
+      "src": "NEEDS {stars} STARS"
+    },
+    {
+      "key": "unlock.tap_lines",
+      "text": "NECESITA LA TORRE DE {lines} LÍNEAS",
+      "src": "NEEDS THE {lines}-LINE TOWER"
+    }
+  ]
+}

@@ -26,7 +26,9 @@ namespace LastCall.EditorTools
         // v2 pixel fonts (16_ui_style_guide v2 §1: Press Start 2P headings/numbers,
         // Silkscreen body/caption — spec-sanctioned fallbacks for m6x11/m5x7). The legacy
         // Limelight/Barlow pair is gone: every slot wires a pixel font now.
-        private const string PixelDisplayFontPath = "Assets/Fonts/PressStart2P-Regular.ttf";
+        // Malibu Arcade is Press Start 2P with its accented capitals redrawn full height (2026-09-14,
+        // localization L3; Tools/loc/ps2p_caps.py) — renamed because the OFL reserves the original's name.
+        private const string PixelDisplayFontPath = "Assets/Fonts/MalibuArcade-Regular.ttf";
         private const string PixelBodyFontPath = "Assets/Fonts/Silkscreen-Regular.ttf";
         /// <summary>The shop's heavier face (2026-08-07) — Silkscreen BOLD, same grid.</summary>
         private const string ShopFontPath = "Assets/Fonts/SilkscreenBold.ttf";

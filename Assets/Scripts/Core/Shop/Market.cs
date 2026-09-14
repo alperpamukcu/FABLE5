@@ -127,6 +127,13 @@ namespace LastCall.Core
             card.Info?.Unlock?.Sentence
             ?? $"NEEDS {RequiredStars(card.Info.Tier, card.Info.Price):0.0} STARS";
 
+        /// <summary>The same words as the <c>Sentence</c> <see cref="GatedFor"/> hands back for
+        /// this card, as a string-table line (localization L1).</summary>
+        public static Line HeldSentenceLine(IngredientCard card) =>
+            card.Info?.Unlock != null
+                ? card.Info.Unlock.SentenceLine
+                : UnlockCondition.StarsSentenceLine(RequiredStars(card.Info.Tier, card.Info.Price));
+
         public static List<MarketOffer> OffersFor(Shelf shelf, IReadOnlyList<IngredientCard> catalogue,
             double stars = double.MaxValue, IUnlockState state = null)
         {

@@ -1,0 +1,499 @@
+{
+ "strings": [
+  {
+   "key": "chrome.cellar.group.bitters",
+   "text": "苦精",
+   "src": "BITTERS"
+  },
+  {
+   "key": "chrome.cellar.group.gin",
+   "text": "琴酒",
+   "src": "GIN"
+  },
+  {
+   "key": "chrome.cellar.group.juice",
+   "text": "果汁",
+   "src": "JUICES"
+  },
+  {
+   "key": "chrome.cellar.group.liqueur",
+   "text": "香甜酒",
+   "src": "LIQUEURS"
+  },
+  {
+   "key": "chrome.cellar.group.mixer",
+   "text": "副材料",
+   "src": "MIXERS"
+  },
+  {
+   "key": "chrome.cellar.group.rum",
+   "text": "蘭姆酒",
+   "src": "RUM"
+  },
+  {
+   "key": "chrome.cellar.group.soda",
+   "text": "蘇打與通寧",
+   "src": "SODA & TONIC"
+  },
+  {
+   "key": "chrome.cellar.group.sour",
+   "text": "酸味料",
+   "src": "SOUR"
+  },
+  {
+   "key": "chrome.cellar.group.syrup",
+   "text": "糖漿",
+   "src": "SYRUPS"
+  },
+  {
+   "key": "chrome.cellar.group.tequila",
+   "text": "龍舌蘭",
+   "src": "TEQUILA"
+  },
+  {
+   "key": "chrome.cellar.group.vodka",
+   "text": "伏特加",
+   "src": "VODKA"
+  },
+  {
+   "key": "chrome.cellar.group.whiskey",
+   "text": "威士忌",
+   "src": "WHISKY"
+  },
+  {
+   "key": "chrome.cellar.meta",
+   "text": "{style}  ·  等級 {tier}",
+   "src": "{style}  ·  TIER {tier}"
+  },
+  {
+   "key": "chrome.cellar.never_shaken",
+   "text": "不可搖盪 · 直接在杯中調製",
+   "src": "NEVER SHAKEN · BUILT AT THE GLASS"
+  },
+  {
+   "key": "chrome.cellar.on_the_house",
+   "text": "本店招待",
+   "src": "ON THE HOUSE"
+  },
+  {
+   "key": "chrome.cellar.price_bottle",
+   "text": "{price} 一瓶",
+   "src": "{price} A BOTTLE"
+  },
+  {
+   "key": "chrome.cellar.price_box",
+   "text": "{price} 一盒",
+   "src": "{price} A BOX"
+  },
+  {
+   "key": "chrome.cellar.stock",
+   "text": "剩 {left} / {capacity}",
+   "src": "{left} OF {capacity} LEFT"
+  },
+  {
+   "key": "chrome.cellar.stock_low",
+   "text": "快用完了  ·  剩 {left} / {capacity}",
+   "src": "ALMOST OUT  ·  {left} OF {capacity} LEFT"
+  },
+  {
+   "key": "chrome.cellar.uses",
+   "text": "用到它的酒譜",
+   "src": "IN THE BOOK"
+  },
+  {
+   "key": "chrome.cellar.uses_more#other",
+   "text": "用到它的酒譜  ·  還有 {n} 款",
+   "src": "IN THE BOOK  ·  AND {n} MORE"
+  },
+  {
+   "key": "chrome.cellar.uses_none",
+   "text": "酒單上還沒有酒用到它",
+   "src": "IN NO HOUSE DRINK YET"
+  },
+  {
+   "key": "chrome.crowd.broke",
+   "text": "手頭拮据",
+   "src": "BROKE CROWD"
+  },
+  {
+   "key": "chrome.crowd.high_rollers",
+   "text": "出手闊綽",
+   "src": "HIGH ROLLERS"
+  },
+  {
+   "key": "chrome.crowd.last_call",
+   "text": "最後一輪",
+   "src": "LAST CALL"
+  },
+  {
+   "key": "chrome.crowd.regulars",
+   "text": "一般客群",
+   "src": "REGULARS"
+  },
+  {
+   "key": "chrome.garnish.meta_garnish",
+   "text": "裝飾  ·  {word}",
+   "src": "GARNISH  ·  {word}"
+  },
+  {
+   "key": "chrome.garnish.meta_ice",
+   "text": "冰塊  ·  {word}",
+   "src": "ICE  ·  {word}"
+  },
+  {
+   "key": "chrome.garnish.meta_rim",
+   "text": "杯緣  ·  {word}",
+   "src": "RIM  ·  {word}"
+  },
+  {
+   "key": "chrome.garnish.tell_garnish",
+   "text": "掛在杯緣或放進酒裡",
+   "src": "ON THE RIM OR IN THE DRINK"
+  },
+  {
+   "key": "chrome.garnish.tell_ice",
+   "text": "倒酒前先放進杯子",
+   "src": "DROP IT IN BEFORE THE POUR"
+  },
+  {
+   "key": "chrome.garnish.tell_rim",
+   "text": "把杯緣在碟子裡轉一圈",
+   "src": "TURN THE GLASS IN THE DISH"
+  },
+  {
+   "key": "chrome.job.clean_nights",
+   "text": "整潔打烊",
+   "src": "CLEAN NIGHTS"
+  },
+  {
+   "key": "chrome.job.done",
+   "text": "{who} · {target}/{target} · 完成 · +${reward}",
+   "src": "{who} · {target}/{target} · DONE · +${reward}"
+  },
+  {
+   "key": "chrome.job.perfect_pours",
+   "text": "完美出杯",
+   "src": "PERFECT POURS"
+  },
+  {
+   "key": "chrome.ledger.drinks",
+   "text": "酒水 ${amount}",
+   "src": "drinks ${amount}"
+  },
+  {
+   "key": "chrome.ledger.empty",
+   "text": "還沒有紀錄。先營業一晚吧。",
+   "src": "No days yet. Close a night first."
+  },
+  {
+   "key": "chrome.ledger.fines",
+   "text": "罰款 ${amount}",
+   "src": "fines ${amount}"
+  },
+  {
+   "key": "chrome.ledger.fittings",
+   "text": "擺設 ${amount}",
+   "src": "fittings ${amount}"
+  },
+  {
+   "key": "chrome.ledger.header",
+   "text": "日期       收入        支出             淨額       收銀機",
+   "src": "DAY        TOOK        PAID OUT         NET        TILL"
+  },
+  {
+   "key": "chrome.ledger.kicked#other",
+   "text": "請出 {n} 位",
+   "src": "{n} shown the door"
+  },
+  {
+   "key": "chrome.ledger.night_stars",
+   "text": "當晚 {stars} 星",
+   "src": "{stars} stars on the night"
+  },
+  {
+   "key": "chrome.ledger.nobody_walked",
+   "text": "沒有人空手離開",
+   "src": "nobody left thirsty"
+  },
+  {
+   "key": "chrome.ledger.rent",
+   "text": "房租 ${amount}",
+   "src": "rent ${amount}"
+  },
+  {
+   "key": "chrome.ledger.row_bare",
+   "text": "{mood}的一晚 · 未留明細",
+   "src": "{mood} night · no breakdown kept"
+  },
+  {
+   "key": "chrome.ledger.row_head",
+   "text": "第{day}天   ${income} ${expenses} {net} {till}",
+   "src": "DAY {day}   ${income} ${expenses} {net} {till}"
+  },
+  {
+   "key": "chrome.ledger.served#other",
+   "text": "服務 {n} 位",
+   "src": "{n} served"
+  },
+  {
+   "key": "chrome.ledger.stock",
+   "text": "進貨 ${amount}",
+   "src": "stock ${amount}"
+  },
+  {
+   "key": "chrome.ledger.thanks",
+   "text": "謝禮 ${amount}",
+   "src": "thanks ${amount}"
+  },
+  {
+   "key": "chrome.ledger.tips",
+   "text": "小費 ${amount}",
+   "src": "tips ${amount}"
+  },
+  {
+   "key": "chrome.ledger.title",
+   "text": "收銀帳冊 — 至今每一天",
+   "src": "THE REGISTER — DAYS SO FAR"
+  },
+  {
+   "key": "chrome.ledger.walked_out#other",
+   "text": "{n} 位沒等到酒就走了",
+   "src": "{n} left without one"
+  },
+  {
+   "key": "chrome.log.job_done",
+   "text": "<color=#6FCC4B>{who} 的任務</color>完成 · +${reward}",
+   "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"
+  },
+  {
+   "key": "chrome.log.key",
+   "text": "紀錄",
+   "src": "LOG"
+  },
+  {
+   "key": "chrome.log.match_close",
+   "text": "接近",
+   "src": "CLOSE"
+  },
+  {
+   "key": "chrome.log.match_exact",
+   "text": "正確",
+   "src": "EXACT"
+  },
+  {
+   "key": "chrome.log.match_wrong",
+   "text": "錯誤",
+   "src": "WRONG"
+  },
+  {
+   "key": "chrome.log.nothing_named",
+   "text": "四不像",
+   "src": "NOTHING NAMED"
+  },
+  {
+   "key": "chrome.log.why_fill",
+   "text": "份量 {pct}",
+   "src": "fill {pct}"
+  },
+  {
+   "key": "chrome.log.why_made",
+   "text": "調成了 {drink}",
+   "src": "made {drink}"
+  },
+  {
+   "key": "chrome.log.why_measures",
+   "text": "比例不對",
+   "src": "measures off"
+  },
+  {
+   "key": "chrome.log.why_spec",
+   "text": "規格 {pct}",
+   "src": "spec {pct}"
+  },
+  {
+   "key": "chrome.mood.great",
+   "text": "很棒",
+   "src": "GREAT"
+  },
+  {
+   "key": "chrome.mood.ok",
+   "text": "普通",
+   "src": "OK"
+  },
+  {
+   "key": "chrome.mood.sour",
+   "text": "糟糕",
+   "src": "SOUR"
+  },
+  {
+   "key": "chrome.rung.back_wall",
+   "text": "後牆",
+   "src": "The back wall"
+  },
+  {
+   "key": "chrome.rung.counter",
+   "text": "吧檯",
+   "src": "The counter"
+  },
+  {
+   "key": "chrome.rung.place_over",
+   "text": "{place} · 取代下面那一階",
+   "src": "{place} · fitted over the mark below"
+  },
+  {
+   "key": "chrome.rung.place_pair",
+   "text": "{place} · 一對算一件",
+   "src": "{place} · both of them, one fitting"
+  },
+  {
+   "key": "chrome.settings.audio",
+   "text": "音效",
+   "src": "AUDIO"
+  },
+  {
+   "key": "chrome.settings.book",
+   "text": "今晚的帳本",
+   "src": "TONIGHT'S BOOK"
+  },
+  {
+   "key": "chrome.settings.book_note",
+   "text": "收銀機收過的每一筆",
+   "src": "EVERY LINE THE TILL HAS TAKEN"
+  },
+  {
+   "key": "chrome.settings.display",
+   "text": "顯示",
+   "src": "DISPLAY"
+  },
+  {
+   "key": "chrome.settings.full",
+   "text": "完整",
+   "src": "FULL"
+  },
+  {
+   "key": "chrome.settings.motion",
+   "text": "動態效果",
+   "src": "MOTION"
+  },
+  {
+   "key": "chrome.settings.motion_note",
+   "text": "減少：不滑動、不飄移、不淡入淡出",
+   "src": "REDUCED: NO SLIDES, NO FLOATS, NO FADES"
+  },
+  {
+   "key": "chrome.settings.new_run",
+   "text": "重新開局",
+   "src": "NEW RUN"
+  },
+  {
+   "key": "chrome.settings.off",
+   "text": "關",
+   "src": "OFF"
+  },
+  {
+   "key": "chrome.settings.on",
+   "text": "開",
+   "src": "ON"
+  },
+  {
+   "key": "chrome.settings.open",
+   "text": "打開",
+   "src": "OPEN"
+  },
+  {
+   "key": "chrome.settings.reduced",
+   "text": "減少",
+   "src": "REDUCED"
+  },
+  {
+   "key": "chrome.settings.sound",
+   "text": "聲音",
+   "src": "SOUND"
+  },
+  {
+   "key": "chrome.settings.start_over",
+   "text": "從頭開始",
+   "src": "START OVER"
+  },
+  {
+   "key": "chrome.settings.start_over_note",
+   "text": "回到第 1 天、空蕩蕩的酒吧 — 今晚的進度會消失",
+   "src": "DAY 1, AN EMPTY BAR — THIS NIGHT IS LOST"
+  },
+  {
+   "key": "chrome.settings.the_run",
+   "text": "本局",
+   "src": "THE RUN"
+  },
+  {
+   "key": "chrome.settings.title",
+   "text": "設定",
+   "src": "SETTINGS"
+  },
+  {
+   "key": "chrome.settings.volume",
+   "text": "音量",
+   "src": "VOLUME"
+  },
+  {
+   "key": "chrome.settings.volume_value",
+   "text": "{pct}%",
+   "src": "{pct}%"
+  },
+  {
+   "key": "chrome.story.count_spare#other",
+   "text": "第 {at}/{total} 杯  ·  還能錯 {n} 次",
+   "src": "{at} OF {total}  ·  {n} SPARE"
+  },
+  {
+   "key": "chrome.story.count_strict",
+   "text": "第 {at}/{total} 杯  ·  不能出錯",
+   "src": "{at} OF {total}  ·  NO MISTAKES"
+  },
+  {
+   "key": "chrome.story.gate",
+   "text": "{need} 星時再來  ·  目前 {now} 星",
+   "src": "COMES BACK AT {need} STARS  ·  YOU HAVE {now}"
+  },
+  {
+   "key": "chrome.story.go_on",
+   "text": "繼續",
+   "src": "GO ON"
+  },
+  {
+   "key": "chrome.story.good_night",
+   "text": "晚安",
+   "src": "GOOD NIGHT"
+  },
+  {
+   "key": "chrome.story.got_it",
+   "text": "知道了",
+   "src": "GOT IT"
+  },
+  {
+   "key": "chrome.story.missing",
+   "text": "酒架上沒有 {styles}",
+   "src": "NO {styles} ON THE SHELF"
+  },
+  {
+   "key": "chrome.story.pour_it",
+   "text": "開始調",
+   "src": "POUR IT"
+  },
+  {
+   "key": "chrome.toast.job_paid",
+   "text": "{who} 付清了 · +${reward}",
+   "src": "{who} PAYS UP · +${reward}"
+  },
+  {
+   "key": "chrome.toast.perfect_pour",
+   "text": "完美出杯 · {recipe} — 已記入酒譜",
+   "src": "PERFECT POUR · {recipe} — IN THE BOOK NOW"
+  },
+  {
+   "key": "chrome.toast.said_no",
+   "text": "你拒絕了 — 對方還會再來",
+   "src": "YOU TOLD THEM NO — THEY WILL BE BACK"
+  }
+ ]
+}

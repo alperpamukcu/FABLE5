@@ -132,15 +132,16 @@ namespace LastCall.UI
         /// the pair of choices while the tin holds nothing the book can name.</summary>
         private static string ShakerHintFor(PrepMethod? method, bool bottleInReach = true)
         {
-            string named =
-                method == PrepMethod.Shaken ? "THIS ONE IS SHAKEN"
-                : method == PrepMethod.Stirred ? "THIS ONE IS STIRRED"
-                : method == PrepMethod.Built ? "THIS ONE IS BUILT — DO NOT WORK IT"
-                : null;
-            if (!bottleInReach) return named ?? "CAPPED — SHAKE IT, OR TAKE IT OVER";
-            return named == null
-                ? "GRAB THE BOTTLE TO POUR · STIR IT, OR CAP IT AND SHAKE"
-                : "GRAB THE BOTTLE TO POUR · " + named;
+            // One key per whole line (L1): the pour half and the method half are one sentence.
+            if (!bottleInReach)
+                return method == PrepMethod.Shaken ? UIText.T("bench.shaker.hint.shaken")
+                    : method == PrepMethod.Stirred ? UIText.T("bench.shaker.hint.stirred")
+                    : method == PrepMethod.Built ? UIText.T("bench.shaker.hint.built")
+                    : UIText.T("bench.shaker.hint.capped");
+            return method == PrepMethod.Shaken ? UIText.T("bench.shaker.hint.pour_shaken")
+                : method == PrepMethod.Stirred ? UIText.T("bench.shaker.hint.pour_stirred")
+                : method == PrepMethod.Built ? UIText.T("bench.shaker.hint.pour_built")
+                : UIText.T("bench.shaker.hint.pour");
         }
         private CanvasGroup _toGlassGroup;
         private Text _toGlassLabel;
@@ -292,7 +293,8 @@ namespace LastCall.UI
             // The bottle's name used to ride the card's head; the strip has no head, so the
             // name goes to a quiet text the bench still writes to (see BuildStepStrip).
             _shakerTitle = BuildStepStrip(panel,
-                new[] { "FILL THE TIN", "CAP IT", "SHAKE OR STIR", "TO THE GLASS" }, _stepRows);
+                new[] { UIText.T("bench.shaker.step.fill"), UIText.T("bench.shaker.step.cap"),
+                        UIText.T("bench.shaker.step.mix"), UIText.T("bench.shaker.step.to_glass") }, _stepRows);
         }
 
         // ── THE STEPS ARE CUT INTO THE COUNTER (2026-09-13) ─────────────────────
@@ -399,7 +401,7 @@ namespace LastCall.UI
         /// <summary>What the tin is still owed, in the player's words — used by the doors
         /// that turn a player back, so being refused always says why.</summary>
         private string BenchOwed(TycoonRun run) =>
-            !_capped ? "cap the tin first" : "shake or stir it first";
+            !_capped ? UIText.T("bench.shaker.owed.cap") : UIText.T("bench.shaker.owed.mix");
 
         /// <summary>
         /// Which step the bench is on, read off the same state the keys and Core read — the
@@ -428,10 +430,10 @@ namespace LastCall.UI
             {
                 string wasThird = _stepRows[2].label.text;
                 _stepRows[2].label.text =
-                    method == PrepMethod.Shaken ? "SHAKE IT"
-                    : method == PrepMethod.Stirred ? "STIR IT"
-                    : method == PrepMethod.Built ? "BUILT, NO MIXING"
-                    : "SHAKE OR STIR";
+                    method == PrepMethod.Shaken ? UIText.T("bench.shaker.step.shake")
+                    : method == PrepMethod.Stirred ? UIText.T("bench.shaker.step.stir")
+                    : method == PrepMethod.Built ? UIText.T("bench.shaker.step.built")
+                    : UIText.T("bench.shaker.step.mix");
                 if (_stepRows[2].label.text != wasThird) LayOutStrip(_stepRows);
                 if (method == PrepMethod.Built) { optional = 2; optionalDone = true; }
             }
@@ -507,7 +509,9 @@ namespace LastCall.UI
                 // WHAT IT IS, beside it: a band too thin to hold a line of type is a colour.
                 if (host != null && card != null && segH >= 11f)
                     GaugeLabel(host, y, segH, labelsLeft, card,
-                        $"{(card.Name ?? id).ToUpperInvariant().Split(' ')[0]} {share:P0}");
+                        UIText.T("bench.shaker.gauge.band",
+                            ("name", UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name ?? id)).Split(' ')[0]),
+                            ("share", share.ToString("P0"))));
                 y += segH;
             }
 
@@ -660,17 +664,18 @@ namespace LastCall.UI
 
         private string ShakerLine(TycoonRun run)
         {
-            if (run.Glass.IsEmpty) return "shaker empty — tip the bottle over the tin";
-            var sb = new StringBuilder();
-            sb.Append($"SHAKER {run.Glass.FillFraction:P0} — ");
+            if (run.Glass.IsEmpty) return UIText.T("bench.shaker.line.empty");
             var parts = new List<string>();
             foreach (var id in run.Glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
-                parts.Add($"{(card?.Name ?? id).ToUpperInvariant()} {run.Glass.RatioOf(id):P0}");
+                parts.Add(UIText.T("bench.shaker.line.part",
+                    ("name", UIText.Caps(UIText.Data("bottle", id, "name", card?.Name ?? id))),
+                    ("share", run.Glass.RatioOf(id).ToString("P0"))));
             }
-            sb.Append(string.Join(", ", parts));
-            return sb.ToString();
+            // The list separator is a symbol and stays here (PLAN_localization_L1 §4).
+            return UIText.T("bench.shaker.line.contents",
+                ("fill", run.Glass.FillFraction.ToString("P0")), ("parts", string.Join(", ", parts)));
         }
 
         /// <summary>The readout's ordinary voice — and it clears any warning colour left on it.</summary>
@@ -713,7 +718,7 @@ namespace LastCall.UI
         /// reason nothing is happening (2026-07-28).</summary>
         private void ShowShakerFull()
         {
-            _shakerReadout.text = "THE TIN IS FULL — PUT THE LID ON AND SHAKE, OR EMPTY IT";
+            _shakerReadout.text = UIText.T("bench.shaker.tin_full");
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
         }
@@ -743,7 +748,7 @@ namespace LastCall.UI
         private void PushFocusBottleArt(TycoonRun run)
         {
             var colour = UITheme.StyleColor(_focusBottle.Info?.Style, _focusBottle.Type);
-            _shakerTitle.text = _focusBottle.Name.ToUpperInvariant();
+            _shakerTitle.text = UIText.Caps(UIText.Data("bottle", _focusBottle.Id, "name", _focusBottle.Name));
             // In the hand it stands OPEN (the author, 2026-08-01): the pour scene uses the
             // capless variant when one exists. Same canvas as the closed art, so the liquid
             // mask and the mouth line all stay put; styles missing an open shot fall back.
@@ -805,7 +810,7 @@ namespace LastCall.UI
             if (_bottleShadow != null && _bottleShadow.gameObject.activeSelf != inHand)
                 _bottleShadow.gameObject.SetActive(inHand);
             if (inHand) PushFocusBottleArt(run);
-            else if (_shakerTitle != null) _shakerTitle.text = "THE TIN";
+            else if (_shakerTitle != null) _shakerTitle.text = UIText.T("bench.shaker.title.tin");
             SayShaker(ShakerLine(run));
             ConfigureBottleHand();
             _shakerFluid.Clear();
@@ -833,7 +838,7 @@ namespace LastCall.UI
             _shakeMeterFill.fillAmount = 0f;
             if (run.Glass.HasPreparation("shaken"))
                 ShowWorkMeter((float)run.ShakeEnergy, UITheme.Amber[3],
-                              $"SHAKEN  {run.ShakeEnergy:P0}");
+                              UIText.T("bench.shaker.meter.shaken", ("pct", run.ShakeEnergy.ToString("P0"))));
         }
 
         /// <summary>
@@ -1250,19 +1255,19 @@ namespace LastCall.UI
                 switch (run.TinMethod)
                 {
                     case PrepMethod.Stirred:
-                        NudgeShaker("this one is STIRRED — work the spoon over the open tin");
+                        NudgeShaker(UIText.T("bench.shaker.nudge.stirred"));
                         break;
                     case PrepMethod.Shaken:
-                        NudgeShaker("this one is SHAKEN — cap the tin, then shake it");
+                        NudgeShaker(UIText.T("bench.shaker.nudge.shaken"));
                         break;
                     case PrepMethod.Built:
-                        NudgeShaker("this one is BUILT — no shaking; cap it and take it over");
+                        NudgeShaker(UIText.T("bench.shaker.nudge.built"));
                         break;
                     default:
                         if (run.MixRequired && !run.IsMixed)
-                            NudgeShaker("two spirits — stir it with the spoon, or cap it and shake");
+                            NudgeShaker(UIText.T("bench.shaker.nudge.two_spirits"));
                         else
-                            NudgeShaker("drag the lid onto the tin to close it");
+                            NudgeShaker(UIText.T("bench.shaker.nudge.cap"));
                         break;
                 }
             }
@@ -1303,7 +1308,7 @@ namespace LastCall.UI
 
             _blowHome = _shakerVessel.anchoredPosition;
             Sfx.Play("blowout", 1f);
-            _shakerReadout.text = "IT BLEW UP — NEVER SHAKE A FIZZY DRINK";
+            _shakerReadout.text = UIText.T("bench.shaker.blew_up");
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
         }
@@ -1329,7 +1334,7 @@ namespace LastCall.UI
                 _shakerVessel.anchoredPosition = _blowHome + new Vector2(
                     UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f)) * (14f * ring);
             }
-            _shakerReadout.text = "IT BLEW UP — NEVER SHAKE A FIZZY DRINK";
+            _shakerReadout.text = UIText.T("bench.shaker.blew_up");
             _shakerReadout.color = UITheme.ViceRed[3];
             _saidThisFrame = true;
             if (_blowT <= 0f) RefreshShaker();   // a clean bench, exactly as after the bin
@@ -1348,7 +1353,7 @@ namespace LastCall.UI
             _capGrabbed = false;
             _capPos = _capRest;
             Sfx.Play("cap_on", 0.55f);
-            SayShaker("lid off — the tin is open again");
+            SayShaker(UIText.T("bench.shaker.lid_off"));
         }
 
         /// <summary>
@@ -1379,7 +1384,8 @@ namespace LastCall.UI
                 {
                     run.Stir(_stirEnergy);
                     Sfx.Play("stir_commit", 0.6f);
-                    SayShaker($"STIRRED · {_stirEnergy:P0} · {ShakerLine(run)}");
+                    SayShaker(UIText.T("bench.shaker.stirred_line",
+                        ("pct", _stirEnergy.ToString("P0")), ("line", ShakerLine(run))));
                 }
                 _spoonHeld = false;
                 _stirEnergy = 0;
@@ -1422,8 +1428,8 @@ namespace LastCall.UI
             else _stirHasPrev = false;
 
             ShowWorkMeter((float)_stirEnergy, UITheme.Cyan[3],
-                          $"STIR  {_stirEnergy:P0}");
-            NudgeShaker(overTin ? "work circles over the tin" : "bring the spoon over the tin");
+                          UIText.T("bench.shaker.meter.stir", ("pct", _stirEnergy.ToString("P0"))));
+            NudgeShaker(overTin ? UIText.T("bench.shaker.nudge.circles") : UIText.T("bench.shaker.nudge.spoon_over"));
         }
 
         /// <summary>
@@ -1459,7 +1465,7 @@ namespace LastCall.UI
             {
                 _toGlassWait = 0f;
                 if (_capped && !run.Glass.IsEmpty)
-                    NudgeShaker("it wants a mix — shake it, or bin it and start again");
+                    NudgeShaker(UIText.T("bench.shaker.nudge.wants_mix"));
                 return;
             }
             // Not while a hand is still on something: a cap released over the tin and a
@@ -1495,7 +1501,8 @@ namespace LastCall.UI
                     bool blows = run.ShakeBlowsTheTin;
                     run.Shake(_shakeEnergy);
                     if (blows) BlowTheTin();
-                    else SayShaker($"SHAKEN · {_shakeEnergy:P0} · {ShakerLine(run)}");
+                    else SayShaker(UIText.T("bench.shaker.shaken_line",
+                        ("pct", _shakeEnergy.ToString("P0")), ("line", ShakerLine(run))));
                 }
                 _shaking = false;
                 _shakeEnergy = 0;
@@ -1534,7 +1541,7 @@ namespace LastCall.UI
             }
 
             ShowWorkMeter((float)_shakeEnergy, UITheme.Amber[3],
-                          $"SHAKE  {_shakeEnergy:P0}");
+                          UIText.T("bench.shaker.meter.shake", ("pct", _shakeEnergy.ToString("P0"))));
         }
 
         /// <summary>
@@ -1789,8 +1796,8 @@ namespace LastCall.UI
             var shakeGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             shakeGrab.callback.AddListener(_ =>
             {
-                if (Run == null || Run.Glass.IsEmpty) { SayShaker("pour something to shake"); return; }
-                if (!_capped) { SayShaker("cap it first — drag the lid onto the tin"); return; }
+                if (Run == null || Run.Glass.IsEmpty) { SayShaker(UIText.T("bench.shaker.nothing_to_shake")); return; }
+                if (!_capped) { SayShaker(UIText.T("bench.shaker.cap_first")); return; }
                 _shaking = true;
             Sfx.Play("tin_tip", 0.7f);
                 _shakeEnergy = Run.ShakeEnergy;   // continue from what's been shaken, don't reset
@@ -1991,7 +1998,7 @@ namespace LastCall.UI
             // column did but wide enough to BE a shaker. Its right edge lands at 510,
             // inside the 1149-wide working area the serve bench measures against, and
             // its captions still have their air to the left.
-            _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, "TIN");
+            _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, UIText.T("bench.shaker.gauge.head"));
 
             // THE WORK METER (2026-08-26, the author: "doluluk barlarını tamamen tekrardan
             // tasarla, çok amatörce duruyor").
@@ -2185,7 +2192,7 @@ namespace LastCall.UI
             var lidLabel = NewText("L", lidFace, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
             Stretch(lidLabel.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            lidLabel.text = "TAKE THE LID OFF";
+            lidLabel.text = UIText.T("bench.shaker.lid_off_key");
             _lidOffGroup = lidOff.gameObject.AddComponent<CanvasGroup>();
             _lidOffGroup.alpha = 0f;
             _lidOffGroup.blocksRaycasts = false;

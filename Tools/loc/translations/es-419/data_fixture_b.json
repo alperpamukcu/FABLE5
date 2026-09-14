@@ -1,0 +1,414 @@
+{
+  "strings": [
+    {
+      "key": "data.fixture.post5_diver.blurb",
+      "text": "Un clavadista en el aire sobre una piscina turquesa. Todo el bar aguanta la respiración con él.",
+      "src": "A diver in mid-air over a turquoise pool. The whole bar holds its breath with them."
+    },
+    {
+      "key": "data.fixture.post5_diver.name",
+      "text": "Póster del clavadista",
+      "src": "Diver Poster"
+    },
+    {
+      "key": "data.fixture.post5_neon.blurb",
+      "text": "Una calle de letreros rosas y azules bajo la lluvia. Hace que el salón se sienta parte de una ciudad.",
+      "src": "A street of pink and blue signs in the rain. It makes the room feel like part of a city."
+    },
+    {
+      "key": "data.fixture.post5_neon.name",
+      "text": "Póster Avenida Neón",
+      "src": "Neon Avenue Poster"
+    },
+    {
+      "key": "data.fixture.post_coast_R.blurb",
+      "text": "La carretera de la costa desde arriba: palmeras, mar y un autito blanco. El viaje que todos piensan hacer algún día.",
+      "src": "The coast road from above, palms and sea and a thin white car. The drive everybody means to take."
+    },
+    {
+      "key": "data.fixture.post_coast_R.name",
+      "text": "Póster de la costa",
+      "src": "Coast Poster"
+    },
+    {
+      "key": "data.fixture.post_malibu_R.blurb",
+      "text": "Una caseta de salvavidas bajo un cielo en llamas, en un póster con una esquina enrollada.",
+      "src": "A lifeguard hut under a burning sky, on a poster curling at one corner."
+    },
+    {
+      "key": "data.fixture.post_malibu_R.name",
+      "text": "Póster Malibu",
+      "src": "Malibu Poster"
+    },
+    {
+      "key": "data.fixture.post_pier_R.blurb",
+      "text": "El muelle al anochecer, con las luces encendiéndose. La postal que manda todo turista.",
+      "src": "The pier at dusk with its lights coming on. The one postcard every tourist sends."
+    },
+    {
+      "key": "data.fixture.post_pier_R.name",
+      "text": "Póster del muelle",
+      "src": "Pier Poster"
+    },
+    {
+      "key": "data.fixture.post_surf_R.blurb",
+      "text": "Un surfista en una ola turquesa, impreso tan grande que se ve el grano. Aquí nadie ha surfeado nunca.",
+      "src": "A surfer on a teal wave, printed so big the grain shows. Nobody here has surfed."
+    },
+    {
+      "key": "data.fixture.post_surf_R.name",
+      "text": "Póster de surf",
+      "src": "Surf Poster"
+    },
+    {
+      "key": "data.fixture.prep_mat.blurb",
+      "text": "Corcho bajo los platitos. Nunca, ni una sola vez, lo han lavado.",
+      "src": "Cork under the dishes. It has never once been washed."
+    },
+    {
+      "key": "data.fixture.prep_mat.name",
+      "text": "Tapete de snacks",
+      "src": "Snack Mat"
+    },
+    {
+      "key": "data.fixture.rug6_memphis.blurb",
+      "text": "Garabatos, puntos y triángulos en todos los colores que vendieron los ochenta. Discute con las paredes y gana.",
+      "src": "Squiggles, dots and triangles in every colour the eighties sold. It argues with the walls and wins."
+    },
+    {
+      "key": "data.fixture.rug6_memphis.name",
+      "text": "Alfombra Memphis",
+      "src": "Memphis Rug"
+    },
+    {
+      "key": "data.fixture.rug6_palm.blurb",
+      "text": "Grandes hojas verdes sobre crema. Hace que todo el piso parezca la terraza de alguien.",
+      "src": "Big green fronds on cream. It makes the whole floor feel like somebody's verandah."
+    },
+    {
+      "key": "data.fixture.rug6_palm.name",
+      "text": "Alfombra de palmas",
+      "src": "Palm Leaf Rug"
+    },
+    {
+      "key": "data.fixture.rug6_sunset.blurb",
+      "text": "Franjas del dorado al magenta y a la noche: la tarde tendida en el piso.",
+      "src": "Stripes from gold to magenta to night, the evening laid flat on the floor."
+    },
+    {
+      "key": "data.fixture.rug6_sunset.name",
+      "text": "Franjas de atardecer",
+      "src": "Sunset Bands"
+    },
+    {
+      "key": "data.fixture.rug_leopard.blurb",
+      "text": "Manchas de pared a pared, con un borde turquesa para que no se escapen. Escandalosa, y orgullosa de serlo.",
+      "src": "Spots from wall to wall, with a teal border to keep them in. Loud, and proud of it."
+    },
+    {
+      "key": "data.fixture.rug_leopard.name",
+      "text": "Alfombra de leopardo",
+      "src": "Leopard Rug"
+    },
+    {
+      "key": "data.fixture.rug_wave.blurb",
+      "text": "Una ola rompiendo, tejida sobre las tablas. Las mesas parecen paradas en la orilla.",
+      "src": "A breaking wave woven across the boards. The tables look like they are standing on the shore."
+    },
+    {
+      "key": "data.fixture.rug_wave.name",
+      "text": "Alfombra de ola",
+      "src": "Wave Rug"
+    },
+    {
+      "key": "data.fixture.rwall6_stripe.blurb",
+      "text": "Franjas rosa y crema que corren hasta la puerta. La pared lateral por fin parece de un bar de la costa.",
+      "src": "Pink and cream bands running back to the door. The side wall finally looks like it belongs to a bar on the coast."
+    },
+    {
+      "key": "data.fixture.rwall6_stripe.name",
+      "text": "Rayas rosa flamenco",
+      "src": "Flamingo Stripes"
+    },
+    {
+      "key": "data.fixture.rwall6_sunray.blurb",
+      "text": "Un atardecer que sale de la esquina en rayos coral y magenta. Nadie sale por esa puerta sin mirarlo.",
+      "src": "A sunset breaking out of the corner in coral and magenta rays. Nobody leaves by that door without looking at it."
+    },
+    {
+      "key": "data.fixture.rwall6_sunray.name",
+      "text": "Pared de rayos",
+      "src": "Sunray Wall"
+    },
+    {
+      "key": "data.fixture.rwall6_tile.blurb",
+      "text": "Rombos turquesa sobre crema, alineados con la pared mientras se aleja de ti. Una piscina en la que te puedes apoyar.",
+      "src": "Teal diamonds on cream, set square to the wall as it runs away from you. A pool you can lean on."
+    },
+    {
+      "key": "data.fixture.rwall6_tile.name",
+      "text": "Rombos turquesa",
+      "src": "Turquoise Diamonds"
+    },
+    {
+      "key": "data.fixture.shaker_gold.blurb",
+      "text": "Oro pulido, y el trago de adentro es exactamente el mismo. Pero nadie está mirando el trago.",
+      "src": "Polished gold, and the drink inside it is exactly the same drink. That is not what anybody is looking at."
+    },
+    {
+      "key": "data.fixture.shaker_gold.name",
+      "text": "Coctelera dorada",
+      "src": "Gold Shaker"
+    },
+    {
+      "key": "data.fixture.shaker_steel.blurb",
+      "text": "La coctelera que venía con el salón. Abollada en la base, fría en la mano, y nunca perdió un trago.",
+      "src": "The tin the room came with. Dented at the base, cold in the hand, and it has never lost a drink."
+    },
+    {
+      "key": "data.fixture.shaker_steel.name",
+      "text": "Coctelera de acero",
+      "src": "Steel Shaker"
+    },
+    {
+      "key": "data.fixture.sink_brass.blurb",
+      "text": "Una tina que atrapa el neón y se lo queda — y un desagüe que nadie te cobra.",
+      "src": "A basin that catches the neon and keeps it — and a drain nobody bills you for."
+    },
+    {
+      "key": "data.fixture.sink_brass.name",
+      "text": "Fregadero de latón",
+      "src": "Brass Sink"
+    },
+    {
+      "key": "data.fixture.table5_bistro_L.blurb",
+      "text": "Una cubierta cuadrada y dos sillas de madera curvada que venían con el contrato. Nadie se sienta ahí mucho rato.",
+      "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."
+    },
+    {
+      "key": "data.fixture.table5_bistro_L.name",
+      "text": "Mesa bistró",
+      "src": "Bistro Table"
+    },
+    {
+      "key": "data.fixture.table5_bistro_R.blurb",
+      "text": "Una cubierta cuadrada y dos sillas de madera curvada que venían con el contrato. Nadie se sienta ahí mucho rato.",
+      "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."
+    },
+    {
+      "key": "data.fixture.table5_bistro_R.name",
+      "text": "Mesa bistró",
+      "src": "Bistro Table"
+    },
+    {
+      "key": "data.fixture.table_left_3.blurb",
+      "text": "Vinil ciruela sobre una columna pulida. Gira si lo dejas.",
+      "src": "Plum vinyl on a polished column. Spins if you let it."
+    },
+    {
+      "key": "data.fixture.table_left_3.name",
+      "text": "Juego neumático de acero",
+      "src": "Steel Gaslift Set"
+    },
+    {
+      "key": "data.fixture.table_right_3.blurb",
+      "text": "Vinil ciruela sobre una columna pulida. Gira si lo dejas.",
+      "src": "Plum vinyl on a polished column. Spins if you let it."
+    },
+    {
+      "key": "data.fixture.table_right_3.name",
+      "text": "Juego neumático de acero",
+      "src": "Steel Gaslift Set"
+    },
+    {
+      "key": "data.fixture.table_v1_L.blurb",
+      "text": "Una cubierta alta y redonda sobre un pie de latón, dos bancos rojos y un vaso esperando encima. La gente se queda a una segunda ronda.",
+      "src": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round."
+    },
+    {
+      "key": "data.fixture.table_v1_L.name",
+      "text": "Mesa alta de cóctel",
+      "src": "Cocktail High-Top"
+    },
+    {
+      "key": "data.fixture.table_v1_R.blurb",
+      "text": "Una cubierta alta y redonda sobre un pie de latón, dos bancos rojos y un vaso esperando encima. La gente se queda a una segunda ronda.",
+      "src": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round."
+    },
+    {
+      "key": "data.fixture.table_v1_R.name",
+      "text": "Mesa alta de cóctel",
+      "src": "Cocktail High-Top"
+    },
+    {
+      "key": "data.fixture.table_v2_L.blurb",
+      "text": "Una cubierta turquesa sobre un pedestal cromado, bancos a juego y las botellas ya encima. El lugar que la gente pide.",
+      "src": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for."
+    },
+    {
+      "key": "data.fixture.table_v2_L.name",
+      "text": "Juego pedestal turquesa",
+      "src": "Teal Pedestal Set"
+    },
+    {
+      "key": "data.fixture.table_v2_R.blurb",
+      "text": "Una cubierta turquesa sobre un pedestal cromado, bancos a juego y las botellas ya encima. El lugar que la gente pide.",
+      "src": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for."
+    },
+    {
+      "key": "data.fixture.table_v2_R.name",
+      "text": "Juego pedestal turquesa",
+      "src": "Teal Pedestal Set"
+    },
+    {
+      "key": "data.fixture.taps_one.blurb",
+      "text": "Una línea, una lager. Por algo se empieza.",
+      "src": "One line, one lager. A start."
+    },
+    {
+      "key": "data.fixture.taps_one.name",
+      "text": "Torre de barril simple",
+      "src": "Single Draught Tower"
+    },
+    {
+      "key": "data.fixture.taps_three.blurb",
+      "text": "Una columna, tres caños, y nada esperando su turno.",
+      "src": "One column, three spouts, and nothing waiting its turn."
+    },
+    {
+      "key": "data.fixture.taps_three.name",
+      "text": "Torre de barril triple",
+      "src": "Triple Draught Tower"
+    },
+    {
+      "key": "data.fixture.taps_two.blurb",
+      "text": "Un puente de latón sobre dos patas, con los tiradores en fila.",
+      "src": "A brass bridge on two legs, handles in a row across it."
+    },
+    {
+      "key": "data.fixture.taps_two.name",
+      "text": "Puente de barril en arco",
+      "src": "Arched Draught Bridge"
+    },
+    {
+      "key": "data.fixture.wall_lamps_one.blurb",
+      "text": "Cian en la punta, rosa a lo largo del tubo, y un soporte de acero que lo sostiene. Lo más barato del salón que sabe en qué año está.",
+      "src": "Cyan at the cap, pink down the tube, a steel bracket holding it. The cheapest thing in the room that knows what year it is."
+    },
+    {
+      "key": "data.fixture.wall_lamps_one.name",
+      "text": "Lámparas de tubo de vidrio",
+      "src": "Glass Tube Lamps"
+    },
+    {
+      "key": "data.fixture.wall_lamps_three.blurb",
+      "text": "Una palmera de latón con un coco encendido. Nadie la necesita. Todos la quieren.",
+      "src": "A brass palm with a lit coconut. Nobody needs it. Everybody wants it."
+    },
+    {
+      "key": "data.fixture.wall_lamps_three.name",
+      "text": "Lámparas de palmera",
+      "src": "Palm Lamps"
+    },
+    {
+      "key": "data.fixture.wall_lamps_two.blurb",
+      "text": "Un frente crema en un marco coral, ancho como una ventana. Baña la pared en vez de llenarla de puntos.",
+      "src": "A cream face in a coral frame, wide as a window. It washes the wall instead of dotting it."
+    },
+    {
+      "key": "data.fixture.wall_lamps_two.name",
+      "text": "Paneles atardecer",
+      "src": "Sunset Panels"
+    },
+    {
+      "key": "data.fixture.wall_tv.blurb",
+      "text": "Un aparato cuadrado atornillado sobre los reservados, pasando anuncios que nadie mira y todos ven.",
+      "src": "A boxy set bolted over the booths, running adverts nobody watches and everybody looks at."
+    },
+    {
+      "key": "data.fixture.wall_tv.name",
+      "text": "Televisor de pared",
+      "src": "Wall Television"
+    },
+    {
+      "key": "data.fixture.walls_1.blurb",
+      "text": "La pared que dejó el último inquilino. Aguanta, casi siempre, y las grietas ya dejaron de crecer.",
+      "src": "The wall the last tenant left. It holds, mostly, and the cracks have stopped growing."
+    },
+    {
+      "key": "data.fixture.walls_1.name",
+      "text": "Yeso agrietado",
+      "src": "Cracked Plaster"
+    },
+    {
+      "key": "data.fixture.walls_2.blurb",
+      "text": "Alisado y pintado color crema. Las grietas siguen debajo, y nadie tiene por qué saberlo.",
+      "src": "Skimmed flat and painted cream. The cracks are under it, and nobody has to know."
+    },
+    {
+      "key": "data.fixture.walls_2.name",
+      "text": "Yeso nuevo",
+      "src": "Fresh Plaster"
+    },
+    {
+      "key": "data.fixture.walls_3.blurb",
+      "text": "Un friso coral a lo largo de toda la pared y una franja en la cornisa. El salón deja de pedir disculpas.",
+      "src": "A coral wainscot along the whole wall and a stripe at the cornice. The room stops apologising."
+    },
+    {
+      "key": "data.fixture.walls_3.name",
+      "text": "Pared con friso",
+      "src": "Panelled Wall"
+    },
+    {
+      "key": "data.fixture.walls_4.blurb",
+      "text": "Rombos rosa y lila sobre los paneles. La pared que sale en las postales.",
+      "src": "Pink and lilac diamonds over the panelling. The wall the postcards are of."
+    },
+    {
+      "key": "data.fixture.walls_4.name",
+      "text": "Papel arlequín",
+      "src": "Harlequin Paper"
+    },
+    {
+      "key": "data.fixture.walls_right_1.blurb",
+      "text": "El morado del último inquilino, pelándose donde entró la humedad. Las tablas se asoman en tres lugares, y nadie ha preguntado por ellas.",
+      "src": "The last tenant's purple, peeling where the damp got in. The boards show through in three places, and nobody has asked about them."
+    },
+    {
+      "key": "data.fixture.walls_right_1.name",
+      "text": "Morado descascarado",
+      "src": "Peeling Purple"
+    },
+    {
+      "key": "data.fixture.walls_right_2.blurb",
+      "text": "Una mano de pintura ciruela de la esquina a la puerta. Tapa los parches y nada más.",
+      "src": "One coat of plum from the corner to the door. It hides the patches and nothing else."
+    },
+    {
+      "key": "data.fixture.walls_right_2.name",
+      "text": "Mano de ciruela",
+      "src": "Plum Coat"
+    },
+    {
+      "key": "data.fixture.walls_right_3.blurb",
+      "text": "Círculos oscuros sobre el morado y una tanda de rayas hacia la esquina. Hace que la puerta parezca puesta a propósito.",
+      "src": "Dark rounds on the purple and a run of stripes into the corner. It makes the door look like somebody meant it."
+    },
+    {
+      "key": "data.fixture.walls_right_3.name",
+      "text": "Papel de círculos",
+      "src": "Bubble Paper"
+    },
+    {
+      "key": "data.fixture.walls_right_4.blurb",
+      "text": "Crema sobre un friso coral, con una franja en la cornisa. La pared lateral por fin combina con las postales.",
+      "src": "Cream above a coral wainscot, a stripe at the cornice. The side wall finally matches the postcards."
+    },
+    {
+      "key": "data.fixture.walls_right_4.name",
+      "text": "Friso atardecer",
+      "src": "Sunset Panelling"
+    }
+  ]
+}

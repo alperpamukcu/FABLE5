@@ -1,0 +1,509 @@
+{
+  "strings": [
+    {
+      "key": "advice.degree.little",
+      "text": "Un poco",
+      "src": "A little"
+    },
+    {
+      "key": "advice.degree.lot",
+      "text": "Mucho",
+      "src": "A lot"
+    },
+    {
+      "key": "advice.degree.touch",
+      "text": "Un toque",
+      "src": "A touch"
+    },
+    {
+      "key": "advice.flawless",
+      "text": "Perfecto. No le cambiaría nada.",
+      "src": "Perfect pour. Not a thing I would change."
+    },
+    {
+      "key": "advice.flawless_stem",
+      "text": "Quedó justo en su punto.",
+      "src": "Poured just right."
+    },
+    {
+      "key": "advice.garnish.draught",
+      "text": "que fuera de barril",
+      "src": "draught"
+    },
+    {
+      "key": "advice.garnish.ice",
+      "text": "hielo",
+      "src": "the ice"
+    },
+    {
+      "key": "advice.garnish.lemon_twist",
+      "text": "un twist de limón",
+      "src": "a lemon twist"
+    },
+    {
+      "key": "advice.garnish.salt_rim",
+      "text": "borde de sal",
+      "src": "a salted rim"
+    },
+    {
+      "key": "advice.garnish.shaken",
+      "text": "que fuera agitado",
+      "src": "shaken"
+    },
+    {
+      "key": "advice.garnish.stirred",
+      "text": "que fuera revuelto",
+      "src": "stirred"
+    },
+    {
+      "key": "advice.garnish.sugar_rim",
+      "text": "borde de azúcar",
+      "src": "a sugared rim"
+    },
+    {
+      "key": "advice.head.less",
+      "text": "{degree} menos de espuma la próxima vez.",
+      "src": "{degree} less head next time."
+    },
+    {
+      "key": "advice.head.more",
+      "text": "{degree} más de espuma la próxima vez.",
+      "src": "{degree} more head next time."
+    },
+    {
+      "key": "advice.ingredient.amaro",
+      "text": "amaro",
+      "src": "amaro"
+    },
+    {
+      "key": "advice.ingredient.bourbon",
+      "text": "bourbon",
+      "src": "bourbon"
+    },
+    {
+      "key": "advice.ingredient.coffee_liqueur",
+      "text": "licor de café",
+      "src": "coffee liqueur"
+    },
+    {
+      "key": "advice.ingredient.cola",
+      "text": "cola",
+      "src": "cola"
+    },
+    {
+      "key": "advice.ingredient.cranberry",
+      "text": "arándano",
+      "src": "cranberry"
+    },
+    {
+      "key": "advice.ingredient.energy",
+      "text": "energizante",
+      "src": "energy"
+    },
+    {
+      "key": "advice.ingredient.gin",
+      "text": "ginebra",
+      "src": "gin"
+    },
+    {
+      "key": "advice.ingredient.ginger",
+      "text": "jengibre",
+      "src": "ginger"
+    },
+    {
+      "key": "advice.ingredient.grenadine",
+      "text": "granadina",
+      "src": "grenadine"
+    },
+    {
+      "key": "advice.ingredient.lager",
+      "text": "lager",
+      "src": "lager"
+    },
+    {
+      "key": "advice.ingredient.lemon",
+      "text": "limón",
+      "src": "lemon"
+    },
+    {
+      "key": "advice.ingredient.lime",
+      "text": "lima",
+      "src": "lime"
+    },
+    {
+      "key": "advice.ingredient.mint",
+      "text": "menta",
+      "src": "mint"
+    },
+    {
+      "key": "advice.ingredient.olive",
+      "text": "aceituna",
+      "src": "olive"
+    },
+    {
+      "key": "advice.ingredient.orange",
+      "text": "naranja",
+      "src": "orange"
+    },
+    {
+      "key": "advice.ingredient.pale_ale",
+      "text": "pale ale",
+      "src": "pale ale"
+    },
+    {
+      "key": "advice.ingredient.pineapple",
+      "text": "piña",
+      "src": "pineapple"
+    },
+    {
+      "key": "advice.ingredient.rum",
+      "text": "ron",
+      "src": "rum"
+    },
+    {
+      "key": "advice.ingredient.soda",
+      "text": "soda",
+      "src": "soda"
+    },
+    {
+      "key": "advice.ingredient.stout",
+      "text": "stout",
+      "src": "stout"
+    },
+    {
+      "key": "advice.ingredient.syrup",
+      "text": "jarabe",
+      "src": "syrup"
+    },
+    {
+      "key": "advice.ingredient.tequila",
+      "text": "tequila",
+      "src": "tequila"
+    },
+    {
+      "key": "advice.ingredient.tonic",
+      "text": "tónica",
+      "src": "tonic"
+    },
+    {
+      "key": "advice.ingredient.triple_sec",
+      "text": "triple sec",
+      "src": "triple sec"
+    },
+    {
+      "key": "advice.ingredient.vermouth",
+      "text": "vermut",
+      "src": "vermouth"
+    },
+    {
+      "key": "advice.ingredient.vodka",
+      "text": "vodka",
+      "src": "vodka"
+    },
+    {
+      "key": "advice.list.and",
+      "text": "{list} y {item}",
+      "src": "{list} and {item}"
+    },
+    {
+      "key": "advice.list.comma",
+      "text": "{list}, {item}",
+      "src": "{list}, {item}"
+    },
+    {
+      "key": "advice.missing",
+      "text": "También pedí {garnishes}.",
+      "src": "I asked for {garnishes} as well."
+    },
+    {
+      "key": "advice.pour.less",
+      "text": "{degree} menos de {ingredient} la próxima vez.",
+      "src": "{degree} less {ingredient} next time."
+    },
+    {
+      "key": "advice.pour.more",
+      "text": "{degree} más de {ingredient} la próxima vez.",
+      "src": "{degree} more {ingredient} next time."
+    },
+    {
+      "key": "advice.pulled_well",
+      "text": "Bien servida. La espuma, perfecta.",
+      "src": "Pulled just right. Perfect head on it."
+    },
+    {
+      "key": "advice.pulled_well_stem",
+      "text": "Bien servida.",
+      "src": "Pulled just right."
+    },
+    {
+      "key": "advice.then",
+      "text": "{first} {second}",
+      "src": "{first} {second}"
+    },
+    {
+      "key": "advice.type.beer",
+      "text": "cerveza",
+      "src": "beer"
+    },
+    {
+      "key": "advice.type.bitter",
+      "text": "amargo",
+      "src": "bitter"
+    },
+    {
+      "key": "advice.type.bubbly",
+      "text": "burbujas",
+      "src": "bubbly"
+    },
+    {
+      "key": "advice.type.garnish",
+      "text": "decoración",
+      "src": "garnish"
+    },
+    {
+      "key": "advice.type.sour",
+      "text": "ácido",
+      "src": "sour"
+    },
+    {
+      "key": "advice.type.spirit",
+      "text": "destilado",
+      "src": "spirit"
+    },
+    {
+      "key": "advice.type.sweet",
+      "text": "dulce",
+      "src": "sweet"
+    },
+    {
+      "key": "rule.already_at_bar",
+      "text": "Ya está en la barra.",
+      "src": "They are already at the bar."
+    },
+    {
+      "key": "rule.bar_top_best",
+      "text": "La barra ya es la mejor que hay.",
+      "src": "The bar top is already the best one."
+    },
+    {
+      "key": "rule.bottle_owned",
+      "text": "Esa botella ya es tuya.",
+      "src": "That bottle is already yours."
+    },
+    {
+      "key": "rule.card_not_read",
+      "text": "No has leído la credencial; los documentos están detrás.",
+      "src": "The card has not been read; the papers are behind it."
+    },
+    {
+      "key": "rule.counter_clean",
+      "text": "Aquí la barra ya está limpia.",
+      "src": "The counter is clean here."
+    },
+    {
+      "key": "rule.drink_in_shaker",
+      "text": "Ese trago sigue en la coctelera — primero pásalo a un vaso.",
+      "src": "That drink is still in the shaker — pour it into a glass first."
+    },
+    {
+      "key": "rule.fixture_needs_stars",
+      "text": "{fixture} necesita un salón de {stars} estrellas; este bar tiene {rating}.",
+      "src": "{fixture} needs a {stars}-star room; this bar rates {rating}."
+    },
+    {
+      "key": "rule.fixture_owned",
+      "text": "El bar ya tiene esto: {fixture}.",
+      "src": "The bar already has {fixture}."
+    },
+    {
+      "key": "rule.fixture_rung_one_at_a_time",
+      "text": "{fixture} es el nivel {level} de su escalera; el bar está en el nivel {bar_level}. Se sube un nivel a la vez.",
+      "src": "{fixture} is rung {level} of its ladder; the bar stands on rung {bar_level}. It climbs one rung at a time."
+    },
+    {
+      "key": "rule.fixture_tower_one_line",
+      "text": "{fixture} tiene {lines} líneas; este bar tiene {bar_lines}. La torre se amplía línea por línea.",
+      "src": "{fixture} runs {lines} lines; this bar runs {bar_lines}. A tower is fitted one line at a time."
+    },
+    {
+      "key": "rule.glass_line_finest",
+      "text": "Esa cristalería ya es la mejor: {glass}.",
+      "src": "The {glass} line is already the finest."
+    },
+    {
+      "key": "rule.kick_already_served",
+      "text": "No puedes mostrarle la salida a alguien que ya atendiste; tu momento era la credencial.",
+      "src": "You cannot show the door to someone you have already served; the card was your moment."
+    },
+    {
+      "key": "rule.kick_guest_of_house",
+      "text": "A quien invita la casa no te toca mostrarle la salida.",
+      "src": "The guest of the house is not yours to show the door."
+    },
+    {
+      "key": "rule.kick_read_card_first",
+      "text": "Primero lee la credencial.",
+      "src": "Read the card first."
+    },
+    {
+      "key": "rule.no_glass_to_collect",
+      "text": "Aquí no hay ningún vaso que recoger.",
+      "src": "There is no glass here to collect."
+    },
+    {
+      "key": "rule.no_last_call",
+      "text": "Nadie está esperando la última ronda.",
+      "src": "Nobody is waiting on the last call."
+    },
+    {
+      "key": "rule.no_pourable_drinks",
+      "text": "Todavía no hay tragos que puedas servir.",
+      "src": "No drinks you can pour yet."
+    },
+    {
+      "key": "rule.no_room_stool",
+      "text": "No hay lugar para otro banco.",
+      "src": "No room for another stool."
+    },
+    {
+      "key": "rule.not_enough_money",
+      "text": "No alcanza el dinero ({money} < {price}).",
+      "src": "Not enough money ({money} < {price})."
+    },
+    {
+      "key": "rule.not_on_counter",
+      "text": "Eso no está en esta barra.",
+      "src": "That is not on this counter."
+    },
+    {
+      "key": "rule.not_ordered",
+      "text": "Todavía no ha pedido.",
+      "src": "They have not ordered yet."
+    },
+    {
+      "key": "rule.not_waiting",
+      "text": "Ya no está esperando.",
+      "src": "They are not waiting any more."
+    },
+    {
+      "key": "rule.not_waiting_at_bar",
+      "text": "No está esperando en la barra.",
+      "src": "They are not waiting at the bar."
+    },
+    {
+      "key": "rule.nothing_to_serve",
+      "text": "No hay nada que servir.",
+      "src": "Nothing to serve."
+    },
+    {
+      "key": "rule.nothing_to_wash",
+      "text": "No tienes nada en las manos para lavar.",
+      "src": "There is nothing in your hands to wash."
+    },
+    {
+      "key": "rule.one_fitting_a_night",
+      "text": "Una mejora por noche — lo demás queda para mañana.",
+      "src": "One fitting a night — the rest keeps until tomorrow."
+    },
+    {
+      "key": "rule.pour_unmixed",
+      "text": "Dos destilados en la coctelera — agítalos o revuélvelos antes de pasarlos al vaso.",
+      "src": "Two spirits in the tin — shake it or stir it before it goes to the glass."
+    },
+    {
+      "key": "rule.pull_cocktail_in_tin",
+      "text": "Termina o tira el cóctel antes de servir una cerveza.",
+      "src": "Finish or bin the cocktail before you pull a pint."
+    },
+    {
+      "key": "rule.pull_glass_full",
+      "text": "El vaso está lleno. Sírvelo o tíralo.",
+      "src": "The glass is full. Serve it or bin it."
+    },
+    {
+      "key": "rule.pull_glass_taken",
+      "text": "Ya hay un trago en ese vaso — sírvelo o tíralo antes de servir una cerveza.",
+      "src": "There is already a drink in that glass — serve it or bin it before pulling a pint."
+    },
+    {
+      "key": "rule.recipe_not_earned",
+      "text": "Todavía no desbloqueaste {recipe} — {lock}.",
+      "src": "{recipe} is not earned yet — {lock}."
+    },
+    {
+      "key": "rule.recipe_short_money",
+      "text": "No alcanza el dinero — {recipe} cuesta {price}.",
+      "src": "Not enough money — {recipe} costs {price}."
+    },
+    {
+      "key": "rule.refund_under_rung",
+      "text": "{fixture} está debajo de un nivel más alto; primero devuelve ese.",
+      "src": "{fixture} is under a higher rung; take that one back first."
+    },
+    {
+      "key": "rule.refund_under_tower",
+      "text": "{fixture} está debajo de la torre de {lines} líneas; primero devuelve esa.",
+      "src": "{fixture} is under the {lines}-line tower; take that one back first."
+    },
+    {
+      "key": "rule.shake_empty",
+      "text": "No hay nada en la coctelera para agitar.",
+      "src": "Nothing in the shaker to shake."
+    },
+    {
+      "key": "rule.sink_running",
+      "text": "El agua del fregadero sigue corriendo — espera.",
+      "src": "The sink is running — wait for it."
+    },
+    {
+      "key": "rule.snack_bowl_empty",
+      "text": "Hoy ya no queda nada en el tazón: {snack}.",
+      "src": "The {snack} bowl is empty today."
+    },
+    {
+      "key": "rule.snack_needs_order",
+      "text": "Los snacks van con un trago — todavía no ha pedido ninguno.",
+      "src": "Snacks ride a drink order — they have not ordered one yet."
+    },
+    {
+      "key": "rule.snack_not_at_bar",
+      "text": "No está en la barra.",
+      "src": "They are not at the bar."
+    },
+    {
+      "key": "rule.still_choosing",
+      "text": "Todavía está eligiendo.",
+      "src": "They are still choosing."
+    },
+    {
+      "key": "rule.still_talking",
+      "text": "Todavía está hablando. Aún no pidió nada.",
+      "src": "They are still talking. Nothing ordered yet."
+    },
+    {
+      "key": "rule.stir_empty",
+      "text": "No hay nada en la coctelera para revolver.",
+      "src": "Nothing in the shaker to stir."
+    },
+    {
+      "key": "rule.trial_not_asked",
+      "text": "Todavía no te ha pedido nada.",
+      "src": "They have not asked for anything yet."
+    },
+    {
+      "key": "rule.trial_over",
+      "text": "Esa prueba ya terminó.",
+      "src": "That trial is already over."
+    },
+    {
+      "key": "rule.trial_started",
+      "text": "Esa prueba ya empezó.",
+      "src": "That trial has already started."
+    },
+    {
+      "key": "rule.wipe_glass_first",
+      "text": "Primero recoge el vaso — no puedes limpiar debajo.",
+      "src": "Collect the glass first — you cannot wipe under it."
+    }
+  ]
+}

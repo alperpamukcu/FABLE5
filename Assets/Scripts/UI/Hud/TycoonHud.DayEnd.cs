@@ -346,7 +346,7 @@ namespace LastCall.UI
             _billStampInk.horizontalOverflow = HorizontalWrapMode.Overflow;
             _billStampInk.verticalOverflow = VerticalWrapMode.Overflow;
             _billStampInk.raycastTarget = false;
-            _billStampInk.text = "DISGRACE";
+            _billStampInk.text = UIText.T("dayend.stamp.disgrace");
             _billStamp.gameObject.SetActive(false);
 
             return y + StarPx + 6f;
@@ -364,7 +364,7 @@ namespace LastCall.UI
                 if (edge.transform != _billStamp)
                     edge.color = new Color(ink.r, ink.g, ink.b, 0.85f);
             _billStampInk.color = new Color(ink.r, ink.g, ink.b, 0.92f);
-            _billStampInk.text = good ? "NEW RECORD" : "DISGRACE";
+            _billStampInk.text = UIText.T(good ? "dayend.stamp.record" : "dayend.stamp.disgrace");
             _billStamp.sizeDelta = new Vector2(good ? 268f : 236f, 42f);
         }
 
@@ -485,12 +485,12 @@ namespace LastCall.UI
 
             var papers = PapersFor(look);
             string full = papers != null ? papers.Name
-                : v.Regular != null ? v.Regular.Name : "a drinker";
+                : v.Regular != null ? v.Regular.Name : UIText.T("dayend.critic.someone");
             // THE FIRST NAME ONLY (2026-08-11). "MEREDITH NOLAN  walked out" is 26
             // characters and the column holds 23, so the row wrapped and became the two
             // lines this was built to stop being. A receipt says a first name anyway.
             int space = full.IndexOf(' ');
-            string name = (space > 0 ? full.Substring(0, space) : full).ToUpperInvariant();
+            string name = UIText.Caps(space > 0 ? full.Substring(0, space) : full);
 
             // Smaller and lighter: the regular face at 16, where it used to be the heavy one
             // at 24. A name on a receipt is a line item, not a headline.
@@ -546,13 +546,13 @@ namespace LastCall.UI
             // SHORT, because the row is one line now (2026-08-11). The drink is drawn beside
             // the name, so the reason no longer has to name it — it only has to say what
             // went right or wrong, in the fewest words that still sound like a person.
-            if (v.State == VisitState.Kicked) return "shown the door";
-            if (v.State == VisitState.StormedOff) return "walked out";
+            if (v.State == VisitState.Kicked) return UIText.T("dayend.critic.shown_door");
+            if (v.State == VisitState.StormedOff) return UIText.T("dayend.critic.walked_out");
             if (v.IdInspected && v.Served != null && v.Order.Wanted.Id != v.Served.Id)
-                return "wrong drink";
-            if (v.Satisfaction >= 0.85) return "exactly right";
-            if (v.Satisfaction >= 0.55) return "a fair pour";
-            return "a rough pour";
+                return UIText.T("dayend.critic.wrong_drink");
+            if (v.Satisfaction >= 0.85) return UIText.T("dayend.critic.exactly_right");
+            if (v.Satisfaction >= 0.55) return UIText.T("dayend.critic.fair_pour");
+            return UIText.T("dayend.critic.rough_pour");
         }
 
         /// <summary>
@@ -647,11 +647,11 @@ namespace LastCall.UI
                 else under++;
             }
             var parts = new List<string>();
-            if (under > 0) parts.Add("UNDER AGE");
-            if (borrowed > 0) parts.Add("BORROWED CARD");
-            if (altered > 0) parts.Add("ALTERED CARD");
-            if (unread > 0) parts.Add("UNREAD CARD");
-            return parts.Count == 0 ? "THE LAW" : string.Join(", ", parts);
+            if (under > 0) parts.Add(UIText.T("dayend.fine.under_age"));
+            if (borrowed > 0) parts.Add(UIText.T("dayend.fine.borrowed"));
+            if (altered > 0) parts.Add(UIText.T("dayend.fine.altered"));
+            if (unread > 0) parts.Add(UIText.T("dayend.fine.unread"));
+            return parts.Count == 0 ? UIText.T("dayend.fine.the_law") : string.Join(", ", parts);
         }
 
         private float BillRow(float y, string label, int amount, string sign, Color ink,
@@ -781,7 +781,7 @@ namespace LastCall.UI
             tail.rectTransform.pivot = new Vector2(0, 0.5f);
             tail.horizontalOverflow = HorizontalWrapMode.Overflow;
             tail.verticalOverflow = VerticalWrapMode.Overflow;
-            tail.text = served + " SERVED  ·  " + stormed + " WALKED";
+            tail.text = UIText.T("dayend.score.counts", ("served", served), ("walked", stormed));
 
             float scoreW = score.preferredWidth, tailW = tail.preferredWidth;
             float left = -(Star + Gap + scoreW + Gap * 2f + tailW) * 0.5f;
@@ -818,12 +818,12 @@ namespace LastCall.UI
             Place(svc.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
             svc.rectTransform.pivot = new Vector2(0, 0.5f);
             svc.horizontalOverflow = HorizontalWrapMode.Overflow;
-            svc.text = "SERVICE " + service.ToString("0.0");
+            svc.text = UIText.T("dayend.house.service", ("rating", service.ToString("0.0")));
             var cmf = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, roomBound ? BillInk : BillQuiet);
             Place(cmf.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
             cmf.rectTransform.pivot = new Vector2(0, 0.5f);
             cmf.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cmf.text = "COMFORT " + comfort.ToString("0.0");
+            cmf.text = UIText.T("dayend.house.comfort", ("rating", comfort.ToString("0.0")));
 
             float svcW = svc.preferredWidth, cmfW = cmf.preferredWidth;
             float total = Icon + Gap + svcW + Between + Icon + Gap + cmfW;
@@ -884,13 +884,13 @@ namespace LastCall.UI
 
         private void BuildNightBoards(RectTransform panel)
         {
-            _weekBoard = NightBoardPlate(panel, "WeekBoard", -BoardX, "THE WEEK");
+            _weekBoard = NightBoardPlate(panel, "WeekBoard", -BoardX, UIText.T("dayend.week.head"));
             // IT SAYS WHICH READING IT IS. The top bar is still lit above the scrim with the
             // standing the bar WALKED IN with — the books have not closed, so it is telling
             // the truth — and two different star counts on one screen with nothing to tell
             // them apart is exactly the drift this project refuses everywhere else. The head
             // names the one this instrument shows.
-            _standBoard = NightBoardPlate(panel, "StandBoard", BoardX, "AFTER TONIGHT");
+            _standBoard = NightBoardPlate(panel, "StandBoard", BoardX, UIText.T("dayend.stand.head"));
         }
 
         private NightBoard NightBoardPlate(RectTransform panel, string name, float x, string caption)
@@ -1005,7 +1005,7 @@ namespace LastCall.UI
             int week = BarCalendar.WeekOf(run.Day);
             _weekBoard.Reading.text = week.ToString("00");
 
-            var names = BarCalendar.WeekColumns;
+            var names = BarCalendar.WeekColumnLines;
             float y = 0f;
             int weekNet = 0, weekTake = 0;
             for (int i = 0; i < names.Length; i++)
@@ -1063,7 +1063,7 @@ namespace LastCall.UI
                     new Vector2(4, 0));
                 name.rectTransform.pivot = new Vector2(0, 0.5f);
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                name.text = names[i];
+                name.text = UIText.T(BarCalendar.WeekColumnLines[i]);
 
                 // SATURDAY IS PROMISED BEFORE IT ARRIVES (BarCalendar.VipNight): the night a
                 // name comes wears the star every week, whether or not a beat is booked —
@@ -1099,7 +1099,7 @@ namespace LastCall.UI
                         new Vector2(-4, 0));
                     shut.rectTransform.pivot = new Vector2(1, 0.5f);
                     shut.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    shut.text = "CLOSED";
+                    shut.text = UIText.T("dayend.week.closed");
                     continue;
                 }
 
@@ -1155,9 +1155,9 @@ namespace LastCall.UI
             // cost, and it only ever answered with TAKEN and NET. The fine is the one outgoing
             // the player CHOSE, so it prints whether or not it happened: a zero here is the
             // board saying the night was clean, which is worth reading.
-            WeekFoot(body, ref y, "TONIGHT'S BILLS",
+            WeekFoot(body, ref y, UIText.T("dayend.week.bills"),
                 run.DayRent + run.DayStock + run.DayUpgrades, "-", UITheme.Cream[3]);
-            WeekFoot(body, ref y, "TONIGHT'S FINES", run.DayFines, run.DayFines > 0 ? "-" : "",
+            WeekFoot(body, ref y, UIText.T("dayend.week.fines"), run.DayFines, run.DayFines > 0 ? "-" : "",
                 run.DayFines > 0 ? UITheme.ViceRed[4] : UITheme.Cream[1]);
 
             y += 6f;
@@ -1171,8 +1171,8 @@ namespace LastCall.UI
             f2i.raycastTarget = false;
             y += 8f;
 
-            WeekFoot(body, ref y, "TAKEN SO FAR", weekTake, "", UITheme.Cream[3]);
-            WeekFoot(body, ref y, "NET SO FAR", weekNet, weekNet >= 0 ? "+" : "-",
+            WeekFoot(body, ref y, UIText.T("dayend.week.taken"), weekTake, "", UITheme.Cream[3]);
+            WeekFoot(body, ref y, UIText.T("dayend.week.net"), weekNet, weekNet >= 0 ? "+" : "-",
                 weekNet >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
         }
 
@@ -1243,7 +1243,7 @@ namespace LastCall.UI
             double was = run.Rating.Average;
             double now = run.StandingAfterTonight;
             _standFrom = was; _standTo = now;
-            _standBoard.Reading.text = "NIGHT " + run.Day;
+            _standBoard.Reading.text = UIText.T("dayend.stand.night", ("day", run.Day));
 
             float y = 4f;
             // THE STANDING, AS BIG AS IT IS IMPORTANT. Five 40px stars is the largest star
@@ -1322,7 +1322,7 @@ namespace LastCall.UI
                 new Vector2(4, -y));
             wasLine.rectTransform.pivot = new Vector2(0, 1);
             wasLine.horizontalOverflow = HorizontalWrapMode.Overflow;
-            wasLine.text = "WAS " + was.ToString("0.00");
+            wasLine.text = UIText.T("dayend.stand.was", ("stars", was.ToString("0.00")));
 
             double step = now - was;
             var chipInk = Math.Abs(step) < 0.005 ? UITheme.Cream[2]
@@ -1355,7 +1355,7 @@ namespace LastCall.UI
             _standDelta.rectTransform.pivot = new Vector2(1, 0.5f);
             _standDelta.horizontalOverflow = HorizontalWrapMode.Overflow;
             _standDelta.verticalOverflow = VerticalWrapMode.Overflow;
-            _standDelta.text = Math.Abs(step) < 0.005 ? "HELD"
+            _standDelta.text = Math.Abs(step) < 0.005 ? UIText.T("dayend.stand.held")
                 : (step > 0 ? "+" : "-") + Math.Abs(step).ToString("0.00");
             _standDeltaChip.gameObject.SetActive(false);   // it lands when the climb does
             y += 34f;
@@ -1375,25 +1375,24 @@ namespace LastCall.UI
             // was worth, what the bar is allowed to be worth, and who that has drawn for
             // tomorrow.
             bool roomBound = run.ComfortTonight < run.ServiceTonight - 1e-9;
-            y = StandRow(y, "SERVICE", run.ServiceTonight.ToString("0.0"),
+            y = StandRow(y, "SERVICE", UIText.T("dayend.stand.service"), run.ServiceTonight.ToString("0.0"),
                 roomBound ? UITheme.Cream[3] : UITheme.Amber[4], true, ItemArt.Heart(true, 13f));
-            y = StandRow(y, "COMFORT", run.ComfortTonight.ToString("0.0"),
+            y = StandRow(y, "COMFORT", UIText.T("dayend.stand.comfort"), run.ComfortTonight.ToString("0.0"),
                 roomBound ? UITheme.Amber[4] : UITheme.Cream[3], true, ItemArt.Medal(true, 13f));
-            y = StandRow(y, "TONIGHT", run.TonightStars.ToString("0.0"), UITheme.Amber[4], true);
+            y = StandRow(y, "TONIGHT", UIText.T("dayend.stand.tonight"), run.TonightStars.ToString("0.0"), UITheme.Amber[4], true);
             double ceiling = run.StarCeiling;
             bool capped = run.TonightStars >= ceiling - 1e-9
                           && BarRating.ExactStarsFor(run.Floor.AverageSatisfaction) > ceiling + 1e-9;
-            y = StandRow(y, "CEILING", ceiling.ToString("0.0"),
+            y = StandRow(y, "CEILING", UIText.T("dayend.stand.ceiling"), ceiling.ToString("0.0"),
                 capped ? UITheme.ViceRed[4] : UITheme.Cream[3], true);
-            y = StandRow(y, "TOMORROW", CrowdName(run.CrowdTomorrow), UITheme.Cyan[3], false);
+            y = StandRow(y, "TOMORROW", UIText.T("dayend.stand.tomorrow"), CrowdName(run.CrowdTomorrow), UITheme.Cyan[3], false);
 
             y += 6f;
             string note = capped
-                ? "THE ROOM WENT HIGHER THAN THE BAR IS FITTED FOR — BUY THE FITTINGS"
+                ? UIText.T("dayend.stand.capped")
                 : !double.IsNaN(rung) && rung <= BarRating.MaxStars
-                    ? "NEXT RUNG AT " + rung.ToString("0.0") + " STARS — "
-                      + opens + (opens == 1 ? " THING OPENS" : " THINGS OPEN")
-                    : "EVERY RUNG ON THE LADDER IS OPEN";
+                    ? UIText.N("dayend.stand.next_rung", opens, ("stars", rung.ToString("0.0")))
+                    : UIText.T("dayend.stand.all_open");
             var foot = NewText("Note", body, _body, 16, TextAnchor.UpperLeft,
                 capped ? UITheme.ViceRed[3] : UITheme.Cream[2]);
             foot.rectTransform.anchorMin = new Vector2(0, 1);
@@ -1428,11 +1427,13 @@ namespace LastCall.UI
         /// <summary>One reading on the standing board: a caption left, a figure right, and
         /// the star mark beside the figure when the figure IS stars — the same unit mark the
         /// slip's critics wear, for the same reason.</summary>
-        private float StandRow(float y, string label, string value, Color ink, bool inStars,
+        private float StandRow(float y, string id, string label, string value, Color ink, bool inStars,
             Sprite unitArt = null)
         {
             var body = _standBoard.Body;
-            var row = NewRect("R" + label, body);
+            // The GameObject is named by the row's id, not its caption, so it keeps its name in
+            // every language.
+            var row = NewRect("R" + id, body);
             row.anchorMin = new Vector2(0, 1); row.anchorMax = new Vector2(1, 1);
             row.pivot = new Vector2(0.5f, 1);
             row.sizeDelta = new Vector2(0, StandRowH - 2f);
@@ -1708,12 +1709,10 @@ namespace LastCall.UI
         private string ClosingWorry()
         {
             if (_cart.Count > 0)
-                return _cart.Count == 1
-                    ? "1 THING IS STILL IN THE BASKET."
-                    : _cart.Count + " THINGS ARE STILL IN THE BASKET.";
+                return UIText.N("dayend.closing.basket", _cart.Count);
             var run = Run;
             if (run != null && run.TodaysPurchases.Count == 0)
-                return "THE VAN LEAVES EMPTY TONIGHT.";
+                return UIText.T("dayend.closing.van_empty");
             return null;
         }
 
@@ -1829,12 +1828,12 @@ namespace LastCall.UI
         {
             switch (RestockAisleOrder(card))
             {
-                case 0: return "SPIRITS & LIQUEURS";
-                case 1: return "BEER";
-                case 2: return "MIXERS, JUICES & SODA";
-                case 3: return "SYRUPS & BITTERS";
-                case 4: return "GARNISHES";
-                default: return "THE REST";
+                case 0: return UIText.T("dayend.aisle.spirits");
+                case 1: return UIText.T("dayend.aisle.beer");
+                case 2: return UIText.T("dayend.aisle.mixers");
+                case 3: return UIText.T("dayend.aisle.syrups");
+                case 4: return UIText.T("dayend.aisle.garnishes");
+                default: return UIText.T("dayend.aisle.rest");
             }
         }
 
@@ -1856,8 +1855,8 @@ namespace LastCall.UI
             // the beats are over and nothing would ever put it back.
             if (_billNext != null)
                 _billNext.gameObject.SetActive(_dayEndStep == 0 && _endBeat == 0);
-            _dayEndTitle.text = "LAST CALL — TIME TO ORDER";
-            if (_billNextLabel != null) _billNextLabel.text = "GO TO THE ORDER";
+            _dayEndTitle.text = UIText.T("dayend.market.title");
+            if (_billNextLabel != null) _billNextLabel.text = UIText.T("dayend.bill.next");
             // NO TITLE OVER THE SLIP (2026-08-11, the author: take the yellow LAST CALL —
             // THE BOOKS off the top). The slip already says LAST CALL across its own head in
             // its own ink; a second one in the scrim above it was the same words twice, in a
@@ -1941,39 +1940,39 @@ namespace LastCall.UI
             int paidOut = run.DayExpenses;   // rent, stock, shop — and the law's fines
 
             y = BillRule(y);
-            y = BillNote(y, "TOOK IN", BillQuiet);
-            y = BillRow(y, "SALES", run.DaySales, "", BillInk, false, "sales");
-            y = BillRow(y, "TIPS", run.DayTips, "", BillInk, false, "tips");
+            y = BillNote(y, UIText.T("dayend.bill.took_in"), BillQuiet);
+            y = BillRow(y, UIText.T("dayend.bill.sales"), run.DaySales, "", BillInk, false, "sales");
+            y = BillRow(y, UIText.T("dayend.bill.tips"), run.DayTips, "", BillInk, false, "tips");
             // The door's two lines print only when they happened (GDD 28 §7 — routine zeros
             // were cut from the slip on 2026-08-11). The label carries the count and the
             // reason; the figure column stays the figure's.
             if (run.DayBonus > 0)
-                y = BillRow(y, "THANKS · " + run.RightKicks + " SHOWN OUT", run.DayBonus, "",
+                y = BillRow(y, UIText.N("dayend.bill.thanks", run.RightKicks), run.DayBonus, "",
                     BillInk, false, "thanks");
             y = BillSub(y, tookIn, "", BillInk);
 
             y += 4f;
-            y = BillNote(y, "PAID OUT", BillQuiet);
-            y = BillRow(y, "RENT", run.DayRent, "-", BillRed, false, "rent");
-            y = BillRow(y, "STOCK", run.DayStock, "-", BillRed, false, "stock");
-            y = BillRow(y, "SHOP", run.DayUpgrades, "-", BillRed, false, "shop");
+            y = BillNote(y, UIText.T("dayend.bill.paid_out"), BillQuiet);
+            y = BillRow(y, UIText.T("dayend.bill.rent"), run.DayRent, "-", BillRed, false, "rent");
+            y = BillRow(y, UIText.T("dayend.bill.stock"), run.DayStock, "-", BillRed, false, "stock");
+            y = BillRow(y, UIText.T("dayend.bill.shop"), run.DayUpgrades, "-", BillRed, false, "shop");
             if (run.DayFines > 0)
-                y = BillRow(y, "FINES · " + FineReason(run), run.DayFines, "-", BillRed, false, "fine");
+                y = BillRow(y, UIText.T("dayend.bill.fines", ("reason", FineReason(run))), run.DayFines, "-", BillRed, false, "fine");
             y = BillSub(y, paidOut, "-", BillRed);
 
             y += 4f;
             y = BillRule(y);
-            y = BillRow(y, "NET", net, net >= 0 ? "+" : "-",
+            y = BillRow(y, UIText.T("dayend.bill.net"), net, net >= 0 ? "+" : "-",
                         net >= 0 ? BillInk : BillRed, true, "net");
-            y = BillRow(y, "TILL", run.Money, run.Money < 0 ? "-" : "",
+            y = BillRow(y, UIText.T("dayend.bill.till"), run.Money, run.Money < 0 ? "-" : "",
                         run.Money < 0 ? BillRed : BillInk, true, "till");
             if (run.Ledger.DebtStrikes > 0)
             {
                 y += 6f;
-                y = BillNote(y, "IN THE RED — STRIKE " + run.Ledger.DebtStrikes
-                                + "/" + DayLedger.StrikesToClose, BillRed);
+                y = BillNote(y, UIText.T("dayend.bill.strike", ("strikes", run.Ledger.DebtStrikes),
+                                ("limit", DayLedger.StrikesToClose)), BillRed);
                 if (run.Ledger.DebtStrikes == DayLedger.StrikesToClose - 1)
-                    y = BillNote(y, "one more red day closes the bar", BillRed);
+                    y = BillNote(y, UIText.T("dayend.bill.last_strike"), BillRed);
             }
 
             FitBillToPaper(y);
@@ -1993,7 +1992,7 @@ namespace LastCall.UI
             bool room = run.CanFitTonight && !CartHasFitting();
             if (_fittingNote != null)
             {
-                _fittingNote.text = room ? "1 UPGRADE TONIGHT" : "UPGRADE USED";
+                _fittingNote.text = UIText.T(room ? "dayend.fitting.free" : "dayend.fitting.used");
                 _fittingNote.color = room ? ShopViceDeep : ShopCost;
             }
             if (_fittingLamp != null) _fittingLamp.color = room ? ShopViceLit : ShopCost;
@@ -2019,7 +2018,8 @@ namespace LastCall.UI
             // off _cart, so a stale price here is a stale price everywhere.
             RepriceWholeWell();
             if (_cartHeadLabel != null)
-                _cartHeadLabel.text = _cart.Count == 0 ? "BASKET" : $"BASKET ({_cart.Count})";
+                _cartHeadLabel.text = _cart.Count == 0 ? UIText.T("dayend.basket.head")
+                    : UIText.N("dayend.basket.head_count", _cart.Count);
             RebuildBasket();
             if (_cartTotal != null)
                 // ClearCoin, not text="": a figure emptied by hand keeps its coin, and a
@@ -2043,7 +2043,7 @@ namespace LastCall.UI
             // The foot key reads the basket for which errand it is on — buy, or open
             // tomorrow — so every rebuild that can have changed the basket re-dresses it.
             RefreshMarketKey();
-            if (_osClock != null) _osClock.text = $"DAY {run.Day}";
+            if (_osClock != null) _osClock.text = UIText.T("dayend.os_clock", ("day", run.Day));
 
             if (_dayEndStep == 0) return;   // the bill step shows no shop at all
             // The upgrade screen stands its own rail of shelves left of the aisle (2026-09-13).
@@ -2052,7 +2052,7 @@ namespace LastCall.UI
             {
                 // RESTOCK. One band, not two: "everything at once" and "bottle by bottle"
                 // were one errand split down the middle for no reason.
-                _cardTarget = ShopSection("THE WELL");
+                _cardTarget = ShopSection(UIText.T("dayend.restock.section"));
                 // WHAT THE SHELF IS SHORT, AND WHAT THIS LINE WOULD STILL ADD — two numbers
                 // now, and the difference between them is what the basket is already
                 // covering bottle by bottle (2026-09-04; see WholeWellPrice).
@@ -2060,24 +2060,24 @@ namespace LastCall.UI
                 int restock = WholeWellPrice();
                 var all = new TileSpec
                 {
-                    Name = "Restock the Whole Well",
-                    Meta = "Every bottle to the brim",
+                    Name = UIText.T("dayend.restock.well.name"),
+                    Meta = UIText.T("dayend.restock.well.meta"),
                     // A CRATE, not the department icon it was borrowing — the errand
                     // and the tab it lives under were drawing the same thing.
                     Art = ItemArt.Load("sh_p_crate") ?? ItemArt.Load("sh_i_restock"),
-                    Identity = "RESTOCK THE WHOLE WELL",
-                    MetaLine = "Delivered before you open",
-                    Body = "Fills every bottle behind the bar. $"
-                           + cfg.RefillPricePerCapacity + " per measure.",
+                    Identity = UIText.T("dayend.restock.well.identity"),
+                    MetaLine = UIText.T("dayend.restock.well.meta_line"),
+                    Body = UIText.T("dayend.restock.well.body",
+                           ("price", "$" + cfg.RefillPricePerCapacity)),
                 };
                 if (restock > 0)
                 {
-                    all.BuffA = new Buff(BuffKind.Cost, "$" + cfg.RefillPricePerCapacity
-                        + " a measure · " + restock + (restock < shelfShort
-                            ? " for the bottles not already in the basket"
-                            : " to fill the shelf"));
+                    all.BuffA = new Buff(BuffKind.Cost, UIText.T(restock < shelfShort
+                            ? "dayend.restock.well.cost_rest"
+                            : "dayend.restock.well.cost_all",
+                        ("price", "$" + cfg.RefillPricePerCapacity), ("total", restock)));
                     all.BuffB = new Buff(BuffKind.Gain,
-                        "Tops up every bottle below that you have not picked yourself");
+                        UIText.T("dayend.restock.well.tops_up"));
                     DressBuyable(all, restock, WholeWellKey, false, () => run.RefillShelf());
                 }
                 else
@@ -2087,13 +2087,13 @@ namespace LastCall.UI
                     // in the basket. Either way the crate is not for sale — the author:
                     // "eğer restock edilebilecek ürün yoksa restock alınamamalı".
                     all.State = TileState.Held;
-                    all.Word = shelfShort > 0 ? "IN" : "FULL";
+                    all.Word = UIText.T(shelfShort > 0 ? "dayend.restock.word_in" : "dayend.restock.word_full");
                     // 6 CAPS: the state row keeps 44 units for the reading beside it, and
                     // ALL IN BASKET wrapped and lost its second line (measured in play).
-                    all.StateWord = shelfShort > 0 ? "ALL IN" : null;
-                    all.BuffA = new Buff(BuffKind.Gain, shelfShort > 0
-                        ? "Every bottle that needs filling is already in the basket."
-                        : "Nothing to pour away — every bottle is at the brim.");
+                    all.StateWord = shelfShort > 0 ? UIText.T("dayend.restock.state_all_in") : null;
+                    all.BuffA = new Buff(BuffKind.Gain, UIText.T(shelfShort > 0
+                        ? "dayend.restock.well.all_in_basket"
+                        : "dayend.restock.well.at_brim"));
                 }
                 AddTile(all);
 
@@ -2116,7 +2116,7 @@ namespace LastCall.UI
                     double mx = x.Capacity - x.Remaining, my = y.Capacity - y.Remaining;
                     return my.CompareTo(mx);
                 });
-                string aisleNow = null;
+                int aisleNow = -1;
                 // THE WHOLE WELL COVERS WHAT YOU HAVE NOT PICKED YOURSELF (2026-09-04). It
                 // used to cover EVERYTHING and throw the singles back out of the basket to
                 // prove it — a line that silently edited the order after the player had made
@@ -2133,14 +2133,16 @@ namespace LastCall.UI
                 foreach (var b in shelf)
                 {
                     var bottle = b;
-                    string aisle = RestockAisleWord(bottle.Ingredient);
-                    if (aisle != aisleNow) { aisleNow = aisle; ShopSection(aisle); }
+                    // Aisles are told apart by their ORDER, never by their word: two languages
+                    // may give two aisles one word, and the page must not merge them.
+                    int aisle = RestockAisleOrder(bottle.Ingredient);
+                    if (aisle != aisleNow) { aisleNow = aisle; ShopSection(RestockAisleWord(bottle.Ingredient)); }
                     int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
                         * cfg.RefillPricePerCapacity);
                     string key = RefillKey + bottle.Ingredient.Id;
                     var spec = new TileSpec
                     {
-                        Name = bottle.Ingredient.Name,
+                        Name = UIText.Data("bottle", bottle.Ingredient.Id, "name", bottle.Ingredient.Name),
                         Art = ItemArt.Bottle(bottle.Ingredient),
                         Card = bottle.Ingredient,
                         // The one fact this department exists to show, and it was line 5 or 6
@@ -2155,11 +2157,11 @@ namespace LastCall.UI
                     else if (cost > 0)
                     {
                         spec.State = TileState.Held;
-                        spec.Word = "IN";                       // 2 CAPS, 26.5 in a 66 slot
+                        spec.Word = UIText.T("dayend.restock.word_in");   // 2 CAPS, 26.5 in a 66 slot
                         spec.BuffA = new Buff(BuffKind.Gain,
-                            "Covered by the whole-well order — no need to buy it twice");
+                            UIText.T("dayend.restock.covered"));
                     }
-                    else { spec.State = TileState.Held; spec.Word = "FULL"; }
+                    else { spec.State = TileState.Held; spec.Word = UIText.T("dayend.restock.word_full"); }
                     AddTile(spec);
                 }
             }
@@ -2168,7 +2170,7 @@ namespace LastCall.UI
                 // ONE LOOP, TWO AISLES. The board is rolled whole by Core; which half of it
                 // a bottle belongs to is a question about the bottle, not about the roll.
                 bool booze = _shopTab == 1;
-                _cardTarget = ShopSection(booze ? "TONIGHT'S BOARD" : "THE MIXER BOARD");
+                _cardTarget = ShopSection(UIText.T(booze ? "dayend.board.spirits" : "dayend.board.mixers"));
                 _liquorHead = _cardTarget; _kegHead = null; _garnishHead = null;
                 bool anyKeg = false, anyGarnish = false;
                 for (int pass = 0; pass < 2; pass++)
@@ -2187,12 +2189,12 @@ namespace LastCall.UI
                                         : card.Type == IngredientType.Garnish;
                     if ((pass == 1) != second) continue;
                     if (pass == 1 && booze && !anyKeg)
-                    { anyKeg = true; _cardTarget = ShopSection("ON TAP — THE KEGS"); _kegHead = _cardTarget; }
+                    { anyKeg = true; _cardTarget = ShopSection(UIText.T("dayend.board.kegs")); _kegHead = _cardTarget; }
                     if (pass == 1 && !booze && !anyGarnish)
-                    { anyGarnish = true; _cardTarget = ShopSection("THE GARNISH TRAY"); _garnishHead = _cardTarget; }
+                    { anyGarnish = true; _cardTarget = ShopSection(UIText.T("dayend.board.garnish")); _garnishHead = _cardTarget; }
                     var spec = new TileSpec
                     {
-                        Name = offer.Bottle.Name,
+                        Name = UIText.Data("bottle", offer.Bottle.Id, "name", offer.Bottle.Name),
                         Art = ItemArt.Bottle(offer.Bottle),
                         Card = offer.Bottle,
                         // The rung it stands on, drawn up its left margin (2026-09-04). Only
@@ -2205,8 +2207,8 @@ namespace LastCall.UI
                     // the old "+ " and "↑ " spent two cells drawing literally nothing,
                     // because neither glyph is in any of the three installed faces.
                     if (offer.IsNewStock)
-                        spec.MetaLine = "New on the board tonight · " + spec.MetaLine;
-                    if (offer.Sold) { spec.State = TileState.Ordered; spec.Word = "SOLD"; }
+                        spec.MetaLine = UIText.T("dayend.board.new_stock", ("meta", spec.MetaLine));
+                    if (offer.Sold) { spec.State = TileState.Ordered; spec.Word = UIText.T("dayend.board.sold"); }
                     else DressBuyable(spec, offer.Price, "brand:" + offer.Bottle.Id, false,
                         () => run.BuyBrand(index));
                     AddTile(spec);
@@ -2232,20 +2234,20 @@ namespace LastCall.UI
                 // exact silence the ladder was built to end, one aisle further down.
                 var kegHead = booze
                     ? AisleSign(run, _kegHead, c => c.Type == IngredientType.Beer, true,
-                        "ON TAP — THE KEGS")
+                        UIText.T("dayend.board.kegs"))
                     : null;
                 if (kegHead != null)
                     SectionGate(run, c => c.Type == IngredientType.Beer, true, "keg", kegHead);
                 var garnishHead = !booze
                     ? AisleSign(run, _garnishHead, c => c.Type == IngredientType.Garnish, false,
-                        "THE GARNISH TRAY")
+                        UIText.T("dayend.board.garnish"))
                     : null;
                 if (garnishHead != null)
                     SectionGate(run, c => c.Type == IngredientType.Garnish, false, "garnish", garnishHead);
             }
             else if (_shopTab == 3)
             {
-                _cardTarget = ShopSection("THE RECIPE BOOK");
+                _cardTarget = ShopSection(UIText.T("dayend.recipes.section"));
                 // LOWEST GATE FIRST (the author). The book is a ladder — what opens next
                 // is the only thing on it the player can act on — and it was listing in
                 // catalogue order, so the drink three stars away sat above the one that
@@ -2271,15 +2273,15 @@ namespace LastCall.UI
                         double gate = run.RecipeStarGate(r);
                         AddTile(new TileSpec
                         {
-                            Name = "Sealed Crate",
-                            Meta = "Sealed",
+                            Name = UIText.T("dayend.recipes.sealed.name"),
+                            Meta = UIText.T("dayend.recipes.sealed.meta"),
                             Money = gate.ToString("0.0"),
                             GateStars = lockedBy.StarsWanted,
                             State = TileState.Sealed,
-                            Identity = "A SEALED CRATE",
-                            MetaLine = "The house will not open this one for you yet",
-                            Body = lockedBy.Sentence,
-                            BuffA = new Buff(BuffKind.Bad, lockedBy.Sentence),
+                            Identity = UIText.T("dayend.recipes.sealed.identity"),
+                            MetaLine = UIText.T("dayend.recipes.sealed.meta_line"),
+                            Body = UIText.T(lockedBy.SentenceLine),
+                            BuffA = new Buff(BuffKind.Bad, UIText.T(lockedBy.SentenceLine)),
                         });
                         continue;
                     }
@@ -2294,7 +2296,7 @@ namespace LastCall.UI
                     var hard = RecipeDifficulty.Of(r);
                     var spec = new TileSpec
                     {
-                        Name = r.Name,
+                        Name = UIText.Data("recipe", r.Id, "name", r.Name),
                         Meta = DifficultyWord(hard) + " · " + PrepWord(r),
                         Art = DrinkIcon.For(r, _bootstrap.Glassware),
                         ArtH = IconH,
@@ -2303,13 +2305,14 @@ namespace LastCall.UI
                         // print — the book is sorted by this number, so it is the one fact
                         // that explains the order of the aisle.
                         RungStars = run.RecipeStarGate(r),
-                        Identity = r.Name.ToUpperInvariant(),
-                        MetaLine = DifficultyWord(hard) + " · " + PrepWord(r) + " · served in a " + GlassNameFor(r),
+                        Identity = UIText.Caps(UIText.Data("recipe", r.Id, "name", r.Name)),
+                        MetaLine = UIText.T("dayend.recipes.meta_line", ("difficulty", DifficultyWord(hard)),
+                                            ("prep", PrepWord(r)), ("glass", GlassNameFor(r))),
                         Body = DifficultySentence(hard),
-                        BuffA = new Buff(BuffKind.Gain, "On the menu tomorrow — one more drink to sell"),
+                        BuffA = new Buff(BuffKind.Gain, UIText.T("dayend.recipes.on_menu")),
                         BuffB = new Buff(hard == DrinkDifficulty.Hard ? BuffKind.Bad
                                          : hard == DrinkDifficulty.Medium ? BuffKind.Cost : BuffKind.Gain,
-                                         "Difficulty · " + DifficultyWord(hard)),
+                                         UIText.T("dayend.recipes.difficulty", ("difficulty", DifficultyWord(hard)))),
                     };
                     DressBuyable(spec, run.RecipePrice(r), "recipe:" + r.Id, false,
                         () => run.UnlockRecipe(r.Id));
@@ -2329,12 +2332,14 @@ namespace LastCall.UI
             {
                 int locked = 0;
                 double next = double.MaxValue;
-                string noun = "line", plural = "lines", verb = "the van will not bring you yet";
+                // One counted sentence per department, "{n} drinks the house will not open for
+                // you yet": the noun and its verb are one line, never glued from pieces.
+                string waitingKey = "dayend.more.lines";
                 // Liquor and mixers answer per AISLE now (SectionGate), because "more is
                 // coming" without saying which shelf is a question, not an answer.
                 if (_shopTab == 3)
                 {
-                    noun = "drink"; plural = "drinks"; verb = "the house will not open for you yet";
+                    waitingKey = "dayend.more.drinks";
                     foreach (var r in run.LockedRecipes)
                     {
                         // Locked-ness is the LOCK's answer; the "next at" hint is still a
@@ -2351,16 +2356,16 @@ namespace LastCall.UI
                 if (locked > 0)
                     AddTile(new TileSpec
                     {
-                        Name = locked + " more waiting",
+                        Name = UIText.N("dayend.more.name", locked),
                         Money = next.ToString("0.0"),
                         GateStars = next,
                         State = TileState.Sealed,
-                        Identity = "MORE AT " + next.ToString("0.0") + " STARS",
-                        MetaLine = locked + " " + (locked == 1 ? noun : plural) + " " + verb,
-                        Body = "Get " + next.ToString("0.0") + " stars and more of these "
-                               + "show up here.",
-                        BuffA = new Buff(BuffKind.Bad, "Needs " + next.ToString("0.0")
-                                         + " stars · you have " + run.Rating.Average.ToString("0.0")),
+                        Identity = UIText.T("dayend.more.identity", ("stars", next.ToString("0.0"))),
+                        MetaLine = UIText.N(waitingKey, locked),
+                        Body = UIText.T("dayend.more.body", ("stars", next.ToString("0.0"))),
+                        BuffA = new Buff(BuffKind.Bad, UIText.T("dayend.more.needs",
+                                         ("stars", next.ToString("0.0")),
+                                         ("have", run.Rating.Average.ToString("0.0")))),
                     });
             }
 
@@ -2371,13 +2376,12 @@ namespace LastCall.UI
             if (_cardTarget != null && _cardTarget.childCount == 0)
                 AddTile(new TileSpec
                 {
-                    Name = "Nothing tonight",
-                    Meta = "Try again tomorrow",
+                    Name = UIText.T("dayend.nothing.name"),
+                    Meta = UIText.T("dayend.nothing.meta"),
                     State = TileState.Held,
-                    Identity = "NOTHING ON THIS BOARD TONIGHT",
-                    MetaLine = "The van brings a different list every night",
-                    Body = "What it brings depends on what you already have, and on "
-                           + "how many stars you have.",
+                    Identity = UIText.T("dayend.nothing.identity"),
+                    MetaLine = UIText.T("dayend.nothing.meta_line"),
+                    Body = UIText.T("dayend.nothing.body"),
                 });
 
             // NO REFUNDS (2026-08-11, the author: "iadeyi kaldıralım"). A shelf that
@@ -2473,7 +2477,7 @@ namespace LastCall.UI
             var head = NewText("H", askBar, _shop, 16, TextAnchor.MiddleLeft, Color.white);
             Stretch(head.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(10, 0), new Vector2(-10, 0));
-            head.text = "CLOSE THE ORDER?";
+            head.text = UIText.T("dayend.closing.head");
 
             // THE WARNING IS THE POINT OF THIS BOX, so it is set like one (2026-08-19, the
             // author: kalin ve buyuk yazsin). It was the body face at 12 — a size the pixel
@@ -2504,7 +2508,7 @@ namespace LastCall.UI
             });
             var backLabel = NewText("L", back, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(backLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            backLabel.text = "GO BACK";
+            backLabel.text = UIText.T("dayend.closing.go_back");
             MarkHoverable(back, backImg);
             var backPress = back.gameObject.AddComponent<Win98Press>();
             backPress.Face = backImg;
@@ -2525,7 +2529,7 @@ namespace LastCall.UI
             });
             var anywayLabel = NewText("L", anyway, _shop, 16, TextAnchor.MiddleCenter, ShopInk);
             Stretch(anywayLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            anywayLabel.text = "OPEN ANYWAY";
+            anywayLabel.text = UIText.T("dayend.closing.open_anyway");
             MarkHoverable(anyway, anywayImg);
             var anywayPress = anyway.gameObject.AddComponent<Win98Press>();
             anywayPress.Face = anywayImg;
@@ -2564,7 +2568,7 @@ namespace LastCall.UI
             _hostNoteWho = NewText("H", bar, _shop, 16, TextAnchor.MiddleLeft, Color.white);
             Stretch(_hostNoteWho.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(10, 0), new Vector2(-10, 0));
-            _hostNoteWho.text = "THE HOUSE";
+            _hostNoteWho.text = UIText.T("dayend.host.fallback");
 
             // The face, in a well cut to it — the plate's own rule, on the site's paper.
             var well = NewRect("Well", card);
@@ -2594,7 +2598,7 @@ namespace LastCall.UI
             keyBtn.onClick.AddListener(OnHostNoteKey);
             _hostNoteKeyLabel = NewText("L", key, _shop, 16, TextAnchor.MiddleCenter, Color.white);
             Stretch(_hostNoteKeyLabel.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _hostNoteKeyLabel.text = "GO ON";
+            _hostNoteKeyLabel.text = UIText.T("dayend.host.go_on");
             MarkHoverable(key, keyImg);
             var press = key.gameObject.AddComponent<Win98Press>();
             press.Face = keyImg;
@@ -2617,7 +2621,7 @@ namespace LastCall.UI
                 _hostNoteLesson = lesson.Id;
                 _hostNoteAt = 0;
                 var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
-                _hostNoteWho.text = host != null ? host.Name.ToUpperInvariant() : "THE HOUSE";
+                _hostNoteWho.text = host != null ? UIText.Caps(host.Name) : UIText.T("dayend.host.fallback");
                 var face = host != null ? LookForStory(host) : null;
                 _hostNoteFace.sprite = face?.Face;
                 _hostNoteFace.enabled = _hostNoteFace.sprite != null;
@@ -2627,8 +2631,8 @@ namespace LastCall.UI
             if (show)
             {
                 int at = Math.Min(_hostNoteAt, lesson.Say.Count - 1);
-                _hostNoteLine.text = lesson.Say[at];
-                _hostNoteKeyLabel.text = at >= lesson.Say.Count - 1 ? "GOT IT" : "GO ON";
+                _hostNoteLine.text = UIText.Data("lesson", lesson.Id, "say." + at, lesson.Say[at]);
+                _hostNoteKeyLabel.text = UIText.T(at >= lesson.Say.Count - 1 ? "dayend.host.got_it" : "dayend.host.go_on");
             }
             else _hostNoteLesson = "";
             if (_hostNote.gameObject.activeSelf != show) _hostNote.gameObject.SetActive(show);

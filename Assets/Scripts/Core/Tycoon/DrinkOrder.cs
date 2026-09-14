@@ -58,7 +58,8 @@ namespace LastCall.Core
                 .Take(config.OrderPoolSize(day))
                 .ToList();
             if (pool.Count == 0)
-                throw new InvalidOperationException("No drinks you can pour yet.");
+                throw Said.With(new InvalidOperationException("No drinks you can pour yet."),
+                    Line.Of("rule.no_pourable_drinks"));
 
             var pick = pool[rng.NextInt(pool.Count)];
             return new DrinkOrder(pick, MenuPrice(pick), ServingSpec.Roll(pick, rng));
