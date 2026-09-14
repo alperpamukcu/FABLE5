@@ -355,7 +355,7 @@ namespace LastCall.PlayTests
             // still means what it meant — neighbouring 15-unit rows that pour — wherever the window
             // sits in the 28, and the sweep stops once the verdict is in (four rows).
             int row = 0, hit = -1, pass = 0;   // pass 0: every fourth row · 1: up from the hit · 2: down
-            while (row >= 0 && row < 28)
+            while (row >= 0 && row < 34)   // 34, not 28: the hand lifts 40 higher (2026-09-14)
             {
                 float y = start.y + 15f + row * 15f;
                 double before = run.ServingGlass.TotalVolume;
@@ -380,7 +380,7 @@ namespace LastCall.PlayTests
                 }
                 if (pass == 1)
                 {
-                    if (poured && row + 1 < 28) { row++; continue; }
+                    if (poured && row + 1 < 34) { row++; continue; }
                     pass = 2; row = hit - 1;       // the rows under the hit, down to the last dry one
                     continue;
                 }

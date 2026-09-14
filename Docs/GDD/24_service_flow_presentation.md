@@ -129,6 +129,14 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    author's `_Front` crop; salt and sugar rims go over the front. The drink is the sheet's own
    texels (any alpha, one texel inside the outline) from the floor to the line, and a full
    glass stops at the first see-through row under the front's near rim (`GlassArt.NearRimRow`).
+   Each row's drink runs between the inner edges of its opaque walls (`GlassArt.BodyMask`: 4–5
+   pixels on the current sheets, none where the edge pixel is see-through). A brimful tin shows an
+   oval in its mouth, two pixels inside the opening's dark inside.
+10. **The lean waits for the top (2026-09-14):** a held bottle or tin stays upright until its mouth
+   clears the target's drawn top by 6 (the tin's mouth on the shaker bench, the glass's top on the
+   serve bench) and reaches level with the mouth at that line; the rest of the lean spreads over
+   the room up to 20 above the surface. The props stand another 20 lower (foot line -245), with
+   the strip at 58, the readout at 32 and SERVE IT beside the bin.
 
 ## 3. Serving: the glass and the pour
 

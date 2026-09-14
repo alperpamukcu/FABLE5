@@ -562,6 +562,45 @@ namespace LastCall.UI
             return -1;
         }
 
+        private static readonly Dictionary<Sprite, Texture2D> BodyMasks = new Dictionary<Sprite, Texture2D>();
+
+        /// <summary>
+        /// WHERE A DRINK CAN STAND IN THIS DRAWING (2026-09-14, the author: "sıvı dolum hizası görsellerin
+        /// Front olmayan halinin en dışındaki pixelden birkaç pixel içeride olacak şekilde olsun bazen hiç
+        /// içeride de olmayabilir"). Row by row, the wall is the run of fully opaque pixels in from each edge
+        /// of the silhouette, and the drink fills between the two inner edges — opaque cut lines inside
+        /// included. Measured on the sheets: rocks and pint walls 5 wide, highball, coupe and martini 4, and
+        /// a row whose edge pixel is already see-through takes no inset at all; the rim's ring and the
+        /// stem rows are opaque edge to edge and hold none. One mask per sheet, the sheet's size, point
+        /// filtered; null when the sheet cannot be read.
+        /// </summary>
+        public static Texture2D BodyMask(Sprite sheet)
+        {
+            if (sheet == null || sheet.texture == null || !sheet.texture.isReadable) return null;
+            if (BodyMasks.TryGetValue(sheet, out var hit) && hit != null) return hit;
+            var st = sheet.texture; var r = sheet.rect;   // the rect, not textureRect (tight mesh)
+            int w = Mathf.RoundToInt(r.width), h = Mathf.RoundToInt(r.height);
+            int x0 = Mathf.RoundToInt(r.x), y0 = Mathf.RoundToInt(r.y);
+            var src = st.GetPixels32();
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+            {
+                int row = (y0 + y) * st.width + x0;
+                int l = -1, rr = -1;
+                for (int x = 0; x < w; x++) if (src[row + x].a > 0) { if (l < 0) l = x; rr = x; }
+                if (l < 0) continue;
+                while (l <= rr && src[row + l].a >= 250) l++;
+                while (rr >= l && src[row + rr].a >= 250) rr--;
+                for (int x = l; x <= rr; x++) px[y * w + x] = new Color32(255, 255, 255, 255);
+            }
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = sheet.name + "_body" };
+            tex.SetPixels32(px);
+            tex.Apply(false);
+            BodyMasks[sheet] = tex;
+            return tex;
+        }
+
         private static readonly Dictionary<string, Vector2> FrontOffsets = new Dictionary<string, Vector2>();
 
         /// <summary>

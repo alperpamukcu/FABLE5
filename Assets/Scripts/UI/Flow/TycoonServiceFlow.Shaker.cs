@@ -48,6 +48,7 @@ namespace LastCall.UI
         /// the walk home. The bottle used to snap to the cursor and was left hanging, tipped,
         /// wherever it was let go.</summary>
         private readonly PourHand _bottleHand = new PourHand();
+        private Image _tinSurface;               // the brimful drink's oval in the tin's mouth (2026-09-14)
         private HoverGlow _pourGlow;             // the bottle's glow, stilled while the hand holds it
         private const float BottleGripDepth = 60f;
         private bool _pouring;
@@ -321,7 +322,7 @@ namespace LastCall.UI
 
         /// <summary>The strip's baseline on the counter front, over the key row and under the
         /// readout's shelf... and the height of one step.</summary>
-        private const float StepStripY = 78f, StepStripH = 20f;   // 100 until the props came down 22 (2026-09-14)
+        private const float StepStripY = 58f, StepStripH = 20f;   // 100, then 78, as the props came down (2026-09-14)
 
         private Text BuildStepStrip(RectTransform panel, string[] words,
             List<(Image icon, Text label, Image tick)> rows)
@@ -891,7 +892,7 @@ namespace LastCall.UI
                 float halfW = _pourSurface.rect.width * 0.5f;
                 float halfH = _pourSurface.rect.height * 0.5f;
                 _bottleHand.Step(Time.deltaTime, pointer,
-                    Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH - 20f));
+                    Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH + HandAbove));
                 _bottleHand.Apply(_pourBottle);
             }
 
@@ -1040,6 +1041,10 @@ namespace LastCall.UI
         /// centre-pivoted, the bottle's is gripped low at 0.22 of its height.</summary>
         private float TinFootY => _shakerHome.y - TinH * 0.5f + 14f * (TinH / 358f);
 
+        /// <summary>The brimful drink's oval, in tin sheet pixels in from the drawing's opaque bounds: two
+        /// inside the opening's dark inside (measured on tin_open, 2026-09-14).</summary>
+        private const float TinMouthInsetX = 5f, TinMouthTopInset = 5f, TinMouthBottomInset = 28f;
+
         /// <summary>How full the tin has to be before any of it shows at the mouth.</summary>
         private const float BrimFill = 0.97f;
         private float BottleFootY => _bottleRest.y - BottleH * 0.22f + 6f;
@@ -1110,6 +1115,7 @@ namespace LastCall.UI
             // through the tin and out under it — the "drips to the floor" the author saw.
             var (mouthAt, mouthHalfW) = TinMouth();
             _shakerFluid.SetSink(mouthAt, mouthHalfW);
+            if (_tinSurface != null) _tinSurface.enabled = false;   // shown below, only at the brim
             // The drink at the brim and the stream into it are drawn in the tin's own pixels.
             var tinArt = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
             if (tinArt != null && tinArt.rect.height >= 1f)
@@ -1168,11 +1174,31 @@ namespace LastCall.UI
             // tin shows its drink through the opening and nowhere else. The plate's ring
             // hides the metaball's proud edge on the front side; MouthTop keeps it under
             // the back rim.
-            const float MouthTop = 0.70f;                  // of the sprite, from its bottom
-            const float LipClear = 2f;                     // px over the front lip's inner edge
-            float mouthTop = rimY + h * (MouthTop - CavityRim);
-            // The particle fluid collides with the tin's rotated interior, so it sloshes with it.
-            _shakerFluid.SetPool(minX, maxX, rimY + LipClear + bob, mouthTop + bob, 1f, rad);
+            //
+            // AN OVAL IN THE MOUTH (2026-09-14, the author: "shakerın içindeki sıvı shakera tam oturmuyor ve
+            // 2.5d perspektifi de düşününce sıvının tepesinin oval olması gerekiyor"). That pool was a box
+            // from the front lip to under the back rim, and read as a flat trapezoid laid over the rim. The
+            // drink's top is the ellipse inside the opening, a few pixels in from the drawing ("sıvı dolum
+            // hizası ... en dışındaki pixelden birkaç pixel içeride"): measured on tin_open (116x208) the
+            // opening's dark inside runs x 20..95 and rows 58..84 — three pixels in from the drawing's
+            // sides and five under its top — and the drink stands two pixels inside that.
+            _shakerFluid.ClearPool();
+            if (_tinSurface != null && tinArt != null && tinArt.rect.height >= 1f)
+            {
+                var ob = ItemArt.OpaqueBounds(tinArt);            // sheet px from the bottom-left
+                float k = _shakerVessel.rect.height / tinArt.rect.height;
+                float drawnTop = ob.y + ob.height;
+                float x0 = ob.x + TinMouthInsetX, x1 = ob.x + ob.width - TinMouthInsetX;
+                float y1 = drawnTop - TinMouthTopInset, y0 = drawnTop - TinMouthBottomInset;
+                var srt = _tinSurface.rectTransform;
+                srt.sizeDelta = new Vector2((x1 - x0) * k, (y1 - y0) * k);
+                srt.anchoredPosition = new Vector2(((x0 + x1) * 0.5f - tinArt.rect.width * 0.5f) * k,
+                                                   ((y0 + y1) * 0.5f - tinArt.rect.height * 0.5f) * k + bob);
+                var body = DrinkColor(run.Glass);
+                _tinSurface.color = new Color(Mathf.Lerp(body.r, 1f, 0.24f), Mathf.Lerp(body.g, 1f, 0.24f),
+                                              Mathf.Lerp(body.b, 1f, 0.24f), 1f);
+                _tinSurface.enabled = true;
+            }
             // The cap's placement belongs to UpdateCap now — it rests on the bench until
             // you drop it on the tin, so it must not be glued to the vessel here.
         }
@@ -1781,7 +1807,7 @@ namespace LastCall.UI
             // BenchClear between every pair of drawn edges, inside the 1149-wide working
             // area. Change one and re-check the others; the gaps are the contract.
             _shakerHome = new Vector2(-120, BenchFootY + TinH * 0.5f);
-            _bottleRest = new Vector2(150, -70);   // the bottle's own rest, needed by its foot line
+            _bottleRest = new Vector2(150, -90);   // the bottle's own rest (-70 until the props came down 20)
             // The two contact shadows, built BEFORE the props so they draw under them.
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
             _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
@@ -1803,6 +1829,16 @@ namespace LastCall.UI
                 Place(lip, new Vector2(0.5f, 1), new Vector2(128, 16), new Vector2(0, 0));
                 lip.gameObject.AddComponent<Image>().color = UITheme.Cream[3];
             }
+
+            // THE BRIMFUL DRINK'S TOP (2026-09-14): an oval in the tin's mouth, placed by PushShakerPool. A
+            // child of the tin so it turns with it; drawn before the fluid's stream, and under the front
+            // plate, which hides its near part behind the lip.
+            var tinSurfaceRt = NewRect("TinSurface", _shakerVessel);
+            tinSurfaceRt.anchorMin = tinSurfaceRt.anchorMax = tinSurfaceRt.pivot = new Vector2(0.5f, 0.5f);
+            _tinSurface = tinSurfaceRt.gameObject.AddComponent<Image>();
+            _tinSurface.sprite = GlassArt.SurfaceDisc();
+            _tinSurface.raycastTarget = false;
+            _tinSurface.enabled = false;
 
             // Grabbing the shaker (once it holds a drink) starts a free, loose shake.
             var shakeGrab = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
@@ -1871,7 +1907,7 @@ namespace LastCall.UI
             // mostly empty air — the lid art rides CapArtOffset above its centre — so the
             // rest is derived from where the DOME should sit, not from the rect.
             // Left of the tin with 73 units of air, and clear of the napkin by 65.
-            _capRest = new Vector2(-330, -165f - CapArtOffset * TinH);
+            _capRest = new Vector2(-330, -185f - CapArtOffset * TinH);   // -165 until the props came down 20
             _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
             _shakerTop.sizeDelta = _shakerOpenSize;
@@ -1981,7 +2017,7 @@ namespace LastCall.UI
                     if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                             _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
                         held = _bottleHand.GripPoint;
-                    _bottleHand.Press(held, _pourSurface.rect.height * 0.5f - 20f);
+                    _bottleHand.Press(held, _pourSurface.rect.height * 0.5f + HandAbove, TinMouth().Centre.y + ClearOverRim);
                 }
             Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });
@@ -1997,7 +2033,7 @@ namespace LastCall.UI
             // size in the rebuild.
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
             // Under the strip, over the keys (2026-09-13).
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 52), new Vector2(-16, 75));
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 32), new Vector2(-16, 55));
 
             // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
             // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and

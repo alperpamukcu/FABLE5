@@ -1528,6 +1528,42 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.63 · Dördüncü geçiş: kap tepeyi geçmeden eğilmiyor, shakerda oval yüzey, sıvı duvarın içinden, nesneler 20 aşağı (2026-09-14)
+
+Yazar: "built sahnelerinde dökülme açısı hep aynı olamaz çünkü bazı bardakların boyutu birbiriyle aynı değil ...
+şişenin eğilmesi bardağın veya shakerin tepe noktasını geçmeye başladıktan sonra olmalı. sahnedeki shaker şişe kaşık
+vs. gibi nesneleri biraz daha aşağı alabiliriz. ... shakerın içindeki sıvı shakera tam oturmuyor ve 2.5d perspektifi
+de düşününce sıvının tepesinin oval olması gerekiyor. Sıvı dolum hizası görsellerin Front olmayan halinin en dışındaki
+pixelden birkaç pixel içeride olacak şekilde olsun bazen hiç içeride de olmayabilir."
+
+- **Kap tepeyi geçmeden eğilmiyor** (`PourHand.Press`, `clearY`). Eğim basıştan hemen başlıyordu; uzun bir kaba
+  kaldırılan şişe ağzı ağza varmadan yan yatmış oluyordu. Dik tutulan kap artık iki şeyi bekliyor: ağzı hedefin çizili
+  tepesinin 6 birim üstüne (`ClearOverRim`) çıkmış olacak, ve el o kadar yüksekte olacak ki dökme açısı — yere paralel —
+  geldiğinde ağız o çizgide olsun (paralelden sonra boyun elde, ağız imlecin olduğu yerde). Kalan eğim tavana kadar olan
+  yere yayılıyor; yüksek bir başlangıç aralığı `MinLiftRange`'e kadar sıkıştırıyor. El yüzeyin tepesinin 20 birim
+  üstüne kadar çıkabiliyor (`HandAbove`). Hedef: tezgâhta shaker'ın çizili ağzı (`TinMouth`), serviste bardağın çizili
+  tepesi (`ServeGlassTop`). Ölçüldü: serviste shaker tutulduğunda ağzı 135'te, highball'un çizgisi 137 — eğilme
+  işaretçi 127'de başlıyor, paralelde ağız 166'da; tezgâhta şişenin ağzı zaten shaker'ın çok üstünde, paralelde 154
+  (çizgi 65).
+- **Nesneler 20 aşağı:** `BenchFootY` −225→−245, şişe −70→−90, kapak −165→−185; adım şeridi 78→58, okuma satırı
+  52→32, servisteki shaker yazısı 82→62. **SERVE IT** alt sırada çöpün soluna geçti (x 880..1120) ve nişan satırı geri
+  tuşuyla onun arasına sığdırıldı (206..860): 3. geçişte metin 22 birim inince düğmenin üstüne binmişti (ölçüldü:
+  satır 439..841 × 32..55, düğme 635..885 × 26..72).
+- **Shaker'da oval yüzey:** ağzına kadar dolu teneke artık ağzın içinde bir elips gösteriyor (`_tinSurface`, tenekenin
+  çocuğu, akışın ve ön plakanın altında). tin_open (116×208) üzerinde ağzın koyu içi x 20..95, satır 58..84 — içecek
+  bunun iki piksel içinde (144×46); ön plaka dudağın arkasındaki alt kenarını örtüyor (kenarda 71., ortada 81. satır).
+  Ağzı dikdörtgen kutuyla dolduran metaball havuzu kalktı; ağız hâlâ akışı yutuyor.
+- **Sıvı duvarın içinden** (`GlassArt.BodyMask`): her satırda silüetin iki kenarından içeri doğru tamamen opak pikseller
+  duvar sayılıyor, içecek iki iç kenar arasında (içerideki opak kesim çizgileri dahil). Ölçüldü: rocks ve pint duvarı 5,
+  highball, coupe, martini 4 piksel; kenar pikseli zaten saydamsa içerilik 0; ağız halkası ve sap satırları baştan
+  sona opak, içecek tutmuyor. Shader tek noktadan okuyor; 3. geçişin "herhangi bir alfa, bir piksel içeride" kuralının
+  yerine geçti.
+- **Uzun bardak testi** 34 sıraya kadar tarıyor (el 40 birim daha yükseğe çıkıyor).
+- **Doğrulama:** EditMode 587/587, PlayMode 13/13. Tezgâhın görüntü tabanı yeniden onaylandı: fark yalnız
+  nesnelerin, şeridin ve okuma satırının 20 birim inişi, ölçü göstergesi yerinde. Oyunda ölçüldü: iki elin eğilme
+  başlangıcı ve paraleldeki ağız yüksekliği, dolu tenekenin ovali (ekran görüntüsüyle), servis alt sırasının
+  kutuları. Uzun bardak yine 20–23. sıralarda döktü; şişeden shaker'a dökme testi de geçti.
+
 ### 9.62 · Üçüncü geçiş: sıvı camın kendi pikselleri, front katmanı, üç ovalamalı bez, başların üstünde balon, alçalan sahne (2026-09-14)
 
 Yazar: "Sıvıların şişe/bardak/shaker dolum sınırları doğru değil. Her şişe/bardak/shaker için normal yüz ve front

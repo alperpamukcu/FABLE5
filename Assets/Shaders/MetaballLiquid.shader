@@ -118,7 +118,6 @@ Shader "LastCall/MetaballLiquid"
             float4 _Drops[MAX_DROPS];   // xy = uv position, z = radius px, w = active flag
             float     _BodyOn;
             sampler2D _MaskTex;
-            float4    _MaskTex_TexelSize;
             float4    _MaskUV;          // the mask sprite's rect in its texture's uv
             float4    _MaskRect;        // where that sprite is drawn, px from the pixel grid's origin
             float     _BodyFloorY;      // px from the grid's origin
@@ -276,15 +275,10 @@ Shader "LastCall/MetaballLiquid"
                     if (muv.x >= 0.0 && muv.x <= 1.0 && muv.y >= 0.0 && muv.y <= 1.0
                         && bp.y >= _BodyFloorY && bp.y <= _BodyTopY)
                     {
-                        // ANY ALPHA, ONE TEXEL IN (2026-09-14): a glass's see-through belly is ~40%
-                        // alpha, so "> 0.5" kept only the walls and the drink vanished behind the
-                        // front crop. The silhouette's own outline row stays the glass's.
-                        float2 mc = _MaskUV.xy + muv * _MaskUV.zw;
-                        float2 ts = _MaskTex_TexelSize.xy;
-                        float m = min(tex2D(_MaskTex, mc).a,
-                                  min(min(tex2D(_MaskTex, mc + float2(ts.x, 0)).a, tex2D(_MaskTex, mc - float2(ts.x, 0)).a),
-                                      min(tex2D(_MaskTex, mc + float2(0, ts.y)).a, tex2D(_MaskTex, mc - float2(0, ts.y)).a)));
-                        if (m > 0.02)
+                        // THE MASK IS THE BODY (2026-09-14, second pass): GlassArt.BodyMask marks each
+                        // row between the inner edges of its opaque walls, so one point sample says it.
+                        float m = tex2D(_MaskTex, _MaskUV.xy + muv * _MaskUV.zw).a;
+                        if (m > 0.5)
                         {
                             inBody = 1.0;
                             bodyRow = (_BodyTopY - bp.y) / max(texel, 1.0);

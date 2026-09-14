@@ -84,7 +84,9 @@ namespace LastCall.UI
         /// <summary>Takes hold of the vessel at <paramref name="pointer"/> (surface space).
         /// <paramref name="ceiling"/> is the highest the pointer will be let go, so the lift a full
         /// tilt takes can be fitted under it.</summary>
-        public void Press(Vector2 pointer, float ceiling = float.PositiveInfinity)
+        /// <param name="clearY">The top the mouth has to clear before the vessel leans (surface space),
+        /// or NaN for a lean that starts at the press.</param>
+        public void Press(Vector2 pointer, float ceiling = float.PositiveInfinity, float clearY = float.NaN)
         {
             Held = true;
             AtRest = false;
@@ -97,10 +99,42 @@ namespace LastCall.UI
             // tall glass is poured by holding the hand over its rim — the lean is spread over the
             // way from where the vessel was taken up to the surface's top (never less than
             // LiftRange, never more than twice it), so there is still a lean to choose up there.
-            float room = float.IsInfinity(ceiling) ? LiftRange : ceiling - pointer.y;
-            _liftRange = Mathf.Max(Mathf.Min(MinLiftRange, LiftRange), Mathf.Clamp(room, LiftRange, LiftRange * 2f));
+            _liftRange = RangeUnder(ceiling, pointer.y, squeeze: false);
             // A vessel caught mid-lean keeps its lean: the lift starts where that lean already is.
             _liftBase = pointer.y - Unlean(_tilt, MaxTilt) * _liftRange;
+
+            // UPRIGHT UNTIL IT CLEARS THE TOP (2026-09-14, the author: "şişenin eğilmesi bardağın veya
+            // shakerin tepe noktasını geçmeye başladıktan sonra olmalı" — a bottle lifted toward a tall
+            // glass or the tin leaned from the moment it left the bench and was over on its side before
+            // its mouth reached the rim, so nothing poured). Taken upright, the lean waits for two things:
+            // the mouth has risen past clearY, and the hand is high enough that the pouring angle — level —
+            // arrives with the mouth AT clearY (from level on the neck is in the hand, so the mouth is where
+            // the pointer is). The lean then spreads over the room left under the ceiling, however tall the
+            // vessel it is poured into.
+            if (!float.IsNaN(clearY) && Mathf.Abs(_tilt) < 1f)
+            {
+                float start = Mathf.Max(pointer.y, pointer.y + (clearY - SpoutNow.y));
+                for (int i = 0; i < 5; i++)   // the start and the room under the ceiling settle together
+                {
+                    _liftRange = RangeUnder(ceiling, start, squeeze: true);
+                    start = Mathf.Max(start, clearY - KneeLift * _liftRange);
+                }
+                _liftRange = RangeUnder(ceiling, start, squeeze: true);
+                _liftBase = start;
+            }
+        }
+
+        /// <summary>The lift a full tilt is spread over, from <paramref name="from"/> up to the ceiling:
+        /// the whole room (never more than twice LiftRange). Without <paramref name="squeeze"/> it is
+        /// never less than LiftRange either; with it a start high under the ceiling gets what is left,
+        /// down to MinLiftRange, so the full tilt stays within reach.</summary>
+        private float RangeUnder(float ceiling, float from, bool squeeze)
+        {
+            if (float.IsInfinity(ceiling)) return LiftRange;
+            float room = ceiling - from;
+            float least = Mathf.Min(MinLiftRange, LiftRange);
+            if (!squeeze) return Mathf.Max(least, Mathf.Clamp(room, LiftRange, LiftRange * 2f));
+            return room >= LiftRange ? Mathf.Min(room, LiftRange * 2f) : Mathf.Max(least, room);
         }
 
         public void Release() => Held = false;

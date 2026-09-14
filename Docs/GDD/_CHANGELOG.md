@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **A vessel leans only once its mouth clears the top it pours into (2026-09-14, fourth pass):** a
+  bottle over the tin or the tin over a tall glass stays upright until its mouth is over the
+  target's drawn top, and reaches level with the mouth there, so a tall glass pours. The bench's
+  props stand 20 lower, SERVE IT moved beside the bin, a brimful tin shows an oval in its mouth,
+  and a drink fills each row of a glass between the inner edges of its opaque walls.
+
 - **The drink is the glass's own pixels, under the author's front layer (2026-09-14, third pass):**
   the serve glass draws sheet → drink → garnish → the author's `_Front` crop (salt and sugar rims
   over it), each crop seated by matching its pixels on the sheet. The drink is every texel of the

@@ -211,6 +211,18 @@ namespace LastCall.UI
             return (new Vector2(c.x, c.y - h * 0.5f + h * piece.RimY), w * 0.5f * piece.InteriorHalf);
         }
 
+        /// <summary>The top of the glass's DRAWING in surface space — what the tin's mouth has to clear
+        /// before it leans (2026-09-14). The sheet fills the glass rect's height, as ServeRim reads it.</summary>
+        private float ServeGlassTop()
+        {
+            var c = _serveGlass.anchoredPosition;
+            float h = _serveGlass.rect.height;
+            var sp = _serveGlassPiece.Sprite;
+            if (sp == null || sp.rect.height < 1f) return c.y + h * 0.5f;
+            var ob = ItemArt.OpaqueBounds(sp);
+            return c.y - h * 0.5f + (ob.y + ob.height) * (h / sp.rect.height);
+        }
+
         /// <summary>The SERVE key answers only a glass with a drink in it — dim until then.
         /// Driven every frame from the stage's own update, now that the cabinet it used to
         /// ride on is gone.</summary>
@@ -261,7 +273,7 @@ namespace LastCall.UI
             float halfW = _serveSurface.rect.width * 0.5f;
             float halfH = _serveSurface.rect.height * 0.5f;
             _serveHand.Step(Time.deltaTime, pointer,
-                Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH - 20f));
+                Rect.MinMaxRect(-halfW + 30f, -halfH + 20f, halfW - 30f, halfH + HandAbove));
             _serveHand.Apply(_serveShaker);
             if (_serveTinLeaving && _serveHand.AtRest)
             {
@@ -632,7 +644,7 @@ namespace LastCall.UI
             _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
             // On the counter front at the left, level with the strip (2026-09-13).
             Place(_serveShakerText.rectTransform, new Vector2(0, 0), new Vector2(280, 12),
-                  new Vector2(24, 82));
+                  new Vector2(24, 62));
             _serveShakerText.rectTransform.pivot = new Vector2(0, 0);
             _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.LowerRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 0), new Vector2(280, 12),
@@ -666,7 +678,7 @@ namespace LastCall.UI
             // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
             // so the eye finds the bench's one sentence in one place on both screens.
             Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
-                    new Vector2(16, 52), new Vector2(-16, 75));
+                    new Vector2(206, 32), new Vector2(-420, 55));   // between the back key and SERVE IT
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -821,7 +833,7 @@ namespace LastCall.UI
                 if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
                     held = _serveHand.GripPoint;
-                _serveHand.Press(held, _serveSurface.rect.height * 0.5f - 20f);
+                _serveHand.Press(held, _serveSurface.rect.height * 0.5f + HandAbove, ServeGlassTop() + ClearOverRim);
             Sfx.Play("tin_tip", 0.6f);
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);
@@ -834,7 +846,10 @@ namespace LastCall.UI
             var done = NewRect("Done", _servePanel);
             // On the key strip with the others, at the key strip's own height — and 250
             // wide, because the one key that finishes the job earns the widest plate.
-            Place(done, new Vector2(0.5f, 0), new Vector2(250, KeyStripH), new Vector2(120, KeyStripY));
+            // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under
+            // the aim line once the bench's text came down for the props (measured: the line 439..841 x
+            // 32..55 over the key 635..885 x 26..72). Key row height, 10 short of the bin.
+            Place(done, new Vector2(1f, 0f), new Vector2(240, KeyStripH), new Vector2(-160f, 0f));
             _serveDoneBtn = done.gameObject.AddComponent<Button>();
             _serveDoneBtn.onClick.AddListener(() =>
             {

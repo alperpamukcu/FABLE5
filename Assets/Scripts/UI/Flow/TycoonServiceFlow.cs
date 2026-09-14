@@ -746,7 +746,12 @@ namespace LastCall.UI
 
         /// <summary>Where a prop's foot touches the bench, in surface-centre coordinates
         /// (screen y 585 — low in the band, clear of the bottom text stack).</summary>
-        private const float BenchFootY = -225f;
+        // -245, not -225 (2026-09-14, the author: "sahnedeki shaker şişe kaşık vs. gibi nesneleri biraz daha
+        // aşağı alabiliriz"); the strip, the readout and the bottle's and lid's rests came down with it.
+        private const float BenchFootY = -245f;
+        /// <summary>How far over the surface's top the hand may lift a vessel, and how far over a target's
+        /// drawn top its mouth must be before it leans (PourHand.Press, 2026-09-14).</summary>
+        private const float HandAbove = 20f, ClearOverRim = 6f;
 
         /// <summary>The step cards' shared TOP line: bottom-anchored y for a card of the
         /// given height, so a four-row card and a two-row card start at the same edge.</summary>

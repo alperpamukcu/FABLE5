@@ -583,10 +583,11 @@ namespace LastCall.UI
         /// </summary>
         public void SetBody(Sprite mask, Rect rect, float floor, float top)
         {
-            if (mask == null || mask.texture == null || top <= floor + 0.5f) { ClearBody(); return; }
-            var tex = mask.texture;
-            var tr = mask.rect;   // the whole sheet: textureRect is the tight mesh's trimmed area
-            var uv = new Vector4(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height);
+            // THE WALLS STAY GLASS (2026-09-14, second pass): the mask is each row between the inner edges
+            // of its opaque walls (GlassArt.BodyMask), a texture of the sheet's own size.
+            var tex = mask != null ? GlassArt.BodyMask(mask) : null;
+            if (tex == null || top <= floor + 0.5f) { ClearBody(); return; }
+            var uv = new Vector4(0f, 0f, 1f, 1f);
             var rc = new Vector4(rect.x, rect.y, rect.width, rect.height);
             if (!_bodyOn || _bodyMask != tex || _bodyMaskUv != uv || _bodyMaskRect != rc
                 || !Mathf.Approximately(_bodyFloor, floor) || !Mathf.Approximately(_bodyTop, top))
