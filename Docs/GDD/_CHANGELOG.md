@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The hand keeps hold of where it took hold, and glasses fill to the brim (2026-09-13, second
+  pass):** a poured vessel now turns about the point that was pressed and leans by how far the
+  pointer has risen, so the bottle stays under the cursor at every angle. The pool ceiling sits one
+  art pixel under the rim, the liquid box is flush to the cavity, and the rocks, martini and coupe
+  densities were re-read at the brim in play. The measure is the tin's silhouette again, with each
+  band named beside it. The counter's marks are clumps — a puddle, crumbs, a wedge or a napkin —
+  ringed in black. Empties are smaller, stand under the drinker's measured head and shrink as they
+  are carried down to the sink. The ticket over a head says the drink, not the name.
+
 - **Drinks have a difficulty, pages you don't own are sealed, and a bottle pours by its angle
   (2026-09-13):** Core rates every recipe by its work — the pours plus one for a shake or stir —
   EASY (green) to HARD (red), shown as three pips and a word on the menu book, the market's hover

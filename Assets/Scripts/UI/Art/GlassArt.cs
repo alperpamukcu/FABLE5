@@ -234,7 +234,9 @@ namespace LastCall.UI
         /// pool needs it because a metaball surface is a bumpy band, not a line; the carried
         /// glass and the rack props take it too so one drink is one height everywhere.
         /// </summary>
-        public const float PoolCeilingArtPx = 3f;
+        // ONE, NOT THREE (2026-09-13, the author: "bardaklar tam dolmuyor"): three art pixels
+        // under the rim left the top of every full glass visibly dry.
+        public const float PoolCeilingArtPx = 1f;
 
         private readonly struct Shape
         {
@@ -452,9 +454,14 @@ namespace LastCall.UI
             // is not what that number is about, and the old bench stands.
             ["pint"] = new Gen3D(0.177f, 0.896f, 0.755f, 1.02f, 0.042f),   // 49x96, cut 4..53 of the take
             ["highball"] = new Gen3D(0.135f, 0.896f, 0.722f, 1.02f, 0.042f),   // 36x96, cut 0..36 of the take
-            ["rocks"] = new Gen3D(0.264f, 0.861f, 0.750f, 0.95f, 0.035f),   // 48x72, cut 8..56 of the take
-            ["martini"] = new Gen3D(0.511f, 0.909f, 0.815f, 0.78f, 0.011f),   // 54x88, cut 7..61 of the take
-            ["coupe"] = new Gen3D(0.534f, 0.886f, 0.800f, 0.78f, 0.017f),   // 50x88, cut 7..57 of the take
+            // RE-READ AT THE BRIM (2026-09-13, the author: "dökme animasyonunda bardaklar tam
+            // dolmuyor"): with the ceiling one art pixel under the rim, a full glass measured in
+            // play — highball on its ceiling at 1.02; rocks 0.9 px short at 0.95 (772 of 785
+            // particles); martini 5.0 px short at 0.78 (705 of 908); coupe 5.6 px short (628 of
+            // 798). Each is raised to what its lattice holds.
+            ["rocks"] = new Gen3D(0.264f, 0.861f, 0.750f, 0.97f, 0.035f),   // 48x72, cut 8..56 of the take
+            ["martini"] = new Gen3D(0.511f, 0.909f, 0.815f, 1.00f, 0.011f),   // 54x88, cut 7..61 of the take
+            ["coupe"] = new Gen3D(0.534f, 0.886f, 0.800f, 0.99f, 0.017f),   // 50x88, cut 7..57 of the take
         };
 
         private static Piece FromGenerated(GlasswareDefinition glass, Sprite sprite, int tier)

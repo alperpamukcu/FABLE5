@@ -637,10 +637,15 @@ namespace LastCall.UI
                 Stretch(seat.Wants.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -18));
                 seat.Wants.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-                seat.Order = NewText("Order", seat.Tag, _speech, SpeechPx, TextAnchor.UpperCenter,
+                // THE ORDER IS THE HEADLINE (2026-09-13, the author: "müşterilerin ismi kafa
+                // hizasında olmasın, talepleri biraz daha ön plana çıksın"). The name left the
+                // ticket, so the drink is its title: the face's own 16 (on the 8px grid, where
+                // 14 was not) and double-struck like the name used to be.
+                seat.Order = NewText("Order", seat.Tag, _speech, 16, TextAnchor.UpperCenter,
                     UITheme.Night[0]);
                 Stretch(seat.Order.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, 0), new Vector2(-4, -28));
                 seat.Order.horizontalOverflow = HorizontalWrapMode.Overflow;
+                seat.Order.gameObject.AddComponent<PixelBold>().Distance = 1f;
 
                 // ASK THE FONT how tall its line is, once, here — the faces and the sizes are
                 // fixed from this point on. Every frame's plate is the sum of the rows it is

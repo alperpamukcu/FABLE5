@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -427,6 +427,9 @@ namespace LastCall.UI
             /// drift from the body it belongs to if it IS the body.</summary>
             public Sprite Face;
             public float HeadY;
+            /// <summary>Where the head is ACROSS, in HUD units from the sprite's pivot, measured
+            /// off the idle frame (TycoonHud.MeasureHeadX, 2026-09-13).</summary>
+            public float HeadX;
             /// <summary>What the bar must be worth before this person comes in.</summary>
             public float Stars;
             /// <summary>Which frame of each glance is the far end of the turn. MEASURED off
@@ -631,6 +634,7 @@ namespace LastCall.UI
             public float ReactLeft;          // remaining departure-reaction one-shot time
             public PatronClip ReactClip;     // Cheer or Upset, chosen from their satisfaction
             public PatronLook Look;          // who is sitting here, and how tall they are
+            public float DirtyX;             // where their empty stands across: under the head
             public RectTransform Gauge;      // the patience bar, re-hung off their own head
             // How tall ONE line of each row really is, asked of the font at build time (the
             // faces and sizes never change after that). The plate's height is the sum of the

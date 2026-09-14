@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -2127,104 +2127,156 @@ namespace LastCall.UI
         /// <summary>
         /// The mark's own pixels, so a mess can own a copy it is allowed to ruin.
         ///
-        /// DRAWN AS GRIT, NOT AS SHAPES (2026-09-06, the author: "masadaki kir için küçük
-        /// partiküller üretilebilir, bu şekilde pixeller kalitesiz duruyor"). The first cut
-        /// drew the ring and the smear as solid runs of pixels at the counter's 2x grain, and
-        /// two-by-two blocks of cream on a dark slate read as damage to the picture rather
-        /// than as a spill. This canvas is the same mark at ONE unit per pixel — four times
-        /// the pixels for the same size on the counter — and everything on it is scattered:
-        /// the ring is a dotted arc, the wash inside it is speckle, the smear is a thinning
-        /// trail of specks, the splashes are two or three grains each. Up close it is grit;
-        /// from a chair it is a spill.
+        /// CLUMPS, NOT GRIT (2026-09-13, the author: "tezgahta müşterilerin bıraktığı
+        /// temizlenmesi gereken kir çok kötü, daha kalın kontraslı toplu parçaların olduğu bir
+        /// dağınıklık olsun"). The grit of 2026-09-06 — a dotted ring, speckle, a trail of
+        /// specks, three splashes — read as noise on the slab. What a drinker actually leaves
+        /// is a handful of THINGS: a sticky puddle of whatever they drank, two heaps of
+        /// bar-snack crumbs, and a squeezed wedge or a screwed-up napkin. Each is a solid,
+        /// shaded lump, the whole heap is ringed in TWO pixels of black, and the pieces are
+        /// piled round the puddle so the mess is one place the cloth goes. Still one unit a
+        /// pixel on a 96x36 canvas, so the cloth still takes it off pixel by pixel.
         /// </summary>
         public static Color32[] SmudgePixels(int seed, out int w, out int h)
         {
             w = SmudgeW; h = SmudgeH;
-            // Locals, because the grain helper below is a local function and an out parameter
+            // Locals, because the helpers below are local functions and an out parameter
             // cannot be closed over.
             int W2 = SmudgeW, H2 = SmudgeH;
             var px = new Color32[W2 * H2];
-            // A WET RING CATCHES THE LIGHT: cream for the water's edge, cyan for the wash
-            // inside it, both a step brighter than the slab (measured in play 2026-09-05 —
-            // the counter's own dark was invisible on it).
-            var ring = new Color32(0xF2, 0xE8, 0xD5, 190);
-            var wash = new Color32(0x7D, 0xF0, 0xE3, 105);
-            var drip = new Color32(0xF2, 0xE8, 0xD5, 150);
-
-            void Grain(int x, int y, Color32 c, float chance, int s2)
+            // Two pixels kept clear at every edge for the black ring.
+            void Put(int x, int y, Color32 c)
             {
-                if (x < 0 || x >= W2 || y < 0 || y >= H2) return;
-                if (Hash(x, y, s2 + seed) > chance) return;
+                if (x < 2 || x >= W2 - 2 || y < 2 || y >= H2 - 2) return;
                 px[(H2 - 1 - y) * W2 + x] = c;
             }
+            Color32 Ink(int hex, byte a) { var c = Hex(hex); c.a = a; return c; }
 
-            // The ring the base printed: a dotted arc, thicker where the glass sat heaviest.
-            float cx = W2 * 0.42f + Hash(3, 1, seed) * 6f, cy = H2 * 0.5f;
-            float rx = W2 * 0.30f, ry = H2 * 0.40f;
+            // THE PUDDLE: what was in the glass, in one of three tones — a sour, a red, a green.
+            // Lobes of an ellipse 1.8 times as wide as it is deep, because it lies on the counter.
+            int tone = Mathf.Min(2, (int)(Hash(1, 1, seed) * 3f));
+            int[] body = { 0xD98A2B, 0xC7385A, 0x86BF35 };
+            int[] lit = { 0xF7CF7A, 0xF58AA2, 0xCDEE84 };
+            int[] deep = { 0x8F5214, 0x7A1D38, 0x4F8420 };
+            Color32 pBody = Ink(body[tone], 235), pLit = Ink(lit[tone], 245), pDeep = Ink(deep[tone], 240);
+            float cx = W2 * 0.46f + (Hash(3, 1, seed) - 0.5f) * 10f, cy = H2 * 0.46f;
+            var lobes = new Vector3[4];   // x, y, depth radius
+            for (int i = 0; i < lobes.Length; i++)
+                lobes[i] = new Vector3(cx + (Hash(i, 7, seed) - 0.5f) * 26f,
+                                       cy + (Hash(i, 8, seed) - 0.5f) * 6f,
+                                       3.5f + Hash(i, 9, seed) * 3f);
+            lobes[0] = new Vector3(cx, cy, 6.5f);
             for (int y = 0; y < H2; y++)
                 for (int x = 0; x < W2; x++)
                 {
-                    float dx = (x - cx) / rx, dy = (y - cy) / ry;
-                    float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    float edge = 0.98f + (Hash(x, y, 11 + seed) - 0.5f) * 0.10f;
-                    if (d <= edge && d > edge - 0.18f) Grain(x, y, ring, 0.72f, 5);
-                    else if (d < edge - 0.18f) Grain(x, y, wash, 0.20f, 7);
-                }
-
-            // THE SMEAR: somebody put the glass down and slid it. A trail of grains off the
-            // ring, thinning as it goes — the part of a mark a straight-down dab always
-            // misses, and the reason the cloth has to travel.
-            float dir = Hash(2, 2, seed) > 0.5f ? 1f : -1f;
-            float tail = W2 * 0.34f;
-            for (float t = 0f; t < tail; t += 0.5f)
-            {
-                float k = t / tail;
-                float sx2 = cx + dir * (rx * 0.75f + t);
-                float half = Mathf.Max(1f, ry * 0.8f * (1f - k * 0.7f));
-                for (int y = Mathf.RoundToInt(cy - half); y <= Mathf.RoundToInt(cy + half); y++)
-                    Grain(Mathf.RoundToInt(sx2), y, Hash((int)t, y, 17 + seed) > 0.55f ? ring : wash,
-                          0.42f * (1f - k * 0.6f), 13);
-            }
-
-            // ...AND THE SPLASHES: three little scatters well clear of the ring, each one its
-            // own errand for the cloth.
-            for (int i = 0; i < 3; i++)
-            {
-                float ax = Mathf.Lerp(3f, W2 - 4f, Hash(i * 5 + 1, 9, seed));
-                float ay = Mathf.Lerp(2f, H2 - 3f, Hash(i * 5 + 2, 4, seed));
-                float ar = 1.6f + Hash(i * 5 + 3, 6, seed) * 2.4f;
-                for (int y = Mathf.FloorToInt(ay - ar); y <= Mathf.CeilToInt(ay + ar); y++)
-                    for (int x = Mathf.FloorToInt(ax - ar); x <= Mathf.CeilToInt(ax + ar); x++)
+                    float best = 9f; int which = 0;
+                    for (int i = 0; i < lobes.Length; i++)
                     {
-                        float dx = x - ax, dy = y - ay;
-                        if (dx * dx + dy * dy > ar * ar) continue;
-                        if (x >= 0 && x < W2 && y >= 0 && y < H2 && px[(H2 - 1 - y) * W2 + x].a > 0) continue;
-                        Grain(x, y, drip, 0.45f, 23 + i);
+                        float dx = (x - lobes[i].x) / (lobes[i].z * 1.8f), dy = (y - lobes[i].y) / lobes[i].z;
+                        float d = dx * dx + dy * dy;
+                        if (d < best) { best = d; which = i; }
+                    }
+                    if (best > 1f) continue;
+                    var l = lobes[which];
+                    float ux = (x - l.x) / (l.z * 1.8f), uy = (y - l.y) / l.z;   // y runs UP here
+                    // Deep along the near rim, lit toward the room's light at the upper left.
+                    Color32 c = uy < -0.55f ? pDeep : (ux < -0.1f && uy > 0.15f && best < 0.55f) ? pLit : pBody;
+                    Put(x, y, c);
+                }
+            var glint = Ink(0xFFFFFF, 255);
+            Put(Mathf.RoundToInt(cx - 5f), Mathf.RoundToInt(cy + 2f), glint);
+            Put(Mathf.RoundToInt(cx - 4f), Mathf.RoundToInt(cy + 2f), glint);
+            Put(Mathf.RoundToInt(cx - 6f), Mathf.RoundToInt(cy + 1f), glint);
+
+            // …ONE THING SOMEBODY PUT DOWN in it: a squeezed wedge, or a screwed-up napkin.
+            float gx = cx + (Hash(6, 6, seed) < 0.5f ? -9f : 9f), gy = cy + 5f;
+            if (Hash(5, 5, seed) < 0.5f)
+            {
+                bool lemon = Hash(7, 7, seed) < 0.5f;
+                Color32 rind = Ink(lemon ? 0xD9A21E : 0x2F7A26, 255), pith = Ink(0xF4F0C8, 255),
+                        flesh = Ink(lemon ? 0xF5DC4A : 0x9ACF45, 255), spoke = Ink(lemon ? 0xFFF3A0 : 0xD2F08A, 255);
+                const float R = 7.5f;
+                for (int y = Mathf.FloorToInt(gy); y <= Mathf.CeilToInt(gy + R); y++)
+                    for (int x = Mathf.FloorToInt(gx - R); x <= Mathf.CeilToInt(gx + R); x++)
+                    {
+                        float dx = x - gx, dy = y - gy;
+                        float d = Mathf.Sqrt(dx * dx + dy * dy);
+                        if (dy < 0f || d > R) continue;
+                        Color32 c = d > R - 1.2f ? rind : d > R - 2.2f ? pith : flesh;
+                        if (d <= R - 2.2f && d > 1f)
+                        {
+                            float ang = Mathf.Atan2(dy, dx) * Mathf.Rad2Deg;
+                            if (Mathf.Abs(ang - 45f) < 7f || Mathf.Abs(ang - 90f) < 6f || Mathf.Abs(ang - 135f) < 7f)
+                                c = spoke;
+                        }
+                        Put(x, y, c);
                     }
             }
-            // A DARK CONTOUR UNDER THE GRAINS (2026-09-07, the author: "masadaki kir için
-            // siyah kontrastlı parçalar kullan"). Cream and cyan grains on a pale slab were
-            // invisible; a ring of near-black around every inked pixel makes the mark read
-            // on any counter the room throws under it, the way the reaction faces are inked.
-            // The contour is ink the cloth takes off with the grain it rings.
-            var contour = new Color32(0x0D, 0x08, 0x13, 190);
-            var ringed = (Color32[])px.Clone();
-            for (int y = 0; y < H2; y++)
-                for (int x = 0; x < W2; x++)
+            else
+            {
+                Color32 paper = Ink(0xF2E8D5, 255), crease = Ink(0xB9A788, 255), bright = Ink(0xFFFFFF, 255);
+                const float Rx = 7f, Ry = 5f;
+                for (int y = Mathf.FloorToInt(gy - Ry); y <= Mathf.CeilToInt(gy + Ry); y++)
+                    for (int x = Mathf.FloorToInt(gx - Rx); x <= Mathf.CeilToInt(gx + Rx); x++)
+                    {
+                        float dx = (x - gx) / Rx, dy = (y - gy) / Ry;
+                        float torn = 0.78f + Hash(x, y, 31 + seed) * 0.28f;   // a torn, uneven edge
+                        if (dx * dx + dy * dy > torn) continue;
+                        Color32 c = paper;
+                        float fx = x - gx, fy = y - gy;
+                        if (Mathf.Abs(fx - fy * 1.4f) < 0.6f || Mathf.Abs(fx + fy * 0.8f - 2f) < 0.6f) c = crease;
+                        else if (dy > 0.45f && dx < 0f) c = bright;
+                        Put(x, y, c);
+                    }
+            }
+
+            // THE CRUMBS: two heaps of bar snack off the puddle's ends, each a handful of lumps
+            // lit on top and dark underneath.
+            Color32 cBody = Ink(0xC98F45, 255), cLit = Ink(0xF0C77E, 255), cDeep = Ink(0x7A4A1E, 255);
+            for (int heap = 0; heap < 2; heap++)
+            {
+                float hx = heap == 0 ? cx - 22f - Hash(heap, 11, seed) * 8f : cx + 20f + Hash(heap, 11, seed) * 10f;
+                float hy = cy + (Hash(heap, 12, seed) - 0.5f) * 10f;
+                int lumps = 4 + (int)(Hash(heap, 13, seed) * 4f);
+                for (int k = 0; k < lumps; k++)
                 {
-                    if (px[(H2 - 1 - y) * W2 + x].a > 0) continue;
-                    bool touches = false;
-                    for (int dy = -1; dy <= 1 && !touches; dy++)
-                        for (int dx = -1; dx <= 1 && !touches; dx++)
+                    float lx = hx + (Hash(heap * 9 + k, 14, seed) - 0.5f) * 12f;
+                    float ly = hy + (Hash(heap * 9 + k, 15, seed) - 0.5f) * 7f;
+                    float r = 1.3f + Hash(heap * 9 + k, 16, seed) * 1.4f;
+                    for (int y = Mathf.FloorToInt(ly - r); y <= Mathf.CeilToInt(ly + r); y++)
+                        for (int x = Mathf.FloorToInt(lx - r); x <= Mathf.CeilToInt(lx + r); x++)
                         {
-                            if (dx == 0 && dy == 0) continue;
-                            int nx = x + dx, ny = y + dy;
-                            if (nx < 0 || nx >= W2 || ny < 0 || ny >= H2) continue;
-                            touches = px[(H2 - 1 - ny) * W2 + nx].a > 0;
+                            float dx = x - lx, dy = y - ly;
+                            if (dx * dx + dy * dy > r * r) continue;
+                            Put(x, y, dy > r * 0.35f ? cLit : dy < -r * 0.35f ? cDeep : cBody);
                         }
-                    if (touches) ringed[(H2 - 1 - y) * W2 + x] = contour;
                 }
-            return ringed;
+            }
+
+            // TWO PIXELS OF BLACK round the whole heap (the author's "kontraslı"), so it reads on
+            // any slab the room throws under it. The ring is ink the cloth takes off with the rest.
+            var edge = Ink(0x0D0813, 255);
+            for (int ring = 0; ring < 2; ring++)
+            {
+                var ringed = (Color32[])px.Clone();
+                for (int y = 0; y < H2; y++)
+                    for (int x = 0; x < W2; x++)
+                    {
+                        if (px[(H2 - 1 - y) * W2 + x].a > 0) continue;
+                        bool touches = false;
+                        for (int dy = -1; dy <= 1 && !touches; dy++)
+                            for (int dx = -1; dx <= 1 && !touches; dx++)
+                            {
+                                if (dx == 0 && dy == 0) continue;
+                                int nx = x + dx, ny = y + dy;
+                                if (nx < 0 || nx >= W2 || ny < 0 || ny >= H2) continue;
+                                touches = px[(H2 - 1 - ny) * W2 + nx].a > 0;
+                            }
+                        if (touches) ringed[(H2 - 1 - y) * W2 + x] = edge;
+                    }
+                px = ringed;
+            }
+            return px;
         }
 
         /// <summary>The mark's size in its own pixels. Read by the counter, which has to map

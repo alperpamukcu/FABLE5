@@ -1528,6 +1528,57 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.61 · İkinci geçiş: tutulan nokta imlecin altında, bardaklar ağzına kadar, shaker silüeti geri, topak kir, isimsiz bilet (2026-09-13)
+
+Yazar: "Dökme animasyonunda bardaklar tam dolmuyor. Yeni doluluk göstergesini beğenmedim, önceki shaker
+silüetinde olmasını istiyordum. Dökerken döktüğümüz şişenin kontrolü çok zor ve mousedan çok ayrı bir yerde
+hareket ediyor. Masada müşterilerin bıraktığı bardakların boyutunu biraz küçültelim ve grablerken boyu tezgaha
+yaklaştıkça küçülsün. Tezgahta müşterilerin bıraktığı temizlenmesi gereken kir çok kötü, daha kalın kontraslı
+toplu parçaların olduğu bir dağınıklık olsun. Bardak da müşterilerin kafa hizasında olsun tam olarak. Müşterilerin
+ismi kafa hizasında olmasın, talepleri biraz daha ön plana çıksın kafalarının üstündeki balonda."
+
+- **Tutulan nokta imlecin altında kalıyor** (`PourHand`). Şişe kapağın altındaki bir tutuş noktası etrafında
+  dönüyor, imlecin o noktaya uzaklığı ise sabit kalıyordu; etiketinden tutulan şişe baş aşağıda imleçten ~400 birim
+  uzağa savruluyordu. Eğim de tutuşun yüksekliğinden, boynun üstündeki boşluğun 90'a sıkıştırdığı bir kaldırma
+  aralığından okunuyordu. Artık kap BASILAN noktasından taşınıyor — dikken o nokta imlecin altında — ve
+  yere paralele yatarken tutuş boynuna kayıyor: paralelden sonra boyun elde, sıvı imlecin olduğu yerden dökülüyor.
+  Eğim İMLECİN basıştan beri ne kadar yükseldiğinden okunuyor; aralık basıştan yüzeyin tavanına kadar olan yere
+  yayılıyor (şişe en az 200, teneke en az 170, en çok iki katı). Tutulurken hover parlaması duruyor. İlk hâli
+  etiketi baştan sona imlecin altında tutuyordu (ölçüldü: 0°/90°/138°/180°'de 0.0 birim) ama paralelden sonra
+  ağız elin ~230 birim altına iniyordu; dökme duman testleri tenekeye de uzun bardağa da hiç dökülmediğini
+  gösterdi, boyun-elde yarısı bunun üzerine eklendi ve uzun bardak testinin taraması ağzın üstüne uzatıldı
+  (28 sıra).
+- **Bardaklar ağzına kadar doluyor.** Havuzun tavanı ağzın 3 değil 1 sanat pikseli altında
+  (`GlassArt.PoolCeilingArtPx`); sıvı kutusu boşluğa yarım piksel içeriden değil tam oturuyor (rocks'un en dış
+  saydam sütunu kuru kalıyordu); üst yüz elipsi dökümle birlikte her kare yerleşiyor (bardak ilk göründüğünde bir
+  kez konuyordu). Doluluk oyunda ölçüldü ve yoğunluklar kafeslerinin aldığına çekildi: rocks 0.95→0.97 (772→785/785),
+  martini 0.78→1.00 (705→904/908), coupe 0.78→0.99 (628→797/798), highball 1.02 (709/709). Dolu yüzey artık her
+  bardakta tavana ~1 sanat pikseli (ölçüm kutusunun bir dilimi) içinde; önce martini/coupe 5 piksel kısaydı.
+- **Gösterge yine shaker silüeti** (`BuildStandingGauge`): ölçü camı geri gönderildi. Silüet tenekenin kendi
+  sanatından çıkarılıyor (`ChromeArt.ShakerOutline/ShakerSolid`), 136×300 (tenekenin 82:181 oranı), bantlar
+  silüete kesiliyor; her bant tenekenin YANINDA, kendi hizasında şişenin küçük resmi ve adıyla yazıyor
+  ("SMIRKOFF 30%", maskenin dışında, daralma kesmesin diye); toplam % sıvının yüzeyinde, siyah kenarlı beyaz,
+  16→24→32 büyüyor. Boş teneke içi koyu.
+- **Tezgâhtaki kir topaklar oldu** (`ChromeArt.SmudgePixels`): noktalı halka/benek/iz yerine üç içki tonundan
+  birinde yapışkan bir su birikintisi (ışığa bakan yanı parlak, ön kenarı koyu), uçlarında iki kırıntı yığını,
+  içinde sıkılmış bir limon/lime dilimi ya da buruşmuş peçete; bütün yığın iki piksel siyahla çevrili. Hâlâ
+  96×36, birim başına bir piksel — bez hâlâ piksel piksel siliyor.
+- **Bırakılan bardak daha küçük ve kafanın hizasında:** `EmptyGlassHeight` 96→80. Bardak ve lekeleri artık
+  koltuğun ortasına değil müşterinin kafasına hizalanıyor — kafanın yatay yeri idle karesinden ölçülüyor
+  (`MeasureHeadX`, HeadY'nin öbür ekseni; kadroda −4…+8 birim). Elde taşınan bardak tezgâhtaki boyuyla kalkıyor
+  (34×52'lik sabit kutu kalkar kalkmaz küçülüyordu) ve lavaboya indikçe 0.72'ye küçülüyor; lavabonun yutma
+  animasyonu o ölçekten başlıyor.
+- **Bilette isim yok, sipariş başlık:** kafanın üstündeki bilet artık yalnız içkiyi söylüyor — sipariş satırı
+  16 ve kalın (PixelBold), tur sayısı ("x2") önünde. İsim kimlikte ve defterde. Bilet ve saat kafanın yatay yerine
+  oturuyor; konuşma balonu da artık herkes için sabit bir yükseklikte değil kendi kafasının üstünde (bilet gibi).
+  Tek satırlık siparişin iki satır sayılıp ikonların altında boş satır bırakması ölçüldü ve düzeltildi.
+- **Yorum:** "bardak da müşterilerin kafa hizasında olsun" bırakılan bardağın müşterinin kafasının tam altında
+  (yatayda) durması olarak okundu; kafa ölçümü kadroda zaten neredeyse ortada çıktığı için fark küçük.
+- **Doğrulama:** EditMode 586/586, PlayMode 13/13 (tezgâhın görüntü tabanı silüet göstergesi için yeniden
+  onaylandı — fark yalnız göstergenin bölgesi, x 996..1173; iki dökme duman testi yeni tutuşla önce kırmızı çıktı,
+  boyun-elde yarısıyla yeşil). Oyunda ölçüldü: kafa X'i kadro boyunca, bardak/leke/bilet konumları, tutulan
+  noktanın imleçten sapması, dört bardağın dolu yüzeyi (yoğunluk öncesi ve sonrası).
+
 ### 9.60 · Kokteyl zorluğu, mühürlü tarifler, dökmenin açı yasası, tezgâhın yeni düzeni (2026-09-13)
 
 Yazar: "Kokteyllere zorluk seviyesi ekleyelim ... Satın alınmayan tariflerin içeriği gözükmemeli ... Dökülme

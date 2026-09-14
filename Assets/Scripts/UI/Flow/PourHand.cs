@@ -8,20 +8,19 @@ namespace LastCall.UI
     /// çıkaramadığımızdan dolayı şişeden sıvı dökemiyoruz", and "sıvılar ve şişeler daha hareketli
     /// olmalı"). Plain C#, one per bench.
     ///
-    /// HOLD THE NECK, TURN ABOUT IT. The vessel used to be held at 0.22 of its height and tipped
-    /// about that point as it was lifted (GDD 24 §2.2: "the higher it goes, the further it tips").
-    /// With the mouth L above the grip, lifting by dy raises the mouth by dy·(1 − L·sinθ·dθ/dy) —
-    /// and with the tin's L of 324 that turned NEGATIVE past 17°: once pouring, lifting the tin
-    /// LOWERED its mouth. The 420 glass of 2026-09-09 put its rim above anything the mouth could
-    /// reach at a pouring angle: the pour window shrank from 328 units of hand travel to 10.
+    /// WHERE YOU TOOK HOLD OF IT STAYS UNDER THE POINTER (2026-09-13, the author: "dökerken
+    /// döktüğümüz şişenin kontrolü çok zor ve mousedan çok ayrı bir yerde hareket ediyor"). The
+    /// vessel used to turn about a grip under its cap while the pointer's offset from that grip
+    /// stayed fixed, so the part you had pressed swung 2·d·sin(θ/2) away from the cursor — nearly
+    /// four hundred units at neck-down for a bottle taken by its label — and the tilt was read off
+    /// the grip's height inside a lift squeezed to 90 units by the room over the neck. Now the
+    /// point pressed is remembered ON THE VESSEL, the vessel turns about THAT point, and the lean
+    /// is read off how far the POINTER has risen since the press, over a full lift fitted under
+    /// the surface's top. The design's rule is kept word for word — higher still tips further.
     ///
-    /// Held a short way below the spout instead, L is small, the bracket stays positive at every
-    /// angle, and raising the hand always raises the mouth. The rule the design wrote is kept
-    /// word for word — higher still tips further — only where the hand holds the vessel changes.
-    ///
-    /// WEIGHT. The grip follows the pointer on a spring rather than snapping to it, the tilt
+    /// WEIGHT. The hand follows the pointer on a spring rather than snapping to it, the tilt
     /// follows its target on a softer one, and a sharp sideways move swings the body under the
-    /// neck like the pendulum it is. Let go and the vessel goes home, and when it gets there it
+    /// hand like the pendulum it is. Let go and the vessel goes home, and when it gets there it
     /// is put EXACTLY back where it stood — the look tests compare the bench byte for byte.
     /// </summary>
     internal sealed class PourHand
@@ -31,19 +30,22 @@ namespace LastCall.UI
         public Vector2 Rest { get; private set; }
         /// <summary>The DRAWN spout, pivot-relative, in the vessel's unrotated frame.</summary>
         public Vector2 Spout { get; private set; }
-        /// <summary>How far below the spout, along the vessel, the hand holds it.</summary>
+        /// <summary>How far below the spout, along the vessel, the grip reference sits.</summary>
         public float GripDepth { get; private set; }
-        /// <summary>Grip lift for a full tilt.</summary>
+        /// <summary>Pointer lift for a full tilt (the most; a press near the top gets less).</summary>
         public float LiftRange { get; private set; }
         /// <summary>Degrees the vessel leans at full lift (counter-clockwise leans left).</summary>
         public float MaxTilt { get; private set; }
 
         // ── where it is ───────────────────────────────────────────────────────
-        private Vector2 _w, _wv;                 // the grip, and its velocity (surface px)
+        private Vector2 _w, _wv;                 // the grip reference, and its velocity (surface px)
         private float _tilt, _tiltV;              // degrees, and degrees per second
-        private Vector2 _offset;                  // grip minus pointer at the press
-        private float _ax;                        // low-passed horizontal acceleration of the grip
-        private Vector2 _lastWv;
+        private Vector2 _p, _pv;                  // the hand: the pointer, followed on a spring
+        private Vector2 _hold;                    // the pressed point, grip-relative, in the unrotated frame
+        private Vector2 _holdPress;               // …as it was taken; _hold slides from it to the neck by level
+        private float _liftBase, _liftRange;      // pointer height where the lift starts, and its travel
+        private float _ax;                        // low-passed horizontal acceleration of the hand
+        private Vector2 _lastV;
 
         public bool Held { get; private set; }
         /// <summary>Standing exactly on its rest, upright and still.</summary>
@@ -52,14 +54,17 @@ namespace LastCall.UI
         public Vector2 GripPoint => _w;
 
         // ── tuning ────────────────────────────────────────────────────────────
-        private const float FollowOmega = 28f, FollowZeta = 0.75f;   // ~40 ms of lag, a hint of overshoot
-        private const float TiltOmega = 18f, TiltZeta = 0.62f;       // the lean catches up, and rocks once
+        private const float FollowOmega = 30f, FollowZeta = 0.85f;   // close behind the pointer, no overshoot to fight
+        private const float TiltOmega = 18f, TiltZeta = 0.7f;        // the lean catches up, and barely rocks
         private const float HomeOmega = 16f, HomeZeta = 0.9f;        // set down, not dropped
-        private const float SwingPerAccel = 0.010f;                  // degrees per px/s² of sideways push
-        private const float MaxSwing = 12f;
+        private const float SwingPerAccel = 0.006f;                  // degrees per px/s² of sideways push
+        private const float MaxSwing = 8f;
         private const float AccelSmoothing = 14f;                    // per second
+        /// <summary>The least lift a full tilt is spread over, however near the top it was taken.</summary>
+        public const float MinLiftRange = 110f;
+        private const float MaxReleaseSpeed = 1600f;                 // what a let-go carries into the walk home
 
-        /// <summary>The grip, vessel-relative: the spout less the grip depth along the vessel.</summary>
+        /// <summary>The grip reference, vessel-relative: the spout less the grip depth along the vessel.</summary>
         private Vector2 G => new Vector2(Spout.x, Spout.y - GripDepth);
         public Vector2 GripRest => Rest + G;
 
@@ -71,18 +76,31 @@ namespace LastCall.UI
         {
             Rest = rest; Spout = spout; GripDepth = gripDepth;
             LiftRange = Mathf.Max(liftRange, 1f); MaxTilt = maxTilt;
-            // Never let the bracket turn: d(spout.y)/d(lift) = 1 − g·sinθ·dθ/dlift must stay
-            // positive at every angle, or raising the hand lowers the mouth again.
             float maxG = MaxGripDepth(LiftRange, MaxTilt);
             if (GripDepth > maxG) GripDepth = maxG;
             if (!Held) SnapHome();
         }
 
-        public void Press(Vector2 pointer)
+        /// <summary>Takes hold of the vessel at <paramref name="pointer"/> (surface space).
+        /// <paramref name="ceiling"/> is the highest the pointer will be let go, so the lift a full
+        /// tilt takes can be fitted under it.</summary>
+        public void Press(Vector2 pointer, float ceiling = float.PositiveInfinity)
         {
             Held = true;
             AtRest = false;
-            _offset = _w - pointer;
+            _holdPress = Rotate(pointer - _w, -_tilt);
+            _hold = _holdPress;
+            _p = pointer;
+            _pv = Vector2.zero;
+            _lastV = Vector2.zero;
+            // THE WHOLE ROOM ABOVE THE PRESS (2026-09-13): past level the neck is in the hand, so a
+            // tall glass is poured by holding the hand over its rim — the lean is spread over the
+            // way from where the vessel was taken up to the surface's top (never less than
+            // LiftRange, never more than twice it), so there is still a lean to choose up there.
+            float room = float.IsInfinity(ceiling) ? LiftRange : ceiling - pointer.y;
+            _liftRange = Mathf.Max(Mathf.Min(MinLiftRange, LiftRange), Mathf.Clamp(room, LiftRange, LiftRange * 2f));
+            // A vessel caught mid-lean keeps its lean: the lift starts where that lean already is.
+            _liftBase = pointer.y - Unlean(_tilt, MaxTilt) * _liftRange;
         }
 
         public void Release() => Held = false;
@@ -90,7 +108,7 @@ namespace LastCall.UI
         /// <summary>Puts the vessel back on its rest this instant, upright and still.</summary>
         public void SnapHome()
         {
-            _w = GripRest; _wv = Vector2.zero; _lastWv = Vector2.zero; _ax = 0f;
+            _w = GripRest; _wv = Vector2.zero; _lastV = Vector2.zero; _ax = 0f;
             _tilt = 0f; _tiltV = 0f;
             AtRest = true;
             _restWritten = false;   // the next Apply puts it there, once
@@ -104,7 +122,7 @@ namespace LastCall.UI
 
         /// <summary>
         /// One frame. <paramref name="pointer"/> is the pointer in the surface's local space, or
-        /// null when there is none; <paramref name="bounds"/> is where the grip may go.
+        /// null when there is none; <paramref name="bounds"/> is where the hand may go.
         /// </summary>
         public void Step(float dt, Vector2? pointer, Rect bounds)
         {
@@ -112,45 +130,70 @@ namespace LastCall.UI
             if (dt <= 0f) return;
             if (dt > 1f / 30f) dt = 1f / 30f;
 
-            Vector2 target = Held && pointer.HasValue
-                ? new Vector2(Mathf.Clamp(pointer.Value.x + _offset.x, bounds.xMin, bounds.xMax),
-                              Mathf.Clamp(pointer.Value.y + _offset.y, bounds.yMin, bounds.yMax))
-                : Held ? _w : GripRest;
+            if (Held)
+            {
+                Vector2 target = pointer.HasValue
+                    ? new Vector2(Mathf.Clamp(pointer.Value.x, bounds.xMin, bounds.xMax),
+                                  Mathf.Clamp(pointer.Value.y, bounds.yMin, bounds.yMax))
+                    : _p;
+                if (Motion.Reduced)
+                {
+                    // No springs for a player who asked for less motion: the vessel is where the
+                    // hand is, at the angle the lift says.
+                    _p = target; _pv = Vector2.zero;
+                    _tilt = LeanAt(_p.y); _tiltV = 0f;
+                }
+                else
+                {
+                    _pv += (FollowOmega * FollowOmega * (target - _p) - 2f * FollowZeta * FollowOmega * _pv) * dt;
+                    _p += _pv * dt;
 
+                    // The body hangs from the hand, so a push sideways swings it: accelerate left
+                    // and the foot lags right, which leans the vessel left — toward the glass.
+                    Vector2 acc = (_pv - _lastV) / dt;
+                    _lastV = _pv;
+                    _ax = Mathf.Lerp(_ax, acc.x, 1f - Mathf.Exp(-AccelSmoothing * dt));
+                    float swing = Mathf.Clamp(-SwingPerAccel * _ax, -MaxSwing, MaxSwing);
+
+                    float tt = LeanAt(_p.y) + swing;
+                    _tiltV += (TiltOmega * TiltOmega * (tt - _tilt) - 2f * TiltZeta * TiltOmega * _tiltV) * dt;
+                    _tilt += _tiltV * dt;
+                }
+                // CARRIED BY WHERE IT WAS TAKEN, POURED FROM THE HAND (2026-09-13, second measure).
+                // Upright, the pressed point stays on the hand. As the vessel tips toward level the
+                // hold slides up it to the neck, and from level on the neck is in the hand — so the
+                // mouth pours where the pointer is. Holding by the label all the way round put the
+                // mouth ~230 units under the hand past level: under the tin's rim and far under a
+                // tall glass's, which the pour smoke tests measured as nothing poured at all.
+                _hold = _holdPress * (1f - Mathf.Clamp01(_tilt / KneeTilt));
+                Vector2 was = _w;
+                _w = _p - Rotate(_hold, _tilt);
+                _wv = Vector2.ClampMagnitude((_w - was) / dt, MaxReleaseSpeed);
+                return;
+            }
+
+            // Let go: the grip walks home and the vessel stands back up.
             if (Motion.Reduced)
             {
-                // No springs for a player who asked for less motion: the vessel is where the
-                // hand is, at the angle the height says, exactly as it was before any of this.
-                _w = target; _wv = Vector2.zero;
-                _tilt = Held ? TiltFor(_w) : 0f; _tiltV = 0f;
+                _w = GripRest; _wv = Vector2.zero;
+                _tilt = 0f; _tiltV = 0f;
             }
             else
             {
-                float om = Held ? FollowOmega : HomeOmega, ze = Held ? FollowZeta : HomeZeta;
-                _wv += (om * om * (target - _w) - 2f * ze * om * _wv) * dt;
+                _wv += (HomeOmega * HomeOmega * (GripRest - _w) - 2f * HomeZeta * HomeOmega * _wv) * dt;
                 _w += _wv * dt;
-
-                // The body hangs under the neck, so a push sideways swings it: accelerate left
-                // and the foot lags right, which leans the vessel left — toward the glass.
-                Vector2 acc = (_wv - _lastWv) / dt;
-                _lastWv = _wv;
-                _ax = Mathf.Lerp(_ax, acc.x, 1f - Mathf.Exp(-AccelSmoothing * dt));
-                float swing = Held ? Mathf.Clamp(-SwingPerAccel * _ax, -MaxSwing, MaxSwing) : 0f;
-
-                float tt = (Held ? TiltFor(_w) : 0f) + swing;
-                float tom = Held ? TiltOmega : HomeOmega, tze = Held ? TiltZeta : HomeZeta;
-                _tiltV += (tom * tom * (tt - _tilt) - 2f * tze * tom * _tiltV) * dt;
+                _tiltV += (HomeOmega * HomeOmega * (0f - _tilt) - 2f * HomeZeta * HomeOmega * _tiltV) * dt;
                 _tilt += _tiltV * dt;
             }
 
-            if (!Held && (_w - GripRest).sqrMagnitude < 0.0025f && _wv.sqrMagnitude < 0.25f
+            if ((_w - GripRest).sqrMagnitude < 0.0025f && _wv.sqrMagnitude < 0.25f
                 && Mathf.Abs(_tilt) < 0.05f && Mathf.Abs(_tiltV) < 0.5f)
                 SnapHome();
         }
 
-        /// <summary>The lean the grip's height asks for — the rule GDD 24 §2.2 wrote: higher
-        /// tips further.</summary>
-        private float TiltFor(Vector2 w) => Lean(Mathf.Clamp01((w.y - GripRest.y) / LiftRange), MaxTilt);
+        /// <summary>The lean the pointer's height asks for — GDD 24 §2.2: higher tips further.</summary>
+        private float LeanAt(float pointerY) =>
+            Lean(Mathf.Clamp01((pointerY - _liftBase) / Mathf.Max(1f, _liftRange)), MaxTilt);
 
         /// <summary>
         /// THE FIRST PART OF THE LIFT LAYS THE VESSEL LEVEL (2026-09-13). The pour runs only past
@@ -172,8 +215,19 @@ namespace LastCall.UI
                 : KneeTilt + (maxTilt - KneeTilt) * (f - KneeLift) / (1f - KneeLift);
         }
 
-        /// <summary>The deepest grip that keeps raising the hand raising the mouth at every angle
-        /// of <see cref="Lean"/>: its steepest degrees-per-unit of lift decides it.</summary>
+        /// <summary>The lift <see cref="Lean"/> needs for <paramref name="tilt"/>: its inverse.</summary>
+        public static float Unlean(float tilt, float maxTilt)
+        {
+            if (maxTilt <= 0f) return 0f;
+            float t = Mathf.Clamp(tilt, 0f, maxTilt);
+            if (maxTilt <= KneeTilt) return t / maxTilt;
+            return t <= KneeTilt
+                ? KneeLift * t / KneeTilt
+                : KneeLift + (1f - KneeLift) * (t - KneeTilt) / (maxTilt - KneeTilt);
+        }
+
+        /// <summary>The deepest grip reference that keeps the mouth moving the way the hand does
+        /// at every angle of <see cref="Lean"/>: its steepest degrees-per-unit of lift decides it.</summary>
         public static float MaxGripDepth(float liftRange, float maxTilt)
         {
             float lr = Mathf.Max(liftRange, 1f);

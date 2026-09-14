@@ -315,10 +315,14 @@ oyunu gibi tamamını silmek gerekecek"). The first cut rubbed a soft disc under
 which was neither where the rag is drawn nor the size of it. Core's `Wipe` — with Core's own
 refusals — is called only once next to nothing is left. Measured in play: one straight pass
 along the middle of a 96×36 mark takes half of it, and the edges and corners want going back
-for. The mark itself is drawn as GRIT rather than as shapes — 96×36 at one unit a pixel, a
-dotted ring, a speckled wash, a thinning smear and three splashes — because at the counter's
-2× grain a solid ring read as damage to the picture ("masadaki kir için küçük partiküller
-üretilebilir bu şekilde pixeller kalitesiz duruyor"). The rim crust on a glass took the same
+for. The mark itself is drawn as CLUMPS since 2026-09-13 (the author: "kir çok kötü, daha kalın
+kontraslı toplu parçaların olduğu bir dağınıklık olsun") — still 96×36 at one unit a pixel,
+but no longer grit: a sticky puddle in one of three drink tones (lit toward the room's light,
+deep along its near rim), two heaps of bar-snack crumbs off its ends, and a squeezed lime or
+lemon wedge or a screwed-up napkin in it, the whole heap ringed in two pixels of black. The
+grit of 2026-09-06 (a dotted ring, a speckled wash, a thinning smear and three splashes, drawn
+fine because a solid ring at the counter's 2× grain read as damage to the picture) read as
+noise on the slab. The rim crust on a glass took the same
 treatment (`GlassDecor.Speckles`, three times the pixels, grains instead of blocks).
 
 **THE BASIN CALLS THE HAND (same day: "bardak tutulduğunda lavaboya oyuncuyu

@@ -68,6 +68,20 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    slows back to nothing at level again (270°). The first 35% of the lift brings the bottle to
    level, the rest tips it to straight down. A thin pour draws a thin stream. The bottle (and the
    tin on the glass bench) is grabbed only on its drawn pixels.
+   **The point taken hold of stays under the pointer (2026-09-13, second pass — "şişenin
+   kontrolü çok zor ve mousedan çok ayrı bir yerde hareket ediyor").** The vessel used to turn
+   about a grip under its cap with the pointer's offset held fixed, so a bottle taken by its
+   label swung up to ~400 units off the cursor, and the lean was read off the grip's height in
+   a lift squeezed to 90 by the room over the neck. Now the vessel is CARRIED by the pressed
+   point — it stays under the pointer while upright — and as it tips toward level the hold
+   slides up to the neck, so from level on the neck is in the hand and the mouth pours where the
+   pointer is. The lean is read off how far the POINTER has risen since the press, spread over
+   the room from the press to the surface's top (at least 200 units for a bottle, 170 for the
+   tin, at most twice that). The hover glow is stilled while the vessel is held. The first cut
+   kept the label under the pointer all the way round, which put the mouth ~230 units under the
+   hand past level — the pour smoke tests poured nothing into the tin or the tall glass, so the
+   neck-in-hand half was added the same morning, and the tall-glass sweep reaches over the rim
+   (28 rows).
    **The neck it streams from is MEASURED (2026-08-11, the author: "sıvının çıkış yerini
    kapak olarak ayarla"):** the vessel in hand stands at the size its own drawing asks for
    and pours from its own cap, both read off the art rather than assumed at the top of the
@@ -95,9 +109,11 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    navigation rework runs on.
 8. **The bench reads as part of the counter, and the room is one click away (2026-09-13,
    the author).** The steps are a strip set into the counter's front (number, word, a tick
-   when done) with one reading line under it; the gauge is a 150×300 measuring glass whose
-   bands carry each bottle's small picture and name ("SHIRKOFF 30%"), with the total in
-   black-outlined white above the liquid, growing 16→24→32 as the glass fills. While a bench
+   when done) with one reading line under it; the gauge is the tin's own silhouette
+   (136×300; a measuring glass tried the same morning was sent back — "önceki shaker
+   silüetinde olmasını istiyordum"), its bands cut to the tin and named beside it with each
+   bottle's small picture ("SMIRKOFF 30%"), with the total in black-outlined white on the
+   liquid's surface, growing 16→24→32 as it fills. While a bench
    is up the room behind it sits under a night veil (alpha 0.5), and the guests' balloons
    shrink and narrow so they stay under the top bar. A click on the room above the counter
    band — nothing held — shuts the cellar and closes the bench with a 0.24 s fade and a small

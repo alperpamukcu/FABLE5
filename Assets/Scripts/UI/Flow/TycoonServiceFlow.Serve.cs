@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -91,6 +91,7 @@ namespace LastCall.UI
         /// <summary>The hand on the tin (PourHand, 2026-09-11): the neck grip that lets a tall
         /// glass be poured, the weight, and the walk home when it is let go.</summary>
         private readonly PourHand _serveHand = new PourHand();
+        private HoverGlow _serveGlow;            // the tin's glow, stilled while the hand holds it
         /// <summary>How far below the drawn spout the hand holds the tin, and how much grip lift
         /// tips it fully. Measured against the 420 highball: the tin's spout clears the drawn rim
         /// from the first pouring angle to full tilt, over ~116 units of hand travel (was 10).</summary>
@@ -238,6 +239,13 @@ namespace LastCall.UI
         {
             if (Mouse.current == null) return;
             if (_serveGrabbed && !Mouse.current.leftButton.isPressed) { _serveGrabbed = false; _serveHand.Release(); }
+            // Held, the glow lets go — see the shaker bench's bottle (2026-09-13).
+            if (_serveGlow != null)
+            {
+                _serveGlow.Rise = _serveGrabbed ? 0f : 4f;
+                _serveGlow.Sway = _serveGrabbed ? 0f : 1.4f;
+                _serveGlow.Grow = _serveGrabbed ? 1f : 1.04f;
+            }
 
             // The hand moves every frame, held or not: let go and the tin walks itself home.
             Vector2? pointer = null;
@@ -433,18 +441,22 @@ namespace LastCall.UI
             // The box is FLUSH with the measured cavity — the metaball surface is built
             // to touch its box, so contact needs no overshoot (the seam of 2026-08-02
             // came from an INSET box; the spills came from overshooting). The ceiling
-            // sits 3 art px BELOW the cavity top: the surface is a bumpy band, not a
+            // sits PoolCeilingArtPx BELOW the cavity top: the surface is a bumpy band, not a
             // line, and those bumps must crest inside the mouth, not over the lip.
-            // ...less HALF an art pixel a side: the field's edge smoothing bleeds that
-            // far past the box (the author, 2026-08-02: "çok çok az taşma kaldı").
+            // FLUSH, NOT HALF A PIXEL IN (2026-09-13, the author: "dökme animasyonunda
+            // bardaklar tam dolmuyor"): the half pixel a side left the outermost see-through
+            // column of the rocks glass dry; the wall's own pixels take the edge's bleed.
             float artPx = piece.Sprite != null ? w / piece.Sprite.rect.width : 1.5f;
-            float iw = w * 0.5f * piece.InteriorHalf - 0.5f * artPx;
+            float iw = w * 0.5f * piece.InteriorHalf;
             float floor = c.y - h * 0.5f + h * piece.FloorY;
             float rim = c.y - h * 0.5f + h * piece.RimY - GlassArt.PoolCeilingArtPx * artPx;
             _serveFluid.SetFloorArc(piece.FloorArc * h);   // the floor's near arc, not a line
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
             // The drink is drawn in the glass's own pixels, counted from the drawing's corner.
             _serveFluid.SetPixelGrid(artPx, new Vector2(c.x - w * 0.5f, c.y - h * 0.5f));
+            // The top face rides the pour (2026-09-13): it was placed once, when the glass
+            // appeared, and a full glass kept the face it had at the first drop.
+            PlaceServeSurface(piece, (float)run.ServingGlass.FillFraction);
         }
 
         /// <summary>
@@ -719,6 +731,7 @@ namespace LastCall.UI
             var serveGlow = _serveShaker.gameObject.AddComponent<HoverGlow>();
             serveGlow.Graphics = new Graphic[] { _serveShakerBody };
             serveGlow.Rise = 4f; serveGlow.Sway = 1.4f; serveGlow.Grow = 1.04f; serveGlow.Halo = 1.3f;
+            _serveGlow = serveGlow;
             var serveTin = ItemArt.Load("tin_open") ?? ItemArt.Shaker;
             if (serveTin != null)
             {
@@ -778,7 +791,7 @@ namespace LastCall.UI
                 if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                         _serveSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
                     held = _serveHand.GripPoint;
-                _serveHand.Press(held);
+                _serveHand.Press(held, _serveSurface.rect.height * 0.5f - 20f);
             Sfx.Play("tin_tip", 0.6f);
             });
             _serveShaker.gameObject.AddComponent<EventTrigger>().triggers.Add(sgrab);

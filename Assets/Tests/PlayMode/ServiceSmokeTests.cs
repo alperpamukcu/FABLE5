@@ -327,7 +327,10 @@ namespace LastCall.PlayTests
             yield return new WaitForSecondsRealtime(0.1f);
             int rowsThatPoured = 0;
             float maxLean = 0f, maxMove = 0f;
-            for (int row = 0; row < 14; row++)
+            // 28 rows, not 14 (2026-09-13): past level the neck is in the hand now (PourHand), so
+            // the tin pours into the tall glass with the HAND over the rim — the rows have to reach
+            // up there, where before they only had to lift a grip that rode 250 units above them.
+            for (int row = 0; row < 28; row++)
             {
                 float y = start.y + 15f + row * 15f;
                 double before = run.ServingGlass.TotalVolume;

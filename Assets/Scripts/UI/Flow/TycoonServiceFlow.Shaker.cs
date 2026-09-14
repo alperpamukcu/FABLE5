@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -48,6 +48,7 @@ namespace LastCall.UI
         /// the walk home. The bottle used to snap to the cursor and was left hanging, tipped,
         /// wherever it was let go.</summary>
         private readonly PourHand _bottleHand = new PourHand();
+        private HoverGlow _pourGlow;             // the bottle's glow, stilled while the hand holds it
         private const float BottleGripDepth = 60f;
         private bool _pouring;
         private const float LiftRange = 200f;  // px of lift for a full tilt
@@ -466,12 +467,12 @@ namespace LastCall.UI
         /// üstünde olsun ve doluluk miktarına göre sayısı o barın üstünde büyüsün, o sayının
         /// tipi siyah kenarlıklı içi beyaz olacak").
         ///
-        /// Each bottle that went in is a band of its own liquid colour, as before — and it is
-        /// NAMED IN ITS BAND now, with the bottle's own small picture, rather than by a caption
-        /// hung in the air beside the column with a hairline back to it. The vessel's reading
-        /// rides the liquid: the figure stands on the surface, white ringed in black, and grows
-        /// a size as the vessel fills (16, 24, 32 — the faces' own multiples), so how full it is
-        /// reads from across the bench before a word of it is read.
+        /// Each bottle that went in is a band of its own liquid colour, CUT TO THE TIN'S
+        /// SILHOUETTE — and it is named BESIDE the tin at its band's height, with the bottle's
+        /// own small picture, on the rig's Labels rect outside the silhouette's mask, where the
+        /// taper cannot cut a word in half. The vessel's reading rides the liquid: the figure
+        /// stands on the surface, white ringed in black, and grows a size as the vessel fills
+        /// (16, 24, 32 — the faces' own multiples).
         ///
         /// One drawing for both benches: the tin's measure and the glass's are the same object
         /// with different contents.
@@ -479,7 +480,11 @@ namespace LastCall.UI
         private void FillGauge(RectTransform bar, GlassContents glass, TycoonRun run, bool labelsLeft)
         {
             foreach (Transform child in bar) Destroy(child.gameObject);
-            float h = bar.rect.height, w = bar.rect.width, y = 0f;
+            // bore → Cavity (the mask) → the rig, which carries the labels and the reading.
+            var rig = bar.parent != null ? bar.parent.parent as RectTransform : null;
+            var host = rig != null ? rig.Find("Labels") as RectTransform : null;
+            if (host != null) foreach (Transform child in host) Destroy(child.gameObject);
+            float h = bar.rect.height, y = 0f;
             foreach (var id in glass.Ingredients)
             {
                 var card = run.Shelf.Find(id)?.Ingredient;
@@ -499,36 +504,23 @@ namespace LastCall.UI
                     mimg.color = Color.Lerp(tone, UITheme.Cream[4], 0.55f);
                     mimg.raycastTarget = false;
                 }
-                // WHAT IT IS, in the band: a band too thin to hold its picture is a colour.
-                if (segH >= 14f && card != null)
-                {
-                    float iconH = Mathf.Min(30f, segH - 2f), iconW = iconH * 0.55f;
-                    var icon = NewRect("Icon", seg);
-                    Place(icon, new Vector2(0f, 0.5f), new Vector2(iconW, iconH), new Vector2(5f, 0f));
-                    var iimg = icon.gameObject.AddComponent<Image>();
-                    iimg.sprite = ItemArt.Bottle(card);
-                    iimg.preserveAspect = true;
-                    iimg.raycastTarget = false;
-                    iimg.enabled = iimg.sprite != null;
-                    var name = NewText("Name", seg, _body, 8, TextAnchor.MiddleLeft, Color.white);
-                    Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(w - iconW - 12f, 12f),
-                        new Vector2(iconW + 9f, 0f));
-                    name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    Outlined(name, 1f);
-                    name.text = $"{(card.Name ?? id).ToUpperInvariant().Split(' ')[0]} {share:P0}";
-                }
+                // WHAT IT IS, beside it: a band too thin to hold a line of type is a colour.
+                if (host != null && card != null && segH >= 11f)
+                    GaugeLabel(host, y, segH, labelsLeft, card,
+                        $"{(card.Name ?? id).ToUpperInvariant().Split(' ')[0]} {share:P0}");
                 y += segH;
             }
 
             // THE READING, ON THE SURFACE.
-            var totalRt = bar.parent != null ? bar.parent.Find("Total") as RectTransform : null;
+            var totalRt = rig != null ? rig.Find("Total") as RectTransform : null;
             var total = totalRt != null ? totalRt.GetComponent<Text>() : null;
             if (total != null)
             {
                 float fill = Mathf.Clamp01((float)glass.FillFraction);
                 total.fontSize = fill < 0.34f ? 16 : fill < 0.67f ? 24 : 32;
                 total.text = Mathf.RoundToInt(fill * 100f) + "%";
-                totalRt.anchoredPosition = new Vector2(0f, bar.offsetMin.y + y + 4f);
+                float boreFoot = rig.rect.height * (1f - ChromeArt.ShakerGaugeCavity.y);
+                totalRt.anchoredPosition = new Vector2(0f, boreFoot + y + 4f);
             }
         }
 
@@ -545,20 +537,57 @@ namespace LastCall.UI
             return seg;
         }
 
-        // ── THE MEASURE STANDS ON THE COUNTER (2026-09-13) ──────────────────────
+        /// <summary>A band's name, out in the air beside the tin level with the band: the
+        /// bottle's small picture against the tin, the outlined name and share past it.</summary>
+        private void GaugeLabel(RectTransform host, float y, float segH, bool onLeft,
+                                IngredientCard card, string text)
+        {
+            float side = onLeft ? 0f : 1f, sign = onLeft ? -1f : 1f;
+            float mid = y + segH * 0.5f;
+            float iconH = Mathf.Min(22f, segH), iconW = 12f;
+
+            var icon = NewRect("Icon", host);
+            icon.anchorMin = icon.anchorMax = new Vector2(side, 0f);
+            icon.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
+            icon.sizeDelta = new Vector2(iconW, iconH);
+            icon.anchoredPosition = new Vector2(sign * GaugeLabelGap, mid);
+            var iimg = icon.gameObject.AddComponent<Image>();
+            iimg.sprite = ItemArt.Bottle(card);
+            iimg.preserveAspect = true;
+            iimg.raycastTarget = false;
+            iimg.enabled = iimg.sprite != null;
+
+            var label = NewText("L", host, _body, 8,
+                onLeft ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft, Color.white);
+            var rt = label.rectTransform;
+            rt.anchorMin = rt.anchorMax = new Vector2(side, 0f);
+            rt.pivot = new Vector2(onLeft ? 1f : 0f, 0.5f);
+            rt.sizeDelta = new Vector2(170f, 12f);
+            rt.anchoredPosition = new Vector2(sign * (GaugeLabelGap + iconW + 4f), mid);
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            label.raycastTarget = false;
+            Outlined(label, 1f);
+            label.text = text;
+        }
+
+        // ── THE MEASURE IS THE TIN AGAIN (2026-09-13, second pass) ──────────────
         //
-        // The standing gauge was a small tin outline floating over the room at the right,
-        // 96 by 212, its captions in 8px in the air beside it. The author asked for the gauge
-        // to be bigger, to belong to the scene rather than float over it, and to say which
-        // bottle is which: so it is a MEASURING GLASS standing on the counter like the tin and
-        // the bottle do — its foot on the props' own line, a shadow under it, a pale glass body
-        // with lit walls and a graduation every tenth, the drink standing inside it in bands.
+        // The author: "Yeni doluluk göstergesini beğenmedim, önceki shaker silüetinde olmasını
+        // istiyordum." The measuring glass of the morning is gone and the silhouette traced off
+        // the tin's own art is back (ChromeArt.ShakerOutline / ShakerSolid) — at the size the
+        // measure grew to, with the contents it gained: bands cut to the tin, each named beside
+        // it with its bottle's picture, and the growing outlined figure on the surface.
 
-        /// <summary>Where the measure stands on both benches (panel-centred): its foot on the
-        /// bench line the props stand on, right of the work, inside the working area.</summary>
+        /// <summary>Where the measure stands on both benches (panel-centred), right of the work.</summary>
         private static readonly Vector2 MeasureAt = new Vector2(485f, -87f);
-        private static readonly Vector2 MeasureSize = new Vector2(150f, 300f);
+        /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
+        private static readonly Vector2 MeasureSize = new Vector2(136f, 300f);
 
+        /// <summary>
+        /// The standing measure: the shaker in outline with the drink cut to its silhouette.
+        /// Returns the BORE — the rect the contents are stacked in, the tin's collar to its
+        /// floor — so <see cref="FillGauge"/> never has to know how the instrument is built.
+        /// </summary>
         private RectTransform BuildStandingGauge(RectTransform panel, Vector2 at,
                                                  Vector2 size, string head)
         {
@@ -569,60 +598,58 @@ namespace LastCall.UI
             catcher.color = new Color(0f, 0f, 0f, 0.001f);
             rig.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
 
-            Image Slab(string name, Vector2 aMin, Vector2 aMax, Vector2 oMin, Vector2 oMax, Color c)
-            {
-                var rt = NewRect(name, rig);
-                Stretch(rt, aMin, aMax, oMin, oMax);
-                var img = rt.gameObject.AddComponent<Image>();
-                img.color = c;
-                img.raycastTarget = false;
-                return img;
-            }
+            // The contents first and the outline over them, CUT TO THE SILHOUETTE: the mask is
+            // the outline's own silhouette, so the two never disagree about where the wall is.
+            var maskRt = NewRect("Cavity", rig);
+            Stretch(maskRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var mimg = maskRt.gameObject.AddComponent<Image>();
+            mimg.sprite = ItemArt.Load("gauge_tin_solid") ?? ChromeArt.ShakerSolid((int)size.x, (int)size.y);
+            mimg.preserveAspect = true;
+            mimg.raycastTarget = false;
+            maskRt.gameObject.AddComponent<Mask>().showMaskGraphic = false;
 
-            // On the counter: the shadow first, under the foot.
-            Slab("Shadow", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(-14f, -7f), new Vector2(14f, 5f),
-                 new Color(0f, 0f, 0f, 0.32f));
-            // The glass: a pale body, two lit walls, a heavy foot and a rim.
-            Slab("Body", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, new Color(0.78f, 0.87f, 1f, 0.10f));
-            Slab("WallL", new Vector2(0f, 0f), new Vector2(0f, 1f), Vector2.zero, new Vector2(3f, 0f), new Color(1f, 1f, 1f, 0.38f));
-            Slab("WallR", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(-3f, 0f), Vector2.zero, new Color(1f, 1f, 1f, 0.26f));
-            Slab("Foot", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(-6f, 0f), new Vector2(6f, 7f), new Color(1f, 1f, 1f, 0.45f));
-            Slab("Rim", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(-3f, -4f), new Vector2(3f, 0f), new Color(1f, 1f, 1f, 0.55f));
+            // The tin's dark inside, so an empty measure reads as an empty tin and not as a hole.
+            var inside = NewRect("Inside", maskRt);
+            Stretch(inside, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var inImg = inside.gameObject.AddComponent<Image>();
+            inImg.color = new Color(0.03f, 0.02f, 0.05f, 0.55f);
+            inImg.raycastTarget = false;
 
-            // The drink stands in the bore, cut to it.
-            var bore = NewRect("MixSegs", rig);
-            Stretch(bore, Vector2.zero, Vector2.one, new Vector2(5f, 8f), new Vector2(-5f, -14f));
-            bore.gameObject.AddComponent<RectMask2D>();
+            var cavity = ChromeArt.ShakerGaugeCavity;    // top / bottom, as fractions from the top
+            var bore = NewRect("MixSegs", maskRt);
+            Stretch(bore, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
+                    Vector2.zero, Vector2.zero);
+            // The names live OUTSIDE the mask, on a rect with the bore's anchors.
+            var labels = NewRect("Labels", rig);
+            Stretch(labels, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
+                    Vector2.zero, Vector2.zero);
 
-            // A graduation every tenth on the left wall, a long one at the half, over the drink.
-            float boreH = size.y - 8f - 14f;
-            for (int i = 1; i < 10; i++)
-                Slab("Tick" + i, new Vector2(0f, 0f), new Vector2(0f, 0f),
-                     new Vector2(3f, 8f + boreH * i / 10f), new Vector2(3f + (i == 5 ? 22f : 11f), 9f + boreH * i / 10f),
-                     new Color(1f, 1f, 1f, i == 5 ? 0.55f : 0.35f));
-            // The glass's sheen down the front, over the drink.
-            Slab("Sheen", new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(14f, 18f), new Vector2(19f, -24f),
-                 new Color(1f, 1f, 1f, 0.12f));
+            var shell = NewRect("Outline", rig);
+            Stretch(shell, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var simg = shell.gameObject.AddComponent<Image>();
+            simg.sprite = ItemArt.Load("gauge_tin") ?? ChromeArt.ShakerOutline((int)size.x, (int)size.y);
+            simg.preserveAspect = true;
+            simg.raycastTarget = false;
 
             // The reading: white, ringed in black, standing on the surface (FillGauge moves it).
             var total = NewText("Total", rig, _display, 16, TextAnchor.LowerCenter, Color.white);
             total.rectTransform.anchorMin = total.rectTransform.anchorMax = new Vector2(0.5f, 0f);
             total.rectTransform.pivot = new Vector2(0.5f, 0f);
             total.rectTransform.sizeDelta = new Vector2(size.x + 90f, 40f);
-            total.rectTransform.anchoredPosition = new Vector2(0f, 12f);
+            total.rectTransform.anchoredPosition = new Vector2(0f, size.y * (1f - cavity.y) + 4f);
             total.horizontalOverflow = HorizontalWrapMode.Overflow;
             total.verticalOverflow = VerticalWrapMode.Overflow;
             total.raycastTarget = false;
             Outlined(total, 2f);
             total.text = "0%";
 
-            // Which vessel it measures, cut into the counter under its foot.
+            // Which vessel it measures, under the tin's foot.
             var label = NewText("Head", rig, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
             label.rectTransform.anchorMin = new Vector2(0, 0);
             label.rectTransform.anchorMax = new Vector2(1, 0);
             label.rectTransform.pivot = new Vector2(0.5f, 1);
-            label.rectTransform.offsetMin = new Vector2(0, -24);
-            label.rectTransform.offsetMax = new Vector2(0, -12);
+            label.rectTransform.offsetMin = new Vector2(0, -16);
+            label.rectTransform.offsetMax = new Vector2(0, -4);
             label.text = head;
             label.raycastTarget = false;
             var cut = label.gameObject.AddComponent<Shadow>();
@@ -828,6 +855,15 @@ namespace LastCall.UI
                 _bottleGrabbed = false;
                 _bottleHand.Release();
             }
+            // HELD, THE GLOW LETS GO (2026-09-13): its rise, sway and grow moved the drawing under
+            // a hand trying to hold it still, and a tilt that carried the steel off the pointer
+            // dropped the glow mid-pour. It eases back when the bottle is let go.
+            if (_pourGlow != null)
+            {
+                _pourGlow.Rise = _bottleGrabbed ? 0f : 4f;
+                _pourGlow.Sway = _bottleGrabbed ? 0f : 1.4f;
+                _pourGlow.Grow = _bottleGrabbed ? 1f : 1.05f;
+            }
 
             // The hand moves every frame, held or not: let go and the bottle goes home.
             Vector2? pointer = null;
@@ -1027,12 +1063,10 @@ namespace LastCall.UI
         private void ConfigureBottleHand()
         {
             if (_pourBottle == null) return;
-            float clampTop = _pourSurface.rect.height * 0.5f - 20f;
-            float g = BottleGripDepth;
-            float lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
-            g = Mathf.Min(g, PourHand.MaxGripDepth(lr, MaxTilt));
-            lr = Mathf.Clamp(clampTop - 10f - (_bottleRest.y + _pourMouth.y - g), 90f, LiftRange);
-            _bottleHand.Configure(_bottleRest, _pourMouth, g, lr, MaxTilt);
+            // THE LIFT IS THE POINTER'S NOW (2026-09-13, PourHand): the room over a bottle's neck
+            // no longer squeezes it to 90, so every bottle gets the whole LiftRange, fitted under
+            // the surface's top when it is taken.
+            _bottleHand.Configure(_bottleRest, _pourMouth, BottleGripDepth, LiftRange, MaxTilt);
             _bottleHand.Apply(_pourBottle);
         }
 
@@ -1928,7 +1962,7 @@ namespace LastCall.UI
                     if (Mouse.current == null || !RectTransformUtility.ScreenPointToLocalPointInRectangle(
                             _pourSurface, Mouse.current.position.ReadValue(), null, out Vector2 held))
                         held = _bottleHand.GripPoint;
-                    _bottleHand.Press(held);
+                    _bottleHand.Press(held, _pourSurface.rect.height * 0.5f - 20f);
                 }
             Sfx.Play("bottle_set", 0.45f);   // lifted off the wood
             });
@@ -1937,6 +1971,7 @@ namespace LastCall.UI
             bottleGlow.Graphics = new Graphic[] { _pourBottleBody };
             bottleGlow.Riser = _pourVessel;      // the drawing, not the grab plate
             bottleGlow.Rise = 4f; bottleGlow.Sway = 1.4f; bottleGlow.Grow = 1.05f;
+            _pourGlow = bottleGlow;
             _benchProps.Add(_pourBottle.gameObject.AddComponent<CanvasGroup>());
 
             // 13 → 16: pinned to the pixel faces' 8px grid (CLAUDE.md), like every other

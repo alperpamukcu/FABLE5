@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -453,7 +453,7 @@ namespace LastCall.UI
                 // simply travels with them, which is the whole ask.
                 if (v.Exiting)
                 {
-                    v.Say.anchoredPosition = new Vector2(0f, CharWinH + TagLift);
+                    v.Say.anchoredPosition = new Vector2(HeadX(v), SayHomeY(v));
                     if (v.SayTail != null)
                     {
                         v.SayTail.rectTransform.anchoredPosition = new Vector2(0f, 2f);
@@ -510,9 +510,9 @@ namespace LastCall.UI
             {
                 v.Say.localScale = Vector3.one * sayScale;
                 float w = v.Say.sizeDelta.x * sayScale, h = v.Say.sizeDelta.y * sayScale;
-                float rootX = v.Root.anchoredPosition.x;
+                float rootX = v.Root.anchoredPosition.x + HeadX(v);
                 float homeY = v.Say.anchoredPosition.y;   // the row it stands on
-                float baseY = CharWinH + TagLift;
+                float baseY = SayHomeY(v);
                 if (homeY < baseY - 0.5f || homeY > baseY + 400f) homeY = baseY;
                 homeY = baseY;
                 // BANT, BALONUN KENDİ ORİJİNİNDE (2026-09-08, ölçülerek düzeltildi). İlk
@@ -603,7 +603,7 @@ namespace LastCall.UI
                         dy -= (inHud.y - roof) / unit;
                     }
                 }
-                v.Say.anchoredPosition = new Vector2(dx, homeY + dy);
+                v.Say.anchoredPosition = new Vector2(HeadX(v) + dx, homeY + dy);
                 placed.Add(new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h));
                 // The tail: over the head, on the balloon's underside. It used to grow with
                 // the climb so a raised balloon still pointed at its drinker; with the
@@ -845,7 +845,7 @@ namespace LastCall.UI
                 // is pushed clear of the board and no further; every other stool is untouched.
                 if (v.DirtyProp != null)
                     v.DirtyProp.anchoredPosition =
-                        new Vector2(ClearOfTheBoard(v.SeatX, v.DirtyProp.rect.width),
+                        new Vector2(ClearOfTheBoard(v.SeatX + v.DirtyX, v.DirtyProp.rect.width),
                                     CounterLineY - 36f + CounterLift);
                 foreach (var mk in v.Marks)
                 {
@@ -866,6 +866,30 @@ namespace LastCall.UI
             float edge = _hudRoot.rect.width * 0.5f + BookPropX + boardHalf;
             return Mathf.Max(x, edge + width * 0.5f + 4f);
         }
+
+        // ── ON THE HEAD, EXACTLY (2026-09-13) ───────────────────────────────────
+        // The author: "bardak da müşterilerin kafa hizasında olsun tam olarak". Everything a
+        // drinker owns on the counter and over it — the empty, its mess, the ticket, the
+        // balloon — hung off the MIDDLE of their canvas, and a figure is stood on that canvas by
+        // its feet: a head that leans, or a body drawn a little to one side, is not in the
+        // middle. These hang off the head itself, measured off the art (MeasureHeadX).
+
+        /// <summary>The drinker's head across, in the seat's own units (0 is the stool's middle).
+        /// A mirrored body mirrors it.</summary>
+        private static float HeadX(SeatView v)
+        {
+            if (v == null || v.Look == null) return 0f;
+            return v.Body != null && v.Body.flipX ? -v.Look.HeadX : v.Look.HeadX;
+        }
+
+        /// <summary>Where the balloon rests over this drinker: on their own head, where the ticket
+        /// rests — not at one height for every figure in the cast.</summary>
+        private float SayHomeY(SeatView v) => (v.Look != null ? v.Look.HeadTop : CharWinH) + TagLift;
+
+        /// <summary>How small a carried empty gets by the time it is over the basin, and where the
+        /// basin is (the sink's foot at stage 68.5 plus half its 35-pixel art).</summary>
+        private const float CarryShrink = 0.72f, CarrySinkStageY = 86f;
+        private float _glassCarryFromY;
 
         private void BuildSnackRow(RectTransform root)
         {
@@ -1503,7 +1527,9 @@ namespace LastCall.UI
         // empties on it looked like a bar with toys on it. It stands a little smaller than
         // the working glass because it is on the far side of the counter, not because it is
         // a different object.
-        private const float EmptyGlassHeight = 96f;
+        // A LITTLE SMALLER (2026-09-13, the author: "masada müşterilerin bıraktığı bardakların
+        // boyutunu biraz küçültelim"): 96 stood the empties nearly as tall as the working glass.
+        private const float EmptyGlassHeight = 80f;
 
         /// <summary>What is left of a mark, as a share of the ink it started with, below which
         /// the counter calls it clean. Not zero: chasing the last few translucent pixels of a
@@ -1854,6 +1880,10 @@ namespace LastCall.UI
             _glassCarryImg.sprite = art;
             _glassCarryImg.color = art != null ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.8f, 0.9f, 0.95f, 0.5f);
             if (_sinkFadeRt == _glassCarry) { _sinkFadeRt = null; _sinkFadeImg = null; }   // picked up mid-sink
+            // THE SAME GLASS IN THE HAND (2026-09-13): the size it stood at on the counter, not a
+            // 34x52 stand-in that visibly shrank the moment it was lifted.
+            _glassCarry.sizeDelta = from != null ? from.sizeDelta : new Vector2(34, 52);
+            _glassCarry.localScale = Vector3.one;
             _glassCarrying = true;
             _glassCarry.gameObject.SetActive(true);
             _glassCarry.SetAsLastSibling();
@@ -1869,6 +1899,7 @@ namespace LastCall.UI
                 _glassCarry.anchoredPosition = start;
                 _emptyGrabOffset = start - held;
             }
+            _glassCarryFromY = _glassCarry.anchoredPosition.y;
         }
 
         private void StepGlassCarry(TycoonRun run)
@@ -1879,6 +1910,13 @@ namespace LastCall.UI
             var screen = mouse.position.ReadValue();
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_hudRoot, screen, null, out Vector2 at))
                 _glassCarry.anchoredPosition = at + _emptyGrabOffset;
+            // SMALLER AS IT GOES DOWN TO THE COUNTER (2026-09-13, the author: "grablerken boyu
+            // tezgaha yaklaştıkça küçülsün"): full size where it was lifted, CarryShrink over the
+            // basin — the scale the sink's own swallow then starts from.
+            float sinkY = (CarrySinkStageY - StageRef.y * 0.5f) * StageToHud;
+            float down = Mathf.InverseLerp(_glassCarryFromY, sinkY, _glassCarry.anchoredPosition.y);
+            float shrink = Mathf.Lerp(1f, CarryShrink, down);
+            _glassCarry.localScale = new Vector3(shrink, shrink, 1f);
             if (mouse.leftButton.isPressed) return;
             // BY THE GLASS, NOT ONLY THE FINGER (2026-09-06, the author: "müşterilerin
             // içtiği bardak lavaboya sürüklenmiyor"). Since the hand keeps its grip, the
@@ -3605,7 +3643,7 @@ namespace LastCall.UI
                             // left, scattered around where they were sitting. The scatter is
                             // hashed off the stool and the mark's number, so a mark does not
                             // jump about between frames or between one visit and the next.
-                            if (g.HasGlass) { if (v.Dirty == null) v.Dirty = g; }
+                            if (g.HasGlass) { if (v.Dirty == null) { v.Dirty = g; v.DirtyX = HeadX(v); } }
                             else if (v.Marks.Count < 3)
                             {
                                 int n = v.Marks.Count;
@@ -3614,7 +3652,7 @@ namespace LastCall.UI
                                 {
                                     Mess = g,
                                     Seed = seed,
-                                    Dx = ((seed * 37 % 61) - 30) * 1.8f + 4f,
+                                    Dx = ((seed * 37 % 61) - 30) * 1.8f + 4f + HeadX(v),
                                     Dy = ((seed * 53 % 17) - 8) * 1.1f,
                                 });
                             }
@@ -3653,9 +3691,9 @@ namespace LastCall.UI
                         if (v.Visit == houseGuest && v.Look != written)
                         {
                             v.Look = written;
-                            v.Tag.anchoredPosition = new Vector2(0, written.HeadTop + TagLift);
+                            v.Tag.anchoredPosition = new Vector2(written.HeadX, written.HeadTop + TagLift);
                             if (v.Gauge != null)
-                                v.Gauge.anchoredPosition = new Vector2(0, written.HeadTop + 6f);
+                                v.Gauge.anchoredPosition = new Vector2(written.HeadX, written.HeadTop + 6f);
                         }
             }
 
@@ -3696,9 +3734,9 @@ namespace LastCall.UI
                         v.Look = LookFor(visit);
                         if (v.Look != null)
                         {
-                            v.Tag.anchoredPosition = new Vector2(0, v.Look.HeadTop + TagLift);
+                            v.Tag.anchoredPosition = new Vector2(v.Look.HeadX, v.Look.HeadTop + TagLift);
                             if (v.Gauge != null)
-                                v.Gauge.anchoredPosition = new Vector2(0, v.Look.HeadTop + 6f);
+                                v.Gauge.anchoredPosition = new Vector2(v.Look.HeadX, v.Look.HeadTop + 6f);
                         }
                         v.Root.gameObject.SetActive(true);
                         Sfx.Play("door", 0.5f);   // someone through the door (P17)
@@ -3810,10 +3848,12 @@ namespace LastCall.UI
                     string star = visit.ExtraOrdersTaken > 0
                         ? $"<color=#8F5A1E>x{visit.ExtraOrdersTaken + 1} </color>" : "";
                     view.Name.supportRichText = true;
-                    // The name off their PAPERS, which is the name their licence prints —
-                    // see NameOn. The ticket is where the card is remembered once it is shut.
-                    view.Name.text = known && !deciding
-                        ? star + NameOn(visit, view.Look) : "";
+                    // NO NAME OVER THE HEAD (2026-09-13, the author: "müşterilerin ismi kafa
+                    // hizasında olmasın, talepleri biraz daha ön plana çıksın"). The name is on
+                    // the licence and in the book; over the head the ticket says the drink, and
+                    // the round count rides in front of it.
+                    view.Name.text = "";
+                    view.Order.supportRichText = true;
 
                     // THE ORDER ARRIVES AS SPEECH (2026-08-19, the author: "yazılar konuşma
                     // metni gibi harf harf gelecek"). The clock starts on the EDGE of the
@@ -3886,7 +3926,7 @@ namespace LastCall.UI
                     {
                         // Read: the name above, the order below — the card said the rest.
                         view.Wants.text = "";
-                        view.Order.text = wanted.Substring(0, said);
+                        view.Order.text = star + wanted.Substring(0, said);
                     }
 
                     // THE ICON ROW comes up only once the order has finished being SAID. The
@@ -3913,8 +3953,11 @@ namespace LastCall.UI
                     float textW = cardW - TagPad * 2f;
 
                     // The order is the line that runs long, so it is the one allowed to wrap.
+                    // A unit of slack (2026-09-13): the card is sized to the order's own width, so a
+                    // one-line order measured a hair over textW and counted as two — an empty row
+                    // between the drink and its icons (measured in play with the order at 16 bold).
                     int orderLines = view.Order.text.Length == 0 ? 0
-                        : Mathf.Max(1, Mathf.CeilToInt(view.Order.preferredWidth / Mathf.Max(1f, textW)));
+                        : Mathf.Max(1, Mathf.CeilToInt((view.Order.preferredWidth - 1f) / Mathf.Max(1f, textW)));
                     view.Order.horizontalOverflow = orderLines > 1
                         ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
 
@@ -4352,8 +4395,38 @@ namespace LastCall.UI
                 _looks.Add(new PatronLook
                 { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face,
                   Stars = entry.Stars,
-                  HoldRight = entry.HoldRight, HoldLeft = entry.HoldLeft });
+                  HoldRight = entry.HoldRight, HoldLeft = entry.HoldLeft,
+                  HeadX = MeasureHeadX(clips[PatronClip.Idle][0], entry.HeadY) });
             }
+        }
+
+        /// <summary>
+        /// Where a person's head is ACROSS, in HUD units from their sprite's pivot — the same
+        /// measurement HeadY is, taken the other way (2026-09-13): the opaque pixels in the
+        /// head's top rows of the idle frame, averaged. Zero when the frame cannot be read.
+        /// </summary>
+        private static float MeasureHeadX(Sprite frame, float headY)
+        {
+            if (frame == null || frame.texture == null || !frame.texture.isReadable) return 0f;
+            var rect = frame.rect;
+            int w = Mathf.RoundToInt(rect.width), h = Mathf.RoundToInt(rect.height);
+            if (w <= 0 || h <= 0) return 0f;
+            float perCanvas = h / CharCanvas;                 // texels per rig-canvas pixel
+            int top = Mathf.RoundToInt(headY * perCanvas);
+            int rows = Mathf.Max(1, Mathf.RoundToInt(24f * perCanvas));
+            var px = frame.texture.GetPixels32();
+            int tw = frame.texture.width;
+            double sum = 0; int n = 0;
+            for (int row = top; row < top + rows && row < h; row++)
+            {
+                int ty = Mathf.RoundToInt(rect.y) + h - 1 - row;
+                for (int x = 0; x < w; x++)
+                    if (px[ty * tw + Mathf.RoundToInt(rect.x) + x].a >= 128) { sum += x; n++; }
+            }
+            if (n == 0) return 0f;
+            float headTexel = (float)(sum / n) + 0.5f;
+            // Drawn about its pivot, CharSize HUD units for the frame's height (SyncPatronBody).
+            return (headTexel - frame.pivot.x) * (CharSize / h) * CharWiden;
         }
 
         /// <summary>All frames of one clip, ordered by name. Everyone in the cast lives
