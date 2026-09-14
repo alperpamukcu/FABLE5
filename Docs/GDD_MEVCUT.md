@@ -1530,6 +1530,39 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.67 · Sekizinci geçiş: taban camın piksel eğrisinde, döküm düşüşüne ve kabın hareketine göre sesleniyor (2026-09-15)
+
+Yazar: "Bardakların tabanında da ovallik gerekiyor bardağın pexel eğrisine böre. Bardağın hareketine ve suyun yakından ya
+da uzaktan düşmesine göre değişen sese ihtiyacımız var."
+
+- **Taban camın kendi eğrisi** (`GlassArt.BodyFloorRise`, shader `_BodyFloorRise[96]`): 9.66'nın taban elipsi yalnız duvar
+  dibinde bir iki piksel kalkıyordu (rocks'ta FloorArc 2.5 px), sıvının altı hâlâ düz bir çizgiydi. Artık çizimin alt kenarı
+  okunuyor: her sütunun en alttaki opak pikseli, en alçak sütundan dışa doğru sütun başına en çok 3 satır tırmandığı sürece
+  (tabanın elipsi; daha büyük sıçrama duvar ya da sap). Bu kenar sıvının taban satırındaki genişliğine iki eksende
+  ölçekleniyor ve her sütunda sıvı tabandan o kadar yukarıda başlıyor. t2 çizimlerinde rocks ve highball ortadan köşeye 7
+  satır, pint 5 satır tırmanıyor; sıvıya ölçeklenince rocks'un tabanı duvarda yaklaşık 4.5 art pikseli kalkıyor. Saplı
+  kadehlerde (coupe, martini) ayak okunuyor ama dar taban onu sıfıra indiriyor; oyunda değişmediler. Sıvının eğri boyunca
+  en alt satırı bir ton koyu (altı ışıktan dönük), kavis camın dibine karşı okunsun diye. `SetBodyArcs` artık yalnız üst
+  yüzü alıyor, `_BodyFloorArc` kalktı.
+- **Düşüşün sesi** (`Sfx.HoldLoop`'a `fall` ve `pan`): her dökümün iki klibi var, yakın (`pour_glass`, `pour_tin`) ve uzak
+  ikizi (`pour_glass_far`, `pour_tin_far`). Düşüş mesafesine göre eşit güçte çapraz geçiyorlar; düşüş kısaldıkça yakın
+  klibin üstü 2400 Hz'e kadar kapanıyor, uzun düşüş biraz daha yüksek. Uzak klip hızlı gelen akış: az lıkır, çok ince
+  kabarcık, içkinin yüzeyinde kırılan damla sıçrantısı (spektral merkez bardakta 1422 → 2843 Hz, tenekede 1152 → 2196 Hz).
+  Mesafe ağızdan kaptaki içkinin üstüne ölçülüyor, kap boşken tabanına (`TinDrinkTopY`, `ServeDrinkTopY`); 150 birim 0,
+  520 birim 1. Oyunda ölçüldü: dökerken şişenin ağzı kaldırmadan bağımsız olarak 202–208'de kalıyor (kalktıkça daha çok
+  eğiliyor), bu yüzden tenekede düşüş boşken 510, doluyken 290 birim ve ses tenekeyle birlikte doldukça yakınlaşıyor.
+  Tenekenin bardak üstündeki ağzı kaldırmayla 155'ten 247'ye çıkıyor; dolu highball'a düşüş 160, boş rocks'a 500 birim.
+  Sesin sağ-sol konumu ağzın tezgâhtaki yeri.
+- **Kabın hareketi** (`Sfx.HoldMotion`, `slosh_glass`, `slosh_tin`): akışı yakalayan bardak ve açık teneke kayıp sallandıkça
+  içindeki içki çalkalanıyor, ayağı tahtada sürtünüyor. Miktar kabın hızından (900 birim/sn tam) ve sallanmasından (45°/sn
+  tam) geliyor, çoğunu içindeki içki belirliyor (boş kap %30). Ses seviyesi, perde (0.9 → 1.15) ve parlaklık (1200 Hz →
+  açık) miktarla artıyor, sağ-sol konumu kabın yeri. Sürülmediği ilk karede sönüyor; kapak takılıyken teneke susuyor,
+  çünkü o sırada sesi çalkalama veriyor. Oyunda ölçüldü: bardak 450 birim/sn'de 900'dekinin yarısı seviyede, perde 0.98 ve
+  1.06, parlaklık 3397 ve 9988 Hz.
+- Dört yeni klip `Tools/sfx_bank.py`'de sentezlendi (bank 77 klip) ve `Docs/SES_LISTESI.md`'ye işlendi. Tutulan sesler
+  (döküm, uzak yarısı, hareket) kendi alt nesnelerinde, her low-pass yalnız kendi kaynağını süzsün diye.
+- Doğrulama: EditMode 598/598, PlayMode 13/13 (görünüm testlerinde fark yok). Oyunda rocks (%30 ve %85), highball, coupe ve martini yakın çekimle görüldü; düşüş ve hareket katmanlarının değerleri probe'la okundu.
+
 ### 9.66 · Yedinci geçiş: sıvı yuvarlak — bardakta ve şişede oval yüz, kavisli taban (2026-09-14)
 
 Yazar: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre

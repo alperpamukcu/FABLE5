@@ -12,10 +12,10 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Klasör** | `Assets/Resources/Audio/` — başka yere konan dosya yüklenmez |
 | **Çağırma** | `Sfx.Play("dosya_adi")` — uzantısız, isimle. Dosya yoksa **sessizlik** (hata değil), yani ses ses eklenebilir |
 | **Format** | 44.1 kHz, **mono**, 16-bit WAV. Stereo/48k da çalışır ama bank tek düzende |
-| **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) |
+| **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) |
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume` |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
-| **Şu anki kaynak** | 73 klibin **tamamı sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py` ile üretildi). Yani hepsi yer tutucu; gerçekleriyle değiştirilebilir |
+| **Şu anki kaynak** | 77 klibin **tamamı sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py` ile üretildi). Yani hepsi yer tutucu; gerçekleriyle değiştirilebilir |
 | **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
@@ -25,7 +25,7 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 
 ---
 
-## 1 · Şu an oyunda olan 73 klip
+## 1 · Şu an oyunda olan 77 klip
 
 ### 1.1 Oda ve gece döngüsü
 
@@ -76,6 +76,8 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | Dosya | Süre | Nerede | Karakter |
 |---|---|---|---|
 | `pour_tin` | 1.14 s | **Loop** — tine dökerken | Sıvı akışı, doluluğa göre perde |
+| `pour_tin_far` | 1.14 s | **Loop** — tine yüksekten dökerken; `pour_tin` ile düşüş mesafesine göre çapraz geçer (2026-09-15) | Aynı içki yüksekten: az lıkır, çok ince kabarcık, tenekenin çeperinde davul gibi sıçrantı |
+| `slosh_tin` | 0.94 s | **Loop** — açık teneke akışı yakalarken kayıp sallandıkça; hızla ses, perde ve parlaklık artar | Tenekede çalkalanan içki, tahtada tenekenin ayağı |
 | `shake_loop` | 0.34 s | **Loop** — çalkalarken | Buz + metal, enerjiye göre hız |
 | `stir_loop` | 0.56 s | **Loop** — karıştırırken | Bar kaşığı, cam içi |
 | `stir_commit` | 0.28 s | Karıştırma bitince | Kaşığı çekme |
@@ -90,6 +92,8 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | Dosya | Süre | Nerede | Karakter |
 |---|---|---|---|
 | `pour_glass` | 1.14 s | **Loop** — bardağa dökerken | Sıvı, daha ince |
+| `pour_glass_far` | 1.14 s | **Loop** — bardağa yüksekten dökerken; `pour_glass` ile düşüş mesafesine göre çapraz geçer (2026-09-15) | Hızlı gelen akış: az lıkır, çok kabarcık, yüzeyde kırılan damla sıçrantısı, altta camın çınlaması |
+| `slosh_glass` | 0.94 s | **Loop** — servis bardağı akışı yakalarken kayıp sallandıkça; hızla ses, perde ve parlaklık artar | Camda çalkalanan içki, tahtada ince kuru sürtünme |
 | `glass_pickup` | 0.18 s | Bardağı alırken | Cam kaldırma |
 | `glass_down` | 0.30 s | Bardağı bırakırken | Cam + tahta |
 | `serve_it` | 0.30 s | Servis onayı | Kısa olumlu |

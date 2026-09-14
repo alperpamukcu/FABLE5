@@ -214,6 +214,16 @@ namespace LastCall.UI
 
         private float _glassCatchX = ServeGlassRestX, _glassCatchV, _glassAx, _glassSway, _glassSwayV, _glassCatchLast = ServeGlassRestX;
         private const float ServeGlassRestX = -110f;
+        private float _serveFall01, _servePan;   // the tin's pour, heard: how far it drops, where on the bench (2026-09-15)
+
+        /// <summary>Where a stream into the serving glass lands, surface-local: the top of the drink in it, its floor
+        /// when it is empty (2026-09-15).</summary>
+        private float ServeDrinkTopY(TycoonRun run)
+        {
+            var c = _serveGlass.anchoredPosition;
+            float h = _serveGlass.rect.height;
+            return c.y - h * 0.5f + h * _serveGlassPiece.FillAmount((float)run.ServingGlass.FillFraction);
+        }
         /// <summary>How far either side of the surface's middle the glass's centre may go.</summary>
         private float GlassReach() =>
             Mathf.Max(0f, _serveSurface.rect.width * 0.5f - _serveGlass.rect.width * 0.5f - 10f);
@@ -382,6 +392,9 @@ namespace LastCall.UI
                         // As thick as the pour is heavy: Core's share of full flow, not the angle.
                         // A thread when little is running (2026-09-13), a rope neck-down.
                         _serveFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.2f + 1.3f * _tinShare);
+                        // What the pour sounds like (2026-09-15): how far it drops onto the drink, and where on the bench.
+                        _serveFall01 = FallOf(mouth.y, ServeDrinkTopY(run));
+                        _servePan = PanOf(mouth.x, _serveSurface);
                     }
                     else RefreshServeText(run, accuracy);
                 }
@@ -534,15 +547,14 @@ namespace LastCall.UI
                 float level = piece.FillAmount(bodyFrac);
                 _serveFluid.SetBody(piece.Sprite, new Rect(0f, 0f, w, h), h * piece.FloorY, h * level);
                 // ROUND, NOT FLAT (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"): the top face is the squashed oval the counter's
-                // glass wears, as wide as this glass's own drink is on the level's row; the floor is the near arc of an
-                // oval as wide as the drink on the floor's row, rising by the glass's measured FloorArc.
+                // glass wears, as wide as this glass's own drink is on the level's row.
                 float sheetW = piece.Sprite.rect.width, sheetH = piece.Sprite.rect.height, toGrid = w / sheetW;
-                if (GlassArt.BodySpan(piece.Sprite, level * sheetH - 0.5f, out float topC, out float topHalf)
-                    && GlassArt.BodySpan(piece.Sprite, piece.FloorY * sheetH + 1.5f, out float floorC, out float floorHalf))
-                    _serveFluid.SetBodyArcs(
-                        new Vector3(topC * toGrid, topHalf * toGrid, topHalf * toGrid * GlassArt.SurfaceSquash),
-                        new Vector3(floorC * toGrid, floorHalf * toGrid, piece.FloorArc * h));
-                else _serveFluid.SetBodyArcs(Vector3.zero, Vector3.zero);
+                _serveFluid.SetBodyArcs(GlassArt.BodySpan(piece.Sprite, level * sheetH - 0.5f, out float topC, out float topHalf)
+                    ? new Vector3(topC * toGrid, topHalf * toGrid, topHalf * toGrid * GlassArt.SurfaceSquash) : Vector3.zero);
+                // THE FLOOR FOLLOWS THE GLASS'S PIXEL CURVE (2026-09-15, the author: "Bardakların tabanında da ovallik
+                // gerekiyor bardağın pixel eğrisine göre"): the drawing's own bottom edge, scaled to the drink's width on
+                // the floor's row, stands each column of the drink up from the floor (GlassArt.BodyFloorRise).
+                _serveFluid.SetBodyFloor(GlassArt.BodyFloorRise(piece.Sprite, piece.FloorY * sheetH + 1.5f), toGrid);
             }
             else _serveFluid.ClearBody();
             _serveFluid.SetBodyTurn(_glassSway, new Vector2(w * 0.5f, h * 0.5f));   // the drink rocks with the glass

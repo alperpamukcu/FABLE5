@@ -43,7 +43,8 @@ namespace LastCall.UI
     /// <summary>
     /// The audio pipeline (v5 P17 — the project's first). One hidden object, a small pool of
     /// one-shot sources, one looping ambience source and one looping action source (pour or
-    /// shake). Clips load from Resources/Audio by name and are cached; a missing clip plays
+    /// shake) — with a pour's far half beside it and a layer for the vessel moving under the
+    /// pour (2026-09-15). Clips load from Resources/Audio by name and are cached; a missing clip plays
     /// as silence rather than throwing, so audio can land clip by clip.
     ///
     /// Pitch jitter is a tiny counter-based wobble, NOT a random stream: audio is
@@ -60,7 +61,19 @@ namespace LastCall.UI
         private int _jitter;               // deterministic pitch wobble counter
         private AudioSource _ambience;
         private AudioSource _loop;         // the held action: pour or shake
+        private AudioSource _loopFar;      // a pour's far half, crossfaded with it by the drop (2026-09-15)
+        private AudioSource _motion;       // the vessel moving under the pour (2026-09-15)
+        private AudioLowPassFilter _loopLp, _motionLp;
         private float _ambienceTarget;     // ducked while a stage is open
+
+        /// <summary>A low-pass this high passes everything the bank holds.</summary>
+        private const float OpenCutoff = 22000f;
+        /// <summary>A pour let go right over the drink keeps only what is under this: the glug, not the hiss.</summary>
+        private const float NearCutoff = 2400f;
+        /// <summary>A vessel barely moving is only a low rub; it opens toward <see cref="OpenCutoff"/> flat out.</summary>
+        private const float MotionStillCutoff = 1200f;
+        /// <summary>The motion layer's level flat out, under the pour's.</summary>
+        private const float MotionLevel = 0.5f;
 
         private static Sfx Instance
         {
@@ -115,8 +128,24 @@ namespace LastCall.UI
             }
             _ambience = gameObject.AddComponent<AudioSource>();
             _ambience.loop = true; _ambience.playOnAwake = false; _ambience.volume = 0f;
-            _loop = gameObject.AddComponent<AudioSource>();
-            _loop.loop = true; _loop.playOnAwake = false;
+            _loop = HeldSource("HeldLoop", out _loopLp);
+            _loopFar = HeldSource("HeldLoopFar", out _);
+            _motion = HeldSource("HeldMotion", out _motionLp);
+        }
+
+        /// <summary>A looping source on a child of its own, so the low-pass beside it is its alone (2026-09-15). A survivor
+        /// of a domain reload is rebuilt, so a child of the same name is thrown away first.</summary>
+        private AudioSource HeldSource(string name, out AudioLowPassFilter lowPass)
+        {
+            var old = transform.Find(name);
+            if (old != null) Destroy(old.gameObject);
+            var go = new GameObject(name);
+            go.transform.SetParent(transform, false);
+            var source = go.AddComponent<AudioSource>();
+            source.loop = true; source.playOnAwake = false;
+            lowPass = go.AddComponent<AudioLowPassFilter>();
+            lowPass.cutoffFrequency = OpenCutoff;
+            return source;
         }
 
         /// <summary>
@@ -191,12 +220,22 @@ namespace LastCall.UI
         /// brief rules out, and they would arrive precisely when the player is working
         /// hardest.
         /// </summary>
-        public static void HoldLoop(string name, float volume = 1f, float energy = -1f)
+        /// <param name="fall">
+        /// HOW FAR THE STREAM DROPS (2026-09-15, the author: "suyun yakından ya da uzaktan düşmesine göre değişen sese
+        /// ihtiyacımız var"), 0 a mouth at the drink .. 1 the top of the lift; below 0 for a loop with no drop. A stream let
+        /// go right over the drink lands soft — the glug is the sound, and it is dull — and one dropped from high hits
+        /// hard: louder, brighter, splashing. So a clip with a `_far` twin crossfades into it on equal power as the drop
+        /// grows, and the near one's top closes as it shrinks; an EQ alone only dims a near pour, it does not change what
+        /// it is.
+        /// </param>
+        /// <param name="pan">Where the pour is across the bench, -1 left .. 1 right.</param>
+        public static void HoldLoop(string name, float volume = 1f, float energy = -1f, float fall = -1f, float pan = 0f)
         {
             var i = Instance;
             if (name == null)
             {
                 if (i._loop.isPlaying) i._loop.Stop();
+                if (i._loopFar.isPlaying) i._loopFar.Stop();
                 i._loopHasTarget = false;
                 return;
             }
@@ -205,9 +244,25 @@ namespace LastCall.UI
             // energy < 0 means "this loop has no effort behind it" — a tap runs at the rate
             // the tap runs at, however you feel about it.
             float e = energy < 0f ? -1f : Mathf.Clamp01(energy);
-            i._loopVolTarget = volume * Sound.Effective * (e < 0f ? 1f : 0.55f + 0.45f * e);
+            float level = volume * Sound.Effective * (e < 0f ? 1f : 0.55f + 0.45f * e);
             i._loopPitchTarget = e < 0f ? 1f : 0.92f + 0.18f * e;
+            float f = fall < 0f ? -1f : Mathf.Clamp01(fall);
+            var far = f >= 0f ? i.Clip(name + "_far") : null;
+            if (f >= 0f) level *= 0.7f + 0.45f * f;                 // a longer drop hits harder
+            i._loopVolTarget = far != null ? level * Mathf.Cos(f * Mathf.PI * 0.5f) : level;
+            i._loopFarVolTarget = far != null ? level * Mathf.Sin(f * Mathf.PI * 0.5f) : 0f;
+            i._loopCutTarget = f >= 0f ? Mathf.Lerp(NearCutoff, OpenCutoff, Mathf.Pow(f, 0.7f)) : OpenCutoff;
+            i._loopPanTarget = Mathf.Clamp(pan, -1f, 1f);
             i._loopHasTarget = true;
+            if (far == null) { if (i._loopFar.isPlaying) i._loopFar.Stop(); }
+            else if (i._loopFar.clip != far || !i._loopFar.isPlaying)
+            {
+                i._loopFar.clip = far;
+                i._loopFar.volume = i._loopFarVolTarget;
+                i._loopFar.pitch = i._loopPitchTarget;
+                i._loopFar.panStereo = i._loopPanTarget;
+                i._loopFar.Play();
+            }
             if (i._loop.clip == clip && i._loop.isPlaying) return;
             // A NEW loop starts AT its target rather than easing up from silence: the ease
             // is for changes within a held action, not for its beginning, and fading every
@@ -215,11 +270,43 @@ namespace LastCall.UI
             i._loop.clip = clip;
             i._loop.volume = i._loopVolTarget;
             i._loop.pitch = i._loopPitchTarget;
+            i._loop.panStereo = i._loopPanTarget;
+            i._loopLp.cutoffFrequency = i._loopCutTarget;
             i._loop.Play();
         }
 
-        private float _loopVolTarget, _loopPitchTarget = 1f;
+        private float _loopVolTarget, _loopFarVolTarget, _loopPitchTarget = 1f, _loopCutTarget = OpenCutoff, _loopPanTarget;
         private bool _loopHasTarget;
+
+        /// <summary>
+        /// THE VESSEL MOVING (2026-09-15, the author: "Bardağın hareketine ... göre değişen sese ihtiyacımız var"): a held
+        /// layer beside the pour for a catching glass or tin — its drink swashing and its foot on the counter. Call it every
+        /// frame the vessel can move, with <paramref name="amount"/> 0..1 from its speed and its rocking; level, pitch and
+        /// brightness climb with it, and <paramref name="pan"/> follows it across the bench. A frame without a call fades it
+        /// out, so a stage that stops driving it cannot leave it running.
+        /// </summary>
+        public static void HoldMotion(string name, float amount, float pan = 0f)
+        {
+            var i = Instance;
+            var clip = name != null ? i.Clip(name) : null;
+            float a = clip != null ? Mathf.Clamp01(amount) : 0f;
+            i._motionVolTarget = MotionLevel * a * Sound.Effective;
+            i._motionPitchTarget = 0.9f + 0.25f * a;
+            i._motionCutTarget = Mathf.Lerp(MotionStillCutoff, OpenCutoff, a * a);
+            i._motionPanTarget = Mathf.Clamp(pan, -1f, 1f);
+            i._motionFrame = Time.frameCount;
+            if (clip == null || a <= 0.001f || (i._motion.clip == clip && i._motion.isPlaying)) return;
+            // A slide starts from rest, so this one DOES ease up from silence.
+            i._motion.clip = clip;
+            i._motion.volume = 0f;
+            i._motion.pitch = i._motionPitchTarget;
+            i._motion.panStereo = i._motionPanTarget;
+            i._motionLp.cutoffFrequency = i._motionCutTarget;
+            i._motion.Play();
+        }
+
+        private float _motionVolTarget, _motionPitchTarget = 1f, _motionCutTarget = OpenCutoff, _motionPanTarget;
+        private int _motionFrame = -10;
 
         /// <summary>The bar bed. Call every frame with whether a stage is open; the volume
         /// eases toward loud or ducked, so menus muffle the room instead of gating it.</summary>
@@ -252,7 +339,30 @@ namespace LastCall.UI
             {
                 _loop.volume = Mathf.MoveTowards(_loop.volume, _loopVolTarget, dt * 2.6f);
                 _loop.pitch = Mathf.MoveTowards(_loop.pitch, _loopPitchTarget, dt * 1.3f);
+                _loop.panStereo = Mathf.MoveTowards(_loop.panStereo, _loopPanTarget, dt * 3f);
+                // A cutoff is heard by its ratio, so it eases in octaves: a linear walk would crawl through the
+                // treble and rush the bass.
+                if (_loopLp != null) _loopLp.cutoffFrequency = EaseCutoff(_loopLp.cutoffFrequency, _loopCutTarget, dt);
+                if (_loopFar != null && _loopFar.isPlaying)
+                {
+                    _loopFar.volume = Mathf.MoveTowards(_loopFar.volume, _loopFarVolTarget, dt * 2.6f);
+                    _loopFar.pitch = _loop.pitch;
+                    _loopFar.panStereo = _loop.panStereo;
+                }
+            }
+            if (_motion != null && _motion.isPlaying)
+            {
+                bool driven = Time.frameCount - _motionFrame <= 1;
+                float target = driven ? _motionVolTarget : 0f;
+                _motion.volume = Mathf.MoveTowards(_motion.volume, target, dt * 2.2f);
+                _motion.pitch = Mathf.MoveTowards(_motion.pitch, _motionPitchTarget, dt * 1.3f);
+                _motion.panStereo = Mathf.MoveTowards(_motion.panStereo, _motionPanTarget, dt * 3f);
+                if (_motionLp != null) _motionLp.cutoffFrequency = EaseCutoff(_motionLp.cutoffFrequency, _motionCutTarget, dt);
+                if (target <= 0.0001f && _motion.volume <= 0.0001f) _motion.Stop();
             }
         }
+
+        private static float EaseCutoff(float now, float target, float dt) =>
+            Mathf.Exp(Mathf.Lerp(Mathf.Log(Mathf.Max(now, 10f)), Mathf.Log(Mathf.Max(target, 10f)), 1f - Mathf.Exp(-8f * dt)));
     }
 }

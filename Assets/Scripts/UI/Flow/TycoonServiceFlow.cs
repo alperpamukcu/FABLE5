@@ -386,7 +386,15 @@ namespace LastCall.UI
                            : _shakerLoopWanted == "stir_loop" ? (float)_stirEnergy
                            // The tin rises as it fills, exactly as the glass does.
                            : _shakerLoopWanted == "pour_tin" ? (float)run.Glass.FillFraction
-                           : -1f);
+                           : -1f,
+                             // ...and a pour drops near or far, left or right of the bench (2026-09-15).
+                             _shakerLoopWanted == "pour_tin" ? _pourFall01 : -1f,
+                             _shakerLoopWanted == "pour_tin" ? _pourPan : 0f);
+                // THE TIN MOVING (2026-09-15, the author: "Bardağın hareketine ... göre değişen sese ihtiyacımız var"): the
+                // drink swashing in the open tin as it slides under a stream and rocks; nothing while it is capped, when the
+                // shake has the sound.
+                Sfx.HoldMotion(!_capped && _capT <= 0f ? "slosh_tin" : null,
+                               CatchMotion(_tinCatchV, _tinSwayV, run.Glass.FillFraction), PanOf(_tinCatchX, _pourSurface));
             }
 
             if (_stage == Stage.Serve)
@@ -398,7 +406,11 @@ namespace LastCall.UI
                 // One loop source, driven once per frame from whatever poured (P17): the tin
                 // and the hand bottle set the flag, and neither can stop the other's sound.
                 Sfx.HoldLoop(_servePouringNow ? "pour_glass" : null, 0.7f,
-                             _servePouringNow ? (float)run.ServingGlass.FillFraction : -1f);
+                             _servePouringNow ? (float)run.ServingGlass.FillFraction : -1f,
+                             _serveFall01, _servePan);   // near or far, left or right of the bench (2026-09-15)
+                // THE GLASS MOVING (2026-09-15): the same swash in the glass that follows the stream.
+                Sfx.HoldMotion("slosh_glass", CatchMotion(_glassCatchV, _glassSwayV, run.ServingGlass.FillFraction),
+                               PanOf(_glassCatchX, _serveSurface));
             }
 
             if (_stage == Stage.Tap) UpdateTap(run);
@@ -798,6 +810,35 @@ namespace LastCall.UI
             sway += swayV * dt;
             if (Motion.Reduced) { sway = 0f; swayV = 0f; }
         }
+
+        // ── THE CATCH, HEARD (2026-09-15, the author: "Bardağın hareketine ve suyun yakından ya da uzaktan düşmesine göre
+        // değişen sese ihtiyacımız var") ─────────────────────────────────────────────────────────────────────────────
+        /// <summary>A stream this far above what it lands on (surface units) sounds like one poured right into the drink,
+        /// and <see cref="FallFar"/> like one dropped from the top of the lift. Measured in play (2026-09-15): a pouring
+        /// bottle's mouth stands at 202 to 208 over the bench whatever the lift, because it leans further as it rises, so
+        /// the tin's drop runs from 510 empty to 290 full; the tin's mouth over a glass climbs from 155 to 247 with the
+        /// lift, and a full highball takes a drop of 160, an empty rocks glass 500.</summary>
+        private const float FallNear = 150f, FallFar = 520f;
+        /// <summary>The catcher's speed (units a second) and its rocking (degrees a second) that sound flat out.</summary>
+        private const float MotionFullSpeed = 900f, MotionFullRock = 45f;
+        /// <summary>How far to one side a sound at the bench's edge sits: the bench is in front of the player, not beside them.</summary>
+        private const float PanWidth = 0.55f;
+
+        /// <summary>How far a stream drops for its sound: 0 its mouth at the drink .. 1 the top of the lift.</summary>
+        private static float FallOf(float mouthY, float landY) =>
+            Mathf.Clamp01((mouthY - landY - FallNear) / (FallFar - FallNear));
+
+        /// <summary>How much a catching vessel is moving for its held sound, 0..1: its speed along the bench and its
+        /// rocking, and the drink in it — an empty glass slid is only its foot on the wood.</summary>
+        private static float CatchMotion(float v, float swayV, double fill) =>
+            Mathf.Clamp01(Mathf.Abs(v) / MotionFullSpeed + Mathf.Abs(swayV) / MotionFullRock)
+            * (0.3f + 0.7f * Mathf.Clamp01((float)fill));
+
+        /// <summary>Where x sits across a stage surface for a sound, left edge -1 .. right edge 1, narrowed by
+        /// <see cref="PanWidth"/>.</summary>
+        private static float PanOf(float x, RectTransform surface) =>
+            surface == null || surface.rect.width < 1f ? 0f
+            : Mathf.Clamp(x / (surface.rect.width * 0.5f), -1f, 1f) * PanWidth;
 
         /// <summary>The step cards' shared TOP line: bottom-anchored y for a card of the
         /// given height, so a four-row card and a two-row card start at the same edge.</summary>

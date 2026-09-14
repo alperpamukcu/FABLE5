@@ -628,6 +628,81 @@ namespace LastCall.UI
             return false;
         }
 
+        private static readonly Dictionary<Sprite, int[]> BottomEdges = new Dictionary<Sprite, int[]>();
+        private static readonly Dictionary<(Sprite, int), float[]> FloorRises = new Dictionary<(Sprite, int), float[]>();
+
+        /// <summary>How many rows the drawing's bottom edge may climb from one column to the next and still be the base's
+        /// ellipse; a bigger jump is a wall or a stem.</summary>
+        private const int BaseEdgeStep = 3;
+
+        /// <summary>
+        /// THE FLOOR FOLLOWS THE GLASS'S PIXEL CURVE (2026-09-15, the author: "Bardakların tabanında da ovallik gerekiyor
+        /// bardağın pixel eğrisine göre"). How far above the body's floor the drink stands in each column of the sheet, in
+        /// sheet px. The curve is the drawing's own bottom edge — the lowest opaque pixel of each column, followed out from
+        /// the lowest one while it climbs at most <see cref="BaseEdgeStep"/> rows a column, which is the base's ellipse —
+        /// scaled about its lowest point until it is as wide as the drink on <paramref name="floorRow"/>
+        /// (<see cref="BodySpan"/>, rows from the sheet's bottom). Scaled both ways, so the floor's oval keeps the base's
+        /// proportions. Measured on the t2 sheets: the rocks glass and the highball climb 7 rows from their middle to their
+        /// corners, the pint 5; a stemmed glass reads its foot, which its narrow floor scales to nothing. Cached per sheet
+        /// and row; null when the sheet cannot be read.
+        /// </summary>
+        public static float[] BodyFloorRise(Sprite sheet, float floorRow)
+        {
+            if (sheet == null || sheet.texture == null || !sheet.texture.isReadable) return null;
+            var key = (sheet, Mathf.RoundToInt(floorRow * 2f));
+            if (FloorRises.TryGetValue(key, out var cached)) return cached;
+            float[] rise = null;
+            if (BodySpan(sheet, floorRow, out float innerC, out float innerHalf) && innerHalf >= 0.5f)
+            {
+                var bottom = BottomEdge(sheet);
+                int w = bottom.Length, mid = -1;
+                for (int x = 0; x < w; x++)
+                {
+                    if (bottom[x] < 0) continue;
+                    if (mid < 0 || bottom[x] < bottom[mid]
+                        || (bottom[x] == bottom[mid] && Mathf.Abs(x + 0.5f - w * 0.5f) < Mathf.Abs(mid + 0.5f - w * 0.5f)))
+                        mid = x;
+                }
+                if (mid >= 0)
+                {
+                    int lo = mid, hi = mid;
+                    while (lo > 0 && bottom[lo - 1] >= 0 && bottom[lo - 1] - bottom[lo] <= BaseEdgeStep) lo--;
+                    while (hi < w - 1 && bottom[hi + 1] >= 0 && bottom[hi + 1] - bottom[hi] <= BaseEdgeStep) hi++;
+                    float outerC = (lo + hi + 1) * 0.5f, outerHalf = (hi - lo + 1) * 0.5f;
+                    float k = Mathf.Min(1f, innerHalf / Mathf.Max(outerHalf, 1f));
+                    rise = new float[w];
+                    for (int x = 0; x < w; x++)
+                    {
+                        float u = Mathf.Clamp((x + 0.5f - innerC) / innerHalf, -1f, 1f);
+                        float at = outerC + u * outerHalf - 0.5f;          // the base's column this one maps onto
+                        int a = Mathf.Clamp(Mathf.FloorToInt(at), lo, hi), b = Mathf.Min(a + 1, hi);
+                        rise[x] = (Mathf.Lerp(bottom[a], bottom[b], Mathf.Clamp01(at - a)) - bottom[mid]) * k;
+                    }
+                }
+            }
+            FloorRises[key] = rise;
+            return rise;
+        }
+
+        /// <summary>The lowest opaque row of each column of a sheet, counted from its bottom; -1 for an empty column.</summary>
+        private static int[] BottomEdge(Sprite sheet)
+        {
+            if (BottomEdges.TryGetValue(sheet, out var hit)) return hit;
+            var st = sheet.texture; var r = sheet.rect;   // the rect, not textureRect (tight mesh)
+            int w = Mathf.RoundToInt(r.width), h = Mathf.RoundToInt(r.height);
+            int x0 = Mathf.RoundToInt(r.x), y0 = Mathf.RoundToInt(r.y);
+            var src = st.GetPixels32();
+            var edge = new int[w];
+            for (int x = 0; x < w; x++)
+            {
+                edge[x] = -1;
+                for (int y = 0; y < h; y++)
+                    if (src[(y0 + y) * st.width + x0 + x].a > 0) { edge[x] = y; break; }
+            }
+            BottomEdges[sheet] = edge;
+            return edge;
+        }
+
         private static readonly Dictionary<string, Vector2> FrontOffsets = new Dictionary<string, Vector2>();
 
         /// <summary>

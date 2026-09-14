@@ -1168,6 +1168,89 @@ def s_pour_floor():
         place(spat, at, b, r.uniform(0.15, 0.55))
     return lowpass(x + highpass(spat, 700.0) * 0.6, 4200.0)
 
+
+# ── THE DROP AND THE MOVE (2026-09-15, the author: "Bardağın hareketine ve suyun yakından ya da uzaktan düşmesine
+# göre değişen sese ihtiyacımız var") ─────────────────────────────────────────────────────────────────────────────
+#
+# A pour is two clips now, crossfaded in play by how far the stream drops (Sfx.HoldLoop's `fall`): the near one is
+# the pour as it was, and its `_far` twin is the same drink dropped from the top of the lift. The vessel sliding
+# under the stream is a third, held beside them (Sfx.HoldMotion), whose level follows the vessel's speed.
+
+def _spatter(seconds, name, count, gain, low):
+    """Drops breaking on a surface: short, flat, pitchless ticks, high-passed so they sit over the stream."""
+    n = int(round(seconds * SR))
+    spat = np.zeros(n)
+    r = rng(name + ':spat')
+    for _ in range(count):
+        ln = int(r.uniform(0.003, 0.012) * SR)
+        at = r.uniform(0.0, seconds - ln / SR - 0.002)
+        b = r.standard_normal(ln) * np.exp(-np.linspace(0, 7, ln))
+        place(spat, at, b, r.uniform(0.15, 0.55))
+    return highpass(spat, low) * gain
+
+
+def s_pour_glass_far():
+    """HELD LOOP, THE FAR HALF OF `pour_glass`.
+
+    A stream dropped from high arrives FAST, and a fast stream does not glug: it punches through the surface,
+    drags a crowd of small bubbles down with it and throws drops back up. So the far pour is the near one's
+    balance turned over — fewer, shallower glugs, far more fine bubbles, a bright spatter of drops breaking on the
+    drink — with the glass's column still ringing under it, because it is still the same glass.
+    """
+    d = 1.20
+    x = liquid(d, 'pgf', low=300.0, high=5200.0, bubbles=2.4, thickness=1.0, glug=0.45, vessel=0.9)
+    x = x + _spatter(d, 'pgf', count=150, gain=0.55, low=1400.0)
+    body = bandpass(x, 760.0, 4.5) * 0.35
+    return lowpass(x + body, 8200.0)
+
+
+def s_pour_tin_far():
+    """HELD LOOP, THE FAR HALF OF `pour_tin`. The same drop into steel: the spatter drums on the tin's walls
+    instead of ringing, lower and duller than the glass's, with the steel's sheen on top."""
+    d = 1.20
+    x = liquid(d, 'ptf', low=220.0, high=4200.0, bubbles=1.8, thickness=1.0, glug=0.35, vessel=0.4)
+    spat = _spatter(d, 'ptf', count=130, gain=0.5, low=900.0)
+    drum = bandpass(spat, 430.0, 2.2) * 0.9 + bandpass(spat, 1180.0, 3.0) * 0.4
+    sheen = bandpass(noise(d, 'ptf_sheen', 'white'), 2900.0, 6.0) * 0.10
+    return lowpass(x + spat * 0.6 + drum + sheen, 6400.0)
+
+
+def _swash(d, name, low, high, lap_top, lap_decay):
+    """A drink swashing wall to wall: a soft low rush that swells twice a second — so it tiles over one second —
+    with a lap each time a wave folds. Nothing is falling in, so there is no glug."""
+    x = t_(d)
+    rush = lowpass(highpass(noise(d, name + '_sw', 'pink'), low), high)
+    out = rush * (0.35 + 0.65 * np.abs(np.sin(np.pi * 2.0 * x))) * 0.9
+    r = rng(name + ':lap')
+    ln = int(0.09 * SR)
+    xx = np.arange(ln) / SR
+    for k in range(6):
+        at = (k + r.uniform(0.1, 0.4)) * d / 6.0
+        lap = lowpass(noise(0.09, '%s_lap%d' % (name, k), 'pink'), lap_top) * np.exp(-xx / lap_decay)
+        place(out, at, lap, r.uniform(0.4, 0.8))
+    return out
+
+
+def s_slosh_glass():
+    """HELD LOOP: A GLASS SLID ALONG THE COUNTER WITH A DRINK IN IT. Its level, pitch and brightness follow the
+    glass's speed in play. The drink swashes, the glass's column answers it faintly, and the foot is a thin dry
+    scrape on the wood."""
+    d = 1.00
+    out = _swash(d, 'slg', 160.0, 1500.0, 900.0, 0.030)
+    ring = bandpass(out, 760.0, 5.0) * 0.25
+    scrape = bandpass(noise(d, 'slg_scr', 'white'), 1900.0, 1.2) * 0.07
+    return lowpass(out + ring + scrape, 5200.0)
+
+
+def s_slosh_tin():
+    """HELD LOOP: THE OPEN TIN SLID WITH A DRINK IN IT. Steel damps the swash lower and shorter than glass, and the
+    tin's foot on the wood is a duller rub."""
+    d = 1.00
+    out = _swash(d, 'slt', 130.0, 1200.0, 700.0, 0.028)
+    drum = bandpass(out, 430.0, 3.0) * 0.35
+    rub = bandpass(noise(d, 'slt_rub', 'white'), 1100.0, 1.0) * 0.06
+    return lowpass(out + drum + rub, 4200.0)
+
 def s_stamp():
     """THE STAMP LANDS (2026-08-27, the author: "damga vurma sesi daha tatmin edici
     olmali ve damga tam vuruldugunda hissi vermeli").
@@ -1359,6 +1442,10 @@ BANK = {
     'pour_glass':     (s_pour_glass,    'loop',    True,  1.0),
     'pour_tin':       (s_pour_tin,      'loop',    True,  1.0),
     'pour_floor':     (s_pour_floor,    'loop',    True,  1.0),
+    'pour_glass_far': (s_pour_glass_far, 'loop',   True,  1.0),
+    'pour_tin_far':   (s_pour_tin_far,  'loop',    True,  1.0),
+    'slosh_glass':    (s_slosh_glass,   'loop',    True,  1.0),
+    'slosh_tin':      (s_slosh_tin,     'loop',    True,  1.0),
     'voice_order':    (s_voice_order,   'light',   False, 1.0),
     'voice_happy':    (s_voice_happy,   'light',   False, 1.0),
     'voice_upset':    (s_voice_upset,   'light',   False, 1.0),

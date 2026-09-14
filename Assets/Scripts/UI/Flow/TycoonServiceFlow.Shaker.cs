@@ -959,6 +959,9 @@ namespace LastCall.UI
                     // ...and a THREAD when little is running (2026-09-13, the author: "az
                     // dökülüyorken şişenin ucundan dökülen sıvı az gözükmeli").
                     _shakerFluid.EmitStream(mouth, streamVel, Time.deltaTime, 0.2f + 1.3f * _bottleShare);
+                    // What the pour sounds like (2026-09-15): how far it drops onto the drink, and where on the bench.
+                    _pourFall01 = FallOf(mouth.y, TinDrinkTopY(run));
+                    _pourPan = PanOf(mouth.x, _pourSurface);
                 }
             }
 
@@ -1005,6 +1008,17 @@ namespace LastCall.UI
         }
 
         private float _tinCatchX = -120f, _tinCatchV, _tinAx, _tinSway, _tinSwayV, _tinCatchLast = -120f;
+        private float _pourFall01, _pourPan;   // the bottle's pour, heard: how far it drops, where on the bench (2026-09-15)
+
+        /// <summary>Where a stream into the open tin lands, surface-local: the top of the drink in its cavity, the
+        /// cavity's floor when it is empty — read off the tin's rect the way PushShakerPool reads it, because an empty
+        /// tin has no pool to ask (2026-09-15).</summary>
+        private float TinDrinkTopY(TycoonRun run)
+        {
+            var c = _shakerVessel.anchoredPosition;
+            float h = _shakerVessel.rect.height;
+            return c.y - h * 0.5f + h * (CavityFloor + (CavityRim - CavityFloor) * (float)run.Glass.FillFraction);
+        }
         /// <summary>How far in from the surface's edges the catching tin stops (its centre, surface-local): the whole
         /// bench (2026-09-14, second pass) — it passes behind the lid, the spoon and the measure rather than leave a
         /// stream it cannot reach. The hand keeps the mouth inside it (UpdateTiltPour).</summary>

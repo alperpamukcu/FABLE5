@@ -56,7 +56,7 @@ Shader "LastCall/MetaballLiquid"
         _BodyTopY     ("Body Top px",  Float) = 0
         _BodyTurn     ("Body Turn",    Vector) = (1, 0, 0, 0)
         _BodyTopArc   ("Body Top Arc", Vector) = (0, 0, 0, 0)
-        _BodyFloorArc ("Body Floor Arc", Vector) = (0, 0, 0, 0)
+        _BodyFloorCols ("Body Floor Columns", Float) = 0
 
         // Standard UI stencil plumbing (lets the fluid live under a Mask if ever needed).
         _StencilComp ("Stencil Comparison", Float) = 8
@@ -127,7 +127,8 @@ Shader "LastCall/MetaballLiquid"
             float     _BodyTopY;
             float4    _BodyTurn;        // cos, sin of the vessel's rock; its pivot in grid px (2026-09-14)
             float4    _BodyTopArc;      // the top face's ellipse: centre x, half width, half height (grid px)
-            float4    _BodyFloorArc;    // the floor's: centre x, half width, its rise at the walls (grid px)
+            float     _BodyFloorCols;   // the floor's curve: how many columns it has, the mask sheet's width (2026-09-15)
+            float     _BodyFloorRise[96];   // how far above _BodyFloorY the drink stands in each of them (grid px)
 
             // Live water surface (2026-07-22): the top of the pool is not a flat line but a
             // real wave. A height-field of columns (a shallow-water sim in MetaballFluid.cs)
@@ -276,6 +277,7 @@ Shader "LastCall/MetaballLiquid"
                 float bodyRow = 1e4;
                 float bodyFace = 0.0;         // 1 on the drink's top face, between its near and far arcs
                 float bodyNearRow = -1.0;     // rows under the top face's near arc
+                float bodyFloorRow = 1e4;     // rows above the floor's curve (2026-09-15)
                 if (_BodyOn > 0.5)
                 {
                     float2 bp = (uv - 0.5) * _Size.xy + _ViewOrigin.xy;   // px from the grid's origin
@@ -292,18 +294,21 @@ Shader "LastCall/MetaballLiquid"
                         if (m > 0.5)
                         {
                             // THE DRINK IS ROUND (2026-09-14): its line rises to the far arc of the top face's
-                            // ellipse and its floor is the near arc of the floor's — both flat where the arcs
-                            // are zero. Seen from a little above, a level in a round glass is an oval.
+                            // ellipse — flat where the arc is zero. Seen from a little above, a level in a round
+                            // glass is an oval.
                             float ut = saturate(abs(bp.x - _BodyTopArc.x) / max(_BodyTopArc.y, 1.0));
                             float arch = _BodyTopArc.z * sqrt(max(0.0, 1.0 - ut * ut));
-                            float uf = saturate(abs(bp.x - _BodyFloorArc.x) / max(_BodyFloorArc.y, 1.0));
-                            float floorAt = _BodyFloorY + _BodyFloorArc.z * (1.0 - sqrt(max(0.0, 1.0 - uf * uf)));
+                            // ...AND SO IS ITS FLOOR (2026-09-15, GlassArt.BodyFloorRise): each column of the drawing
+                            // stands its drink as far up as the glass's own bottom edge climbs there, scaled to the drink.
+                            int fcol = (int)clamp(floor(muv.x * _BodyFloorCols), 0.0, 95.0);
+                            float floorAt = _BodyFloorY + (_BodyFloorCols > 0.5 ? _BodyFloorRise[fcol] : 0.0);
                             if (bp.y >= floorAt && bp.y <= _BodyTopY + arch)
                             {
                                 inBody = 1.0;
                                 bodyRow = (_BodyTopY + arch - bp.y) / max(texel, 1.0);
                                 bodyFace = bp.y >= _BodyTopY - arch ? 1.0 : 0.0;
                                 bodyNearRow = (_BodyTopY - arch - bp.y) / max(texel, 1.0);
+                                bodyFloorRow = (bp.y - floorAt) / max(texel, 1.0);
                             }
                         }
                     }
@@ -400,6 +405,9 @@ Shader "LastCall/MetaballLiquid"
                         // the face and the drink meet on an ellipse.
                         if (bodyNearRow >= -1.0 && bodyNearRow < 0.0) s += 1.0;
                         if (bodyNearRow >= 0.0 && bodyNearRow < 1.0) s -= 1.0;
+                        // THE FLOOR'S EDGE (2026-09-15): the drink's lowest row along its curve a band darker — the
+                        // underside turned from the light — so the arc reads against the glass's base.
+                        if (bodyFloorRow < 1.0 && bodyFace < 0.5) s -= 1.0;
                     }
                     // FORM: the sides and the underside, one row wide like a pixel artist's rim —
                     // the face turned to the light (up and left) a band lighter, the one turned

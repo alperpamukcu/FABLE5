@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The drink stands on its glass's own curve, and a pour is heard by its drop and its vessel (2026-09-15):**
+  the drink's floor in a serving glass follows the drawing's bottom edge, scaled to the drink, so it arcs up to the
+  walls the way the base does. A pour crossfades from a soft near clip to a splashing far one as the stream's drop to
+  the drink grows, panned with the mouth, and a catching glass or open tin swashes louder, higher and brighter the
+  faster it slides and rocks.
+
 - **Drinks are round (2026-09-14):** the drink in the serving glass rises to the far arc of an oval
   top face as wide as the glass is at its level, and stands on the near arc of the floor's oval; the
   face is lit and its near edge drawn. The hand bottle's drink wears the same oval face at any tilt,

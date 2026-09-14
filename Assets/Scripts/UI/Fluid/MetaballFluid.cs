@@ -601,7 +601,10 @@ namespace LastCall.UI
         private float _bodyFloor, _bodyTop;
         private bool _bodyOn;
         private Vector4 _bodyTurn = new Vector4(1f, 0f, 0f, 0f);   // cos, sin, pivot x, pivot y (grid px)
-        private Vector4 _bodyTopArc, _bodyFloorArc;                  // centre x, half width, rise (grid px)
+        private Vector4 _bodyTopArc;                                 // centre x, half width, half height (grid px)
+        private const int BodyFloorColumns = 96;                     // the shader's _BodyFloorRise[96]
+        private readonly float[] _bodyFloorRise = new float[BodyFloorColumns];   // grid px above the floor, per sheet column
+        private float _bodyFloorCols;
 
         /// <summary>
         /// Draws the settled drink as <paramref name="mask"/>'s opaque pixels between
@@ -627,14 +630,31 @@ namespace LastCall.UI
         /// <summary>
         /// THE DRINK IS ROUND (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"). <paramref name="top"/> is the top face's ellipse —
         /// its centre x, half width and half height, grid px: the body's line rises to its far arc and the face between
-        /// its near and far arcs is lit. <paramref name="floor"/> is the floor's: centre x, half width, and how much
-        /// higher the floor stands at the walls than in the middle. Zeros for a flat drink.
+        /// its near and far arcs is lit. Zeros for a flat line.
         /// </summary>
-        public void SetBodyArcs(Vector3 top, Vector3 floor)
+        public void SetBodyArcs(Vector3 top)
         {
             var t = new Vector4(top.x, top.y, top.z, 0f);
-            var f = new Vector4(floor.x, floor.y, floor.z, 0f);
-            if (t != _bodyTopArc || f != _bodyFloorArc) { _bodyTopArc = t; _bodyFloorArc = f; if (_bodyOn) _drawDirty = true; }
+            if (t != _bodyTopArc) { _bodyTopArc = t; if (_bodyOn) _drawDirty = true; }
+        }
+
+        /// <summary>
+        /// THE FLOOR'S CURVE (2026-09-15, the author: "Bardakların tabanında da ovallik gerekiyor bardağın pixel eğrisine
+        /// göre"): how far above the body's floor the drink stands in each column of the mask sheet, in sheet px
+        /// (<see cref="GlassArt.BodyFloorRise"/>), times <paramref name="scale"/> to grid px. Null — or a sheet wider than
+        /// the shader's table — for a flat floor.
+        /// </summary>
+        public void SetBodyFloor(float[] rise, float scale)
+        {
+            int n = rise != null && rise.Length <= BodyFloorColumns ? rise.Length : 0;
+            bool changed = n != (int)_bodyFloorCols;
+            for (int i = 0; i < n; i++)
+            {
+                float v = rise[i] * scale;
+                if (v != _bodyFloorRise[i]) { _bodyFloorRise[i] = v; changed = true; }
+            }
+            _bodyFloorCols = n;
+            if (changed && _bodyOn) _drawDirty = true;
         }
 
         /// <summary>Turns the body with a vessel that rocks (2026-09-14): <paramref name="degrees"/> about
@@ -716,7 +736,8 @@ namespace LastCall.UI
         private static readonly int IdBodyTopY   = Shader.PropertyToID("_BodyTopY");
         private static readonly int IdBodyTurn   = Shader.PropertyToID("_BodyTurn");
         private static readonly int IdBodyTopArc = Shader.PropertyToID("_BodyTopArc");
-        private static readonly int IdBodyFloorArc = Shader.PropertyToID("_BodyFloorArc");
+        private static readonly int IdBodyFloorCols = Shader.PropertyToID("_BodyFloorCols");
+        private static readonly int IdBodyFloorRise = Shader.PropertyToID("_BodyFloorRise");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -2032,7 +2053,8 @@ namespace LastCall.UI
                 _material.SetFloat(IdBodyTopY, _bodyTop);
                 _material.SetVector(IdBodyTurn, _bodyTurn);
                 _material.SetVector(IdBodyTopArc, _bodyTopArc);
-                _material.SetVector(IdBodyFloorArc, _bodyFloorArc);
+                _material.SetFloat(IdBodyFloorCols, _bodyFloorCols);
+                _material.SetFloatArray(IdBodyFloorRise, _bodyFloorRise);
                 _material.SetFloat(IdPoolTopY, ToUv(0f, _gridOrigin.y + _bodyTop).y);
             }
 
