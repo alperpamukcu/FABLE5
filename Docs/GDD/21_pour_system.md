@@ -94,7 +94,18 @@ longer moves the lip. The volume is the full rate × that share × the time. The
 (`MaxTilt`), and the first 25% of its lift lays the vessel level (`PourHand.Lean`) so the travel
 that pours is the travel that is spread out. From level on the bench bottle is held by its
 **middle** (the tin by its neck), and the lean waits until the mouth clears the tin's top at every
-pouring angle (`PourHand.Press`). ~~A full bottle starts to run at 24°; the onset climbs
+pouring angle (`PourHand.Press`).
+
+**The hand pours by its lift, in steps (2026-09-14, `BottlePour.LiftShare`; the author: "koyma hızı
+kaldırma mesafesine göre hızlanarak artacak 1-1-2-3-5-8 gibi artarak").** Past the pouring angle
+(level) the rest of the hand's lift is cut into nine equal bands, and each band runs a step of full
+flow in the ratio **1, 1, 2, 3, 5, 8, 13, 21, 34**: the first is about a percent of the tin a second
+at the bench's 0.33 tin/s, the ninth is full flow. The step is read off the hand's height
+(`PourHand.PourLift01`), not the lean, so a sideways swing cannot rock it. Both hand verbs pour by it
+(`TycoonRun.PourTickLift`, `PourOutLift`); the tilt law above stays in Core for the verbs and tests
+that pour by an angle. **Nothing is aimed any more:** the vessel that catches — the open tin, the
+serving glass — stands at the bottom of the screen and slides under the stream wherever it falls,
+rocking as it goes, so a bottle pours anywhere and never misses. ~~A full bottle starts to run at 24°; the onset climbs
 to 102° as it empties; a 30° ramp from an 8% trickle (2026-09-11).~~ The rates are Core's, not the benches': a hand pour runs at
 `TycoonConfig.HandPourScale` (0.60) and the tin into the serving glass at `ServePourMax` (0.45).
 `PourTick(seconds, tilt)` returns nothing under the onset without letting go of the chosen bottle

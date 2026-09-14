@@ -661,7 +661,17 @@ namespace LastCall.PlayTests
                 yield return new WaitForSecondsRealtime(0.2f);
             }
             var stuck = HostKey();
-            if (stuck != null) SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ")");
+            if (stuck != null)
+            {
+                string said = "";
+                foreach (var root in new[] { Find("LastCallPlate"), Find("HostNote") })
+                {
+                    if (root == null || !root.gameObject.activeInHierarchy) continue;
+                    foreach (var t in root.GetComponentsInChildren<UnityEngine.UI.Text>(false))
+                        if (!string.IsNullOrEmpty(t.text)) said += "[" + t.name + ":" + t.text.Replace("\n", " ") + "]";
+                }
+                SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ", saying " + said + ")");
+            }
         }
 
         private static RectTransform HostKey()

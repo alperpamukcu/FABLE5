@@ -1530,6 +1530,36 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.65 · Altıncı geçiş: kaldırma adımlarıyla döküm, kap akışı yakalıyor, akış ön plakanın arkasına iniyor (2026-09-14)
+
+Yazar: "şişelerden dökülen sıvı shaker.png nin önünde shaker_Front.png nin arkasında olacak. Koyma hızı kaldırma
+mesafesine göre hızlanarak artacak 1-1-2-3-5-8 gibi artarak. Artık şişe her yerde dökülebilecek. Bardak/shaker ekranın
+neredeyse en aşağısında dökülen sıvıyı otomatik yakalayacak asla kaçırmayacak ve hareket esnasında sallanacak. şişeyi
+kaldırma aralığını genişletip büyütebiliriz böylece"
+
+- **Kaldırma adımları** (`BottlePour.LiftShare`, Core): paralelden sonra elin kalan kaldırma aralığı dokuz eşit banda
+  bölünüyor; her bant tam akışın **1, 1, 2, 3, 5, 8, 13, 21, 34**'te biri. İlk adım tezgâhın 0.33 tin/sn'sinde saniyede
+  yaklaşık %1, dokuzuncu tam akış. Adım elin yüksekliğinden okunuyor (`PourHand.PourLift01`), eğimden değil — yana
+  itmenin eğime kattığı salınım adımı oynatmasın. Döküm fiilleri `PourTickLift` ve `PourOutLift`; eğim yasası Core'da
+  açıyla döken fiiller ve testler için duruyor. Oyunda ölçüldü (kuyruğa eklenen fare olaylarıyla gerçek bir döküm):
+  kaldırdıkça adım 3 → 5 → 7 → 9, teneke %1.6 → %9 → %30 → %96.
+- **Kap yakalıyor, nişan yok:** açık teneke (`_shakerHome` ayağı `CatchFootY` −340, ekranın altında; görünen alt kenar
+  ~12) ve servis bardağı akışın altına yayla kayıyor — şişe/teneke 40°'yi geçince ağzın x'ine, bırakılınca evine
+  (`StepCatch`). Teneke kapağın sağından ölçü camının soluna kadar (−122..325), bardak tezgâhın solundan SERVE IT'in
+  soluna kadar gidiyor; menzil dışındaki ağızdan akış kaba doğru bükülüyor. Kayarken ayağının üstünde yalpalıyor:
+  hıza ve hızlanmaya göre eğilen, az sönümlü bir yay (en çok 10°). Teneke kapanınca eski tezgâh çizgisinin ortasına
+  çıkıyor. Bardak yalpalarken içindeki gövde de dönüyor (`MetaballFluid.SetBodyTurn`, shader `_BodyTurn`); ön kenar
+  parçası dönen camın ağzında kalıyor. Serviste nişan kapısı ve "ağız kenarı geçsin" koşulu kalktı.
+- **Akış tenekenin arkasından önüne:** akışı yutan ağız çizili ağzın 56 birim altına indi (`TinStreamDepth`), yani akış
+  tenekenin arka duvarının önünden geçip ön plakanın dudağının arkasında kayboluyor.
+- **Kaldırma aralığı büyüdü:** kap alta inince üstündeki yer arttı; `LiftRange` 260→320, `ServeLiftRange` 220→300.
+- **Yerleşim:** adım şeridi 58→352, okuma satırı ve servis nişan satırı rayın hemen altına (326..349); şişe 150→300 (şeridin
+  sağında). Servis yazıları bardağın önünde çiziliyor, nişan satırı dış çizgili.
+- **Testler:** EditMode 598/598 (üç yeni: Fibonacci adımları, ilk adım saniyede ~%1 ve tepe 34 katı, kaldırmayla dolu
+  teneke bir porsiyon; sekizi o sırada çalışan başka bir oturumun), PlayMode 13/13 (94 sn). Tezgâhın görüntü tabanı yeniden
+  onaylandı (fark: teneke aşağıda, şişe sağda, yazılar yukarıda). Bir akşamda iki kez gece plakasının Listen tuşu 40 basışta
+  kapanmadı ve ilgili test kırmızı çıktı; sonraki tam koşuda tekrarlanmadı. Takılma notu artık plakanın o an ne dediğini yazıyor.
+
 ### 9.64 · Beşinci geçiş: şişe ortasından tutuluyor, döküm damlayla başlıyor (2026-09-14)
 
 Yazar: "Şişenin ucundan değil ortasından tutuyor olmamız gerekiyor böylece oranı daha ince ayarlayabiliriz oyuncu %1

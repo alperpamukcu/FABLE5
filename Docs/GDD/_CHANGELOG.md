@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The pour runs by the lift in Fibonacci steps, and the vessel catches it (2026-09-14, sixth
+  pass):** past level the hand's lift is nine bands whose flows go 1, 1, 2, 3, 5, 8, 13, 21, 34,
+  from about a percent of the tin a second to full flow. The open tin and the serving glass stand
+  at the bottom of the screen and slide under the stream wherever the bottle or tin is tipped,
+  rocking on their feet, so there is nothing to aim. The stream goes in over the tin's back and
+  under its front; the lift room grew; the step strip and the readout moved up under the rail.
+
 - **The bottle is held by its middle, and a pour starts as a trickle (2026-09-14, fifth pass):**
   from level on the bench bottle turns about the middle of its drawing instead of its neck, and
   the lean waits until its mouth stays over the tin at every pouring angle. The share of full flow

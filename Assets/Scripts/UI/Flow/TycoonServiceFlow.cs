@@ -48,8 +48,10 @@ namespace LastCall.UI
             if (!_serveGlassPiece.LipPlacement(_serveGlass.sizeDelta, out var lipSize, out var lipAt)) return;
             if ((_serveGlassLipRt.sizeDelta - lipSize).sqrMagnitude > 0.01f) _serveGlassLipRt.sizeDelta = lipSize;   // Piece is a struct; LipPlacement answers false with no sprite
             var g = _serveGlass;
+            // Turned with the glass (2026-09-14): the glass rocks while it catches, and the strip's offset from
+            // the glass's centre turns with it, or the front would slide off the rim as it leans.
             _serveGlassLipRt.anchoredPosition = g.anchoredPosition
-                + new Vector2(lipAt.x, g.sizeDelta.y * (1f - g.pivot.y) + lipAt.y);
+                + (Vector2)(g.localRotation * new Vector3(lipAt.x, g.sizeDelta.y * (1f - g.pivot.y) + lipAt.y, 0f));
             _serveGlassLipRt.localRotation = g.localRotation;
             _serveGlassLipRt.localScale = g.localScale;
         }
@@ -752,6 +754,38 @@ namespace LastCall.UI
         /// <summary>How far over the surface's top the hand may lift a vessel, and how far over a target's
         /// drawn top its mouth must be before it leans (PourHand.Press, 2026-09-14).</summary>
         private const float HandAbove = 20f, ClearOverRim = 6f;
+
+        // ── THE CATCH (2026-09-14, the author: "Artık şişe her yerde dökülebilecek. Bardak/shaker ekranın neredeyse en
+        // aşağısında dökülen sıvıyı otomatik yakalayacak asla kaçırmayacak ve hareket esnasında sallanacak. şişeyi kaldırma
+        // aralığını genişletip büyütebiliriz böylece") ────────────────────────────────────────────────────────────────
+        /// <summary>The foot of the vessel that catches — the open tin, the serving glass — at the bottom of the
+        /// screen (surface-local; the rect's bottom). The lift room over it is what grew.</summary>
+        private const float CatchFootY = -340f;
+        /// <summary>The glass stands a little higher than the tin: its sheet has fewer empty rows under its foot.</summary>
+        private const float GlassFootLift = 16f;
+        /// <summary>A vessel is pouring from this lean on (level, less the lean's own spring).</summary>
+        private const float PourFromTilt = 85f;
+        private const float CatchOmega = 9f, CatchZeta = 0.8f;                  // follows the stream, no overshoot
+        private const float SwayOmega = 11f, SwayZeta = 0.25f;                   // rocks, and wobbles when it stops
+        // Measured in play at 0.0005 per px/s² alone: the tin following a pour rocked 1.3 degrees at most, which does not
+        // read as a sway. The lean now takes the speed as well as the push, and the push counts for more.
+        private const float SwayPerAccel = 0.0012f, SwayPerSpeed = 0.004f, MaxSway = 10f;
+
+        /// <summary>One frame of a catcher: its x follows <paramref name="target"/> on a spring, and it rocks on
+        /// its foot with the push — an underdamped lean off its low-passed sideways acceleration, so it wobbles
+        /// as it stops. Positive sway leans the top left (Unity's counter-clockwise).</summary>
+        private static void StepCatch(ref float x, ref float v, ref float ax, ref float sway, ref float swayV,
+            float target, float dt)
+        {
+            float was = v;
+            v += (CatchOmega * CatchOmega * (target - x) - 2f * CatchZeta * CatchOmega * v) * dt;
+            x += v * dt;
+            ax = Mathf.Lerp(ax, (v - was) / dt, 1f - Mathf.Exp(-14f * dt));
+            float want = Mathf.Clamp(ax * SwayPerAccel + v * SwayPerSpeed, -MaxSway, MaxSway);
+            swayV += (SwayOmega * SwayOmega * (want - sway) - 2f * SwayZeta * SwayOmega * swayV) * dt;
+            sway += swayV * dt;
+            if (Motion.Reduced) { sway = 0f; swayV = 0f; }
+        }
 
         /// <summary>The step cards' shared TOP line: bottom-anchored y for a card of the
         /// given height, so a four-row card and a two-row card start at the same edge.</summary>

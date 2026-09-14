@@ -1627,6 +1627,44 @@ namespace LastCall.Core
             return PourIntoServingGlass(volume, 1.0);
         }
 
+        /// <summary>
+        /// The hand pour by the LIFT (2026-09-14, <see cref="BottlePour.LiftShare"/>): how far past the pouring
+        /// angle the hand has lifted picks a step of the bottle's hand rate, 1 to 34. Everything else is the
+        /// tilted pour's: a lift that runs nothing changes nothing, what runs un-mixes the tin and picks the
+        /// serving glass while it is empty, and an empty bottle ends the pour.
+        /// </summary>
+        public double PourTickLift(double seconds, double pour01)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (PouringId == null || seconds <= 0) return 0;
+
+            var bottle = _shelf.Find(PouringId);
+            double fill = bottle.Capacity > 0 ? bottle.Remaining / bottle.Capacity : 0;
+            double volume = BottlePour.LiftVolume(pour01, fill, bottle.PourRate * Config.HandPourScale, seconds);
+            if (volume <= 0) return 0;
+
+            double poured = _shelf.PourInto(Glass, PouringId, volume);
+            if (poured > 0)
+            {
+                UnmixTin();
+                if (ServingGlass.IsEmpty)
+                    SelectGlassFor(RatioRecipeMatcher.Match(Glass, _recipes, IngredientOf)?.Recipe);
+            }
+            if (poured <= 0 || bottle.IsEmpty) PouringId = null;
+            return poured;
+        }
+
+        /// <summary>The tin over the serving glass by the LIFT (2026-09-14): a step of the bar's serve rate,
+        /// off the tin's own level, through <see cref="PourIntoServingGlass"/> like every pour out.</summary>
+        public double PourOutLift(double seconds, double pour01)
+        {
+            EnsurePhase(TycoonPhase.DayOpen);
+            if (seconds <= 0 || Glass.IsEmpty) return 0;
+            double volume = BottlePour.LiftVolume(pour01, Glass.FillFraction, Config.ServePourMax, seconds);
+            if (volume <= 0) return 0;
+            return PourIntoServingGlass(volume, 1.0);
+        }
+
         /// <summary>A lean is between upright and upside down; the tap's own clamp.</summary>
         private static double ClampTilt(double degrees) => degrees < 0 ? 0 : (degrees > 180 ? 180 : degrees);
 

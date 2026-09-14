@@ -54,6 +54,7 @@ Shader "LastCall/MetaballLiquid"
         _MaskRect     ("Body Rect px", Vector) = (0, 0, 1, 1)
         _BodyFloorY   ("Body Floor px",Float) = 0
         _BodyTopY     ("Body Top px",  Float) = 0
+        _BodyTurn     ("Body Turn",    Vector) = (1, 0, 0, 0)
 
         // Standard UI stencil plumbing (lets the fluid live under a Mask if ever needed).
         _StencilComp ("Stencil Comparison", Float) = 8
@@ -122,6 +123,7 @@ Shader "LastCall/MetaballLiquid"
             float4    _MaskRect;        // where that sprite is drawn, px from the pixel grid's origin
             float     _BodyFloorY;      // px from the grid's origin
             float     _BodyTopY;
+            float4    _BodyTurn;        // cos, sin of the vessel's rock; its pivot in grid px (2026-09-14)
 
             // Live water surface (2026-07-22): the top of the pool is not a flat line but a
             // real wave. A height-field of columns (a shallow-water sim in MetaballFluid.cs)
@@ -271,6 +273,9 @@ Shader "LastCall/MetaballLiquid"
                 if (_BodyOn > 0.5)
                 {
                     float2 bp = (uv - 0.5) * _Size.xy + _ViewOrigin.xy;   // px from the grid's origin
+                    // THE GLASS ROCKS (2026-09-14): read the body in the glass's own turned frame.
+                    float2 bd = bp - _BodyTurn.zw;
+                    bp = _BodyTurn.zw + float2(bd.x * _BodyTurn.x + bd.y * _BodyTurn.y, -bd.x * _BodyTurn.y + bd.y * _BodyTurn.x);
                     float2 muv = (bp - _MaskRect.xy) / max(_MaskRect.zw, float2(1, 1));
                     if (muv.x >= 0.0 && muv.x <= 1.0 && muv.y >= 0.0 && muv.y <= 1.0
                         && bp.y >= _BodyFloorY && bp.y <= _BodyTopY)

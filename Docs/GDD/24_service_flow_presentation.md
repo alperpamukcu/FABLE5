@@ -132,6 +132,11 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    Each row's drink runs between the inner edges of its opaque walls (`GlassArt.BodyMask`: 4–5
    pixels on the current sheets, none where the edge pixel is see-through). A brimful tin shows an
    oval in its mouth, two pixels inside the opening's dark inside.
+11. **The vessel catches (2026-09-14, sixth pass):** the open tin and the serving glass stand at the
+   bottom of the screen (foot -340) and slide under the stream wherever the bottle or tin is tipped,
+   rocking on their feet as they go; nothing is aimed. The pour runs by the hand's lift past level in
+   nine Fibonacci steps (GDD 21). The step strip stands at 352 and the readout / aim line at 326..349,
+   under the rail; the bottle rests at 300. On the serve bench the words draw over the glass.
 10. **The lean waits for the top (2026-09-14):** a held bottle or tin stays upright until its mouth
    clears the target's drawn top by 6 (the tin's mouth on the shaker bench, the glass's top on the
    serve bench) and reaches level with the mouth at that line; the rest of the lean spreads over

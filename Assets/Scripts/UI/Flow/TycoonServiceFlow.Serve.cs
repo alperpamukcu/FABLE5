@@ -101,7 +101,7 @@ namespace LastCall.UI
         /// tips it fully. Measured against the 420 highball: the tin's spout clears the drawn rim
         /// from the first pouring angle to full tilt, over ~116 units of hand travel (was 10).</summary>
         // 220, not 170 (2026-09-14, the author: "şişelerde sıvı dökerken daha ince ayar yapılabilmeli").
-        private const float ServeGripDepth = 60f, ServeLiftRange = 220f;
+        private const float ServeGripDepth = 60f, ServeLiftRange = 300f;   // 300: the glass went to the bottom (2026-09-14)
         /// <summary>A tin that ran dry leaves the bench — but only once it is standing on it.</summary>
         private bool _serveTinLeaving;
         /// <summary>The share of full flow the tin is giving this frame — Core's BottlePour, read
@@ -136,6 +136,7 @@ namespace LastCall.UI
             _serveFluid.SetColor(DrinkColor(run.ServingGlass.IsEmpty ? run.Glass : run.ServingGlass));
             ShowServingGlassware(run);
             RefreshServeMixBar(run);
+            _glassCatchX = ServeGlassRestX; _glassCatchV = 0f; _glassAx = 0f; _glassSway = 0f; _glassSwayV = 0f;
             PushServePool(run);
             GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
             // Steel is steel whatever is in it. This used to multiply the tin sprite by the
@@ -209,6 +210,41 @@ namespace LastCall.UI
             if (piece.Sprite == null)
                 return (c + new Vector2(0f, h * 0.5f), w * 0.4f);
             return (new Vector2(c.x, c.y - h * 0.5f + h * piece.RimY), w * 0.5f * piece.InteriorHalf);
+        }
+
+        private float _glassCatchX = ServeGlassRestX, _glassCatchV, _glassAx, _glassSway, _glassSwayV;
+        private const float ServeGlassRestX = -110f;
+        private static readonly Vector3[] DoneCorners = new Vector3[4];
+
+        /// <summary>The serving glass catches (2026-09-14): it follows the tin's mouth along the bottom, between the
+        /// bench's left edge and SERVE IT, rocked on its foot; the back sheet and the shadow go with it.</summary>
+        private void StepGlassCatch(float targetX)
+        {
+            if (_serveGlass == null || _serveSurface == null) return;
+            float dt = Mathf.Min(Time.deltaTime, 1f / 30f);
+            if (dt <= 0f) return;
+            float half = _serveGlass.rect.width * 0.5f;
+            float min = -_serveSurface.rect.width * 0.5f + half + 10f, max = float.PositiveInfinity;
+            if (_serveDoneGroup != null)
+            {
+                ((RectTransform)_serveDoneGroup.transform).GetWorldCorners(DoneCorners);
+                max = _serveSurface.InverseTransformPoint(DoneCorners[0]).x - half - 8f;
+            }
+            StepCatch(ref _glassCatchX, ref _glassCatchV, ref _glassAx, ref _glassSway, ref _glassSwayV,
+                Mathf.Clamp(targetX, min, Mathf.Max(min, max)), dt);
+            var rock = Quaternion.Euler(0f, 0f, _glassSway);
+            float h = _serveGlass.rect.height;
+            _serveGlass.anchoredPosition = new Vector2(_glassCatchX, CatchFootY + GlassFootLift)
+                + (Vector2)(rock * new Vector3(0f, h * 0.5f, 0f));
+            _serveGlass.localRotation = rock;
+            if (_serveGlassBackRt != null)
+            {
+                _serveGlassBackRt.anchoredPosition = _serveGlass.anchoredPosition;
+                _serveGlassBackRt.localRotation = rock;
+                _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
+            }
+            if (_serveGlassShadow != null)
+                _serveGlassShadow.anchoredPosition = new Vector2(_glassCatchX, _serveGlassShadow.anchoredPosition.y);
         }
 
         /// <summary>The top of the glass's DRAWING in surface space — what the tin's mouth has to clear
@@ -290,10 +326,11 @@ namespace LastCall.UI
                 // since 2026-08-11 and this bench never did (it aimed rect top at rect top).
                 Vector2 mouth = ServeSpoutNow();
                 var (opening, rimHalf) = ServeRim();
-                bool clear = mouth.y > opening.y + 2f;
-                // THE LIP DECIDES (2026-09-11): a full tin runs from 24 degrees, its last drops
-                // need nearly a hundred — Core's BottlePour, off the tin's own level.
-                _tinShare = (float)BottlePour.Share(tilt, run.Glass.FillFraction);
+                // THE GLASS CATCHES (2026-09-14): it slides under the stream wherever the tin is tipped
+                // (StepGlassCatch), so there is no rim to clear and no aim to miss.
+                bool clear = true;
+                // BY THE LIFT, IN STEPS (BottlePour.LiftShare): 1, 1, 2, 3, 5, 8, 13, 21, 34 past level.
+                _tinShare = tilt >= PourFromTilt ? (float)BottlePour.LiftShare(_serveHand.PourLift01, run.Glass.FillFraction) : 0f;
                 bool running = _tinShare > 0f;
 
                 // The glass is full: the pour stops there rather than running a stream into a
@@ -324,8 +361,8 @@ namespace LastCall.UI
                     // bardak olursa olsun tam 1 porsiyon çıkmalı"): a stream that misses the
                     // glass is a stream the tin does not pour — the aim GATES the pour
                     // instead of taxing it, so a full tin is always a full glass.
-                    accuracy = Mathf.Clamp01(1f - Mathf.Abs(mouth.x - opening.x) / 90f);
-                    pourNow = accuracy > AimGate;
+                    accuracy = 1.0;     // the glass is under the stream wherever it falls (2026-09-14)
+                    pourNow = true;
 
                     // The stream falls toward where the aim sends it: dead-on it drops into the
                     // glass and melts into the drink; off-aim it drifts wide and misses the rim,
@@ -352,7 +389,7 @@ namespace LastCall.UI
             {
                 _servePouringNow = true;
                 double before = run.ServingGlass.TotalVolume;
-                run.PourOutTilted(Time.deltaTime, _serveHand.Tilt);   // Core's lip, Core's rate
+                run.PourOutLift(Time.deltaTime, _serveHand.PourLift01);   // Core's steps, Core's rate
                 // The GLASS's colour as the tin goes into it. Only the refresh set this, and the
                 // refresh reads the tin when the glass is empty — so tipping a shaken drink into
                 // a glass that already held something left the pool at the old drink's colour
@@ -367,6 +404,7 @@ namespace LastCall.UI
             // counter can change in the middle of this stage. Checked every frame; it costs a
             // reference compare until the day it actually changes.
             ShowServingGlassware(run);
+            StepGlassCatch(_serveGrabbed && _serveHand.Held && _serveHand.Tilt > 40f ? ServeSpoutNow().x : ServeGlassRestX);
             PushServePool(run);
             _serveFluid.Step(Time.deltaTime);
         }
@@ -428,7 +466,7 @@ namespace LastCall.UI
             // half the TALLEST glass above the bench line, so a rocks tumbler floated two
             // inches over its own shadow. The foot stands on the line; the centre follows.
             _serveGlass.anchoredPosition = new Vector2(_serveGlass.anchoredPosition.x,
-                BenchFootY + _serveGlass.sizeDelta.y * 0.5f);
+                CatchFootY + GlassFootLift + _serveGlass.sizeDelta.y * 0.5f);
             if (_serveGlassBackRt != null)
             {
                 _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
@@ -442,7 +480,7 @@ namespace LastCall.UI
                     ? Mathf.Max(0.35f, piece.Profile[0]) : 0.8f);
                 _serveGlassShadow.sizeDelta = new Vector2(foot, Mathf.Max(10f, foot * 0.22f));
                 _serveGlassShadow.anchoredPosition = new Vector2(_serveGlass.anchoredPosition.x,
-                    BenchFootY + 8f);
+                    CatchFootY + GlassFootLift + 8f);
             }
             _serveFluid.SetProfile(piece.Profile);
             _serveFluid.SetDensity(piece.Density);   // measured per vessel, not one number for all
@@ -487,6 +525,7 @@ namespace LastCall.UI
             if (piece.Sprite != null && bodyFrac > 0.001f)
                 _serveFluid.SetBody(piece.Sprite, new Rect(0f, 0f, w, h), h * piece.FloorY, h * piece.FillAmount(bodyFrac));
             else _serveFluid.ClearBody();
+            _serveFluid.SetBodyTurn(_glassSway, new Vector2(w * 0.5f, h * 0.5f));   // the drink rocks with the glass
             // The top face rides the pour (2026-09-13): it was placed once, when the glass
             // appeared, and a full glass kept the face it had at the first drop.
             PlaceServeSurface(piece, (float)run.ServingGlass.FillFraction);
@@ -678,7 +717,7 @@ namespace LastCall.UI
             // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
             // so the eye finds the bench's one sentence in one place on both screens.
             Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
-                    new Vector2(206, 32), new Vector2(-420, 55));   // between the back key and SERVE IT
+                    new Vector2(16, 326), new Vector2(-16, 349));   // up under the rail, over the glass (2026-09-14)
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -695,7 +734,7 @@ namespace LastCall.UI
             // the pooled drink; the glass image itself becomes the clear FRONT face.
             // Centre-left of the work column, foot on the bench's own line: the glass is
             // 260 tall about its centre, so half of that stands it on BenchFootY.
-            var glassRest = new Vector2(-110, BenchFootY + ServeGlassHeight * 0.5f);
+            var glassRest = new Vector2(ServeGlassRestX, CatchFootY + GlassFootLift + ServeGlassHeight * 0.5f);
             // Under the glass, on the counter. Re-sized with the vessel in
             // ShowServingGlassware — a coupe casts a wider shadow than a highball.
             _serveGlassShadow = AddContactShadow(_serveSurface, 150f,
@@ -841,6 +880,14 @@ namespace LastCall.UI
             // The way back is the left-edge key now (the loop rework's one back, one place).
             AddEdgeBack(_servePanel);
             AddBinButton(_servePanel);      // see the shaker's, above
+            // THE WORDS OVER THE GLASS (2026-09-14): the strip and the aim line went up under the rail when the glass
+            // came down to the bottom, and a tall glass stands in that band — so they draw after it, outlined.
+            var aimOutline = _aimText.gameObject.AddComponent<Outline>();
+            aimOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            aimOutline.effectDistance = new Vector2(1f, -1f);
+            _aimText.transform.SetAsLastSibling();
+            foreach (Transform child in _servePanel)
+                if (child.name == "Steps") { child.SetAsLastSibling(); break; }
 
 
             var done = NewRect("Done", _servePanel);

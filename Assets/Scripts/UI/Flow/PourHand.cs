@@ -56,6 +56,22 @@ namespace LastCall.UI
         public float Tilt => _tilt;
         public Vector2 GripPoint => _w;
 
+        /// <summary>
+        /// How far the hand has lifted past the pouring angle, 0..1 of the rest of its lift (2026-09-14): what
+        /// BottlePour.LiftShare steps. Read off the hand's own height, not the lean, so the swing a sideways
+        /// push adds to the lean cannot rock the pour from one step to the next.
+        /// </summary>
+        public float PourLift01
+        {
+            get
+            {
+                if (!Held || _liftRange <= 0f) return 0f;
+                float lift01 = (_p.y - _liftBase) / _liftRange;
+                if (MaxTilt <= KneeTilt) return Mathf.Clamp01(lift01);
+                return Mathf.Clamp01((lift01 - KneeLift) / (1f - KneeLift));
+            }
+        }
+
         // ── tuning ────────────────────────────────────────────────────────────
         private const float FollowOmega = 30f, FollowZeta = 0.85f;   // close behind the pointer, no overshoot to fight
         private const float TiltOmega = 18f, TiltZeta = 0.7f;        // the lean catches up, and barely rocks

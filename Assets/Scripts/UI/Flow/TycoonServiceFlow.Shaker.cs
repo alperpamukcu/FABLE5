@@ -52,7 +52,9 @@ namespace LastCall.UI
         private HoverGlow _pourGlow;             // the bottle's glow, stilled while the hand holds it
         private const float BottleGripDepth = 60f;
         private bool _pouring;
-        private const float LiftRange = 260f;  // px of lift for a full tilt (200 until 2026-09-14: "daha ince ayar")
+        // 320 (2026-09-14, the author: "şişeyi kaldırma aralığını genişletip büyütebiliriz"): the tin went to the bottom
+        // of the screen, so the room over it grew and the lift takes more of it (200, then 260, before).
+        private const float LiftRange = 320f;
         // 180, NECK STRAIGHT DOWN (2026-09-13): the pour runs past level and is fullest with the
         // vessel on its neck (BottlePour), so the hand has to be able to get it there. The first
         // part of the lift lays it level (PourHand.Lean). Was 118.
@@ -322,7 +324,8 @@ namespace LastCall.UI
 
         /// <summary>The strip's baseline on the counter front, over the key row and under the
         /// readout's shelf... and the height of one step.</summary>
-        private const float StepStripY = 58f, StepStripH = 20f;   // 100, then 78, as the props came down (2026-09-14)
+        // 352 (2026-09-14): up under the counter rail, over the tin that now stands at the bottom (100, 78, 58 before).
+        private const float StepStripY = 352f, StepStripH = 20f;
 
         private Text BuildStepStrip(RectTransform panel, string[] words,
             List<(Image icon, Text label, Image tick)> rows)
@@ -831,6 +834,7 @@ namespace LastCall.UI
             _shakerFluid.SetColor(DrinkColor(run.Glass));
             _shakerVessel.anchoredPosition = _shakerHome;
             _shakerVessel.localRotation = Quaternion.identity;
+            _tinCatchX = _shakerHome.x; _tinCatchV = 0f; _tinAx = 0f; _tinSway = 0f; _tinSwayV = 0f;
             _capped = false; _capGrabbed = false; _capT = 0f;
             _spoonHeld = false; _stirEnergy = 0; _stirHasPrev = false;
             _toGlassWasOn = false; _toGlassPulse = 0f;
@@ -909,7 +913,9 @@ namespace LastCall.UI
                 Vector2 mouth = _bottleHand.SpoutNow;
 
                 var (opening, mouthHalf) = TinMouth();
-                bool over = Mathf.Abs(mouth.x - opening.x) < mouthHalf && mouth.y > opening.y - 30f;
+                // THE TIN CATCHES (2026-09-14): it slides under the stream wherever the bottle is tipped
+                // (StepTinCatch), so there is no mouth to aim at any more; a stream out of its reach bends to it.
+                bool over = true;
                 // A full tin takes nothing more, so the stream stops with it: liquid pouring into
                 // a glass that cannot accept it read as an overflow the rules do not have
                 // (GDD 21 §3, 2026-07-28). The bottle stays in hand — only the pour ends.
@@ -924,7 +930,8 @@ namespace LastCall.UI
                 // THIS bottle, at its own level, starts to run, and how much it gives past that.
                 var held = run.Shelf.Find(_focusBottle.Id);
                 double level = held != null && held.Capacity > 0 ? held.Remaining / held.Capacity : 0;
-                _bottleShare = (float)BottlePour.Share(tilt, level);
+                // BY THE LIFT, IN STEPS (2026-09-14, BottlePour.LiftShare): 1, 1, 2, 3, 5, 8, 13, 21, 34 over the lift past level.
+                _bottleShare = tilt >= PourFromTilt ? (float)BottlePour.LiftShare(_bottleHand.PourLift01, level) : 0f;
                 bool running = _bottleShare > 0f;
                 pourNow = running && over && !full;
                 if (full && running && over) ShowShakerFull();
@@ -952,7 +959,7 @@ namespace LastCall.UI
             if (pourNow)
             {
                 if (run.PouringId == null) run.BeginPour(_focusBottle.Id);
-                run.PourTick(Time.deltaTime, _bottleHand.Tilt);   // Core's lip, Core's rate
+                run.PourTickLift(Time.deltaTime, _bottleHand.PourLift01);   // Core's steps, Core's rate
                 // The tin's own colour, every frame it changes. RefreshShaker sets this once on
                 // the way in, and on the way in the tin is EMPTY — so without this the body kept
                 // DrinkColor's empty-glass cream while the stream poured pink into it (the
@@ -973,10 +980,31 @@ namespace LastCall.UI
             if (pourNow) RefreshShakerMixBar(run);          // the gauge follows the stream
             _pouring = pourNow;
 
+            // The tin follows the mouth once the bottle is well on its way over, and goes home when it is not.
+            StepTinCatch(!_capped && _capT <= 0f && _bottleGrabbed && _bottleHand.Held && _bottleHand.Tilt > 40f
+                ? _bottleHand.SpoutNow.x : _shakerHome.x);
+
             // Every frame, not only the pouring ones: the bottle in hand is the same bottle
             // that stands on the rail, and it drains while you hold it over the tin. Setting
             // it once on the way in would show the level it had when you picked it up.
             PushPourFill(run);
+        }
+
+        private float _tinCatchX = -120f, _tinCatchV, _tinAx, _tinSway, _tinSwayV;
+        /// <summary>How far the catching tin may travel: from its home, where the lid stands to its left, to the
+        /// measuring glass on the right (surface-local, the tin's centre).</summary>
+        private const float TinCatchMinX = -122f, TinCatchMaxX = 325f;
+        /// <summary>How far under the drawn mouth the stream is swallowed: past the front plate's lip (26 sheet rows,
+        /// 52 units, at the middle), so the stream is seen going in — over the tin's back, under its front (2026-09-14,
+        /// the author: "şişelerden dökülen sıvı shaker.png nin önünde shaker_Front.png nin arkasında olacak").</summary>
+        private const float TinStreamDepth = 56f;
+
+        private void StepTinCatch(float targetX)
+        {
+            float dt = Mathf.Min(Time.deltaTime, 1f / 30f);
+            if (dt <= 0f) return;
+            StepCatch(ref _tinCatchX, ref _tinCatchV, ref _tinAx, ref _tinSway, ref _tinSwayV,
+                Mathf.Clamp(targetX, TinCatchMinX, TinCatchMaxX), dt);
         }
 
         /// <summary>The focus bottle's v4 plates, resolved once per card: PushPourFill runs
@@ -1117,7 +1145,7 @@ namespace LastCall.UI
             // the steel shows no drink, and with nothing to land on the stream used to fall
             // through the tin and out under it — the "drips to the floor" the author saw.
             var (mouthAt, mouthHalfW) = TinMouth();
-            _shakerFluid.SetSink(mouthAt, mouthHalfW);
+            _shakerFluid.SetSink(mouthAt + new Vector2(0f, -TinStreamDepth), mouthHalfW);
             if (_tinSurface != null) _tinSurface.enabled = false;   // shown below, only at the brim
             // The drink at the brim and the stream into it are drawn in the tin's own pixels.
             var tinArt = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
@@ -1247,10 +1275,27 @@ namespace LastCall.UI
             float e = _capT * _capT * (3f - 2f * _capT);   // smoothstep
 
             if (!_shaking)
-                _shakerVessel.anchoredPosition = Vector2.Lerp(
-                    _shakerVessel.anchoredPosition,
-                    Vector2.Lerp(_shakerHome, new Vector2(CapCentreX, _shakerHome.y), e),
-                    1f - Mathf.Exp(-9f * dt));
+            {
+                if (e <= 0.0001f)
+                {
+                    // OPEN, IT CATCHES (2026-09-14): where StepTinCatch has it, rocked on its foot.
+                    var rock = Quaternion.Euler(0f, 0f, _tinSway);
+                    _shakerVessel.anchoredPosition = new Vector2(_tinCatchX, _shakerHome.y - TinH * 0.5f)
+                        + (Vector2)(rock * new Vector3(0f, TinH * 0.5f, 0f));
+                    _shakerVessel.localRotation = rock;
+                }
+                else
+                {
+                    // Capped, it eases up to the middle of the old counter line, where the lid and a shaking hand
+                    // have room, and stands upright.
+                    _shakerVessel.localRotation = Quaternion.Slerp(_shakerVessel.localRotation, Quaternion.identity,
+                        1f - Mathf.Exp(-12f * dt));
+                    _shakerVessel.anchoredPosition = Vector2.Lerp(
+                        _shakerVessel.anchoredPosition,
+                        Vector2.Lerp(new Vector2(_tinCatchX, _shakerHome.y), new Vector2(CapCentreX, BenchFootY + TinH * 0.5f), e),
+                        1f - Mathf.Exp(-9f * dt));
+                }
+            }
             _shakerVessel.sizeDelta = Vector2.Lerp(_shakerOpenSize, _shakerOpenSize * CapGrowth, e);
 
             foreach (var g in _benchProps) if (g != null) g.alpha = 1f - e;
@@ -1809,8 +1854,10 @@ namespace LastCall.UI
             // tin 66, cap 71, bottle 86, napkin 54 — and the numbers below leave at least
             // BenchClear between every pair of drawn edges, inside the 1149-wide working
             // area. Change one and re-check the others; the gaps are the contract.
-            _shakerHome = new Vector2(-120, BenchFootY + TinH * 0.5f);
-            _bottleRest = new Vector2(150, -90);   // the bottle's own rest (-70 until the props came down 20)
+            _shakerHome = new Vector2(-120, CatchFootY + TinH * 0.5f);   // at the bottom: the tin catches (2026-09-14)
+            // 300, not 150 (2026-09-14): the strip and the readout moved up under the rail, and at 150 the bottle stood
+            // in their band; right of them it stands clear, and the tin travels under it when the bottle is in hand.
+            _bottleRest = new Vector2(300, -90);
             // The two contact shadows, built BEFORE the props so they draw under them.
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
             _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
@@ -2036,7 +2083,7 @@ namespace LastCall.UI
             // size in the rebuild.
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
             // Under the strip, over the keys (2026-09-13).
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 32), new Vector2(-16, 55));
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 326), new Vector2(-16, 349));   // under the strip, over the tin (2026-09-14)
 
             // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
             // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and

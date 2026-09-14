@@ -1017,7 +1017,21 @@ namespace LastCall.PlayTests
                 yield return new WaitForSecondsRealtime(0.2f);
             }
             var stuck = HostKey();
-            if (stuck != null) SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ")");
+            if (stuck != null) SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ", saying " + HostLine() + ")");
+        }
+
+        /// <summary>Who is on the host's plate or note and the line it is showing, for the suite clock when a key
+        /// will not put it away (2026-09-14: the night plate held on through forty presses twice in one evening).</summary>
+        private static string HostLine()
+        {
+            string said = "";
+            foreach (var root in new[] { Find("LastCallPlate"), Find("HostNote") })
+            {
+                if (root == null || !root.gameObject.activeInHierarchy) continue;
+                foreach (var t in root.GetComponentsInChildren<Text>(false))
+                    if (!string.IsNullOrEmpty(t.text)) said += "[" + t.name + ":" + t.text.Replace("\n", " ") + "]";
+            }
+            return said.Length > 0 ? said : "(nothing)";
         }
 
         /// <summary>The one key the host is waiting on, or null when she is not talking.</summary>

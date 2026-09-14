@@ -574,6 +574,7 @@ namespace LastCall.UI
         private Vector4 _bodyMaskUv, _bodyMaskRect;
         private float _bodyFloor, _bodyTop;
         private bool _bodyOn;
+        private Vector4 _bodyTurn = new Vector4(1f, 0f, 0f, 0f);   // cos, sin, pivot x, pivot y (grid px)
 
         /// <summary>
         /// Draws the settled drink as <paramref name="mask"/>'s opaque pixels between
@@ -594,6 +595,15 @@ namespace LastCall.UI
                 _drawDirty = true;
             _bodyOn = true; _bodyMask = tex; _bodyMaskUv = uv; _bodyMaskRect = rc;
             _bodyFloor = floor; _bodyTop = top;
+        }
+
+        /// <summary>Turns the body with a vessel that rocks (2026-09-14): <paramref name="degrees"/> about
+        /// <paramref name="pivot"/>, in the pixel grid's px. Zero for a vessel standing still.</summary>
+        public void SetBodyTurn(float degrees, Vector2 pivot)
+        {
+            float r = degrees * Mathf.Deg2Rad;
+            var turn = new Vector4(Mathf.Cos(r), Mathf.Sin(r), pivot.x, pivot.y);
+            if (turn != _bodyTurn) { _bodyTurn = turn; if (_bodyOn) _drawDirty = true; }
         }
 
         /// <summary>Back to the particles drawing the whole drink.</summary>
@@ -664,6 +674,7 @@ namespace LastCall.UI
         private static readonly int IdMaskRect   = Shader.PropertyToID("_MaskRect");
         private static readonly int IdBodyFloorY = Shader.PropertyToID("_BodyFloorY");
         private static readonly int IdBodyTopY   = Shader.PropertyToID("_BodyTopY");
+        private static readonly int IdBodyTurn   = Shader.PropertyToID("_BodyTurn");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -1977,6 +1988,7 @@ namespace LastCall.UI
                 _material.SetVector(IdMaskRect, _bodyMaskRect);
                 _material.SetFloat(IdBodyFloorY, _bodyFloor);
                 _material.SetFloat(IdBodyTopY, _bodyTop);
+                _material.SetVector(IdBodyTurn, _bodyTurn);
                 _material.SetFloat(IdPoolTopY, ToUv(0f, _gridOrigin.y + _bodyTop).y);
             }
 

@@ -60,5 +60,43 @@ namespace LastCall.Core
             if (seconds <= 0 || fullRate <= 0) return 0;
             return fullRate * Share(tiltDegrees, fill) * seconds;
         }
+
+        // ── THE LIFT'S STEPS (2026-09-14, the author: "koyma hızı kaldırma mesafesine göre hızlanarak artacak
+        // 1-1-2-3-5-8 gibi artarak") ─────────────────────────────────────────────────────────────────────────
+        // The hand pours by how far it has lifted past the pouring angle, not by the lean: the rest of the
+        // lift is cut into equal bands and each band runs a step of flow, the steps growing as Fibonacci does.
+        // Nine of them, 1 to 34, so the first is a thirty-fourth of full flow — at the bench's 0.33 tin a
+        // second that is about a percent of the tin a second, the small measure the author asked to be easy
+        // (2026-09-14) — and the ninth is the same full flow as ever.
+        private static readonly int[] Steps = { 1, 1, 2, 3, 5, 8, 13, 21, 34 };
+
+        /// <summary>How many steps the lift is cut into.</summary>
+        public static int StepCount => Steps.Length;
+
+        /// <summary>The step a lift of <paramref name="pour01"/> (0 at the pouring angle, 1 at the top of the
+        /// hand's lift) stands on: 0 for none, 1..<see cref="StepCount"/>.</summary>
+        public static int LiftStep(double pour01)
+        {
+            if (double.IsNaN(pour01) || pour01 <= 0) return 0;
+            int i = (int)Math.Floor(pour01 * Steps.Length);
+            return Math.Min(i, Steps.Length - 1) + 1;
+        }
+
+        /// <summary>The share of full flow at a lift of <paramref name="pour01"/>: the step's flow over the
+        /// last step's. Zero at the pouring angle and from an empty vessel.</summary>
+        public static double LiftShare(double pour01, double fill)
+        {
+            if (fill <= 0) return 0;
+            int step = LiftStep(pour01);
+            return step == 0 ? 0 : Steps[step - 1] / (double)Steps[Steps.Length - 1];
+        }
+
+        /// <summary>The volume that runs in <paramref name="seconds"/> at a lift, from a vessel whose full flow
+        /// is <paramref name="fullRate"/> a second.</summary>
+        public static double LiftVolume(double pour01, double fill, double fullRate, double seconds)
+        {
+            if (seconds <= 0 || fullRate <= 0) return 0;
+            return fullRate * LiftShare(pour01, fill) * seconds;
+        }
     }
 }

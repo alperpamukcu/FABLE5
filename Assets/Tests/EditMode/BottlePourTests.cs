@@ -112,6 +112,25 @@ namespace LastCall.Tests
             Assert.AreEqual(a, b, 0.0, "the same lean, level and clock give the same volume, bit for bit");
         }
 
+        /// <summary>The lift's steps (2026-09-14, the author: "1-1-2-3-5-8 gibi artarak"): equal bands of the
+        /// lift past level, their flows growing as Fibonacci does, from a trickle to full flow.</summary>
+        [Test]
+        public void TheLift_StepsUpLikeFibonacci_FromATrickleToFullFlow()
+        {
+            Assert.AreEqual(0.0, BottlePour.LiftShare(0.0, 1.0), 1e-12, "at the pouring angle nothing runs yet");
+            var steps = new[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 };
+            Assert.AreEqual(steps.Length, BottlePour.StepCount);
+            for (int i = 0; i < steps.Length; i++)
+            {
+                double mid = (i + 0.5) / steps.Length;
+                Assert.AreEqual(i + 1, BottlePour.LiftStep(mid), $"the middle of band {i + 1}");
+                Assert.AreEqual(steps[i] / 34.0, BottlePour.LiftShare(mid, 0.7), 1e-12, $"band {i + 1}'s flow");
+            }
+            Assert.AreEqual(1.0, BottlePour.LiftShare(1.0, 0.7), 1e-12, "the top of the lift is full flow");
+            Assert.AreEqual(1.0, BottlePour.LiftShare(3.0, 0.7), 1e-12, "past the top it stays full");
+            Assert.AreEqual(0.0, BottlePour.LiftShare(0.5, 0.0), 1e-12, "an empty vessel gives nothing");
+        }
+
         // ── the verbs ───────────────────────────────────────────────────────────
 
         private static IngredientCard Booze(string id, string category) =>
@@ -200,6 +219,34 @@ namespace LastCall.Tests
             Assert.AreEqual(1.0, run.Glass.FillFraction, 1e-9, "the tin runs past its brim");
             run.BeginPour("gin");
             Assert.AreEqual(0.0, run.PourTick(0.5, 180.0), 1e-12, "a full tin took more");
+        }
+
+        [Test]
+        public void ByTheLift_TheFirstStepIsAPercentASecond_AndTheTopIsThirtyFourOfIt()
+        {
+            var low = BenchRun();
+            low.BeginPour("gin");
+            double trickle = low.PourTickLift(1.0, 0.05);
+            var high = BenchRun();
+            high.BeginPour("gin");
+            double full = high.PourTickLift(1.0, 1.0);
+            Assert.That(trickle, Is.InRange(0.008, 0.012), "the first step should be about a percent of the tin a second");
+            Assert.AreEqual(34.0 * trickle, full, 1e-9, "the top step is thirty-four of the first");
+            var none = BenchRun();
+            none.BeginPour("gin");
+            Assert.AreEqual(0.0, none.PourTickLift(1.0, 0.0), 1e-12, "at the pouring angle nothing runs");
+            Assert.AreEqual("gin", none.PouringId, "a lift that runs nothing ended the pour");
+        }
+
+        [Test]
+        public void ByTheLift_AFullTin_FillsTheGlass_AndEmpties()
+        {
+            var run = BenchRun();
+            run.PourMeasure("gin", 0.4);
+            run.PourMeasure("soda", 0.6);
+            for (int i = 0; i < 60 * 6 && !run.Glass.IsEmpty; i++) run.PourOutLift(1.0 / 60.0, 1.0);
+            Assert.IsTrue(run.Glass.IsEmpty, "a full tin lifted to the top for six seconds did not run dry");
+            Assert.AreEqual(1.0, run.ServingGlass.FillFraction, 1e-9, "one tin is one portion");
         }
 
         [Test]
