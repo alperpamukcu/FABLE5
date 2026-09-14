@@ -275,6 +275,11 @@ namespace LastCall.UI
         private readonly List<SpriteRenderer> _cellarBack = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _cellarDrink = new List<SpriteRenderer>();
         private readonly List<SpriteMask> _cellarMask = new List<SpriteMask>();
+        // THE DRINK IS ROUND (2026-09-14): the oval face on top of each bottle's drink and the arched foot under it, both
+        // inside the bottle's mask. The face shares the drink's sorting order and stands a hair nearer the camera, which
+        // is what draws it over the drink (Renderer2D sorts a tie by depth); the order above is the bottle's front.
+        private readonly List<SpriteRenderer> _cellarFace = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _cellarFoot = new List<SpriteRenderer>();
         private readonly List<Rect> _cellarCavity = new List<Rect>();   // opaque bbox of the mask, in art px
         private Sprite _whitePx;
         private RectTransform _cellarDoorRoot;
@@ -419,6 +424,8 @@ namespace LastCall.UI
                 {
                     _cellarBack[i].gameObject.SetActive(false);
                     _cellarDrink[i].gameObject.SetActive(false);
+                    _cellarFace[i].gameObject.SetActive(false);
+                    _cellarFoot[i].gameObject.SetActive(false);
                     _cellarMask[i].gameObject.SetActive(false);
                 }
                 if (!on) continue;
@@ -527,7 +534,12 @@ namespace LastCall.UI
                 mask.frontSortingOrder = 31; mask.backSortingOrder = 31;
                 var drink = WorldSprite("StockDrink" + i, WhitePixel(), order: 31);
                 drink.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                var face = WorldSprite("StockFace" + i, GlassArt.SurfaceDisc(), order: 31);
+                face.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+                var foot = WorldSprite("StockFoot" + i, GlassArt.SurfaceDisc(), order: 31);
+                foot.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
                 _cellarBack.Add(back); _cellarMask.Add(mask); _cellarDrink.Add(drink);
+                _cellarFace.Add(face); _cellarFoot.Add(foot);
                 _cellarCavity.Add(Rect.zero);
             }
             for (int i = 0; i < _cellarStock.Count; i++)
@@ -536,6 +548,8 @@ namespace LastCall.UI
                 bool on = p != null && p.Mask != null && _cellarStock[i].gameObject.activeSelf;
                 _cellarBack[i].gameObject.SetActive(on);
                 _cellarDrink[i].gameObject.SetActive(on);
+                _cellarFace[i].gameObject.SetActive(on);
+                _cellarFoot[i].gameObject.SetActive(on);
                 _cellarMask[i].gameObject.SetActive(on);
                 if (!on) continue;
                 _cellarBack[i].sprite = p.Back;
@@ -564,6 +578,12 @@ namespace LastCall.UI
             _cellarStock[index].enabled = shown;
             if (index < _cellarBack.Count) _cellarBack[index].enabled = shown;
             if (index < _cellarDrink.Count) _cellarDrink[index].enabled = shown && _cellarDrinkOn(index);
+            if (index < _cellarFace.Count)
+            {
+                // The face and the foot follow the drink, and only where the fills last drew them.
+                _cellarFace[index].enabled = shown && _cellarDrink[index].enabled && _cellarFaceWidth(index) > 0f;
+                _cellarFoot[index].enabled = shown && _cellarDrink[index].enabled && _cellarFoot[index].transform.localScale.y > 0f;
+            }
         }
 
         private bool _cellarDrinkOn(int index) =>
@@ -605,6 +625,7 @@ namespace LastCall.UI
                 var movers = new List<Transform> { _cellarStock[i].transform };
                 if (i < _cellarBack.Count) movers.Add(_cellarBack[i].transform);
                 if (i < _cellarDrink.Count) movers.Add(_cellarDrink[i].transform);
+                if (i < _cellarFace.Count) { movers.Add(_cellarFace[i].transform); movers.Add(_cellarFoot[i].transform); }
                 if (i < _cellarMask.Count) movers.Add(_cellarMask[i].transform);
                 glow.Movers = movers.ToArray();
             }
@@ -620,7 +641,7 @@ namespace LastCall.UI
                 float f = fills != null && i < fills.Count ? Mathf.Clamp01(fills[i]) : 0f;
                 var cav = _cellarCavity[i];
                 var sp = _cellarMask[i].sprite;
-                if (sp == null || cav.width <= 0f || f <= 0f) { d.enabled = false; continue; }
+                if (sp == null || cav.width <= 0f || f <= 0f) { d.enabled = false; RoundOff(i); continue; }
                 d.enabled = true;
                 d.color = i < _cellarTones.Count ? _cellarTones[i] : Color.white;
                 // Art pixel -> world: the mask sprite's PPU, times the slot's scale. The cavity
@@ -634,14 +655,29 @@ namespace LastCall.UI
                 // bottle. A plain height fraction over the whole mask drew a full bottle with
                 // a neck full of drink, 5–11 rows above the hand's level (2026-09-04 audit).
                 float rows = BottleArt.Upright(sp).RowsFor(f);    // whole art rows, from the cavity's foot
-                if (rows < 1f) { d.enabled = false; continue; }
+                if (rows < 1f) { d.enabled = false; RoundOff(i); continue; }
                 float w = cav.width * unit, hgt = rows * unit;
                 float cx = (cav.x + cav.width * 0.5f - sp.rect.width * 0.5f) * unit;
-                float cy = (cav.y + rows * 0.5f - sp.rect.height * 0.5f) * unit;
-                d.transform.localScale = new Vector3(w, hgt, 1f);
+                float footY = (cav.y - sp.rect.height * 0.5f) * unit;   // the cavity's lowest row, from the sprite's centre
+                // ROUND, NOT FLAT (2026-09-14, the author: "şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü ...
+                // dairesel hissini vermeli"): the face is an oval as wide as the cavity is on the level's row, squashed as
+                // the glasses' are; the foot is the near half of an oval as wide as the cavity just over its lowest row —
+                // so the drink's quad starts that half-height up, and the foot's disc rounds it down to the middle.
+                var table = BottleArt.Upright(sp);
+                float faceW = 0f, footW = 0f;
+                if (table.Width != null && table.Width.Length > 0)
+                {
+                    faceW = table.Width[Mathf.Clamp(table.MinY + Mathf.RoundToInt(rows) - 1, 0, table.Width.Length - 1)] * unit;
+                    footW = table.Width[Mathf.Clamp(table.MinY + 2, 0, table.Width.Length - 1)] * unit;
+                }
+                float rise = footW * GlassArt.SurfaceSquash * 0.5f;
+                if (rise * 2f >= hgt) rise = 0f;
+                d.transform.localScale = new Vector3(w, hgt - rise, 1f);
                 // Both hang under _world: place in the parent's frame, so a scaled stage (a
                 // wide monitor, DesignFrame.SceneScale > 1) cannot push the level up.
-                d.transform.localPosition = _cellarMask[i].transform.localPosition + new Vector3(cx, cy, 0f);
+                var at = _cellarMask[i].transform.localPosition;
+                d.transform.localPosition = at + new Vector3(cx, footY + rise + (hgt - rise) * 0.5f, 0f);
+                PlaceRoundDrink(i, at, cx, footY, hgt, faceW, footW, rise, d.color);
             }
         }
 
@@ -653,6 +689,34 @@ namespace LastCall.UI
         }
 
         private readonly List<Color> _cellarTones = new List<Color>();
+
+        /// <summary>The oval face and the arched foot of cellar bottle <paramref name="i"/>'s drink (see SetCellarFills).</summary>
+        private void PlaceRoundDrink(int i, Vector3 at, float cx, float footY, float hgt, float faceW, float footW, float rise, Color tone)
+        {
+            if (i >= _cellarFace.Count) return;
+            var face = _cellarFace[i];
+            var low = _cellarFoot[i];
+            var size = face.sprite != null ? face.sprite.bounds.size : Vector3.one;
+            float faceH = Mathf.Max(0.001f, faceW * GlassArt.SurfaceSquash);
+            face.color = new Color(Mathf.Min(1f, tone.r * 1.18f + 0.07f), Mathf.Min(1f, tone.g * 1.18f + 0.07f),
+                                   Mathf.Min(1f, tone.b * 1.18f + 0.07f), tone.a);   // the hand bottle's face tone
+            face.transform.localScale = new Vector3(faceW / size.x, faceH / size.y, 1f);
+            face.transform.localPosition = at + new Vector3(cx, footY + hgt, -0.01f);   // a hair nearer: over the drink
+            face.enabled = faceW > 0f;
+            low.color = tone;
+            low.transform.localScale = new Vector3(rise > 0f ? footW / size.x : 0f, rise * 2f / size.y, 1f);
+            low.transform.localPosition = at + new Vector3(cx, footY + rise, 0f);
+            low.enabled = rise > 0f && footW > 0f;
+        }
+
+        private void RoundOff(int i)
+        {
+            if (i >= _cellarFace.Count) return;
+            _cellarFace[i].enabled = false;
+            _cellarFoot[i].enabled = false;
+        }
+
+        private float _cellarFaceWidth(int i) => i < _cellarFace.Count ? _cellarFace[i].transform.localScale.x : 0f;
 
         private Sprite WhitePixel()
         {

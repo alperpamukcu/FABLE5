@@ -530,7 +530,20 @@ namespace LastCall.UI
             // on top. The grid's origin is this rect's corner, so the rect is (0,0,w,h) from it.
             float bodyFrac = (float)run.ServingGlass.FillFraction;
             if (piece.Sprite != null && bodyFrac > 0.001f)
-                _serveFluid.SetBody(piece.Sprite, new Rect(0f, 0f, w, h), h * piece.FloorY, h * piece.FillAmount(bodyFrac));
+            {
+                float level = piece.FillAmount(bodyFrac);
+                _serveFluid.SetBody(piece.Sprite, new Rect(0f, 0f, w, h), h * piece.FloorY, h * level);
+                // ROUND, NOT FLAT (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"): the top face is the squashed oval the counter's
+                // glass wears, as wide as this glass's own drink is on the level's row; the floor is the near arc of an
+                // oval as wide as the drink on the floor's row, rising by the glass's measured FloorArc.
+                float sheetW = piece.Sprite.rect.width, sheetH = piece.Sprite.rect.height, toGrid = w / sheetW;
+                if (GlassArt.BodySpan(piece.Sprite, level * sheetH - 0.5f, out float topC, out float topHalf)
+                    && GlassArt.BodySpan(piece.Sprite, piece.FloorY * sheetH + 1.5f, out float floorC, out float floorHalf))
+                    _serveFluid.SetBodyArcs(
+                        new Vector3(topC * toGrid, topHalf * toGrid, topHalf * toGrid * GlassArt.SurfaceSquash),
+                        new Vector3(floorC * toGrid, floorHalf * toGrid, piece.FloorArc * h));
+                else _serveFluid.SetBodyArcs(Vector3.zero, Vector3.zero);
+            }
             else _serveFluid.ClearBody();
             _serveFluid.SetBodyTurn(_glassSway, new Vector2(w * 0.5f, h * 0.5f));   // the drink rocks with the glass
             // The top face rides the pour (2026-09-13): it was placed once, when the glass

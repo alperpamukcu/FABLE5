@@ -601,6 +601,7 @@ namespace LastCall.UI
         private float _bodyFloor, _bodyTop;
         private bool _bodyOn;
         private Vector4 _bodyTurn = new Vector4(1f, 0f, 0f, 0f);   // cos, sin, pivot x, pivot y (grid px)
+        private Vector4 _bodyTopArc, _bodyFloorArc;                  // centre x, half width, rise (grid px)
 
         /// <summary>
         /// Draws the settled drink as <paramref name="mask"/>'s opaque pixels between
@@ -621,6 +622,19 @@ namespace LastCall.UI
                 _drawDirty = true;
             _bodyOn = true; _bodyMask = tex; _bodyMaskUv = uv; _bodyMaskRect = rc;
             _bodyFloor = floor; _bodyTop = top;
+        }
+
+        /// <summary>
+        /// THE DRINK IS ROUND (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"). <paramref name="top"/> is the top face's ellipse —
+        /// its centre x, half width and half height, grid px: the body's line rises to its far arc and the face between
+        /// its near and far arcs is lit. <paramref name="floor"/> is the floor's: centre x, half width, and how much
+        /// higher the floor stands at the walls than in the middle. Zeros for a flat drink.
+        /// </summary>
+        public void SetBodyArcs(Vector3 top, Vector3 floor)
+        {
+            var t = new Vector4(top.x, top.y, top.z, 0f);
+            var f = new Vector4(floor.x, floor.y, floor.z, 0f);
+            if (t != _bodyTopArc || f != _bodyFloorArc) { _bodyTopArc = t; _bodyFloorArc = f; if (_bodyOn) _drawDirty = true; }
         }
 
         /// <summary>Turns the body with a vessel that rocks (2026-09-14): <paramref name="degrees"/> about
@@ -701,6 +715,8 @@ namespace LastCall.UI
         private static readonly int IdBodyFloorY = Shader.PropertyToID("_BodyFloorY");
         private static readonly int IdBodyTopY   = Shader.PropertyToID("_BodyTopY");
         private static readonly int IdBodyTurn   = Shader.PropertyToID("_BodyTurn");
+        private static readonly int IdBodyTopArc = Shader.PropertyToID("_BodyTopArc");
+        private static readonly int IdBodyFloorArc = Shader.PropertyToID("_BodyFloorArc");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -2015,6 +2031,8 @@ namespace LastCall.UI
                 _material.SetFloat(IdBodyFloorY, _bodyFloor);
                 _material.SetFloat(IdBodyTopY, _bodyTop);
                 _material.SetVector(IdBodyTurn, _bodyTurn);
+                _material.SetVector(IdBodyTopArc, _bodyTopArc);
+                _material.SetVector(IdBodyFloorArc, _bodyFloorArc);
                 _material.SetFloat(IdPoolTopY, ToUv(0f, _gridOrigin.y + _bodyTop).y);
             }
 

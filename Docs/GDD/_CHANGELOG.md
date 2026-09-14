@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Drinks are round (2026-09-14):** the drink in the serving glass rises to the far arc of an oval
+  top face as wide as the glass is at its level, and stands on the near arc of the floor's oval; the
+  face is lit and its near edge drawn. The hand bottle's drink wears the same oval face at any tilt,
+  sized from the cavity's chord at the level, and an arched foot while it stands; the cellar's
+  bottles wear both.
+
 - **The vessel follows the liquid, not the mouth (2026-09-14):** the stream falls straight down and
   the tin or glass goes to where the next drop in the air will come down, on a stiffer spring led by
   that point's speed. It travels the whole bench, and the hand keeps the mouth within its reach. A

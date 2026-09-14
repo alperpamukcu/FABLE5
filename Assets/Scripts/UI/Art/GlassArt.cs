@@ -601,6 +601,33 @@ namespace LastCall.UI
             return tex;
         }
 
+        private static readonly Dictionary<Texture2D, Color32[]> BodyMaskPixels = new Dictionary<Texture2D, Color32[]>();
+
+        /// <summary>
+        /// The drink's span on one row of a sheet (2026-09-14): the centre and half width, in sheet pixels, between the
+        /// inner edges of that row's walls (<see cref="BodyMask"/>). <paramref name="row"/> counts from the sheet's
+        /// BOTTOM; a row that holds no drink hands the search a few rows down. False when none of them does.
+        /// </summary>
+        public static bool BodySpan(Sprite sheet, float row, out float centre, out float half)
+        {
+            centre = 0f; half = 0f;
+            var mask = BodyMask(sheet);
+            if (mask == null) return false;
+            if (!BodyMaskPixels.TryGetValue(mask, out var px)) { px = mask.GetPixels32(); BodyMaskPixels[mask] = px; }
+            int w = mask.width, h = mask.height;
+            int y = Mathf.Clamp(Mathf.FloorToInt(row), 0, h - 1);
+            for (int tries = 0; y >= 0 && tries < 6; y--, tries++)
+            {
+                int l = -1, r = -1;
+                for (int x = 0; x < w; x++) if (px[y * w + x].a > 127) { if (l < 0) l = x; r = x; }
+                if (l < 0) continue;
+                centre = (l + r + 1) * 0.5f;
+                half = (r - l + 1) * 0.5f;
+                return true;
+            }
+            return false;
+        }
+
         private static readonly Dictionary<string, Vector2> FrontOffsets = new Dictionary<string, Vector2>();
 
         /// <summary>

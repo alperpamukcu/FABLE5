@@ -31,8 +31,12 @@ namespace LastCall.UI
     public sealed class BottleArt
     {
         private readonly RectTransform _root;
-        private readonly Image _back, _stencil, _drink, _surface, _front;
-        private readonly RectTransform _level, _drinkRt, _surfaceRt;
+        private readonly Image _back, _stencil, _drink, _surface, _floor, _front;
+        private readonly RectTransform _level, _drinkRt, _surfaceRt, _floorRt;
+        // THE CHORD TABLE (2026-09-14): per tilt bucket, per one-texel slab along world-up from the cavity's lowest texel,
+        // how many cavity texels the slab holds (its width) and the sum of their positions along world-right (its middle).
+        private float[] _chordN, _chordC, _chordMin;
+        private const int ChordBins = 256;
         private ItemArt.BottlePlates _plates;
         private float[] _lut;                 // [bucket][row] surface height, lazily built
         private float _shoulderFrac = 1f;     // the cavity's share below the shoulder: "full"
@@ -43,10 +47,11 @@ namespace LastCall.UI
         private const int Rows = 64;          // fraction resolution of the table
 
         private BottleArt(RectTransform root, Image back, Image stencil, RectTransform level,
-                          Image drink, Image surface, Image front)
+                          Image drink, Image floor, Image surface, Image front)
         {
             _root = root; _back = back; _stencil = stencil; _level = level;
             _drink = drink; _drinkRt = drink.rectTransform;
+            _floor = floor; _floorRt = floor.rectTransform;
             _surface = surface; _surfaceRt = surface.rectTransform; _front = front;
         }
 
@@ -95,9 +100,12 @@ namespace LastCall.UI
             level.pivot = new Vector2(0.5f, 0.5f);
             level.anchoredPosition = Vector2.zero;
             var drink = Plate("Drink", level, false);
-            var surface = Plate("Surface", level, false);
+            var floor = Plate("Floor", level, false);       // the drink's round foot (2026-09-14)
+            var surface = Plate("Surface", level, false);   // the drink's oval face (2026-09-14)
+            floor.sprite = GlassArt.SurfaceDisc();
+            surface.sprite = GlassArt.SurfaceDisc();
             var front = Plate("Front", root, true);
-            return new BottleArt(root, back, stencil, level, drink, surface, front);
+            return new BottleArt(root, back, stencil, level, drink, floor, surface, front);
         }
 
         public void Show(ItemArt.BottlePlates plates)
@@ -119,9 +127,9 @@ namespace LastCall.UI
         /// </summary>
         public void SetLevel(Color tone, double fraction, float tiltDeg)
         {
-            if (_plates == null || _plates.Mask == null) { _drink.enabled = _surface.enabled = false; return; }
+            if (_plates == null || _plates.Mask == null) { _drink.enabled = _surface.enabled = _floor.enabled = false; return; }
             float f = Mathf.Clamp01((float)fraction);
-            if (f <= 0f) { _drink.enabled = _surface.enabled = false; return; }
+            if (f <= 0f) { _drink.enabled = _surface.enabled = _floor.enabled = false; return; }
             _drink.enabled = _surface.enabled = true;
             _drink.color = tone;
             _surface.color = new Color(Mathf.Min(1f, tone.r * 1.18f + 0.07f),
@@ -162,16 +170,49 @@ namespace LastCall.UI
             float y = surf * unit;
             float bottom = (lowest - 2f) * unit;
             float half = diag * 0.5f;
-            // Drink: from below the cavity up to the surface, full width of the level rect.
+
+            // THE FOOT IS AN ARC WHILE IT STANDS (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"): the drink's lowest edge is the
+            // near half of the base's oval — its middle on the cavity's lowest row, its sides a squashed half-width
+            // higher. Only near upright: lying over, the low side of the drink is a wall, not a floor.
+            float upright = Mathf.Clamp01(1f - Mathf.Abs(Mathf.DeltaAngle(0f, tiltDeg)) / 20f);
+            ChordAt(bucket, 2, out float footChord, out float footMid);
+            float rise = footChord * unit * GlassArt.SurfaceSquash * 0.5f * upright;
+            if (rise > 0.5f * unit && y > lowest * unit + rise * 2f)
+            {
+                bottom = lowest * unit + rise;
+                _floorRt.anchorMin = _floorRt.anchorMax = _floorRt.pivot = new Vector2(0.5f, 0.5f);
+                _floorRt.sizeDelta = new Vector2(footChord * unit, rise * 2f);
+                _floorRt.anchoredPosition = new Vector2(footMid * unit, bottom);
+                _floor.color = tone;
+                _floor.enabled = true;
+            }
+            else _floor.enabled = false;
+
+            // Drink: from its foot up to the surface, full width of the level rect.
             _drinkRt.anchorMin = Vector2.zero; _drinkRt.anchorMax = Vector2.one;
             _drinkRt.offsetMin = new Vector2(0f, Mathf.Clamp(bottom + half, 0f, diag));
             _drinkRt.offsetMax = new Vector2(0f, -(diag - Mathf.Clamp(y + half, 0f, diag)));
-            // Surface band: two art rows just under the line — a lighter tone, clipped by the
-            // stencil so its ends land on the cavity walls by themselves.
-            float band = 2f * unit;
-            _surfaceRt.anchorMin = Vector2.zero; _surfaceRt.anchorMax = Vector2.one;
-            _surfaceRt.offsetMin = new Vector2(0f, Mathf.Clamp(y + half - band, 0f, diag));
-            _surfaceRt.offsetMax = new Vector2(0f, -(diag - Mathf.Clamp(y + half, 0f, diag)));
+
+            // THE FACE IS AN OVAL (2026-09-14): the level line's chord through the cavity — as wide as the drink is there,
+            // at any tilt — drawn as the squashed disc the glasses wear, a tone lighter: its near half over the drink,
+            // its far half above the line, and the stencil cutting both to the walls. It replaces the two-row band.
+            int faceBin = Mathf.Clamp(Mathf.FloorToInt(surf - _chordMin[bucket]) - 1, 0, ChordBins - 1);
+            ChordAt(bucket, faceBin, out float chord, out float chordMid);
+            _surfaceRt.anchorMin = _surfaceRt.anchorMax = _surfaceRt.pivot = new Vector2(0.5f, 0.5f);
+            _surfaceRt.sizeDelta = new Vector2(chord * unit, Mathf.Max(unit, chord * unit * GlassArt.SurfaceSquash));
+            _surfaceRt.anchoredPosition = new Vector2(chordMid * unit, y);
+            _surface.enabled = chord > 0f;
+        }
+
+        /// <summary>How wide the cavity is in slab <paramref name="bin"/> of a tilt bucket (texels) and where its middle
+        /// is along world-right (texels from the art's centre). Zero width for an empty slab.</summary>
+        private void ChordAt(int bucket, int bin, out float width, out float middle)
+        {
+            width = 0f; middle = 0f;
+            if (_chordN == null) return;
+            int i = bucket * ChordBins + Mathf.Clamp(bin, 0, ChordBins - 1);
+            width = _chordN[i];
+            middle = width > 0f ? _chordC[i] / width : 0f;
         }
 
         /// <summary>
@@ -203,6 +244,9 @@ namespace LastCall.UI
                             pts.Add(new Vector2(x + 0.5f - _lutW * 0.5f, y + 0.5f - _lutH * 0.5f));
             }
             _lut = new float[Buckets * Rows];
+            _chordN = new float[Buckets * ChordBins];
+            _chordC = new float[Buckets * ChordBins];
+            _chordMin = new float[Buckets];
             _shoulderFrac = 1f;
             if (pts.Count == 0) return;
             // FULL IS THE SHOULDER: the remap is the shoulder's share of the cavity's texels,
@@ -218,7 +262,16 @@ namespace LastCall.UI
                 // mirrored every bucket; unseen only because the cavities are near-symmetric.
                 float rad = tilt * Mathf.Deg2Rad;
                 Vector2 up = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
-                for (int i = 0; i < pts.Count; i++) proj[i] = Vector2.Dot(pts[i], up);
+                Vector2 right = new Vector2(Mathf.Cos(rad), -Mathf.Sin(rad));   // world-right in the art's frame
+                float pmin = float.PositiveInfinity;
+                for (int i = 0; i < pts.Count; i++) { proj[i] = Vector2.Dot(pts[i], up); if (proj[i] < pmin) pmin = proj[i]; }
+                _chordMin[b] = pmin;
+                for (int i = 0; i < pts.Count; i++)
+                {
+                    int bin = Mathf.Clamp(Mathf.FloorToInt(proj[i] - pmin), 0, ChordBins - 1);
+                    _chordN[b * ChordBins + bin] += 1f;
+                    _chordC[b * ChordBins + bin] += Vector2.Dot(pts[i], right);
+                }
                 System.Array.Sort(proj);
                 for (int r = 0; r < Rows; r++)
                 {

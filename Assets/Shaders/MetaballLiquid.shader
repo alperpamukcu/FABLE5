@@ -55,6 +55,8 @@ Shader "LastCall/MetaballLiquid"
         _BodyFloorY   ("Body Floor px",Float) = 0
         _BodyTopY     ("Body Top px",  Float) = 0
         _BodyTurn     ("Body Turn",    Vector) = (1, 0, 0, 0)
+        _BodyTopArc   ("Body Top Arc", Vector) = (0, 0, 0, 0)
+        _BodyFloorArc ("Body Floor Arc", Vector) = (0, 0, 0, 0)
 
         // Standard UI stencil plumbing (lets the fluid live under a Mask if ever needed).
         _StencilComp ("Stencil Comparison", Float) = 8
@@ -124,6 +126,8 @@ Shader "LastCall/MetaballLiquid"
             float     _BodyFloorY;      // px from the grid's origin
             float     _BodyTopY;
             float4    _BodyTurn;        // cos, sin of the vessel's rock; its pivot in grid px (2026-09-14)
+            float4    _BodyTopArc;      // the top face's ellipse: centre x, half width, half height (grid px)
+            float4    _BodyFloorArc;    // the floor's: centre x, half width, its rise at the walls (grid px)
 
             // Live water surface (2026-07-22): the top of the pool is not a flat line but a
             // real wave. A height-field of columns (a shallow-water sim in MetaballFluid.cs)
@@ -270,6 +274,8 @@ Shader "LastCall/MetaballLiquid"
                 // the drink's line is drink, whole — no lattice, so no stepped top and no notched wall.
                 float inBody = 0.0;
                 float bodyRow = 1e4;
+                float bodyFace = 0.0;         // 1 on the drink's top face, between its near and far arcs
+                float bodyNearRow = -1.0;     // rows under the top face's near arc
                 if (_BodyOn > 0.5)
                 {
                     float2 bp = (uv - 0.5) * _Size.xy + _ViewOrigin.xy;   // px from the grid's origin
@@ -278,15 +284,27 @@ Shader "LastCall/MetaballLiquid"
                     bp = _BodyTurn.zw + float2(bd.x * _BodyTurn.x + bd.y * _BodyTurn.y, -bd.x * _BodyTurn.y + bd.y * _BodyTurn.x);
                     float2 muv = (bp - _MaskRect.xy) / max(_MaskRect.zw, float2(1, 1));
                     if (muv.x >= 0.0 && muv.x <= 1.0 && muv.y >= 0.0 && muv.y <= 1.0
-                        && bp.y >= _BodyFloorY && bp.y <= _BodyTopY)
+                        && bp.y >= _BodyFloorY && bp.y <= _BodyTopY + _BodyTopArc.z)
                     {
                         // THE MASK IS THE BODY (2026-09-14, second pass): GlassArt.BodyMask marks each
                         // row between the inner edges of its opaque walls, so one point sample says it.
                         float m = tex2D(_MaskTex, _MaskUV.xy + muv * _MaskUV.zw).a;
                         if (m > 0.5)
                         {
-                            inBody = 1.0;
-                            bodyRow = (_BodyTopY - bp.y) / max(texel, 1.0);
+                            // THE DRINK IS ROUND (2026-09-14): its line rises to the far arc of the top face's
+                            // ellipse and its floor is the near arc of the floor's — both flat where the arcs
+                            // are zero. Seen from a little above, a level in a round glass is an oval.
+                            float ut = saturate(abs(bp.x - _BodyTopArc.x) / max(_BodyTopArc.y, 1.0));
+                            float arch = _BodyTopArc.z * sqrt(max(0.0, 1.0 - ut * ut));
+                            float uf = saturate(abs(bp.x - _BodyFloorArc.x) / max(_BodyFloorArc.y, 1.0));
+                            float floorAt = _BodyFloorY + _BodyFloorArc.z * (1.0 - sqrt(max(0.0, 1.0 - uf * uf)));
+                            if (bp.y >= floorAt && bp.y <= _BodyTopY + arch)
+                            {
+                                inBody = 1.0;
+                                bodyRow = (_BodyTopY + arch - bp.y) / max(texel, 1.0);
+                                bodyFace = bp.y >= _BodyTopY - arch ? 1.0 : 0.0;
+                                bodyNearRow = (_BodyTopY - arch - bp.y) / max(texel, 1.0);
+                            }
                         }
                     }
                 }
@@ -372,6 +390,17 @@ Shader "LastCall/MetaballLiquid"
                     // THE MENISCUS: the drink's top edge, wherever the particles put it — its
                     // first row catches the light, the next holds some of it.
                     s += up * (row < 1.0 ? 2.0 : (row < 2.0 ? 1.0 : 0.0));
+                    // THE TOP FACE (2026-09-14): a band lighter than the drink under it, and its near arc — the edge
+                    // turned to the eye — one row brighter still, so the oval reads as a surface and not a stain.
+                    if (inBody > 0.5)
+                    {
+                        s += bodyFace;                                              // the face, a band lighter
+                        // Measured in play with only the band: the oval read as a bump on the drink, because nothing
+                        // drew its near edge. Its lowest row is lit once more and the drink's row under it shaded, so
+                        // the face and the drink meet on an ellipse.
+                        if (bodyNearRow >= -1.0 && bodyNearRow < 0.0) s += 1.0;
+                        if (bodyNearRow >= 0.0 && bodyNearRow < 1.0) s -= 1.0;
+                    }
                     // FORM: the sides and the underside, one row wide like a pixel artist's rim —
                     // the face turned to the light (up and left) a band lighter, the one turned
                     // away a band darker. The stream takes it too; it is what makes the rope round.

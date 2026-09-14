@@ -1530,6 +1530,29 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.66 · Yedinci geçiş: sıvı yuvarlak — bardakta ve şişede oval yüz, kavisli taban (2026-09-14)
+
+Yazar: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre
+dairesel hissini vermeli."
+
+- **Servis bardağı** (shader gövdesi, `MetaballFluid.SetBodyArcs`): içkinin çizgisi artık üst yüz elipsinin UZAK kavsine
+  kadar yükseliyor, taban da taban elipsinin YAKIN kavsi. Elipsin genişliği camın o satırdaki kendi içki genişliği
+  (`GlassArt.BodySpan`, duvarların iç kenarları arasında), yüksekliği sahnenin bakış oranı (`SurfaceSquash` 0.24); tabanın
+  kavsi camın ölçülmüş `FloorArc`'ı. Yüz, içkinin bir ton açığı; yüzün yakın kenarı bir ton daha açık, hemen altındaki içki
+  satırı bir ton koyu — oyunda yalnız açık bantla denendi, oval içkinin üstünde bir tümsek gibi okundu, yakın kenar çizilince
+  elips oldu.
+- **Eldeki şişe** (`BottleArt`): iki satırlık düz yüzey bandı yerine oval yüz. Genişlik, eğim kovası başına tutulan KİRİŞ
+  tablosundan: dünya-yukarısı boyunca bir teksellik dilimdeki boşluk teksel sayısı ve dünya-sağındaki ortası — yani yatık
+  şişede de yüz, sıvının o yükseklikteki gerçek genişliği kadar. Dikken (±20°) sıvının ayağı da kavisli: altı tabanın yakın
+  kavsi, ortası boşluğun en alt satırında.
+- **Kilerdeki şişeler** (`DiegeticStage`): aynı oval yüz ve kavisli ayak, şişenin maskesinin içinde iki sprite daha;
+  şişeyle birlikte sallanıyorlar. Yüz sıvıyla aynı sıralama numarasında, kameraya bir tık yakın — Renderer2D eşitliği
+  derinlikle bozuyor (sıralama modu varsayılan), önündeki şişe plakası 32'de kalıyor.
+- Tezgâhtaki taşınan bardak ve açık teneke zaten oval yüz çiziyordu; tap pinti değişmedi.
+- Doğrulama: EditMode 598/598, PlayMode 13/13. Tezgâhın görünüm tabanı (`bench.png`) bakılarak yeniden onaylandı; tek fark
+  ayaktaki şişenin oval yüzü ve kavisli ayağı. Oyunda dört servis bardağı, dik ve 60° yatık şişe, kiler ekran görüntüsüyle
+  ölçüldü.
+
 ### 9.65 · Altıncı geçiş: kaldırma adımlarıyla döküm, kap akışı yakalıyor, akış ön plakanın arkasına iniyor (2026-09-14)
 
 Yazar: "şişelerden dökülen sıvı shaker.png nin önünde shaker_Front.png nin arkasında olacak. Koyma hızı kaldırma
