@@ -20,8 +20,14 @@ namespace LastCall.Core
     /// hand that learns one bottle has learned every bottle.
     ///
     /// The old law (a lip that followed the level, 24 degrees full to 102 empty, a 30-degree ramp
-    /// from an 8% trickle) is what this replaced. The proportional start keeps the small shares a
-    /// hand can hit: three degrees past level gives a thirtieth of full flow.
+    /// from an 8% trickle) is what this replaced.
+    ///
+    /// A TRICKLE FIRST (2026-09-14, the author: "oyuncu %1 koymaya çalışırken zorlanmasın"). The share
+    /// is the SQUARE of how far the lean has come from level toward straight down. In proportion, ten
+    /// degrees past level ran 11% of full flow — a percent of the tin in a quarter of a second at the
+    /// bench's 0.33 tin/s — so a small measure was a flick. Squared, the first fifteen degrees are a
+    /// trickle (under 3%, a percent in over a second) and the same full flow is still there neck-down;
+    /// the lean that gives 0.5..3% a second is about 2.5 times as wide.
     /// </summary>
     public static class BottlePour
     {
@@ -42,8 +48,9 @@ namespace LastCall.Core
             double t = tiltDegrees % 360.0;
             if (t < 0) t += 360.0;
             double fromStraightDown = Math.Abs(t - FullDeg);   // 0 neck down .. 90 lying level
-            double share = 1.0 - fromStraightDown / (FullDeg - OnsetDeg);
-            return share <= 0 ? 0 : (share >= 1 ? 1 : share);
+            double u = 1.0 - fromStraightDown / (FullDeg - OnsetDeg);   // 0 level .. 1 straight down
+            if (u <= 0) return 0;
+            return u >= 1 ? 1 : u * u;
         }
 
         /// <summary>The volume that runs in <paramref name="seconds"/> at a lean, from a vessel

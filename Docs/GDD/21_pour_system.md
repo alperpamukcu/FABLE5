@@ -86,11 +86,15 @@ the fill to flatter the solver (see 24 §3.5).
 "şişeyi 90 dereceden sonra ne kadar yatırıyorsa o kadar hızlı dolsun, tam 90 derece şişe ise en
 hızlı şekilde; yere paralelleşiyorsa yavaşlasın, paralelleştiğinde dursun").** Leans are measured
 from upright. Nothing runs until the vessel is past **level (90°)**; from there the share of full
-flow grows in proportion to the lean and is **1 with the neck straight down (180°)**; tipped on past
+flow is the **square** of the way from level to straight down (2026-09-14, the author: "oyuncu %1
+koymaya çalışırken zorlanmasın" — fifteen degrees past level is under 3% of full flow, 135° is a
+quarter) and is **1 with the neck straight down (180°)**; tipped on past
 that it slows the same way and **stops lying level again (270°)**. The level in the vessel no
 longer moves the lip. The volume is the full rate × that share × the time. The hand reaches 180°
-(`MaxTilt`), and the first 35% of its lift lays the vessel level (`PourHand.Lean`) so the travel
-that pours is the travel that is spread out. ~~A full bottle starts to run at 24°; the onset climbs
+(`MaxTilt`), and the first 25% of its lift lays the vessel level (`PourHand.Lean`) so the travel
+that pours is the travel that is spread out. From level on the bench bottle is held by its
+**middle** (the tin by its neck), and the lean waits until the mouth clears the tin's top at every
+pouring angle (`PourHand.Press`). ~~A full bottle starts to run at 24°; the onset climbs
 to 102° as it empties; a 30° ramp from an 8% trickle (2026-09-11).~~ The rates are Core's, not the benches': a hand pour runs at
 `TycoonConfig.HandPourScale` (0.60) and the tin into the serving glass at `ServePourMax` (0.45).
 `PourTick(seconds, tilt)` returns nothing under the onset without letting go of the chosen bottle

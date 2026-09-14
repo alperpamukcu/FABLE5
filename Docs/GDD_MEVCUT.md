@@ -57,9 +57,11 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Zorunlu karıştırma (GDD 21 §14; tarife bağlandı 2026-08-14):** önce **tarif** konuşur — `TinMethod`, tin'in kendi içeriğinin eşleştiği tarifin `prepMethod`'u: `Shaken`/`Stirred` çalışmayı zorunlu kılar, `Built` asla. Kitap içeceği adlandıramıyorsa eski yapısal kural devreye girer: tin'de ≥%3 payla **2+ alkollü** içerik (kategori testi — likörler sayılır, ABV asla kural beslemez) varsa dışa döküm `Shake` ya da `Stir` ister; red `PourIntoServingGlass`'ta, UI `CanPourOut` okur. Bardakta inşa muaf (kural tin hakkında); bin her zaman açık; Info'suz test kartları bilerek muaf. `Stir(enerji)` = `Shake`'in aynası (`IsStirred/StirEnergy`, tek yuva son kazanır). Hakem yöntemi aynı gün öğrendi (§6 zanaat): Martini'yi çalkalamak hâlâ YASAL (kapı "karışsın" der, "doğru karışsın" demez) ama bahşişten öder.
 - **Bardak otomatiği:** eşleşen tarifin `GlassId`'si ilk dışa dökümde seçilir; sıvı varken kap değişmez. Kapasiteler: pint 1.6 · highball 1.0 (varsayılan) · rocks 0.7 · martini 0.6 · coupe 0.55.
 - **Şişe ve tin dökme yasası (`BottlePour`, Core, 2026-09-13):** dikten ölçülen eğim **90°'yi (yere paralel) geçene kadar
-  hiçbir şey akmaz**; oradan eğimle orantılı artar, **boyun dümdüz aşağıdayken (180°) tam akış**; öteye devrilince aynı şekilde
-  yavaşlar ve **yine yere paralelken (270°) durur**. Doluluk artık eşiği oynatmaz. El 180°'ye kadar yatırır, kaldırmanın ilk
-  %35'i şişeyi yataya getirir (`PourHand.Lean`). (Eski yasa 2026-09-11: dolu 24°, boş 102°, 30°'lik rampa, %8 damla.)
+  hiçbir şey akmaz**; oradan pay, paralelden dümdüz aşağıya kat edilen yolun **karesiyle** artar (2026-09-14: önce damla —
+  paralelin 15° ötesi tam akışın %3'ünden az; 135° çeyrek akış), **boyun dümdüz aşağıdayken (180°) tam akış**; öteye devrilince
+  aynı şekilde yavaşlar ve **yine yere paralelken (270°) durur**. Doluluk artık eşiği oynatmaz. El 180°'ye kadar yatırır,
+  kaldırmanın ilk %25'i şişeyi yataya getirir (`PourHand.Lean`). (Eski yasa 2026-09-11: dolu 24°, boş 102°, 30°'lik rampa, %8
+  damla; 2026-09-13..14 arası pay eğimle doğrusal.)
   Hacim = tam hız × pay × süre; tezgâh hızları `TycoonConfig.HandPourScale` 0.60 ve `ServePourMax` 0.45. `PourTick(sn, eğim)`
   eşiğin altındaki bir yatırışta 0 döner (seçili şişeyi bırakmaz, karışımı bozmaz); servis `PourOutTilted(sn, eğim)`.
   Sabit 42° eşik ve UI'ya ait hızlar KALKTI. Nişan bir KAPI (GDD 21): bardağı ıskalayan akış dökülmez, çizilmez de.
@@ -1527,6 +1529,31 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
+
+### 9.64 · Beşinci geçiş: şişe ortasından tutuluyor, döküm damlayla başlıyor (2026-09-14)
+
+Yazar: "Şişenin ucundan değil ortasından tutuyor olmamız gerekiyor böylece oranı daha ince ayarlayabiliriz oyuncu %1
+koymaya çalışırken zorlanmasın gibi"
+
+- **Ortasından tutuluyor** (`PourHand.HoldBelowSpout`). Dikken basılan nokta yine imlecin altında; yere paralele
+  yaklaşırken tutuş artık boyna değil **şişenin çiziminin ortasına** kayıyor (tezgâh şişesinde ağzın 168 birim altı),
+  paralelden sonra şişe ortası etrafında dönüyor. Servisteki teneke boynundan tutulmaya devam ediyor (uzun bardağa
+  yetişmesi için).
+- **Tepe kuralı her dökme açısı için:** ortasından tutulan şişenin ağzı paralelden sonra elin altına iniyor; eğilmenin
+  başlangıcı artık yalnız paraleldeki değil, 90°'den tam eğime kadar HER açıdaki en alçak ağız yüksekliği çizginin
+  üstünde kalacak şekilde seçiliyor (`LowestMouthOverLift`). Ölçüldü: dökerken ağzın en alçak yeri 65, çizgi 65
+  (teneke ağzı 59 + 6); akış işaretçi 70'te, ağız tenekenin üstündeyken başlıyor; kaldırma aralığı 351.
+- **Döküm damlayla başlıyor** (`BottlePour.Share`): pay artık paralelden dümdüz aşağıya kat edilen yolun **karesi**.
+  Doğrusal yasada paralelin 10° ötesi tam akışın %11'iydi — tezgâhın 0.33 tin/sn'sinde teneke %1'i çeyrek saniyede
+  doluyordu. Karesiyle 15° ötesi %3'ün altında, 135° çeyrek akış, 180° yine tam akış. Ölçüldü: saniyede %0.5–3 akış
+  veren el aralığı **40 birim** (önce ~13); saniyede %1 işaretçi 110 civarında, yani %1 bir saniye.
+- **Testler:** `BottlePourTests` 135°'de çeyrek akışı ve 15°'de damlayı sabitliyor.
+- **Ev sahibinin market notu testleri takmıyor:** tam koşuda sepet görüntü testi ve restock testi kırmızı çıktı. Test saati
+  sebebi yazdı: "host key still up after 12 presses". Notun her tuşu bir satır; ilk marketlerde birkaç ders arka arkaya
+  geliyor ve 12 satır yetmiyordu. Not açık kaldığı için sepet karardı, restock tıklamaları sepete ulaşmadı. İki fikstürün
+  `LetTheHostFinish` sınırı 40 oldu. Oyunda bir hata değil, testin sınırıydı. Restock testinin daha önceki tek seferlik
+  kırmızısı büyük olasılıkla aynı sebepti.
+- **Doğrulama:** EditMode 587/587, PlayMode 13/13 (95 sn); dört market testi ayrıca tek başına yeşil. Oyunda ölçüldü: ortasından tutuşun yeri, her dökme açısında ağzın tenekeye göre yüksekliği, %0.5–3/sn akışın el aralığı ve iki dökme pozu (110° ve 150°, ekran görüntüsüyle).
 
 ### 9.63 · Dördüncü geçiş: kap tepeyi geçmeden eğilmiyor, shakerda oval yüzey, sıvı duvarın içinden, nesneler 20 aşağı (2026-09-14)
 

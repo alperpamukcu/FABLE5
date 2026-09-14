@@ -1088,7 +1088,10 @@ namespace LastCall.UI
             // THE LIFT IS THE POINTER'S NOW (2026-09-13, PourHand): the room over a bottle's neck
             // no longer squeezes it to 90, so every bottle gets the whole LiftRange, fitted under
             // the surface's top when it is taken.
-            _bottleHand.Configure(_bottleRest, _pourMouth, BottleGripDepth, LiftRange, MaxTilt);
+            // Held by its MIDDLE from level on (2026-09-14): half way from the drawn cap to the foot.
+            float footBelowPivot = _bottleRest.y - BottleFootY;
+            _bottleHand.Configure(_bottleRest, _pourMouth, BottleGripDepth, LiftRange, MaxTilt,
+                (_pourMouth.y + footBelowPivot) * 0.5f);
             _bottleHand.Apply(_pourBottle);
         }
 

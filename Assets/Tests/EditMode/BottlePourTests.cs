@@ -49,7 +49,9 @@ namespace LastCall.Tests
                 last = s;
             }
             Assert.AreEqual(1.0, BottlePour.Share(BottlePour.FullDeg, 0.7), 1e-12, "neck down is full flow");
-            Assert.AreEqual(0.5, BottlePour.Share(135, 0.7), 1e-12, "half way from level to neck down is half the flow");
+            // A TRICKLE FIRST (2026-09-14): the share is the square of the way from level to neck-down.
+            Assert.AreEqual(0.25, BottlePour.Share(135, 0.7), 1e-12, "half way from level to neck down is a quarter of the flow");
+            Assert.Less(BottlePour.Share(BottlePour.OnsetDeg + 15.0, 0.7), 0.03, "fifteen degrees past level is still a trickle");
         }
 
         [Test]

@@ -1003,7 +1003,10 @@ namespace LastCall.PlayTests
         /// </summary>
         private IEnumerator LetTheHostFinish()
         {
-            for (int i = 0; i < 12; i++)
+            // 40, not 12 (2026-09-14): every press is one line, and the first market of a fresh profile
+            // queues several lessons back to back — twelve lines left her key up and the basket dimmed
+            // under her box (the suite clock caught it: "host key still up after 12 presses").
+            for (int i = 0; i < 40; i++)
             {
                 var key = HostKey();
                 if (key == null) yield break;
@@ -1014,7 +1017,7 @@ namespace LastCall.PlayTests
                 yield return new WaitForSecondsRealtime(0.2f);
             }
             var stuck = HostKey();
-            if (stuck != null) SuiteClock.Mark("host key still up after 12 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ")");
+            if (stuck != null) SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ")");
         }
 
         /// <summary>The one key the host is waiting on, or null when she is not talking.</summary>

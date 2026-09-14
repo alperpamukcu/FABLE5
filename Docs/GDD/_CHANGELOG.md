@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bottle is held by its middle, and a pour starts as a trickle (2026-09-14, fifth pass):**
+  from level on the bench bottle turns about the middle of its drawing instead of its neck, and
+  the lean waits until its mouth stays over the tin at every pouring angle. The share of full flow
+  is now the square of the lean's way from level to neck-down, so the first fifteen degrees past
+  level are a trickle and a one-percent measure is a second of steady hand, not a flick.
+
 - **A vessel leans only once its mouth clears the top it pours into (2026-09-14, fourth pass):** a
   bottle over the tin or the tin over a tall glass stays upright until its mouth is over the
   target's drawn top, and reaches level with the mouth there, so a tall glass pours. The bench's

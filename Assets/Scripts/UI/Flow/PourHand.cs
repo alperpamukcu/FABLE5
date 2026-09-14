@@ -36,6 +36,9 @@ namespace LastCall.UI
         public float LiftRange { get; private set; }
         /// <summary>Degrees the vessel leans at full lift (counter-clockwise leans left).</summary>
         public float MaxTilt { get; private set; }
+        /// <summary>How far below the spout, along the vessel, the hand holds it from level on: the
+        /// grip depth (the neck) for the tin, the middle of the drawing for a bottle (2026-09-14).</summary>
+        public float HoldBelowSpout { get; private set; }
 
         // ── where it is ───────────────────────────────────────────────────────
         private Vector2 _w, _wv;                 // the grip reference, and its velocity (surface px)
@@ -66,18 +69,24 @@ namespace LastCall.UI
 
         /// <summary>The grip reference, vessel-relative: the spout less the grip depth along the vessel.</summary>
         private Vector2 G => new Vector2(Spout.x, Spout.y - GripDepth);
+        /// <summary>The hold from level on, grip-relative in the unrotated frame.</summary>
+        private Vector2 PourHold => new Vector2(0f, GripDepth - HoldBelowSpout);
         public Vector2 GripRest => Rest + G;
 
         /// <summary>
         /// Sets up the vessel. A hand that is not holding anything is put straight back on the
         /// new rest; one that is mid-pour keeps its grip where it is.
         /// </summary>
-        public void Configure(Vector2 rest, Vector2 spout, float gripDepth, float liftRange, float maxTilt)
+        /// <param name="holdBelowSpout">Where the hand holds the vessel from level on, measured down from
+        /// the spout; NaN for the neck (the grip depth).</param>
+        public void Configure(Vector2 rest, Vector2 spout, float gripDepth, float liftRange, float maxTilt,
+            float holdBelowSpout = float.NaN)
         {
             Rest = rest; Spout = spout; GripDepth = gripDepth;
             LiftRange = Mathf.Max(liftRange, 1f); MaxTilt = maxTilt;
             float maxG = MaxGripDepth(LiftRange, MaxTilt);
             if (GripDepth > maxG) GripDepth = maxG;
+            HoldBelowSpout = float.IsNaN(holdBelowSpout) ? GripDepth : Mathf.Max(0f, holdBelowSpout);
             if (!Held) SnapHome();
         }
 
@@ -117,11 +126,32 @@ namespace LastCall.UI
                 for (int i = 0; i < 5; i++)   // the start and the room under the ceiling settle together
                 {
                     _liftRange = RangeUnder(ceiling, start, squeeze: true);
-                    start = Mathf.Max(start, clearY - KneeLift * _liftRange);
+                    start = Mathf.Max(start, clearY - LowestMouthOverLift(_liftRange));
                 }
                 _liftRange = RangeUnder(ceiling, start, squeeze: true);
                 _liftBase = start;
             }
+        }
+
+        /// <summary>
+        /// Over every pouring lean (level to MaxTilt), the lowest the mouth stands above the lift's
+        /// start: the lift that lean takes plus the mouth's height over the hand at it. Held by the
+        /// neck that is level itself (the knee's lift). Held by its middle, a bottle's mouth swings
+        /// down under the hand as it tips past level — measured with a 190 lever over a 260 lift, the
+        /// lowest point comes near 140 degrees, some 40 under where it stood at level — so the start
+        /// is raised until even that point clears the top.
+        /// </summary>
+        private float LowestMouthOverLift(float range)
+        {
+            Vector2 lever = new Vector2(0f, GripDepth) - PourHold;   // hold to spout, unrotated
+            float lowest = float.PositiveInfinity;
+            float top = Mathf.Max(KneeTilt, MaxTilt);
+            for (float t = KneeTilt; t <= top + 0.01f; t += 2f)
+            {
+                float over = range * Unlean(t, MaxTilt) + Rotate(lever, t).y;
+                if (over < lowest) lowest = over;
+            }
+            return float.IsInfinity(lowest) ? KneeLift * range : lowest;
         }
 
         /// <summary>The lift a full tilt is spread over, from <paramref name="from"/> up to the ceiling:
@@ -199,7 +229,10 @@ namespace LastCall.UI
                 // mouth pours where the pointer is. Holding by the label all the way round put the
                 // mouth ~230 units under the hand past level: under the tin's rim and far under a
                 // tall glass's, which the pour smoke tests measured as nothing poured at all.
-                _hold = _holdPress * (1f - Mathf.Clamp01(_tilt / KneeTilt));
+                // BY ITS MIDDLE, FOR A BOTTLE (2026-09-14, the author: "şişenin ucundan değil ortasından
+                // tutuyor olmamız gerekiyor böylece oranı daha ince ayarlayabiliriz"): the hold slides to
+                // PourHold, which is the neck for the tin and the middle of the drawing for a bottle.
+                _hold = Vector2.Lerp(_holdPress, PourHold, Mathf.Clamp01(_tilt / KneeTilt));
                 Vector2 was = _w;
                 _w = _p - Rotate(_hold, _tilt);
                 _wv = Vector2.ClampMagnitude((_w - was) / dt, MaxReleaseSpeed);
