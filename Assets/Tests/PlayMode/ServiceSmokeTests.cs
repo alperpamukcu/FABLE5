@@ -98,6 +98,12 @@ namespace LastCall.PlayTests
         public override void Setup()
         {
             base.Setup();
+            // THE HAND KEEPS WORKING WITH THE EDITOR IN THE BACK (2026-09-15). uGUI's EventSystem
+            // follows the REAL window's focus, and once it hears OnApplicationFocus(false) the input
+            // module drops every press unless the input system is told to ignore focus. Nobody told
+            // it, so an alt-tab mid-test left the raycast finding the host's key while forty presses
+            // reached nothing ("host key still up after 40"). The fixture restores the settings.
+            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             // The fixture wipes the input system, so the hand is made here, after the wipe and
             // before the scene builds its EventSystem against it.
             _mouse = InputSystem.AddDevice<Mouse>();
