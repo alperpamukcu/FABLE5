@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using LastCall.Core;
@@ -34,8 +34,19 @@ namespace LastCall.UI
         /// the placement the piece measured.</summary>
         private void FollowServeGlassLip()
         {
+            if (_serveRimOver != null && _serveGlass != null)
+            {
+                _serveRimOver.anchoredPosition = _serveGlass.anchoredPosition;
+                _serveRimOver.sizeDelta = _serveGlass.sizeDelta;
+                _serveRimOver.localRotation = _serveGlass.localRotation;
+                _serveRimOver.localScale = _serveGlass.localScale;
+            }
             if (_serveGlassLip == null || !_serveGlassLip.enabled || _serveGlass == null) return;
-            if (!_serveGlassPiece.LipPlacement(_serveGlass.sizeDelta, out _, out var lipAt)) return;   // Piece is a struct; LipPlacement answers false with no sprite
+            // The SIZE too, every frame (2026-09-14): ShowServingGlassware sized the crop off the
+            // PREVIOUS glass's box, before the new glass's size was set, so a change of glass left the
+            // front at the last glass's scale (measured: a highball's front drawn 0.64 of its size).
+            if (!_serveGlassPiece.LipPlacement(_serveGlass.sizeDelta, out var lipSize, out var lipAt)) return;
+            if ((_serveGlassLipRt.sizeDelta - lipSize).sqrMagnitude > 0.01f) _serveGlassLipRt.sizeDelta = lipSize;   // Piece is a struct; LipPlacement answers false with no sprite
             var g = _serveGlass;
             _serveGlassLipRt.anchoredPosition = g.anchoredPosition
                 + new Vector2(lipAt.x, g.sizeDelta.y * (1f - g.pivot.y) + lipAt.y);
@@ -473,7 +484,21 @@ namespace LastCall.UI
                 PlayStageFade(PanelOf(stage));
             else if (closing)
                 PlayStageClose(PanelOf(previous));
+
+            // THE SCENE A LITTLE LOWER BEHIND A BENCH (2026-09-14, the author: "sahneyi biraz daha
+            // aşağı alıp şişe ve shakera diklemesine daha çok alan tanıyabilirsin", and "konuşma
+            // metinleri karakterlerin kafasının üstünde çıkmıyor"). With the drawer all the way up the
+            // heads stood twenty units under the top bar and every balloon was pressed down over a
+            // face (measured). A bench holds the room at BenchDrawer; back to the cellar, it rises
+            // the rest of the way so the shelves are whole.
+            var room = GetComponent<TycoonHud>()?.Room;
+            if (room != null && room.DrawerOpen)
+                room.SetDrawerOpen(true, false, stage == Stage.Closed ? 1f : BenchDrawer);
         }
+
+        /// <summary>How far the cellar's drawer stands open while a bench is up (2026-09-14).</summary>
+        // 0.72, not 0.85: at 0.85 the balloons over the heads cleared them by 9, −1 and 9 units (measured).
+        private const float BenchDrawer = 0.72f;
 
         // ── the two-slot stage slide ────────────────────────────────────────────
 

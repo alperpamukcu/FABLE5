@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -194,6 +194,7 @@ namespace LastCall.UI
         private void OnDisable()
         {
             _over = false;
+            _beckoned = false;   // whoever beckons asks again every frame it still wants it
             _g = 0f;
             _stowing = true;
             Restore();
@@ -277,7 +278,18 @@ namespace LastCall.UI
 
         private void Restore()
         {
-            if (!_held) return;
+            if (!_held)
+            {
+                // NOTHING OF THE COLOUR WAS TAKEN, BUT THE PROP STILL MOVED (2026-09-14, the author:
+                // "sink kendi kendine parlak kalıyor ... kullanıldıktan sonraki günlerde"). A BECKON
+                // lifts, grows and lights a prop exactly as a hover does without ever capturing its
+                // colours — so a sink called forward and then switched off (the glass dropped in,
+                // the tap starting) returned here having undone none of it, and stayed lit for days.
+                Move(0f);
+                Shine(0f);
+                Front(false);
+                return;
+            }
             Apply(0f);
             Front(false);
             _held = false;
@@ -362,13 +374,21 @@ namespace LastCall.UI
                 // angle here held it upright through the whole pour (the author: "shakerdan
                 // bardağa koyma sahnesinde shaker devrilmiyor koyarken"). Same law as the
                 // rise: take off what this glow added last frame, then add this frame's.
-                if (Sway > 0f)
+                // …and TAKEN OFF even when the sway has been switched off since (2026-09-14): a
+                // bench stills a held vessel's glow, and gating the undo on Sway left the last
+                // angle standing on the drawing for good.
+                if (Sway > 0f || _addedRot[k] != Quaternion.identity)
                 {
                     var owner = t.localRotation * Quaternion.Inverse(_addedRot[k]);
                     t.localRotation = owner * rot;
                     _addedRot[k] = rot;
                 }
-                if (Grow > 1f)
+                // WRITTEN WHENEVER THE SCALE MOVES, not only while Grow is above one (2026-09-14,
+                // the author: "şişelerin giderek boyutu büyüyor sabit kalmalı"). A bench sets
+                // Grow to 1 while its vessel is held: _addedScale went back to 1 but the write was
+                // skipped, so the 5% stayed baked in — and the next hover grew on top of it, a
+                // bottle 5% bigger for every time it was picked up.
+                if (Mathf.Abs(undo * want - 1f) > 1e-6f)
                 {
                     var s = t.localScale;
                     t.localScale = new Vector3(s.x * undo * want, s.y * undo * want, s.z);

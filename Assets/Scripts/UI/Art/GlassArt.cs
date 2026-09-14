@@ -106,18 +106,30 @@ namespace LastCall.UI
             /// <summary>Where the strip's TOP goes: the rim ellipse's axis, as a fraction of
             /// the sprite's height from its top. Measured off each base drawing.</summary>
             public readonly float LipRow;
+            /// <summary>Where the author's _Front crop sits on the sheet, in sheet pixels from its
+            /// TOP-LEFT, found by matching the crop's own pixels against the sheet (2026-09-14);
+            /// negative where there is no crop to place (see <see cref="FrontOffset"/>).</summary>
+            public readonly Vector2 LipOffsetPx;
+            /// <summary>The drink's line in a FULL glass, as a fraction of the sprite's height from
+            /// the bottom: the first see-through row under the front crop's near rim
+            /// (<see cref="NearRimRow"/>; <see cref="FullBelowFrontPx"/> rows under its top edge where
+            /// that cannot be read) (2026-09-14), or 0 where there is no crop and the old ceiling under
+            /// the cavity stands.</summary>
+            public readonly float FullY;
 
             public Piece(Sprite sprite, Sprite fill, float interiorHalf, float floorY, float rimY,
                 float[] profile, float aspect, float density,
                 Sprite front = null, Sprite back = null, float floorArc = 0f,
                 Sprite lip = null, float lipRow = 0f,
-                Sprite rimSalt = null, Sprite rimSugar = null, float mouthTop = 0f)
+                Sprite rimSalt = null, Sprite rimSugar = null, float mouthTop = 0f,
+                Vector2? lipOffsetPx = null, float fullY = 0f)
             {
                 Sprite = sprite; Fill = fill; InteriorHalf = interiorHalf;
                 FloorY = floorY; RimY = rimY; Profile = profile; Aspect = aspect;
                 Density = density; Front = front; Back = back; FloorArc = floorArc;
                 Lip = lip; LipRow = lipRow;
                 RimSalt = rimSalt; RimSugar = rimSugar; MouthTop = mouthTop;
+                LipOffsetPx = lipOffsetPx ?? new Vector2(-1f, -1f); FullY = fullY;
             }
 
             /// <summary>A crust's rect inside a box the SPRITE is drawn in with
@@ -150,9 +162,16 @@ namespace LastCall.UI
                 float drawnW = Sprite.rect.width * k, drawnH = Sprite.rect.height * k;
                 float left = (box.x - drawnW) * 0.5f, top = (box.y - drawnH) * 0.5f;
                 size = new Vector2(Lip.rect.width * k, Lip.rect.height * k);
-                // centred on the drawing, its top on the rim's axis
-                topCentre = new Vector2(left + drawnW * 0.5f - box.x * 0.5f,
-                                        -(top + drawnH * LipRow));
+                // WHERE THE CROP WAS CUT FROM (2026-09-14, the author: "Front.png doğru konumlandırıldıktan
+                // sonra şişe içerisi doluymuş hissiyatı verecek"): its own top-left on the sheet, matched
+                // pixel for pixel. LipRowsPx put most crops one to three rows low and every odd-width one
+                // half a pixel off centre; it stays the fallback for a crop that cannot be matched.
+                if (LipOffsetPx.x >= 0f)
+                    topCentre = new Vector2(left + (LipOffsetPx.x + Lip.rect.width * 0.5f) * k - box.x * 0.5f,
+                                            -(top + LipOffsetPx.y * k));
+                else
+                    topCentre = new Vector2(left + drawnW * 0.5f - box.x * 0.5f,
+                                            -(top + drawnH * LipRow));
                 return true;
             }
 
@@ -169,7 +188,9 @@ namespace LastCall.UI
             /// </summary>
             public float FillAmount(float fraction)
             {
-                float ceiling = RimY - (Sprite != null && Sprite.rect.height > 0
+                // NOT TO THE BRIM (2026-09-14, the author: "tüm bardaklar aşırı doluyor bu kadar
+                // dolmamalılar"): a full drink stands a few rows under the front crop's top edge.
+                float ceiling = FullY > 0f ? FullY : RimY - (Sprite != null && Sprite.rect.height > 0
                     ? PoolCeilingArtPx / Sprite.rect.height : 0f);
                 return FloorY + (ceiling - FloorY) * Mathf.Clamp01(fraction);
             }
@@ -491,15 +512,110 @@ namespace LastCall.UI
             // `_Front`, and Resources.Load is case-insensitive on Windows, so the old
             // full-plate lookup found the STRIP and drew it instead of the glass. No file
             // has ever existed for the plate; the name only has to stop colliding.
+            var front = ItemArt.Load($"glass3d_{glass.Id}{dress}_Front");
+            Vector2 lipAt = FrontOffset(sprite, front);
+            // UNDER THE NEAR RIM, NOT ABOVE IT (2026-09-14): three rows under the crop's top edge left
+            // a full martini's line in the open mouth over the front's near rim — a band of drink with
+            // no glass over it, brighter than the rest (seen in play). The line is the first see-through
+            // row under the near rim's solid line, read off the crop's centre column.
+            int nearRim = lipAt.x >= 0f ? NearRimRow(front) : -1;
+            float belowTop = nearRim >= 0 ? nearRim : FullBelowFrontPx;
+            float fullY = lipAt.x >= 0f && sprite.rect.height > 0f
+                ? Mathf.Max(g.FloorY + 0.05f, (sprite.rect.height - lipAt.y - belowTop) / sprite.rect.height)
+                : 0f;
             return new Piece(sprite, fill, g.InteriorHalf, g.FloorY, g.RimY, solverProfile,
                 sprite.rect.width / sprite.rect.height, g.Density,
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_frontplate"),
                 ItemArt.Load($"glass3d_{glass.Id}{dress}_back"), g.FloorArc,
-                ItemArt.Load($"glass3d_{glass.Id}{dress}_Front"),
+                front,
                 LipRow(glass.Id, tier, sprite),
                 ItemArt.Load($"glass3d_{glass.Id}_rim_salt"),
                 ItemArt.Load($"glass3d_{glass.Id}_rim_sugar"),
-                MouthTopTable.TryGetValue(glass.Id, out var mouth) ? mouth : 0.10f);
+                MouthTopTable.TryGetValue(glass.Id, out var mouth) ? mouth : 0.10f,
+                lipAt, fullY);
+        }
+
+        /// <summary>How far under the front crop's top edge a full glass's drink stands, in art rows.</summary>
+        public const float FullBelowFrontPx = 3f;
+
+        /// <summary>
+        /// Rows from a front crop's TOP to the first see-through texel (0 &lt; alpha &lt; 1) under the
+        /// near rim's solid line, down the crop's centre column (2026-09-14). -1 when the crop is
+        /// missing, unreadable, or has no such texel. Measured: rocks 4, highball 3, coupe 7,
+        /// martini 8, pint 9 (tier 2).
+        /// </summary>
+        public static int NearRimRow(Sprite front)
+        {
+            if (front == null || front.texture == null || !front.texture.isReadable) return -1;
+            var ft = front.texture; var fr = front.rect;   // the rect, not textureRect (tight mesh)
+            int fw = Mathf.RoundToInt(fr.width), fh = Mathf.RoundToInt(fr.height);
+            if (fw <= 0 || fh <= 0) return -1;
+            var fp = ft.GetPixels32();
+            int x = Mathf.RoundToInt(fr.x) + fw / 2, y0 = Mathf.RoundToInt(fr.y);
+            bool covered = false;
+            for (int y = 0; y < fh; y++)
+            {
+                byte a = fp[(y0 + fh - 1 - y) * ft.width + x].a;
+                if (a > 0) covered = true;
+                if (covered && a > 0 && a < 255) return y;
+            }
+            return -1;
+        }
+
+        private static readonly Dictionary<string, Vector2> FrontOffsets = new Dictionary<string, Vector2>();
+
+        /// <summary>
+        /// Where an author's front crop sits on its sheet, in sheet pixels from the TOP-LEFT: the
+        /// offset at which the crop's opaque pixels match the sheet's own best — the crop IS a cut of
+        /// that drawing (measured 2026-09-14: mean colour difference 0–5 at the right offset for every
+        /// glass and tin). (-1,-1) when either is missing, unreadable, or the crop does not fit.
+        /// Cached per pair, so each is matched once.
+        /// </summary>
+        public static Vector2 FrontOffset(Sprite sheet, Sprite front)
+        {
+            if (sheet == null || front == null) return new Vector2(-1f, -1f);
+            string key = sheet.name + "|" + front.name;
+            if (FrontOffsets.TryGetValue(key, out var hit)) return hit;
+            var at = MatchFront(sheet, front);
+            FrontOffsets[key] = at;
+            return at;
+        }
+
+        private static Vector2 MatchFront(Sprite sheet, Sprite front)
+        {
+            var st = sheet.texture; var ft = front.texture;
+            if (st == null || ft == null || !st.isReadable || !ft.isReadable) return new Vector2(-1f, -1f);
+            // THE SPRITE'S RECT, NOT ITS textureRect: the sheets are imported with a TIGHT mesh, and
+            // textureRect is then the trimmed opaque area (rocks_t3: y 6.08, 59.85 tall), which put
+            // every match six to eight rows high and the tin's front nowhere near the tin (measured).
+            var sr = sheet.rect; var fr = front.rect;
+            int sw = Mathf.RoundToInt(sr.width), sh = Mathf.RoundToInt(sr.height);
+            int fw = Mathf.RoundToInt(fr.width), fh = Mathf.RoundToInt(fr.height);
+            if (fw > sw || fh > sh || fw <= 0 || fh <= 0) return new Vector2(-1f, -1f);
+            var sp = st.GetPixels32(); var fp = ft.GetPixels32();
+            int sx0 = Mathf.RoundToInt(sr.x), sy0 = Mathf.RoundToInt(sr.y), stw = st.width;
+            int fx0 = Mathf.RoundToInt(fr.x), fy0 = Mathf.RoundToInt(fr.y), ftw = ft.width;
+            long best = long.MaxValue; int bx = -1, by = -1;
+            for (int dy = 0; dy <= sh - fh; dy++)            // rows counted from the sheet's TOP
+                for (int dx = 0; dx <= sw - fw; dx++)
+                {
+                    long cost = 0;
+                    for (int y = 0; y < fh && cost < best; y++)
+                    {
+                        int frow = (fy0 + fh - 1 - y) * ftw + fx0;          // the crop's row y from ITS top
+                        int srow = (sy0 + sh - 1 - (dy + y)) * stw + sx0;    // the sheet's row dy+y from its top
+                        for (int x = 0; x < fw; x++)
+                        {
+                            var f = fp[frow + x];
+                            if (f.a == 0) continue;
+                            var s = sp[srow + dx + x];
+                            if (s.a == 0) { cost += 600; continue; }
+                            cost += Mathf.Abs(f.r - s.r) + Mathf.Abs(f.g - s.g) + Mathf.Abs(f.b - s.b);
+                        }
+                    }
+                    if (cost < best) { best = cost; bx = dx; by = dy; }
+                }
+            return bx < 0 ? new Vector2(-1f, -1f) : new Vector2(bx, by);
         }
 
         /// <summary>

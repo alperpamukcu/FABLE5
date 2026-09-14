@@ -564,6 +564,13 @@ namespace LastCall.UI
             public int Ink;
             public int Seed;
             public float Dx, Dy;          // where it landed, in counter units off the stool
+            // THE CLOTH GOES OVER IT THREE TIMES (2026-09-14): per texel, the ink it started with,
+            // how many passes of the cloth it has had, whether the cloth was on it last frame, and
+            // the strength it is easing toward what the passes left.
+            public byte[] Orig;
+            public byte[] Rubs;
+            public bool[] Covered;
+            public float[] Level;
         }
 
         private sealed class SeatView
@@ -778,8 +785,17 @@ namespace LastCall.UI
         /// apart by hand again.
         /// </summary>
         private Vector2 GlassHome =>
-            new Vector2(GlassHomeX,
-                CounterFootY + CoasterLift + GlassHalfHeight + CounterLift);
+            new Vector2(GlassHomeX + _drinkGlassFootDx,
+                CounterFootY + CoasterLift + CoasterFaceRise + GlassHalfHeight - _drinkGlassFootPad + CounterLift);
+
+        /// <summary>How far the coaster's top FACE's middle stands above its rect's middle: the mat
+        /// is drawn 18 rows with its face in the top 15, shown at 2x (BackBarArt.Coaster).</summary>
+        private const float CoasterFaceRise = 3f;
+        /// <summary>The carried glass's empty sheet rows under its drawn foot, and how far its drawing's
+        /// middle sits off the sheet's — both in HUD units, measured when the glass is dressed.</summary>
+        private float _drinkGlassFootPad, _drinkGlassFootDx;
+        /// <summary>The carried glass's crust host, over its front crop (2026-09-14).</summary>
+        private RectTransform _drinkGlassRimOver;
 
         /// <summary>
         /// Half the glass that is actually standing there (2026-09-06, the author: "ana
@@ -1659,6 +1675,10 @@ namespace LastCall.UI
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateShakerProp();   // the tin waits on the same coaster the glass does
+            // The balloons are placed EVERY frame, bench up or not (2026-09-14): they were solved
+            // inside the rail's step, which stops while a bench is open, so a balloon that began
+            // while you were pouring stood wherever the last solve had left it.
+            SeparateSays();
             StepMiniPreps(run);
             StepIdOpen();
             StepPropTip();
@@ -1698,8 +1718,11 @@ namespace LastCall.UI
         /// four and a half seconds — so this is a backstop against a view that never
         /// finishes, never a timer the night is expected to hit.</summary>
         private const float DayEndPatience = 9f;
-        /// <summary>The beat between the last glass going away and the books (2026-09-09).</summary>
-        private const float DayEndBeat = 1f;
+        /// <summary>The beat between the last glass going away and the books: three seconds after
+        /// the last wash (2026-09-14, the author: "gün sonu son bardağın temizlenme beklenme süresi
+        /// bittikten 3 saniye sonra gerçekleşsin"; it was one, and Core had not waited for the sink
+        /// at all — see TycoonRun's night gate).</summary>
+        private const float DayEndBeat = 3f;
         private float _dayEndClearAt = -1f;
 
         private bool _flowWasOpen;

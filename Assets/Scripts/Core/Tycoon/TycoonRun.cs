@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -1031,7 +1031,11 @@ namespace LastCall.Core
             // Gated HERE and not in BarDay.IsComplete: the floor's tests serve people and
             // wait for the floor to empty with nobody to clean — a floor is not the thing
             // that owns a cloth.
-            if (Floor.IsComplete && Floor.House.CounterClear)
+            // …AND FOR THE SINK (2026-09-14, the author: "gün sonu son bardağın temizlenme beklenme
+            // süresi bittikten 3 saniye sonra gerçekleşsin"). The last glass is collected into a
+            // running tap; closing on that frame zeroed the wash in CloseNight and the books came
+            // down over it. The night now ends when the tap stops, and the HUD's beat follows.
+            if (Floor.IsComplete && Floor.House.CounterClear && !Floor.House.SinkBusy)
             {
                 // The counter's night ends here, BEFORE anything reads ComfortTonight: what
                 // is still in the hand and in the sink is washed for free, what is still on

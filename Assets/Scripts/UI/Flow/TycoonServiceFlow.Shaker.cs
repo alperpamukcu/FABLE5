@@ -51,7 +51,7 @@ namespace LastCall.UI
         private HoverGlow _pourGlow;             // the bottle's glow, stilled while the hand holds it
         private const float BottleGripDepth = 60f;
         private bool _pouring;
-        private const float LiftRange = 200f;  // px of lift for a full tilt
+        private const float LiftRange = 260f;  // px of lift for a full tilt (200 until 2026-09-14: "daha ince ayar")
         // 180, NECK STRAIGHT DOWN (2026-09-13): the pour runs past level and is fullest with the
         // vessel on its neck (BottlePour), so the hand has to be able to get it there. The first
         // part of the lift lays it level (PourHand.Lean). Was 118.
@@ -228,6 +228,18 @@ namespace LastCall.UI
             var front = ItemArt.Load("tin_open" + t + "_Front") ?? ItemArt.Load("tin_open_Front");
             _tinFrontImg.sprite = front;
             _tinFrontImg.enabled = front != null;
+            // SEATED WHERE IT WAS CUT FROM (2026-09-14): matched on the tin's own sheet, per tier. The
+            // hand-typed anchors were tin_open's, and stretched the t2 crop's 123 rows over 124.
+            var tinSheet = ItemArt.Load("tin_open" + t) ?? ItemArt.Load("tin_open");
+            var at = GlassArt.FrontOffset(tinSheet, front);
+            if (front != null && tinSheet != null && at.x >= 0f)
+            {
+                float sheetW = tinSheet.rect.width, sheetH = tinSheet.rect.height;
+                var artRt = _tinFrontImg.rectTransform;
+                artRt.anchorMin = new Vector2(at.x / sheetW, (sheetH - at.y - front.rect.height) / sheetH);
+                artRt.anchorMax = new Vector2((at.x + front.rect.width) / sheetW, (sheetH - at.y) / sheetH);
+                artRt.offsetMin = artRt.offsetMax = Vector2.zero;
+            }
         }
 
         /// <summary>The front rides the tin: same position, rotation and scale, every frame
@@ -309,7 +321,7 @@ namespace LastCall.UI
 
         /// <summary>The strip's baseline on the counter front, over the key row and under the
         /// readout's shelf... and the height of one step.</summary>
-        private const float StepStripY = 100f, StepStripH = 20f;
+        private const float StepStripY = 78f, StepStripH = 20f;   // 100 until the props came down 22 (2026-09-14)
 
         private Text BuildStepStrip(RectTransform panel, string[] words,
             List<(Image icon, Text label, Image tick)> rows)
@@ -583,7 +595,7 @@ namespace LastCall.UI
         // it with its bottle's picture, and the growing outlined figure on the surface.
 
         /// <summary>Where the measure stands on both benches (panel-centred), right of the work.</summary>
-        private static readonly Vector2 MeasureAt = new Vector2(485f, -87f);
+        private static readonly Vector2 MeasureAt = new Vector2(485f, -109f);   // -87 until the props came down
         /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
         private static readonly Vector2 MeasureSize = new Vector2(136f, 300f);
 
@@ -1985,7 +1997,7 @@ namespace LastCall.UI
             // size in the rebuild.
             _shakerReadout = NewText("Readout", _shakerPanel, _body, 16, TextAnchor.LowerCenter, UITheme.TextSecondary);
             // Under the strip, over the keys (2026-09-13).
-            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 74), new Vector2(-16, 97));
+            Stretch(_shakerReadout.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(16, 52), new Vector2(-16, 75));
 
             // The pour gauge: a slim standing column, cyan-edged, filled bottom-up with the
             // TIN's contents as shares of the whole vessel — 5% of vodka reads 5% VODKA and

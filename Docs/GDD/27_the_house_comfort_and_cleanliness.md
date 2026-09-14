@@ -315,7 +315,12 @@ oyunu gibi tamamını silmek gerekecek"). The first cut rubbed a soft disc under
 which was neither where the rag is drawn nor the size of it. Core's `Wipe` — with Core's own
 refusals — is called only once next to nothing is left. Measured in play: one straight pass
 along the middle of a 96×36 mark takes half of it, and the edges and corners want going back
-for. The mark itself is drawn as CLUMPS since 2026-09-13 (the author: "kir çok kötü, daha kalın
+for. **Three passes (2026-09-14, the author: "tek seferde temizlemesin 3 kere üstünde ovalaması
+gereksin fade şeklinde silinen bölge gitsin"):** a pixel counts a pass each time the cloth
+enters it (2 units of hysteresis), is gone after three, and fades rather than blinks out
+(4 per second). Measured: ink 1.00 → 0.67 → 0.33 → 0 and the mark leaves the list. The night
+waits for the sink too: Core closes it only when the counter is clear and the sink is idle,
+and the day-end screen follows three seconds later. The mark itself is drawn as CLUMPS since 2026-09-13 (the author: "kir çok kötü, daha kalın
 kontraslı toplu parçaların olduğu bir dağınıklık olsun") — still 96×36 at one unit a pixel,
 but no longer grit: a sticky puddle in one of three drink tones (lit toward the room's light,
 deep along its near rim), two heaps of bar-snack crumbs off its ends, and a squeezed lime or

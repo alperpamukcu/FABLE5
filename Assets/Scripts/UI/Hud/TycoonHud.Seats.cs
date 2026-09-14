@@ -477,7 +477,8 @@ namespace LastCall.UI
                 sig.Append(v.Exiting ? 'x' : '.')
                    .Append(Mathf.RoundToInt(v.Root.anchoredPosition.x)).Append(':')
                    .Append(Mathf.RoundToInt(v.Say.sizeDelta.x)).Append('x')
-                   .Append(Mathf.RoundToInt(v.Say.sizeDelta.y)).Append(';');
+                   .Append(Mathf.RoundToInt(v.Say.sizeDelta.y)).Append('@')
+                   .Append(Mathf.RoundToInt(HeadX(v))).Append('/').Append(Mathf.RoundToInt(SayHomeY(v))).Append(';');
             }
             // SETTLED ROWS STAY SETTLED (2026-09-07, the author: "konuşma balonları gereksiz
             // kayabiliyor"). The row was re-solved every frame from scratch, so a balloon
@@ -549,19 +550,20 @@ namespace LastCall.UI
                 // değil BAŞTAN aşağı ölçülüyor — mahzen ne kadar açılırsa açılsın balon başla
                 // birlikte hareket eder ve arasındaki mesafe sabit kalır. Yüzü de kapatmaz:
                 // kafa balonun üstünde durur.
+                // OVER THE HEAD AGAIN, DRAWER OR NOT (2026-09-14, the author: "konuşma metinleri
+                // karakterlerin kafasının üstünde çıkmıyor"). With the cellar open the balloon was
+                // lerped to HeadTop − h − 10, which puts its TOP ten units under the crown: over
+                // the face. It stays small in the band (CellarSayScale) and stands on the head.
                 float ceiling = float.MaxValue;
-                if (drawer > 0.01f)
-                {
-                    float headY = v.Look != null ? v.Look.HeadTop : CharWinH;
-                    float under = headY - h - CellarSayClear;
-                    homeY = Mathf.Lerp(baseY, under, drawer);
-                    ceiling = under;
-                }
                 float dx = 0f, dy = 0f;
                 // Inside the picture first.
                 float left = rootX - w * 0.5f, right = rootX + w * 0.5f;
-                if (left < -halfRoom + 4f) dx = (-halfRoom + 4f) - left;
-                else if (right > halfRoom - 4f) dx = (halfRoom - 4f) - right;
+                // THE SEATS' OWN SPACE (2026-09-14): a stool's x runs 0..width from the HUD's left
+                // edge, and this clamp was written for a centred origin — every stool right of the
+                // middle failed it and had its balloon shoved toward the centre of the screen.
+                float roomW = halfRoom * 2f;
+                if (left < 4f) dx = 4f - left;
+                else if (right > roomW - 4f) dx = (roomW - 4f) - right;
                 for (int storey = 0; storey < 4; storey++)
                 {
                     var mine = new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h);
@@ -578,7 +580,7 @@ namespace LastCall.UI
                     if (clear) break;
                     // A small slide along the row is allowed; a big one is a balloon over
                     // somebody else's head, so it climbs instead.
-                    if (dx + push <= MaxSlide && rootX + dx + push + w * 0.5f <= halfRoom - 4f)
+                    if (dx + push <= MaxSlide && rootX + dx + push + w * 0.5f <= halfRoom * 2f - 4f)
                     {
                         dx += push;
                         var again = new Rect(rootX + dx - w * 0.5f, homeY + dy, w, h);
@@ -1568,6 +1570,12 @@ namespace LastCall.UI
         /// splash with a cloth is not a game, it is an eye test.</summary>
         private const float SmudgeGone = 0.07f;
 
+        /// <summary>Passes of the cloth a texel of a mark takes before it is gone, how fast what a
+        /// pass took off fades out, and how far inside the cloth a texel must be to count as under
+        /// it (and outside, to count as left) so a swinging hem cannot rub a pixel on its own.</summary>
+        private const int RubsToClean = 3;
+        private const float RubFadePerSecond = 4f, RubHysteresis = 2f;
+
         /// <summary>
         /// A stool's mark — and its OWN copy of one (2026-09-06, the author: "bezle silinirken
         /// kir tek seferde silinmemeli, piksele göre boyama mantığında her yeri silmeli"). The
@@ -1585,6 +1593,10 @@ namespace LastCall.UI
             mk.Px = ChromeArt.SmudgePixels(mk.Seed, out int sw, out int sh);
             mk.Ink = 0;
             foreach (var c in mk.Px) mk.Ink += c.a;
+            int texels = mk.Px.Length;
+            mk.Orig = new byte[texels]; mk.Rubs = new byte[texels];
+            mk.Covered = new bool[texels]; mk.Level = new float[texels];
+            for (int i = 0; i < texels; i++) { mk.Orig[i] = mk.Px[i].a; mk.Level[i] = 1f; }
             mk.Tex = new Texture2D(sw, sh, TextureFormat.RGBA32, false)
             { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, hideFlags = HideFlags.DontSave };
             mk.Tex.SetPixels32(mk.Px);
@@ -1597,6 +1609,13 @@ namespace LastCall.UI
             relay.Entered = () => ShowPropTip(rt, UIText.T("seats.tip.mark"));
             relay.Exited = () => HidePropTip(rt);
             mk.Prop = rt;
+        }
+
+        /// <summary>Moves <paramref name="t"/> to the end of its parent only if it is not there already.</summary>
+        private static void KeepLast(Transform t)
+        {
+            if (t == null || t.parent == null) return;
+            if (t.GetSiblingIndex() != t.parent.childCount - 1) t.SetAsLastSibling();
         }
 
         /// <summary>Bottom-left HUD units to the centre-anchored space the carried props live in.</summary>
@@ -1691,6 +1710,7 @@ namespace LastCall.UI
                 // the towel would hang over the shelves you are reading.
                 float phase = stage != null ? stage.DrawerPhase : 0f;
                 _clothImg.color = new Color(1f, 1f, 1f, 1f - 0.8f * phase);
+                StepMarks(run, false, default, 0f);   // what the last passes took keeps fading
                 return;
             }
             _clothImg.color = Color.white;
@@ -1730,35 +1750,44 @@ namespace LastCall.UI
             // the mark is only wiped — Core's own verb, with Core's own refusals — once there
             // is next to nothing left of it. Under a glass Core refuses, and the refusal is
             // said once per mark per grab.
+            StepMarks(run, true, at, dxTravel);
+        }
+
+        /// <summary>
+        /// The counter's marks, every frame: rubbed where the held cloth passes, eased toward what
+        /// the passes left of them, and handed to Core once they are gone. Runs with the cloth on
+        /// the rail too, so the last pass keeps fading after the hand lets go.
+        /// </summary>
+        private void StepMarks(TycoonRun run, bool held, Vector2 at, float dxTravel)
+        {
             foreach (var v in _seats)
                 foreach (var mk in v.Marks)
                 {
-                    if (mk.Prop == null || mk.Mess == null || mk.Tex == null || mk.Px == null) continue;
-                    if (!Rub(mk)) continue;
-                    // IT THROWS OFF WHAT IT TAKES UP (2026-09-09, the author: "cloth ile
-                    // tezgah temizlenirken partiküller çıksın temizlenen masadan"). Rub
-                    // returns true only on a frame that actually took ink out of the mark, so
-                    // the spray is tied to the work and not to the hand waving about: a drop
-                    // every ClothSprayEvery units of travel, off the cloth's own hem.
-                    _clothSprayed += Mathf.Abs(dxTravel);
-                    while (_clothSprayed >= ClothSprayEvery)
+                    if (mk.Prop == null || mk.Mess == null || mk.Tex == null || mk.Px == null || mk.Orig == null) continue;
+                    bool took = held && Rub(mk);
+                    EaseMark(mk);
+                    if (took)
                     {
-                        _clothSprayed -= ClothSprayEvery;
-                        ShedDrop(at + new Vector2(((_grains.Count * 29) % 23) - 11f, -20f));
+                        // IT THROWS OFF WHAT IT TAKES UP (2026-09-09): a drop every ClothSprayEvery
+                        // units of travel, off the cloth's own hem, only on a frame that rubbed.
+                        _clothSprayed += Mathf.Abs(dxTravel);
+                        while (_clothSprayed >= ClothSprayEvery)
+                        {
+                            _clothSprayed -= ClothSprayEvery;
+                            ShedDrop(at + new Vector2(((_grains.Count * 29) % 23) - 11f, -20f));
+                        }
                     }
-                    // ASKED AFTER EVERY TOUCH, not only after one that took something off: the
-                    // last few percent can end up somewhere the cloth has already been, and a
-                    // mark that can never be finished is worse than one that finishes early.
-                    if (InkLeft(mk) > SmudgeGone) continue;
+                    if (mk.Mess.IsClean || InkLeft(mk) > SmudgeGone) continue;
                     try
                     {
                         run.Wipe(mk.Mess);
                         Sfx.Play("rim_done", 0.45f);
-                        for (int i = 0; i < 4; i++) ShedDrop(at + new Vector2((i - 1.5f) * 7f, -16f));
+                        if (held)
+                            for (int i = 0; i < 4; i++) ShedDrop(at + new Vector2((i - 1.5f) * 7f, -16f));
                     }
                     catch (System.InvalidOperationException e)
                     {
-                        if (_clothRefused != v) { _clothRefused = v; Toast(UIText.Refusal(e)); }
+                        if (held && _clothRefused != v) { _clothRefused = v; Toast(UIText.Refusal(e)); }
                     }
                 }
         }
@@ -1779,8 +1808,9 @@ namespace LastCall.UI
         private bool Rub(Mark mk)
         {
             var rt = mk.Prop;
-            if (rt == null || _clothRt == null) return false;
-            // The rag's four corners, in the mark's own local space, and the box around them.
+            if (rt == null || _clothRt == null || mk.Orig == null) return false;
+            // The rag's four corners, in the mark's own local space, and the box around them —
+            // padded, so a texel the cloth has just left is still looked at and can be let go.
             var corners = new Vector3[4];
             _clothRt.GetWorldCorners(corners);
             float minX = float.MaxValue, maxX = float.MinValue, minY = float.MaxValue, maxY = float.MinValue;
@@ -1790,47 +1820,78 @@ namespace LastCall.UI
                 minX = Mathf.Min(minX, local.x); maxX = Mathf.Max(maxX, local.x);
                 minY = Mathf.Min(minY, local.y); maxY = Mathf.Max(maxY, local.y);
             }
-            // Local (pivot centre for x, foot for y) into texels.
-            int x0 = Mathf.FloorToInt((minX / rt.rect.width + 0.5f) * ChromeArt.SmudgeW);
-            int x1 = Mathf.CeilToInt((maxX / rt.rect.width + 0.5f) * ChromeArt.SmudgeW);
-            int y0 = Mathf.FloorToInt((minY / rt.rect.height) * ChromeArt.SmudgeH);
-            int y1 = Mathf.CeilToInt((maxY / rt.rect.height) * ChromeArt.SmudgeH);
-            if (x1 < 0 || y1 < 0 || x0 >= ChromeArt.SmudgeW || y0 >= ChromeArt.SmudgeH) return false;
+            float pad = RubHysteresis;
+            int W = ChromeArt.SmudgeW, H = ChromeArt.SmudgeH;
+            int x0 = Mathf.FloorToInt(((minX - pad) / rt.rect.width + 0.5f) * W);
+            int x1 = Mathf.CeilToInt(((maxX + pad) / rt.rect.width + 0.5f) * W);
+            int y0 = Mathf.FloorToInt(((minY - pad) / rt.rect.height) * H);
+            int y1 = Mathf.CeilToInt(((maxY + pad) / rt.rect.height) * H);
 
-            // WHERE THE CLOTH ACTUALLY IS, not the box round it (2026-09-09, the author:
-            // "tezgah silerken bezin değdiği yerler silinsin gerçekten de"). The rag swings
-            // on the hand, and a bounding box round a rotated rag is a good deal bigger than
-            // the rag — so marks came off where no cloth had been, and the wipe read as
-            // approximate. Every texel in the box is taken back into the CLOTH's own frame
-            // and kept only if it is inside its rectangle.
+            // THREE PASSES, NOT ONE (2026-09-14, the author: "tezgah silme özelliği tek seferde
+            // temizlemesin 3 kere üstünde ovalaması gereksin fade şeklinde silinen bölge gitsin").
+            // A texel counts a pass when the cloth COMES ONTO it — covered now, not covered last
+            // frame — and each pass takes a third of its ink, eased out by EaseMark. A cloth resting
+            // on a mark rubs nothing; a cloth worked back and forth across it takes it in three.
+            // The rag's own rectangle still decides what is under it (2026-09-09), with a couple of
+            // units of hysteresis so a swinging hem does not count a pass by itself.
+            // AND THE ROW IS THE ONE ON SCREEN (2026-09-14): the texture reads row 0 at the FOOT,
+            // and this indexed from the top, so a hem reaching halfway down a mark rubbed out the
+            // mirrored strip.
             float halfW = _clothRt.rect.width * 0.5f, cloth = _clothRt.rect.height;
-            bool changed = false;
-            for (int y = Mathf.Max(0, y0); y <= Mathf.Min(ChromeArt.SmudgeH - 1, y1); y++)
-                for (int x = Mathf.Max(0, x0); x <= Mathf.Min(ChromeArt.SmudgeW - 1, x1); x++)
+            bool took = false;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
                 {
-                    int i = (ChromeArt.SmudgeH - 1 - y) * ChromeArt.SmudgeW + x;
-                    var c = mk.Px[i];
-                    if (c.a == 0) continue;
-                    // texel centre → the mark's local point → world → the cloth's local frame
-                    var here = new Vector3(((x + 0.5f) / ChromeArt.SmudgeW - 0.5f) * rt.rect.width,
-                                           ((y + 0.5f) / ChromeArt.SmudgeH) * rt.rect.height, 0f);
+                    int i = y * W + x;
+                    if (mk.Orig[i] == 0) continue;
+                    if (x < x0 || x > x1 || y < y0 || y > y1) { mk.Covered[i] = false; continue; }
+                    var here = new Vector3(((x + 0.5f) / W - 0.5f) * rt.rect.width,
+                                           ((y + 0.5f) / H) * rt.rect.height, 0f);
                     var inCloth = _clothRt.InverseTransformPoint(rt.TransformPoint(here));
+                    float ax = Mathf.Abs(inCloth.x);
                     // the rag hangs from its top edge: pivot (0.5, 1), so y runs 0 .. -height
-                    if (Mathf.Abs(inCloth.x) > halfW || inCloth.y > 0f || inCloth.y < -cloth) continue;
-                    mk.Px[i] = new Color32(c.r, c.g, c.b, 0);
-                    changed = true;
+                    bool inside = ax <= halfW - pad && inCloth.y <= -pad && inCloth.y >= -cloth + pad;
+                    bool outside = ax > halfW + pad || inCloth.y > pad || inCloth.y < -cloth - pad;
+                    if (inside)
+                    {
+                        if (mk.Covered[i]) continue;
+                        mk.Covered[i] = true;
+                        if (mk.Rubs[i] < RubsToClean) { mk.Rubs[i]++; took = true; }
+                    }
+                    else if (outside) mk.Covered[i] = false;
                 }
-            if (!changed) return false;
-            mk.Tex.SetPixels32(mk.Px);
-            mk.Tex.Apply();
-            if (_rubT <= 0f)
+            if (took && _rubT <= 0f)
             {
                 _rubT = 0.16f;                       // the cloth on wet slate, not a machine gun
-                // There is no cloth in the bank; the rim's dry turn is the nearest thing
-                // to a rag on stone, and quiet enough to repeat.
                 Sfx.Play("rim_turn", 0.22f);
             }
-            return true;
+            return took;
+        }
+
+        /// <summary>Eases every texel of a mark toward what its passes have left of it, so a pass
+        /// fades the ink out rather than punching it out. Writes the texture only if a texel moved.</summary>
+        private void EaseMark(Mark mk)
+        {
+            if (mk.Orig == null) return;
+            float step = Motion.Reduced ? 1f : RubFadePerSecond * Time.unscaledDeltaTime;
+            bool changed = false;
+            for (int i = 0; i < mk.Px.Length; i++)
+            {
+                if (mk.Orig[i] == 0) continue;
+                float target = 1f - Mathf.Min(mk.Rubs[i], RubsToClean) / (float)RubsToClean;
+                float lv = mk.Level[i];
+                if (lv == target) continue;
+                lv = Mathf.MoveTowards(lv, target, step);
+                mk.Level[i] = lv;
+                byte a = (byte)Mathf.RoundToInt(mk.Orig[i] * lv);
+                var c = mk.Px[i];
+                if (c.a == a) continue;
+                mk.Px[i] = new Color32(c.r, c.g, c.b, a);
+                changed = true;
+            }
+            if (!changed) return;
+            mk.Tex.SetPixels32(mk.Px);
+            mk.Tex.Apply();
         }
 
         /// <summary>Do these two rects overlap on screen? Corner-box against corner-box, which
@@ -2534,7 +2595,6 @@ namespace LastCall.UI
                 stage.SetPrepMatSpan(PrepRailX0 + span * 0.5f, span + PrepDishBox, slot);
             }
             StepSinkFade();
-            SeparateSays();
             StepPrepCarry(run);
             StepGrains();
             StepCloth(run);
@@ -2677,6 +2737,10 @@ namespace LastCall.UI
             _drinkGlassArt = art.gameObject.AddComponent<Image>();
             _drinkGlassArt.raycastTarget = false;
             _drinkGlassArt.preserveAspect = true;
+            // BEHIND THE DRINK (2026-09-14, the author: "görsel->sıvı->(garnishler)->görsel_front"):
+            // the whole sheet stands under the liquid, and the author's _Front crop (the Lip) is the
+            // one thing drawn in front of it. It stays the glow's drawing.
+            art.SetSiblingIndex(liquid.GetSiblingIndex());
             // THE RIM'S FRONT EDGE, over everything (2026-09-08, the author's `_Front`
             // strips): the liquid's surface disc used to draw over the front of the rim,
             // which is what made a full glass look like a glass with a plate of liquid on
@@ -2687,6 +2751,9 @@ namespace LastCall.UI
             _drinkGlassLip = lipRt.gameObject.AddComponent<Image>();
             _drinkGlassLip.raycastTarget = false;
             _drinkGlassLip.enabled = false;
+            // The rim's crust rides over the front crop (2026-09-14): GlassDecor hangs it here.
+            _drinkGlassRimOver = NewRect("RimOver", _drinkGlass);
+            Stretch(_drinkGlassRimOver, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             // The glow's drawing, now that there is one: the front face is the glass you see.
             if (_drinkGlassGlow != null) _drinkGlassGlow.Graphics = new Graphic[] { _drinkGlassArt };
 
@@ -3048,6 +3115,15 @@ namespace LastCall.UI
                 // height is what made every glass the same glass.
                 _drinkGlass.sizeDelta = GlassArt.BoxFor(run.ServingGlassware, piece.Sprite,
                                                         CarriedGlassHeight);
+                // ON THE COASTER'S FACE, BY ITS DRAWN FOOT (2026-09-14, the author: "bardak altlığının
+                // üstündeki bardak görselini tam bardak altlığının ortasına oturt"): the sheet's empty
+                // rows under the foot come off, and the drawing's own middle goes over the mat's.
+                var footBounds = ItemArt.OpaqueBounds(piece.Sprite);
+                float sheetScale = piece.Sprite != null && piece.Sprite.rect.height > 0f
+                    ? _drinkGlass.sizeDelta.y / piece.Sprite.rect.height : 1f;
+                _drinkGlassFootPad = footBounds.width > 0f ? footBounds.y * sheetScale : 0f;
+                _drinkGlassFootDx = footBounds.width > 0f && piece.Sprite != null
+                    ? (piece.Sprite.rect.width * 0.5f - (footBounds.x + footBounds.width * 0.5f)) * sheetScale : 0f;
                 if (_drinkGlassLip != null)
                 {
                     bool hasLip = piece.LipPlacement(_drinkGlass.sizeDelta, out var lipSize, out var lipAt);
@@ -3071,7 +3147,12 @@ namespace LastCall.UI
             _rimSwept.TryGetValue("salt_rim", out float sweptSalt);
             _rimSwept.TryGetValue("sugar_rim", out float sweptSugar);
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run,
-                            sweptSalt / RimLap, sweptSugar / RimLap);
+                            sweptSalt / RimLap, sweptSugar / RimLap, _drinkGlassRimOver);
+            // The decor puts itself last every sync; the front crop goes back over it, and the crust
+            // over that — only when the order is actually wrong, so the canvas is not re-sorted per frame.
+            if (_drinkGlassLip != null && _drinkGlassLip.enabled)
+                KeepLast(_drinkGlassLip.transform);
+            if (_drinkGlassRimOver != null) KeepLast(_drinkGlassRimOver);
 
             float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
             var mouse = Mouse.current;

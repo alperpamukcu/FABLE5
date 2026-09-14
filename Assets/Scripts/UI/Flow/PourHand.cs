@@ -204,7 +204,9 @@ namespace LastCall.UI
         /// The author's "şişeyi yukarı kaydırdıkça şişe dikleşsin": lift more and it stands on
         /// its neck.
         /// </summary>
-        public const float KneeLift = 0.35f, KneeTilt = 90f;
+        // A quarter, not 0.35 (2026-09-14, the author: "şişelerde sıvı dökerken daha ince ayar
+        // yapılabilmeli"): the pouring half of the lean gets three quarters of the lift.
+        public const float KneeLift = 0.25f, KneeTilt = 90f;
 
         public static float Lean(float lift01, float maxTilt)
         {

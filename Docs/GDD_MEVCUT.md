@@ -1528,6 +1528,54 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.62 · Üçüncü geçiş: sıvı camın kendi pikselleri, front katmanı, üç ovalamalı bez, başların üstünde balon, alçalan sahne (2026-09-14)
+
+Yazar: "Sıvıların şişe/bardak/shaker dolum sınırları doğru değil. Her şişe/bardak/shaker için normal yüz ve front
+yüz olmak üzere 2 ayrı katman oluşturdum ... görsel->sıvı->(Araya girmesi gereken garnishler girecek(tuz ve şeker
+değil))->görsel_front ... Tüm bardaklar aşırı doluyor ... Tezgah silme özelliği tek seferde temizlemesin 3 kere
+üstünde ovalaması gereksin ... Gün sonu son bardağın temizlenme beklenme süresi bittikten 3 saniye sonra
+gerçekleşsin ... Sink kendi kendine parlak kalıyor."
+
+- **Katman sırası: cam → sıvı → garnish → front.** Servis camı artık düz resmin kendisini arkada çiziyor, sıvı
+  onun üstünde, yazarın `_Front` kırpımı en üstte. Kırpımın levhadaki yeri piksel eşleştirmesiyle bulunuyor
+  (`GlassArt.FrontOffset`; rocks 1,14 · highball 2,20 · coupe 1,16 · martini 0..3,14..15 · pint 1,16). Tuz/şeker
+  kabuğu kendi `RimOver` katmanında front'un da üstünde; öbür garnishler sıvıyla front arasında. Tenekenin front'u
+  da aynı eşleştirmeyle oturuyor. Tuzak: sıkı mesh'te `sprite.textureRect` kırpılmış opak alan — hep `sprite.rect`.
+- **Sıvı camın kendi pikselleri** (`MetaballFluid.SetBody`, shader'da `_BodyOn`). Tabanla içki çizgisi arasında
+  arka levhanın alfası olan HER pikseli (silüetin bir piksel içi) içki — parçacık kafesi yok, dolayısıyla "tetris"
+  boşluğu, basamaklı üst ya da çentikli duvar yok. Havuz parçacıkları kapsama çizmiyor, yalnız benek ve çalkantı
+  taşıyor. İlk hâli alfa > 0.5 istiyordu; camın göbeği ~%46 alfa olduğu için sıvı yalnız duvarlarda kalıp front'un
+  arkasında kayboldu (oyunda görüldü) — eşik "herhangi bir alfa, bir piksel içeride" oldu.
+- **Bardaklar aşırı dolmuyor:** dolu çizgi artık front'un ön kenar çizgisinin altındaki ilk yarı saydam satır
+  (`GlassArt.NearRimRow`, kırpımın orta sütunu). Levhanın tepesinden satır: rocks 18, highball 23, coupe 23,
+  martini 22, pint 25. Ön kenardan 3 satır aşağı denemesi dolu martininin çizgisini ağzın açık kısmına koydu — cam
+  tonu almayan parlak bir şerit (oyunda görüldü); martini 17→22 satır.
+- **Tezgâh üç ovalamada temizleniyor** (`TycoonHud.Rub/EaseMark`): bezin girdiği her piksel bir geçiş sayıyor
+  (2 birim histerezis), üç geçişte gidiyor ve sönerek kayboluyor (saniyede 4). Ölçüldü: mürekkep 1.00 → 0.67 →
+  0.33 → 0, leke listeden düştü. `ChromeArt.SmudgePixels`'ın satır indeksi `y * W2 + x` olarak düzeltildi.
+- **Gün sonu:** Core gecenin kapısını `Floor.IsComplete && CounterClear && !SinkBusy` yaptı — son bardak lavabodan
+  çıkmadan gece kapanmıyor; UI ardından 3 sn bekliyor (`DayEndBeat`). EditMode testi
+  `TheNight_WaitsForTheSink_AndClosesWhenTheTapStops`.
+- **Şişeler büyümüyor, lavabo parlak kalmıyor** (`HoverGlow`): sallanma geri alınmadan ölçek her kavrayışta
+  birikiyordu, tutulmadığında parlama da sıfırlanmıyordu. Artık tutulmayan nesnede hareket, parlama ve öne alma
+  sıfırlanıyor; kapatılırken çağrı bayrağı düşüyor. Ölçüldü: onlarca hover/kavrama sonrası ölçek 1.0, lavabo 0.
+- **Daha ince döküm:** kaldırma aralıkları genişledi (tezgâh şişesi `LiftRange` 260, servis tenekesi
+  `ServeLiftRange` 220, eğilme dizi `KneeLift` 0.25). Ağız sanatın üstünden: şişenin büyümesi dökme noktasını
+  çizili ağızdan ayırıyordu; ölçek sabitlenince ikisi yeniden aynı yerde.
+- **Tuz ve şeker kartı** küçük `carry_salt` / `carry_sugar` resmini tam katında, 64'lük kutuda ortalı gösteriyor.
+- **Bardak altlığın ortasında:** taşınan bardağın çizili ayağı opak sınırlarından ölçülüyor (`FootPad`, `FootDx`),
+  altlığın yüzü 3 birim yukarıda (`CoasterFaceRise`); ayak altlığın yüzüne oturuyor.
+- **Balonlar başların üstünde:** `SeparateSays` her kare ve kafa X'i ile kendi yüksekliği üzerinden çalışıyor; baş
+  altına düşürme kolu kaldırıldı. Odada başlardan 22–58 birim yukarıda, ortası kafanın X'inde.
+- **Sahne alçaldı:** tezgâh açıkken oda çekmecenin 0.72'sinde duruyor (`BenchDrawer`; 0.85'te balonlar başı 9/−1/9
+  birimle geçiyordu, 0.72'de 19–22). Tezgâhın zemini 62→18 (`StageBottom`), aksesuarlar 22 birim aşağıda; adım
+  şeridi, okuma satırı ve ölçü de onlarla indi — şişeye ve tenekeye dikleşmek için yer.
+- **Doğrulama:** EditMode 587/587, PlayMode 13/13 (tezgâhın görüntü tabanı alçalan sahne için yeniden onaylandı —
+  fark yalnız aksesuarların, şeridin ve okuma satırının 22 birim inişi ve üstte görünen tezgâh bandı; bir koşuda
+  sepet testi bilinen yutulan-ilk-basış aksaklığıyla kırmızı çıktı, tekrarında yeşil). Oyunda ölçüldü — beş servis
+  camı kızılcıkla (rocks 0.6, highball 1.0, coupe 0.5, martini 1.0, pint 0.8) katman sırası ve dolu çizgi
+  görüntüyle, balon payları, altlık, bez geçişleri, ölçek/parlama.
+
 ### 9.61 · İkinci geçiş: tutulan nokta imlecin altında, bardaklar ağzına kadar, shaker silüeti geri, topak kir, isimsiz bilet (2026-09-13)
 
 Yazar: "Dökme animasyonunda bardaklar tam dolmuyor. Yeni doluluk göstergesini beğenmedim, önceki shaker

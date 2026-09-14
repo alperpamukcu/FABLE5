@@ -69,7 +69,9 @@ namespace LastCall.UI
 
         /// <summary>Room kept clear at the top for the title and the aim line, and at the bottom
         /// for the two buttons.</summary>
-        private const float StageTop = 86f, StageBottom = 62f;
+        // 18, not 62 (2026-09-14, "sahneyi biraz daha aşağı al"): the surface's foot drops 44, so its
+        // middle — which every prop stands off — is 22 lower, and its top, where the hand stops, stays.
+        private const float StageTop = 86f, StageBottom = 18f;
 
         /// <summary>How tall the shaker is drawn on THIS stage. The shaker bench's 180 left
         /// the tin looking like a thimble beside a 260-tall glass.</summary>
@@ -91,11 +93,15 @@ namespace LastCall.UI
         /// <summary>The hand on the tin (PourHand, 2026-09-11): the neck grip that lets a tall
         /// glass be poured, the weight, and the walk home when it is let go.</summary>
         private readonly PourHand _serveHand = new PourHand();
+        private RectTransform _serveRimOver;     // the rim crust's host, over the glass's front crop
+        /// <summary>The serve glass draws its drink as the back sheet's own pixels (2026-09-14).</summary>
+        private static readonly bool ServeBodyFill = true;
         private HoverGlow _serveGlow;            // the tin's glow, stilled while the hand holds it
         /// <summary>How far below the drawn spout the hand holds the tin, and how much grip lift
         /// tips it fully. Measured against the 420 highball: the tin's spout clears the drawn rim
         /// from the first pouring angle to full tilt, over ~116 units of hand travel (was 10).</summary>
-        private const float ServeGripDepth = 60f, ServeLiftRange = 170f;
+        // 220, not 170 (2026-09-14, the author: "şişelerde sıvı dökerken daha ince ayar yapılabilmeli").
+        private const float ServeGripDepth = 60f, ServeLiftRange = 220f;
         /// <summary>A tin that ran dry leaves the bench — but only once it is standing on it.</summary>
         private bool _serveTinLeaving;
         /// <summary>The share of full flow the tin is giving this frame — Core's BottlePour, read
@@ -131,7 +137,7 @@ namespace LastCall.UI
             ShowServingGlassware(run);
             RefreshServeMixBar(run);
             PushServePool(run);
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
             // Steel is steel whatever is in it. This used to multiply the tin sprite by the
             // drink's colour AND by its alpha — harmless while that alpha was a fixed 0.9, and
             // not harmless at all once it became the fill-derived 0.52-0.86: the serve stage's
@@ -370,9 +376,14 @@ namespace LastCall.UI
             _serveGlassPiece = piece;
             // Modular when the art is: the glass image is the clear FRONT face, and the
             // back face mirrors it under the pooled drink.
+            // BACK, DRINK, GARNISH, FRONT (2026-09-14, the author: "görsel->sıvı->(araya girmesi
+            // gereken garnishler girecek (tuz ve şeker değil))->görsel_front"). The whole sheet stands
+            // BEHIND the drink on GlassBack; the glass's own image keeps the sheet for whoever reads
+            // it but draws nothing; the author's _Front crop (GlassLip) is what stands in front.
             _serveGlassImage.sprite = piece.Front != null ? piece.Front : piece.Sprite;
             _serveGlassImage.preserveAspect = true;
             _serveGlassImage.color = Color.white;
+            _serveGlassImage.enabled = false;
             if (_serveGlassLip != null)
             {
                 bool hasLip = piece.LipPlacement(_serveGlass.sizeDelta, out var lipSize, out var lipAt);
@@ -383,12 +394,13 @@ namespace LastCall.UI
                     _serveGlassLipRt.sizeDelta = lipSize;
                     _serveGlassLipRt.SetAsLastSibling();
                 }
+                if (_serveRimOver != null) _serveRimOver.SetAsLastSibling();   // the crust over the front
             }
             PlaceServeSurface(piece, (float)run.ServingGlass.FillFraction);
             if (_serveGlassBack != null)
             {
-                _serveGlassBack.sprite = piece.Back;
-                _serveGlassBack.enabled = piece.Back != null;
+                _serveGlassBack.sprite = piece.Back != null ? piece.Back : piece.Sprite;
+                _serveGlassBack.enabled = _serveGlassBack.sprite != null;
                 _serveGlassBack.preserveAspect = true;
             }
             // Height is fixed and width follows the drawing, so a coupe is wide and a highball
@@ -449,11 +461,20 @@ namespace LastCall.UI
             float artPx = piece.Sprite != null ? w / piece.Sprite.rect.width : 1.5f;
             float iw = w * 0.5f * piece.InteriorHalf;
             float floor = c.y - h * 0.5f + h * piece.FloorY;
-            float rim = c.y - h * 0.5f + h * piece.RimY - GlassArt.PoolCeilingArtPx * artPx;
+            // The particles fill to the drink's FULL line, not the cavity's top (2026-09-14): they are
+            // what the stream lands on, and the body below draws the drink at that same line.
+            float rim = c.y - h * 0.5f + h * piece.FillAmount(1f);
             _serveFluid.SetFloorArc(piece.FloorArc * h);   // the floor's near arc, not a line
             _serveFluid.SetPool(c.x - iw, c.x + iw, floor, rim, (float)run.ServingGlass.FillFraction);
             // The drink is drawn in the glass's own pixels, counted from the drawing's corner.
             _serveFluid.SetPixelGrid(artPx, new Vector2(c.x - w * 0.5f, c.y - h * 0.5f));
+            // THE DRINK IS THE GLASS'S OWN PIXELS (2026-09-14; MetaballFluid.SetBody): every pixel of
+            // the back sheet between the floor and the drink's line — cut by the sheet's alpha, level
+            // on top. The grid's origin is this rect's corner, so the rect is (0,0,w,h) from it.
+            float bodyFrac = (float)run.ServingGlass.FillFraction;
+            if (piece.Sprite != null && bodyFrac > 0.001f)
+                _serveFluid.SetBody(piece.Sprite, new Rect(0f, 0f, w, h), h * piece.FloorY, h * piece.FillAmount(bodyFrac));
+            else _serveFluid.ClearBody();
             // The top face rides the pour (2026-09-13): it was placed once, when the glass
             // appeared, and a full glass kept the face it had at the first drop.
             PlaceServeSurface(piece, (float)run.ServingGlass.FillFraction);
@@ -527,7 +548,7 @@ namespace LastCall.UI
         {
             _serveShakerText.text = UIText.T("bench.serve.shaker_left", ("pct", run.Glass.FillFraction.ToString("P0")));
             _serveGlassText.text = UIText.T("bench.serve.glass_pct_full", ("pct", run.ServingGlass.FillFraction.ToString("P0")));
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
             RefreshServeMixBar(run);
             _aimText.text = accuracy > 0.8 ? UIText.T("bench.serve.aim.clean")
                 : accuracy > AimGate ? UIText.T("bench.serve.aim.steady") : UIText.T("bench.serve.aim.missing");
@@ -546,6 +567,9 @@ namespace LastCall.UI
         private void PlaceServeSurface(GlassArt.Piece piece, float fraction)
         {
             if (_serveGlassSurface == null) return;
+            // THE BODY DRAWS ITS OWN TOP NOW (2026-09-14, PushServePool): a disc on its own grid over
+            // a level line was a second surface the drink did not agree with.
+            if (ServeBodyFill) { _serveGlassSurface.enabled = false; return; }
             if (piece.Sprite == null || fraction <= 0.001f || piece.Aspect <= 0f)
             {
                 _serveGlassSurface.enabled = false;
@@ -608,7 +632,7 @@ namespace LastCall.UI
             _serveShakerText = NewText("Shaker", _servePanel, _body, 8, TextAnchor.LowerLeft, UITheme.TextSecondary);
             // On the counter front at the left, level with the strip (2026-09-13).
             Place(_serveShakerText.rectTransform, new Vector2(0, 0), new Vector2(280, 12),
-                  new Vector2(24, 104));
+                  new Vector2(24, 82));
             _serveShakerText.rectTransform.pivot = new Vector2(0, 0);
             _serveGlassText = NewText("Glass", _servePanel, _body, 8, TextAnchor.LowerRight, UITheme.TextPrimary);
             Place(_serveGlassText.rectTransform, new Vector2(1, 0), new Vector2(280, 12),
@@ -642,7 +666,7 @@ namespace LastCall.UI
             // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
             // so the eye finds the bench's one sentence in one place on both screens.
             Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
-                    new Vector2(16, 74), new Vector2(-16, 97));
+                    new Vector2(16, 52), new Vector2(-16, 75));
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -712,6 +736,10 @@ namespace LastCall.UI
             _serveGlassLip = _serveGlassLipRt.gameObject.AddComponent<Image>();
             _serveGlassLip.raycastTarget = false;
             _serveGlassLip.enabled = false;
+            // The rim's crust rides OVER the front (2026-09-14): salt and sugar are on the mouth, not
+            // in the drink, so GlassDecor hangs its crust here — the glass rect's size and centre.
+            _serveRimOver = NewRect("GlassRimOver", _serveSurface);
+            _serveRimOver.anchorMin = _serveRimOver.anchorMax = _serveRimOver.pivot = new Vector2(0.5f, 0.5f);
 
             // THE SAME TIN THE OTHER BENCH WORKS (2026-08-26, the author: "bardağa
             // koyduğumuz sahnedeki shaker ile shakera koyduğumuz sahnedeki shaker aynı

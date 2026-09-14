@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace LastCall.UI
@@ -562,6 +562,47 @@ namespace LastCall.UI
             _gridOrigin = origin;
         }
 
+        // ── THE DRINK IS THE GLASS'S OWN PIXELS (2026-09-14) ─────────────────────
+        // The author: "sıvı arkadaki Front olmayan katmana göre sınırlarda dolacak ... sadece
+        // sınırlardan sıvıları kes", and "pixel pixel sıvı dolduğundan bardaklarda tetris vari
+        // açıklıklar kalabiliyor". A settled drink drawn as a hexagonal lattice of blobs thresholded
+        // texel by texel leaves stepped tops and notched walls, and the box it is held in is not the
+        // glass. The BODY is the glass itself: every texel of the vessel's back sprite (by its alpha)
+        // between a floor and the drink's line is drink. The particles keep what only particles do —
+        // the stream's landing, the flecks, the churn — and stop drawing the settled body.
+        private Texture _bodyMask;
+        private Vector4 _bodyMaskUv, _bodyMaskRect;
+        private float _bodyFloor, _bodyTop;
+        private bool _bodyOn;
+
+        /// <summary>
+        /// Draws the settled drink as <paramref name="mask"/>'s opaque pixels between
+        /// <paramref name="floor"/> and <paramref name="top"/>. <paramref name="rect"/> is where the
+        /// sprite is drawn and the two heights are in the same units: surface px measured from the
+        /// pixel grid's origin (<see cref="SetPixelGrid"/>). The vessel must not turn.
+        /// </summary>
+        public void SetBody(Sprite mask, Rect rect, float floor, float top)
+        {
+            if (mask == null || mask.texture == null || top <= floor + 0.5f) { ClearBody(); return; }
+            var tex = mask.texture;
+            var tr = mask.rect;   // the whole sheet: textureRect is the tight mesh's trimmed area
+            var uv = new Vector4(tr.x / tex.width, tr.y / tex.height, tr.width / tex.width, tr.height / tex.height);
+            var rc = new Vector4(rect.x, rect.y, rect.width, rect.height);
+            if (!_bodyOn || _bodyMask != tex || _bodyMaskUv != uv || _bodyMaskRect != rc
+                || !Mathf.Approximately(_bodyFloor, floor) || !Mathf.Approximately(_bodyTop, top))
+                _drawDirty = true;
+            _bodyOn = true; _bodyMask = tex; _bodyMaskUv = uv; _bodyMaskRect = rc;
+            _bodyFloor = floor; _bodyTop = top;
+        }
+
+        /// <summary>Back to the particles drawing the whole drink.</summary>
+        public void ClearBody()
+        {
+            if (!_bodyOn) return;
+            _bodyOn = false;
+            _drawDirty = true;
+        }
+
         /// <summary>
         /// Draws the drink into its texture. The texture covers WHOLE texels of the vessel's
         /// grid a little past the viewport, so its pixels land exactly on the glass's pixels;
@@ -616,6 +657,12 @@ namespace LastCall.UI
         private static readonly int IdEdgeWidth = Shader.PropertyToID("_EdgeWidth");
         private static readonly int IdFoamColor = Shader.PropertyToID("_FoamColor");
         private static readonly int IdStreamColor = Shader.PropertyToID("_StreamColor");
+        private static readonly int IdBodyOn     = Shader.PropertyToID("_BodyOn");
+        private static readonly int IdMaskTex    = Shader.PropertyToID("_MaskTex");
+        private static readonly int IdMaskUV     = Shader.PropertyToID("_MaskUV");
+        private static readonly int IdMaskRect   = Shader.PropertyToID("_MaskRect");
+        private static readonly int IdBodyFloorY = Shader.PropertyToID("_BodyFloorY");
+        private static readonly int IdBodyTopY   = Shader.PropertyToID("_BodyTopY");
 
         public MetaballFluid(RectTransform surface)
         {
@@ -1918,6 +1965,19 @@ namespace LastCall.UI
                     ? 2f : ToUv(0f, surfaceLocal).y);
             }
             else _material.SetFloat(IdPoolTopY, 2f);
+
+            // THE BODY (see SetBody): its mask, its floor and its line — and the liquid line the
+            // shading reads is the body's, not the hidden particles'.
+            _material.SetFloat(IdBodyOn, _bodyOn ? 1f : 0f);
+            if (_bodyOn)
+            {
+                _material.SetTexture(IdMaskTex, _bodyMask);
+                _material.SetVector(IdMaskUV, _bodyMaskUv);
+                _material.SetVector(IdMaskRect, _bodyMaskRect);
+                _material.SetFloat(IdBodyFloorY, _bodyFloor);
+                _material.SetFloat(IdBodyTopY, _bodyTop);
+                _material.SetFloat(IdPoolTopY, ToUv(0f, _gridOrigin.y + _bodyTop).y);
+            }
 
             DrawTexture(texel);
             _drawDirty = false;

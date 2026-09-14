@@ -2148,7 +2148,7 @@ namespace LastCall.UI
             void Put(int x, int y, Color32 c)
             {
                 if (x < 2 || x >= W2 - 2 || y < 2 || y >= H2 - 2) return;
-                px[(H2 - 1 - y) * W2 + x] = c;
+                px[y * W2 + x] = c;
             }
             Color32 Ink(int hex, byte a) { var c = Hex(hex); c.a = a; return c; }
 
@@ -2262,7 +2262,7 @@ namespace LastCall.UI
                 for (int y = 0; y < H2; y++)
                     for (int x = 0; x < W2; x++)
                     {
-                        if (px[(H2 - 1 - y) * W2 + x].a > 0) continue;
+                        if (px[y * W2 + x].a > 0) continue;
                         bool touches = false;
                         for (int dy = -1; dy <= 1 && !touches; dy++)
                             for (int dx = -1; dx <= 1 && !touches; dx++)
@@ -2270,9 +2270,9 @@ namespace LastCall.UI
                                 if (dx == 0 && dy == 0) continue;
                                 int nx = x + dx, ny = y + dy;
                                 if (nx < 0 || nx >= W2 || ny < 0 || ny >= H2) continue;
-                                touches = px[(H2 - 1 - ny) * W2 + nx].a > 0;
+                                touches = px[ny * W2 + nx].a > 0;
                             }
-                        if (touches) ringed[(H2 - 1 - y) * W2 + x] = edge;
+                        if (touches) ringed[y * W2 + x] = edge;
                     }
                 px = ringed;
             }

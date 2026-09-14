@@ -119,6 +119,16 @@ the mouse.** Buttons select; the mouse *does*. Every step below is a physical in
    band — nothing held — shuts the cellar and closes the bench with a 0.24 s fade and a small
    drop; the tin or glass standing on the counter opens it again. The counter band follows
    the drawer every frame while a bench is up, and holds still while it closes.
+   **Lower (2026-09-14):** with a bench up the drawer stops at 0.72 of its travel
+   (`BenchDrawer`) so the balloons clear the heads (19–22 units, measured; at full travel they
+   were pressed onto the faces); the cellar alone takes the full travel. The bench's floor is
+   18, not 62, so every prop stands 22 lower with the strip, readout and measure — more room to
+   turn a bottle or tin on its neck. The lift ranges are wider for finer pouring: bench bottle
+   260, serve tin 220, knee 0.25.
+9. **Layers (2026-09-14):** every glass draws its sheet, the drink, the garnishes, then the
+   author's `_Front` crop; salt and sugar rims go over the front. The drink is the sheet's own
+   texels (any alpha, one texel inside the outline) from the floor to the line, and a full
+   glass stops at the first see-through row under the front's near rim (`GlassArt.NearRimRow`).
 
 ## 3. Serving: the glass and the pour
 

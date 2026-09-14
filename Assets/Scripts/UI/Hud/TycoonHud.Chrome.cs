@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -563,32 +563,21 @@ namespace LastCall.UI
             string tell;
             if (prop.IsRim)
             {
-                // The glass the crust is turned in — the tumbler for salt, the coupe for
-                // sugar, which is how a bar actually rims them.
-                string glassId = prop.Id == "sugar_rim" ? "coupe" : "rocks";
-                GlasswareDefinition def = null;
-                if (_bootstrap != null && _bootstrap.Glassware != null)
-                    foreach (var g in _bootstrap.Glassware)
-                        if (g.Id == glassId) { def = g; break; }
-                var piece = def != null ? GlassArt.For(def, 2) : default;
+                // THE SALT, NOT A GLASS (2026-09-14, the author: "tuz ve şeker garnishi hoverinde
+                // küçük tuz ve şeker görselleri kullanılsın"). The card drew a tumbler wearing the
+                // crust — what the rim becomes; the card is about what the dish HOLDS. Shown at a
+                // whole multiple of its pixels, centred in the picture's box.
+                var grain = ItemArt.Load(prop.Id == "sugar_rim" ? "carry_sugar" : "carry_salt");
                 var img = picRt.gameObject.AddComponent<Image>();
-                img.sprite = piece.Sprite;
+                img.sprite = grain;
                 img.preserveAspect = true;
                 img.raycastTarget = false;
-                img.enabled = piece.Sprite != null;
-                var crust = prop.Id == "sugar_rim" ? piece.RimSugar : piece.RimSalt;
-                if (crust != null && piece.RimPlacement(picRt.sizeDelta, crust,
-                                                        out var cSize, out var cTop))
+                img.enabled = grain != null;
+                if (grain != null)
                 {
-                    var cRt = NewRect("Crust", picRt);
-                    cRt.anchorMin = cRt.anchorMax = new Vector2(0.5f, 1f);
-                    cRt.pivot = new Vector2(0.5f, 1f);
-                    cRt.sizeDelta = cSize;
-                    cRt.anchoredPosition = cTop;
-                    var cImg = cRt.gameObject.AddComponent<Image>();
-                    cImg.sprite = crust;
-                    cImg.preserveAspect = true;
-                    cImg.raycastTarget = false;
+                    int whole = Mathf.Max(1, Mathf.FloorToInt(Box / Mathf.Max(grain.rect.width, grain.rect.height)));
+                    picRt.sizeDelta = new Vector2(grain.rect.width * whole, grain.rect.height * whole);
+                    picRt.anchoredPosition = new Vector2((Box - picRt.sizeDelta.x) * 0.5f, 0f);
                 }
                 tell = UIText.T("chrome.garnish.tell_rim");
             }

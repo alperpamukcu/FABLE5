@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.Universal;
@@ -375,13 +375,15 @@ namespace LastCall.UI
         /// mock-ups differ by exactly <see cref="DrawerTravel"/> in every landmark, patrons
         /// included, so this moves the world root rather than the counter alone.
         /// </summary>
-        public void SetDrawerOpen(bool open, bool instant = false)
+        /// <param name="amount">How far open, 0..1 of <see cref="DrawerTravel"/> (2026-09-14): a bench
+        /// stands the room a little short of the top so the heads have air over them.</param>
+        public void SetDrawerOpen(bool open, bool instant = false, float amount = 1f)
         {
-            float wanted = open ? 1f : 0f;
-            // Only when it actually MOVES. Callers set the same state freely (SERVE IT
-            // shuts a cellar that may already be shut), and a roller that speaks every
-            // time it is asked to stay put is a roller that rattles.
-            if (!Mathf.Approximately(_drawerTarget, wanted) && !instant)
+            float wanted = open ? Mathf.Clamp01(amount) : 0f;
+            // Only when it actually OPENS OR SHUTS. Callers set the same state freely (SERVE IT
+            // shuts a cellar that may already be shut), and a roller that speaks every time it is
+            // asked to stay put — or to settle a little lower behind a bench — is a roller that rattles.
+            if ((wanted > 0.5f) != (_drawerTarget > 0.5f) && !instant)
                 Sfx.Play(open ? "cellar_open" : "cellar_close", 0.75f);
             _drawerTarget = wanted;
             if (instant || Motion.Reduced) { _drawerT = _drawerTarget; ApplyDrawer(); }

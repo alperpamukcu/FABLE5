@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The drink is the glass's own pixels, under the author's front layer (2026-09-14, third pass):**
+  the serve glass draws sheet → drink → garnish → the author's `_Front` crop (salt and sugar rims
+  over it), each crop seated by matching its pixels on the sheet. The drink is every texel of the
+  back sheet between the floor and the line, so it has no stepped top or gaps; a full glass stops
+  at the first see-through row under the front's near rim. The counter's mark takes three passes
+  of the cloth and fades. The night closes three seconds after the last glass leaves the sink.
+  Bottles no longer grow with each grab and the sink no longer stays lit. Balloons sit over the
+  heads, the room stands lower behind a bench and the bench's props are 22 units lower.
+
 - **The hand keeps hold of where it took hold, and glasses fill to the brim (2026-09-13, second
   pass):** a poured vessel now turns about the point that was pressed and leans by how far the
   pointer has risen, so the bottle stays under the cursor at every angle. The pool ceiling sits one

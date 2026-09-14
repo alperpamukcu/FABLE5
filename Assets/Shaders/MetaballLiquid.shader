@@ -47,6 +47,13 @@ Shader "LastCall/MetaballLiquid"
         _PoolBottomY  ("Pool Bottom Y",Float) = 0
         _PoolEdgeSoft ("Pool Edge Soft",Float) = 0.03
         _PoolStrength ("Pool Strength",Float) = 1.40
+        // THE BODY (2026-09-14): the settled drink as the vessel's own pixels filled to a line.
+        _BodyOn       ("Body On",      Float) = 0
+        _MaskTex      ("Body Mask",    2D) = "white" {}
+        _MaskUV       ("Body Mask UV", Vector) = (0, 0, 1, 1)
+        _MaskRect     ("Body Rect px", Vector) = (0, 0, 1, 1)
+        _BodyFloorY   ("Body Floor px",Float) = 0
+        _BodyTopY     ("Body Top px",  Float) = 0
 
         // Standard UI stencil plumbing (lets the fluid live under a Mask if ever needed).
         _StencilComp ("Stencil Comparison", Float) = 8
@@ -109,6 +116,13 @@ Shader "LastCall/MetaballLiquid"
             float  _PoolEdgeSoft;
             float  _PoolStrength;
             float4 _Drops[MAX_DROPS];   // xy = uv position, z = radius px, w = active flag
+            float     _BodyOn;
+            sampler2D _MaskTex;
+            float4    _MaskTex_TexelSize;
+            float4    _MaskUV;          // the mask sprite's rect in its texture's uv
+            float4    _MaskRect;        // where that sprite is drawn, px from the pixel grid's origin
+            float     _BodyFloorY;      // px from the grid's origin
+            float     _BodyTopY;
 
             // Live water surface (2026-07-22): the top of the pool is not a flat line but a
             // real wave. A height-field of columns (a shallow-water sim in MetaballFluid.cs)
@@ -199,6 +213,14 @@ Shader "LastCall/MetaballLiquid"
                     float  r = max(abs(d.z), 0.001);
                     float  t = saturate(1.0 - dist2 / (r * r));
                     float  c = t * t;   // squared -> soft shoulders that fuse when overlapping
+                    // THE BODY OWNS THE SETTLED DRINK (2026-09-14): with it on, a pool particle draws
+                    // no coverage — it only carries the flecks and the churn inside the body.
+                    if (_BodyOn > 0.5 && d.w < 1.5)
+                    {
+                        agit += c * frac(d.w) * 2.04;
+                        if (d.z < 0.0 && abs(dpx.x) < halfTexel && abs(dpx.y) < halfTexel) speck = 1.0;
+                        continue;
+                    }
                     total += c;
                     grad  += -4.0 * t * dpx / (r * r);
                     agit  += c * frac(d.w) * 2.04;   // w = kind + speed share x 0.49
@@ -243,7 +265,33 @@ Shader "LastCall/MetaballLiquid"
                 float dropTotal, dropFoam, dropStream, dropAgit, dropSpeck;
                 float2 grad;
                 dropFields(uv, dropTotal, dropFoam, dropStream, grad, dropAgit, dropSpeck);
-                float field = poolField(ruv) + dropTotal;
+                // THE BODY: a texel of the vessel's back sprite (by its alpha) between the floor and
+                // the drink's line is drink, whole — no lattice, so no stepped top and no notched wall.
+                float inBody = 0.0;
+                float bodyRow = 1e4;
+                if (_BodyOn > 0.5)
+                {
+                    float2 bp = (uv - 0.5) * _Size.xy + _ViewOrigin.xy;   // px from the grid's origin
+                    float2 muv = (bp - _MaskRect.xy) / max(_MaskRect.zw, float2(1, 1));
+                    if (muv.x >= 0.0 && muv.x <= 1.0 && muv.y >= 0.0 && muv.y <= 1.0
+                        && bp.y >= _BodyFloorY && bp.y <= _BodyTopY)
+                    {
+                        // ANY ALPHA, ONE TEXEL IN (2026-09-14): a glass's see-through belly is ~40%
+                        // alpha, so "> 0.5" kept only the walls and the drink vanished behind the
+                        // front crop. The silhouette's own outline row stays the glass's.
+                        float2 mc = _MaskUV.xy + muv * _MaskUV.zw;
+                        float2 ts = _MaskTex_TexelSize.xy;
+                        float m = min(tex2D(_MaskTex, mc).a,
+                                  min(min(tex2D(_MaskTex, mc + float2(ts.x, 0)).a, tex2D(_MaskTex, mc - float2(ts.x, 0)).a),
+                                      min(tex2D(_MaskTex, mc + float2(0, ts.y)).a, tex2D(_MaskTex, mc - float2(0, ts.y)).a)));
+                        if (m > 0.02)
+                        {
+                            inBody = 1.0;
+                            bodyRow = (_BodyTopY - bp.y) / max(texel, 1.0);
+                        }
+                    }
+                }
+                float field = poolField(ruv) + dropTotal + inBody * 8.0;
 
                 // The edge: a texel is liquid or it is not in the pixel-art look; the smooth one
                 // keeps its antialiased threshold from the field's screen-space rate of change.
@@ -319,6 +367,8 @@ Shader "LastCall/MetaballLiquid"
                     float nl = length(nrm);
                     float2 nu = nl > 1e-5 ? nrm / nl : float2(0.0, 1.0);
                     float row = (field - _Threshold) / max(nl, 1e-4) / texel;
+                    // The body's top face is its line, and its rows are counted down from it.
+                    if (inBody > 0.5) { nu = float2(0.0, 1.0); row = bodyRow; }
                     float up = saturate((nu.y - 0.35) / 0.35) * still;  // the drink's top face
                     // THE MENISCUS: the drink's top edge, wherever the particles put it — its
                     // first row catches the light, the next holds some of it.

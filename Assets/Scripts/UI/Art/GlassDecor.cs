@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using LastCall.Core;
 using System.Collections.Generic;
 using UnityEngine;
@@ -61,8 +61,12 @@ namespace LastCall.UI
 
         /// <summary>Finds or adds the decor layer on <paramref name="glassRect"/> and brings it
         /// up to date with what is actually on <paramref name="glass"/>.</summary>
+        /// <param name="rimOver">Where the crust hangs instead of the decor (2026-09-14, the author:
+        /// garnishes go between the drink and the front, "tuz ve şeker değil"): a rect laid over the
+        /// glass's front crop with the glass rect's own size and centre, or null to keep it in the decor.</param>
         public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass,
-                                TycoonRun run = null, float buildSalt = 0f, float buildSugar = 0f)
+                                TycoonRun run = null, float buildSalt = 0f, float buildSugar = 0f,
+                                RectTransform rimOver = null)
         {
             var t = glassRect.Find("Decor");
             GlassDecor decor;
@@ -79,6 +83,7 @@ namespace LastCall.UI
             decor.transform.SetAsLastSibling();   // crust and wedge draw over the glass walls
             decor.BuildSalt = buildSalt;
             decor.BuildSugar = buildSugar;
+            if (decor._rimOver != rimOver) { decor._rimOver = rimOver; decor._signature = null; }
             decor.Refresh(piece, glass, run);
         }
 
@@ -126,11 +131,16 @@ namespace LastCall.UI
         /// time. The finished preparation on the glass still wins over both.</summary>
         public float BuildSalt, BuildSugar;
         private Image _crust;
+        private RectTransform _rimOver;   // the crust's host over the front crop, when given
 
         private void Rebuild(GlassContents glass, bool mint, bool olive)
         {
             for (int i = transform.childCount - 1; i >= 0; i--)
                 Destroy(transform.GetChild(i).gameObject);
+            if (_rimOver != null)
+                for (int i = _rimOver.childCount - 1; i >= 0; i--)
+                    Destroy(_rimOver.GetChild(i).gameObject);
+            _crust = null;
             _ice.Clear();
             _mint = _olive = null;
             if (glass == null) return;
@@ -183,6 +193,7 @@ namespace LastCall.UI
                     // the offset was half a glass adrift. Half the height puts it back.
                     var crust = NewChild("Crust", crustSize,
                         new Vector2(crustTop.x, h * 0.5f + crustTop.y - crustSize.y * 0.5f));
+                    if (_rimOver != null) crust.SetParent(_rimOver, false);
                     _crust = crust.gameObject.AddComponent<Image>();
                     _crust.sprite = drawn;
                     _crust.preserveAspect = true;
@@ -205,6 +216,7 @@ namespace LastCall.UI
                     int ringH = Mathf.Max(6, Mathf.RoundToInt(h * 0.085f));
                     var ring = NewChild("Crust", new Vector2(ringW, ringH),
                         new Vector2(0, rimYLocal + ringH * 0.5f - 1f));
+                    if (_rimOver != null) ring.SetParent(_rimOver, false);
                     var img = ring.gameObject.AddComponent<Image>();
                     img.sprite = RimRing(ringW, ringH, salt);
                     img.color = tone;

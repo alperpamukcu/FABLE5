@@ -273,5 +273,48 @@ namespace LastCall.Tests
             Assert.Greater(run.Floor.House.GlassesWashed, 0);
             Assert.AreEqual(2.0, run.ComfortTonight, 1e-9, "glasses in the hand never cost the room");
         }
+
+        [Test]
+        public void TheNight_WaitsForTheSink_AndClosesWhenTheTapStops()
+        {
+            // 2026-09-14, the author: "gün sonu son bardağın temizlenme beklenme süresi bittikten 3
+            // saniye sonra gerçekleşsin". The last glass went into a running tap and the night closed
+            // on that same tick, the wash cut off by CloseNight; it stays open until the tap stops now.
+            var run = NewRun("tap", ARoomWorthTwo());
+            // One glass stands on the counter all night, so the doors are held until it is dealt with.
+            var held = run.Floor.House.LeaveMess("highball", smudge: false);
+            int guard = 0;
+            while (!run.Floor.IsComplete)
+            {
+                Assert.Less(guard++, 1200, "the floor must empty");
+                run.Tick(1);
+                Assert.AreEqual(TycoonPhase.DayOpen, run.Phase, "a glass on the counter holds the doors");
+                foreach (var m in new List<CounterMess>(run.Floor.Messes))
+                {
+                    if (m == held) continue;
+                    if (m.HasGlass) run.CollectGlass(m);
+                    if (m.Smudged) run.Wipe(m);
+                }
+                if (run.GlassesInHand > 0 && !run.SinkBusy) run.WashGlasses();
+                ServeEveryone(run);
+            }
+            guard = 0;
+            while (run.SinkBusy)
+            {
+                Assert.Less(guard++, 60);
+                run.Tick(1);
+            }
+            Assert.AreEqual(TycoonPhase.DayOpen, run.Phase, "the held glass still holds the night");
+
+            run.CollectGlass(held);
+            Assert.IsTrue(run.Floor.House.CounterClear, "the last glass is off the counter");
+            run.WashGlasses();
+            Assert.IsTrue(run.SinkBusy);
+            run.Tick(0.5);
+            Assert.AreEqual(TycoonPhase.DayOpen, run.Phase, "the night does not close over a running tap");
+            run.Tick(Housekeeping.WashSeconds);
+            Assert.IsFalse(run.SinkBusy);
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase, "…and closes once it stops");
+        }
     }
 }
