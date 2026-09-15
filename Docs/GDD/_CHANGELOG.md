@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The framed night, the engine's clock stopped, flags for the language, the author's button pack and key caps
+  (2026-09-15):** the pause menu and the settings keep the room as their backdrop and draw the night only inside
+  their frame; Escape stops everything (Time.timeScale 0) and the menu opens and closes on two cues of its own; the
+  LANGUAGE page is a grid of flags (eleven new ones drawn), the chosen one on the green plate; every key in both menus
+  is built from the author's button pack, and the CONTROLS page shows each action's key as the author's key cap,
+  pressed while the real key is.
+
 - **Customers walk, arrive and leave without a hitch (2026-09-15):** the walk is PixelLab's eight-frame skeleton
   template (a closed two-step cycle for the first cast, whose characters are gone), its head held on one column and
   every clip locked to the character's idle palette, so hair no longer turns black in profile. It plays on one

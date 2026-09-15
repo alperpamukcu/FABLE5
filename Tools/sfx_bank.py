@@ -1329,6 +1329,8 @@ BANK = {
     'voice_greet':    (s_voice_greet,   'light',   False, 1.0),
     'screen_on':      (s_screen_on,     'light',   False, 1.0),
     'screen_off':     (s_screen_off,    'light',   False, 1.0),
+    'menu_open':      (_cue('menu_open'),     'light',   False, 1.0),
+    'menu_close':     (_cue('menu_close'),    'light',   False, 1.0),
     'glass_pickup':   (s_glass_pickup,  'light',   False, 1.0),
     'pour_cutoff':    (s_pour_cutoff,   'light',   False, 1.0),
     'verdict_good':   (_cue('verdict_good'),  'body',    False, 1.0),
@@ -1385,6 +1387,7 @@ SPACE = {
     # The interface is not in the room.
     'click': 'dry', 'hover': 'dry', 'key_press': 'dry', 'deny': 'dry',
     'whoosh': 'dry', 'page_turn': 'dry', 'screen_on': 'dry', 'screen_off': 'dry',
+    'menu_open': 'dry', 'menu_close': 'dry',
     'curtain': 'dry', 'order_ready': 'dry', 'patience_warn': 'dry',
     'id_card': 'dry', 'id_card_away': 'dry', 'bill_slip': 'near',
     # Nor is the music, nor the stingers that comment on play rather than happen in it.

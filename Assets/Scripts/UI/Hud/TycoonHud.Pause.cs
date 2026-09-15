@@ -7,17 +7,20 @@ namespace LastCall.UI
 {
     /// <summary>
     /// THE PAUSE MENU (2026-09-15, the author: "esc ekranı ve ayaralar key bind ses ve şimdilik daha eklenmeyen kayıt
-    /// et devam et butonları ... Palmiye Duvarı kullanılsın"). Escape with nothing open puts the night on hold and
-    /// hangs the palm wall over the room: a drawn night (NightArt.Backdrop) under scanlines, a glass plate with the
-    /// bar's own keys down it, the hour and the till at its foot. RESUME is the one amber key; SAVE and CONTINUE stand
-    /// greyed with a SOON tag until a save layer exists (there is none — TycoonRun.cs:310); SETTINGS opens the window
-    /// over this; NEW RUN and QUIT do what they say.
+    /// et devam et butonları ... Palmiye Duvarı kullanılsın"). Escape with nothing open STOPS the night — the engine's
+    /// own clock (SetPaused: Time.timeScale 0, "ESC'de oyunda her şey durmalı") — and hangs a frame over the room:
+    /// the drawn night inside it (NightArt.Night, at 2x, under a tint and scanlines), the bar's keys down it, the hour
+    /// and the till at its foot. THE ROOM STAYS AROUND THE FRAME (the author, later the same day: "arkaplan ana ekran
+    /// kalsın sadece butonların üstünde olduğu çerçevenin arkaplanı olsun"): no wall, a faint dim that swallows the
+    /// clicks. The menu opens and closes on its own two cues (menu_open / menu_close).
+    ///
+    /// THE KEYS ARE THE AUTHOR'S PACK (the same message: "Butonlar içinde bu dosya yolundaki butonları kullan" —
+    /// MenuPack): a worded key stands on the pack's blank cell 9-sliced at 2x and carries one of its glyphs; RESUME is
+    /// the one orange key; SAVE and CONTINUE stand greyed with a SOON tag until a save layer exists (there is none —
+    /// TycoonRun.cs:310); SETTINGS opens the window over this; NEW RUN and QUIT do what they say.
     ///
     /// THE KEYS FIT THEIR WORDS (the author: "butonlar hoverlar dillere göre cümle uzun veya kısa olduğunda flexible
     /// olmalı kesinlikle"): every key here is sized from its label's measured width (FitKey), never from a number.
-    ///
-    /// Pausing is one flag the clock reads (TycoonHud.Update): the night's scale goes to 0, the room and its weather
-    /// with it, and nothing that decides anything is touched.
     /// </summary>
     public sealed partial class TycoonHud
     {
@@ -40,54 +43,38 @@ namespace LastCall.UI
             _pausePanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_pausePanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // THE NIGHT BEHIND THE MENU: the drawn wall at exactly 2x (640x360 shown over 1280x720), or the flat tile
-            // at 2x when the author prefers it, and the scanlines over either. It catches every click — the room
-            // under it is on hold, and a click into it must not reach a stool.
-            var wall = NewRect("Wall", _pausePanel);
-            Stretch(wall, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var wallImg = wall.gameObject.AddComponent<Image>();
-            wallImg.sprite = NightArt.Backdrop();
-            wallImg.type = NightArt.UseFlatBackdrop ? Image.Type.Tiled : Image.Type.Simple;
-            wallImg.pixelsPerUnitMultiplier = 0.5f;   // tiles at 2x
-            wallImg.color = Color.white;
-            wallImg.raycastTarget = true;
-            UiAuditExempt.Mark(wall, "the pause menu's drawn night is 640x360 shown at exactly 2x; the audit reads the stretch as a scale");
-            var scrim = NewRect("Dim", _pausePanel);
-            Stretch(scrim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var scrimImg = scrim.gameObject.AddComponent<Image>();
-            scrimImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.42f);   // Night[0] at 42%: the wall stays legible
-            scrimImg.raycastTarget = false;
-            Scanlines(_pausePanel, 0.16f);
+            // THE ROOM STAYS: a faint dim over it that catches every click — the room under it is on hold, and a
+            // click into it must not reach a stool.
+            var dim = NewRect("Dim", _pausePanel);
+            Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var dimImg = dim.gameObject.AddComponent<Image>();
+            dimImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.22f);
+            dimImg.raycastTarget = true;
 
-            var plate = NewRect("Plate", _pausePanel);
-            Place(plate, new Vector2(0.5f, 0.5f), new Vector2(PausePlateW, PausePlateH), new Vector2(0, 0));
-            var plateImg = plate.gameObject.AddComponent<Image>();
-            plateImg.sprite = NightArt.MenuPlate();
-            plateImg.type = Image.Type.Sliced;
-            plateImg.raycastTarget = true;
-            Scanlines(plate, 0.10f);
+            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0.30f);
 
             // the title, a shadow copy under it, and the three sunset rules under that
             NightTitle(plate, UIText.T("chrome.pause.title"), -36f);
-            SunsetRules(plate, -66f);
+            SunsetRules(plate, -66f, PausePlateW - 80f);
 
             // the keys, top down; each fitted to its word
             float y = -96f;
-            var resume = PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", UITheme.PrimaryAction, ref y, TogglePause);
-            PauseKey(plate, "SAVE", UIText.T("chrome.pause.save"), "save", UITheme.Night[3], ref y, null);
-            PauseKey(plate, "CONTINUE", UIText.T("chrome.pause.continue"), "redo", UITheme.Night[3], ref y, null);
-            PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", UITheme.ClubBlue[2], ref y, () =>
+            PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", MenuPack.Tone.Orange, ref y, TogglePause);
+            PauseKey(plate, "SAVE", UIText.T("chrome.pause.save"), "save", MenuPack.Tone.Grey, ref y, null);
+            PauseKey(plate, "CONTINUE", UIText.T("chrome.pause.continue"), "lock", MenuPack.Tone.Grey, ref y, null);
+            PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", MenuPack.Tone.Grey, ref y, () =>
             {
+                Sfx.Play("click");
                 _settingsFromPause = true;
                 _pausePanel.gameObject.SetActive(false);
                 if (_settingsPanel != null && !_settingsPanel.gameObject.activeSelf) ToggleSettings();
             });
-            PauseKey(plate, "NEW RUN", UIText.T("chrome.pause.new_run"), "moon", UITheme.ClubBlue[2], ref y, () =>
+            PauseKey(plate, "NEW RUN", UIText.T("chrome.pause.new_run"), "restart", MenuPack.Tone.Grey, ref y, () =>
             {
                 TogglePause();
                 _bootstrap.StartNewRun(null);
             });
-            PauseKey(plate, "QUIT", UIText.T("chrome.pause.quit"), "door", UITheme.ClubBlue[2], ref y, () =>
+            PauseKey(plate, "QUIT", UIText.T("chrome.pause.quit"), "exit", MenuPack.Tone.Grey, ref y, () =>
             {
                 Sfx.Play("bar_closed", 0.6f);
 #if UNITY_EDITOR
@@ -120,26 +107,27 @@ namespace LastCall.UI
             _pausePanel.gameObject.SetActive(false);
         }
 
-        /// <summary>A key on the pause plate: the house key (KeyPlate through NewButton), a mark at its left, the
-        /// word fitted, and — with no <paramref name="onClick"/> — greyed with a SOON tag, because the thing it names is
-        /// not built yet.</summary>
-        private RectTransform PauseKey(RectTransform plate, string id, string label, string mark, Color fill, ref float y, Action onClick)
+        /// <summary>A key on the pause plate: the pack's worded key with a glyph at its left, fitted to its word, and
+        /// — with no <paramref name="onClick"/> — greyed with a SOON tag, because the thing it names is not built yet.</summary>
+        private RectTransform PauseKey(RectTransform plate, string id, string label, string glyph, MenuPack.Tone tone, ref float y, Action onClick)
         {
             bool soon = onClick == null;
-            var key = NewButton(plate, label, new Vector2(0.5f, 1), new Vector2(PauseKeyMinW, PauseKeyH),
-                new Vector2(0, y), fill, onClick ?? (() => { }));
-            key.name = id;
-            var face = (RectTransform)key.Find("Face");
-            KeyMark(face, mark, soon ? UITheme.Cream[2] : fill == UITheme.PrimaryAction ? UITheme.TextOnAmber : UITheme.Cream[4]);
-            var labelText = face.Find("Label").GetComponent<Text>();
-            labelText.rectTransform.offsetMin = new Vector2(44f, KeyPlate.Throw);
+            var key = PackWordKey(plate, id, label, glyph, tone, new Vector2(0.5f, 1), new Vector2(PauseKeyMinW, PauseKeyH),
+                new Vector2(0, y), onClick ?? (() => { }), PauseKeyMinW, 48f + 24f + (soon ? 72f : 0f));
             if (soon)
             {
-                labelText.color = UITheme.Cream[2];
+                // The pack has no disabled drawing: the plate, the glyph and the word go to half light, and the key
+                // stops answering the pointer.
+                key.GetComponent<Image>().color = new Color(0.55f, 0.55f, 0.55f, 1f);   // a uniform dim, so the audit reads it as one
                 key.GetComponent<Button>().interactable = false;
                 key.GetComponent<PressSink>().enabled = false;
+                key.GetComponent<PackKey>().enabled = false;
+                var face = (RectTransform)key.Find("Face");
+                face.Find("Label").GetComponent<Text>().color = UITheme.Cream[2];
+                var glyphImg = face.Find("Glyph");
+                if (glyphImg != null) glyphImg.GetComponent<Image>().color = UITheme.Cream[2];
                 var tag = NewRect("Soon", face);
-                Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, KeyPlate.Throw * 0.5f));
+                Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, 1f));
                 tag.pivot = new Vector2(1, 0.5f);
                 var tagImg = tag.gameObject.AddComponent<Image>();
                 tagImg.color = UITheme.Magenta[1]; tagImg.raycastTarget = false;
@@ -148,21 +136,158 @@ namespace LastCall.UI
                 tagText.text = UIText.T("chrome.pause.soon");
                 FitRect(tag, tagText, 16f, 40f);
             }
-            else Scanlines(face, 0.22f);
-            FitKey(key, PauseKeyMinW, 44f + 24f + (soon ? 72f : 0f));
             y -= PauseKeyH + 10f;
             return key;
         }
 
-        /// <summary>A 16-unit mark inlaid at a key face's left, lifted off the throw like NewButton's own.</summary>
-        private void KeyMark(RectTransform face, string mark, Color ink)
+        // ── the framed night and the pack's keys (shared with the settings window) ────────────────────────────────
+
+        /// <summary>A FRAMED NIGHT (2026-09-15): the drawn night stands INSIDE the frame at exactly 2x — drawn at the
+        /// frame's own half size, cropped to its inside, under a tint of <paramref name="tint"/> and the scanlines —
+        /// and the frame (NightArt.MenuFrame, its inner line the picture's mat) lies over it. The plate catches every
+        /// click that lands on it, so nothing under it is pressed through it.</summary>
+        private RectTransform NightPlate(RectTransform parent, string name, Vector2 size, float tint)
         {
-            var rt = NewRect("Mark", face);
-            Place(rt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(16f, KeyPlate.Throw * 0.5f));
-            rt.pivot = new Vector2(0, 0.5f);
+            var plate = NewRect(name, parent);
+            Place(plate, new Vector2(0.5f, 0.5f), size, Vector2.zero);
+            var catcher = plate.gameObject.AddComponent<Image>();
+            catcher.color = new Color(0f, 0f, 0f, 0.004f);
+            catcher.raycastTarget = true;
+            plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+
+            var pic = NewRect("Picture", plate);
+            Stretch(pic, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
+            pic.gameObject.AddComponent<RectMask2D>();
+            int w = Mathf.CeilToInt((size.x - 6f) / 2f), h = Mathf.CeilToInt((size.y - 6f) / 2f);
+            var art = NewRect("Night", pic);
+            Place(art, new Vector2(0.5f, 0.5f), new Vector2(w * 2, h * 2), Vector2.zero);
+            var ai = art.gameObject.AddComponent<Image>();
+            ai.sprite = NightArt.Picture(w, h);
+            ai.type = NightArt.UseFlatBackdrop ? Image.Type.Tiled : Image.Type.Simple;
+            ai.pixelsPerUnitMultiplier = 0.5f;
+            ai.color = Color.white;
+            ai.raycastTarget = false;
+            UiAuditExempt.Mark(art, "the menu's drawn night, " + w + "x" + h + " shown at exactly 2x inside its frame");
+            var glass = NewRect("Tint", pic);
+            Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var gi = glass.gameObject.AddComponent<Image>();
+            gi.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, tint);
+            gi.raycastTarget = false;
+            Scanlines(pic, 0.12f);
+
+            var frame = NewRect("Frame", plate);
+            Stretch(frame, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var fi = frame.gameObject.AddComponent<Image>();
+            fi.sprite = NightArt.MenuFrame();
+            fi.type = Image.Type.Sliced;
+            fi.color = Color.white;
+            fi.raycastTarget = false;
+            return plate;
+        }
+
+        /// <summary>A WORDED KEY from the author's pack (2026-09-15, MenuPack): the pack's blank cell 9-sliced at 2x
+        /// for the plate, one of its glyphs at the left in its own inks, the word in the house face. Under the pointer
+        /// the glyph lights; pressed, the plate swaps to the pack's own pressed drawing (the rim two units lower) and
+        /// the face travels with it. Widened to its word (FitKey) from <paramref name="minW"/>.</summary>
+        private RectTransform PackWordKey(RectTransform parent, string id, string label, string glyph, MenuPack.Tone tone,
+            Vector2 anchor, Vector2 size, Vector2 pos, Action onClick, float minW, float pad)
+        {
+            var rt = NewRect(id, parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
+            rt.sizeDelta = size;
+            rt.anchoredPosition = pos;
+            var plate = rt.gameObject.AddComponent<Image>();
+            plate.sprite = MenuPack.Blank(tone, false);
+            plate.type = Image.Type.Sliced;
+            plate.pixelsPerUnitMultiplier = 0.5f;          // the pack at exactly 2x
+            plate.color = Color.white;
+            plate.raycastTarget = true;
+            var button = rt.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.targetGraphic = plate;
+            button.onClick.AddListener(() => onClick());
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            Image glyphImg = null;
+            if (glyph != null)
+            {
+                var g = NewRect("Glyph", face);
+                Place(g, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(10f, 1f));
+                g.pivot = new Vector2(0, 0.5f);
+                glyphImg = g.gameObject.AddComponent<Image>();
+                glyphImg.sprite = MenuPack.Glyph(glyph);
+                glyphImg.color = MenuPack.Ink(tone, false);
+                glyphImg.raycastTarget = false;
+            }
+            var pk = rt.gameObject.AddComponent<PackKey>();
+            pk.Plate = plate;
+            pk.Rest = plate.sprite; pk.Lit = plate.sprite; pk.Pressed = MenuPack.Blank(tone, true);
+            pk.Glyph = glyphImg; pk.GlyphRest = MenuPack.Ink(tone, false); pk.GlyphLit = MenuPack.Ink(tone, true);
+            var text = NewText("Label", face, _body, size.y >= 32f ? 16 : 8, TextAnchor.MiddleCenter, MenuPack.Word(tone));
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(glyph != null ? 48f : 8f, 2f), new Vector2(-8f, 0f));
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.text = label;
+            FitKey(rt, minW, pad);
+            return rt;
+        }
+
+        /// <summary>A worded key changing tone (a tab lit, a flag chosen, a switch thrown): new drawings and inks.</summary>
+        private static void RetoneWordKey(RectTransform key, MenuPack.Tone tone)
+        {
+            var pk = key.GetComponent<PackKey>();
+            if (pk == null) return;
+            pk.Refit(MenuPack.Blank(tone, false), MenuPack.Blank(tone, false), MenuPack.Blank(tone, true),
+                MenuPack.Ink(tone, false), MenuPack.Ink(tone, true));
+            var label = key.Find("Face/Label");
+            if (label != null) label.GetComponent<Text>().color = MenuPack.Word(tone);
+        }
+
+        /// <summary>An ICON KEY from the pack: one cell at 2x (32x32) — the blank cell for the plate and the glyph
+        /// over it in the pack's inks, which is how the pack's own cells are built and lets the two glyphs the pack
+        /// lacks (prev, next) stand on the same plate. Lit under the pointer, the pack's pressed drawing while held.
+        /// The meters' - and +, the player's three keys, the sound switch.</summary>
+        private RectTransform PackIconKey(RectTransform parent, string id, string icon, MenuPack.Tone tone, Vector2 anchor, Vector2 pos, Action onClick)
+        {
+            var rt = NewRect(id, parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
+            rt.sizeDelta = new Vector2(32f, 32f);
+            rt.anchoredPosition = pos;
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = NightArt.Mark(mark) ?? ChromeArt.Mark(mark);
-            img.color = ink; img.preserveAspect = true; img.raycastTarget = false;
+            img.sprite = MenuPack.Blank(tone, false);
+            img.type = Image.Type.Simple;
+            img.color = Color.white;
+            img.raycastTarget = true;
+            var button = rt.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.targetGraphic = img;
+            button.onClick.AddListener(() => onClick());
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var g = NewRect("Glyph", face);
+            Stretch(g, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var gi = g.gameObject.AddComponent<Image>();
+            gi.sprite = MenuPack.Glyph(icon);
+            gi.color = MenuPack.Ink(tone, false);
+            gi.raycastTarget = false;
+            var pk = rt.gameObject.AddComponent<PackKey>();
+            pk.Plate = img;
+            pk.Rest = img.sprite; pk.Lit = img.sprite; pk.Pressed = MenuPack.Blank(tone, true);
+            pk.Glyph = gi; pk.GlyphRest = MenuPack.Ink(tone, false); pk.GlyphLit = MenuPack.Ink(tone, true);
+            return rt;
+        }
+
+        /// <summary>An icon key changing its drawing (the hold key between pause and play, the sound switch).</summary>
+        private static void ReiconKey(RectTransform key, MenuPack.Tone tone, string icon)
+        {
+            var pk = key.GetComponent<PackKey>();
+            if (pk == null) return;
+            if (pk.Glyph != null) pk.Glyph.sprite = MenuPack.Glyph(icon);
+            pk.Refit(MenuPack.Blank(tone, false), MenuPack.Blank(tone, false), MenuPack.Blank(tone, true),
+                MenuPack.Ink(tone, false), MenuPack.Ink(tone, true));
         }
 
         /// <summary>The direction's scanlines over a surface: a 1x4 tile at 2x, tinted dark at <paramref name="alpha"/>.</summary>
@@ -195,14 +320,14 @@ namespace LastCall.UI
             title.text = word;
         }
 
-        /// <summary>Three two-unit rules in the sunset's colours, under a title.</summary>
-        private void SunsetRules(RectTransform plate, float y)
+        /// <summary>Three two-unit rules in the sunset's colours, under a title, <paramref name="width"/> wide.</summary>
+        private void SunsetRules(RectTransform plate, float y, float width)
         {
             var cols = new[] { UITheme.Amber[3], UITheme.Magenta[3], UITheme.ClubBlue[3] };
             for (int i = 0; i < cols.Length; i++)
             {
                 var rt = NewRect("Rule" + i, plate);
-                Place(rt, new Vector2(0.5f, 1), new Vector2(PausePlateW - 80f, 2), new Vector2(0, y - i * 4f));
+                Place(rt, new Vector2(0.5f, 1), new Vector2(width, 2), new Vector2(0, y - i * 4f));
                 rt.pivot = new Vector2(0.5f, 1);
                 var img = rt.gameObject.AddComponent<Image>();
                 img.color = cols[i]; img.raycastTarget = false;
@@ -236,12 +361,23 @@ namespace LastCall.UI
             {
                 CloseId();
                 RefreshPauseFoot();
-                Sfx.Play("screen_on", 0.5f);
+                Sfx.Play("menu_open", 0.7f);
             }
-            else Sfx.Play("screen_off", 0.4f);
+            else Sfx.Play("menu_close", 0.6f);
             _pausePanel.gameObject.SetActive(show);
-            _paused = show;
+            SetPaused(show);
             _settingsFromPause = false;
+        }
+
+        /// <summary>EVERYTHING STOPS (2026-09-15, the author: "ESC'de oyunda her şey durmalı"): the engine's clock goes
+        /// to zero, so the sim, the room, the weather, a pour in the glass and a drinker mid-step all hold where they
+        /// are; the HUD's own motion (PressSink, the hover plates, the music's crossfade) runs on unscaled time and
+        /// keeps answering the pointer. Let go here, by CloseEverySheet, and by OnDestroy — the editor keeps the
+        /// scale across plays.</summary>
+        private void SetPaused(bool on)
+        {
+            _paused = on;
+            Time.timeScale = on ? 0f : 1f;
         }
 
         private void RefreshPauseFoot()

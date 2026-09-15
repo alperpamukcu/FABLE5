@@ -194,6 +194,17 @@ namespace LastCall.EditorTools
                 if (f.FieldType == typeof(Color)) list.Add((Color)f.GetValue(null));
                 else if (f.FieldType == typeof(Color[])) list.AddRange((Color[])f.GetValue(null));
             }
+            // THE AUTHOR'S PACKS KEEP THEIR OWN PALETTE (2026-09-15, MenuPack / KeyCaps): the button pack's faces
+            // and inks and the key caps' letter colour are the packs' own, on the author's word ("Butonlar için bu
+            // dosya yolundaki butonları kullan"), and count as tokens here the way the flags' colours do not need to
+            // — a flag is a picture, a key's word is a colour the audit sees.
+            foreach (MenuPack.Tone tone in System.Enum.GetValues(typeof(MenuPack.Tone)))
+            {
+                list.Add(MenuPack.Face(tone));
+                list.Add(MenuPack.Ink(tone, false));
+                list.Add(MenuPack.Ink(tone, true));
+            }
+            list.Add(KeyCaps.Ink);
             return _tokens = list.ToArray();
         }
 

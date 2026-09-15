@@ -33,6 +33,8 @@ RED = (206, 43, 55); DEEPRED = (172, 32, 44); WHITE = (244, 242, 236); BLACK = (
 BLUE = (44, 74, 150); NAVY = (26, 44, 96); SKY = (86, 148, 206); GREEN = (46, 132, 82)
 DARKGREEN = (24, 88, 56); YELLOW = (232, 190, 66); GOLD = (206, 160, 48); ORANGE = (226, 128, 52)
 SAFFRON = (232, 150, 62); MAROON = (128, 32, 44)
+# the language picker's flags (2026-09-15) add two the roster's set never needed
+UKBLUE = (54, 104, 186); BROWN = (118, 74, 42)
 
 
 def bands(colors, horizontal=True, weights=None):
@@ -197,6 +199,53 @@ def brazil(d, im):
     d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=NAVY)
 
 
+def taiwan(d, im):
+    """Red, the canton navy, a white sun of twelve rays in it."""
+    import math
+    d.rectangle([0, 0, W - 1, H - 1], fill=RED)
+    d.rectangle([0, 0, round(W * 0.5) - 1, round(H * 0.5) - 1], fill=NAVY)
+    cx, cy, r = W * 0.25, H * 0.25, H * 0.13
+    for k in range(12):
+        a = k * math.pi / 6
+        d.line([cx, cy, cx + r * 1.55 * math.cos(a), cy + r * 1.55 * math.sin(a)], fill=WHITE, width=1)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=WHITE)
+    d.ellipse([cx - r * 0.7, cy - r * 0.7, cx + r * 0.7, cy + r * 0.7], fill=NAVY)
+    d.ellipse([cx - r * 0.55, cy - r * 0.55, cx + r * 0.55, cy + r * 0.55], fill=WHITE)
+
+
+def mexico(d, im):
+    """The tricolour with the eagle on its cactus — at this size a brown bird over a green pad, which is what tells
+    it from Italy's."""
+    bands([DARKGREEN, WHITE, RED], horizontal=False)(d, im)
+    cx, cy = W / 2.0, H / 2.0
+    d.ellipse([cx - 3.5, cy - 3.5, cx + 3.5, cy + 2.5], fill=BROWN)              # the body
+    d.polygon([(cx - 5.5, cy - 4), (cx - 1, cy - 1.5), (cx - 5, cy + 0.5)], fill=BROWN)   # a wing
+    d.polygon([(cx + 5.5, cy - 4), (cx + 1, cy - 1.5), (cx + 5, cy + 0.5)], fill=BROWN)
+    d.ellipse([cx - 1.5, cy - 6, cx + 1.5, cy - 3], fill=BROWN)                  # the head
+    d.chord([cx - 5, cy + 1, cx + 5, cy + 7], 180, 360, fill=DARKGREEN)           # the pad under it
+
+
+def greece(d, im):
+    """Nine stripes, blue first, a blue canton with a white cross five stripes deep."""
+    bands([BLUE, WHITE] * 4 + [BLUE])(d, im)
+    cw, ch = round(W * 10 / 27.0), round(H * 5 / 9.0)
+    d.rectangle([0, 0, cw - 1, ch - 1], fill=BLUE)
+    arm = max(2, round(ch / 5.0))
+    d.rectangle([round(cw / 2.0 - arm / 2.0), 0, round(cw / 2.0 - arm / 2.0) + arm - 1, ch - 1], fill=WHITE)
+    d.rectangle([0, round(ch / 2.0 - arm / 2.0), cw - 1, round(ch / 2.0 - arm / 2.0) + arm - 1], fill=WHITE)
+
+
+def malaysia(d, im):
+    """Fourteen stripes, the canton navy with the crescent and the fourteen-point star."""
+    bands([RED, WHITE] * 7)(d, im)
+    cw, ch = round(W * 0.5), round(H * 8 / 14.0)
+    d.rectangle([0, 0, cw - 1, ch - 1], fill=NAVY)
+    cx, cy, r = cw * 0.36, ch * 0.5, ch * 0.34
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=YELLOW)
+    d.ellipse([cx - r + r * 0.45, cy - r * 0.8, cx + r * 0.25 + r * 0.45, cy + r * 0.8], fill=NAVY)
+    star(d, cw * 0.68, cy, ch * 0.27, YELLOW, points=14)
+
+
 FLAGS = {
     # The canton is nine rows of stars at this size; drawn as five offset rows of real stars,
     # which reads as the union rather than as a dot grid.
@@ -247,7 +296,25 @@ FLAGS = {
                lambda d, im: d.polygon([(0, 0), (round(W * 0.34), H // 2), (0, H - 1)], fill=DARKGREEN)),
     'br': brazil,
     'ca': maple,
+    # THE LANGUAGE PICKER'S (2026-09-15, the author: "Dil seçiminde çerçeveye olan dillerin bayrakları gözüksün
+    # bayrağa tıklanarak dil seçilsin"): the ten flags the settings window needs that no customer carries.
+    'ru': bands([WHITE, BLUE, RED]),
+    'ua': bands([UKBLUE, YELLOW]),
+    'tw': taiwan,
+    'mx': mexico,
+    'cz': over(bands([WHITE, RED]),
+               lambda d, im: d.polygon([(0, 0), (round(W * 0.5), H // 2), (0, H - 1)], fill=NAVY)),
+    'hu': bands([RED, WHITE, DARKGREEN]),
+    'gr': greece,
+    'bg': bands([WHITE, GREEN, RED]),
+    'my': malaysia,
+    'vn': over(bands([RED]), lambda d, im: star(d, W / 2.0, H / 2.0, H * 0.30, YELLOW)),
 }
+
+# One flag a language (Languages.cs; the picker's own table lives in TycoonHud.Settings.LanguageFlag). English flies
+# the Union flag, both Chinese tables their own, the two Spanish and Portuguese each theirs.
+LANGUAGE_ISOS = ('gb', 'cn', 'ru', 'de', 'br', 'es', 'fr', 'tr', 'pl', 'kr', 'jp', 'ua', 'tw', 'it', 'mx', 'pt', 'cz',
+                 'hu', 'ro', 'nl', 'se', 'dk', 'no', 'fi', 'gr', 'bg', 'id', 'my', 'vn')
 
 
 def draw(iso):
@@ -262,7 +329,7 @@ def draw(iso):
 
 def needed():
     roster = json.load(io.open(ROSTER, encoding='utf-8'))['people']
-    return sorted({r['iso'] for r in roster})
+    return sorted({r['iso'] for r in roster} | set(LANGUAGE_ISOS))
 
 
 def main():

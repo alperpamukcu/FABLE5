@@ -1540,6 +1540,63 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.72 · Çerçeveli gece: oda arkada kalır, ESC her şeyi durdurur, bayraklı dil seçimi, yazarın buton paketi ve tuş kapakları (2026-09-15)
+
+Yazar: "ESC menüsü için arkaplan ana ekran kalsın sadece butonların üstünde olduğu çerçevenin arkaplanı olsun. Dil
+seçiminde çerçeveye olan dillerin bayrakları gözüksün bayrağa tıklanarak dil seçilsin. Esc menüsünün açılma sesi
+eklensin aynı şekilde kapanma sesi de. ESC'de oyunda her şey durmalı. KEybind için ... Classic burdaki dosyalardaki
+görselleri kullan animasyonlu olduğundan 2 frame olabilir. Butonlar içinde bu dosya yolundaki butonları kullan ... buton"
+
+- **Oda arkada kalır, gece çerçevenin içinde** (`TycoonHud.Pause.NightPlate`): tam ekran duvar kalktı; menünün ve
+  ayarların altında odayı %22 karartan bir tıklama yakalayıcı var, gece yalnız plakanın içinde. `NightArt.Night(w, h)`
+  aynı kompozisyonu (gökyüzü, güneş, şehir, deniz, yol, palmiyeler) istenen kutuya çizer — duraklatma 217×247, ayarlar
+  397×267 — tam 2× gösterilir, `RectMask2D` ile çerçevenin içine kırpılır, üstünde Night[0] perdesi (%30 / %50) ve
+  tarama çizgisi; çerçeve (`NightArt.MenuFrame`, içi boş; 6 birim içerideki ClubBlue çizgi resmin paspartusu) resmin
+  ÜSTÜNDE durur. `UseFlatBackdrop` yine düz deseni koyar. Ayarlarda karartılmış odaya tıklamak pencereyi kapatır.
+- **ESC her şeyi durdurur** (`SetPaused`): `Time.timeScale = 0` — sim, oda, hava, bardaktaki sıvı, yürüyen müşteri
+  durur; HUD'un kendi hareketi (PressSink, hover plakaları, müziğin geçişi) unscaled zamanla sürer, müzik çalar.
+  Bırakılır: RESUME, `CloseEverySheet`, `OnDestroy` (editör timeScale'i oyunlar arası taşır; menüden çıkılan oyun
+  sonrakini donduramaz). Ölçüldü: duraklatmada 1 sn arayla `Floor.Elapsed` 1,341 → 1,341, `timeScale` 0; devamda 1.
+- **Açılış / kapanış sesleri**: `menu_open` (elektrikli piyanoda yukarı beşli, üstünde pluck) ve `menu_close` (aynı
+  iki nota tersten, daha kısık) — `music_synth.stinger`, `sfx_bank` light / dry. Duraklatma menüsü ve üst bardan
+  açılan ayarlar bunları çalar; duraklatmadan açılan ayarlar yalnız tık sesi (duvar zaten inmiştir).
+- **Yazarın buton paketi** (`MenuPack`, `Tools/menu_pack.py`; kaynak Desktop/konsept art/buton): on 80×96 sayfa, otuz
+  16×16 ikon buton — gri, turuncu, yeşil; dinlenme / ışıklı glif / basılı (çerçeve bir piksel aşağı, gölge bir sıra
+  ince). `Resources/Menu/pack_<renk>_<durum>.png` olarak kopyalanır; türetilir: `pack_<renk>_blank(_pressed).png`
+  (glifi yüzey rengiyle boyanmış hücre, 4'ten 9 dilim — sözcüklü tuşun plakası) ve `pack_glyphs.png` (her glif beyaz
+  maske, ikinci tonu yarım alfa; yedinci satırda paketin olmadığı prev / next, paketin kendi play üçgeninden). Sözcüklü
+  tuş (`PackWordKey`): blank 2× dilimli + solda 32'lik glif + 16 px sözcük, sözcüğe esnek (FitKey); ikon tuşu
+  (`PackIconKey`): blank hücre + glif, 32×32. `PackKey` davranışı: fare üstünde glif paketin ışıklı mürekkebine,
+  basınca plaka paketin basılı çizimine döner; `PressSink` yalnız kaldırmayı ve 2 birimlik yüz inişini verir. Renk
+  dili: turuncu = ekranın tek birincil tuşu (RESUME, BACK), yeşil = açık durum (SOUND ON, MOTION FULL, yanan sekme,
+  seçili bayrak), gri = geri kalan; SOON tuşları %55 karartılır ve kilit / kayıt glifi taşır. **Palet istisnası:**
+  paketin yüzeyleri ve mürekkepleri paketin kendi renkleridir (gri yüzey 104,111,153; mürekkep 223,224,232 / ışıklı
+  245,255,232; turuncu 230,69,57; yeşil 99,171,63); `UiAudit.Tokens()` bunları jeton sayar — GDD 16 §0'a yazarın
+  sözüyle açılan tek istisna, bayrakların ve şişelerin kendi renklerini taşıması gibi. Üst bardaki oynatıcı ve oyunun
+  geri kalan tuşları ChromeArt'ta kaldı; paket menülerin dili.
+- **Tuş kapakları** (`KeyCaps`; kaynak Desktop/konsept art/Classic, Dark takımı): tuş başına 17×16 iki kare (yukarı /
+  basılı); ALT, ALTGR, BACKSPACE, CAPS, CTRL, SHIFT, SPACE, TAB, EMPTY2 geniş; 58 dosya `Resources/Keys/`. CONTROLS
+  sayfasında her eylemin tuşu kapağıyla (2×) satırın sağında; gerçek tuş basılıyken basılı kare, satır dinlerken
+  4 Hz göz kırpma ve solunda "PRESS A KEY..."; paketin kapağı olmayan tuş (Esc, F'ler, numpad, köşeli parantezler)
+  EMPTY1 / EMPTY2 üstüne kapağın kendi mürekkebiyle (242,240,229) yazılır, sığmayan sözcük 8 px. ENTER (31 yüksek,
+  L biçimli) alınmadı: EMPTY2 + "ENTER". Satırlar 40, altta ipucu (`chrome.settings.controls_hint`).
+- **Bayraklı dil seçimi** (`BuildLanguagePage`; dördüncü sekme LANGUAGE, zarf glifi): bu yapının tablosu olan her dil
+  (29) bayrağıyla, sekizli sıralarda 64×49 gri plakalarda; seçili dil yeşil plakada, altında adı ve — seçilen dilde —
+  "bir sonraki açılışta" notu; fare üstünde bayrak dilin adını söyler (hover plakası). Eşleme `LanguageFlag`: en→gb,
+  zh-CN→cn, zh-TW→tw, pt-BR→br, es-419→mx, ko→kr, ja→jp, uk→ua, cs→cz, sv→se, da→dk, el→gr, ms→my, vi→vn; gerisi
+  kendi harfleri. On bir yeni bayrak `Tools/flags.py` ile aynı baskı paletinde çizildi (`LANGUAGE_ISOS`): ru, ua, tw
+  (on iki ışınlı güneş), mx (üç renk + kahverengi kartal ve yeşil pad — İtalya'dan ayıran), cz, hu, gr (dokuz şerit,
+  haçlı kanton), bg, my (on dört şerit, hilal ve on dört uçlu yıldız), vn, br. Eski ◀ ▶ dil tuşları gitti.
+- **Ayarlar penceresi** aynı çerçevede: SES'te −/+ paketin ikon tuşları, TÜM SESLER hoparlör tuşu (yeşil açık / gri
+  çarpılı), NOW PLAYING prev / hold / next paketten; GÖRÜNTÜ'de TAM / AZALTILMIŞ yeşil-gri, AÇ (menü glifi), YENİ KOŞU
+  (yeniden glifi); ayakta RESET (yeniden glifi), BACK (turuncu, geri glifi). Dört sekme, sözcüğe esnek (en az 140).
+- `PatronArtPostprocessor` `Resources/Menu/` ve `Resources/Keys/` klasörlerini de kapsar (PPU 100, point,
+  sıkıştırmasız; kural derlenmeden inen PNG'ler `ImportAsset(ForceUpdate)` ile yeniden alındı). Yerelleştirme: iki yeni
+  anahtar (`chrome.settings.controls_hint`, `chrome.settings.language_hint`), en.json 1930.
+- UI denetimi duraklatma menüsü ve ayarların CONTROLS sayfası açıkken: 16 bulgu, hepsi önceden var olanlar (kalp
+  soketleri, tezgâh garnitürleri, kitap gölgesi, fotoğraf); benim nesnelerimde bulgu yok.
+- Doğrulama: EditMode 595/595, PlayMode 13/13 (88,7 sn, bakış testleri dokunulmadı); oyunda ölçüldü — duraklatmada Floor.Elapsed 1,341 → 1,341 ve timeScale 0, devamda 1; paket, kapaklar ve 13 bayrak yüklendi (Esc = EMPTY2 39×16 + sözcük, SPACE 67 geniş); UI denetimi 16 bulgu, hepsi eski.
+
 ### 9.71 · Palmiye Duvarı: duraklatma menüsü, yeni ayarlar, üst barda müzik oynatıcı, tuş atamaları, hover plakası (2026-09-15)
 
 Yazar üç yön arasından seçti: "Palmiye Duvarı kullanılsın. Arkaplan için pixelart oluşturulsun eğer beğenilmezse sabit

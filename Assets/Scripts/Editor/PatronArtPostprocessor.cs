@@ -21,7 +21,10 @@ namespace LastCall.EditorTools
             // than wired into the scene, because one serialized slot cannot hold three.
             bool world = p.Contains("Resources/Fixtures/") || p.Contains("Resources/Scene/")
                       || p.Contains("Art/Backgrounds/");
-            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !p.Contains("Resources/Emotes/") && !world) return;
+            // Resources/Menu and Resources/Keys (2026-09-15): the author's button pack and key caps, sliced at run
+            // time (MenuPack, KeyCaps) — UI sprites at PPU 100 like the items, point-filtered or the 16px cells blur.
+            if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !p.Contains("Resources/Emotes/")
+                && !p.Contains("Resources/Menu/") && !p.Contains("Resources/Keys/") && !world) return;
 
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;

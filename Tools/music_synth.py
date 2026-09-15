@@ -705,7 +705,7 @@ def master(mix, beat):
 # ── the game's short musical cues ────────────────────────────────────────────────────────────────────────────────
 
 STINGERS = ('another_round', 'buy', 'order_ready', 'rim_done', 'serve_it', 'verdict_good', 'verdict_flat', 'verdict_bad',
-            'debt_alarm', 'synth_swell', 'cheer_sfx', 'upset_sfx')
+            'debt_alarm', 'synth_swell', 'cheer_sfx', 'upset_sfx', 'menu_open', 'menu_close')
 
 
 def stinger(name):
@@ -758,6 +758,13 @@ def stinger(name):
             nn = int((d + 0.25) * SR)
             x = osc(hz(m), nn, 'square', cutoff=1300.0, cut_mul=lambda tc: 0.4 + 0.6 * np.exp(-tc / 0.12), reso=0.15, max_k=20)
             put(buf, x * adsr(nn, int(d * SR), 0.006, 0.15, 0.6, 0.15), at, 0.0, 0.4)
+    elif name == 'menu_open':
+        # THE PAUSE MENU (2026-09-15, the author: "Esc menüsünün açılma sesi eklensin aynı şekilde kapanma sesi de"):
+        # a soft fifth up in the electric piano with a pluck on top — the wall comes down over the room.
+        ep([(0.0, 76), (0.08, 83)], 0.5, 0.22); pluck([(0.08, 83)], 0.35)
+    elif name == 'menu_close':
+        # ...and the same two notes the other way, quieter: the wall goes back up.
+        ep([(0.0, 83), (0.08, 76)], 0.42, 0.2)
     elif name == 'synth_swell':
         nn = int(2.8 * SR)
         env = adsr(nn, int(2.2 * SR), 1.2, 2.0, 1.0, 0.6)

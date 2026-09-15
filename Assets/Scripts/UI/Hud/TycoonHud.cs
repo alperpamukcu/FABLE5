@@ -1519,6 +1519,9 @@ namespace LastCall.UI
         {
             if (_bootstrap != null) _bootstrap.RunStarted -= OnRunStarted;
             CursorSkin.Reset();
+            // The pause menu stops the engine's clock (TycoonHud.Pause.SetPaused) and the editor keeps
+            // Time.timeScale across plays: a run quit from the menu must not freeze the next one.
+            Time.timeScale = 1f;
         }
 
         /// <summary>THE HAND'S THREE FRAMES (2026-09-08): grabbing whenever something is in
@@ -2186,7 +2189,7 @@ namespace LastCall.UI
                 if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
             }
             if (Showing(_pausePanel)) _pausePanel.gameObject.SetActive(false);
-            _paused = false; _settingsFromPause = false; _bindListening = null;
+            SetPaused(false); _settingsFromPause = false; _bindListening = null;
             if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
             if (Showing(_devPanel)) _devPanel.gameObject.SetActive(false);
             if (Showing(_guidePanel)) _guidePanel.gameObject.SetActive(false);

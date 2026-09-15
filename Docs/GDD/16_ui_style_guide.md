@@ -27,6 +27,10 @@ gradient — see §6.10; twenty-six bands since 2026-08-19, when the author aske
 first take's eight for "daha smooth" — a band set smooths by growing bands, never by
 interpolating). A literal `new Color(...)` in UI code is a bug unless it
 is a tint or an alpha of a token, and it must say why on the line above it.
+ONE written exception (2026-09-15, the author: "Butonlar için bu dosya yolundaki butonları
+kullan"): the menus' keys are the author's own button pack and key caps (`MenuPack`,
+`KeyCaps`, GDD_MEVCUT §9.72), and those keep the packs' own faces and inks — the audit
+counts them as tokens. Everything drawn AROUND a pack key stays in the ramps.
 
 **Type:** the pixel faces rasterise cleanly only at whole multiples of their 8px design size.
 **8, 16 or 24. Nothing else, ever.** `resizeTextForBestFit` stays off.

@@ -146,6 +146,8 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | `level_up` | 0.95 s | Seviye/rütbe | Daha büyük yükseliş |
 | `screen_on` | 0.30 s | Ekran açılışı (2 yer) | CRT uyanma |
 | `screen_off` | 0.28 s | Ekran kapanışı | CRT sönme |
+| `menu_open` | 0.86 s | Duraklatma menüsü ve ayarların açılışı | E-piyanoda yukarı beşli + pluck (music_synth.stinger) |
+| `menu_close` | 0.85 s | Duraklatma menüsü ve ayarların kapanışı | Aynı iki nota tersten, daha kısık |
 
 ### 1.11 Arayüz
 

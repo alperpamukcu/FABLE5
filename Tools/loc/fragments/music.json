@@ -195,6 +195,16 @@
       "key": "chrome.bind.music_toggle",
       "text": "MUSIC ON / OFF",
       "note": "Controls row: pauses and resumes the music. ~18 characters."
+    },
+    {
+      "key": "chrome.settings.controls_hint",
+      "text": "CLICK A KEY CAP, THEN PRESS THE KEY YOU WANT · ESC CANCELS",
+      "note": "Hint line at the foot of the settings' CONTROLS page, under the rows of key caps. One line, 8px body face, ~60 characters."
+    },
+    {
+      "key": "chrome.settings.language_hint",
+      "text": "CLICK A FLAG TO CHOOSE THE GAME'S LANGUAGE",
+      "note": "Hint line over the settings' LANGUAGE page, a grid of flags. One line, 8px body face, ~48 characters."
     }
   ]
 }
