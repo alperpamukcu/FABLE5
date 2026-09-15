@@ -661,10 +661,9 @@ namespace LastCall.UI
             var sel = UnityEngine.EventSystems.EventSystem.current != null
                 ? UnityEngine.EventSystems.EventSystem.current.currentSelectedGameObject : null;
             if (sel != null && sel.GetComponent<InputField>() != null) return;
-            var keys = UnityEngine.InputSystem.Keyboard.current;
-            if (keys == null) return;
-            if (keys.rightArrowKey.wasPressedThisFrame) TurnPage(+1);
-            else if (keys.leftArrowKey.wasPressedThisFrame) TurnPage(-1);
+            // On the player's own keys (Keys, 2026-09-15); the arrows unless they moved them.
+            if (Keys.Pressed(KeyAction.PageForward)) TurnPage(+1);
+            else if (Keys.Pressed(KeyAction.PageBack)) TurnPage(-1);
         }
 
         /// <summary>A page-sized clipping window over the spread, and the print container

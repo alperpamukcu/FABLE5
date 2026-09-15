@@ -348,7 +348,7 @@ namespace LastCall.UI
             // the floor talking over a thing that covers the floor.
             return Showing(_idRoot) || Showing(_bookPanel) || Showing(_settingsPanel)
                 || Showing(_guidePanel) || Showing(_devPanel) || Showing(_ledgerPanel)
-                || Showing(_dayEndPanel);
+                || Showing(_dayEndPanel) || Showing(_pausePanel);
         }
 
         /// <summary>

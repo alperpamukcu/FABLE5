@@ -30,8 +30,9 @@ namespace LastCall.UI
         /// </summary>
         private void UpdateEscape()
         {
-            var keys = UnityEngine.InputSystem.Keyboard.current;
-            if (keys == null || !keys.escapeKey.wasPressedThisFrame) return;
+            if (_bindListening != null) return;             // the settings' listening row owns the keyboard
+            if (!Keys.Pressed(KeyAction.Pause)) return;      // on whatever key the player put it (Keys)
+            if (Showing(_pausePanel)) { TogglePause(); return; }
             if (_bookOpen) { ToggleRecipeBook(); return; }
             if (Showing(_settingsPanel)) { ToggleSettings(); return; }
             // The bench is above the guide, so Escape must reach it first — a panel that
@@ -52,7 +53,9 @@ namespace LastCall.UI
                 OnDayEndAdvance();
                 return;
             }
-            if (_flow != null && _flow.IsOpen) _flow.CloseFlow();
+            if (_flow != null && _flow.IsOpen) { _flow.CloseFlow(); return; }
+            // NOTHING OPEN: the night goes on hold behind the pause menu (2026-09-15, TycoonHud.Pause).
+            if (Run != null && Run.Phase == TycoonPhase.DayOpen) TogglePause();
         }
 
         /// <summary>Is the counter's cellar open? Asked by everything that must get out of its
@@ -164,13 +167,16 @@ namespace LastCall.UI
             _propTip.anchorMin = _propTip.anchorMax = new Vector2(0.5f, 0.5f);
             _propTip.pivot = new Vector2(0.5f, 0f);
             _propTip.sizeDelta = new Vector2(180f, 22f);
+            // THE PALM WALL'S PLATE (2026-09-15, the author's direction): the night glass with a cyan frame and the
+            // scanlines every surface of the direction wears; the title in the display face, the line in the body face.
             var plate = _propTip.gameObject.AddComponent<Image>();
-            plate.sprite = ChromeArt.Card();
+            plate.sprite = NightArt.TipPlate();
             plate.type = Image.Type.Sliced;
-            plate.color = UITheme.Night[1];
+            plate.color = Color.white;
             plate.raycastTarget = false;
+            Scanlines(_propTip, 0.18f);
             _propTipText = NewText("Line", _propTip, _display, 8, TextAnchor.MiddleCenter,
-                                   UITheme.Amber[4]);
+                                   UITheme.Cream[4]);
             Stretch(_propTipText.rectTransform, Vector2.zero, Vector2.one,
                     Vector2.zero, Vector2.zero);
             _propTipText.raycastTarget = false;
@@ -834,18 +840,20 @@ namespace LastCall.UI
             float box = big ? 48f : 16f;
             // Two rows and as wide as its longer line when it carries a mark or a detail;
             // the one-row word it always was otherwise. A picture takes its own column.
-            float chars = Mathf.Max(word.Length, (detail ?? "").Length);
+            _propTipDetail.text = detail ?? "";
+            _propTipDetail.enabled = rich;
+            // AS WIDE AS ITS WORDS (2026-09-15, the author: "hoverlar dillere göre cümle uzun veya kısa olduğunda
+            // flexible olmalı kesinlikle"): measured off the two texts themselves, never counted in characters.
+            float textW = Mathf.Ceil(Mathf.Max(_propTipText.preferredWidth, rich ? _propTipDetail.preferredWidth : 0f) / 4f) * 4f;
             _propTip.sizeDelta = big
-                ? new Vector2(Mathf.Max(220f, box + 24f + chars * 7.2f), 64f)
-                : rich ? new Vector2(Mathf.Max(200f, 30f + chars * 7.2f + 12f), 40f)
-                : new Vector2(180f, 22f);
+                ? new Vector2(Mathf.Max(220f, box + 32f + textW), 64f)
+                : rich ? new Vector2(Mathf.Max(120f, (icon != null ? 30f : 10f) + textW + 12f), 40f)
+                : new Vector2(Mathf.Max(64f, textW + 20f), 22f);
             var ir = _propTipIcon.rectTransform;
             ir.sizeDelta = new Vector2(box, box);
             ir.anchoredPosition = new Vector2(big ? 12f : 8f, 0f);
             _propTipIcon.sprite = icon;
             _propTipIcon.enabled = icon != null;
-            _propTipDetail.text = detail ?? "";
-            _propTipDetail.enabled = rich;
             _propTipText.alignment = rich ? TextAnchor.UpperLeft : TextAnchor.MiddleCenter;
             var tr = _propTipText.rectTransform;
             float inset = big ? box + 20f : icon != null ? 30f : 10f;
@@ -2004,238 +2012,6 @@ namespace LastCall.UI
                        $" · ${verdict.BasePaid}+${verdict.Tip} · {LogStars(verdict.Satisfaction)}{reasons}");
         }
 
-        private void ToggleSettings()
-        {
-            if (_settingsPanel == null) return;
-            bool show = !_settingsPanel.gameObject.activeSelf;
-            if (show) CloseId();
-            _settingsPanel.gameObject.SetActive(show);
-            if (show) RefreshSettings();
-        }
-
-        // The menu's plate and its margins, in one place. 444 tall since the LANGUAGE row
-        // (2026-09-14): one row, 40 more; the foot keys keep their corners.
-        private const float SetPlateW = 520f, SetPlateH = 444f, SetInset = 24f, SetRowH = 40f;
-
-        /// <summary>
-        /// A MENU, NOT A LIST (2026-09-06, the author: "ayarlar menüsü tekrardan tasarlansın
-        /// şu an öylesine koyulmuş bir menü mevcut, bunu profesyonel bir oyun menüsü haline
-        /// getir, dev tools için kenara şimdilik bir buton koyabilirsin"). Six keys stacked
-        /// in a corner was a dev panel with three settings in it. This is a WINDOW over the
-        /// room, the way the licence and the market are: its own scrim, a titled plate in
-        /// the centre, and the settings as rows — the name on the left, the control on the
-        /// right — grouped under what they are about. The run's own verbs (the book, a new
-        /// run) are the last group, so the one thing that throws the night away sits
-        /// furthest from the thumb; the developer's bench is one small key at the plate's
-        /// foot, where it is found and not pressed by accident.
-        /// </summary>
-        private void BuildSettings(RectTransform root)
-        {
-            _settingsPanel = NewRect("Settings", root);
-            var canvas = _settingsPanel.gameObject.AddComponent<Canvas>();
-            canvas.overrideSorting = true;
-            canvas.sortingOrder = 23;                 // over the market (22), under the guide (24)
-            _settingsPanel.gameObject.AddComponent<ForgivingRaycaster>();
-            Stretch(_settingsPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var scrim = _settingsPanel.gameObject.AddComponent<Image>();
-            scrim.color = UITheme.Scrim;
-            var scrimBtn = _settingsPanel.gameObject.AddComponent<Button>();
-            scrimBtn.transition = Selectable.Transition.None;
-            scrimBtn.onClick.AddListener(ToggleSettings);
-
-            var plate = NewRect("Plate", _settingsPanel);
-            Place(plate, new Vector2(0.5f, 0.5f), new Vector2(SetPlateW, SetPlateH), new Vector2(0, 10));
-            var plateImg = plate.gameObject.AddComponent<Image>();
-            plateImg.sprite = ChromeArt.Panel();          // the house's panel (2026-09-08)
-            plateImg.type = Image.Type.Sliced;
-            plateImg.pixelsPerUnitMultiplier = 0.5f;
-            plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // swallow clicks
-
-            // The title band: the cog it opened from, the word, and the neon under it.
-            var band = NewRect("Band", plate);
-            // inside the panel's 6-unit rule, not over it (2026-09-08)
-            Place(band, new Vector2(0.5f, 1), new Vector2(SetPlateW - 12f, 44f), new Vector2(0, -6f));
-            band.pivot = new Vector2(0.5f, 1);
-            var bandImg = band.gameObject.AddComponent<Image>();
-            bandImg.color = UITheme.Night[0];
-            bandImg.raycastTarget = false;
-            var cog = NewRect("Cog", band);
-            Place(cog, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(SetInset, 0));
-            cog.pivot = new Vector2(0, 0.5f);
-            var cogImg = cog.gameObject.AddComponent<Image>();
-            cogImg.sprite = ChromeArt.Mark("cog");
-            cogImg.color = UITheme.Amber[4];
-            cogImg.raycastTarget = false;
-            var title = NewText("T", band, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 20), new Vector2(SetInset + 28f, 0));
-            title.rectTransform.pivot = new Vector2(0, 0.5f);
-            title.horizontalOverflow = HorizontalWrapMode.Overflow;
-            title.text = UIText.T("chrome.settings.title");
-            Hairline(band, new Vector2(0, 0), new Vector2(1, 0), UITheme.Amber[3]);
-
-            float y = -62f;
-
-            // ── AUDIO ────────────────────────────────────────────────────────────
-            SettingsCaption(plate, "AUDIO", UIText.T("chrome.settings.audio"), ref y);
-            var vol = SettingsLine(plate, "VOLUME", UIText.T("chrome.settings.volume"), null, ref y);
-            // The volume is a meter with a key at each end: five blocks, a fifth apiece.
-            // (It used to be one key that CYCLED 20% at a press — six presses to turn it
-            // down a notch, and nothing on it said which way it was going.)
-            const float VolKeyW = 36f, VolCell = 16f;
-            SettingsKey(vol, "+", VolKeyW, 0f, "+", UITheme.Night[3], () =>
-            {
-                Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume + 0.2f) * 5f) / 5f);
-                Sfx.Play("click");
-                RefreshSettings();
-            });
-            _settingsMeter = new Image[5];
-            for (int i = 0; i < 5; i++)
-            {
-                var cell = NewRect("M" + i, vol);
-                Place(cell, new Vector2(1, 0.5f), new Vector2(12f, 14f),
-                    new Vector2(-(VolKeyW + 8f + (4 - i) * VolCell + 4f), 0));
-                cell.pivot = new Vector2(1, 0.5f);
-                _settingsMeter[i] = cell.gameObject.AddComponent<Image>();
-                _settingsMeter[i].raycastTarget = false;
-            }
-            SettingsKey(vol, "-", VolKeyW, VolKeyW + 8f + 5f * VolCell + 8f, "-", UITheme.Night[3], () =>
-            {
-                Sound.Volume = Mathf.Clamp01(Mathf.Round((Sound.Volume - 0.2f) * 5f) / 5f);
-                Sfx.Play("click");
-                RefreshSettings();
-            });
-            _settingsVolume = NewText("V", vol, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
-            Place(_settingsVolume.rectTransform, new Vector2(1, 0.5f), new Vector2(60, 12),
-                new Vector2(-(VolKeyW * 2f + 16f + 5f * VolCell + 10f), 0));
-            _settingsVolume.rectTransform.pivot = new Vector2(1, 0.5f);
-            _settingsVolume.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-            var snd = SettingsLine(plate, "SOUND", UIText.T("chrome.settings.sound"), null, ref y);
-            _settingsMute = SettingsKey(snd, "ON", 96f, 0f, UIText.T("chrome.settings.on"), UITheme.Night[3], () =>
-            {
-                Sound.Muted = !Sound.Muted;
-                Sfx.Play("click");              // audible iff it just came back on — itself the test
-                RefreshSettings();
-            });
-
-            // ── DISPLAY ──────────────────────────────────────────────────────────
-            y -= 10f;
-            SettingsCaption(plate, "DISPLAY", UIText.T("chrome.settings.display"), ref y);
-            var mot = SettingsLine(plate, "MOTION", UIText.T("chrome.settings.motion"),
-                UIText.T("chrome.settings.motion_note"), ref y);
-            _settingsMotion = SettingsKey(mot, "FULL", 96f, 0f, UIText.T("chrome.settings.full"), UITheme.Night[3], () =>
-            {
-                Motion.Reduced = !Motion.Reduced;
-                Sfx.Play("click");
-                RefreshSettings();
-            });
-
-            // LANGUAGE (2026-09-14, localization L4): the language's own name between a key at
-            // each end, the way the volume sits between - and +. Every language is named in itself
-            // (Deutsch, 日本語), so a player stranded in a language they cannot read still finds
-            // theirs. The pick is REMEMBERED, not switched to — the HUD is built once, in one
-            // language — and the note under the label says so, in the picked language.
-            var lang = SettingsLine(plate, "LANGUAGE", UIText.T("chrome.settings.language"), "", ref y);
-            const float LangKeyW = 36f, LangNameW = 150f;
-            SettingsKey(lang, "NEXT", LangKeyW, 0f, "▶", UITheme.Night[3], () => StepLanguage(+1));
-            _settingsLanguage = NewText("Name", lang, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Place(_settingsLanguage.rectTransform, new Vector2(1, 0.5f), new Vector2(LangNameW, 20f),
-                new Vector2(-(LangKeyW + 4f), 0));
-            _settingsLanguage.rectTransform.pivot = new Vector2(1, 0.5f);
-            _settingsLanguage.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _settingsLanguage.raycastTarget = false;
-            SettingsKey(lang, "PREV", LangKeyW, LangKeyW + LangNameW + 8f, "◀", UITheme.Night[3], () => StepLanguage(-1));
-            var langNote = lang.Find("Note");
-            _settingsLanguageNote = langNote != null ? langNote.GetComponent<Text>() : null;
-
-            // ── THE RUN ──────────────────────────────────────────────────────────
-            // THE BOOK LOST ITS DOOR WITH THE TILL (2026-08-26, the author: "kasa ve parayı
-            // ana sahneden kaldır"): nothing counts money at you while you are serving, so
-            // the night's ledger lives here, one press away for anybody who wants it.
-            // NEW RUN LIVES HERE TOO (2026-08-14, the author: "new run yazısını ayarların
-            // içine taşı"): a thing that throws the night away belongs behind a door.
-            y -= 10f;
-            SettingsCaption(plate, "THE RUN", UIText.T("chrome.settings.the_run"), ref y);
-            var book = SettingsLine(plate, "TONIGHT'S BOOK", UIText.T("chrome.settings.book"),
-                UIText.T("chrome.settings.book_note"), ref y);
-            SettingsKey(book, "OPEN", 96f, 0f, UIText.T("chrome.settings.open"), UITheme.Night[3],
-                () => { ToggleSettings(); ToggleLedger(); });
-            var fresh = SettingsLine(plate, "START OVER", UIText.T("chrome.settings.start_over"),
-                UIText.T("chrome.settings.start_over_note"), ref y);
-            SettingsKey(fresh, "NEW RUN", 96f, 0f, UIText.T("chrome.settings.new_run"), UITheme.Brick[2], () =>
-            { _bootstrap.StartNewRun(null); ToggleSettings(); });
-
-            // The foot: the developer's door at one corner, the way out at the other.
-            // THE WORKBENCH IS NOT A SETTING (2026-08-14, the author: "ayarlarla dev toolu
-            // ayır"); it keeps one small key here, for now, because the author asked for one.
-            // NOT IN A PLAYER'S BUILD (2026-09-13, localization L1): the bench is the author's
-            // own Turkish tool and is never translated, so a release build has no door to it.
-            // The key is placed on its own corner, so nothing else on the plate moves without it.
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            NewButton(plate, "DEV TOOLS", new Vector2(0, 0), new Vector2(110, 26),
-                new Vector2(SetInset, 16), UITheme.Night[2], () => { ToggleSettings(); ToggleDevBench(); });
-#endif
-            NewButton(plate, UIText.T("common.close"), new Vector2(1, 0), new Vector2(120, 32),
-                new Vector2(-SetInset, 14), UITheme.PrimaryAction, ToggleSettings).name = "CLOSE";
-
-            _settingsPanel.gameObject.SetActive(false);
-        }
-
-        /// <summary>A group's caption: small amber caps over its rows.</summary>
-        /// <param name="id">The English word, for the GameObject's name only (it stays the same in
-        /// every language); <paramref name="text"/> is what is shown.</param>
-        private void SettingsCaption(RectTransform plate, string id, string text, ref float y)
-        {
-            var t = NewText("G_" + id, plate, _body, 8, TextAnchor.LowerLeft, UITheme.Amber[3]);
-            Place(t.rectTransform, new Vector2(0, 1), new Vector2(300, 16), new Vector2(SetInset, y));
-            t.rectTransform.pivot = new Vector2(0, 1);
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.text = text;
-            y -= 18f;
-        }
-
-        /// <summary>One setting's row: its name (and a note under it, if it needs one) on
-        /// the left, a hairline under the row; the control is added by the caller at the
-        /// right edge.</summary>
-        private RectTransform SettingsLine(RectTransform plate, string id, string name, string note, ref float y)
-        {
-            var row = NewRect("R_" + id, plate);   // the English id: the name is the same in every language
-            Place(row, new Vector2(0, 1), new Vector2(SetPlateW - SetInset * 2f, SetRowH), new Vector2(SetInset, y));
-            row.pivot = new Vector2(0, 1);
-            Hairline(row, new Vector2(0, 0), new Vector2(1, 0), new Color(1f, 1f, 1f, 0.07f));
-            var t = NewText("N", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(260, 20), new Vector2(0, note != null ? 6f : 0f));
-            t.rectTransform.pivot = new Vector2(0, 0.5f);
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.raycastTarget = false;
-            t.text = name;
-            if (note != null)
-            {
-                var n = NewText("Note", row, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-                Place(n.rectTransform, new Vector2(0, 0.5f), new Vector2(320, 12), new Vector2(0, -10f));
-                n.rectTransform.pivot = new Vector2(0, 0.5f);
-                n.horizontalOverflow = HorizontalWrapMode.Overflow;
-                n.raycastTarget = false;
-                n.text = note;
-            }
-            y -= SetRowH;
-            return row;
-        }
-
-        /// <summary>A row's control: the house key, right-aligned, its word returned so the
-        /// refresh can rewrite it (ON / OFF, FULL / REDUCED).</summary>
-        private Text SettingsKey(RectTransform row, string id, float w, float rightInset, string label, Color fill, Action onClick)
-        {
-            // The helper names the rect after its label and WRITES the label, so the word
-            // goes in bare (a "K_" prefix here printed itself on every key, photographed).
-            // The rect is then renamed to the English id, so the hierarchy reads the same in
-            // every language while the label is the player's.
-            var key = NewButton(row, label, new Vector2(1, 0.5f), new Vector2(w, 28f),
-                new Vector2(-rightInset, 0), fill, onClick);
-            key.name = id;
-            return key.GetComponentInChildren<Text>();
-        }
-
         private void ToggleDevBench()
         {
             if (_devPanel == null) return;
@@ -2696,56 +2472,6 @@ namespace LastCall.UI
                     fi.enabled = fi.sprite != null;
                 }
             }
-        }
-
-        private void RefreshSettings()
-        {
-            if (_settingsVolume == null) return;
-            _settingsVolume.text = UIText.T("chrome.settings.volume_value", ("pct", Mathf.RoundToInt(Sound.Volume * 100)));
-            if (_settingsMeter != null)
-                for (int i = 0; i < _settingsMeter.Length; i++)
-                    if (_settingsMeter[i] != null)
-                        _settingsMeter[i].color = !Sound.Muted && Sound.Volume + 1e-3f >= (i + 1) / 5f
-                            ? UITheme.Amber[4] : UITheme.Night[3];
-            _settingsMute.text = Sound.Muted ? UIText.T("chrome.settings.off") : UIText.T("chrome.settings.on");
-            _settingsMotion.text = Motion.Reduced ? UIText.T("chrome.settings.reduced") : UIText.T("chrome.settings.full");
-            if (_settingsLanguage != null)
-            {
-                string pick = Localization.PreferredCode();
-                var info = Languages.Find(pick);
-                _settingsLanguage.text = info != null ? info.Name : pick;
-                // The note is said in the language just PICKED, not the one on screen: a player who
-                // chose Deutsch reads, in German, that it comes at the next start — the proof it took.
-                if (_settingsLanguageNote != null)
-                {
-                    if (pick == Localization.Current.Code) _settingsLanguageNote.text = "";
-                    else
-                    {
-                        if (_languageNoteCode != pick)
-                        {
-                            _languageNoteCode = pick;
-                            _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note");
-                        }
-                        _settingsLanguageNote.text = _languageNoteText;
-                    }
-                }
-            }
-        }
-
-        /// <summary>One press of the LANGUAGE row's ◀ or ▶: the next language this build has a table
-        /// for, remembered for the next start (<see cref="Localization.Choose"/>).</summary>
-        private void StepLanguage(int step)
-        {
-            var all = Localization.Available;
-            if (all.Count == 0) return;
-            string pick = Localization.PreferredCode();
-            int at = 0;
-            for (int i = 0; i < all.Count; i++)
-                if (all[i].Code == pick) { at = i; break; }
-            at = ((at + step) % all.Count + all.Count) % all.Count;
-            Localization.Choose(all[at].Code);
-            Sfx.Play("click");
-            RefreshSettings();
         }
 
         /// <summary>Leader dots so the bill columns line up in the monospace pixel font.</summary>

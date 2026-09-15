@@ -374,7 +374,9 @@ namespace LastCall.UI
             }
             HoverTip(cogKey, cogArt ?? ChromeArt.Mark("cog"), UIText.T("build.settings.tip_title"),
                 UIText.T("build.settings.tip"));
+            BuildMusicPlayer(top);   // the beam's middle (2026-09-15)
             BuildSettings(root);
+            BuildPauseMenu(root);    // Escape with nothing open (2026-09-15)
             BuildOrderTip(root);
 
             // THE CURTAIN, above everything the HUD owns. Its own canvas at 30 so it also

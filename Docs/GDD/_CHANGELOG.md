@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The palm wall: a pause menu, a new settings window, a music player and key bindings (2026-09-15):** Escape
+  with nothing open holds the night behind a drawn synthwave night (code-drawn, shown at 2x) — RESUME, SAVE and
+  CONTINUE (greyed, SOON), SETTINGS, NEW RUN, QUIT. The settings window has AUDIO (master, music, effects, the
+  player), CONTROLS (seven rebindable keys) and DISPLAY pages on the same glass. The top bar carries a music player
+  with previous, hold and next, the song's title and its place. Every key and hover plate is sized from its measured
+  text, and every hover tip in the game wears the direction's plate.
+
 - **Snacks leave the game (2026-09-15):** the v5 P16 bowls, the pairing rule, the tab line and the morning
   buy-back are gone from Core, the data, the counter, the sim, the tests and the docs; the loc keys stay, unused.
   The bar's crowd murmur is gone too (the rain stays), and a good or bad order is a synth notification cue rather

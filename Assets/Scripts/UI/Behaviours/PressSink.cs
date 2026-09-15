@@ -47,6 +47,15 @@ namespace LastCall.UI
         private Color _cold;
         private bool _coldSet;
 
+        /// <summary>A key whose resting colour CHANGES (a tab lit or unlit, a cap listening) tells the sink so: the
+        /// hover warms from this colour and cools back to it, not to the one first seen (2026-09-15).</summary>
+        public void Repaint(Color cold)
+        {
+            _cold = cold;
+            _coldSet = true;
+            if (Tint != null) Tint.color = cold;
+        }
+
         public void OnPointerDown(PointerEventData _) => _held = true;
         public void OnPointerUp(PointerEventData _) => _held = false;
 

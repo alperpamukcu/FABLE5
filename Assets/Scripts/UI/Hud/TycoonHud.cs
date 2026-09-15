@@ -1624,7 +1624,8 @@ namespace LastCall.UI
                 // açıkken zaman çok yavaş geçmeli"): it slows the night nearly to a
                 // hold while the working menus keep their 0.3 — and the clock still
                 // moves, because the night keeps its one-way arrow.
-                float clock = _bookOpen ? (float)TycoonConfig.BookTimeScale
+                // ...and the PAUSE MENU holds it outright (2026-09-15): nothing moves behind the palm wall.
+                float clock = Paused ? 0f : _bookOpen ? (float)TycoonConfig.BookTimeScale
                     : menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f;
                 // THE ROOM RUNS ON THE SAME CLOCK AS THE NIGHT (2026-09-08, the author:
                 // "menüye bakmak zamanı ve oyunu durdursun"). The sim was scaled here and the
@@ -1681,6 +1682,9 @@ namespace LastCall.UI
             PlaceBookProp();      // it stands on the counter, so it rides with the counter
             SyncLastCall(run);    // after the seats: the guest is one of them
             SyncHostNote(run);    // the closing's lessons, on the market
+            UpdateHotkeys();      // the book, the cellar and the music on their keys (2026-09-15)
+            StepSettings();       // a controls row listening for its key
+            RefreshMusicPlayer(); // the beam's player says what is on
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateShakerProp();   // the tin waits on the same coaster the glass does
@@ -2177,6 +2181,8 @@ namespace LastCall.UI
                 _bookTurning = false;
                 if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
             }
+            if (Showing(_pausePanel)) _pausePanel.gameObject.SetActive(false);
+            _paused = false; _settingsFromPause = false; _bindListening = null;
             if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
             if (Showing(_devPanel)) _devPanel.gameObject.SetActive(false);
             if (Showing(_guidePanel)) _guidePanel.gameObject.SetActive(false);

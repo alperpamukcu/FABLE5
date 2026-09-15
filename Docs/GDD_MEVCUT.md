@@ -1528,6 +1528,57 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.71 · Palmiye Duvarı: duraklatma menüsü, yeni ayarlar, üst barda müzik oynatıcı, tuş atamaları, hover plakası (2026-09-15)
+
+Yazar üç yön arasından seçti: "Palmiye Duvarı kullanılsın. Arkaplan için pixelart oluşturulsun eğer beğenilmezse sabit
+düz desenli bir arkaplan. Kullanılan butonlar hoverlar dillere göre cümle uzun veya kısa olduğunda flexible olmalı
+kesinlikle. Hover tasarımları geliştirilebilir başlık harici biraz daha küçük font olabilir. Menü ayarlar panellerinde
+daha çok görsellerden yararlanabilir daha yaratıcı olabilir." Daha önce: "oyunun üst barına müzikleri geçebileceğimiz bir
+müzik oynatıcı ekleyelim ... esc ekranı ve ayaralar key bind ses ve şimdilik daha eklenmeyen kayıt et devam et butonları
+... üst bardaki nesneler ... için hover tasarımı da üretmelisin oyunda kalan yerlerde o hover tasarımı kullanılmalı".
+
+- **Arka plan kodla çizilen piksel sanat** (`NightArt.Backdrop`, 640×360, tam 2× gösterilir; UI süsü asla üretilmez —
+  GDD 14 §2): yıldızlı gökyüzü, alt yarısı kesik bantlı güneş ve halesi, pencereleri amber/cyan yanan iki sıra uzak
+  şehir, güneşin suda kırılan yansıması, cyan ızgara yol, iki büyük iki küçük palmiye; üstünde 1×4'lük tarama çizgisi
+  karosu (2×, Night[0] %16). `NightArt.UseFlatBackdrop = true` yazarın istediği yedek: düz desenli duvar (32×32 karo,
+  ClubBlue ızgara, magenta çivi).
+- **Duraklatma menüsü** (`TycoonHud.Pause`): hiçbir sayfa açık değilken Escape (ya da PAUSE MENU'ye atanan tuş) geceyi
+  tutar — `Paused` saat ölçeğini 0 yapar, oda ve hava da durur (ölçüldü: 1 sn duraklatmada `Floor.Elapsed` 7,7 → 7,7).
+  Cam plaka (`NightArt.MenuPlate`, 2 birim cyan çerçeve, kesik köşeler, ClubBlue iç çizgi), gün batımı bantlı başlık
+  (display 24 + Night[0] gölge, altında amber/magenta/ClubBlue üç çizgi). Tuşlar: RESUME (tek amber), SAVE GAME ve
+  CONTINUE (Night[3], pasif, magenta SOON etiketi — kayıt katmanı yok, `TycoonRun.cs:310`), SETTINGS, NEW RUN, QUIT
+  GAME (ClubBlue[2], yüzünde tarama çizgisi). Her tuşta 16 px işaret; ayakta saat işaretiyle "NIGHT 12 · SATURDAY ·
+  18:39" ve kasa işaretiyle tutar. Menü canvas 29 (kitabın üstünde, perde ve bildirimin altında).
+- **Tuşlar ve plakalar sözcüğe göre esner** (`FitKey`, `FitRect`, `ShowPropTip`): genişlik karakter sayılmadan `Text.preferredWidth`
+  ile ölçülür, 4'lük ızgaraya yuvarlanır, verilen en altına inmez — uzun çeviri uzun tuş alır.
+- **Ayarlar penceresi yeniden** (`TycoonHud.Settings`, eski `BuildSettings` Chrome'dan çıktı): 800×540 aynı cam plaka,
+  arka planı yine duvar. Üç sekme (işaretli, sözcüğe esnek): AUDIO — MASTER, MUSIC, EFFECTS on hücreli cyan ölçerler
+  −/+ tuşlarıyla (`Sound.MusicVolume`, `Sound.EffectsVolume`, PlayerPrefs `lastcall.music` / `lastcall.effects`;
+  efektler `Sound.Effective`, müzik `Sound.MusicEffective`), SOUND ON/OFF, NOW PLAYING satırında oynatıcının üç tuşu
+  ve şarkı adı; CONTROLS — yedi eylem ve tuş kapakları, kapağa basınca satır dinler ("PRESS A KEY...", Escape iptal),
+  bir tuşu alan eylem eskisini öbürüne verir (`Keys.Set`); DISPLAY — MOTION, LANGUAGE (◀ ▶ artık işaret, glif değil),
+  TONIGHT'S BOOK, START OVER. Ayak: RESET DEFAULTS (ses, hareket, tuşlar), DEV TOOLS (yalnız editör), BACK (amber;
+  duraklatmadan açıldıysa duraklatmaya döner, gece tutulu kalır).
+- **Tuş atamaları** (`Keys`, `KeyAction`): Pause=Esc, Book=B, Cellar=C, PageBack/Forward=oklar, NextTrack=N,
+  MusicToggle=M; PlayerPrefs `lastcall.key.<eylem>`. Escape akışı, kitabın sayfa okları ve yeni kısayollar
+  (`UpdateHotkeys`: kitap, kiler, sonraki şarkı, müzik aç/kapa; hiçbir sayfa açık değilken) hepsi `Keys.Pressed`'den okur.
+- **Üst barda müzik oynatıcı** (`TycoonHud.Player`): gece kuyusu ile ev şeritleri arasındaki boşlukta 376×42'lik kuyu
+  (`ChromeArt.Well`), 26'lık üç tuş (16 px işaretler 1×: önceki / tut / sonraki), nota işareti, şarkı adı (Cyan[4] 8 px)
+  ve altında "NIGHT · 1 / 5" (Magenta[3] 8 px), sağda dört sabit seviye çubuğu (bakış testleri kirişi karşılaştırdığı
+  için durgun). Hover: "MUSIC — NEON POUR · 1 OF 5 · PREVIOUS · PAUSE · NEXT". Motor: `Sfx.SkipTrack(±1)`,
+  `Sfx.MusicPaused`, `Sfx.NowPlaying`, `Sfx.NowPlayingPlace`; tutulan şarkı ilerlemez (`StepMusic` duraklatmada
+  sonraki parçaya geçmez). Şarkı adları `music.<mood>_<n>` anahtarları: NEON POUR, OCEAN DRIVE DISCO, VELVET ROPE,
+  PALM STATIC, LAST TAXI HOME, CLOSING TAB, RAIN ON THE WINDOW, MORNING LEDGER, SHUTTERS DOWN. Ölçüldü: atlayınca
+  `night_2 (2, 5)`, tutunca yüzdeki işaret ▶'e döndü.
+- **Hover plakası** (`BuildPropTip`): `NightArt.TipPlate` (cyan çerçeve, altında bir ton koyu dudak, gece camı) ve
+  tarama çizgisi; başlık display 8 Cream[4], satır body 8 Cream[3], işaret solda. Oyunun her ipucu bu plakayı kullanır
+  (üst bar okumaları, kirli bardak, lavabo, musluk, çark, oynatıcı); genişlik ölçülüyor.
+- **Yerelleştirme:** `Tools/loc/fragments/music.json` (39 anahtar: şarkı adları, oynatıcı, duraklatma, ayarlar,
+  atamalar) `merge_fragments --write` ile en.json'a girdi; anahtar silinmedi.
+- UI denetimi (`LastCall → Audit UI`) duraklatma menüsü ve ayarlar açıkken koşuldu: benim nesnelerimde bulgu yok;
+  kalan 16–20 bulgu daha önce var olan kalp soketleri, tezgâh garnitürleri ve yıldız dolgusu.
+- Doğrulama: EditMode 595/595, PlayMode 13/13 (bakış testlerinde fark yok); oyunda duraklatma, ayarların üç sayfası, oynatıcı ve hover plakası ekran görüntüsüyle görüldü, davranışlar reflection'la okundu; UI denetimi iki pencerede koşuldu.
+
 ### 9.70 · Atıştırmalıklar oyundan çıktı; uğultu sustu; sipariş sesleri bildirim oldu (2026-09-15)
 
 Yazar: "Oyundan atıştırmalıklar kaldırılacak oyunda atıştırmalık olmaması gerekiyor bununla ilgili tüm kodları ve

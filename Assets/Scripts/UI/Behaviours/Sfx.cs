@@ -12,16 +12,34 @@ namespace LastCall.UI
     {
         private const string VolKey = "lastcall.volume";
         private const string MuteKey = "lastcall.muted";
+        private const string MusicKey = "lastcall.music";
+        private const string EffectsKey = "lastcall.effects";
         private static bool _loaded;
-        private static float _volume;
+        private static float _volume, _music, _effects;
         private static bool _muted;
 
         private static void Load()
         {
             if (_loaded) return;
             _volume = PlayerPrefs.GetFloat(VolKey, 0.8f);
+            _music = PlayerPrefs.GetFloat(MusicKey, 1f);
+            _effects = PlayerPrefs.GetFloat(EffectsKey, 1f);
             _muted = PlayerPrefs.GetInt(MuteKey, 0) == 1;
             _loaded = true;
+        }
+
+        /// <summary>The music's own share of the master, 0..1 (2026-09-15, the settings' MUSIC row).</summary>
+        public static float MusicVolume
+        {
+            get { Load(); return _music; }
+            set { Load(); _music = Mathf.Clamp01(value); PlayerPrefs.SetFloat(MusicKey, _music); }
+        }
+
+        /// <summary>The effects' share of the master, 0..1 (the settings' EFFECTS row): every one-shot and held loop.</summary>
+        public static float EffectsVolume
+        {
+            get { Load(); return _effects; }
+            set { Load(); _effects = Mathf.Clamp01(value); PlayerPrefs.SetFloat(EffectsKey, _effects); }
         }
 
         public static float Volume
@@ -36,8 +54,11 @@ namespace LastCall.UI
             set { Load(); _muted = value; PlayerPrefs.SetInt(MuteKey, value ? 1 : 0); }
         }
 
-        /// <summary>What actually reaches the speakers.</summary>
-        public static float Effective => Muted ? 0f : Volume;
+        /// <summary>What actually reaches the speakers from an effect.</summary>
+        public static float Effective => Muted ? 0f : Volume * EffectsVolume;
+
+        /// <summary>...and from the music.</summary>
+        public static float MusicEffective => Muted ? 0f : Volume * MusicVolume;
     }
 
     /// <summary>
@@ -391,6 +412,75 @@ namespace LastCall.UI
             i.NextTrack();
         }
 
+        // ── THE PLAYER (2026-09-15, the author: "oyunun üst barına müzikleri geçebileceğimiz bir müzik oynatıcı
+        // ekleyelim") ────────────────────────────────────────────────────────────────────────────────────────────
+        /// <summary>The song playing now, by its file's tail — "night_1", "dayend_2" — or null before the music starts.</summary>
+        public static string NowPlaying
+        {
+            get
+            {
+                var i = Instance;
+                var clip = i._music != null ? i._music[i._musicActive].clip : null;
+                return clip != null && clip.name.StartsWith("music_") ? clip.name.Substring(6) : null;
+            }
+        }
+
+        /// <summary>Where the song stands in its mood's list: 1-based, and the list's length. (0, 0) with no music.</summary>
+        public static (int at, int of) NowPlayingPlace
+        {
+            get
+            {
+                var i = Instance;
+                string from = i.ResolvedMood(out var list);
+                if (from == null || list.Count == 0) return (0, 0);
+                i._musicCursor.TryGetValue(from, out int next);
+                return (((next - 1) % list.Count + list.Count) % list.Count + 1, list.Count);
+            }
+        }
+
+        /// <summary>Steps the music through its mood's list — +1 the next song, -1 the one before — fading as it does
+        /// between songs on its own. The mood keeps its place, so the night resumes from the song it was skipped to.</summary>
+        public static void SkipTrack(int step)
+        {
+            var i = Instance;
+            string from = i.ResolvedMood(out var list);
+            if (from == null || list.Count == 0) return;
+            i._musicCursor.TryGetValue(from, out int next);
+            i._musicCursor[from] = ((next - 1 + step) % list.Count + list.Count) % list.Count;
+            i.NextTrack();
+            i._musicPaused = false;
+            i._music[i._musicActive].UnPause();
+        }
+
+        /// <summary>The music held where it is (true) or let go on (false): the player's pause key.</summary>
+        public static bool MusicPaused
+        {
+            get => Instance._musicPaused;
+            set
+            {
+                var i = Instance;
+                if (i._musicPaused == value || i._music == null) return;
+                i._musicPaused = value;
+                var active = i._music[i._musicActive];
+                if (value) active.Pause(); else if (active.clip != null) active.UnPause();
+            }
+        }
+
+        private bool _musicPaused;
+
+        /// <summary>The mood whose list is playing — the mood itself, or the nearest one with songs.</summary>
+        private string ResolvedMood(out List<AudioClip> list)
+        {
+            string from = _mood;
+            list = from != null ? Playlist(from) : null;
+            while (from != null && list.Count == 0)
+            {
+                from = MusicFallback(from);
+                list = from != null ? Playlist(from) : null;
+            }
+            return from;
+        }
+
         private List<AudioClip> Playlist(string mood)
         {
             if (_playlists.TryGetValue(mood, out var list)) return list;
@@ -411,13 +501,7 @@ namespace LastCall.UI
         /// <summary>Starts the mood's next track on the quiet source; StepMusic fades it up and the other down.</summary>
         private void NextTrack()
         {
-            string from = _mood;
-            var list = from != null ? Playlist(from) : null;
-            while (from != null && list.Count == 0)
-            {
-                from = MusicFallback(from);
-                list = from != null ? Playlist(from) : null;
-            }
+            string from = ResolvedMood(out var list);
             AudioClip clip;
             if (from != null)
             {
@@ -443,12 +527,13 @@ namespace LastCall.UI
             var fading = _music[1 - _musicActive];
             float rate = dt * MusicLevel / MusicFade;
             active.volume = Mathf.MoveTowards(active.volume,
-                MusicLevel * Sound.Effective * (_musicDucked ? MusicDuck : 1f), rate);
+                MusicLevel * Sound.MusicEffective * (_musicDucked ? MusicDuck : 1f), rate);
             fading.volume = Mathf.MoveTowards(fading.volume, 0f, rate);
             if (fading.isPlaying && fading.volume <= 0.0001f) fading.Stop();
             // The next track begins its fade before this one ends, so the night never stops; a track that stopped anyway
-            // (a device change, a reimport in play) is picked up the same way — once it has had time to start.
-            if (active.clip != null && !active.loop && Time.unscaledTime - _trackStartedAt > MusicFade
+            // (a device change, a reimport in play) is picked up the same way — once it has had time to start. Not while
+            // the player holds it: a paused source is not playing, and that is not a song that ended.
+            if (!_musicPaused && active.clip != null && !active.loop && Time.unscaledTime - _trackStartedAt > MusicFade
                 && (!active.isPlaying || active.clip.length - active.time <= MusicFade))
                 NextTrack();
         }
