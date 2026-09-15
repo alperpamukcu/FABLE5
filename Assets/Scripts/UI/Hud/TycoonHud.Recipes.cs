@@ -599,6 +599,10 @@ namespace LastCall.UI
             if (x + size.x > halfW) x = local.x - Gap - size.x;
             float y = local.y - Gap;
             if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            // ...and turned back or not, never past the panel (2026-09-16, the author: "Hiçbir hover ekran dışına
+            // taşmamalı"): a flip at one edge can land it over the other.
+            x = Mathf.Clamp(x, -halfW + 4f, halfW - size.x - 4f);
+            y = Mathf.Clamp(y, -halfH + size.y + 4f, halfH - 4f);
             _idRecipeTip.anchoredPosition = new Vector2(x, y);
         }
 

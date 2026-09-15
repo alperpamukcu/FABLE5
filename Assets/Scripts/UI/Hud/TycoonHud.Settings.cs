@@ -103,17 +103,18 @@ namespace LastCall.UI
             canvas.sortingOrder = 29;                 // with the pause menu, over the book; the market (22) never shows it
             _settingsPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_settingsPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            // THE ROOM STAYS (2026-09-15): the window stands over it in a faint dim; a click on the dim closes the window.
+            // THE ROOM STAYS, DARKENED (2026-09-16, with the pause menu): the window stands over it under the house
+            // scrim; a click on the scrim closes the window.
             var dim = NewRect("Dim", _settingsPanel);
             Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var dimImg = dim.gameObject.AddComponent<Image>();
-            dimImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.22f);
+            dimImg.color = UITheme.Scrim;
             dimImg.raycastTarget = true;
             var dimBtn = dim.gameObject.AddComponent<Button>();
             dimBtn.transition = Selectable.Transition.None;
             dimBtn.onClick.AddListener(ToggleSettings);
 
-            var plate = NightPlate(_settingsPanel, "Plate", new Vector2(SetW, SetH), 0.5f);
+            var plate = NightPlate(_settingsPanel, "Plate", new Vector2(SetW, SetH), 0.10f);
             NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
             SunsetRules(plate, -66f, SetW - 80f);
 
@@ -467,7 +468,7 @@ namespace LastCall.UI
                 var sink = key.gameObject.AddComponent<PressSink>();
                 sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
                 var flag = NewRect("Flag", face);
-                Place(flag, new Vector2(0.5f, 0.5f), new Vector2(48, 33), new Vector2(0, 1f));
+                Place(flag, new Vector2(0.5f, 0.5f), new Vector2(48, 33), new Vector2(0, 2f));   // on the face's middle, two up (PackWordKey)
                 var fi = flag.gameObject.AddComponent<Image>();
                 fi.sprite = ItemArt.Load("fl_" + LanguageFlag(code));
                 fi.color = Color.white; fi.raycastTarget = false;

@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The menus darken the room, sit their words dead centre, wear a quiet pattern, and no hover leaves the
+  screen (2026-09-16):** the house scrim under the pause menu and the settings; a pack key's word centred on its
+  face (measured); the flat pattern inside the frame instead of the drawn night; every hover plate clamped to the
+  screen, the recipe tip and the market's card and table clamped after their edge flip.
+
 - **The framed night, the engine's clock stopped, flags for the language, the author's button pack and key caps
   (2026-09-15):** the pause menu and the settings keep the room as their backdrop and draw the night only inside
   their frame; Escape stops everything (Time.timeScale 0) and the menu opens and closes on two cues of its own; the

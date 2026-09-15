@@ -43,15 +43,16 @@ namespace LastCall.UI
             _pausePanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_pausePanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // THE ROOM STAYS: a faint dim over it that catches every click — the room under it is on hold, and a
-            // click into it must not reach a stool.
+            // THE ROOM STAYS, DARKENED (2026-09-16, the author: "ESC menüsü açıldığında arka plan karartılmalı"): the
+            // house scrim over it, which also catches every click — the room under it is on hold, and a click into
+            // it must not reach a stool.
             var dim = NewRect("Dim", _pausePanel);
             Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var dimImg = dim.gameObject.AddComponent<Image>();
-            dimImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.22f);
+            dimImg.color = UITheme.Scrim;
             dimImg.raycastTarget = true;
 
-            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0.30f);
+            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0.10f);
 
             // the title, a shadow copy under it, and the three sunset rules under that
             NightTitle(plate, UIText.T("chrome.pause.title"), -36f);
@@ -127,7 +128,7 @@ namespace LastCall.UI
                 var glyphImg = face.Find("Glyph");
                 if (glyphImg != null) glyphImg.GetComponent<Image>().color = UITheme.Cream[2];
                 var tag = NewRect("Soon", face);
-                Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, 1f));
+                Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, 2f));
                 tag.pivot = new Vector2(1, 0.5f);
                 var tagImg = tag.gameObject.AddComponent<Image>();
                 tagImg.color = UITheme.Magenta[1]; tagImg.raycastTarget = false;
@@ -225,11 +226,17 @@ namespace LastCall.UI
             pk.Plate = plate;
             pk.Rest = plate.sprite; pk.Lit = plate.sprite; pk.Pressed = MenuPack.Blank(tone, true);
             pk.Glyph = glyphImg; pk.GlyphRest = MenuPack.Ink(tone, false); pk.GlyphLit = MenuPack.Ink(tone, true);
+            // THE WORD SITS DEAD CENTRE ON THE FACE (2026-09-16, the author: "butonların üstündeki yazılar butonların
+            // tam ortasında olsun"; measured off a capture): centred across the WHOLE key, not the part right of the
+            // glyph — which put it twenty units off — and two units up, because the pack's face runs from the rim
+            // under the outline to the shadow, whose middle is two units above the rect's. The pad below keeps a
+            // key wide enough that a centred word never reaches the glyph.
             var text = NewText("Label", face, _body, size.y >= 32f ? 16 : 8, TextAnchor.MiddleCenter, MenuPack.Word(tone));
-            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(glyph != null ? 48f : 8f, 2f), new Vector2(-8f, 0f));
+            // (9 and -7: the face's glyphs land one unit left of the box's middle — their bearing — measured too.)
+            Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(9f, 4f), new Vector2(-7f, 0f));
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.text = label;
-            FitKey(rt, minW, pad);
+            FitKey(rt, minW, glyph != null ? Mathf.Max(pad, 100f) : pad);
             return rt;
         }
 

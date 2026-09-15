@@ -904,9 +904,21 @@ namespace LastCall.UI
                 screen = RectTransformUtility.WorldToScreenPoint(null, bottom);
             }
             _propTip.pivot = new Vector2(0.5f, hang ? 1f : 0f);
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    (RectTransform)_propTip.parent, screen, null, out Vector2 local))
-                _propTip.anchoredPosition = local + new Vector2(0f, hang ? -8f : 8f);
+            var parent = (RectTransform)_propTip.parent;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, null, out Vector2 local))
+            {
+                var pos = local + new Vector2(0f, hang ? -8f : 8f);
+                // NEVER OFF THE PICTURE (2026-09-16, the author: "Hiçbir hover ekran dışına taşmamalı"): the plate
+                // is slid back inside its parent's rect whichever edge it would cross — on the beam's far-right key
+                // or the last flag of a row, half of it used to hang past the screen's edge.
+                var r = parent.rect;
+                var size = _propTip.sizeDelta;
+                const float Edge = 8f;
+                pos.x = Mathf.Clamp(pos.x, r.xMin + Edge + size.x * 0.5f, r.xMax - Edge - size.x * 0.5f);
+                pos.y = hang ? Mathf.Clamp(pos.y, r.yMin + Edge + size.y, r.yMax - Edge)
+                             : Mathf.Clamp(pos.y, r.yMin + Edge, r.yMax - Edge - size.y);
+                _propTip.anchoredPosition = pos;
+            }
         }
 
         /// <summary>One figure, falling out from under the money it changed.</summary>

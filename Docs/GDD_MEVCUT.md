@@ -1597,6 +1597,29 @@ görselleri kullan animasyonlu olduğundan 2 frame olabilir. Butonlar içinde bu
   soketleri, tezgâh garnitürleri, kitap gölgesi, fotoğraf); benim nesnelerimde bulgu yok.
 - Doğrulama: EditMode 595/595, PlayMode 13/13 (88,7 sn, bakış testleri dokunulmadı); oyunda ölçüldü — duraklatmada Floor.Elapsed 1,341 → 1,341 ve timeScale 0, devamda 1; paket, kapaklar ve 13 bayrak yüklendi (Esc = EMPTY2 39×16 + sözcük, SPACE 67 geniş); UI denetimi 16 bulgu, hepsi eski.
 
+**2026-09-16 düzeltmeleri** — yazar: "ESC menüsü açıldığında arka plan karartılmalı, butonların üstündeki yazılar
+butonların tam ortasında olsun. Aynı zamanda arkaplan olarak daha az göz alan bir arkaplan seçilsin. Hiçbir hover
+ekran dışına taşmamalı."
+
+- **Oda karartılır:** duraklatma menüsünün ve ayarların altındaki tıklama yakalayıcı artık evin perdesi
+  (`UITheme.Scrim`, Night[0] %70); oda görünür kalır ama arkada durur.
+- **Sözcük yüzün tam ortasında** (`PackWordKey`, kaptürden ölçüldü): etiket önce glifin sağındaki alana
+  ortalanıyordu (tuşun ortasından 19 birim sağda), şimdi tuşun bütününe ortalanır ve iki birim yukarıdadır —
+  paketin yüzü çerçevenin altındaki kenardan gölgeye uzanır, ortası dikdörtgenin ortasının iki birim üstündedir;
+  bir birim de glif taşması (bearing) için. Ölçüm: RESUME / SETTINGS / NEW RUN etiket merkezi tuş merkezinden
+  dx 0, yüz merkezinden dy 0. Glifli tuşta en az 100 birimlik pay, ortalanan sözcük glife değmesin diye. Bayrak ve
+  SOON etiketi de yüzün ortasına (2 birim yukarı).
+- **Çerçevenin içi sakin desen:** `NightArt.UseFlatBackdrop = true` — yazarın baştaki yedeği artık seçim. Karo
+  yeniden çizildi: Night[1] zemin, Night[2] tek piksellik ızgara (32'de bir), kesişimde 2×2 Night[3] çivi, hücre
+  ortasında tek nokta; üstünde %10 perde ve tarama çizgisi. Çizilmiş gece (`NightArt.Night`) bir satır ötede
+  duruyor, silinmedi.
+- **Hiçbir hover ekran dışına taşmaz:** `StepPropTip` plakayı üst nesnesinin dikdörtgenine (8 birim payla) geri
+  iter — hangi kenarı aşarsa aşsın; kirişin en sağındaki dişli tuşunun ve satır sonundaki bayrağın hover'ı
+  ölçüldü, içeride. Tarif ipucu (`FollowPointerWithRecipeTip`), market kartı ve tablosu (`FollowPointerWithShopCard`
+  / `Spec`) kenarda dönmenin ardından bir de kelepçelenir: bir kenarda dönüş öbür kenarı aşabiliyordu. Kiler kartı
+  zaten kayıyordu.
+- Doğrulama: EditMode 595/595, PlayMode 13/13 (86,9 sn, bakış testleri dokunulmadı); kaptürden ölçüldü — RESUME/SETTINGS/NEW RUN etiketleri tuş merkezinden dx 0, yüz merkezinden dy 0; hover: kirişin en sağındaki dişli tuşu (ekran x 1222..1264) plakası 278 geniş, 994..1272'ye çekildi (kenardan 8), satır sonu bayrağı ve ölçer tuşu içeride; oda perdesi Scrim, çerçevede düz desen.
+
 ### 9.71 · Palmiye Duvarı: duraklatma menüsü, yeni ayarlar, üst barda müzik oynatıcı, tuş atamaları, hover plakası (2026-09-15)
 
 Yazar üç yön arasından seçti: "Palmiye Duvarı kullanılsın. Arkaplan için pixelart oluşturulsun eğer beğenilmezse sabit

@@ -20,8 +20,9 @@ namespace LastCall.UI
     /// </summary>
     public static class NightArt
     {
-        /// <summary>The author's fallback: a flat patterned wall instead of the drawn night.</summary>
-        public const bool UseFlatBackdrop = false;
+        /// <summary>The author's fallback, now the choice (2026-09-16: "arkaplan olarak daha az göz alan bir arkaplan
+        /// seçilsin"): a flat patterned wall inside the frame instead of the drawn night, which stays one line away.</summary>
+        public const bool UseFlatBackdrop = true;
 
         private static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
 
@@ -172,8 +173,10 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
-        /// <summary>The flat fallback: a 32x32 tile — the night with a faint club-blue grid and a magenta stud where
-        /// the lines cross — shown tiled at 2x.</summary>
+        /// <summary>The flat pattern: a 32x32 tile of the night with a grid one shade up, a two-unit stud in the next
+        /// shade where the lines cross, and a single dot at each cell's middle — quiet enough to sit behind a page
+        /// of keys (the first cut's club-blue lines and magenta studs drew the eye, which is what the author sent it
+        /// back for). Shown tiled at 2x.</summary>
         private static Sprite FlatPattern()
         {
             const string Key = "night:flat";
@@ -181,11 +184,13 @@ namespace LastCall.UI
             const int S = 32;
             var px = new Color32[S * S];
             var ground = C(UITheme.Night[1]);
-            var line = C(UITheme.ClubBlue[1]);
+            var line = C(UITheme.Night[2]);
+            var stud = C(UITheme.Night[3]);
             for (int y = 0; y < S; y++)
                 for (int x = 0; x < S; x++)
                     px[y * S + x] = x == 0 || y == 0 ? line : ground;
-            px[0] = C(UITheme.Magenta[2]);
+            px[0] = stud; px[1] = stud; px[S] = stud; px[S + 1] = stud;
+            px[(S / 2) * S + S / 2] = line;
             return Cache[Key] = Make(px, S, S, Vector4.zero);
         }
 

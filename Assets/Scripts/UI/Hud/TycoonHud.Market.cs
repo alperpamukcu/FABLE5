@@ -578,6 +578,9 @@ namespace LastCall.UI
             // above the cursor, and without it here the table landed back on top of the card
             // it was supposed to be stacked under (measured, 2026-08-11).
             if (y - size.y < -halfH) y = local.y + Gap + drop + size.y;
+            // ...and never past the panel either way (2026-09-16, the author: "Hiçbir hover ekran dışına taşmamalı").
+            x = Mathf.Clamp(x, -halfW + 4f, halfW - size.x - 4f);
+            y = Mathf.Clamp(y, -halfH + size.y + 4f, halfH - 4f);
             _shopSpec.anchoredPosition = new Vector2(x, y);
         }
 
@@ -687,6 +690,9 @@ namespace LastCall.UI
             if (x + size.x > halfW) x = local.x - Gap - size.x;
             float y = local.y - Gap;
             if (y - size.y < -halfH) y = local.y + Gap + size.y;
+            // ...and never past the panel either way (2026-09-16, the author: "Hiçbir hover ekran dışına taşmamalı").
+            x = Mathf.Clamp(x, -halfW + 4f, halfW - size.x - 4f);
+            y = Mathf.Clamp(y, -halfH + size.y + 4f, halfH - 4f);
             _shopCard.anchoredPosition = new Vector2(x, y);
         }
 
