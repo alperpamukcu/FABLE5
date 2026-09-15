@@ -203,5 +203,10 @@
   "arrive": "a59cb045-2d05-4b5b-bec1-0121db60e922",
   "route": "living",
   "leave": "47b68c37-49d5-4aee-b9f3-bd74ee5fa01d"
+ },
+ "barcelona": {
+  "arrive": "d2674847-1a9f-4d4e-8233-a02bc1bff3b7",
+  "route": "living",
+  "leave": "50de275f-a78b-4723-a85e-92a0ca1c3e7f"
  }
 }
