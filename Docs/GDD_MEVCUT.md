@@ -282,6 +282,18 @@ Yazarın altı maddesi, tek turda.
   yavaşlama. **300 birimde 0.30**: varış 3.5 kare/sn, yavaşlama üçte iki saniye daha uzun.
   Seçilmeden önce ölçüldü — vardiya 95 saniye ve yürüyüş oradan harcanıyor: yaklaşma 0.45 sn
   pahalandı; eğrili yumuşatma (u² yerine u) önce denendi ve 1.7 sn tuttu, yani bir müşteri.
+  **2026-09-15'te KALDIRILDI** (aşağıdaki "Müşteri yürür, varır, kalkar" maddesi): yavaşlayan çevrim ağır çekim
+  gibi okunuyordu; artık yürüyüş sabit hızda ve duruşu VARIŞ klibi yapıyor.
+- **MÜŞTERİ YÜRÜR, VARIR, KALKAR (2026-09-15)** ("tüm yürüyüşler loop halinde değil" → pilot → "şablon ve
+  sabitleme çok daha iyi ... sabitlenmişteki hız iyi"). Yürüyüş PixelLab'in 8 karelik iskelet şablonu (kimliği
+  silinmiş ilk kadroda iki yarıdan kapanan döngü), kafası sabitlenmiş ve karakterin DURUŞ paletine kilitli
+  (`Tools/patron_motion.py`); oyunda kare sayısından bağımsız `WalkCycleSeconds = 1.25` sn ile oynar,
+  `ArrivalEase/ArrivalPace` yok. Tabure atanınca yürüyüş saati `SeatWalkClock` ile öyle başlar ki son adım
+  döngünün 0. karesine denk gelir; oradan **ARRIVE** (yavaşla, dön, oturur gibi yerleş → idle), çıkışta tepkiden
+  sonra **LEAVE** (kalk, kapıya/SAĞA dön → aynalı yürüyüş pozu), sonra yürüyüş 0. kareden. İki klibin de iki ucu
+  bağlandığı klibe oturur ve kafa yüksekliği dönüş boyunca sabittir (`patron_motion.bridge`; 41 karakterde ≤0.5 px).
+  Klibi olmayan yüz eskisi gibi tek karede döner (`OneShotSeconds` 0). Tüm kadro 10 oda pikseli aşağıda:
+  `CharFootDrop` 93 → **103**.
 
 ### 9.4 · Fatura sadeleşti (2026-08-26)
 

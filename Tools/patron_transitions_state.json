@@ -1,0 +1,207 @@
+{
+ "analyst": {
+  "arrive": "1a393366-51ba-4005-b274-b96c3f7c314e",
+  "route": "living",
+  "leave": "f68292fc-e1ab-4aaa-a1ee-2b2945716e30"
+ },
+ "ankara": {
+  "arrive": "85a93102-0f3a-422f-b45b-8203b782f914",
+  "route": "living",
+  "leave": "8d3f521f-af93-4ddf-9dd2-f1c6b94479e4"
+ },
+ "archivist": {
+  "arrive": "5740e926-67a4-4c2f-9171-1a0e5b24a51c",
+  "route": "living",
+  "leave": "6403cdd3-65d3-4169-b7e7-333a85c8ee64"
+ },
+ "barista": {
+  "arrive": "979e56ac-ab8c-4753-a473-3aca77dfea14",
+  "route": "living",
+  "leave": "a78cc90c-ad10-416a-b724-b47fded8d33d"
+ },
+ "berlin": {
+  "arrive": "6641e46b-1bce-4679-b040-f444f55f9dfa",
+  "route": "living",
+  "leave": "44142e14-00a3-4b62-985c-69450bf703ff"
+ },
+ "bilbao": {
+  "arrive": "5e5be65c-a094-4222-be77-01d9fab3a752",
+  "route": "living",
+  "leave": "7146f6bf-5cb4-48cb-be79-30b228142593"
+ },
+ "bristol": {
+  "arrive": "14357802-0386-417d-961f-38fae202799d",
+  "route": "living",
+  "leave": "d23aa838-3447-432b-94af-cea9deb9a116"
+ },
+ "canton": {
+  "arrive": "77ed1c06-61b5-4250-a29f-9fcc54266369",
+  "route": "living",
+  "leave": "186bdf86-0413-41af-a007-41c48a78ae53"
+ },
+ "couriereu": {
+  "arrive": "a46db909-a98a-4c89-96a9-a4439427d010",
+  "route": "living",
+  "leave": "f9ac7ecd-85a6-4398-bb99-ec8b70bc29e6"
+ },
+ "florist": {
+  "arrive": "900eb6c3-50a8-4090-8dde-ac05ede89567",
+  "route": "living",
+  "leave": "a217d1ba-9694-443e-8d6a-d7bc8119b928"
+ },
+ "gallerist": {
+  "arrive": "b10aaa55-06fb-4716-9ed5-e1eafa4ca665",
+  "route": "living",
+  "leave": "ced81b8b-574d-4e6d-8c42-816ca12aa28a"
+ },
+ "idoljp": {
+  "arrive": "b9d0fa73-d2d7-4eb0-9420-19ac7f03595d",
+  "route": "living",
+  "leave": "67202a70-eb91-4d43-8bd8-0f61606e572d"
+ },
+ "istanbul": {
+  "arrive": "b0154489-bb11-4b14-9900-35d703e2a239",
+  "route": "living",
+  "leave": "69f792eb-41c5-4fad-8335-6d7ebe990b76"
+ },
+ "izmir": {
+  "arrive": "3c1b091b-6842-4528-94c9-a4940227fa90",
+  "route": "living",
+  "leave": "7d7c6e3e-2f39-4cac-afd1-1ff113d6828b"
+ },
+ "junior": {
+  "arrive": "64a19364-5f0d-461f-9234-8b754450ad72",
+  "route": "living",
+  "leave": "bafc63df-d6ea-48fd-b214-1c645027656a"
+ },
+ "kadikoy": {
+  "arrive": "318b48c7-5e34-4f15-a97b-b8a98b0cfab0",
+  "route": "living",
+  "leave": "a876d144-aece-486b-9920-b835e76c595b"
+ },
+ "kdance": {
+  "arrive": "5780f356-74ab-4127-91f3-1977a1a2ace4",
+  "route": "living",
+  "leave": "a06513b2-c169-4f98-9b11-25c02f5c2bf1"
+ },
+ "kstudent": {
+  "arrive": "f701d4a1-25d0-4568-beee-f175d3409e54",
+  "route": "living",
+  "leave": "f4b4c1e0-3e8f-4f61-883c-f921ffa87c30"
+ },
+ "londongirl": {
+  "arrive": "df04e000-1b6f-46c4-8217-c210a142ccff",
+  "route": "living",
+  "leave": "321216d3-1bcf-4634-b505-8760027bc03e"
+ },
+ "clubgirl": {
+  "arrive": "be4185e2-e3a3-406b-977c-3bb102aec39b",
+  "route": "image",
+  "leave": "77136c48-6b1a-49ba-8d43-5e91222e3d95"
+ },
+ "hamburg": {
+  "arrive": "33153890-5d88-4119-b081-2ad4d46f9cf7",
+  "route": "living",
+  "leave": "c2c18451-096b-4e17-8da5-ab6419a53385"
+ },
+ "madrid": {
+  "arrive": "3d88a6ad-e8ea-438f-a184-dc82208289fb",
+  "route": "living",
+  "leave": "3961de3c-57cd-4811-8837-cda67b0c2a98"
+ },
+ "mancboy": {
+  "arrive": "772d57c0-a63f-430e-b7bd-beb57dea5d5d",
+  "route": "living",
+  "leave": "599bc84b-457a-44f5-a335-1b6ae878d895"
+ },
+ "milano": {
+  "arrive": "e94203df-8ca2-4799-8b89-d71de436e0ba",
+  "route": "living",
+  "leave": "850fb769-db98-4ed0-bfc2-5f990fda2d16"
+ },
+ "munich": {
+  "arrive": "5330251e-e80d-4e5b-a513-b64609d9433b",
+  "route": "living",
+  "leave": "6227d691-9172-433f-a277-369ce5c4d905"
+ },
+ "seoulboy": {
+  "arrive": "6a2235ad-7c03-409d-b2ae-3076e61768b1",
+  "route": "living",
+  "leave": "af92de88-e5ce-4e58-9d5e-25afe2e9df3c"
+ },
+ "seoulgirl": {
+  "arrive": "d409da45-aff5-4916-b546-64309ef77b91",
+  "route": "living",
+  "leave": "715c43d2-031b-499a-a306-570c0d30c84d"
+ },
+ "teacherde": {
+  "arrive": "065310c9-6432-4e33-af71-6bf67541a43d",
+  "route": "living",
+  "leave": "f2e511e4-88fe-4908-8efa-efa84371f944"
+ },
+ "driftgirl": {
+  "arrive": "3e8e2dff-a090-4264-89c2-342d19803e38",
+  "route": "image",
+  "leave": "55121b97-b0a0-4285-b4bf-7a728b94ccee"
+ },
+ "skater": {
+  "arrive": "160e139c-c301-4502-9e0f-a52152259d6d",
+  "route": "living",
+  "leave": "6c2dc941-2ab0-49c7-b3cb-75b6050bfcf2"
+ },
+ "eastasianman": {
+  "arrive": "2128c116-0487-4db7-8505-89655cd0d21a",
+  "route": "image",
+  "leave": "fa127abc-e9b8-4d0f-8d8d-33de399a62d3"
+ },
+ "guard": {
+  "arrive": "c1a61c12-6a07-4ffd-9fcf-c646a27ac25b",
+  "route": "image",
+  "leave": "4c719e7b-577e-4f7a-9e8c-fec5f5e933ca"
+ },
+ "harajuku": {
+  "arrive": "264a1c1b-f251-43f4-8eca-5719232ffeda",
+  "route": "image",
+  "leave": "ae94a30a-9ac5-48f5-adb3-713596aeec64"
+ },
+ "leopard": {
+  "arrive": "b6d92733-afbe-4d5f-94c8-11cbca036c3a",
+  "route": "image",
+  "leave": "de74b817-efcc-450d-bdf1-addb63ea965b"
+ },
+ "pastelman": {
+  "arrive": "d044d06d-7802-4fd0-8b90-b4b1c7cdff74",
+  "route": "image",
+  "leave": "e88c4731-5903-47eb-9e3c-c7eb7daaf908"
+ },
+ "salaryman": {
+  "arrive": "a67ebaa3-91a3-428e-aa05-ea61f70c943f",
+  "route": "image",
+  "leave": "9866ffa2-3c38-4062-8ebc-614e484cb8e5"
+ },
+ "shaved": {
+  "arrive": "64cfbf43-21f0-4787-bfc9-5cebf27ad0bb",
+  "route": "image",
+  "leave": "8ea66ecb-8aa5-4d80-b864-0e19aaf8d3ad"
+ },
+ "silkwoman": {
+  "leave": "9e02adac-61c3-4f40-a39f-d033dacba351",
+  "route": "image",
+  "arrive": "62314031-8698-4931-a76f-8b61f14221ce"
+ },
+ "atelier": {
+  "arrive": "02ff2c21-5f91-4420-ba8e-9b21238de1d1",
+  "route": "living",
+  "leave": "b0a74ab3-414b-4a1b-a1f3-57f7aaba26be"
+ },
+ "trainee": {
+  "arrive": "6ec9783c-c528-4bf6-97b7-377e2259a9be",
+  "route": "living",
+  "leave": "8de826cd-f46c-44ce-b219-4eb753401e75"
+ },
+ "sevilla": {
+  "arrive": "a59cb045-2d05-4b5b-bec1-0121db60e922",
+  "route": "living",
+  "leave": "47b68c37-49d5-4aee-b9f3-bd74ee5fa01d"
+ }
+}

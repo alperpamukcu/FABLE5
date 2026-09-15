@@ -31,7 +31,7 @@ namespace LastCall.EditorTools
         private const float DrinkCycleSeconds = 4.4f;  // TycoonHud.DrinkCycleSeconds
 
         private static readonly string[] Clips =
-            { "idle", "order", "drink", "cheer", "upset", "walk", "look_right", "look_left" };
+            { "idle", "order", "drink", "cheer", "upset", "walk", "look_right", "look_left", "arrive", "leave" };
 
         private sealed class Patron
         {
@@ -208,7 +208,8 @@ namespace LastCall.EditorTools
                 if (p.Face != null) DrawSprite(faceRect, p.Face);
                 GUILayout.BeginVertical();
                 GUILayout.Label(p.Slug, EditorStyles.boldLabel);
-                GUILayout.Label(p.Missing == 0 ? "8 clips" : (8 - p.Missing) + " clips · " + p.Missing + " missing",
+                GUILayout.Label(p.Missing == 0 ? Clips.Length + " clips"
+                        : (Clips.Length - p.Missing) + " clips · " + p.Missing + " missing",
                     EditorStyles.miniLabel);
                 GUILayout.EndVertical();
                 EditorGUILayout.EndHorizontal();

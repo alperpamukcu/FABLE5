@@ -206,8 +206,8 @@ KEPT = ('clubgirl', 'heavyset')
 # Who is being LOOKED AT this round, as opposed to who is in the game. The author asks for
 # stills first and animations only after approval, every time - so a new face is queued
 # here, judged, and only then added to KEPT and given clips.
-TRYING = ('londongirl', 'mancboy', 'analyst', 'bristol', 'berlin',
-          'teacherde', 'hamburg', 'munich', 'milano', 'roma')   # Britain, Germany, Italy, 2026-09-07
+TRYING = ('istanbul', 'kadikoy', 'izmir', 'ankara',
+          'madrid', 'barcelona', 'sevilla', 'bilbao')   # Turkey, Spain, 2026-09-08 (the ten Europeans shipped)
 
 # -- the clip table (2026-08-19, round five) ---------------------------------
 # EVERY ONE-SHOT IS DRAWN IN TWO HALVES, the author's own idea and a good one:
@@ -252,6 +252,21 @@ CLIPS = {
     # at 12fps is 1.4s a cycle, which is a calm walk.
     'walk_a': dict(directions=['west'], frames=8),
     'walk_b': dict(directions=['west'], frames=8, start=('walk_a', 'last'), end=('walk_a', 'first')),
+
+    # A WALK THAT DOES NOT HITCH, THE PILOT (2026-09-15, the author: "hala animasyonun başı ile
+    # sonu arasında fark oluyor ... karşıdan bakan bir tabureye oturma animasyonu da
+    # denenebilir"). Two halves drawn apart never share a rhythm - measured on istanbul, three
+    # head dips of different depths in one 15-frame cycle - so the pilot tries the server's own
+    # walk TEMPLATE, a skeleton cycle even by construction, and the two transitions a walk needs
+    # so that nothing has to stop inside it: ARRIVING (the walk's pose -> slow, turn to face the
+    # room, settle onto the stool, ending on the idle) and LEAVING (the idle -> up, turn, the
+    # walk's pose). Both ends are pinned, so each joins the clips on either side without a pop.
+    'walk_t': dict(directions=['west'], template='walking-8-frames'),
+    'arrive': dict(directions=['south'], frames=8, start=('walk_a', 'first'), end=('order_a', 'first')),
+    # EAST, and its end is the walk's pose MIRRORED: the door is on the right, so a customer
+    # leaves walking right on the flipped walk (TycoonHud.AdvanceExit). animate() cannot mirror a
+    # pinned frame, so the pilot queues this one itself (scratchpad walk_pilot_gen.py).
+    'leave': dict(directions=['east'], frames=8, start=('order_a', 'first'), end=('walk_a', 'first')),
 }
 FRAMES = 8
 
@@ -328,6 +343,17 @@ CUSTOM = {
     'walk_b': ('continuing the walk, taking ONE step with the LEFT leg: the left foot lifts, '
                'swings forward and plants, returning to the standing pose the walk began '
                'from, the arms swing a little in opposition, ' + CALM),
+
+    # Not CALM: its "the body stays where it is" forbids the turn these two are for. The seat is
+    # said "as if", the way the drink's glass of water is - a named object in these strings is
+    # what failed twice (see the note at the top of CUSTOM).
+    'arrive': ('slowing from a walk to a stop, turning the whole body to face the viewer, then '
+               'settling the weight down a little as if sitting onto a tall seat, ending upright '
+               'and facing forward with the arms relaxed at the sides, calm and natural, '
+               'no exaggeration'),
+    'leave': ('rising a little as if getting up from a tall seat, turning the whole body to the '
+              'right side and taking the first step of a walk away, the arms relaxed, calm and '
+              'natural, no exaggeration'),
 }
 
 # DIFFERENT WAYS OF BEING ANNOYED (2026-09-07, the author: "sinirlenme animasyonunda ...

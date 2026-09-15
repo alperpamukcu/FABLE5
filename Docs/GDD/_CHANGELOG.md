@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Customers walk, arrive and leave without a hitch (2026-09-15):** the walk is PixelLab's eight-frame skeleton
+  template (a closed two-step cycle for the first cast, whose characters are gone), its head held on one column and
+  every clip locked to the character's idle palette, so hair no longer turns black in profile. It plays on one
+  1.25 s cycle whatever its frame count, at one steady pace: the slow-down to the stool is gone. The walk-in is
+  phased to land on its first frame, then ARRIVE turns the customer to the room and settles them; LEAVE stands them
+  up and turns them to the door before the walk out. Both ends of both clips sit on the clips they join and the head
+  holds its height through the turn. The whole cast stands ten room pixels lower behind the bar. The cast review cut
+  nine faces, fixed seven heads the ship step had cropped, joined eight new ones and redrew berlin's drink.
+
 - **The palm wall: a pause menu, a new settings window, a music player and key bindings (2026-09-15):** Escape
   with nothing open holds the night behind a drawn synthwave night (code-drawn, shown at 2x) — RESUME, SAVE and
   CONTINUE (greyed, SOON), SETTINGS, NEW RUN, QUIT. The settings window has AUDIO (master, music, effects, the

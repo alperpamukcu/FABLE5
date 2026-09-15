@@ -1884,7 +1884,8 @@
    "drink_b": "48d930ee-6bbe-4372-b880-e4364f48482e",
    "cheer_b": "00c429bc-fa32-4288-b8e6-c0d2a91fd201",
    "upset_b": "3b39b38b-f57b-44e7-8ea9-b2a60cf26ecc",
-   "walk_b": "4d6faf31-e31c-4545-923d-61ebe47fc6f8"
+   "walk_b": "4d6faf31-e31c-4545-923d-61ebe47fc6f8",
+   "walk_t": "c973c816-ec8e-4518-bb7a-cb6b247499eb"
   }
  },
  "barista": {
@@ -1912,7 +1913,8 @@
    "drink_b": "2487799d-4ef3-4dd0-8091-56effe005383",
    "cheer_b": "4e344fa4-e860-418d-bb04-1a7be37cfdc9",
    "upset_b": "2e18c2a9-d1d7-441c-af12-3b715ffe0707",
-   "walk_b": "a5efd46a-0333-429d-b4a3-cb845d39c1e1"
+   "walk_b": "a5efd46a-0333-429d-b4a3-cb845d39c1e1",
+   "walk_t": "1f138eec-0d3e-4987-92e8-ac75c537e336"
   }
  },
  "archivist": {
@@ -1940,7 +1942,8 @@
    "drink_b": "0fd9fe3a-26c3-4b01-af23-3951d42960f2",
    "cheer_b": "9a060ef4-f27e-457f-b211-88ea7bb519ea",
    "upset_b": "99b52be0-9428-474b-b1e2-a519a7a132ac",
-   "walk_b": "2a6ffc96-e547-4c6b-9b80-f225657d8f08"
+   "walk_b": "2a6ffc96-e547-4c6b-9b80-f225657d8f08",
+   "walk_t": "f5a649cd-e866-4282-bb9d-e8ff36ac0712"
   }
  },
  "gallerist": {
@@ -1968,7 +1971,8 @@
    "drink_b": "1f08c625-d2ab-49df-afd5-7d19e6b7c6d9",
    "cheer_b": "f0e091fa-de66-4423-bde2-ddb216ec300a",
    "upset_b": "86ca7711-2184-4a2f-bf8d-5d784658c60e",
-   "walk_b": "4b992307-1d6d-43a4-bd75-c4488a55137c"
+   "walk_b": "4b992307-1d6d-43a4-bd75-c4488a55137c",
+   "walk_t": "9b29cc2b-0f5f-4dc9-9c38-d383208b076d"
   }
  },
  "trainee": {
@@ -1996,7 +2000,8 @@
    "drink_b": "6a8dc4dc-9eb4-4f5f-a4c8-91ced8e34737",
    "cheer_b": "086fda78-9587-4543-8aab-f0e6fe37a968",
    "upset_b": "bcfff8a1-9e80-4116-8094-6adb6eff2e64",
-   "walk_b": "b83c6489-9a4a-4036-be72-18ec1f9469a2"
+   "walk_b": "b83c6489-9a4a-4036-be72-18ec1f9469a2",
+   "walk_t": "2dc2db52-9d58-41de-9531-fb66bc4bc0b2"
   }
  },
  "skater": {
@@ -2024,7 +2029,8 @@
    "drink_b": "698f44bb-da20-4950-89ef-d12b86109e16",
    "cheer_b": "1dc1a254-48b8-4b9e-bda2-6edfed5cb454",
    "upset_b": "d1df2008-08b0-47c0-8de3-345024bfa3b4",
-   "walk_b": "695cd0bd-fb7a-4981-8b60-32a4a7253dff"
+   "walk_b": "695cd0bd-fb7a-4981-8b60-32a4a7253dff",
+   "walk_t": "75d9492a-c180-4e42-9582-2785b0a21621"
   }
  },
  "florist": {
@@ -2052,7 +2058,8 @@
    "drink_b": "afa1864e-886d-4500-bbd2-387508482252",
    "cheer_b": "0b46543a-8443-4e56-9e50-d6c4a11fe380",
    "upset_b": "2d90ff84-d1c5-43fb-82ac-90b7ea4198be",
-   "walk_b": "c163fc51-904f-49c7-b047-b8064766dce8"
+   "walk_b": "c163fc51-904f-49c7-b047-b8064766dce8",
+   "walk_t": "f6b56eb5-a45e-4715-8de4-83b15ab4ffc4"
   }
  },
  "junior": {
@@ -2080,7 +2087,8 @@
    "drink_b": "a285763c-44fd-446e-ac33-b5b7f26bd449",
    "cheer_b": "faf8415d-7a32-47a6-9737-b0eea10a7348",
    "upset_b": "f037526b-e74d-4f0e-a4e4-e2cf5927e7c8",
-   "walk_b": "63cb9088-d8e8-4eef-8be4-ba25d1f08f9e"
+   "walk_b": "63cb9088-d8e8-4eef-8be4-ba25d1f08f9e",
+   "walk_t": "a70d9418-e9ec-45b2-9833-1f30130e33a6"
   }
  },
  "busker": {
@@ -2136,7 +2144,8 @@
    "drink_b": "9504f5ae-0ffa-47fe-9da6-84e92f117698",
    "cheer_b": "d07a3c43-c8df-4f7e-a32f-62a1db309080",
    "upset_b": "d3607401-8b41-41c5-913e-aed1bd1cb9c5",
-   "walk_b": "7120973a-dab8-4aa3-b6ef-a3679deb8b45"
+   "walk_b": "7120973a-dab8-4aa3-b6ef-a3679deb8b45",
+   "walk_t": "d1b1c0eb-1953-4a6f-8aef-91a80c8a470f"
   }
  },
  "tokyodj": {
@@ -2192,7 +2201,8 @@
    "drink_b": "a8d81b37-f5ec-4de5-bf4a-076dbfa16386",
    "cheer_b": "e83cbd4c-8367-4bf6-a741-40bfb7b4a075",
    "upset_b": "b2ea2517-8718-4157-be23-c42b5cfe337e",
-   "walk_b": "8c66fef7-77d9-4ed4-8994-7e02cbd6150f"
+   "walk_b": "8c66fef7-77d9-4ed4-8994-7e02cbd6150f",
+   "walk_t": "bc633c40-acaf-4d6d-928a-213dd0c9aa72"
   }
  },
  "shanghai": {
@@ -2276,7 +2286,8 @@
    "drink_b": "0b05e542-d7b3-439a-927f-0b344d9ae3b0",
    "cheer_b": "46683beb-cbe0-48d1-9490-879e0877798e",
    "upset_b": "fb28e90c-f310-4e93-bd19-78a0df385335",
-   "walk_b": "b56acad9-1ce0-4e88-af73-e17660fe2508"
+   "walk_b": "b56acad9-1ce0-4e88-af73-e17660fe2508",
+   "walk_t": "26905e2a-f689-4746-a113-d692eb916c1d"
   }
  },
  "beijing": {
@@ -2332,7 +2343,8 @@
    "drink_b": "37be6784-e53a-4f40-9075-c4115518e181",
    "cheer_b": "930dd587-05ac-40a1-88da-7d07d4121913",
    "upset_b": "8e7a82ca-3f6a-48b6-bc75-c411cb815145",
-   "walk_b": "561031b9-93ce-4db7-b07e-f3a0f1409941"
+   "walk_b": "561031b9-93ce-4db7-b07e-f3a0f1409941",
+   "walk_t": "d6116690-eb49-4a7e-be73-5391aeac581a"
   }
  },
  "seoulgirl": {
@@ -2360,7 +2372,8 @@
    "drink_b": "43ca5d97-39b8-46d8-a048-cdfb135f0ea0",
    "cheer_b": "6cc97527-eb76-48cf-984b-3f283cf1160f",
    "upset_b": "a03f5f3a-3d10-4d23-9780-ca0d83546401",
-   "walk_b": "c061274b-3446-4825-81da-1fb71e23b243"
+   "walk_b": "c061274b-3446-4825-81da-1fb71e23b243",
+   "walk_t": "8646c25b-3676-4770-9374-6969ff0854f4"
   }
  },
  "kdance": {
@@ -2388,7 +2401,8 @@
    "drink_b": "b4540005-b673-4384-b990-3b535aafa472",
    "cheer_b": "49d33d48-bf6a-46ac-89a3-c20f1b3fc1e1",
    "upset_b": "7a09b6ea-d5c7-45e0-a61b-c3cfa1073efa",
-   "walk_b": "98363d82-5474-46b1-9d0b-045f3fca0f1a"
+   "walk_b": "98363d82-5474-46b1-9d0b-045f3fca0f1a",
+   "walk_t": "ed55eae5-f134-4c24-85a5-ced40b9fa104"
   }
  },
  "kstudent": {
@@ -2416,7 +2430,8 @@
    "drink_b": "2d011b97-484d-4a66-b71a-1e4fbe0f2253",
    "cheer_b": "32ddcfa1-6df8-469b-959d-3bd8b4d91114",
    "upset_b": "0d631a87-4135-44bb-9e21-4120a9b38c78",
-   "walk_b": "a750d43a-027f-4cf1-bfa6-f01509d89f4d"
+   "walk_b": "a750d43a-027f-4cf1-bfa6-f01509d89f4d",
+   "walk_t": "39ffe3c0-8529-4d5a-8306-6fd2438fd42b"
   }
  },
  "londongirl": {
@@ -2444,7 +2459,8 @@
    "cheer_b": "89edb2f6-b100-4104-8041-314296fda44f",
    "upset_b": "6703cca7-2130-4f1c-8cb6-d717a3ef93cc",
    "walk_a": "91484762-45fb-4056-8a50-12b6b4c6fbae",
-   "walk_b": "2f825d14-58c6-4e5b-a34c-e891d0ab3b04"
+   "walk_b": "2f825d14-58c6-4e5b-a34c-e891d0ab3b04",
+   "walk_t": "ca98a137-fb16-424d-8113-c9549120e3b3"
   }
  },
  "mancboy": {
@@ -2472,7 +2488,8 @@
    "cheer_b": "58fb3874-24a7-45dd-aedc-acaa44204646",
    "upset_b": "86ec3cbb-dcef-4bde-97fb-3087032de853",
    "walk_a": "dedfa872-e893-489a-a9c6-08498227a27b",
-   "walk_b": "08390a52-27a4-4b80-b1d3-310d982a5576"
+   "walk_b": "08390a52-27a4-4b80-b1d3-310d982a5576",
+   "walk_t": "6aa0477b-e83f-47bc-85f0-05a90d8464eb"
   }
  },
  "analyst": {
@@ -2500,7 +2517,8 @@
    "cheer_b": "caecdd06-4bf5-441b-ac56-c08f7812e5e4",
    "upset_b": "26a78dd0-80b2-41f3-8ec0-ade711d771bf",
    "walk_a": "fb8ec11e-14bb-4cf3-abc3-2b903a4bf927",
-   "walk_b": "136c8f3a-7922-4a93-a6ee-fb3c6090ab3c"
+   "walk_b": "136c8f3a-7922-4a93-a6ee-fb3c6090ab3c",
+   "walk_t": "69c5f4ec-d898-4c4b-94d1-ce1ac9afe398"
   }
  },
  "bristol": {
@@ -2528,7 +2546,8 @@
    "cheer_b": "dbb6a833-444e-47d2-8e65-2a7ae67fbc31",
    "upset_b": "7fafc417-8ba3-4e56-bf48-325bb0e56cd2",
    "walk_a": "f6075f3b-1bef-4a77-9778-14250ff6bf6b",
-   "walk_b": "61812bb9-d6f3-46ab-9228-a422edd3ae01"
+   "walk_b": "61812bb9-d6f3-46ab-9228-a422edd3ae01",
+   "walk_t": "cd2743b0-171d-4e88-aa29-80cfd6a0f451"
   }
  },
  "berlin": {
@@ -2548,15 +2567,18 @@
    "look_right": "b38c59e2-f622-4459-a827-aa6c17a2dfaf",
    "look_left": "c513bb6e-2542-4165-b16a-29097333c48d",
    "order_a": "5480cc8c-5259-4df6-9294-f3cb5c0cb418",
-   "drink_a": "b825df8b-a979-481a-8a2c-9a11edc51866",
    "order_b": "8b8ca30e-a2b5-42ac-9bad-769e42985984",
-   "drink_b": "5648fd70-6791-4aca-9c95-ec0a9b9e8538",
    "cheer_a": "cccb0684-db1b-4b35-b58f-433fe2dfa922",
    "upset_a": "82163e9c-9a9d-44cd-bc01-f7945fe1c64f",
    "cheer_b": "d20a329e-977a-4a3b-8520-20f4ca786a51",
    "upset_b": "7e52d43b-ff26-4b74-af49-7c5f0b16758c",
    "walk_a": "fe7c33ba-302d-49ff-a6b4-a10547e365e2",
-   "walk_b": "6ebe6c66-e895-4b29-bbfb-f455690dddf2"
+   "walk_b": "6ebe6c66-e895-4b29-bbfb-f455690dddf2",
+   "drink_a": "ee9a7aa9-52dc-48d3-84bf-26c7c7e9fc0b",
+   "drink_b": "6799deda-d639-49a5-9aee-e87fe343709f",
+   "walk_t": "d47f2c9f-5cc4-4e87-b434-5660c2708a97",
+   "arrive": "62bbc9db-7e97-4147-839e-71c05396f379",
+   "leave": "38c24035-337c-4873-9e2a-176facb35693"
   }
  },
  "teacherde": {
@@ -2584,7 +2606,8 @@
    "cheer_b": "13d52255-880b-4a6f-bdf7-eb21efdd9ba4",
    "upset_b": "5dfba4a1-cae3-413a-9569-367ace3a894e",
    "walk_a": "6d135432-41ef-44b5-8497-c3e1bd1aab5b",
-   "walk_b": "19d43539-799b-4b02-9435-09cfc49e0512"
+   "walk_b": "19d43539-799b-4b02-9435-09cfc49e0512",
+   "walk_t": "8fb2e7b5-548e-40e5-acc6-ad032d778c1a"
   }
  },
  "hamburg": {
@@ -2612,7 +2635,8 @@
    "cheer_b": "96b7b681-b8c5-4f8c-969d-25022a17bb16",
    "upset_b": "90a7be51-cb71-4113-9299-628f1f860fbd",
    "walk_a": "7372325e-2797-48a1-a5d8-886c77d1105a",
-   "walk_b": "5637b75f-dc9b-42f0-89be-808558022bde"
+   "walk_b": "5637b75f-dc9b-42f0-89be-808558022bde",
+   "walk_t": "a6dd72b3-2835-40b9-9bc4-d2242da7f172"
   }
  },
  "munich": {
@@ -2640,7 +2664,8 @@
    "cheer_b": "38f74800-8dd3-43ce-92db-473a62655d53",
    "upset_b": "32e72c90-7af6-4219-b270-5c10c4eb022a",
    "walk_a": "294dcf57-0695-468b-a924-ce7ab2a2d674",
-   "walk_b": "9d8f8bc1-6b76-4e14-b649-dfb044981ad5"
+   "walk_b": "9d8f8bc1-6b76-4e14-b649-dfb044981ad5",
+   "walk_t": "f8dc5fd4-cbe0-4351-98a0-7f6907cf7c19"
   }
  },
  "milano": {
@@ -2668,7 +2693,8 @@
    "cheer_b": "a59d81b0-96a9-467d-a283-1d59f817b522",
    "upset_b": "bd2f0783-d154-48ab-9e1d-c6f0adb9f27e",
    "walk_a": "dbf2372a-7ad7-471b-83a1-5c387c7c24ee",
-   "walk_b": "8ceb95ee-01ac-466e-9fa6-57b5a36ebf6e"
+   "walk_b": "8ceb95ee-01ac-466e-9fa6-57b5a36ebf6e",
+   "walk_t": "164001b3-a8b7-4f42-b14e-69eb51dec6e0"
   }
  },
  "roma": {
@@ -2697,6 +2723,240 @@
    "upset_b": "e0de9ab3-f3fd-4505-9980-a94993160b60",
    "walk_a": "2ac93eb5-9720-4692-a544-53472bfba64a",
    "walk_b": "be19e054-df9b-4e4d-b8d2-7ec28d0f8f2d"
+  }
+ },
+ "istanbul": {
+  "character_id": "d63248dd-222b-4b2c-a16c-82e3d2fa68bc",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 23.22,
+   "head": 0.126,
+   "whole": 30.065,
+   "colours": 32,
+   "body": 206,
+   "black": 33.533
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\istanbul.png",
+  "clips": {
+   "look_right": "dac5c76b-1f81-4d40-b2d8-e11f3d81a520",
+   "look_left": "46386ab6-b795-45d0-aadb-f3cd427307b7",
+   "order_a": "b9b29a0d-24d8-4b91-a73b-fbc69082d3f2",
+   "drink_a": "9877398d-5c4c-4b98-b314-9f38637f7974",
+   "walk_a": "b5651a58-bec6-4b66-914b-56d825acfe98",
+   "cheer_a": "91ad1a98-fe8d-4a2f-91ab-bb7cff6eb7b5",
+   "upset_a": "4db553db-fc0e-474a-a9e8-b2d6a420c99f",
+   "order_b": "eb3e6f0a-c16a-4861-b19a-3986c8b22678",
+   "drink_b": "6d2ce179-2992-4d00-9c44-f34e3162e6b8",
+   "cheer_b": "6a678139-e334-4dfa-819a-1ce422899aef",
+   "upset_b": "23405ddd-17e2-40ec-8f0f-067390967f5c",
+   "walk_b": "22e4d266-8bf1-44df-ad84-fd6d0098ebbf",
+   "walk_t": "2bfe6b02-550e-439f-8ef8-ac34ad9c23fe",
+   "arrive": "4dc85ef9-53a4-48d3-b67b-e0adc45dd4dc",
+   "leave": "47063cef-d080-47d2-90eb-f084087cb579"
+  }
+ },
+ "kadikoy": {
+  "character_id": "02de9a9c-cc9d-45e1-b2ce-101c3a4f28d8",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 50.278,
+   "head": 0.142,
+   "whole": 64.036,
+   "colours": 40,
+   "body": 197,
+   "black": 13.892
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\kadikoy.png",
+  "clips": {
+   "look_right": "8ed2fd29-5dc4-49f2-ae7e-e1eac27c0d8e",
+   "look_left": "f69f2bd1-457c-4d2e-864f-143992a7d5bc",
+   "order_a": "a4097f4d-2025-4a6b-98b4-9fe8e1854978",
+   "drink_a": "e4eaf2e8-a1f1-49f8-8c58-508f0989d75f",
+   "walk_a": "e04101df-7ba0-4d33-8d4d-a132b25f47fc",
+   "cheer_a": "45f6f6d5-0f5b-4896-b824-3e26b56eb4a3",
+   "upset_a": "2ac73e6d-50d3-4f1b-afd2-31167849b884",
+   "order_b": "5ce7825f-a683-4974-8254-176cee219be6",
+   "drink_b": "8e4d95ab-4eea-4c0b-a71b-e0b69929ae41",
+   "cheer_b": "a232c972-e489-4696-a0d3-3e8e2c8fc000",
+   "upset_b": "ad84882d-fe80-46a4-aa93-c94830e76f02",
+   "walk_b": "f3027775-9d32-4eaa-85c8-1557f643a650",
+   "walk_t": "1b9e4e36-72f0-4eea-9a17-79ff715c001b"
+  }
+ },
+ "izmir": {
+  "character_id": "abe4ab05-53aa-4a09-b78b-0bbf12d7f730",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 79.851,
+   "head": 0.184,
+   "whole": 86.932,
+   "colours": 39,
+   "body": 206,
+   "black": 19.32
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\izmir.png",
+  "clips": {
+   "look_right": "d7fe63c9-8585-4c1e-b6c8-77397d00260d",
+   "look_left": "baa0ca59-54ef-46ed-a0d8-9f27800740ff",
+   "order_a": "1888c3f8-4bab-484a-a826-886f94cf0e28",
+   "drink_a": "8b5c49ec-b357-4560-8993-7dbe34ab7695",
+   "walk_a": "35b7b7ca-d486-4413-a2eb-44a4844068ad",
+   "cheer_a": "eedd9b8d-7efe-4110-9c9d-98ec132ec641",
+   "upset_a": "0ea28e37-d06f-4199-9911-eef17bc80327",
+   "order_b": "dd0aa0a4-ab94-435e-b0ee-968feec533c5",
+   "drink_b": "db808fc3-cf7b-4386-801c-27aaf2dcb310",
+   "cheer_b": "faa6927f-84ba-4da3-a4e2-e1ae3b6972e1",
+   "upset_b": "13e4677e-80db-4c6f-83b7-06571604dede",
+   "walk_b": "ba2ff05f-d8bb-4d20-83fc-cfbc5ef3f304",
+   "walk_t": "03ea4ae5-858c-485e-8ea6-f0baa8cb73fc"
+  }
+ },
+ "ankara": {
+  "character_id": "4dde10ca-ba7c-4e3f-8f4e-1fd4941e69bd",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 39.353,
+   "head": 0.145,
+   "whole": 43.698,
+   "colours": 61,
+   "body": 200,
+   "black": 3.624
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\ankara.png",
+  "clips": {
+   "look_right": "b05cce7a-2faa-4139-a745-126116d006c8",
+   "look_left": "d6900d8d-a2a8-485e-9345-b7c2bcfd381f",
+   "order_a": "59fffdf7-685c-4c12-8116-c2571ed191a7",
+   "drink_a": "05529fd5-b637-4266-baa6-0b8dc25c708c",
+   "walk_a": "01f253cb-b40f-4596-9e93-1d261e74fff1",
+   "cheer_a": "06b74968-d0c8-4d98-9033-90a5f12b0101",
+   "upset_a": "d3484220-c368-46a2-841c-5aba2d5aed99",
+   "order_b": "97b4e178-055b-445c-9000-160c2c873759",
+   "drink_b": "862a8ffd-92d6-4c6e-baeb-e6e01ee56028",
+   "cheer_b": "7a37aac2-2257-4715-9836-2284ca2e826e",
+   "upset_b": "52f57047-deb1-4cb1-a6d4-4ea4fec0c395",
+   "walk_b": "1992458b-0bfe-4b30-bfc0-db5131933314",
+   "walk_t": "4bf8b605-293f-411b-8863-05853915d1ae"
+  }
+ },
+ "madrid": {
+  "character_id": "1307edd6-ac02-4482-aed6-bdb1626078b7",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 73.421,
+   "head": 0.149,
+   "whole": 85.204,
+   "colours": 42,
+   "body": 208,
+   "black": 23.389
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\madrid.png",
+  "clips": {
+   "look_right": "b17b9d84-9054-4833-9431-28f6b521c652",
+   "look_left": "3b3e84c4-8365-4644-8630-e854e677b536",
+   "order_a": "a2e950ca-7160-4ee4-8ab9-4f781347f10f",
+   "drink_a": "123cd71f-e930-4f54-9a50-55d06e31a9cd",
+   "walk_a": "2a392d49-40e7-4758-87b3-0916f6a3b67f",
+   "cheer_a": "15e27062-ea5b-44bf-ae55-9ac3da911f1f",
+   "upset_a": "c4bce462-5651-4353-ae10-cdeb5c62de1d",
+   "order_b": "d7463200-c412-4c6e-bcff-c37c01ef9f9c",
+   "drink_b": "93b440a1-ec8c-4925-8cc1-7ee57a4363af",
+   "cheer_b": "6784b551-42a0-4188-b7ff-b722e1f103b6",
+   "upset_b": "b2b47277-6be4-4d86-a90c-110d22cd7b0f",
+   "walk_b": "2945dddc-e74d-4ab2-ae1b-3f6ed29997e8",
+   "walk_t": "bf8c2cd4-ed2b-46e0-bf0f-58106f8c8050"
+  }
+ },
+ "barcelona": {
+  "character_id": "6033c00a-f869-4edb-b286-6f56ee4abe3b",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 82.262,
+   "head": 0.152,
+   "whole": 86.473,
+   "colours": 29,
+   "body": 204,
+   "black": 16.471
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\barcelona.png",
+  "clips": {
+   "look_right": "b620d4b8-7958-4d5b-8722-90f85ffc15d7",
+   "look_left": "ecdf5e46-c8db-4292-8b00-e0dbcc37924a",
+   "order_a": "6bc8c6d4-1c93-4b75-ab53-f07901002683",
+   "drink_a": "c32bf3d3-5df1-4df0-a425-daf59b0550f9",
+   "cheer_a": "34d3cb2e-ff22-4916-9df7-7576d9c8427a",
+   "upset_a": "4243bed0-fe4f-4d10-8e24-9aca9150def7",
+   "walk_a": "c7c5b667-70d5-43f1-af07-9cc5fc38a3c3",
+   "order_b": "9050f487-2fca-42ba-a4a0-152576637587",
+   "drink_b": "f74d32a1-0c3c-4bc3-8607-ea3f325e7eaf",
+   "cheer_b": "b6fb5585-a3d4-4d89-b822-602640a484a7",
+   "upset_b": "26be6544-ce03-4be1-9b43-c79dd895b1b1",
+   "walk_b": "50cf309d-815f-4c28-9bb1-5916b9f3d5ed",
+   "walk_t": "a0954927-bdb0-482d-98a3-faf98760cae4"
+  }
+ },
+ "sevilla": {
+  "character_id": "7723b929-34c0-4437-bb59-f3b840b9c3dc",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 49.644,
+   "head": 0.192,
+   "whole": 57.631,
+   "colours": 41,
+   "body": 203,
+   "black": 11.238
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\sevilla.png",
+  "clips": {
+   "look_right": "4ae6ec32-0776-4c77-95f7-adb90184fd8f",
+   "look_left": "88d73261-0b4f-4b81-81aa-31d2a3756650",
+   "order_a": "986833a1-c88d-48d8-8f45-88e305460c1b",
+   "drink_a": "e8864a01-9a2a-4db3-8622-62402f13a7f7",
+   "cheer_a": "1fdc5955-334d-46ad-925e-77822e39c528",
+   "upset_a": "868b154a-9d99-42a4-a71d-6ac7fe3a55a0",
+   "walk_a": "a9990b71-31ac-40f7-b93f-f9fedfe5333d",
+   "order_b": "0d490392-ab25-440b-891b-738dfe19cfdf",
+   "drink_b": "468ab323-c8c6-4552-a1bb-4e4dd820b1b7",
+   "cheer_b": "5253901c-e95b-4f2b-b57d-a0cca642bd90",
+   "upset_b": "13aa47e6-dbb2-4cde-bc33-0b1f3866ee3f",
+   "walk_b": "92ec3902-26d4-4c6f-9d88-50fa0252e158",
+   "walk_t": "b9cf09c3-4ea1-494e-8030-5d8aa64d9d3c"
+  }
+ },
+ "bilbao": {
+  "character_id": "7c8557e9-062f-41e7-937a-9a14a0e75db7",
+  "language": "lineless",
+  "size": 220,
+  "measured": {
+   "outline": 79.109,
+   "head": 0.149,
+   "whole": 80.12,
+   "colours": 40,
+   "body": 202,
+   "black": 21.468
+  },
+  "png": "AssetPipeline\\sources\\patron_trial\\bilbao.png",
+  "clips": {
+   "look_right": "5581db4b-24d9-41cb-bcff-a8e90923c585",
+   "look_left": "7b9208d0-4217-41c2-9757-9aab6765ca1d",
+   "order_a": "36f699bc-2331-45f8-ac13-fc1b52a474be",
+   "drink_a": "c58ee09d-ca91-451b-9f9b-cdfe0fc1b55b",
+   "cheer_a": "2925f0f4-cd35-4cb3-8d2d-009859494ed2",
+   "upset_a": "b2c69709-78ad-4a35-b13e-0ba2471da0ef",
+   "walk_a": "62ae3100-3e83-4900-a4ad-bd2cd7790952",
+   "order_b": "99047a0f-e128-4c3b-a0bf-ccfd90f00aad",
+   "drink_b": "7e18dd95-c84d-44b5-9546-6fb30c0d36cc",
+   "cheer_b": "23914cd5-ac78-4cb4-9737-ddbb5b3f411a",
+   "upset_b": "d534e594-ff76-45bb-9134-0c93254945d6",
+   "walk_b": "24a8ab9c-f16b-4bd0-81e2-e77beb9990f1",
+   "walk_t": "fb00015f-1521-4147-9e0d-7553fd38a19e"
   }
  }
 }

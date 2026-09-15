@@ -53,6 +53,42 @@
   {
    "slug": "linen",
    "why": "not on the hundred; dropped with the 2026-09-07 trim"
+  },
+  {
+   "slug": "afrowoman",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "beijing",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "busker",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "chengdu",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "racerboy",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "rider",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "roma",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "shanghai",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
+  },
+  {
+   "slug": "tokyodj",
+   "why": "cut in the 2026-09-14 cast review - the author played every face with every clip side by side"
   }
  ],
  "people": [
@@ -125,23 +161,6 @@
    "garment": "plain"
   },
   {
-   "slug": "afrowoman",
-   "name": "Simone Baptiste",
-   "age": 31,
-   "country": "United States",
-   "iso": "us",
-   "voice": "miami",
-   "dress": "club",
-   "look": "a Black woman in her forties, warm dark brown skin, tall and full-figured, a short natural afro, large gold hoop earrings, a burnt orange wrap blouse, cream wide-legged trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "laugh",
-   "upset": "wave",
-   "order": "speak",
-   "garment": "plain"
-  },
-  {
    "slug": "eastasianman",
    "name": "Daniel Yoon",
    "age": 26,
@@ -189,23 +208,6 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak",
-   "garment": "plain"
-  },
-  {
-   "slug": "racerboy",
-   "name": "Kenji Sato",
-   "age": 26,
-   "country": "Japan",
-   "iso": "jp",
-   "voice": "japanese",
-   "dress": "street casual",
-   "look": "a Japanese man in his twenties, slim and narrow, short spiky very dark brown hair with bleached tips, clean shaven, a pale orange short sleeved shirt open over a white tee, dark grey trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "smile",
-   "upset": "sigh",
    "order": "speak",
    "garment": "plain"
   },
@@ -258,23 +260,6 @@
    "cheer": "hands",
    "upset": "glare",
    "order": "speak",
-   "garment": "plain"
-  },
-  {
-   "slug": "rider",
-   "name": "Yeferson Mora",
-   "age": 24,
-   "country": "United States",
-   "iso": "us",
-   "voice": "miami",
-   "dress": "street casual",
-   "look": "a Venezuelan young man in his twenties, slim, dark curly hair, a thin beard, a mint green short sleeved shirt open over a plain tee, dark shorts",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "point",
-   "upset": "shake",
-   "order": "finger",
    "garment": "plain"
   },
   {
@@ -414,23 +399,6 @@
    "garment": "plain"
   },
   {
-   "slug": "busker",
-   "name": "Aoife Quinn",
-   "age": 23,
-   "country": "Ireland",
-   "iso": "ie",
-   "voice": "brit",
-   "dress": "street casual",
-   "look": "a young Irish woman, red hair in two braids, a mustard cropped tee and dark denim shorts",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "hands",
-   "upset": "glare",
-   "order": "finger",
-   "garment": "plain"
-  },
-  {
    "slug": "couriereu",
    "name": "Andrei Popa",
    "age": 28,
@@ -444,23 +412,6 @@
    "note": "",
    "cheer": "point",
    "upset": "shake",
-   "order": "speak",
-   "garment": "plain"
-  },
-  {
-   "slug": "tokyodj",
-   "name": "Sora Ito",
-   "age": 25,
-   "country": "Japan",
-   "iso": "jp",
-   "voice": "japanese",
-   "dress": "club",
-   "look": "a young Japanese man, undercut with a bleached fringe, a silver-grey silk short sleeved shirt open over a white vest, dark slim trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "smile",
-   "upset": "sigh",
    "order": "speak",
    "garment": "plain"
   },
@@ -482,40 +433,6 @@
    "garment": "plain"
   },
   {
-   "slug": "shanghai",
-   "name": "Wei Zhang",
-   "age": 27,
-   "country": "China",
-   "iso": "cn",
-   "voice": "chinese",
-   "dress": "smart casual",
-   "look": "a young Chinese man, neat black hair, a stone grey shirt buttoned to the collar, black-free charcoal trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "thumb",
-   "upset": "arms",
-   "order": "speak",
-   "garment": "stripe"
-  },
-  {
-   "slug": "chengdu",
-   "name": "Lin Xu",
-   "age": 24,
-   "country": "China",
-   "iso": "cn",
-   "voice": "chinese",
-   "dress": "street casual",
-   "look": "a young Chinese woman, dark hair in a high ponytail, an oversized cream t-shirt and wide light denim shorts",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "hands",
-   "upset": "glare",
-   "order": "speak",
-   "garment": "floral"
-  },
-  {
    "slug": "canton",
    "name": "Jiahao Lam",
    "age": 29,
@@ -530,23 +447,6 @@
    "cheer": "point",
    "upset": "shake",
    "order": "finger",
-   "garment": "plain"
-  },
-  {
-   "slug": "beijing",
-   "name": "Yuxi Chen",
-   "age": 26,
-   "country": "China",
-   "iso": "cn",
-   "voice": "chinese",
-   "dress": "club",
-   "look": "a young Chinese woman, blunt bob with a gold clip, an emerald green halter top and dark trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "smile",
-   "upset": "sigh",
-   "order": "speak",
    "garment": "plain"
   },
   {
@@ -771,23 +671,6 @@
    "garment": "sequin"
   },
   {
-   "slug": "roma",
-   "name": "Alessio Greco",
-   "age": 28,
-   "country": "Italy",
-   "iso": "it",
-   "voice": "italian",
-   "dress": "smart casual",
-   "look": "an Italian man in his late twenties, stubble, a cream linen shirt half-buttoned, tan trousers",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "point",
-   "upset": "shake",
-   "order": "finger",
-   "garment": "plain"
-  },
-  {
    "slug": "istanbul",
    "name": "Deniz Arslan",
    "age": 27,
@@ -796,8 +679,8 @@
    "voice": "turkish",
    "dress": "smart casual",
    "look": "a young Turkish woman, dark hair loose with a middle parting, a rust satin blouse and dark trousers",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
@@ -813,8 +696,8 @@
    "voice": "turkish",
    "dress": "street casual",
    "look": "a Turkish man in his late twenties, dark curls, a plain white tee under an open grey short sleeved shirt, light trousers",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
@@ -830,8 +713,8 @@
    "voice": "turkish",
    "dress": "club",
    "look": "a young Turkish woman, dark hair in a high ponytail, a burgundy halter top and wide trousers",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "thumb",
    "upset": "arms",
@@ -847,8 +730,8 @@
    "voice": "turkish",
    "dress": "street casual",
    "look": "a young Turkish man, short beard, a navy t-shirt and light chino shorts",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "hands",
    "upset": "glare",
@@ -864,8 +747,8 @@
    "voice": "miami",
    "dress": "club",
    "look": "a young Spanish woman, dark hair in beach waves, a scarlet halter dress",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "point",
    "upset": "shake",
@@ -881,8 +764,8 @@
    "voice": "miami",
    "dress": "street casual",
    "look": "a young Spanish man, dark tousled hair, a striped ecru tee and loose beige trousers",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "smile",
    "upset": "sigh",
@@ -898,8 +781,8 @@
    "voice": "miami",
    "dress": "street casual",
    "look": "a young Spanish woman, curly dark hair, a cropped white blouse and light denim shorts",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "laugh",
    "upset": "wave",
@@ -915,8 +798,8 @@
    "voice": "miami",
    "dress": "smart casual",
    "look": "a Spanish man in his late twenties, short dark hair, a slate blue shirt with the sleeves rolled",
-   "art": "planned",
-   "inGame": false,
+   "art": "drawn",
+   "inGame": true,
    "note": "",
    "cheer": "thumb",
    "upset": "arms",

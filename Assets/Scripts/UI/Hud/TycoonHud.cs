@@ -313,21 +313,18 @@ namespace LastCall.UI
         /// which is 320 HUD units. 310 sits a hair under, where the feet grip.</summary>
         private const float WalkSpeed = 310f;
 
-        /// <summary>How far out from the stool the arrival ease begins, and how slow it
-        /// gets there. Both the floor and the cycle are scaled by it — see AdvanceWalkIn.
+        /// <summary>
+        /// ONE WALK CYCLE, IN SECONDS, whatever the clip's frame count (2026-09-15, the author,
+        /// on the walk pilot: "sabitlenmişteki hız iyi böylece kol çok agresif değil ... smooth
+        /// olarak şablon ve sabitleme çok daha iyi"). The template walk is eight frames and the
+        /// older joined walks fifteen or sixteen; played at PatronFps the eight swung the arms
+        /// twice as fast as the walk the author liked. So the walk is timed by its CYCLE, at
+        /// the pace the author picked: the stabilised walk's fifteen frames at twelve.
         ///
-        /// DEEPER AND EARLIER (2026-08-26, the author: "yürüme animasyonunun sonunda
-        /// yavaşlarken animasyonun yavaşlaması gerekmez mi"). The cycle HAS been riding the
-        /// pace since the ease was rebuilt, so what was missing was not the wiring but the
-        /// reading: at 0.45 over 260 units the last steps run at five and a half frames a
-        /// second for about a third of a second, which is a slow-down you can measure and
-        /// not one you can see. 0.30 over 300 lands the last steps at three and a half
-        /// frames a second and gives the slow-down two thirds of a second more to happen in
-        /// — the difference between a figure that stops and a figure that is stopping.
-        /// Measured before it was picked, because the shift is 95 seconds long and a walk
-        /// is spent out of it: the approach costs 0.45s more than it did, and a curved ease
-        /// (u² rather than u) was tried first and cost 1.7s, which is a customer.</summary>
-        private const float ArrivalEase = 300f, ArrivalPace = 0.30f;
+        /// The arrival ease that slowed the last 300 units to 30% (2026-08-26) went with it:
+        /// a walk played slower reads as slow motion, and the ARRIVE clip does the stopping now.
+        /// </summary>
+        private const float WalkCycleSeconds = 15f / 12f;
 
         /// <summary>Frames a second for the walk: nine frames at nine is one cycle, two
         /// strides, a second — the pace WalkSpeed is measured against. Re-read this
@@ -338,8 +335,8 @@ namespace LastCall.UI
         // cycle a second, and WalkSpeed is derived from that. Everything else follows, so
         // nobody speaks in fast-forward beside somebody walking at nine.
         // (ExitSpeed is gone, 2026-08-19 — the author: "çıkış animasyonu giriş animasyonu ile
-        //  aynı hızda aynı şekilde". The exit is the entrance mirrored and shares WalkSpeed,
-        //  ArrivalEase and ArrivalPace; see AdvanceExit.)
+        //  aynı hızda aynı şekilde". The exit is the entrance mirrored and shares WalkSpeed
+        //  and WalkCycleSeconds; see AdvanceExit.)
         private const float OffscreenMargin = 150f; // how far past the right edge they start/finish
         /// <summary>The "placing the order" beat. The clip is two halves joined,
         /// about seventeen frames, which at PatronFps runs 1.42s - the beat is a hair
@@ -390,8 +387,13 @@ namespace LastCall.UI
         /// units. MEASURED, not tuned: the bar's front face is 83 art px tall in counter.png
         /// (rows 67–149; rows 0–66 are its top surface seen at 30°), so a customer standing
         /// at it has their feet 83 units down, and the rig leaves 10 px of air under the
-        /// shoes — 93 stage units, doubled into HUD.</summary>
-        private const float CharFootDrop = 93f * StageToHud;
+        /// shoes — 93 stage units, doubled into HUD.
+        ///
+        /// 103 since 2026-09-15 (the author: "tüm karakterlerin hizasını 10 birim aşağı
+        /// alalım"): the whole cast stands ten of the room's pixels lower behind the bar. The
+        /// head row, the order ticket, the motes and the cellar's give-back all derive from this
+        /// one number, so they came down with it.</summary>
+        private const float CharFootDrop = 103f * StageToHud;
 
         /// <summary>Idle is a STILL frame here, not a loop (2026-08-19, the author: "nefes
         /// alış veriş istemiyorum … sabit durmalı, biraz biraz sağa sola bakınmalı gibi").
@@ -403,7 +405,7 @@ namespace LastCall.UI
         // grips keyed off the served glass were built and taken out again; the trade is
         // written down where it belongs, in Tools/patron_trial_gen.py - every customer now
         // drinks from the same plain glass whatever the recipe called for.
-        private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset, LookRight, LookLeft }
+        private enum PatronClip { Idle, Order, Drink, Walk, Cheer, Upset, LookRight, LookLeft, Arrive, Leave }
 
         /// <summary>The reaction beat before they leave: the same joined length as
         /// the order, so the clip lands back on the idle pose exactly as the beat ends
@@ -494,7 +496,6 @@ namespace LastCall.UI
             // of zero is what that reads as. Tools/afro_crown_fix.py slid the whole set
             // down seven rows and rebuilt the dome on the curve her own hair was already
             // drawing, so the measurement moved with the art.
-            ("afrowoman", 7f, 0f, 7, 6),
             ("eastasianman", 7f, 0f, 5, 6),
             // The last one before the casting pauses, the author's own description, and
             // DRAWN AGAIN on 2026-08-20 rather than filtered. For one day her keyline was
@@ -511,42 +512,42 @@ namespace LastCall.UI
             // should re-roll the character rather than re-ship those frames, because the
             // frames are what was wrong with him.
             ("leopard", 4f, 0f, 4, 6),
-            ("roma", 1f, 0.0f, 5, 6),   // the tenth list, 2026-09-07
+            ("bilbao", 8f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
+            ("sevilla", 6f, 0.0f, 6, 7),   // the tenth list, 2026-09-07
+            ("barcelona", 7f, 0.0f, 4, 3),   // the tenth list, 2026-09-07
+            ("madrid", 4f, 0.0f, 5, 4),   // the tenth list, 2026-09-07
+            ("ankara", 10f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
+            ("izmir", 4f, 0.0f, 5, 5),   // the tenth list, 2026-09-07
+            ("kadikoy", 12f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
+            ("istanbul", 6f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
             ("milano", 10f, 0.0f, 4, 6),   // the tenth list, 2026-09-07
             ("munich", 13f, 0.0f, 6, 4),   // the tenth list, 2026-09-07
-            ("hamburg", 4f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
-            ("teacherde", 0f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
+            ("hamburg", 5f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
+            ("teacherde", 3f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
             ("berlin", 16f, 0.0f, 6, 3),   // the tenth list, 2026-09-07
             ("bristol", 10f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("analyst", 7f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("mancboy", 6f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
             ("londongirl", 17f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("seoulboy", 6f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
-            ("kstudent", 0f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
-            ("kdance", 1f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
+            ("kstudent", 8f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
+            ("kdance", 3f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
             ("seoulgirl", 5f, 0.0f, 5, 5),   // the tenth list, 2026-09-07
-            ("beijing", 4f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
             ("idoljp", 5f, 0.0f, 4, 3),   // the tenth list, 2026-09-07
             ("canton", 10f, 0.0f, 5, 7),   // the tenth list, 2026-09-07
-            ("chengdu", 7f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
-            ("shanghai", 6f, 0.0f, 5, 4),   // the tenth list, 2026-09-07
-            ("tokyodj", 8f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("couriereu", 7f, 0.0f, 3, 4),   // the twelfth list, 2026-09-07
-            ("busker", 9f, 0.0f, 4, 5),   // the twelfth list, 2026-09-07
             ("junior", 12f, 0.0f, 5, 6),   // the twelfth list, 2026-09-07
-            ("skater", 0f, 0.0f, 3, 5),   // the twelfth list, 2026-09-07
+            ("skater", 4f, 0.0f, 3, 5),   // the twelfth list, 2026-09-07
             ("trainee", 6f, 0.0f, 4, 4),   // the twelfth list, 2026-09-07
             ("gallerist", 18f, 0.0f, 5, 4),   // the twelfth list, 2026-09-07
             ("archivist", 5f, 0.0f, 6, 5),   // the twelfth list, 2026-09-07
             ("barista", 6f, 0.0f, 3, 5),   // the twelfth list, 2026-09-07
             ("florist", 5f, 0.0f, 4, 7),   // the twelfth list, 2026-09-07
-            ("atelier", 0f, 0.0f, 7, 5),   // the twelfth list, 2026-09-07
-            ("racerboy", 7f, 0.0f, 6, 6),   // the eleventh list, 2026-09-07
-            ("harajuku", 2f, 0.0f, 5, 7),   // the eleventh list, 2026-09-07
+            ("atelier", 5f, 0.0f, 7, 5),   // the twelfth list, 2026-09-07
+            ("harajuku", 4f, 0.0f, 5, 7),   // the eleventh list, 2026-09-07
             ("driftgirl", 10f, 0.0f, 5, 4),   // the eleventh list, 2026-09-07
             ("salaryman", 6f, 0.0f, 6, 7),   // the eleventh list, 2026-09-07
             ("guard", 7f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
-            ("rider", 5f, 0.0f, 5, 6),   // the tenth list, 2026-09-07
         };
 
         private readonly List<PatronLook> _looks = new List<PatronLook>();
@@ -596,7 +597,10 @@ namespace LastCall.UI
             /// mark's pixels, because the art is shared and the cloth ruins what it wipes.</summary>
             public readonly List<Mark> Marks = new List<Mark>();
             public float WalkT;              // 0..1 walk-in progress
-            public float WalkPace;           // 1 at the door, ArrivalPace at the stool
+            public float ArriveLeft;         // remaining arrive one-shot: slowing, turning to the room
+            public float ArriveSeconds;      // its whole length, for its frame clock
+            public float LeaveLeft;          // remaining leave one-shot: rising, turning to the door
+            public float LeaveSeconds;
             public bool SawRight, SawLeft;   // was a neighbour there last frame
             public bool Greeting;            // playing the one-shot glance at a newcomer
             public bool GreetRight;          // which way that glance goes

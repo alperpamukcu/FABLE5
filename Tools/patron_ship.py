@@ -118,13 +118,19 @@ SHIP = {
     # Two halves, joined at the junction frame, exactly as the one-shots are: a right step
     # and a left step make one cycle that ends where it began (2026-09-07). Falls back to a
     # single 'walk' group for the cast generated before the split.
-    'walk': ((['walk_a', 'walk_b'], 'walk'), True, None, False),
+    # The TEMPLATE walk first (2026-09-15): a skeleton cycle even by construction, which the two
+    # halves never were. ship() steadies it and locks it to the idle's colours (patron_motion).
+    'walk': (('walk_t', ['walk_a', 'walk_b'], 'walk'), True, None, False),
     'look_right': ('look_right', True, None, True),
     'look_left': ('look_left', True, None, True),
     'order': (['order_a', 'order_b'], True, None, True),
     'drink': (['drink_a', 'drink_b'], True, None, True),
     'cheer': (['cheer_a', 'cheer_b'], True, None, True),
     'upset': (['upset_a', 'upset_b'], True, None, True),
+    # Arriving ends on the idle and leaving starts on it (Tools/patron_transitions.py), so each is
+    # anchored by that end: 'last' stands the clip's LAST frame where the idle stands.
+    'arrive': ('arrive', True, None, 'last'),
+    'leave': ('leave', True, None, True),
 }
 
 
@@ -135,13 +141,13 @@ def log(rec):
         f.write(json.dumps(rec, ensure_ascii=False) + '\n')
 
 
-def anchor_to(frames, idle):
-    """Shift a whole clip so its FIRST frame stands where the idle frame stands.
+def anchor_to(frames, idle, which='first'):
+    """Shift a whole clip so its FIRST (or LAST) frame stands where the idle frame stands.
 
     One offset for every frame, so nothing inside the clip moves relative to anything
     else - the clip keeps the motion it was drawn with and only its address changes.
     """
-    a, b = patron_gen.bbox(frames[0]), patron_gen.bbox(idle)
+    a, b = patron_gen.bbox(frames[0] if which == 'first' else frames[-1]), patron_gen.bbox(idle)
     if a is None or b is None:
         return frames
     dx, dy = b[0] - a[0], b[3] - a[3]
@@ -155,26 +161,13 @@ def anchor_to(frames, idle):
     return out
 
 
-def clean(folder):
-    if not os.path.isdir(folder):
-        return
-    for name in os.listdir(folder):
-        if name.endswith('.png') or name.endswith('.png.meta'):
-            os.remove(os.path.join(folder, name))
+def stand_all(groups, still, foot_y, quiet=False):
+    """Every shipped folder stood on one foot line, in SHIP order, as {folder: frames}.
 
-
-def ship(slug):
-    zip_path = os.path.join(trial.RAW, slug + '_anim.zip')
-    still_path = os.path.join(trial.RAW, slug + '.png')
-    # A face with no clips yet has no zip, and that is a normal state: it is shipped for
-    # its idle alone so the clips have a pose to be generated from (see the note on 'idle').
-    groups = (patron_gen.frames_from_zip(io.open(zip_path, 'rb').read())
-              if os.path.exists(zip_path) else {})
-    still = Image.open(still_path).convert('RGBA')
-    print('%s (zip carries %s)' % (slug, ', '.join(sorted(groups))))
-
-    head_y = None
-    idle_frame = None
+    The idle is stood first and the anchored clips are anchored to it, so a set stood on
+    any foot line has the same joins as a set stood on any other.
+    """
+    stood_set, idle_frame = {}, None
     for folder, (source, lock, pick, anchor) in SHIP.items():
         if isinstance(source, tuple):
             # First source that exists wins - see the bootstrap note on 'idle'. An entry may
@@ -191,11 +184,22 @@ def ship(slug):
             parts = [groups.get(name) for name in source]
             if any(part is None for part in parts):
                 missing = [n for n, part in zip(source, parts) if part is None]
-                print('  %-12s MISSING %s' % (folder, ', '.join(missing)))
+                if not quiet:
+                    print('  %-12s MISSING %s' % (folder, ', '.join(missing)))
                 continue
             frames = list(parts[0])
-            for part in parts[1:]:
-                frames += list(part[1:])          # the junction frame, once
+            if folder == 'walk':
+                # A LOOP IS JOINED THE OTHER WAY ROUND (2026-09-15, the author: "tüm yürüyüşler
+                # loop halinde değil"). Measured on 33 walks: half B's FIRST frame is a new
+                # frame, a whole step on from A's last (4-7k px), and its LAST frame is A's
+                # first pixel for pixel (0-8 px) - the end pose it was pinned to. Dropping B's
+                # first frame cut a step out of the middle and kept the copy at the end, so
+                # every cycle hitched on the same pose twice. Keep B's first, drop B's last.
+                for part in parts[1:]:
+                    frames += list(part[:-1])
+            else:
+                for part in parts[1:]:
+                    frames += list(part[1:])          # the junction frame, once
         else:
             frames = groups.get(source)
         if frames and pick == 'last':
@@ -203,12 +207,109 @@ def ship(slug):
         if frames and pick == 'first':
             frames = [frames[0]]
         if not frames:
-            print('  %-11s MISSING' % folder)
+            if not quiet:
+                print('  %-11s MISSING' % folder)
             continue
         stood = patron_gen.stand(frames, lock_centre=lock, rigid=lock,
-                                 canvas=CANVAS, foot_y=FOOT_Y)
+                                 canvas=CANVAS, foot_y=foot_y)
         if anchor and idle_frame is not None and stood:
-            stood = anchor_to(stood, idle_frame)
+            stood = anchor_to(stood, idle_frame, 'last' if anchor == 'last' else 'first')
+        if not stood:
+            continue
+        stood_set[folder] = stood
+        if folder == 'idle':
+            idle_frame = stood[0]
+    return stood_set
+
+
+def crowned(frames):
+    """True when any frame carries the figure on its top row: the head ran off the canvas."""
+    for f in frames:
+        alpha = f.split()[3].load()
+        if any(alpha[x, 0] >= 40 for x in range(f.size[0])):
+            return True
+    return False
+
+
+def clean(folder):
+    if not os.path.isdir(folder):
+        return
+    for name in os.listdir(folder):
+        if name.endswith('.png') or name.endswith('.png.meta'):
+            os.remove(os.path.join(folder, name))
+
+
+def ship(slug, only=None):
+    """Stand a character's clips on the rig and write them under Resources/Patron/<slug>/.
+
+    only: a set of folder names to write, leaving every other folder, the face and the cast
+    record exactly as they are (2026-09-15: re-joining the walks must not re-ship the rest).
+    The whole set is still STOOD, so the feet land on the same row the shipped set uses.
+    """
+    zip_path = os.path.join(trial.RAW, slug + '_anim.zip')
+    still_path = os.path.join(trial.RAW, slug + '.png')
+    # A face with no clips yet has no zip, and that is a normal state: it is shipped for
+    # its idle alone so the clips have a pose to be generated from (see the note on 'idle').
+    groups = (patron_gen.frames_from_zip(io.open(zip_path, 'rb').read())
+              if os.path.exists(zip_path) else {})
+    still = Image.open(still_path).convert('RGBA')
+    print('%s (zip carries %s)' % (slug, ', '.join(sorted(groups))))
+
+    # THE HEAD, NOT THE SHOES (2026-09-14). Standing every frame on row 210 of a 220 canvas
+    # cropped anyone drawn taller than 210 px off the TOP - kstudent by 7 rows, atelier,
+    # skater and teacherde on every clip - while the raw frames all had the whole head.
+    # Everything below row 127 is behind the counter in play, so the side to give up is the
+    # bottom: the whole set goes down one row at a time, ONE offset for every clip so no
+    # join moves, until no frame of any clip touches the top row.
+    foot_y = FOOT_Y
+    stood_set = stand_all(groups, still, foot_y)
+    while foot_y < CANVAS and any(crowned(frames) for frames in stood_set.values()):
+        foot_y += 1
+        stood_set = stand_all(groups, still, foot_y, quiet=True)
+    if foot_y != FOOT_Y:
+        print('  %-12s feet on row %d, not %d: the head ran off the top' % ('headroom', foot_y, FOOT_Y))
+
+    # THE SIDE VIEW IN THE PERSON'S OWN COLOURS, THE WALK HELD STEADY (2026-09-15, see
+    # patron_motion). The palette is the idle AFTER the ink pass - the idle is inked on disk below,
+    # and a clip locked to the un-inked idle would carry colours the shipped idle no longer has.
+    # Locked folders are inked inside lock_palette and skipped by the ink pass below.
+    import patron_ink
+    import patron_motion
+    LOCKED = ('walk', 'arrive', 'leave')
+    on_disk = os.path.join(PATRON, slug, 'idle', 'idle_00.png')
+    if only and 'idle' not in only and os.path.exists(on_disk):
+        # A PARTIAL SHIP JOINS THE IDLE THAT IS ON DISK. This pass re-derives the headroom over
+        # every clip, new ones included, and may stand the set a few rows off the ship that wrote
+        # the idle: bridging to the idle stood HERE left kstudent's arrive 4 px off the idle the
+        # game actually plays (measured 2026-09-15). The shipped idle is already inked.
+        stood_set['idle'] = [Image.open(on_disk).convert('RGBA')]
+        idle_inked = stood_set['idle'][0]
+    elif 'idle' in stood_set:
+        idle_inked = stood_set['idle'][0].copy()
+        patron_ink.reink(idle_inked)
+    if 'idle' in stood_set:
+        for folder in LOCKED:
+            if folder in stood_set and (not only or folder in only):
+                frames = stood_set[folder]
+                if folder == 'walk':
+                    frames = patron_motion.stabilise(frames)
+                stood_set[folder] = patron_motion.lock_palette(frames, idle_inked)
+        # BOTH ENDS OF A TRANSITION ON THE CLIPS THEY JOIN (patron_motion.bridge): arriving
+        # starts on the walk's first frame and ends on the idle; leaving starts on the idle and
+        # ends on the walk's first frame MIRRORED, which is how the game draws the walk out.
+        walk0 = stood_set['walk'][0] if 'walk' in stood_set else None
+        if walk0 is not None:
+            from PIL import ImageOps
+            if 'arrive' in stood_set:
+                stood_set['arrive'] = patron_motion.bridge(stood_set['arrive'], walk0, idle_inked)
+            if 'leave' in stood_set:
+                stood_set['leave'] = patron_motion.bridge(stood_set['leave'], idle_inked,
+                                                          ImageOps.mirror(walk0))
+
+    head_y = None
+    for folder, stood in stood_set.items():
+        if only and folder not in only:
+            continue
         out = os.path.join(PATRON, slug, folder)
         os.makedirs(out, exist_ok=True)
         clean(out)
@@ -217,7 +318,6 @@ def ship(slug):
         print('  %-12s %2d frames' % (folder, len(stood)))
         if folder == 'idle':
             head_y = patron_gen.bbox(stood[0])[1]
-            idle_frame = stood[0]
             patron_gen.make_face(slug, stood[0])
 
     # NO BLACK KEYLINE, EVER (2026-09-07, the author: "kesinlikle siyah kontras olmamali,
@@ -226,9 +326,12 @@ def ship(slug):
     # near-black pixel becomes the colour of its neighbours, darkened. Run here rather than
     # by hand because a shipped patron that skipped it is a black outline in the room, and
     # nobody sees it until the author does.
-    import patron_ink
     inked = 0
     for folder in SHIP:
+        if only and folder not in only:
+            continue
+        if folder in LOCKED:
+            continue                      # inked before the palette lock, above
         d = os.path.join(PATRON, slug, folder)
         if not os.path.isdir(d):
             continue
@@ -241,6 +344,13 @@ def ship(slug):
             if n:
                 im.save(f)
                 inked += n
+    if only:
+        # A partial re-ship owns no face, no glance holds and no cast row: logging it as
+        # 'shipped' would hand patron_join a record with no head row.
+        print('  re-shipped only %s (feet on row %d)' % (', '.join(sorted(only)), foot_y))
+        log({'asset': 'patron/' + slug, 'event': 'reshipped', 'only': sorted(only),
+             'foot_y': foot_y})
+        return
     face = os.path.join(PATRON, slug, 'face.png')
     if os.path.exists(face):
         im = Image.open(face).convert('RGBA')
@@ -264,9 +374,15 @@ def ship(slug):
     print('  cast row:  ("%s", %sf, <stars>),   hold %s'
           % (slug, head_y, holds))
     log({'asset': 'patron/' + slug, 'event': 'shipped', 'rig': [CANVAS, FOOT_Y],
-         'head_y': head_y, 'holds': holds})
+         'foot_y': foot_y, 'head_y': head_y, 'holds': holds})
 
 
 if __name__ == '__main__':
-    for slug in (sys.argv[1:] or list(trial.KEPT)):
-        ship(slug)
+    args = sys.argv[1:]
+    only = None
+    if '--only' in args:
+        i = args.index('--only')
+        only = set(args[i + 1].split(','))
+        args = args[:i] + args[i + 2:]
+    for slug in (args or list(trial.KEPT)):
+        ship(slug, only)

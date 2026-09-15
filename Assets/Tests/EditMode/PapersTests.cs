@@ -86,7 +86,6 @@ namespace LastCall.Tests
         [TestCase("silkwoman")]
         [TestCase("pastelman")]
         [TestCase("shaved")]
-        [TestCase("afrowoman")]
         [TestCase("eastasianman")]
         [TestCase("leopard")]
         public void Every_face_the_bar_draws_today_carries_its_own_papers(string slug)
@@ -102,12 +101,24 @@ namespace LastCall.Tests
         /// THE SPANISH DRINKER IS GONE (2026-08-25, the author: "İspanyol müşteriyi oyundan
         /// kaldır görseli ve animasyonları bozuk"). His frames were deleted; a row here would
         /// be a person the bar can name and can never show.
+        ///
+        /// NINE MORE (2026-09-14): the author's cast review played every face with every clip
+        /// side by side and cut these by name. Same rule, same reason.
         /// </summary>
-        [Test]
-        public void The_cut_face_has_no_papers_left_behind()
+        [TestCase("spanishsuit")]
+        [TestCase("afrowoman")]
+        [TestCase("beijing")]
+        [TestCase("busker")]
+        [TestCase("chengdu")]
+        [TestCase("racerboy")]
+        [TestCase("rider")]
+        [TestCase("roma")]
+        [TestCase("shanghai")]
+        [TestCase("tokyodj")]
+        public void The_cut_face_has_no_papers_left_behind(string slug)
         {
-            Assert.That(Load().For("spanishsuit"), Is.Null,
-                "spanishsuit was cut from the cast; his papers should have gone with him");
+            Assert.That(Load().For(slug), Is.Null,
+                $"'{slug}' was cut from the cast; their papers should have gone with them");
         }
 
         [Test]

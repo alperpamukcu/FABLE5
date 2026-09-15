@@ -89,13 +89,6 @@
       "iso": "tr"
     },
     {
-      "slug": "afrowoman",
-      "name": "Simone Baptiste",
-      "age": 31,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
       "slug": "eastasianman",
       "young": true,
       "name": "Daniel Yoon",
@@ -108,13 +101,6 @@
       "young": true,
       "name": "Talia Reyes",
       "age": 27,
-      "country": "United States",
-      "iso": "us"
-    },
-    {
-      "slug": "rider",
-      "name": "Yeferson Mora",
-      "age": 24,
       "country": "United States",
       "iso": "us"
     },
@@ -143,13 +129,6 @@
       "slug": "harajuku",
       "name": "Yui Kobayashi",
       "age": 22,
-      "country": "Japan",
-      "iso": "jp"
-    },
-    {
-      "slug": "racerboy",
-      "name": "Kenji Sato",
-      "age": 26,
       "country": "Japan",
       "iso": "jp"
     },
@@ -210,39 +189,11 @@
       "iso": "pt"
     },
     {
-      "slug": "busker",
-      "name": "Aoife Quinn",
-      "age": 23,
-      "country": "Ireland",
-      "iso": "ie"
-    },
-    {
       "slug": "couriereu",
       "name": "Andrei Popa",
       "age": 28,
       "country": "Romania",
       "iso": "ro"
-    },
-    {
-      "slug": "tokyodj",
-      "name": "Sora Ito",
-      "age": 25,
-      "country": "Japan",
-      "iso": "jp"
-    },
-    {
-      "slug": "shanghai",
-      "name": "Wei Zhang",
-      "age": 27,
-      "country": "China",
-      "iso": "cn"
-    },
-    {
-      "slug": "chengdu",
-      "name": "Lin Xu",
-      "age": 24,
-      "country": "China",
-      "iso": "cn"
     },
     {
       "slug": "canton",
@@ -257,13 +208,6 @@
       "age": 21,
       "country": "Japan",
       "iso": "jp"
-    },
-    {
-      "slug": "beijing",
-      "name": "Yuxi Chen",
-      "age": 26,
-      "country": "China",
-      "iso": "cn"
     },
     {
       "slug": "seoulgirl",
@@ -316,6 +260,13 @@
     { "slug": "hamburg", "name": "Nele Krause", "age": 27, "country": "Germany", "iso": "de" },
     { "slug": "munich", "name": "Felix Bauer", "age": 26, "country": "Germany", "iso": "de" },
     { "slug": "milano", "name": "Giulia Conti", "age": 26, "country": "Italy", "iso": "it" },
-    { "slug": "roma", "name": "Alessio Greco", "age": 28, "country": "Italy", "iso": "it" }
+    { "slug": "istanbul", "name": "Deniz Arslan", "age": 27, "country": "Turkey", "iso": "tr" },
+    { "slug": "kadikoy", "name": "Emre Kayhan", "age": 29, "country": "Turkey", "iso": "tr" },
+    { "slug": "izmir", "name": "Selin Yilmaz", "age": 24, "country": "Turkey", "iso": "tr" },
+    { "slug": "ankara", "name": "Baris Demir", "age": 26, "country": "Turkey", "iso": "tr" },
+    { "slug": "madrid", "name": "Lucia Ferrer", "age": 25, "country": "Spain", "iso": "es" },
+    { "slug": "barcelona", "name": "Pau Vidal", "age": 27, "country": "Spain", "iso": "es" },
+    { "slug": "sevilla", "name": "Marina Ortega", "age": 23, "country": "Spain", "iso": "es" },
+    { "slug": "bilbao", "name": "Iker Aguirre", "age": 29, "country": "Spain", "iso": "es" }
   ]
 }
