@@ -84,10 +84,6 @@ def _notes_glass_name(obj, ctx):
             "so keep it a plain noun.")
 
 
-def _notes_snack_name(obj, ctx):
-    return "Snack bowl name, shown in capitals in toasts and on the snack mat."
-
-
 def _notes_country_name(obj, ctx):
     return ("Country on the customer's licence, CITIZEN OF field, printed in capitals "
             "(TycoonHud.Id.cs). Keyed by the ISO code papers.json uses. Use the language's own "
@@ -113,7 +109,6 @@ PAIRS = [
     ("fixture", "name", "Assets/Data/fixtures/fixtures.json", "fixtures", "id", "name", _notes_fixture_name, False),
     ("fixture", "blurb", "Assets/Data/fixtures/fixtures.json", "fixtures", "id", "flavor", _notes_fixture_blurb, False),
     ("glass", "name", "Assets/Data/glassware/glassware.json", "glasses", "id", "name", _notes_glass_name, False),
-    ("snack", "name", "Assets/Data/snacks/snacks.json", "snacks", "id", "name", _notes_snack_name, False),
     ("country", "name", "Assets/Data/customers/papers.json", "papers", "iso", "country", _notes_country_name, False),
     ("archetype", "name", "Assets/Data/customers/archetypes.json", "archetypes", "id", "name", _notes_archetype_name, False),
 ]
@@ -130,7 +125,6 @@ COVERED = {
     ("Assets/Data/fixtures/fixtures.json", ".fixtures[].name"): "fixture/name",
     ("Assets/Data/fixtures/fixtures.json", ".fixtures[].flavor"): "fixture/blurb",
     ("Assets/Data/glassware/glassware.json", ".glasses[].name"): "glass/name",
-    ("Assets/Data/snacks/snacks.json", ".snacks[].name"): "snack/name",
     ("Assets/Data/customers/papers.json", ".papers[].country"): "country/name",
     ("Assets/Data/customers/archetypes.json", ".archetypes[].name"): "archetype/name",
 }

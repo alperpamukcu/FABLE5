@@ -47,23 +47,30 @@
     "cloth_wipe_2": {"src": "sfx/cloth_wipe/fs609191_rag_on_glass.mp3", "mode": "event", "pick": 0, "min_len": 0.25, "max_len": 0.8, "level": "light"},
     "cloth_wipe_3": {"src": "sfx/cloth_wipe/fs609191_rag_on_glass.mp3", "mode": "event", "pick": 1, "min_len": 0.25, "max_len": 0.8, "level": "light"},
     "kick_out": {"src": "sfx/kick_out/fs136537_interior_door_slam.mp3", "mode": "whole", "level": "weight"},
+    "bill_slip": {"src": "sfx/bill_slip/fs590304_docket_sticker_ripper.mp3", "mode": "whole"},
+    "dish_down": {"src": "sfx/dish_down/kenney_impact_sounds_impactPlate_light_001.ogg", "mode": "whole"},
+    "drain": {"src": "sfx/drain/fs80932_drain_gurgle.mp3", "mode": "whole"},
+    "glass_pickup": {"src": "sfx/glass_pickup/fs610391_glass_on_wood_table_handle.mp3", "mode": "event", "max_len": 0.5},
+    "grain_pinch": {"src": "sfx/grain_pinch/fs668642_salt_dropping_in_bowl.mp3", "mode": "event", "max_len": 0.7},
+    "head_settle": {"src": "sfx/head_settle/fs329627_beer_foam.mp3", "mode": "window", "seconds": 0.9},
+    "id_card_away": {"src": "sfx/id_card_away/kenney_casino_audio_card-place-1.ogg", "mode": "whole"},
+    "pour_floor": {"src": "sfx/pour_floor/fs329513_water_on_concrete.mp3", "mode": "steady", "seconds": 3.0},
+    "rim_turn": {"src": "sfx/rim_turn/fs272227_salt_flakes.mp3", "mode": "steady", "seconds": 2.0},
+    "stir_loop": {"src": "sfx/stir_loop/fs199407_stir_ice_in_glass.mp3", "mode": "steady", "seconds": 3.0},
+    "stir_commit": {"src": "sfx/stir_commit/fs549899_small_wine_glass_clink.mp3", "mode": "whole"},
+    "stool_take": {"src": "sfx/stool_take/fs475493_chair_sitting_creak_wood.mp3", "mode": "event", "min_len": 0.2, "max_len": 1.0},
+    "tin_set_down": {"src": "sfx/tin_set_down/kenney_impact_sounds_impactTin_medium_003.ogg", "mode": "whole"},
+    "curtain": {"src": "sfx/curtain/fs365528_pulling_curtains.mp3", "mode": "window", "seconds": 1.0},
+    "day_open": {"src": "sfx/day_open/fs405321_unlocking_opening_front_door.mp3", "mode": "whole"},
+    "day_close": {"src": "sfx/day_close/fs394951_rolling_shutters_down.mp3", "mode": "whole"},
+    "bar_closed": {"src": "sfx/bar_closed/fs367221_heavy_wooden_door_close.mp3", "mode": "whole"},
+    "last_call_bell": {"src": "sfx/last_call_bell/fs353233_ship_bell_single_ring.mp3", "mode": "whole"},
+    "screen_on": {"src": "sfx/screen_on/fs693860_crt_tv_switches_on.mp3", "mode": "event", "pick": 0, "max_len": 2.0},
+    "screen_off": {"src": "sfx/screen_off/fs616850_tv_crt_on_off_static_click.mp3", "mode": "event", "pick": -1, "max_len": 1.0},
     "star_earn": {"src": "music/kenney_jingles_sax07.ogg", "mode": "whole"},
     "level_up": {"src": "music/oga_fupi_winvibraphone.ogg", "mode": "whole"}
   },
-  "music": {
-    "music_night_1": {"src": "music/oga_prosensory_chill_jazz.mp3"},
-    "music_night_2": {"src": "music/holizna_studio_apartment.mp3"},
-    "music_night_3": {"src": "music/oga_prosensory_elevator_music.wav"},
-    "music_night_4": {"src": "music/holizna_nowhere_to_be_nothing_to_do.mp3"},
-    "music_night_5": {"src": "music/oga_prosensory_elevator_music_2.wav"},
-    "music_night_6": {"src": "music/holizna_bus_stop.mp3"},
-    "music_lastcall_1": {"src": "music/oga_prosensory_jazz_slower.wav"},
-    "music_story_1": {"src": "music/oga_complicated_feelings.ogg"},
-    "music_dayend_1": {"src": "music/holizna_on_foot.mp3"},
-    "music_dayend_2": {"src": "music/oga_prosensory_lydian_synth_jazz.mp3"}
-  },
   "beds": {
-    "ambience_crowd": {"src": "ambience/ambience_crowd/fs237398_squareal_general_chatter_in_bar.ogg", "start": 30, "end": 150, "lufs": -26.0, "crossfade": 2.0},
     "ambience_rain": {"src": "ambience/ambience_rain/fs473554_timothyd4y_light_rain_inside_shut_window.ogg", "lufs": -28.0, "crossfade": 2.0}
   }
 }

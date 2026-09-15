@@ -61,31 +61,4 @@ namespace LastCall.Core
 
         public override string ToString() => $"{Name} ({Id})";
     }
-
-    /// <summary>
-    /// A snack bowl (v5 P10, the notes' snack system). Description only for now: the serve
-    /// loop and the pairing rules (never alone, only alongside an alcoholic order) land in
-    /// P11/P16 as Core refusals.
-    /// </summary>
-    public sealed class SnackDefinition
-    {
-        public string Id { get; }
-        public string Name { get; }
-        public int Price { get; }
-        public int Stock { get; }
-
-        public SnackDefinition(string id, string name, int price, int stock)
-        {
-            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Snack needs an id.", nameof(id));
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Snack '{id}' needs a name.", nameof(name));
-            if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price), $"Snack '{id}' must cost something.");
-            if (stock < 0) throw new ArgumentOutOfRangeException(nameof(stock), $"Snack '{id}' has negative stock.");
-            Id = id;
-            Name = name;
-            Price = price;
-            Stock = stock;
-        }
-
-        public override string ToString() => $"{Name} (${Price}, {Stock} in stock)";
-    }
 }

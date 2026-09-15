@@ -72,8 +72,8 @@ bench** (developer-only; it is hidden from player builds instead — `#if UNITY_
 
 The English stays in the data files; `Tools/loc/data_keys.py` writes a `data.*` entry for every shown
 field into en.json (so a data edit re-generates, and the parity test catches drift). Kinds and fields:
-`recipe` (name, lore/note), `bottle` (name, style), `fixture` (name, blurb), `glass` (name), `snack`
-(name), `country` (name, by ISO code), `archetype` (name), `lesson` (text), `story` (dialogue lines),
+`recipe` (name, lore/note), `bottle` (name, style), `fixture` (name, blurb), `glass` (name),
+`country` (name, by ISO code), `archetype` (name), `lesson` (text), `story` (dialogue lines),
 `voice` (lines per cue — **rewritten per language**, not translated). Brand parody names inside bottle
 names stay as they are; only the generic noun is translated.
 

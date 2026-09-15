@@ -679,6 +679,9 @@ checked in play.
 
 ## P16 — Snacks & drink variety
 
+> **Snacks removed 2026-09-15** (the author: "oyunda atıştırmalık olmaması gerekiyor"): the
+> snack loop below is history. Core, data, the counter, the sim and the tests no longer carry it.
+
 - ☑ **Snack loop** *(2026-07-31)*: bowls stand ON THE COUNTER rather than in the menu —
   a snack has no prep, so routing it through the drink flow would be a stage with nothing
   on it. Click a bowl into hand, click a customer. Core refuses solo snacks (no drink

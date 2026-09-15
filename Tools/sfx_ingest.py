@@ -161,6 +161,9 @@ def clip(root, name, pick):
     elif mode == 'steady':
         x = steady(x, pick.get('seconds', 2.0))
         loop = True
+    elif mode == 'window':
+        # the steadiest stretch as a one-shot, faded at both ends: a fizz or a curtain has no hit to find
+        x = steady(x, pick.get('seconds', 1.0))
     else:
         raise ValueError('%s: unknown mode %s' % (name, mode))
     if not loop:
@@ -221,9 +224,10 @@ def manifests(root):
 
 def ledger(root, picks):
     rows = manifests(root)
-    lines = ['# LAST CALL — Ses kaynakları (kayıtlar ve müzik)', '',
+    lines = ['# LAST CALL — Ses kaynakları (kayıtlar ve ortam)', '',
              '*`Tools/sfx_ingest.py --ledger` yazar; elle düzenleme. Buradaki her dosya CC0 / kamu malı; atıf gerekmiyor,',
-             'ama sahiplerinin adı teşekkür için burada duruyor. Sentetik klipler (`Tools/sfx_bank.py`) burada yok.*', '',
+             'ama sahiplerinin adı teşekkür için burada duruyor. Sentetik klipler (`Tools/sfx_bank.py`), şarkılar ve müzikal',
+             'işaretler (oyunun kendi bestesi, `Tools/music_synth.py`) burada yok.*', '',
              '| Oyundaki dosya | Kaynak | Sahibi | Lisans | Lisansın yazdığı sayfa |', '|---|---|---|---|---|']
     for section in ('music', 'beds', 'clips'):
         for name, pick in sorted(picks.get(section, {}).items()):

@@ -36,6 +36,14 @@ from sfx_dsp import (SR, LEVELS, analog, bandpass, dc_block, env_ad, env_ar,  # 
                      highpass, impact, lowpass, modal, noise, normalize, place,
                      render, rng, silence, soft_limit, sweep, write)
 from sfx_dsp import t as t_
+from music_synth import stinger  # noqa
+
+
+def _cue(name):
+    """A musical cue in the songs' own instruments (2026-09-15, Tools/music_synth.py `stinger`): the verdicts, the
+    order bell, SERVE IT, the purchase, another round, the debt pulse and the closing swell used to be their own small
+    synths here; they speak in the music's voice now, and still leave through `render` at their old level and room."""
+    return lambda: stinger(name)
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    '..', 'Assets', 'Resources', 'Audio')
@@ -469,14 +477,6 @@ def s_rim_turn():
     return x * g
 
 
-def s_rim_done():
-    """The lap closes: a small settle, the sound of a job finished."""
-    d = 0.30
-    x = glass_body(d, 690.0, 'rimd', amp=0.7, decay=0.16)
-    x += impact(d, 'rimd', tone=1900.0, q=3.0, crack=0.0018) * 0.5
-    return lowpass(x * env_ad(d, 0.0006, 0.085), 8000.0)
-
-
 def s_pour_loop():
     """HELD LOOP: spirit running from a bottle into a tin. Thinner and higher than
     beer, with bubbles as it breaks on what is already in there."""
@@ -658,18 +658,6 @@ def s_cash():
     return lowpass(out, 9500.0)
 
 
-def s_buy():
-    """A purchase lands: two rising notes, warm, over in a moment. Not a fanfare."""
-    d = 0.42
-    out = silence(d)
-    for k, (hz, at) in enumerate(((523.25, 0.0), (783.99, 0.085))):
-        v = modal(0.30, [(hz, 1.0, 0.12), (hz * 2, 0.30, 0.07),
-                         (hz * 3, 0.10, 0.045)], 'buy%d' % k)
-        i = int(at * SR)
-        place(out, i / SR, v, env_ad(0.30, 0.004, 0.10) * (1.0 - 0.25 * k))
-    return lowpass(out, 7000.0)
-
-
 def s_star_earn():
     """A star awarded. Bright, but rounded off hard at the top so it sparkles rather
     than stings — the brief's 'ear-hurting' lives in exactly this register."""
@@ -680,32 +668,6 @@ def s_star_earn():
         i = int(k * 0.070 * SR)
         place(out, i / SR, v, env_ad(0.55, 0.006, 0.18) * (1.0 - 0.22 * k))
     return lowpass(out, 8000.0)
-
-
-def s_cheer_sfx():
-    """A customer pleased. NOT a crowd sample — a warm two-note lift with a little
-    room behind it, so it reads as one person's approval at a quiet bar."""
-    d = 0.70
-    out = silence(d)
-    for k, (hz, at) in enumerate(((392.0, 0.0), (587.33, 0.10), (783.99, 0.19))):
-        v = modal(0.48, [(hz, 1.0, 0.20), (hz * 2, 0.34, 0.12),
-                         (hz * 3, 0.12, 0.07)], 'cheer%d' % k)
-        i = int(at * SR)
-        place(out, i / SR, v, env_ad(0.48, 0.008, 0.16) * (1.0 - 0.18 * k))
-    room = lowpass(noise(d, 'cheer_r', 'pink'), 1600.0) * 0.10 * env_ar(d, 0.05, 0.30)
-    return lowpass(out + room, 6500.0)
-
-
-def s_upset_sfx():
-    """A customer unhappy. It falls instead of rising, and it is SOFT — the game does
-    not punish with volume."""
-    d = 0.60
-    out = silence(d)
-    for k, (hz, at) in enumerate(((349.23, 0.0), (277.18, 0.11))):
-        v = modal(0.42, [(hz, 1.0, 0.20), (hz * 2, 0.22, 0.10)], 'ups%d' % k)
-        i = int(at * SR)
-        place(out, i / SR, v, env_ad(0.42, 0.010, 0.15) * (1.0 - 0.2 * k))
-    return lowpass(out, 3200.0)
 
 
 def s_patience_warn():
@@ -904,39 +866,6 @@ def _chord(seconds, notes, name, gain=1.0, spread=0.0, **kw):
     return out
 
 
-def s_verdict_good():
-    """A GOOD PINT. A rising major third on the house synth — short, warm, and
-    over before the player has finished being pleased with themselves."""
-    return lowpass(_chord(0.55, [440.0, 554.37], 'vg', spread=0.055,
-                          cut0=2600.0, cut1=700.0), 7000.0)
-
-
-def s_verdict_bad():
-    """TOO MUCH HEAD. The same voice, a semitone-flat pair — wrong rather than
-    punishing. It is quieter than the good one by design: the game corrects, it
-    does not scold."""
-    return lowpass(_chord(0.50, [415.30, 493.88], 'vb', spread=0.050,
-                          cut0=1500.0, cut1=420.0), 4200.0)
-
-
-def s_verdict_flat():
-    """A FLAT PINT — no head at all. One note, alone, going nowhere."""
-    return lowpass(_chord(0.48, [349.23], 'vf', cut0=1300.0, cut1=380.0), 3600.0)
-
-
-def s_another_round():
-    """A perfect streak earns another round: the bank's brightest moment, four
-    notes up an add9 and a soft neon shimmer behind them. The one place this game
-    is allowed to be triumphant."""
-    d = 1.20
-    out = _chord(d, [523.25, 659.25, 783.99, 987.77], 'ar', spread=0.075,
-                 cut0=3400.0, cut1=900.0, detune=0.013)
-    shimmer = highpass(noise(d, 'ar_sh', 'pink'), 4000.0) * 0.10
-    place(out, 0.05, lowpass(shimmer, 11000.0)[:int(0.9 * d * SR)]
-          * env_ad(0.9 * d, 0.05, 0.35), 1.0)
-    return lowpass(out, 9000.0)
-
-
 def s_level_up():
     """A fixture bought and installed — the bar itself got better. Rising, with
     a low root under it so it lands as WEIGHT rather than as a chime."""
@@ -957,18 +886,6 @@ def s_bar_closed():
     return lowpass(out, 2600.0)
 
 
-def s_debt_alarm():
-    """The bar goes under water. A slow two-note pulse, LOW and soft — the brief
-    forbids sounds that hurt, and money trouble in this game is a mood, not a
-    klaxon. It should worry the player without making them reach for the volume."""
-    d = 1.10
-    out = silence(d)
-    for i, at in enumerate((0.0, 0.42)):
-        v = analog(0.55, 138.59, 'da%d' % i, voices=2, cut0=700.0, cut1=220.0)
-        place(out, at, v * env_ad(0.55, 0.030, 0.18), 1.0 - 0.2 * i)
-    return lowpass(out, 1800.0)
-
-
 def s_last_call_bell():
     """LAST CALL. A real bell over the bar — struck brass, not a synth: this is the
     one announcement the ROOM makes rather than the game, because in a bar it is a
@@ -980,15 +897,6 @@ def s_last_call_bell():
     return lowpass(x * env_ad(d, 0.0006, 0.44), 9000.0)
 
 
-def s_synth_swell():
-    """The closing beat's pad: the ceiling coming down on the last customer. Slow
-    in, slow out, and it never resolves — it just hangs there."""
-    d = 2.40
-    out = _chord(d, [174.61, 261.63, 349.23], 'sw', spread=0.20,
-                 cut0=1200.0, cut1=380.0, detune=0.016, voices=4)
-    return lowpass(out * env_ar(d, 0.55, 0.80), 3000.0)
-
-
 def s_curtain():
     """The black between two nights: a soft downward breath, no pitch to speak of."""
     d = 0.85
@@ -997,13 +905,6 @@ def s_curtain():
     x += analog(d, 110.0, 'curt_s', voices=2, cut0=520.0, cut1=180.0) * 0.35 \
         * env_ar(d, 0.15, 0.50)
     return lowpass(x, 1600.0)
-
-
-def s_order_ready():
-    """A customer closes the menu and knows what they want. Two soft notes — the
-    game's most FREQUENT synth cue, so it is small and it never gets in the way."""
-    return lowpass(_chord(0.34, [659.25, 880.0], 'ord', spread=0.045, gain=0.9,
-                          cut0=2400.0, cut1=800.0), 7000.0)
 
 
 def s_prompt_up():
@@ -1052,37 +953,12 @@ def _s_rent_line_unused():
     return lowpass(x * env_ad(d, 0.0006, 0.024), 6500.0)
 
 
-def s_bowl_down():
-    """A snack bowl set in front of someone: ceramic on wood, duller and heavier
-    than a glass."""
-    d = 0.26
-    x = impact(d, 'bowl', tone=1050.0, q=2.2, crack=0.0026)
-    x += modal(d, [(560.0, 0.7, 0.075), (1290.0, 0.30, 0.045),
-                   (2010.0, 0.12, 0.028)], 'bowl')
-    x += wood_body(d, 170.0, 'bowl_w', amp=0.5, decay=0.030)
-    return lowpass(x * env_ad(d, 0.0006, 0.055), 6000.0)
-
-
 def s_dish_down():
     """A prep dish put back on the rail — small, dry, and final."""
     d = 0.18
     x = impact(d, 'dish', tone=1350.0, q=2.6, crack=0.0022)
     x += modal(d, [(720.0, 0.5, 0.040), (1610.0, 0.2, 0.024)], 'dish')
     return lowpass(x * env_ad(d, 0.0006, 0.032), 7000.0)
-
-
-def s_serve_it():
-    """SERVE IT — the one press that ends the whole build, and it was silent. A
-    key plate under a hand, and the counter answering it: bigger than any other
-    press in the game, because it is the only one that finishes something."""
-    d = 0.30
-    out = silence(d)
-    place(out, 0.0, impact(0.09, 'si', tone=980.0, q=1.8, crack=0.0034), 1.0)
-    place(out, 0.0, wood_body(0.26, 175.0, 'si_w', amp=1.0, decay=0.055)
-          * env_ad(0.26, 0.0008, 0.055), 1.0)
-    place(out, 0.030, analog(0.22, 587.33, 'si_s', voices=2, cut0=2000.0, cut1=620.0)
-          * env_ad(0.22, 0.006, 0.07), 0.35)
-    return lowpass(out, 6000.0)
 
 
 def s_tin_set_down():
@@ -1429,7 +1305,7 @@ BANK = {
     'garnish':        (s_garnish,       'light',   False, 1.0),
     'grain_pinch':    (s_grain_pinch,   'light',   False, 1.0),
     'rim_turn':       (s_rim_turn,      'loop',    True,  1.0),
-    'rim_done':       (s_rim_done,      'light',   False, 1.0),
+    'rim_done':       (_cue('rim_done'),      'light',   False, 1.0),
     'tap_pull':       (s_tap_pull,      'loop',    True,  1.0),
     'tap_water':      (s_tap_water,     'loop',    True,  1.0),
     'shake_loop':     (s_shake_loop,    'loop',    True,  1.1),
@@ -1455,31 +1331,30 @@ BANK = {
     'screen_off':     (s_screen_off,    'light',   False, 1.0),
     'glass_pickup':   (s_glass_pickup,  'light',   False, 1.0),
     'pour_cutoff':    (s_pour_cutoff,   'light',   False, 1.0),
-    'verdict_good':   (s_verdict_good,  'body',    False, 1.0),
-    'verdict_bad':    (s_verdict_bad,   'light',   False, 1.0),
-    'verdict_flat':   (s_verdict_flat,  'light',   False, 1.0),
-    'another_round':  (s_another_round, 'moment',  False, 1.0),
+    'verdict_good':   (_cue('verdict_good'),  'body',    False, 1.0),
+    'verdict_bad':    (_cue('verdict_bad'),   'light',   False, 1.0),
+    'verdict_flat':   (_cue('verdict_flat'),  'light',   False, 1.0),
+    'another_round':  (_cue('another_round'), 'moment',  False, 1.0),
     'level_up':       (s_level_up,      'moment',  False, 1.0),
     'bar_closed':     (s_bar_closed,    'weight',  False, 1.0),
-    'debt_alarm':     (s_debt_alarm,    'body',    False, 1.0),
+    'debt_alarm':     (_cue('debt_alarm'),    'body',    False, 1.0),
     'last_call_bell': (s_last_call_bell,'moment',  False, 1.0),
-    'synth_swell':    (s_synth_swell,   'bed',     False, 1.0),
+    'synth_swell':    (_cue('synth_swell'),   'bed',     False, 1.0),
     'curtain':        (s_curtain,       'light',   False, 1.0),
-    'order_ready':    (s_order_ready,   'light',   False, 1.0),
+    'order_ready':    (_cue('order_ready'),   'light',   False, 1.0),
     'stamp':          (s_stamp,         'weight',  False, 1.0),
     'printer_feed':   (s_printer_feed,  'loop',    True,  1.0),
-    'bowl_down':      (s_bowl_down,     'body',    False, 1.0),
     'dish_down':      (s_dish_down,     'light',   False, 1.0),
-    'serve_it':       (s_serve_it,      'weight',  False, 1.0),
+    'serve_it':       (_cue('serve_it'),      'weight',  False, 1.0),
     'tin_set_down':   (s_tin_set_down,  'body',    False, 1.0),
     'stir_commit':    (s_stir_commit,   'light',   False, 1.0),
     'id_card_away':   (s_id_card_away,  'light',   False, 1.0),
     'coin':           (s_coin,          'body',    False, 1.0),
     'cash':           (s_cash,          'moment',  False, 1.0),
-    'buy':            (s_buy,           'body',    False, 1.0),
+    'buy':            (_cue('buy'),           'body',    False, 1.0),
     'star_earn':      (s_star_earn,     'moment',  False, 1.0),
-    'cheer_sfx':      (s_cheer_sfx,     'moment',  False, 1.0),
-    'upset_sfx':      (s_upset_sfx,     'body',    False, 1.0),
+    'cheer_sfx':      (_cue('cheer_sfx'),     'moment',  False, 1.0),
+    'upset_sfx':      (_cue('upset_sfx'),     'body',    False, 1.0),
     'patience_warn':  (s_patience_warn, 'light',   False, 1.0),
     'id_card':        (s_id_card,       'light',   False, 1.0),
     'bill_slip':      (s_bill_slip,     'body',    False, 1.0),

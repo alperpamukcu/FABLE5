@@ -1518,7 +1518,7 @@ namespace LastCall.UI
         }
 
         /// <summary>THE HAND'S THREE FRAMES (2026-09-08): grabbing whenever something is in
-        /// it — a glass, the tin, the cloth, a bowl of snacks, or on the bench a bottle, the
+        /// it — a glass, the tin, the cloth, or on the bench a bottle, the
         /// spoon or the pint — pressed while the button is down, idle otherwise.</summary>
         private void StepCursor()
         {
@@ -1526,7 +1526,7 @@ namespace LastCall.UI
             // cursoru ana sahnede garnishleri taşırken gözükmeli, aynı şekilde sahnedeki
             // bardakları ve clothu sürüklerken de"). The dish carried off the rail rides
             // _prepCarry, which was the one carry the hand did not know about.
-            bool grabbing = _glassCarrying || _tinCarrying || _clothHeld || _snackInHand != null
+            bool grabbing = _glassCarrying || _tinCarrying || _clothHeld
                             || (_prepCarry != null && _prepCarry.gameObject.activeSelf)
                             || (_flow != null && _flow.IsHolding);
             var mouse = Mouse.current;
@@ -1739,17 +1739,6 @@ namespace LastCall.UI
         /// <summary>The room, for the service flow — which has to put its bar top on the same
         /// line the room's counter is on, and cannot ask the scene for it twice.</summary>
         public DiegeticStage Room => stage;
-
-        // ── the snack bowls (v5 P16) ─────────────────────────────────────────────
-        // On the counter, left end, opposite the bin: click a bowl to take it in hand, click
-        // a customer to put it down. The plan said "from the menu"; the bowls stand on the
-        // counter instead because a snack has no prep — sending the player through the drink
-        // menu for a bowl of nuts would be a stage with nothing on it.
-
-        private SnackDefinition _snackInHand;
-
-        private readonly List<(SnackDefinition snack, Image art, Text stock)> _snackBowls =
-            new List<(SnackDefinition, Image, Text)>();
 
         /// <summary>How many tabs are still counting themselves over a stool. The night's
         /// books wait for these (see <see cref="FloorIsClear"/>): the money and the stars a

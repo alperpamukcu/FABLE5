@@ -89,25 +89,6 @@ namespace LastCall.UI
             var visit = _seats[index].Visit;
             if (visit == null) return;
 
-            // A bowl in hand goes down in front of them (v5 P16). Before the waiting check,
-            // because a customer nursing a drink is exactly who takes a bowl of nuts — and
-            // Core's own refusals do the talking when the snack cannot land (never alone,
-            // bowl empty), so the toast is the rule speaking, not the menu's guess at it.
-            if (_snackInHand != null)
-            {
-                var snack = _snackInHand;
-                _snackInHand = null;
-                try
-                {
-                    run.ServeSnack(snack.Id, visit);
-                    Sfx.Play("bowl_down", 0.75f);
-                    Toast(UIText.T("seats.snack.on_tab", ("snack", SnackCaps(snack))));
-                }
-                catch (InvalidOperationException e) { Toast(UIText.Refusal(e)); }
-                RefreshSnackRow(run);
-                return;
-            }
-
             if (visit.State != VisitState.Waiting) return;
             if (!visit.HasOrdered) return;   // still deciding — no order to read yet (2026-07-23)
 
@@ -330,10 +311,6 @@ namespace LastCall.UI
                 default: return string.Empty;
             }
         }
-
-        /// <summary>A snack's name as the bowls and toasts print it: its data name, in capitals.</summary>
-        private static string SnackCaps(SnackDefinition snack) =>
-            UIText.Caps(UIText.Data("snack", snack.Id, "name", snack.Name));
 
         /// <summary>How many sips a drinker takes, and so how many things they can say.</summary>
         private const int SipsPerDrink = 3;
@@ -925,78 +902,6 @@ namespace LastCall.UI
         /// basin is (the sink's foot at stage 68.5 plus half its 35-pixel art).</summary>
         private const float CarryShrink = 0.72f, CarrySinkStageY = 86f;
         private float _glassCarryFromY;
-
-        private void BuildSnackRow(RectTransform root)
-        {
-            var run = Run;
-            if (run == null || run.Snacks.Count == 0) return;
-            float x = 24f;
-            foreach (var snack in run.Snacks)
-            {
-                var s = snack;
-                var bowl = NewRect($"Snack_{s.Id}", root);
-                bowl.anchorMin = bowl.anchorMax = bowl.pivot = new Vector2(0f, 0f);
-                bowl.sizeDelta = new Vector2(76, 84);
-                // ON the counter, which is what the comment above has always claimed:
-                // at 96 they stood on the bar's FRONT panel, across the shelf bays,
-                // and the glassware that belongs in those bays had nowhere to go.
-                bowl.anchoredPosition = new Vector2(x, 190f);
-                x += 82f;
-                var hit = bowl.gameObject.AddComponent<Image>();
-                hit.color = new Color(0, 0, 0, 0.001f);
-
-                var art = NewRect("Art", bowl);
-                Place(art, new Vector2(0.5f, 1), new Vector2(72, 54), new Vector2(0, 0));
-                var img = art.gameObject.AddComponent<Image>();
-                img.sprite = ItemArt.Load($"snack_{s.Id}");
-                img.preserveAspect = true; img.raycastTarget = false;
-                if (img.sprite == null) img.color = UITheme.Amber[2];   // no art yet: a warm chip
-
-                var label = NewText("N", bowl, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
-                Place(label.rectTransform, new Vector2(0.5f, 0), new Vector2(96, 24), Vector2.zero);
-                label.text = SnackCaps(s);
-
-                var btn = bowl.gameObject.AddComponent<Button>();
-                btn.targetGraphic = hit;
-                btn.transition = Selectable.Transition.None;
-                var snackRelay = bowl.gameObject.AddComponent<HoverRelay>();
-                var snackRt = bowl;
-                snackRelay.Entered = () => ShowPropTip(snackRt, UIText.T("seats.snack.take", ("snack", SnackCaps(s))));
-                snackRelay.Exited = () => HidePropTip(snackRt);
-                btn.onClick.AddListener(() =>
-                {
-                    var r = Run;
-                    if (r == null || r.Phase != TycoonPhase.DayOpen) return;
-                    if (r.SnackLeft(s.Id) <= 0) { Toast(UIText.T("seats.snack.bowl_empty", ("snack", SnackCaps(s)))); return; }
-                    _snackInHand = _snackInHand == s ? null : s;   // click again to put it back
-                    Sfx.Play(_snackInHand != null ? "garnish" : "glass_down", 0.8f);
-                    Toast(_snackInHand != null
-                        ? UIText.T("seats.snack.in_hand", ("snack", SnackCaps(s)))
-                        : UIText.T("seats.snack.put_back"));
-                    RefreshSnackRow(r);
-                });
-                var sink = bowl.gameObject.AddComponent<PressSink>();
-                sink.Face = art; sink.Depth = 4f; sink.Lift = 3f; sink.Tint = img;
-
-                _snackBowls.Add((s, img, label));
-            }
-        }
-
-        /// <summary>Stock counts and the in-hand highlight, redrawn after anything changes.</summary>
-        private void RefreshSnackRow(TycoonRun run)
-        {
-            foreach (var (snack, art, stock) in _snackBowls)
-            {
-                int left = run.SnackLeft(snack.Id);
-                stock.text = left > 0
-                    ? UIText.T("seats.snack.stock", ("snack", SnackCaps(snack)), ("left", left))
-                    : UIText.T("seats.snack.out", ("snack", SnackCaps(snack)));
-                var baseCol = art.sprite != null ? Color.white : UITheme.Amber[2];
-                art.color = left <= 0 ? new Color(baseCol.r, baseCol.g, baseCol.b, 0.35f)
-                    : _snackInHand == snack ? new Color(1f, 1f, 0.82f, 1f)
-                    : baseCol;
-            }
-        }
 
         // ── the counter's prep RAIL (2026-08-26) ──────────────────────────────
         //
@@ -3759,11 +3664,8 @@ namespace LastCall.UI
                                 : "?"),
                             ("paid", "$0"), ("stars", LogStars(0))));
                     else if (v.Visit.Paid > 0)
-                        LogService(v.Visit.SnacksTaken > 0
-                            ? UIText.N("seats.log.tab_snacks", v.Visit.SnacksTaken,
-                                       ("paid", "$" + v.Visit.Paid), ("stars", LogStars(v.Visit.Satisfaction)))
-                            : UIText.T("seats.log.tab",
-                                       ("paid", "$" + v.Visit.Paid), ("stars", LogStars(v.Visit.Satisfaction))));
+                        LogService(UIText.T("seats.log.tab",
+                            ("paid", "$" + v.Visit.Paid), ("stars", LogStars(v.Visit.Satisfaction))));
                     // The bussing beat (D2): a drinker leaves the empty glass on this stool.
                     // Core left the mess in the same tick that freed the seat (GDD 27 §4.1 —
                     // the SERVE is the signal, so an unmatched pour's glass is claimed too);
@@ -3812,6 +3714,9 @@ namespace LastCall.UI
                     v.ReactLeft = !kicked && reactLook != null
                         && reactLook.Clips.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
                         ? ReactSeconds : 0f;
+                    // …then up off the stool and turned to the door (LEAVE, 2026-09-15), kicked
+                    // or not: a kicked customer still has to stand up before walking out.
+                    v.LeaveSeconds = v.LeaveLeft = OneShotSeconds(v, PatronClip.Leave);
                 }
             }
             // 1b) THE GUEST WEARS THE FACE THE BEAT NAMES, whatever order the frame ran in.
@@ -3864,6 +3769,8 @@ namespace LastCall.UI
                     {
                         v.Visit = visit;
                         v.WalkT = 0f;
+                        v.ArriveLeft = v.LeaveLeft = 0f;
+                        v.AnimClock = SeatWalkClock(v);
                         v.Nagged = false;
                         v.Note = default;      // the last drinker's line is not this one's
                         HushSeat(v);           // …and neither is what they said about it
@@ -3885,7 +3792,6 @@ namespace LastCall.UI
                 }
             }
 
-            RefreshSnackRow(run);
             RefreshDirtyGlasses(run);
             // The bar bed (P17): always on, muffled while a stage or the licence is open — and, since 2026-09-15, the
             // music over it, which follows the night (MusicMood). The mood goes first: the bed is chosen by it.
@@ -4218,21 +4124,18 @@ namespace LastCall.UI
             if (view.WalkT < 1f)
             {
                 float dist = Mathf.Max(1f, entryX - view.SeatX);
-                // ARRIVING SLOWS DOWN (2026-08-19, the author: "karakterler koltuğuna
-                // yaklaşınca yürüme hızı biraz yavaşlamalı"). An ease-out lived here once and
-                // was removed for a good reason, written down at the time: the ground slid
-                // fast under slow feet, because only the FLOOR was easing. So the ease is
-                // back with the missing half — WalkPace scales the walk cycle by exactly the
-                // same factor it scales the speed, and the feet stay on the floor at every
-                // pace. Nothing about the cycle is retimed; it is simply played slower.
-                float left = (1f - view.WalkT) * dist;
-                view.WalkPace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(left / ArrivalEase));
+                // A STEADY WALK, THEN THE ARRIVAL (2026-09-15). The slow-down that lived here
+                // (2026-08-19) played the last steps at a third of the pace, which read as slow
+                // motion; the ARRIVE clip does the stopping now, so the floor and the cycle run
+                // at one pace all the way to the stool. The walk's clock was phased when the
+                // stool was given (SeatWalkClock), so the step that lands here is the cycle's
+                // first frame - the pose ARRIVE was drawn from.
                 bool stillWalking = view.WalkT < 1f;
-                view.WalkT = Mathf.Min(1f,
-                    view.WalkT + RoomDelta * WalkSpeed * view.WalkPace / dist);
+                view.WalkT = Mathf.Min(1f, view.WalkT + RoomDelta * WalkSpeed / dist);
                 if (stillWalking && view.WalkT >= 1f)
                 {
                     Sfx.Play("stool_take", 0.7f);
+                    view.ArriveSeconds = view.ArriveLeft = OneShotSeconds(view, PatronClip.Arrive);
                 }
                 view.Root.anchoredPosition =
                     new Vector2(Mathf.Lerp(entryX, view.SeatX, view.WalkT), SeatLineY);
@@ -4254,7 +4157,8 @@ namespace LastCall.UI
         /// <summary>Plays a customer leaving (2026-07-23): they get up and walk back out to
         /// the right the way they came — and since 2026-08-19 it IS the way they came (the
         /// author: "çıkış animasyonu giriş animasyonu ile aynı hızda aynı şekilde"): the
-        /// entrance mirrored, same WalkSpeed, same near-stool ease, same fade. One pace for
+        /// entrance mirrored, same WalkSpeed, same steady cycle (the near-stool ease is gone,
+        /// 2026-09-15: the reaction beat, then LEAVE, then the walk). One pace for
         /// everybody — the storm-off's shake and its 1.5× hurry are gone; anger is carried by
         /// the Upset reaction beat and the toast, not by the walk.</summary>
         private void AdvanceExit(SeatView view)
@@ -4276,15 +4180,23 @@ namespace LastCall.UI
                 return;
             }
 
-            // The entrance run backwards: slow at the stool, full pace by ArrivalEase out —
-            // and the cycle is scaled by the same factor as the floor, so the feet grip at
-            // every step exactly as they do on the way in (see AdvanceWalkIn).
+            // Then up off the stool and turned to the door (LEAVE, 2026-09-15) - still on the
+            // stool as it is right now, for the reason the reaction beat above re-reads
+            // SeatLineY. It ends on the walk's first pose, mirrored, so the walk out starts on
+            // frame 0.
+            if (view.LeaveLeft > 0f)
+            {
+                view.LeaveLeft -= RoomDelta;
+                view.Root.anchoredPosition = new Vector2(view.SeatX, SeatLineY);
+                UpdatePatronFrame(view, PatronClip.Leave, view.LeaveSeconds - view.LeaveLeft, facing: 1);
+                if (view.LeaveLeft <= 0f) view.AnimClock = 0f;
+                return;
+            }
+
+            // The entrance run backwards, at the entrance's one steady pace (see AdvanceWalkIn).
             float exitX = _hudRoot.rect.width + OffscreenMargin;
             float dist = Mathf.Max(1f, exitX - view.SeatX);
-            float gone = view.ExitT * dist;
-            float pace = Mathf.Lerp(ArrivalPace, 1f, Mathf.Clamp01(gone / ArrivalEase));
-            view.ExitT = Mathf.Min(1f,
-                view.ExitT + RoomDelta * WalkSpeed * pace / dist);
+            view.ExitT = Mathf.Min(1f, view.ExitT + RoomDelta * WalkSpeed / dist);
             view.Root.anchoredPosition = new Vector2(
                 Mathf.Lerp(view.SeatX, exitX, view.ExitT), SeatLineY);
             // Solid the whole way out, for the same reason they walk in solid: exitX is past
@@ -4293,7 +4205,7 @@ namespace LastCall.UI
 
             // Mirror the walk so they face the way they are leaving (to the right).
             UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);
-            view.AnimClock += RoomDelta * Mathf.Max(0.05f, pace);
+            view.AnimClock += RoomDelta;
 
             if (view.ExitT >= 1f)
             {
@@ -4346,13 +4258,15 @@ namespace LastCall.UI
 
             PatronClip clip; float t;
             if (!seated)                      { clip = PatronClip.Walk;  t = view.AnimClock; }   // faces left, walking in
+            else if (view.ArriveLeft > 0f)    { clip = PatronClip.Arrive; t = view.ArriveSeconds - view.ArriveLeft;
+                                                view.ArriveLeft -= RoomDelta; }
             else if (drinking)                { clip = PatronClip.Drink; t = view.DrinkT; }
             else if (view.OrderAnimLeft > 0f) { clip = PatronClip.Order; t = OrderAnimSeconds - view.OrderAnimLeft;
                                                 view.OrderAnimLeft -= Time.deltaTime; }
             else                              { clip = PatronClip.Idle;  t = view.AnimClock; }
-            // The clock the walk is played on runs at the pace the figure is moving, so an
-            // arriving customer's feet slow with the floor instead of skating on it.
-            view.AnimClock += Time.deltaTime * (seated ? 1f : Mathf.Max(0.05f, view.WalkPace));
+            // The walk's clock runs on the room's time, the time the floor is moved by, so the
+            // step that reaches the stool is the frame the walk-in was phased for (SeatWalkClock).
+            view.AnimClock += seated ? Time.deltaTime : RoomDelta;
 
             // A seated customer's idle is a STILL frame, so the life in it comes from where
             // they are looking. This runs only in the idle branch — somebody speaking their
@@ -4457,6 +4371,28 @@ namespace LastCall.UI
             SyncPatronBody(view);
         }
 
+        /// <summary>How long a one-shot plays at PatronFps, or 0 when this face has no frames for
+        /// it - a face drawn before ARRIVE and LEAVE existed simply snaps, as every face used to.</summary>
+        private float OneShotSeconds(SeatView view, PatronClip clip)
+        {
+            var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
+            return look != null && look.Clips.TryGetValue(clip, out var frames) && frames.Length > 0
+                ? frames.Length / PatronFps : 0f;
+        }
+
+        /// <summary>
+        /// Where a walk-in's clock starts, so that the step which reaches the stool is the cycle's
+        /// FIRST frame - the pose the ARRIVE clip was drawn from (2026-09-15). The walk runs at
+        /// one pace, so the time to the stool is known the moment the stool is given.
+        /// </summary>
+        private float SeatWalkClock(SeatView view)
+        {
+            if (_hudRoot == null) return 0f;
+            float entryX = _hudRoot.rect.width + OffscreenMargin;
+            float travel = Mathf.Max(1f, entryX - view.SeatX) / WalkSpeed;
+            return WalkCycleSeconds - Mathf.Repeat(travel, WalkCycleSeconds);
+        }
+
         /// <summary>The frame index for a clip at time t. Most clips loop at a fixed rate; the
         /// drink raises and lowers the glass over a sip window then holds it at rest, so it reads
         /// as a real sip every few seconds instead of a gulp every frame (2026-07-23).</summary>
@@ -4468,7 +4404,9 @@ namespace LastCall.UI
             // pose - so its last frame is the idle pose and the return is drawn rather than
             // reversed. That is what the halves bought: a clip that ends where the idle
             // stands, at twice the frames, with nothing mirrored.
-            if (clip == PatronClip.Walk) return Mathf.FloorToInt(t * PatronFps) % n;
+            // The walk is timed by its cycle, not by its frame count (see WalkCycleSeconds).
+            if (clip == PatronClip.Walk)
+                return ((Mathf.FloorToInt(t / WalkCycleSeconds * n) % n) + n) % n;
             if (clip == PatronClip.Drink)
             {
                 // A sip, then a pause standing as they were, then another sip - the
@@ -4530,6 +4468,8 @@ namespace LastCall.UI
                     [PatronClip.Upset] = LoadPatronClip(entry.Slug, "upset"),
                     [PatronClip.LookRight] = LoadPatronClip(entry.Slug, "look_right"),
                     [PatronClip.LookLeft]  = LoadPatronClip(entry.Slug, "look_left"),
+                    [PatronClip.Arrive]    = LoadPatronClip(entry.Slug, "arrive"),
+                    [PatronClip.Leave]     = LoadPatronClip(entry.Slug, "leave"),
                 };
                 // A look with no idle has no art on disk. Skip it instead of seating a
                 // customer who renders as nothing.

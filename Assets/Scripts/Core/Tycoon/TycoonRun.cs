@@ -243,7 +243,6 @@ namespace LastCall.Core
             TycoonConfig config = null, RegularsRegistry regulars = null,
             IReadOnlyList<IngredientCard> brandCatalogue = null,
             IReadOnlyList<GlasswareDefinition> glassware = null,
-            IReadOnlyList<SnackDefinition> snacks = null,
             IReadOnlyList<IngredientCard> lockedStock = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
             StoryArc story = null)
@@ -268,7 +267,6 @@ namespace LastCall.Core
                 ? new List<IngredientCard>(lockedStock) : new List<IngredientCard>();
 
             _glassware = glassware ?? Array.Empty<GlasswareDefinition>();
-            _snacks = snacks ?? Array.Empty<SnackDefinition>();
             _fixtureCatalogue = fixtures ?? Array.Empty<FixtureDefinition>();
             // WHAT THE ROOM ALREADY HAS (2026-08-15). Dressing is bought, with one
             // exception: the first beer font is the only door onto the draught station now
@@ -279,7 +277,6 @@ namespace LastCall.Core
             // back tonight's purchases, so it cannot be sold back for money nobody paid.
             foreach (var fixture in _fixtureCatalogue)
                 if (fixture.StartsInTheRoom) _fixtures.Add(fixture.Id);
-            RestockSnacks();
 
             Money = _config.StartingMoney;
             Seats = _config.StartingSeats;
@@ -860,92 +857,11 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
-            BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
                 _rng.GetStream("mess"));
             Floor.House.SinkSeconds = SinkSeconds;
             return Day - from;
-        }
-
-        // ── snacks (v5 P16) ─────────────────────────────────────────────────────
-
-        private readonly IReadOnlyList<SnackDefinition> _snacks;
-        private readonly Dictionary<string, int> _snackLeft = new Dictionary<string, int>();
-
-        /// <summary>The bowls this bar puts out. Empty for a run built without them, which
-        /// keeps the bench setups and the older tests snack-free.</summary>
-        public IReadOnlyList<SnackDefinition> Snacks => _snacks;
-
-        /// <summary>What is left in a bowl today; 0 for an unknown id.</summary>
-        public int SnackLeft(string snackId) =>
-            snackId != null && _snackLeft.TryGetValue(snackId, out var n) ? n : 0;
-
-        /// <summary>Opening day's bowls come with the bar. Only the constructor fills free.</summary>
-        private void RestockSnacks()
-        {
-            foreach (var snack in _snacks) _snackLeft[snack.Id] = snack.Stock;
-        }
-
-        /// <summary>
-        /// The morning snack delivery (v5 P16): every unit eaten yesterday is bought back at
-        /// one dollar under its menu price, so a bowl nets exactly $1 — "small income" made
-        /// literal. The first pass filled the bowls FREE, and the sim caught what that did:
-        /// ~$11 a night of costless money wiped the rent-v2 squeeze whole (bankruptcies
-        /// 19.5% → 0%). Purchases require cash (GDD 23): the delivery fills unit by unit as
-        /// far as the till reaches, so a bar under water opens with thin bowls — which is a
-        /// small extra tooth on exactly the bar the squeeze is for.
-        /// </summary>
-        private void BuyBackTheBowls()
-        {
-            foreach (var snack in _snacks)
-            {
-                int unitCost = Math.Max(1, snack.Price - 1);
-                while (_snackLeft[snack.Id] < snack.Stock && Money >= unitCost)
-                {
-                    Money -= unitCost;
-                    DayStock += unitCost;
-                    _snackLeft[snack.Id]++;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Puts a bowl in front of a seated customer (v5 P16). Core refuses everything the
-        /// design forbids, so no menu wiring can create a solo snack: they must have a DRINK
-        /// order open (never alone — the pairing rule), the bowl must have something in it,
-        /// and they must still be at the bar. The price rides their tab and settles on the
-        /// way out with everything else.
-        /// </summary>
-        public SnackDefinition ServeSnack(string snackId, CustomerVisit visit)
-        {
-            EnsurePhase(TycoonPhase.DayOpen);
-            if (visit == null) throw new ArgumentNullException(nameof(visit));
-
-            SnackDefinition snack = null;
-            foreach (var s in _snacks)
-                if (s.Id == snackId) { snack = s; break; }
-            if (snack == null)
-                throw new InvalidOperationException($"No bowl of '{snackId}' at this bar.");
-            if (SnackLeft(snackId) <= 0)
-                throw Said.With(new InvalidOperationException($"The {snack.Name} bowl is empty today."),
-                    Line.Of("rule.snack_bowl_empty").With("snack", DataNameLine("snack", snack.Id)));
-
-            bool atTheBar = (visit.State == VisitState.Waiting || visit.State == VisitState.Drinking)
-                            && Floor.Seated.Contains(visit);
-            if (!atTheBar)
-                throw Said.With(new InvalidOperationException("They are not at the bar."),
-                    Line.Of("rule.snack_not_at_bar"));
-            // Never alone (GDD 23, the pairing rule): a snack rides an alcoholic order. A
-            // customer still reading the menu has not ordered one, so the bowl waits.
-            if (!visit.HasOrdered)
-                throw Said.With(new InvalidOperationException(
-                    "Snacks ride a drink order — they have not ordered one yet."),
-                    Line.Of("rule.snack_needs_order"));
-
-            _snackLeft[snackId]--;
-            visit.AddSnack(snack.Price);
-            return snack;
         }
 
         // ── glassware (v5 P14 / C9) ─────────────────────────────────────────────
@@ -2879,7 +2795,6 @@ namespace LastCall.Core
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             SettleTheJob();
-            BuyBackTheBowls();
             ResetVessels();
             Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
                 _rng.GetStream("mess"));

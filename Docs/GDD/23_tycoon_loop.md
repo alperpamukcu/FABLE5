@@ -317,15 +317,11 @@ days — it simply stops being what the player reads the night by.
   the floor — softened the squeeze from 19.5% to 2.0% bankruptcies; at 2·Day²/11 the same
   seeds land 16.0%, the shape restored.)*
 
-- **Snacks (v5 P16):** four bowls (peanuts $2, popcorn $2, chips $3, mixed nuts $4),
-  clicked into hand at the counter and put down in front of a seated customer. **Never
-  alone** — Core refuses a bowl for anyone without an open drink order, so no menu wiring
-  can create a solo snack. The price rides the customer's tab and settles on the way out;
-  no tip on a bowl. Every unit eaten is **bought back the next morning at $1 under menu**
-  (the bowls net exactly $1 a serve — "small income" made literal), and the delivery only
-  fills as far as the till reaches: a bar under water opens with thin bowls. The first
-  pass filled bowls free, and the sim caught ~$11/night of costless money erasing the
-  rent squeeze whole — the buy-back is what keeps snacks flavour, not economy.
+- **Snacks — REMOVED (2026-09-15, the author: "oyunda atıştırmalık olmaması gerekiyor").**
+  The v5 P16 bowls (peanuts, popcorn, chips, mixed nuts), the never-alone pairing rule, the
+  tab line without a tip and the morning buy-back at $1 under menu are gone from Core, the
+  data, the counter, the sim and the tests. The rent divisor above stays at 5.5 until the
+  200-run sim is re-read without their $4 a night.
 - **Purchases require cash (2026-07-22):** refills, brands, stools and ambience cannot
   be bought on credit — if the till cannot cover it, the buy is refused with a notice.
   Only **rent** can push the till below zero, which keeps debt something that happens

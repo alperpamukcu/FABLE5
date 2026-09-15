@@ -99,7 +99,6 @@ namespace LastCall.EditorTools
             var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
             var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
-            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
             var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
             var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
 
@@ -107,7 +106,7 @@ namespace LastCall.EditorTools
             var stats = new Aggregate();
             for (int i = 0; i < Runs; i++)
                 PlayRun($"STAR-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, Horizon, glassware, snacks, story);
+                    DrinkBuildSeconds, Horizon, glassware, story);
 
             var sb = new StringBuilder();
             sb.AppendLine("# The star track — how far a bar climbs, and how fast");
@@ -351,7 +350,6 @@ namespace LastCall.EditorTools
             var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
             var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
-            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
             var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
 
             const int Runs = 100;
@@ -379,7 +377,7 @@ namespace LastCall.EditorTools
                 var stats = new Aggregate();
                 for (int i = 0; i < Runs; i++)
                     PlayRun($"HOUSE-{i:0000}", deck, recipes, archetypes, stats,
-                        DrinkBuildSeconds, DayCap, glassware, snacks, null,
+                        DrinkBuildSeconds, DayCap, glassware, null,
                         new Hands { NeverCleans = h.NeverCleans, CleanLatencySeconds = h.CleanLatencySeconds, BuysDressing = h.BuysDressing },
                         fixtures);
                 int nights = Math.Max(1, stats.NightsClosed);
@@ -414,7 +412,6 @@ namespace LastCall.EditorTools
             var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
             var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
-            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
 
             const int Runs = 80;
             var levels = new (string Name, Hands H)[]
@@ -448,7 +445,7 @@ namespace LastCall.EditorTools
                 var stats = new Aggregate();
                 for (int i = 0; i < Runs; i++)
                     PlayRun($"HAND-{i:0000}", deck, recipes, archetypes, stats,
-                        DrinkBuildSeconds, DayCap, glassware, snacks, null, h);
+                        DrinkBuildSeconds, DayCap, glassware, null, h);
                 int serves = Math.Max(1, stats.Serves);
                 sb.AppendLine($"| {name} | {h.RatioSigma:0.00} | " +
                               $"{100.0 * stats.Exact / serves:0.0}% | " +
@@ -645,7 +642,6 @@ namespace LastCall.EditorTools
             // so the vessel decides how much liquid a drink costs. Leaving it out here would
             // measure a bar nobody plays.
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
-            var snacks = DataLoader.ParseSnacks(Read("snacks/snacks.json"));
 
             // THE ARC IS BUILT ONCE AND PLAYED TWO HUNDRED TIMES (GDD 26 §9). It is content:
             // immutable, shared, and each run keeps its own StoryProgress through it — which
@@ -663,7 +659,7 @@ namespace LastCall.EditorTools
             var stats = new Aggregate();
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware, snacks, story, fixtures: fixtures);
+                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -700,7 +696,6 @@ namespace LastCall.EditorTools
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
             Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
             IReadOnlyList<GlasswareDefinition> glassware = null,
-            IReadOnlyList<SnackDefinition> snacks = null,
             StoryArc story = null,
             Hands handsIn = null,
             IReadOnlyList<FixtureDefinition> fixtures = null)
@@ -746,7 +741,7 @@ namespace LastCall.EditorTools
             var rng = new RunRng(seed);
             var run = new TycoonRun(shelf, recipes, rng,
                 regulars: new RegularsRegistry(archetypes), brandCatalogue: catalogue,
-                glassware: glassware, snacks: snacks,
+                glassware: glassware,
                 lockedStock: deck.LockedCards, story: story, fixtures: fixtures);
             var hands = handsIn ?? Hands.Steady;
             hands.Dice = rng.GetStream("hands");
@@ -755,7 +750,6 @@ namespace LastCall.EditorTools
 
             double buildTimer = buildSeconds;
             int guard = 0;
-            int servedHere = 0;      // this run's own serves; see the snack cadence below
             while (run.Phase != TycoonPhase.Closed && run.Ledger.History.Count < dayCap)
             {
                 if (guard++ > 300_000) { stats.Stuck++; return; }
@@ -847,31 +841,11 @@ namespace LastCall.EditorTools
                             stats.Declined++;
                             continue;
                         }
-                        // Every third serve gets a bowl alongside (v5 P16): enough traffic to
-                        // measure the snack share without pretending everyone eats. Cycling
-                        // the bowls spreads the stock; a drained bowl just skips.
-                        // COUNTED PER RUN, NOT ACROSS ALL OF THEM (2026-08-14). This read
-                        // `stats.Serves` — the aggregate shared by every run in the batch — so
-                        // the bot's snack cadence in run 200 depended on how many drinks runs
-                        // 1..199 had poured. Runs were not independent samples, and any A/B
-                        // between two bot configurations was comparing two different
-                        // experiments. It is the run's own count now.
-                        if (servedHere % 3 == 0 && run.Snacks.Count > 0)
-                        {
-                            var snack = run.Snacks[(servedHere / 3) % run.Snacks.Count];
-                            if (run.SnackLeft(snack.Id) > 0)
-                            {
-                                run.ServeSnack(snack.Id, visit);
-                                stats.SnackServes++;
-                                stats.SnackIncome += snack.Price;
-                            }
-                        }
                         if (!BuildOrderedDrink(run, visit, hands)) continue;
                         bool pint = run.ServingGlass.HasPreparation(Preparations.Draught.Id);
                         double head = pint ? run.ServingGlass.Head / run.ServingGlass.Capacity : 0;
                         int specRequests = visit.Order.Spec.RequestCount;
                         var verdict = run.ServeTo(visit);
-                        servedHere++;
                         stats.RecordServe(verdict, pint, head, specRequests);
                         buildTimer = 0;
                         break;
@@ -1485,7 +1459,6 @@ namespace LastCall.EditorTools
         {
             public int Runs, Stuck, Bankruptcies, StormOffs, CustomersFinished;
             public int Serves, Exact, Close, Wrong, CraftServes, SpeedTips, ExtraOrders;
-            public int SnackServes, SnackIncome;
             public int GlassesBussed;
             // THE ROOM (GDD 27 §7, 2026-09-05): what it was worth, how clean it was kept,
             // which side held the night, and what the bot bought for it.
@@ -1764,7 +1737,6 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Draught share of serves | {Pct(Pints, Serves)} |");
                 sb.AppendLine($"| Pints in the good head band | {Pct(GoodPints, Pints)} |");
                 sb.AppendLine($"| Average head poured | {HeadSum / Math.Max(1, Pints):P0} |");
-                sb.AppendLine($"| Snack serves (of serves) | {Pct(SnackServes, Serves)} · ${SnackIncome} |");
                 sb.AppendLine($"| Glasses collected / wipes / washes | {GlassesBussed} / {Wipes} / {Washes} |");
                 sb.AppendLine($"| Service (avg night) / comfort (avg night) | {ServiceSum / Math.Max(1, NightsClosed):0.00} / {ComfortSum / Math.Max(1, NightsClosed):0.00} |");
                 sb.AppendLine($"| Avg cleanliness | {CleanSum / Math.Max(1, NightsClosed):P0} |");

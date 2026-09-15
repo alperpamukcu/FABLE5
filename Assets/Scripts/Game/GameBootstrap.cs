@@ -16,10 +16,9 @@ namespace LastCall.Game
         /// <summary>Customer archetypes (GDD 19). Leave unassigned for an anonymous crowd.</summary>
         [SerializeField] private TextAsset archetypesJson;
 
-        /// <summary>The serving glasses and the snack bowls (v5 P10). Parsed and validated at
-        /// boot so a bad file fails loudly today, even though the run consumes them in P14/P16.</summary>
+        /// <summary>The serving glasses (v5 P10). Parsed and validated at boot so a bad file
+        /// fails loudly today. (The snack file that stood beside it left with the snacks, 2026-09-15.)</summary>
         [SerializeField] private TextAsset glasswareJson;
-        [SerializeField] private TextAsset snacksJson;
 
         /// <summary>The bar-dressing catalogue (2026-08-10). Leave unassigned for a bare room.</summary>
         [SerializeField] private TextAsset fixturesJson;
@@ -51,9 +50,6 @@ namespace LastCall.Game
 
         /// <summary>The glass set (v5 P10); empty until the scene wires glasswareJson.</summary>
         public IReadOnlyList<GlasswareDefinition> Glassware { get; private set; }
-
-        /// <summary>The snack shelf (v5 P10); empty until the scene wires snacksJson.</summary>
-        public IReadOnlyList<SnackDefinition> Snacks { get; private set; }
 
         /// <summary>Future stock (v5 P10): locked bottles the shop can sell later.</summary>
         public IReadOnlyList<IngredientCard> LockedStock { get; private set; }
@@ -146,9 +142,6 @@ namespace LastCall.Game
             Glassware = glasswareJson != null
                 ? DataLoader.ParseGlassware(glasswareJson.text)
                 : System.Array.Empty<GlasswareDefinition>();
-            Snacks = snacksJson != null
-                ? DataLoader.ParseSnacks(snacksJson.text)
-                : System.Array.Empty<SnackDefinition>();
             var dressing = fixturesJson != null
                 ? DataLoader.ParseFixtures(fixturesJson.text)
                 : new LoadedFixtures(System.Array.Empty<FixtureDefinition>(),
@@ -178,7 +171,6 @@ namespace LastCall.Game
                 regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
                 brandCatalogue: brandCatalogue,
                 glassware: Glassware,
-                snacks: Snacks,
                 lockedStock: LockedStock,
                 fixtures: dressing.Fixtures,
                 story: storyInPlay ? Story : null);

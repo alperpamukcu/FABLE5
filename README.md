@@ -81,7 +81,7 @@ wrong ratio lands as a **Close** — menu price, half the tip. The wrong drink e
 price of whatever you actually handed over, and no tip at all.
 
 Money leaves through rent, restocks, new bottles and recipes, extra stools, glassware
-tiers, counter upgrades and the trash. Snacks are a side hustle with morning buy-back.
+tiers, counter upgrades and the trash.
 
 ## The stars
 
@@ -131,7 +131,7 @@ burns if you miss too often. Story is opt-in data (`story/story.json`); a run wi
    then **drag the glass onto the customer's stool**.
 
 Around the room: click a dirty glass to collect it, drag a drink to the trash to bin it
-(it costs), click the bowl to run snacks, and the till shows tonight's take. At day's end
+(it costs), and the till shows tonight's take. At day's end
 the receipt leads into the market — restock, bottles, recipes, upgrades, with same-night
 refunds. **NEW RUN** lives in the settings panel; seeds are deterministic, so the same
 seed string replays the same run on any platform.

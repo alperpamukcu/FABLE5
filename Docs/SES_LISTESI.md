@@ -15,7 +15,7 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) + **müzik kanalı** (iki kaynak, parçadan parçaya geçiş) + 2 **ortam yatağı** (kalabalık, yağmur) |
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume` |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
-| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **48 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **44 klip sentetik** (`Tools/sfx_bank.py` + `sfx_dsp.py`), **10 müzik parçası** ve **2 ortam yatağı** CC0 |
+| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **68 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **12 müzikal işaret** ve **9 şarkı** oyunun kendi bestesi (`Tools/music_synth.py`), **11 klip sentetik** (`Tools/sfx_bank.py`), **1 ortam yatağı** CC0 |
 | **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
@@ -49,8 +49,8 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | `stool_take` | 0.70 s | Tabureye oturma | Tabure gıcırtısı + ağırlık |
 | `order_ready` | 0.34 s | Sipariş balonu çıkınca | Kısa, nazik bildirim |
 | `another_round` | 1.20 s | "Bir tur daha" | Neşeli iki nota |
-| `cheer_sfx` | 0.70 s | Memnun müşteri (memnuniyet ≥ 0.55) | Küçük alkış/sevinç |
-| `upset_sfx` | 0.60 s | Küs müşteri çıkışı | Homurdanma / sandalye itme |
+| `cheer_sfx` | 1.15 s | Memnun müşteri (memnuniyet ≥ 0.55) | Bildirim: iki parlak nota + e-piyano çınlaması (`music_synth`), insan sesi yok |
+| `upset_sfx` | 0.97 s | Küs müşteri çıkışı | Bildirim: inen iki yumuşak nota (`music_synth`), insan sesi yok |
 | `serve_clink` | 0.55 s | Bardak müşteriye gidince | Cam tokuşması |
 | `patience_warn` | 0.22 s | **Bağlanmadı** — sabır bitmek üzereyken çalmalı | Tik / huzursuz vuruş |
 
@@ -122,7 +122,6 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | `grain_pinch` | 0.14 s | Tuz/şeker tutamı | Kum serpme |
 | `rim_turn` | 0.84 s | **Loop** — bardak kenarı çevirirken | Cam üzerinde tane |
 | `rim_done` | 0.30 s | Rim bitince (2 yer) | Kısa onay |
-| `bowl_down` | 0.26 s | Kase bırakma | Seramik |
 | `dish_down` | 0.18 s | Tabak bırakma (2 yer) | Küçük seramik |
 
 ### 1.9 Menü kitabı
@@ -173,7 +172,7 @@ istemiyorsak bu beş dosya silinir.
 
 ### 2.1 MÜZİK
 
-> **Durum (2026-09-15):** kanal kuruldu (`Sfx.Music`), oyunda `music_night_1..6`, `music_lastcall_1`, `music_story_1`, `music_dayend_1..2` (CC0; GDD_MEVCUT §9.68). Menü ekranı olmadığı için ana tema yok; yoğun gece B ayrıca bağlanmadı, gece listesi sırayla dönüyor.
+> **Durum (2026-09-15):** kanal kuruldu (`Sfx.Music`). Müzik oyunun kendi bestesi: `Tools/music_synth.py` ile dokuz synthwave şarkı — `music_night_1..5`, `music_lastcall_1`, `music_story_1`, `music_dayend_1..2` (GDD_MEVCUT §9.69). Menü ekranı olmadığı için ana tema yok; gece listesi sırayla dönüyor.
 
 | İhtiyaç | Uzunluk | Nerede | Not |
 |---|---|---|---|
@@ -190,7 +189,7 @@ istemiyorsak bu beş dosya silinir.
 
 ### 2.2 Ortam yatakları (mevcut tek yatağın yerine/yanına)
 
-> **Durum (2026-09-15):** `ambience_crowd` ve `ambience_rain` oyunda. Boş bar (buzdolabı) ve neon vızıltısı bilerek yok: sabit uğultu 2026-08-27'de kaldırılan şeydi.
+> **Durum (2026-09-15):** yalnız `ambience_rain` oyunda; `ambience_crowd` aynı gün yazarın isteğiyle ("arkada konuşma sesleri olmasın") çıktı. Boş bar (buzdolabı) ve neon vızıltısı bilerek yok: sabit uğultu 2026-08-27'de kaldırılan şeydi.
 
 | İhtiyaç | Uzunluk | Not |
 |---|---|---|
@@ -215,7 +214,7 @@ En çok duyulan 10 klip — **önce bunlar** değişsin:
 
 ### 2.4 Henüz sesi olmayan eylemler (yeni dosya gerekiyor)
 
-> **Durum (2026-09-15):** `bin_drop`, `cloth_wipe` (3 kayıt) ve `kick_out` bağlandı; lavabo dolma kaydı `tap_water` oldu. `snack_crunch`, `till_open`, `neon_buzz`, `fixture_install`, `paper_stamp_fail`, `ui_error` hâlâ yok.
+> **Durum (2026-09-15):** `bin_drop`, `cloth_wipe` (3 kayıt) ve `kick_out` bağlandı; lavabo dolma kaydı `tap_water` oldu. `till_open`, `neon_buzz`, `fixture_install`, `paper_stamp_fail`, `ui_error` hâlâ yok.
 
 | Önerilen ad | Nerede olacak | Karakter |
 |---|---|---|
@@ -225,7 +224,6 @@ En çok duyulan 10 klip — **önce bunlar** değişsin:
 | `fixture_install` | Market'ten alınan mobilya yerleşince | Montaj, tok |
 | `kick_out` | Müşteri kovulunca | Sert kapı |
 | `paper_stamp_fail` | Sahte kimlik yakalanınca | Kuru, olumsuz damga |
-| `snack_crunch` | Atıştırmalık | Çıtırtı |
 | `neon_buzz` | Neon tabela (döngü) | Elektrik vızıltısı |
 | `till_open` | Kasa çekmecesi ayrı | `cash`ten ayrılırsa daha iyi |
 | `ui_error` | Yasak işlem | `deny`den daha yumuşak bir varyant |

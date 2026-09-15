@@ -221,31 +221,6 @@ namespace LastCall.Game
             return glasses;
         }
 
-        /// <summary>The snack bowls (v5 P10).</summary>
-        public static IReadOnlyList<SnackDefinition> ParseSnacks(string json)
-        {
-            var dto = FromJson<SnacksFileDto>(json, "snacks");
-            if (dto.snacks == null || dto.snacks.Count == 0)
-                throw new FormatException("Snacks file contains no snacks.");
-
-            var seen = new HashSet<string>();
-            var snacks = new List<SnackDefinition>(dto.snacks.Count);
-            foreach (var snack in dto.snacks)
-            {
-                if (!seen.Add(snack.id ?? ""))
-                    throw new FormatException($"Snacks file lists '{snack.id}' twice.");
-                try
-                {
-                    snacks.Add(new SnackDefinition(snack.id, snack.name, snack.price, snack.stock));
-                }
-                catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
-                {
-                    throw new FormatException($"Snack '{snack.id}': {e.Message}");
-                }
-            }
-            return snacks;
-        }
-
         /// <summary>
         /// Bar dressing (2026-08-10): the modular fixtures. One catalogue entry per slot —
         /// two fixtures fighting over one hook is a content bug and fails here, at load,
@@ -1092,22 +1067,6 @@ namespace LastCall.Game
         {
             public int version;
             public List<GlassDto> glasses;
-        }
-
-        [Serializable]
-        private sealed class SnackDto
-        {
-            public string id;
-            public string name;
-            public int price;
-            public int stock;
-        }
-
-        [Serializable]
-        private sealed class SnacksFileDto
-        {
-            public int version;
-            public List<SnackDto> snacks;
         }
 
 #pragma warning restore 0649

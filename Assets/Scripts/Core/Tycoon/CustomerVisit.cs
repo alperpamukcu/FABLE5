@@ -105,16 +105,6 @@ namespace LastCall.Core
 
         internal void SettleTab() => TabSettled = true;
 
-        /// <summary>Bowls taken this visit (v5 P16). The money rides the same tab the drinks
-        /// do — a snack is a line on the bill, not its own transaction.</summary>
-        public int SnacksTaken { get; private set; }
-
-        internal void AddSnack(int price)
-        {
-            SnacksTaken++;
-            Paid += price;
-            PaidBase += price;   // no tip on a bowl of nuts
-        }
         /// <summary>The whole wait, one clock: it starts the moment they have made up their
         /// mind and runs until the drink lands. Being kept waiting to be ASKED and waiting on
         /// the drink are the same bar — taking the order pays a box back into it

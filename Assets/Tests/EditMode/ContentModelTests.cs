@@ -11,7 +11,7 @@ namespace LastCall.Tests
 {
     /// <summary>
     /// The v5 P10 content model (PLAN_service_depth): categories, carbonation, locked stock
-    /// and recipes, style-banded matching, glassware and snacks. The load-bearing promise
+    /// and recipes, style-banded matching and glassware. The load-bearing promise
     /// pinned here is QUARANTINE — new content exists in the data without changing one thing
     /// about the live game until something unlocks it.
     /// </summary>
@@ -378,16 +378,6 @@ namespace LastCall.Tests
             const string bad = "{\"version\":1,\"glasses\":[{\"id\":\"x\",\"name\":\"X\",\"spriteKey\":\"x\",\"profile\":[0.5,1.4],\"tierPrices\":[10,20]}]}";
             Assert.Throws<FormatException>(() => DataLoader.ParseGlassware(bad),
                 "a profile value over 1 is a silhouette wider than the glass");
-        }
-
-        [Test]
-        public void SnacksFile_ParsesAndValidates()
-        {
-            var snacks = DataLoader.ParseSnacks(ReadDataFile("snacks/snacks.json"));
-            Assert.AreEqual(4, snacks.Count);
-
-            const string bad = "{\"version\":1,\"snacks\":[{\"id\":\"x\",\"name\":\"X\",\"price\":0,\"stock\":5}]}";
-            Assert.Throws<FormatException>(() => DataLoader.ParseSnacks(bad));
         }
 
         [Test]

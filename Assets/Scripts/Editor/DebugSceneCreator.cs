@@ -19,7 +19,6 @@ namespace LastCall.EditorTools
         private const string RecipesPath = "Assets/Data/recipes/recipes.json";
         private const string ArchetypesPath = "Assets/Data/customers/archetypes.json";
         private const string GlasswarePath = "Assets/Data/glassware/glassware.json";
-        private const string SnacksPath = "Assets/Data/snacks/snacks.json";
         private const string FixturesPath = "Assets/Data/fixtures/fixtures.json";
         private const string PapersPath = "Assets/Data/customers/papers.json";
         private const string StoryPath = "Assets/Data/story/story.json";
@@ -105,7 +104,6 @@ namespace LastCall.EditorTools
             so.FindProperty("recipesJson").objectReferenceValue = LoadRequired<TextAsset>(RecipesPath);
             so.FindProperty("archetypesJson").objectReferenceValue = LoadRequired<TextAsset>(ArchetypesPath);
             so.FindProperty("glasswareJson").objectReferenceValue = LoadRequired<TextAsset>(GlasswarePath);
-            so.FindProperty("snacksJson").objectReferenceValue = LoadRequired<TextAsset>(SnacksPath);
             so.FindProperty("fixturesJson").objectReferenceValue = LoadRequired<TextAsset>(FixturesPath);
             so.FindProperty("papersJson").objectReferenceValue = LoadRequired<TextAsset>(PapersPath);
             so.FindProperty("storyJson").objectReferenceValue = LoadRequired<TextAsset>(StoryPath);

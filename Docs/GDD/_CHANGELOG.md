@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Snacks leave the game (2026-09-15):** the v5 P16 bowls, the pairing rule, the tab line and the morning
+  buy-back are gone from Core, the data, the counter, the sim, the tests and the docs; the loc keys stay, unused.
+  The bar's crowd murmur is gone too (the rain stays), and a good or bad order is a synth notification cue rather
+  than a voice.
+
+- **The bar composes its own synthwave (2026-09-15):** the music is nine original synthwave songs written and rendered
+  by Tools/music_synth.py from oscillators — a drum machine with a gated snare, a pumping bass, detuned pads, arps, a
+  gliding lead and an FM electric piano — for the night, last call, the story and the day's end. The game's musical cues
+  play on the same instruments, and 20 more everyday sounds are CC0 recordings.
+
 - **The bar has music, a room and real sounds (2026-09-15):** a music channel follows the night — CC0 synth-jazz
   and jazz-lofi tracks in turn while the bar is open, a slower one for its last stretch, an e-piano piece while the
   last customer is at the bar and two for the books — each fading into the next. Under it, the bar's own murmur while

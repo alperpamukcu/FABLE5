@@ -124,7 +124,7 @@ simulator's tier-1 sweep — unlocking is a purchase (P12/P18), not a load. Seve
 cocktail ingredients ship locked: tequila, orange liqueur, cola, tonic, energy drink,
 orange juice, lime. The fizzy ones carry `carbonated: true` (21 §12).
 
-Two new data files join the content surface, parsed and validated at boot even though the
-run consumes them later: `glassware/glassware.json` (five glasses; the silhouette profile
-that defines each glass is the same array the fluid solver fills it with) and
-`snacks/snacks.json` (four bowls; pairing rules are P11/P16 Core work).
+One new data file joins the content surface, parsed and validated at boot even though the
+run consumes it later: `glassware/glassware.json` (five glasses; the silhouette profile
+that defines each glass is the same array the fluid solver fills it with). The snack file
+that stood beside it left with the snacks on 2026-09-15.

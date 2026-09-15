@@ -59,12 +59,10 @@ namespace LastCall.UI
         private AudioSource[] _voices;
         private int _next;                 // round-robin through the voices
         private int _jitter;               // deterministic pitch wobble counter
-        private AudioSource _ambience;
         private AudioSource _loop;         // the held action: pour or shake
         private AudioSource _loopFar;      // a pour's far half, crossfaded with it by the drop (2026-09-15)
         private AudioSource _motion;       // the vessel moving under the pour (2026-09-15)
         private AudioLowPassFilter _loopLp, _motionLp;
-        private float _ambienceTarget;     // ducked while a stage is open
         private AudioSource _rain;         // the city through the window, under everything (2026-09-15)
         private float _rainTarget;
         private AudioSource[] _music;      // two, so a track fades into the next (2026-09-15)
@@ -137,8 +135,6 @@ namespace LastCall.UI
                 _voices[i] = gameObject.AddComponent<AudioSource>();
                 _voices[i].playOnAwake = false;
             }
-            _ambience = gameObject.AddComponent<AudioSource>();
-            _ambience.loop = true; _ambience.playOnAwake = false; _ambience.volume = 0f;
             _rain = gameObject.AddComponent<AudioSource>();
             _rain.loop = true; _rain.playOnAwake = false; _rain.volume = 0f;
             var oldMusic = transform.Find("Music");
@@ -327,39 +323,19 @@ namespace LastCall.UI
         private float _motionVolTarget, _motionPitchTarget = 1f, _motionCutTarget = OpenCutoff, _motionPanTarget;
         private int _motionFrame = -10;
 
-        /// <summary>The bar bed. Call every frame with whether a stage is open; the volume
-        /// eases toward loud or ducked, so menus muffle the room instead of gating it.</summary>
+        /// <summary>The room under the music, called every frame with whether a stage is open: light rain on the
+        /// window, eased toward its level or ducked. THE MURMUR IS GONE (2026-09-15, the author: "arkada konuşma sesleri
+        /// olmasın") — the bar's crowd bed of the same morning was voices, and the rain is the whole room now. KEPT
+        /// PLAYING, not merely assigned (2026-08-27): a clip reimported in play mode stops its source and nothing
+        /// notices otherwise; isPlaying is a field read, and this is already called every frame.</summary>
         public static void Ambience(bool ducked)
         {
             var i = Instance;
-            // THE ROOM, NOT THE MUSIC (2026-09-15): this bed WAS the music until the music got a channel of its own
-            // (Music). It is the bar's murmur while the night is on and the empty room once it is over, with the rain on
-            // the window under both. A bed with no file stays silent, as every clip here does.
             var rain = i.Clip("ambience_rain");
-            if (rain != null)
-            {
-                if (i._rain.clip != rain) i._rain.clip = rain;
-                if (!i._rain.isPlaying) i._rain.Play();
-                i._rainTarget = RainLevel * (ducked ? BedDuck : 1f) * Sound.Effective;
-            }
-            var bed = i.Clip(i._mood == "dayend" || i._mood == "closed" ? "ambience_empty" : "ambience_crowd");
-            if (i._ambience.clip != bed)
-            {
-                i._ambienceTarget = 0f;                                   // the old bed goes before the new one comes
-                if (i._ambience.clip != null && i._ambience.isPlaying && i._ambience.volume > 0.001f) return;
-                i._ambience.clip = bed;
-                i._ambience.volume = 0f;
-            }
-            if (bed == null) return;
-            // KEEP IT PLAYING, not merely ASSIGNED (2026-08-27). This started the bed
-            // only on the frame the clip was first loaded, so anything that stopped the
-            // source afterwards stopped the music for the rest of the session and
-            // nothing noticed: an AudioClip reimported while the editor is in play mode
-            // does it (measured — `playing=False` with the clip still attached), and so
-            // would a device change or a scene load. Checked every frame because this is
-            // already called every frame, and isPlaying is a field read.
-            if (!i._ambience.isPlaying) i._ambience.Play();
-            i._ambienceTarget = BedLevel * (ducked ? BedDuck : 1f) * (i._mood == "story" ? 0.5f : 1f) * Sound.Effective;
+            if (rain == null) return;
+            if (i._rain.clip != rain) i._rain.clip = rain;
+            if (!i._rain.isPlaying) i._rain.Play();
+            i._rainTarget = RainLevel * (ducked ? BedDuck : 1f) * Sound.Effective;
         }
 
         /// <summary>
@@ -395,8 +371,8 @@ namespace LastCall.UI
         private const float MusicDuck = 0.6f;
         /// <summary>Seconds a track takes to fade into the next, and one mood into another.</summary>
         private const float MusicFade = 3f;
-        /// <summary>The room's murmur and the rain under it at full; both drop to BedDuck while a stage is open.</summary>
-        private const float BedLevel = 0.35f, RainLevel = 0.18f, BedDuck = 0.4f;
+        /// <summary>The rain at full; it drops to BedDuck while a stage is open.</summary>
+        private const float RainLevel = 0.18f, BedDuck = 0.4f;
         private const int MaxTracks = 12;
 
         /// <summary>
@@ -480,9 +456,6 @@ namespace LastCall.UI
         private void Update()
         {
             float dt = Time.unscaledDeltaTime;
-            if (_ambience != null && _ambience.clip != null)
-                _ambience.volume = Mathf.MoveTowards(_ambience.volume, _ambienceTarget,
-                    dt * 0.9f);
             if (_rain != null && _rain.clip != null)
                 _rain.volume = Mathf.MoveTowards(_rain.volume, _rainTarget, dt * 0.5f);
             StepMusic(dt);

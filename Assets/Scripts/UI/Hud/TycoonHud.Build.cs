@@ -841,7 +841,6 @@ namespace LastCall.UI
             // can be raised by rather than under one of them.
             BuildPropTip(root);
             BuildCellarCard(root);
-            BuildSnackRow(root);
             BuildServiceLog(root);
             BuildIdCard(root);
             BuildLastCall(root);
