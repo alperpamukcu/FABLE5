@@ -103,6 +103,31 @@ namespace LastCall.Game
         private void Start()
         {
             StartNewRun(seed);
+            if (s_handoff != null)
+            {
+                // The scene was reloaded around a run that was already going (ReloadKeepingRun): the fresh run
+                // StartNewRun just made is dropped and the one handed across takes its place, content and all.
+                Tycoon = s_handoff;
+                CurrentSeed = s_handoffSeed ?? CurrentSeed;
+                s_handoff = null; s_handoffSeed = null;
+                RunStarted?.Invoke();
+            }
+        }
+
+        // THE SCENE, RELOADED AROUND THE SAME RUN (2026-09-16, the author: "ESC menüsünde dil seçildikten sonra
+        // uygula dendiğinde oyunun dili direkt değişmeli"). Every word of the HUD is baked as it is built, so a
+        // language is applied by building the scene again — and the run is handed across the reload in a static,
+        // so the night goes on exactly where it was, in the new words.
+        private static TycoonRun s_handoff;
+        private static string s_handoffSeed;
+
+        public void ReloadKeepingRun()
+        {
+            s_handoff = Tycoon;
+            s_handoffSeed = CurrentSeed;
+            Time.timeScale = 1f;   // the menu that asked for this had stopped the clock
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);
         }
 
         /// <summary>Starts a fresh run. Null/empty seed keeps the inspector default.</summary>

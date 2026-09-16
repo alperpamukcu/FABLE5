@@ -359,6 +359,62 @@ namespace LastCall.UI
             grid.constraintCount = CardCols;
             _cardTarget = row;
             foreach (var f in rungs) DecorCard(run, f, where, climbed, total);
+            if (slot == TycoonRun.CounterPaintFixture && run.CanRepaintCounter) FinishRow(run);
+        }
+
+        /// <summary>THE FINISHES, once the kit is owned (2026-09-16): five swatches cut from the counter's own drawing
+        /// in each finish, the one on the bar lit; pressing one repaints it — the room and the benches follow at
+        /// once (TycoonHud.StepCounterFinish), and the market redraws.</summary>
+        private void FinishRow(TycoonRun run)
+        {
+            var head = NewRect("FinishHead", _offerRow);
+            head.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
+            var t = NewText("T", head, _shop, 8, TextAnchor.LowerLeft, TileMetaInk);
+            Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(2, 4), new Vector2(-2, 0));
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.text = UIText.T("decor.finish.head");
+
+            var row = NewRect("Finishes", _offerRow);
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 84;
+            var h = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = CardGap; h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = false; h.childControlHeight = false;
+            h.childForceExpandWidth = false; h.childForceExpandHeight = false;
+            var counter = stage != null ? stage.CounterArt : null;
+            foreach (var id in TycoonRun.CounterFinishes)
+            {
+                string finish = id;
+                bool on = run.CounterFinish == id;
+                var cell = NewRect("Finish_" + id, row);
+                cell.sizeDelta = new Vector2(CardW, 80f);
+                var plate = cell.gameObject.AddComponent<Image>();
+                plate.sprite = ChromeArt.Win98Key();
+                plate.type = Image.Type.Sliced;
+                plate.color = on ? PlateOrdered : ShopPage;
+                if (!on)
+                {
+                    var button = cell.gameObject.AddComponent<Button>();
+                    button.targetGraphic = plate;
+                    button.onClick.AddListener(() =>
+                    {
+                        run.RepaintCounter(finish);
+                        RememberScroll();
+                        Sfx.Play("click", 0.7f);
+                        RebuildDayEnd();
+                    });
+                    MarkHoverable(cell, plate);
+                }
+                var swatch = NewRect("Swatch", cell);
+                Place(swatch, new Vector2(0.5f, 1f), new Vector2(CardW - 12f, 46f), new Vector2(0, -6f));
+                var si = swatch.gameObject.AddComponent<Image>();
+                si.sprite = CounterFinish.Swatch(counter, id);
+                si.preserveAspect = true; si.raycastTarget = false;
+                if (si.sprite == null) si.color = CounterFinish.Of(id).Accent;
+                var name = NewText("N", cell, _shop, 8, TextAnchor.LowerCenter, on ? ShopInk : TileMetaInk);
+                Stretch(name.rectTransform, Vector2.zero, new Vector2(1, 0), new Vector2(2, 6), new Vector2(-2, 22));
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                name.text = UIText.T("decor.finish." + id) + (on ? " · " + UIText.T("decor.finish.on") : "");
+            }
         }
 
         private static FixtureDefinition TopRung(List<FixtureDefinition> rungs, int level)

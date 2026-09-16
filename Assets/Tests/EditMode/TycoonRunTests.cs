@@ -1079,6 +1079,29 @@ namespace LastCall.Tests
             Assert.IsTrue(spooned.IsStirred);
         }
 
+        /// <summary>THE COUNTER'S FINISH (2026-09-16, the author: "marketten 1 geliştirme satın alınarak masa rengi
+        /// değiştirme özelliği gelecek markette, 1 kere alınan bir upgrade"): the bar opens in neon, cannot be
+        /// repainted without the kit, and with the kit takes any finish on the list — and no other.</summary>
+        [Test]
+        public void TheCounter_IsRepaintedOnlyWithTheKit()
+        {
+            var kit = new FixtureDefinition(TycoonRun.CounterPaintFixture, "Refinish Kit", TycoonRun.CounterPaintFixture,
+                120, 0, "five finishes", "fx_counter_paint");
+            var run = NewRun("paint", 400, kit);
+            Assert.AreEqual(TycoonRun.CounterFinishes[0], run.CounterFinish, "the bar opens in neon");
+            Assert.IsFalse(run.CanRepaintCounter);
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen && guard++ < 500) run.Tick(60);
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase, "the market is where the counter is painted");
+            Assert.Throws<InvalidOperationException>(() => run.RepaintCounter("walnut"), "no kit, no paint");
+            run.BuyFixture(TycoonRun.CounterPaintFixture);
+            Assert.IsTrue(run.CanRepaintCounter);
+            run.RepaintCounter("walnut");
+            Assert.AreEqual("walnut", run.CounterFinish);
+            Assert.Throws<ArgumentException>(() => run.RepaintCounter("plaid"), "not a finish on the list");
+            Assert.AreEqual("walnut", run.CounterFinish, "a refused paint changes nothing");
+        }
+
         [Test]
         public void APourIntoAMixedTin_UnmixesIt()
         {

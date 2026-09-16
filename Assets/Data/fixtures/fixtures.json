@@ -2,6 +2,15 @@
   "version": 1,
   "slots": [
     {
+      "id": "counter_paint",
+      "x": 320,
+      "y": 60,
+      "onCounter": true,
+      "carried": true,
+      "title": "Counter finish",
+      "place": "The counter"
+    },
+    {
       "id": "plant_left",
       "x": 150,
       "y": 136.5,
@@ -164,6 +173,16 @@
     }
   ],
   "fixtures": [
+    {
+      "id": "counter_paint",
+      "name": "Refinish Kit",
+      "slot": "counter_paint",
+      "price": 120,
+      "stars": 1,
+      "flavor": "Brushes, lacquer and five finishes for the counter. Buy it once; repaint whenever the market is open, and the benches take the same colour.",
+      "sprite": "fx_counter_paint",
+      "group": "counter"
+    },
     {
       "id": "walls_1",
       "name": "Cracked Plaster",

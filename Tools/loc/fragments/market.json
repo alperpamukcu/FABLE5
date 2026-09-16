@@ -135,6 +135,13 @@
     { "key": "decor.foot.on_show", "text": "ON SHOW", "note": "Upgrade card foot beside a tick: this rung is the one standing in the room. Capitals, 8 px, ~110 px." },
     { "key": "decor.foot.in_room", "text": "IN THE ROOM", "note": "Upgrade card foot beside a tick: this single piece stands in the room. Capitals, 8 px, ~110 px." },
     { "key": "decor.foot.wear", "text": "WEAR", "note": "Key on an owned upgrade card: put this piece up in the room instead of the current one. Capitals, 16 px face, 136 px key." },
+    { "key": "decor.finish.head", "text": "COUNTER FINISH · PICK ONE — THE ROOM AND THE BENCHES FOLLOW", "note": "Heading over the five counter-finish swatches in the market, shown once the refinish kit is owned. 8 px, one line." },
+    { "key": "decor.finish.on", "text": "ON THE BAR", "note": "Tag after the finish the counter is painted in now, on its swatch. 8 px, two short words." },
+    { "key": "decor.finish.neon", "text": "NEON", "note": "Counter finish name: pink frames on a dark plum back (the bar as it opens). 8 px, short." },
+    { "key": "decor.finish.walnut", "text": "WALNUT & BRASS", "note": "Counter finish name: dark walnut back, brass frames. 8 px, short." },
+    { "key": "decor.finish.pine", "text": "PINE LACQUER", "note": "Counter finish name: navy back, green lacquer frames. 8 px, short." },
+    { "key": "decor.finish.cream", "text": "CREAM & BURGUNDY", "note": "Counter finish name: burgundy back, cream frames. 8 px, short." },
+    { "key": "decor.finish.copper", "text": "NIGHT BLUE & COPPER", "note": "Counter finish name: night-blue back, copper frames. 8 px, short." },
     { "key": "decor.foot.mark_first", "text": "MARK {mark} FIRST", "note": "Upgrade card foot beside a lock: buy rung {mark} of this ladder before this one. Capitals, 8 px, ~110 px." }
   ]
 }

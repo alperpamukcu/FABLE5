@@ -1540,6 +1540,44 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.79 · Tezgâhın boyası: neonla açılış, bir kerelik boya kiti, beş finiş; tezgâhlar ve UI aksanı boyayı izler; dil ANINDA uygulanır; kstudent kadrodan çıktı (2026-09-16)
+
+Yazar: "Mevcut olan hariç hepsi eklenecek. Başlangıçta C olucak marketten 1 geliştirme satın alınarak masa rengi
+değiştirme özelliği gelecek markette, 1 kere alınan bir upgrade ... Tezgah rengi değişince Built sahnesindeki tezgah
+arkaplanı da ona göre değişmeli. Ona göre de o sahnedeki UI renkleri de ona göre değişmeli her arkaplanda aynı renk
+olmaz ... ESC menüsünde dil seçildikten sonra uygula dendiğinde oyunun dili direkt değişmeli ... Kstudent oyundan
+kaldırılacak."
+
+- **Core.** `TycoonRun.CounterFinish` ("neon" açılış), `CounterFinishes` = neon/walnut/pine/cream/copper,
+  `CounterPaintFixture` = "counter_paint" (fikstür + aynı adlı carried slot, grup counter, 120$, 1★),
+  `RepaintCounter(id)` yalnız pazarda (DayEnd) ve kit sahipken; kitsiz `rule.counter_paint_needs_kit`, listede
+  olmayan id ArgumentException. Test: `TheCounter_IsRepaintedOnlyWithTheKit`.
+- **Boya = yeniden çizim değil, yeniden renklendirme** (`CounterFinish`, UI/Art): counter.png ve counter_shutter.png
+  üç aileye ayrılır (pembe çerçeveler, mor raf arkası, koyu plaka); her aile parlaklık sırasına göre finişin
+  rampasına taşınır (yazarın önizleme sayfasındaki A–E ile aynı rampalar). Yazarın çizimi ve elle düzenlemeleri
+  korunur; kopya dokular runtime'da üretilip önbelleğe alınır. `DiegeticStage.SetCounterFinish` sayaç ve kepenk
+  sprite'larını değiştirir; ölçümler (ray, dolap) aynı çizimden okunduğundan değişmez.
+- **Tezgâhlar boyayı izler.** `CounterFinish.Current` (HUD, run'dan): tezgâh dolgusu (`ChromeArt.Counter` finişin
+  plaka tonuyla; yazarın `bench_counter.png`'si varsa plaka ailesi yeniden renklenir), yuvalar
+  (`CounterFinish.Recess` → `ChromeArt.CounterRecess(well,dark,lit,finiş)`), pirinç çerçeve
+  (`BrassRim` → `Rim`), ibre/çentik/MIX ve PINT dolguları/adım başlığı/BARA DÖN oku (`Accent`). Aksanlar: neon
+  pembe (E168BB), ceviz pirinç (D9A94A), çam nane (58BFA6), krem gül (D9B48C), bakır (E8A063). Uyarı/karar
+  renkleri (Amber/ViceRed/Lime) anlamsal kalır. Değişince `TycoonServiceFlow.RebuildBenches()` (yalnız
+  kapalıyken; HUD `StepCounterFinish` her kare sorar) tüm tezgâh kanvasını yeniden kurar.
+- **Market:** counter grubunda "Refinish Kit" kartı (`Items/fx_counter_paint.png`, carried slot → Items rafı);
+  sahipken altında `FinishRow`: beş swatch (finişteki sayacın kendisinden 140×70 kesit), takılı olan
+  `decor.finish.on`, diğerleri basılınca `RepaintCounter` + oda ve tezgâhlar anında.
+- **Dil anında:** `GameBootstrap.ReloadKeepingRun()` — koşu statik el değiştirme ile sahne yeniden yüklenir
+  (Main.unity build listesinde), `Start` yeni koşuyu atıp el verileni takar, `RunStarted` yeniden ateşlenir;
+  `Time.timeScale` 1'e döner. Ayarlar → DİL: farklı bayrak seçilince yeşil APPLY tuşu (`chrome.settings.apply_language`)
+  ve yeni not `chrome.settings.language_note_now` (eski `language_note` anahtarı silinmedi). Ölçüldü: para/gün/puan
+  korunuyor; bilinen küçük yan etki — HUD'un kendi "söylendi" hafızası sıfırlandığından 1. gün açılış dersi bir
+  kez daha söyleniyor.
+- **kstudent** kadrodan (`PatronCast`), roster.json ve papers.json'dan çıkarıldı; `Resources/Patron/kstudent`
+  silindi.
+- Doğrulama: EditMode 596/597 (kırmızı olan yazarın çalışma ağacındaki 32×66 `v4_bourbon_hollow_oak_front_c`);
+  PlayMode 13/13. r25/r26 sondaları: oda neon/ceviz/çam, tezgâh ceviz/çam, dil yeniden yüklemesi, pazar swatch satırı.
+
 ### 9.78 · Bira tezgâhı alet ailesine geçti: plakada karar, eğim kadranı, PINT/HEAD sütunları, ışık ve ayna, gerçek SERVİS tuşu; oda kalkar (2026-09-16)
 
 Yazar: "Bira koyma ekranını da tamamen baştan tasarla, bira koyma ekranında 1. seviye bira musluğu yerine 2 ve 3ü

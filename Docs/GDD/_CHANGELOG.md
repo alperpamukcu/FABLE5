@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The counter's finish (2026-09-16):** the bar opens in neon (pink frames, a dark plum back); the refinish kit,
+  bought once at the market, unlocks five finishes as swatches cut from the counter's own drawing; a finish
+  recolours the counter and the shutter by family, the bench counter takes the same slab tone and the bench
+  chrome (rims, needles, marks, fills) takes the finish's accent; the language picked in the settings applies at
+  once around the same run; kstudent left the cast.
+
 - **The draught bench in the instrument family (2026-09-16):** the verdict moved onto the plaque under the rail with
   the beer's name and a small hint-then-numbers line; a tilt dial left of the glass shows the angle with a lime
   notch at 45°; PINT and HEAD columns stand right of the font with the short-pour line and the good head band; a

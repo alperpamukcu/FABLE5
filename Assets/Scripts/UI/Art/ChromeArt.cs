@@ -2021,13 +2021,16 @@ namespace LastCall.UI
         /// for the bench's words to be engraved in. 9-sliced at 2, in the counter's own sampled shades (the bench's
         /// BenchSlab family), so it reads as the stone and not as a card laid on it.
         /// </summary>
-        public static Sprite CounterRecess()
+        public static Sprite CounterRecess() => CounterRecess(Hex(0x17121B), Hex(0x100B14), Hex(0x2B2433), "night");
+
+        /// <summary>The recess in a finish's own tones (2026-09-16, CounterFinish.Recess): the well, its shadowed top
+        /// and left, its lit bottom and right.</summary>
+        public static Sprite CounterRecess(Color32 well, Color32 dark, Color32 lit, string finish)
         {
-            const string Key = "counter:recess";
+            string Key = "counter:recess:" + finish;
             if (Cache.TryGetValue(Key, out var got) && got != null) return got;
             const int S = 6;
             var px = new Color32[S * S];
-            Color32 well = Hex(0x17121B), dark = Hex(0x100B14), lit = Hex(0x2B2433);
             for (int y = 0; y < S; y++)
                 for (int x = 0; x < S; x++)
                 {
@@ -2173,9 +2176,9 @@ namespace LastCall.UI
         public enum CounterGrain { Slate, Speck, Brushed, Weave, Terrazzo }
 
         /// <summary>The counter's surface. Tile it; never stretch it.</summary>
-        public static Sprite Counter(int w, int h, CounterGrain grain = CounterGrain.Slate)
+        public static Sprite Counter(int w, int h, CounterGrain grain = CounterGrain.Slate, Color32? tone = null)
         {
-            string key = $"counter:{w}x{h}:{grain}";
+            string key = $"counter:{w}x{h}:{grain}:{(tone.HasValue ? tone.Value.r + "." + tone.Value.g + "." + tone.Value.b : "-")}";
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
 
             Color32 slab = Hex(0x1F1924);        // BenchSlab, sampled off counter.png
@@ -2183,6 +2186,13 @@ namespace LastCall.UI
             Color32 up2 = Hex(0x27212E);
             Color32 dn1 = Hex(0x1B1520);
             Color32 dn2 = Hex(0x18121C);
+            if (tone.HasValue)
+            {
+                // IN A FINISH'S SLAB TONE (2026-09-16, CounterFinish): the same five steps, scaled off the tone,
+                // so the grain keeps its contrast budget in walnut or pine exactly as it had it in neon.
+                Color32 Scale(Color32 c, float k) => new Color32((byte)Mathf.Min(255, c.r * k), (byte)Mathf.Min(255, c.g * k), (byte)Mathf.Min(255, c.b * k), 255);
+                slab = tone.Value; up1 = Scale(slab, 1.12f); up2 = Scale(slab, 1.24f); dn1 = Scale(slab, 0.86f); dn2 = Scale(slab, 0.74f);
+            }
 
             var px = new Color32[w * h];
             for (int y = 0; y < h; y++)

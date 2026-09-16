@@ -495,7 +495,7 @@ namespace LastCall.UI
             // a little over the counter's front so its top clears the plaque hanging from the rail
             Place(dial, new Vector2(0.5f, 0.5f), new Vector2(TapDialW, TapDialH), new Vector2(TapDialX, CounterY - 4f + TapDialH * 0.5f));
             var di = dial.gameObject.AddComponent<Image>();
-            di.sprite = ChromeArt.CounterRecess(); di.type = Image.Type.Sliced; di.raycastTarget = false;
+            di.sprite = CounterFinish.Recess(); di.type = Image.Type.Sliced; di.raycastTarget = false;
             var face = NewRect("Face", dial);
             Place(face, new Vector2(0.5f, 0f), new Vector2(176f, 88f), new Vector2(0f, 20f));
             var fi = face.gameObject.AddComponent<Image>();
@@ -509,7 +509,7 @@ namespace LastCall.UI
             _tapNeedle.pivot = new Vector2(0.5f, 0f);
             _tapNeedle.sizeDelta = new Vector2(4f, 66f);
             _tapNeedle.anchoredPosition = new Vector2(0f, 24f);
-            var ni = _tapNeedle.gameObject.AddComponent<Image>(); ni.color = UITheme.Amber[3]; ni.raycastTarget = false;
+            var ni = _tapNeedle.gameObject.AddComponent<Image>(); ni.color = CounterFinish.Current.Accent; ni.raycastTarget = false;
             var hint = NewText("Hint", dial, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
             Stretch(hint.rectTransform, Vector2.zero, new Vector2(1f, 0f), new Vector2(4f, 4f), new Vector2(-4f, 16f));
             hint.text = UIText.T("bench.tap.dial_hint");
@@ -539,7 +539,7 @@ namespace LastCall.UI
             fill.fillMethod = Image.FillMethod.Vertical;
             fill.fillOrigin = (int)Image.OriginVertical.Bottom;
             fill.fillAmount = 0f;
-            fill.color = UITheme.Amber[3];
+            fill.color = CounterFinish.Current.Accent;
             fill.raycastTarget = false;
             var glass = NewRect("Glass", rig);
             Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -579,7 +579,7 @@ namespace LastCall.UI
                 var g = run.ServingGlass;
                 float fill = Mathf.Clamp01((float)g.FillFraction);
                 _pintColFill.fillAmount = fill;
-                _pintColFill.color = fill >= 0.75f ? UITheme.Lime[3] : UITheme.Amber[3];
+                _pintColFill.color = fill >= 0.75f ? UITheme.Lime[3] : CounterFinish.Current.Accent;
                 double head = g.Capacity > 0 ? g.Head / g.Capacity : 0.0;
                 _headColFill.fillAmount = Mathf.Clamp01((float)(head / HeadColumnFull));
                 _headColFill.color = head >= TapPour.GoodHeadMin && head <= TapPour.GoodHeadMax ? UITheme.Lime[3] : UITheme.Cream[3];

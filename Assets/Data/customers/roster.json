@@ -501,23 +501,6 @@
    "garment": "leopard"
   },
   {
-   "slug": "kstudent",
-   "name": "Yerin Cho",
-   "age": 22,
-   "country": "South Korea",
-   "iso": "kr",
-   "voice": "korean",
-   "dress": "street casual",
-   "look": "a young Korean woman, shoulder-length brown hair, a butter yellow cropped tee and a pleated skirt",
-   "art": "drawn",
-   "inGame": true,
-   "note": "",
-   "cheer": "point",
-   "upset": "shake",
-   "order": "speak",
-   "garment": "plain"
-  },
-  {
    "slug": "londongirl",
    "name": "Freya Hughes",
    "age": 25,

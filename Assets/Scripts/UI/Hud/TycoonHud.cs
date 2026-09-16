@@ -530,7 +530,6 @@ namespace LastCall.UI
             ("mancboy", 6f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
             ("londongirl", 17f, 0.0f, 4, 5),   // the tenth list, 2026-09-07
             ("seoulboy", 6f, 0.0f, 3, 5),   // the tenth list, 2026-09-07
-            ("kstudent", 8f, 0.0f, 5, 3),   // the tenth list, 2026-09-07
             ("kdance", 3f, 0.0f, 4, 4),   // the tenth list, 2026-09-07
             ("seoulgirl", 5f, 0.0f, 5, 5),   // the tenth list, 2026-09-07
             ("idoljp", 5f, 0.0f, 4, 3),   // the tenth list, 2026-09-07
@@ -1561,6 +1560,7 @@ namespace LastCall.UI
             // (the author, 2026-08-05).
             ItemArt.ClearCache();
             BottleArt.ClearCache();
+            _appliedFinish = null;      // a new bar is painted afresh (StepCounterFinish)
             VesselArt.ClearCache();     // measurements are of sprites, so they go with them
             _lastPhase = TycoonPhase.DayOpen;
             _dayEndDue = false;   // a new bar is not owed last night's books
@@ -1596,8 +1596,27 @@ namespace LastCall.UI
             ApplyBarLook();
         }
 
+        private string _appliedFinish;
+
+        /// <summary>The counter's finish, applied whenever the run's differs from what is painted: the room's counter
+        /// and shutter at once, the benches when they are closed (they rebuild). On a fresh bar "neon" is what the
+        /// benches are built in already, so only the room is painted.</summary>
+        private void StepCounterFinish()
+        {
+            var run = Run;
+            string want = run != null ? run.CounterFinish : null;
+            if (want == null || want == _appliedFinish) return;
+            if (_flow != null && _flow.IsOpen) return;
+            bool first = _appliedFinish == null;
+            _appliedFinish = want;
+            CounterFinish.Set(want);
+            if (stage != null) stage.SetCounterFinish(want);
+            if (_flow != null && !(first && want == TycoonRun.CounterFinishes[0])) _flow.RebuildBenches();
+        }
+
         private void Update()
         {
+            StepCounterFinish();
             // THE CURTAIN STEPS FIRST, AND UNCONDITIONALLY. Everything below is gated on
             // there being a run, and a full-screen black that is gated on game state is a
             // black screen waiting to happen: any frame where Run is null — between runs,

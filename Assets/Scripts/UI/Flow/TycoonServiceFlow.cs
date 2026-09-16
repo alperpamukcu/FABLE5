@@ -329,6 +329,24 @@ namespace LastCall.UI
 
         public void CloseFlow() => GoTo(Stage.Closed);
 
+        /// <summary>
+        /// THE BENCHES, BUILT AGAIN IN THE COUNTER'S FINISH (2026-09-16, the author: "Tezgah rengi değişince Built
+        /// sahnesindeki tezgah arkaplanı da ona göre değişmeli. Ona göre de o sahnedeki UI renkleri de değişmeli").
+        /// Every recess, rim, needle and counter tile reads CounterFinish.Current as it is built, so a repaint is a
+        /// rebuild: the whole flow canvas goes and BuildUi lays it again. Only with the flow closed — a bench in use
+        /// is not torn down under the hand; the HUD asks again next frame.
+        /// </summary>
+        public void RebuildBenches()
+        {
+            if (_root == null || IsOpen) return;
+            var canvasGo = _root.parent != null ? _root.parent.gameObject : _root.gameObject;
+            _railHung.Clear(); _benchCounters.Clear(); _benchProps.Clear(); _fixedChrome.Clear();
+            _stepRows.Clear(); _serveStepRows.Clear(); _gaugeBands.Clear();
+            _benchCounterTop = -1f;
+            Destroy(canvasGo);
+            BuildUi();
+        }
+
         /// <summary>Every stage change kills the held-action sound: a loop belongs to the
         /// stage that started it, and a closed stage must not keep pouring in the dark.</summary>
         private void StopHeldSounds() => Sfx.HoldLoop(null);
@@ -859,7 +877,7 @@ namespace LastCall.UI
             Place(rt, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH), new Vector2(16f, 18f));
             RegisterFixed(panel, rt);    // ...and so is the way out
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.CounterRecess();
+            img.sprite = CounterFinish.Recess();
             img.type = Image.Type.Sliced;
             img.color = Color.white;
             img.raycastTarget = true;
@@ -877,7 +895,7 @@ namespace LastCall.UI
             mark.pivot = new Vector2(0f, 0.5f);
             var mi = mark.gameObject.AddComponent<Image>();
             mi.sprite = ChromeArt.Mark("chevron_left");
-            mi.color = UITheme.Amber[3];
+            mi.color = CounterFinish.Current.Accent;
             mi.raycastTarget = false;
             var label = NewText("L", face, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
             Place(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(BackKeyW - 62f, 20f), new Vector2(54f, 0f));
@@ -893,7 +911,8 @@ namespace LastCall.UI
         /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
         private void BrassRim(RectTransform plate)
         {
-            var rim = new Color(UITheme.Amber[1].r, UITheme.Amber[1].g, UITheme.Amber[1].b, 0.85f);
+            var tone = CounterFinish.Current.Rim;   // brass in walnut, teal in pine, pink in neon (2026-09-16)
+            var rim = new Color(tone.r, tone.g, tone.b, 0.85f);
             foreach (var (name, min, max, offMin, offMax) in new[] {
                 ("RimT", new Vector2(0, 1), new Vector2(1, 1), new Vector2(2, -4), new Vector2(-2, -2)),
                 ("RimB", new Vector2(0, 0), new Vector2(1, 0), new Vector2(2, 2), new Vector2(-2, 4)),

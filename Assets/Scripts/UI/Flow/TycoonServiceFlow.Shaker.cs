@@ -303,7 +303,7 @@ namespace LastCall.UI
             if (_workFill != null)
             {
                 _workFill.fillAmount = Mathf.Clamp01(level);
-                _workFill.color = level >= EnoughMark ? UITheme.Lime[3] : UITheme.Amber[3];
+                _workFill.color = level >= EnoughMark ? UITheme.Lime[3] : CounterFinish.Current.Accent;
             }
             if (_tinFrostRt == null) return;
             bool on = level > 0.02f;
@@ -474,7 +474,7 @@ namespace LastCall.UI
             Place(plaque, new Vector2(0.5f, 0.5f), new Vector2(DialPlaqueW, DialPlaqueH),
                   new Vector2(_bottleRest.x, BottleFootY - 22f - DialPlaqueH * 0.5f));
             var img = plaque.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.CounterRecess();
+            img.sprite = CounterFinish.Recess();
             img.type = Image.Type.Sliced;
             img.raycastTarget = false;
             // Under the bottle's shadow and the bottle, but OVER the mirrors (the bottle's reflection lay across the
@@ -494,7 +494,7 @@ namespace LastCall.UI
             _pourNeedle.sizeDelta = new Vector2(4f, NeedleH);
             _pourNeedle.anchoredPosition = new Vector2(0f, 24f);
             var ni = _pourNeedle.gameObject.AddComponent<Image>();
-            ni.color = UITheme.Amber[3];
+            ni.color = CounterFinish.Current.Accent;
             ni.raycastTarget = false;
 
             var word = NewText("Hint", plaque, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
@@ -552,7 +552,7 @@ namespace LastCall.UI
             var rt = NewRect("Plaque", panel);
             Place(rt, new Vector2(0f, 0f), new Vector2(w, h), new Vector2(PlaqueX, 0f));
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.CounterRecess();
+            img.sprite = CounterFinish.Recess();
             img.type = Image.Type.Sliced;
             img.color = Color.white;
             img.raycastTarget = false;
@@ -615,7 +615,7 @@ namespace LastCall.UI
             LayOutStrip(rows);
             // What the bench still writes the bottle's name to. Not drawn: the measuring glass
             // names every bottle that went in, in its own band.
-            var title = NewText("H", strip, _body, 8, TextAnchor.MiddleCenter, UITheme.Amber[3]);
+            var title = NewText("H", strip, _body, 8, TextAnchor.MiddleCenter, CounterFinish.Current.Accent);
             title.gameObject.SetActive(false);
             return title;
         }
@@ -1918,7 +1918,7 @@ namespace LastCall.UI
                 // also being handed a surface-space x while it now expects the tin's own frame.
             }
 
-            ShowWorkMeter((float)_shakeEnergy, UITheme.Amber[3],
+            ShowWorkMeter((float)_shakeEnergy, CounterFinish.Current.Accent,
                           UIText.T("bench.shaker.meter.shake", ("pct", _shakeEnergy.ToString("P0"))));
         }
 
@@ -2086,7 +2086,10 @@ namespace LastCall.UI
             // aseprite'da editleyeceğim"): Items/bench_counter.png, tiled at the same 4x, its own far edge and all —
             // Tools/bench_export.py hands them the drawing at the art's scale. Until it exists, the code's grain.
             var own = ItemArt.Load("bench_counter");
-            timg.sprite = own ?? ChromeArt.Counter(320, 96, BenchGrain);
+            // ...IN THE COUNTER'S FINISH (2026-09-16): the author's drawing with its slab family recoloured, or the
+            // brushed tile cut in the finish's slab tone (CounterFinish.Current, set by the HUD before the benches build).
+            timg.sprite = own != null ? CounterFinish.RecolourSlab(own, CounterFinish.Current.Id)
+                                      : ChromeArt.Counter(320, 96, BenchGrain, CounterFinish.Current.Counter);
             timg.type = Image.Type.Tiled;
             timg.pixelsPerUnitMultiplier = 0.25f;
             timg.color = timg.sprite != null ? Color.white : BenchSlab;

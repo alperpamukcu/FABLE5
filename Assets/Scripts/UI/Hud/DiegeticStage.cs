@@ -189,6 +189,18 @@ namespace LastCall.UI
         private const float PeekSeconds = 0.14f;
         private const float DrawerSeconds = 0.42f;
         private Transform _shutterTr;
+        private SpriteRenderer _counterSr, _shutterSr;   // to repaint (SetCounterFinish)
+
+        /// <summary>The counter as drawn — what the market's finish swatches are cut from.</summary>
+        public Sprite CounterArt => counterSprite;
+
+        /// <summary>THE COUNTER REPAINTED (2026-09-16, CounterFinish): the counter and the shutter swap their sprites
+        /// for recoloured copies of the same drawing; the tiling and every measurement taken off it stay.</summary>
+        public void SetCounterFinish(string id)
+        {
+            if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
+            if (_shutterSr != null && shutterSprite != null) _shutterSr.sprite = CounterFinish.Recolour(shutterSprite, id);
+        }
         private Vector2 _shutterNative;
         private float _shutterRestLocalY;
 
@@ -2366,6 +2378,7 @@ namespace LastCall.UI
             {
                 var sr = WorldSprite("Counter", counterSprite, order: 30);
                 _counterTr = sr.transform;
+                _counterSr = sr;
                 _counterNative = counterSprite.rect.size;
                 _counterDrawWidth = SetUpCounterTiling(sr);
                 // Built HERE and not up with the room's lights, because they are the BAR's:
@@ -2384,6 +2397,7 @@ namespace LastCall.UI
             {
                 var sh = WorldSprite("Shutter", shutterSprite, order: 33);
                 _shutterTr = sh.transform;
+                _shutterSr = sh;
                 _shutterNative = shutterSprite.rect.size;
                 BuildShutterDoor();
             }

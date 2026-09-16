@@ -36,7 +36,7 @@ namespace LastCall.UI
         // The audio page's rows are 50, not 56: six of them (three meters, the switch, the player, the track) have to
         // stand between the tabs and the foot, and a 32 key on a 50 row is still a key with room around it.
         private const float AudioRow = 50f, SeekW = 300f, SongRowH = 22f;
-        private RectTransform _settingsSongKey, _songList, _seekFill, _seekKnob;
+        private RectTransform _settingsSongKey, _songList, _seekFill, _seekKnob, _settingsApplyLanguage;
         private readonly Dictionary<string, Text> _songRows = new Dictionary<string, Text>();
         private Text _seekClock;
         private bool _songListOpen, _seekDragging;
@@ -629,6 +629,18 @@ namespace LastCall.UI
             Place(_settingsLanguageNote.rectTransform, new Vector2(0.5f, 1), new Vector2(640, 12), new Vector2(0, captionY - 24f));
             _settingsLanguageNote.rectTransform.pivot = new Vector2(0.5f, 1);
             _settingsLanguageNote.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // APPLY (2026-09-16, the author: "dil seçildikten sonra uygula dendiğinde oyunun dili direkt değişmeli"):
+            // shown once a different language is picked; the scene rebuilds around the same run in the new words.
+            _settingsApplyLanguage = PackWordKey(page, "APPLY", UIText.T("chrome.settings.apply_language"), "restart", MenuPack.Tone.Green,
+                new Vector2(0.5f, 1), new Vector2(180, 40), new Vector2(0, captionY - 44f), () =>
+                {
+                    string pick = Localization.PreferredCode();
+                    if (pick == Localization.Current.Code || _bootstrap == null) return;
+                    Sfx.Play("click");
+                    Localization.UseForSession(pick);
+                    _bootstrap.ReloadKeepingRun();
+                }, 140f, 48f + 24f);
+            _settingsApplyLanguage.gameObject.SetActive(false);
             return page;
         }
 
@@ -670,6 +682,7 @@ namespace LastCall.UI
             {
                 string pick = Localization.PreferredCode();
                 var info = Languages.Find(pick);
+                if (_settingsApplyLanguage != null) _settingsApplyLanguage.gameObject.SetActive(pick != Localization.Current.Code);
                 _settingsLanguage.text = info != null ? info.Name : pick;
                 foreach (var pair in _flagKeys)
                     RetoneWordKey(pair.Value, pair.Key == pick ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
@@ -683,7 +696,7 @@ namespace LastCall.UI
                         if (_languageNoteCode != pick)
                         {
                             _languageNoteCode = pick;
-                            _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note");
+                            _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note_now");
                         }
                         _settingsLanguageNote.text = _languageNoteText;
                     }

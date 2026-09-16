@@ -2440,6 +2440,36 @@ namespace LastCall.Core
 
         public bool OwnsFixture(string fixtureId) => _fixtures.Contains(fixtureId);
 
+        // ── THE COUNTER'S FINISH (2026-09-16, the author: "Başlangıçta C olucak marketten 1 geliştirme satın
+        // alınarak masa rengi değiştirme özelliği gelecek markette, 1 kere alınan bir upgrade") ────────────────
+        /// <summary>The refinish kit: a fixture bought ONCE, and from then on the counter is repainted at any
+        /// market, as often as the owner likes. Its slot carries the same id.</summary>
+        public const string CounterPaintFixture = "counter_paint";
+
+        /// <summary>The finishes the kit paints, by id. Core knows only their names — the UI draws them
+        /// (CounterFinish recolours the counter's own drawing). The first is the bar as it opens.</summary>
+        public static readonly string[] CounterFinishes = { "neon", "walnut", "pine", "cream", "copper" };
+
+        /// <summary>What the counter is painted now.</summary>
+        public string CounterFinish { get; private set; } = CounterFinishes[0];
+
+        public bool CanRepaintCounter => _fixtures.Contains(CounterPaintFixture);
+
+        /// <summary>Paints the counter — at the market, with the kit. The rules refuse without it: the shop's
+        /// swatches are only ever drawn once the kit is owned, but a rule the UI has to remember is a rule the
+        /// UI will forget.</summary>
+        public void RepaintCounter(string finish)
+        {
+            EnsurePhase(TycoonPhase.DayEnd);
+            if (System.Array.IndexOf(CounterFinishes, finish) < 0)
+                throw new ArgumentException($"'{finish}' is not a counter finish.");
+            if (!CanRepaintCounter)
+                throw Said.With(new InvalidOperationException(
+                    "The counter is repainted with the refinish kit, which this bar does not own."),
+                    Line.Of("rule.counter_paint_needs_kit"));
+            CounterFinish = finish;
+        }
+
         // ── the draught tower is a LADDER (2026-08-19) ──────────────────────────
         // The author: "3 seviye musluk olacak, marketten musluğu geliştirmeden bir üst
         // seviye fıçı bira alınmamalı." Three towers standing in one slot, bought in
