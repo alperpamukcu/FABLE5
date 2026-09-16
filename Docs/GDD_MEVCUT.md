@@ -1540,6 +1540,43 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.83 · Tezgâh sahnesi: plaka düzeni, odak parlaklığı kapalı, her prop gölgeli, loş pembe neon, oda kararması, giriş animasyonu, shaker→bardak yerinde geçiş, ölçünün boş silüeti (2026-09-17, dördüncü liste)
+
+Yazar: "Görseldeki yazıları ve talimatları sahneye düzenli bir şekilde entegre et. bu sahnedeki odak parlaklığını
+kaldır. Bu sahnede her nesnenin gölgelendirmesi olmalı, sahne genel loş pembe neon ile aydınlanır, müşterilerin
+olduğu arkaplan biraz karartılır. Built sahnelerinin açılma animasyonu: ... şişe hariç tüm her şey aşağıdan gelip
+oturma ... şişe ise ekranın üstünden ... sallanarak düşecek ... Kapanan shaker ekranda kalacak ... tezgah arkaplanı
+sabit kalacak ... yazılar fade olup değişecek ... bardak ... düşerek girecek. ... doluluk barı shakerının boş hali
+gözükmeli."
+
+- **Plaka:** shaker plakası 464→560 (okuma satırı artık ortadan kırılmıyor); bira plakası 480→560 ve musluk
+  `TowerX` −50→150 (pint dinlenirken plakanın sözlerinin üstünde duruyordu).
+- **Odak parlaklığı kapalı:** `Unlit(HoverGlow)` — Gain 1, Halo 0 (teneke, kapak, şişe, kaşık, servis tenekesi);
+  hover yükselme/salınım duruyor.
+- **Gölgeler:** kapak ve kaşık `PushPropShadow` ile propu izler, havlu (kaşıkla görünür), servis tenekesi, musluk
+  kulesi (sabit) ve pint (izler); teneke, şişe, servis bardağı zaten vardı. Yeni gölgeler her yüzeyin ilk çocukları
+  (musluk tezgâhında tezgâh önü/kenarından sonra, indeks 4-5).
+- **Loş pembe neon:** `AddNeonWash` — `_benchStage` üzerinde (tüm tezgâhların altındaki paylaşılan sahne; bandın
+  hemen üstünde, propların altında) 1400×300 `ChromeArt.NeonGradient` (tepede dolu, ayakta sıfır, t²) Magenta[3]
+  %26, ray ayağından (panel y +60) aşağı; ve tüm yüzeye Night[0] %14 "Dusk". Bira tezgâhı kendi yüzeyinde (tezgâh
+  önünden sonra) ayrıca alır.
+- **Oda kararması:** `RoomDimBench` 0,62 (ölçüldü: eski perde duvarı 216→151 yapıyordu; 0,30 176 verdi; 0,62 ≈135).
+- **Giriş animasyonu** (`PlayBenchEntrance`/`StepBenchEntrance`, Closed→Shaker): panelin çocukları (bant ve
+  raya asılılar hariç) 380 birim aşağıdan ease-out-back ile (dinlenme yerini geçip geri) 0,55 sn, her biri 0,03 sn
+  gecikmeli; raya asılılar (plaka, mat, limon) aynı ofseti `AlignBenchCounters` üzerinden alır (giriş boyunca her
+  kare hizalanır, sonunda `_benchCounterTop=-1` ile bir kez daha); şişe yüzeyin hareketine karşı tutulup 720 birim
+  yukarıdan (üst barın altından, hiyerarşide zaten) düşer, 14°'lik sönümlü salınımla. Saat 0,05 sn'ye kırpılır
+  (editör takılması propları tek karede eve atmasın). Süre `Ceremony.Pace`'e bölünür (testlerde 8×).
+- **Shaker→bardak yerinde** (`PlayStageCross`): iki tezgâh arasında kaydırma yok — giden panel olduğu yerde solar,
+  gelen aynı yerde belirir (0,4 sn / Pace), sabit krom kıpırdamaz, lurch yok; plaka aynı yerde, yazılar solarak
+  değişir. Bardak `ServeDropOffset/Swing` ile yukarıdan düşer (0,6 sn). Not: servis tezgâhının tenekesi kendi
+  dinlenme yerinde (sağda) belirir; shaker'ın tenekesi solarken yerinde kalır — iki teneke aynı noktada değil
+  (yazar isterse shaker tenekesi geçiş sırasında servis yerine kaydırılır).
+- **Ölçü boş silüeti:** Reveal kırpması dolumu değil oyuk tepesini (+5) izler; kapak yine görünmez, boş gövde
+  baştan görünür.
+- Ölçüldü (r32–r39): giriş zaman çizelgesi (yüzey −236→+4→0, plaka 112→352→349, şişe 703→34 dönüşlü), üç tezgâh
+  dinlenmede (yıkama, gölgeler, perde), bira tezgâhı plaka/pint ayrık.
+
 ### 9.82 · Sıvıda dökme sıvının pixel ditheri: şişe (el ve mahzen) ve ölçü bantları (2026-09-17)
 
 Yazar: "sıvıda pixel dokusu yapıyorduk o tarz olsun dökülürkenki gibi. yenilerin hiçbirini sevmedim." (Water+ karoları

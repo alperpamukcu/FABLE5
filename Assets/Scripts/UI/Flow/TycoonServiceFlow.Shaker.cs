@@ -106,7 +106,15 @@ namespace LastCall.UI
         // What the mat used to do: say that the tin and the bottle are ON something. Two
         // contact shadows on the counter line, each following its prop's x and thinning as
         // it is lifted away — a shaken tin is in the air, and its shadow should know.
-        private RectTransform _tinShadow, _bottleShadow;
+        private RectTransform _tinShadow, _bottleShadow, _lidShadow, _spoonShadow, _towelShadow;
+
+        /// <summary>A prop's glow with the brightness taken out (2026-09-17, the author: "bu sahnedeki odak parlaklığını
+        /// kaldır"): the hover still lifts and sways the prop, it no longer lights it or halos it.</summary>
+        private static void Unlit(HoverGlow g)
+        {
+            if (g == null) return;
+            g.Gain = 1f; g.Halo = 0f; g.HaloHidden = true;
+        }
         // ...and since 2026-09-16 the light on the work and the two mirrors (StepBenchLight).
         private RectTransform _benchLight, _tinMirror, _bottleMirror;
 
@@ -543,7 +551,7 @@ namespace LastCall.UI
 
         /// <summary>The plaque's place and size on a bench: from the panel's left edge, under the rail's foot. 464
         /// wide: the tin's rect starts at 464 but its steel at ~500, and the capped tin stands at the centre.</summary>
-        private const float PlaqueX = 16f, PlaqueW = 464f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;
+        private const float PlaqueX = 16f, PlaqueW = 560f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
         /// <summary>The strip's and the readout's bottoms, from the plaque's own; the readout has two lines' room.</summary>
         private const float PlaqueStepsY = 42f, PlaqueLineY = 6f, PlaqueLineH = 32f;
         /// <summary>The counter's far edge: ridge, seam, six rails and a seam (AddBenchCounter's bands).</summary>
@@ -795,8 +803,6 @@ namespace LastCall.UI
                 total.text = Mathf.RoundToInt(fill * 100f) + "%";
                 float boreFoot = rig.rect.height * (1f - ChromeArt.ShakerGaugeCavity.y);
                 totalRt.anchoredPosition = new Vector2(0f, boreFoot + y + 8f);
-                var reveal = rig.Find("Reveal") as RectTransform;
-                if (reveal != null) reveal.offsetMax = new Vector2(0f, boreFoot + y + 5f);   // five units over the drink
             }
             // Layers while unmixed, one colour once mixed (2026-09-16): what Core says of the tin, on both benches.
             BlendGauge(bar, run.IsMixed ? 1f : 0f);
@@ -874,7 +880,7 @@ namespace LastCall.UI
         /// floor — so <see cref="FillGauge"/> never has to know how the instrument is built.
         /// </summary>
         private RectTransform BuildStandingGauge(RectTransform panel, Vector2 at,
-                                                 Vector2 size, string head)
+                                                 Vector2 size, string head, bool besideColumn = false)
         {
             var rig = NewRect("MixTrack", panel);
             Place(rig, new Vector2(0.5f, 0.5f), size, at);
@@ -892,7 +898,10 @@ namespace LastCall.UI
             var reveal = NewRect("Reveal", rig);
             reveal.anchorMin = Vector2.zero; reveal.anchorMax = new Vector2(1f, 0f);
             reveal.pivot = new Vector2(0.5f, 0f);
-            reveal.offsetMin = Vector2.zero; reveal.offsetMax = new Vector2(0f, 24f);
+            // ...THE EMPTY TIN, ALWAYS (2026-09-17, the author: "doluluk barı shakerının boş hali gözükmeli şu an
+            // doldukça oluşuyor"): the clip stands at the cavity's top plus five, so the whole empty body shows from
+            // the start and the lid never does; the drink rises inside it.
+            reveal.offsetMin = Vector2.zero; reveal.offsetMax = new Vector2(0f, size.y * (1f - ChromeArt.ShakerGaugeCavity.x) + 5f);
             reveal.gameObject.AddComponent<RectMask2D>();
             var maskRt = NewRect("Cavity", reveal);
             maskRt.anchorMin = Vector2.zero; maskRt.anchorMax = new Vector2(1f, 0f);
@@ -921,7 +930,7 @@ namespace LastCall.UI
                     Vector2.zero, Vector2.zero);
             // the band labels stand LEFT of the measure, and the MIX column stands there too (2026-09-16): the
             // labels' box reaches further left, past the column and its gap, so the two never overprint
-            labels.offsetMin = new Vector2(-(WorkColW + WorkColGap + 12f + 8f), labels.offsetMin.y);
+            if (besideColumn) labels.offsetMin = new Vector2(-(WorkColW + WorkColGap + 12f + 8f), labels.offsetMin.y);
 
             var shell = NewRect("Outline", reveal);
             shell.anchorMin = Vector2.zero; shell.anchorMax = new Vector2(1f, 0f);
@@ -1113,6 +1122,8 @@ namespace LastCall.UI
             bool spoon = run.SpoonUnlocked;
             if (_spoonRt != null && _spoonRt.gameObject.activeSelf != spoon) _spoonRt.gameObject.SetActive(spoon);
             if (_napkinRt != null && _napkinRt.gameObject.activeSelf != spoon) _napkinRt.gameObject.SetActive(spoon);
+            if (_towelShadow != null && _towelShadow.gameObject.activeSelf != spoon) _towelShadow.gameObject.SetActive(spoon);
+            if (_spoonShadow != null && _spoonShadow.gameObject.activeSelf != spoon) _spoonShadow.gameObject.SetActive(spoon);
             if (!spoon) _spoonHeld = false;
             if (_bottleShadow != null && _bottleShadow.gameObject.activeSelf != inHand)
                 _bottleShadow.gameObject.SetActive(inHand);
@@ -1386,6 +1397,10 @@ namespace LastCall.UI
             // one shared line put the bottle's shadow seventy pixels under its base.
             PushPropShadow(_tinShadow, _shakerVessel, _shakerHome.y, TinFootY, 158f, 1f);
             PushPropShadow(_bottleShadow, _pourBottle, _bottleRest.y, BottleFootY, 128f, 1f - _capT);
+            if (_shakerTop != null)
+                PushPropShadow(_lidShadow, _shakerTop, _capRest.y, _capRest.y - _shakerTop.rect.height * 0.5f + 10f, 150f, 1f - _capT);
+            if (_spoonRt != null)
+                PushPropShadow(_spoonShadow, _spoonRt, _spoonRest.y, SpoonFootY, 50f, 1f);
         }
 
         /// <summary>Where each bench prop's base sits when it is standing: the tin's rect is
@@ -2004,7 +2019,7 @@ namespace LastCall.UI
             var room = GetComponent<TycoonHud>()?.Room;
             if (room == null) return;
             float fromY = room.BenchSurfaceFraction;
-            if (Mathf.Approximately(fromY, _benchCounterTop)) return;
+            if (Mathf.Approximately(fromY, _benchCounterTop) && _entranceT < 0f) return;   // every frame while the entrance plays
             _benchCounterTop = fromY;
             foreach (var band in _benchCounters)
             {
@@ -2017,7 +2032,7 @@ namespace LastCall.UI
             // ...and everything hung from the rail goes with it (the plaques, 2026-09-16).
             float railTop = fromY * _field.rect.height;
             foreach (var (rt, dy) in _railHung)
-                if (rt != null) rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, railTop - dy);
+                if (rt != null) rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, railTop - dy + _entranceRailOffset);
         }
 
         /// <summary>The room's counter, zoomed (2026-08-25, the author: "ekran çok boş
@@ -2055,8 +2070,34 @@ namespace LastCall.UI
         // mat along the back edge, and two lemon wheels in the far corner. All hung from the rail, so they stay on
         // the counter's own line. The water ring and the mirrors are the shaker bench's (BuildShakerPanel).
 
+        /// <summary>THE BENCH UNDER A DIM PINK NEON (2026-09-17, the author: "sahne genel loş pembe neon ile
+        /// aydınlanır"): a magenta wash falling from the rail down the counter, and a thin dusk over the whole surface
+        /// under the props, so the bench sits in the rail's own light rather than a flat grey. First siblings, under
+        /// everything.</summary>
+        private void AddNeonWash(RectTransform panel, float railTop, int over = -1)
+        {
+            // Under the props but over the counter's bands: right after however many bands the panel carries
+            // (the shaker and glass benches keep theirs in _benchCounters; the draught bench passes its own count).
+            int after = over;
+            if (after < 0) { after = 0; foreach (Transform t in panel) if (_benchCounters.Contains(t as RectTransform)) after++; }
+            var dusk = NewRect("Dusk", panel);
+            Stretch(dusk, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var di = dusk.gameObject.AddComponent<Image>();
+            di.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.14f);
+            di.raycastTarget = false;
+            dusk.SetSiblingIndex(after);
+            var wash = NewRect("NeonWash", panel);
+            Place(wash, new Vector2(0.5f, 0.5f), new Vector2(1400f, 300f), new Vector2(0f, railTop - 150f));
+            var wi = wash.gameObject.AddComponent<Image>();
+            wi.sprite = ChromeArt.NeonGradient();
+            wi.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.26f);
+            wi.raycastTarget = false;
+            wash.SetSiblingIndex(after + 1);
+        }
+
         private void BuildBenchDressing()
         {
+            AddNeonWash(_benchStage, 60f);    // the stage under every bench: one wash for all, over the band, under the props
             var sheen = NewRect("Sheen", _benchStage);
             Place(sheen, new Vector2(0.5f, 0f), new Vector2(1180f, 240f), new Vector2(0f, 0f));
             var si = sheen.gameObject.AddComponent<Image>();
@@ -2241,6 +2282,14 @@ namespace LastCall.UI
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
             _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
             _bottleShadow = AddContactShadow(_pourSurface, 128f, new Vector2(_bottleRest.x, BottleFootY));
+            // EVERY PROP CASTS ONE (2026-09-17, the author: "Bu sahnede her nesnenin gölgelendirmesi olmalı"): the
+            // lid and the spoon follow their props (PushPropShadow), the towel's lies still under it.
+            _lidShadow = AddContactShadow(_pourSurface, 150f, new Vector2(-510f, -140f - CapArtOffset * TinH - 60f));
+            _spoonShadow = AddContactShadow(_pourSurface, 50f, new Vector2(SpoonX, SpoonFootY));
+            _towelShadow = AddContactShadow(_pourSurface, 150f, new Vector2(SpoonX, SpoonFootY + 2f));
+            _towelShadow.sizeDelta = new Vector2(150f, 26f);
+            var towelImg = _towelShadow.GetComponent<Image>();
+            if (towelImg != null) towelImg.color = new Color(0f, 0f, 0f, 0.42f);
             // LIGHT ON THE WORK, AND THE STONE ANSWERING (2026-09-16, the author: "tezgaha ışıklandırma ve yansıma
             // gerekiyor ... odak şişe ve shakerda olmalı dökerken, şişe dolduktan sonra odak kapağa geçmeli"): a
             // soft bloom behind whatever the hand is on — the bottle while it pours, the tin once the lid is on,
@@ -2303,6 +2352,7 @@ namespace LastCall.UI
             // and it is held rather than picked up, so it takes the light and a breath
             // of sway — no rise, because a tin that lifts off the bench is a spill.
             var tinGlow = _tinGlow = _shakerVessel.gameObject.AddComponent<HoverGlow>();
+            Unlit(tinGlow);
             tinGlow.Graphics = new Graphic[] { shakerImg };   // the lid joins it below, once it exists
             tinGlow.Rise = 0f; tinGlow.Sway = 1.2f; tinGlow.Grow = 1.03f; tinGlow.Halo = 1.3f;
             // NOT UNTIL THERE IS SOMETHING TO DO WITH IT (2026-09-06, the author: "shakera
@@ -2387,6 +2437,7 @@ namespace LastCall.UI
             // is switched off and the TIN's glow lights both drawings and moves both
             // transforms — one shaker, one light, one sway.
             var capGlow = _capGlow = _shakerTop.gameObject.AddComponent<HoverGlow>();
+            Unlit(capGlow);
             capGlow.Graphics = new Graphic[] { topImg };
             capGlow.Rise = 4f; capGlow.Sway = 1.4f; capGlow.Grow = 1.06f;
             _shakerTop.gameObject.SetActive(topImg.sprite != null);
@@ -2473,6 +2524,7 @@ namespace LastCall.UI
             });
             _pourBottle.gameObject.AddComponent<EventTrigger>().triggers.Add(grab);
             var bottleGlow = _pourBottle.gameObject.AddComponent<HoverGlow>();
+            Unlit(bottleGlow);
             bottleGlow.Graphics = new Graphic[] { _pourBottleBody };
             bottleGlow.Riser = _pourVessel;      // the drawing, not the grab plate
             bottleGlow.Rise = 4f; bottleGlow.Sway = 1.4f; bottleGlow.Grow = 1.05f;
@@ -2500,7 +2552,7 @@ namespace LastCall.UI
             // column did but wide enough to BE a shaker. Its right edge lands at 510,
             // inside the 1149-wide working area the serve bench measures against, and
             // its captions still have their air to the left.
-            _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, UIText.T("bench.shaker.gauge.head"));
+            _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, UIText.T("bench.shaker.gauge.head"), besideColumn: true);
             BuildWorkColumn(_shakerPanel);
 
             // THE WORK METER, FOURTH TAKE (2026-09-16): it was a flat bar (2026-08-26, "çok amatörce duruyor"),
@@ -2581,6 +2633,7 @@ namespace LastCall.UI
                 // The glow rides the SLOT, which is what the stir moves, but it lights and
                 // measures the drawing, because the slot is a transparent hit rectangle.
                 var spoonGlow = _spoonRt.gameObject.AddComponent<HoverGlow>();
+                Unlit(spoonGlow);
                 spoonGlow.Graphics = new Graphic[] { si };
                 spoonGlow.Rise = 4f; spoonGlow.Sway = 1.6f; spoonGlow.Grow = 1.05f;
             }

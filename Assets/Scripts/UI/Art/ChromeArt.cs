@@ -2258,6 +2258,21 @@ namespace LastCall.UI
         /// reading is on the thing being shaken. One column of white, opaque at the foot and gone at the top, drawn
         /// over the tin's body at the height the shake has reached, so the frost's edge is a soft line and not a bar.
         /// </summary>
+        /// <summary>A plain fall of light: solid at the top, nothing at the foot (2026-09-17, the bench's neon wash).</summary>
+        public static Sprite NeonGradient()
+        {
+            const string Key = "neon:gradient";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int H = 32;
+            var px = new Color32[H];
+            for (int y = 0; y < H; y++)
+            {
+                float t = y / (float)(H - 1);                 // 0 at the foot, 1 at the top
+                px[y] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(255f * t * t));
+            }
+            return Cache[Key] = Make(px, 1, H, Vector4.zero);
+        }
+
         public static Sprite FrostGradient()
         {
             const string Key = "frost:gradient";

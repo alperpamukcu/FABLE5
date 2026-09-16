@@ -154,6 +154,9 @@ namespace LastCall.UI
         /// </summary>
         private Image _roomDim;
         private const float RoomDimAlpha = 0.5f;   // 0.34 measured as a 14% drop on the wall — too faint to read
+        // THE ROOM BEHIND THE BENCH, DIMMED A LITTLE (2026-09-17, the author: "müşterilerin olduğu arkaplan biraz
+        // karartılır"): the veil that was switched off on 2026-08-22 ("karartma olmasın") comes back at a third.
+        private const float RoomDimBench = 0.62f;   // 0.30 measured lighter than the old veil (wall 176 vs 151 of 216); 0.62 lands near 135
         /// <summary>The HUD's top bar, which the veil stops under (TycoonHud.TopBarH).</summary>
         private const float HudTopBarH = 54f;
 
@@ -357,6 +360,7 @@ namespace LastCall.UI
             // that gates input must never be starved by an early return.
             StepStageSlide();
             StepBenchLurch();
+            StepBenchEntrance();
             // The band rides the drawer while a bench is up (2026-09-13): the tin's door on the
             // counter opens the drawer and the bench in the same frame, and a band lined up once
             // stayed at the shut room's height behind a room that then rose.
@@ -514,12 +518,27 @@ namespace LastCall.UI
                 bool forward = previous == Stage.Shaker && stage == Stage.Serve;
                 bool bench = (previous == Stage.Shaker || previous == Stage.Serve)
                           && (stage == Stage.Shaker || stage == Stage.Serve);
-                PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f, bench);
+                // THE TIN STAYS, THE WORDS FADE (2026-09-17, the author: "Kapanan shaker ekranda kalacak ... ekrandan
+                // shaker gitmeyecek, tezgah arkaplanıda sabit kalacak. Bilgi ve açıklama paneli sabit kalacak ve
+                // üstündeki yazılar fade olup değişecek"): between the two benches nothing slides any more — one
+                // panel fades out over the other fading in, on the same counter, the plaque in the same place.
+                if (bench) PlayStageCross(PanelOf(previous), PanelOf(stage));
+                else PlayStageSlide(PanelOf(previous), PanelOf(stage), forward ? 1f : -1f, false);
             }
             else if (fade)
                 PlayStageFade(PanelOf(stage));
             else if (closing)
                 PlayStageClose(PanelOf(previous));
+            // THE ENTRANCE (2026-09-17, the author: "şişe hariç tüm her şey aşağıdan gelip oturma ... şişe ise ekranın
+            // üstünden ... sallanarak düşecek"): opening the shaker bench, every prop rises from under the counter and
+            // settles past its rest; the bottle swings down from the top. The glass bench's glass drops the same way.
+            if (stage == Stage.Shaker && previous == Stage.Closed)
+                PlayBenchEntrance(_shakerPanel, _pourSurface, _pourBottle, _bottleRest);
+            if (stage == Stage.Serve && !Motion.Reduced)
+            {
+                _serveDropStart = Time.unscaledTime;
+                _serveDropDur = 0.6f / Mathf.Max(1f, LastCall.Game.Ceremony.Pace);
+            }
 
             // THE SCENE A LITTLE LOWER BEHIND A BENCH (2026-09-14, the author: "sahneyi biraz daha
             // aşağı alıp şişe ve shakera diklemesine daha çok alan tanıyabilirsin", and "konuşma
@@ -564,6 +583,122 @@ namespace LastCall.UI
 
         /// <summary>Closed→Menu: the flow OPENS rather than arrives, so the first panel
         /// fades up in place instead of shoving in from a direction that means nothing.</summary>
+        /// <summary>One bench over the other, in place (2026-09-17): the incoming panel fades in at zero while the
+        /// outgoing fades out where it is; nothing slides, the fixed chrome never moves, no lurch after.</summary>
+        private void PlayStageCross(RectTransform outRt, RectTransform inRt)
+        {
+            _slideOutRt = outRt;
+            _slideInRt = inRt;
+            _slideInGroup = GroupOn(inRt);
+            _slideInGroup.alpha = 0f;
+            _crossOutGroup = GroupOn(outRt);
+            _crossOutGroup.alpha = 1f;
+            _slideFade = true;
+            _fadeRoot = false;
+            _benchSlide = false;
+            _transT = 0f;
+            _transDur = CrossDur / Mathf.Max(1f, LastCall.Game.Ceremony.Pace);
+            inRt.anchoredPosition = Vector2.zero;
+            outRt.anchoredPosition = Vector2.zero;
+            if (_rootGroup != null) _rootGroup.blocksRaycasts = false;
+        }
+        private CanvasGroup _crossOutGroup;
+        private const float CrossDur = 0.4f;
+
+        // ── THE ENTRANCE ─────────────────────────────────────────────────────────────────────────────────────
+        private float _entranceT = -1f, _entranceDur;
+        private readonly List<(RectTransform rt, Vector2 rest)> _entranceMovers = new List<(RectTransform, Vector2)>();
+        private RectTransform _entranceSurface, _entranceBottle;
+        private Vector2 _entranceSurfaceRest, _entranceBottleRest;
+        private const float EntranceRise = 380f, EntranceDrop = 720f;
+        private float _serveDropStart = -1f, _serveDropDur = 0.6f;
+
+        private void PlayBenchEntrance(RectTransform panel, RectTransform surface, RectTransform bottle, Vector2 bottleRest)
+        {
+            if (Motion.Reduced || panel == null) return;
+            _entranceMovers.Clear();
+            foreach (Transform t in panel)
+            {
+                var rt = t as RectTransform;
+                if (rt == null || !rt.gameObject.activeSelf) continue;
+                if (_benchCounters.Contains(rt)) continue;                 // the slab is the room's; it stays
+                bool hung = false;                                          // the rail-hung ride the alignment instead
+                foreach (var (h, _) in _railHung) if (h == rt) { hung = true; break; }
+                if (hung) continue;
+                _entranceMovers.Add((rt, rt.anchoredPosition));
+            }
+            _entranceSurface = surface; _entranceSurfaceRest = surface != null ? surface.anchoredPosition : Vector2.zero;
+            _entranceBottle = bottle; _entranceBottleRest = bottleRest;
+            _entranceT = 0f;
+            _entranceDur = 0.55f / Mathf.Max(1f, LastCall.Game.Ceremony.Pace);
+            StepBenchEntrance();
+        }
+
+        /// <summary>Every frame of the entrance: each mover rises on an ease that overshoots its rest and comes back,
+        /// a little later than the one before; the bottle, inside the surface, is held against the surface's own
+        /// motion and dropped from the top with a damped swing.</summary>
+        private void StepBenchEntrance()
+        {
+            if (_entranceT < 0f) return;
+            _entranceT += Mathf.Min(Time.unscaledDeltaTime, 0.05f);   // a hitch must not throw the props home in one frame
+            bool done = true;
+            float dur = Mathf.Max(0.001f, _entranceDur);
+            {
+                // the rail-hung (the plaque, the mat, the lemons) take the same rise through AlignBenchCounters, which
+                // keeps setting their places while the room lifts under the bench
+                float k0 = Mathf.Clamp01(_entranceT / dur);
+                float u0 = k0 - 1f;
+                float e0 = u0 * u0 * ((1.70158f + 1f) * u0 + 1.70158f) + 1f;
+                _entranceRailOffset = -EntranceRise * (1f - e0);
+                if (k0 < 1f) done = false;
+            }
+            for (int i = 0; i < _entranceMovers.Count; i++)
+            {
+                var (rt, rest) = _entranceMovers[i];
+                if (rt == null) continue;
+                float k = Mathf.Clamp01((_entranceT - i * 0.03f / Mathf.Max(1f, LastCall.Game.Ceremony.Pace)) / dur);
+                if (k < 1f) done = false;
+                const float s = 1.70158f;            // ease-out-back: past the rest, then home
+                float u = k - 1f;
+                float e = u * u * ((s + 1f) * u + s) + 1f;
+                rt.anchoredPosition = rest + new Vector2(0f, -EntranceRise * (1f - e));
+            }
+            if (_entranceBottle != null && _entranceBottle.gameObject.activeSelf)
+            {
+                float kb = Mathf.Clamp01(_entranceT / (dur * 1.25f));
+                if (kb < 1f) done = false;
+                float fall = (1f - kb) * (1f - kb);
+                Vector2 surfaceShift = _entranceSurface != null ? _entranceSurface.anchoredPosition - _entranceSurfaceRest : Vector2.zero;
+                _entranceBottle.anchoredPosition = _entranceBottleRest - surfaceShift + new Vector2(0f, EntranceDrop * fall);
+                _entranceBottle.localRotation = Quaternion.Euler(0f, 0f, 14f * Mathf.Sin(kb * 9.42f) * (1f - kb));
+            }
+            if (done)
+            {
+                foreach (var (rt, rest) in _entranceMovers) if (rt != null) rt.anchoredPosition = rest;
+                if (_entranceBottle != null) { _entranceBottle.anchoredPosition = _entranceBottleRest; _entranceBottle.localRotation = Quaternion.identity; }
+                _entranceMovers.Clear();
+                _entranceT = -1f;
+                _entranceRailOffset = 0f;
+                _benchCounterTop = -1f;   // one more alignment, so the rail-hung land exactly where the rail is now
+            }
+        }
+        private float _entranceRailOffset;
+
+        /// <summary>The glass bench's glass, on its way down (2026-09-17): how far above its rest it still is, and its swing.</summary>
+        private float ServeDropOffset()
+        {
+            if (_serveDropStart < 0f) return 0f;
+            float kb = Mathf.Clamp01((Time.unscaledTime - _serveDropStart) / Mathf.Max(0.001f, _serveDropDur));
+            if (kb >= 1f) { _serveDropStart = -1f; return 0f; }
+            return EntranceDrop * (1f - kb) * (1f - kb);
+        }
+        private float ServeDropSwing()
+        {
+            if (_serveDropStart < 0f) return 0f;
+            float kb = Mathf.Clamp01((Time.unscaledTime - _serveDropStart) / Mathf.Max(0.001f, _serveDropDur));
+            return 14f * Mathf.Sin(kb * 9.42f) * (1f - kb);
+        }
+
         private void PlayStageFade(RectTransform inRt)
         {
             _slideOutRt = null;
@@ -622,6 +757,7 @@ namespace LastCall.UI
                 if (_slideOutRt != PanelOf(_stage))
                     _slideOutRt.gameObject.SetActive(false);
             }
+            if (_crossOutGroup != null) { _crossOutGroup.alpha = 1f; _crossOutGroup = null; }
             if (_slideInRt != null)
             {
                 _slideInRt.anchoredPosition = Vector2.zero;
@@ -684,6 +820,7 @@ namespace LastCall.UI
             {
                 float s = k * k * (3f - 2f * k);
                 if (_slideInGroup != null) _slideInGroup.alpha = s;
+                if (_crossOutGroup != null) _crossOutGroup.alpha = 1f - s;
                 if (_fadeRoot && _rootGroup != null) _rootGroup.alpha = s;
                 return;
             }
@@ -1019,7 +1156,7 @@ namespace LastCall.UI
             var dimRt = NewRect("RoomDim", _root);
             Stretch(dimRt, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0f, -HudTopBarH));
             _roomDim = dimRt.gameObject.AddComponent<Image>();
-            _roomDim.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, RoomDimAlpha);
+            _roomDim.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, RoomDimBench);
             _roomDim.raycastTarget = false;
 
             // The scrim keeps the whole screen — a dimmed room with undimmed corners is

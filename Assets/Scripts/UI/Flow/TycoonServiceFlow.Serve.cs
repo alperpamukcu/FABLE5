@@ -90,6 +90,7 @@ namespace LastCall.UI
 
         private Text _aimText;
         private Vector2 _serveShakerRest;
+        private RectTransform _serveTinShadow;   // the tin casts one too (2026-09-17); the glass had its own
         private bool _serveGrabbed;
         /// <summary>The hand on the tin (PourHand, 2026-09-11): the neck grip that lets a tall
         /// glass be poured, the weight, and the walk home when it is let go.</summary>
@@ -244,8 +245,12 @@ namespace LastCall.UI
             var rock = Quaternion.Euler(0f, 0f, _glassSway);
             float h = _serveGlass.rect.height;
             _serveGlass.anchoredPosition = new Vector2(_glassCatchX, CatchFootY + GlassFootLift)
-                + (Vector2)(rock * new Vector3(0f, h * 0.5f, 0f));
-            _serveGlass.localRotation = rock;
+                + (Vector2)(rock * new Vector3(0f, h * 0.5f, 0f))
+                + new Vector2(0f, ServeDropOffset());                 // on its way down when the bench opens (2026-09-17)
+            _serveGlass.localRotation = rock * Quaternion.Euler(0f, 0f, ServeDropSwing());
+            if (_serveShaker != null)
+                PushPropShadow(_serveTinShadow, _serveShaker, _serveShakerRest.y, BenchFootY + 4f, 158f * (TinW / 200f),
+                    _serveShaker.gameObject.activeSelf ? 1f : 0f);
             if (_serveGlassBackRt != null)
             {
                 _serveGlassBackRt.anchoredPosition = _serveGlass.anchoredPosition;
@@ -783,6 +788,10 @@ namespace LastCall.UI
             _serveGlassBack.raycastTarget = false;
             _serveGlassBack.enabled = false;
 
+            // shadows under the glass and the tin, first in the surface so every prop draws over them (2026-09-17)
+            _serveTinShadow = AddContactShadow(_serveSurface, 158f * (TinW / 200f), new Vector2(150f, BenchFootY + 4f));
+            _serveTinShadow.SetAsFirstSibling();
+
             _serveGlass = NewRect("Glass", _serveSurface);
             // the pool's top face, made before the glass so it draws under the front wall
             Place(_serveGlass, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
@@ -847,6 +856,7 @@ namespace LastCall.UI
             // sahnesinde shaker parlamıyor") — you grab it and tip it, so it answers the
             // pointer like everything else you can pick up.
             var serveGlow = _serveShaker.gameObject.AddComponent<HoverGlow>();
+            Unlit(serveGlow);
             serveGlow.Graphics = new Graphic[] { _serveShakerBody };
             serveGlow.Rise = 4f; serveGlow.Sway = 1.4f; serveGlow.Grow = 1.04f; serveGlow.Halo = 1.3f;
             _serveGlow = serveGlow;

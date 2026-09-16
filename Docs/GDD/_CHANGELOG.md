@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bench scene, fourth pass (2026-09-17):** the plaques widened so their words sit whole (the draught font
+  moved right of its plaque); no brightness on the props under the pointer; a shadow under every prop; a dim pink
+  neon falling from the rail over every bench and a thin dusk on the counter; the room behind dimmed a little;
+  opening the shaker bench, everything but the bottle rises from under the counter and settles past its rest while
+  the bottle swings down from the top; the shaker-to-glass change is a crossfade in place with the plaque's words
+  fading over, and the glass drops in; the gauge shows its whole empty body from the start.
+
 - **The pouring liquid's dither on every still liquid (2026-09-17):** the two-unit checker MetaballFluid draws the
   glass with now lies on the hand bottle's drink (turning with the bottle), on the cellar's drink bodies (drawn at
   their own pixel size) and on the gauge's bands; the Water+ tiles and the procedural patterns were rejected.

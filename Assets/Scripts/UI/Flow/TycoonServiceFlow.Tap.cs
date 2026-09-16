@@ -33,7 +33,7 @@ namespace LastCall.UI
         // çok fazla detay ve işlemeden kaçın"): the same family as the shaker's — a tilt dial cut into the counter
         // left of the glass, a PINT and a HEAD column right of the font, the verdict engraved on the plaque, a light
         // that follows the glass and a mirror of the pint under its rest. The bottom status strip is gone.
-        private RectTransform _tapNeedle, _tapLight, _pintMirror;
+        private RectTransform _tapNeedle, _tapLight, _pintMirror, _tapFontShadow, _tapPintShadow;
         private Image _pintMirrorImg, _pintColFill, _headColFill;
         private const float TapDialW = 180f, TapDialH = 110f, TapDialX = -440f, TapColW = 24f, TapColH = 200f;
         private const double HeadColumnFull = 0.40;   // the HEAD column's top: twice the good band's ceiling
@@ -147,7 +147,7 @@ namespace LastCall.UI
         // what is left here is the one number a font does not carry, which is where along
         // the counter it is bolted. The counter dropped 30 for the big drawing and the kegs
         // dropped with it (see KegBaseY) so none of them pokes up through the counter line.
-        private const float TowerX = -50f;
+        private const float TowerX = 150f;   // -50 until 2026-09-17: the pint at rest stood on the plaque's words
         /// <summary>The open recess under the bar, where the kegs live in a real one. Putting the
         /// keg BEHIND the counter hid its label under the counter line, and putting it beside the
         /// counter left it standing in the room; under the bar it is both in its right place and
@@ -247,19 +247,19 @@ namespace LastCall.UI
             // used to stand at the top of the panel — under the HUD's beam, where the music player now is.
             // Three lines on it (2026-09-16): the beer's name, the VERDICT (it stood on a strip at the foot of the
             // screen), and a small line that is the hint until the glass is taken and the numbers after.
-            var tapPlaque = AddCounterPlaque(_tapPanel, 480f, 70f);
+            var tapPlaque = AddCounterPlaque(_tapPanel, 560f, 70f);   // 480 until 2026-09-17: the hint line ran past it
             _tapTitle = NewText("Title", tapPlaque, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(_tapTitle.rectTransform, new Vector2(0f, 0f), new Vector2(480f - PlaquePad * 2f, 20f),
+            Place(_tapTitle.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 20f),
                   new Vector2(PlaquePad, 46f));
             _tapTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
             Engraved(_tapTitle);
             _tapVerdict = NewText("Verdict", tapPlaque, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(_tapVerdict.rectTransform, new Vector2(0f, 0f), new Vector2(480f - PlaquePad * 2f, 20f),
+            Place(_tapVerdict.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 20f),
                   new Vector2(PlaquePad, 24f));
             _tapVerdict.horizontalOverflow = HorizontalWrapMode.Overflow;
             Engraved(_tapVerdict);
             _tapReadout = NewText("Readout", tapPlaque, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-            Place(_tapReadout.rectTransform, new Vector2(0f, 0f), new Vector2(480f - PlaquePad * 2f, 14f),
+            Place(_tapReadout.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 14f),
                   new Vector2(PlaquePad, 4f));
             _tapReadout.horizontalOverflow = HorizontalWrapMode.Overflow;
             _tapReadout.text = UIText.T("bench.tap.hint");
@@ -289,6 +289,13 @@ namespace LastCall.UI
             // StepBenchLight): a warm halo on the counter that follows the glass while it is held, and a faint flipped
             // pint under the glass's rest. Both before the props, so the props draw over them.
             // NO LIGHT (2026-09-16, the author: "Built sahnesindeki ışığı kaldır"); the mirror stays.
+            // ...and shadows under the font and the pint (2026-09-17), with the neon wash and the dusk under all.
+            // over the counter's front and lip (the surface's first two children), under everything else
+            AddNeonWash(_tapSurface, CounterY + 180f, over: 2);
+            _tapFontShadow = AddContactShadow(_tapSurface, 120f, new Vector2(TowerX, CounterY + 4f));
+            _tapFontShadow.SetSiblingIndex(4);
+            _tapPintShadow = AddContactShadow(_tapSurface, PintW * 0.8f, new Vector2(TowerX + _rig.Rest, CounterY + 4f));
+            _tapPintShadow.SetSiblingIndex(5);
             _pintMirror = NewRect("PintMirror", _tapSurface);
             _pintMirror.anchorMin = _pintMirror.anchorMax = new Vector2(0.5f, 0.5f);
             _pintMirror.pivot = new Vector2(0.5f, 0f);       // the foot: flipped, it hangs under the line
@@ -579,6 +586,8 @@ namespace LastCall.UI
                 _headColFill.fillAmount = Mathf.Clamp01((float)(head / HeadColumnFull));
                 _headColFill.color = head >= TapPour.GoodHeadMin && head <= TapPour.GoodHeadMax ? UITheme.Lime[3] : UITheme.Cream[3];
             }
+            if (_tapPintShadow != null && _tapGlass != null)
+                PushPropShadow(_tapPintShadow, _tapGlass, _tapGlassRest.y, CounterY + 4f, PintW * 0.8f, 1f);
             if (_pintMirror != null)
             {
                 bool show = !_glassHeld && _pintMirrorImg != null && _pintMirrorImg.sprite != null;
