@@ -1540,6 +1540,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.78 · Bira tezgâhı alet ailesine geçti: plakada karar, eğim kadranı, PINT/HEAD sütunları, ışık ve ayna, gerçek SERVİS tuşu; oda kalkar (2026-09-16)
+
+Yazar: "Bira koyma ekranını da tamamen baştan tasarla, bira koyma ekranında 1. seviye bira musluğu yerine 2 ve 3ü
+tekrardan oluşturmanı istiyorum sadece 1. seviyenin biraz daha gelişmişi olsun, çok fazla detay ve işlemeden kaçın."
+
+- **Plaka** (`AddCounterPlaque` 480×70, rayın altında): üç satır — biranın adı (16 px), **KARAR** (16 px, oyma;
+  ekranın dibindeki şeritten buraya taşındı, rengi eskisi gibi Lime/Amber/ViceRed) ve 8 px küçük satır: bardak
+  alınana kadar ipucu (`bench.tap.hint`), sonra sayılar (`bench.tap.readout`). Eski `StatusPlate` + dip yazıları
+  kaldırıldı.
+- **Eğim kadranı** ("TiltDial", 180×110, x −440, tezgâh önüne 4 birim taşar ki tepesi plakayı geçsin): `DialFace(88,44,6)`
+  2x, 0..90°; ibre `_glassTilt`'a döner (dikte solda, yanda sağda), tepede Lime çentik = 45° (`TapPour.IdealTilt`);
+  altında `bench.tap.dial_hint` "TILT TO 45° · STAND IT UP FOR HEAD".
+- **PINT ve HEAD sütunları** (`BuildTapColumn`, 24×200, musluğun sağında x TowerX+110 / +148): PINT dolum oranı,
+  0,75'te çizgi (kısa döküm sınırı), geçince Lime; HEAD köpük payı / 0,40 tavan, `GoodHeadMin/Max` iki çizgi,
+  bantta Lime yoksa Cream. `StepTapInstruments` her kare (`UpdateTap` içinden).
+- **Işık ve ayna**: 760×460 Cream[4] %16 hale, bardak eldeyken bardağı izler, değilse musluğun üstünde;
+  bardağın dinlenme yerinin altında %14 çevrik pint aynası (eldeyken gizli, `RefreshTap` sprite'ı günceller).
+- **SERVİS tuşu**: 240×64 amber `KeyPlate`, sağ altta (−16, 18), 16 px sözcük — 34'lük dip şeridi fıçı rafının
+  altında kalıyordu.
+- **Oda kalkar**: `OpenTap` diğer iki tezgâh gibi `Room.SetDrawerOpen(true)` çağırır. Ölçüldü: çekmece kapalıyken
+  ray tezgâhın altında kaldığından plaka y 530..600'e (fıçı rafının arkasına) asılıyordu.
+- **2. ve 3. seviye musluk**: 1. seviyeden TÜRETİLDİ (`scratchpad/tap_fonts_derive.py`): "ikiz" (ikinci kol aynalı,
+  bilezik, madalyon; 76×172) ve "taç" (ikiz + 16 satır, topuz, geniş taban; 76×188). Önizleme sayfasında (§9.77
+  bağlantısı, bölüm C); yazar seçerse `Items/bench_tap_twin/crown.png` olarak sevk edilir ve `RigFor` 2/3 ona
+  döner — bugün rigler hâlâ kemer/T'de.
+- Ölçüldü (r23/r24): kadran x 110..290 y 423..533; SERVİS 1024..1264 × 638..702; plaka (oda kalkınca) 16..496 ×
+  340..410; 1,5 sn 45° dökümde PINT %39 kehribar, HEAD %2.
+- Doğrulama: EditMode 596/596; PlayMode 13/13 (fıçı testleri SERVİS tuşunu adıyla bulur).
+
 ### 9.77 · Şişede içki ayağa iner, biraz cam görünür; backbar ve küçük şişe önizlemesi (2026-09-16)
 
 Yazar: "Şişelerin büyük hallerinin altındaki kısımlar dolmuyor ... sıvılarda sıvı dokusu olsa daha gerçekçi olur

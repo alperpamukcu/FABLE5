@@ -72,6 +72,9 @@
     { "key": "bench.serve.gauge_head", "text": "GLASS", "note": "Caption under the standing measure on the glass bench: it measures the glass. 8 px, centred under a 136-unit measure: ~10 characters." },
     { "key": "bench.serve.serve_key", "text": "SERVE IT ▶", "note": "The primary key on the glass bench: closes the bench with the drink ready to hand over. Keep the arrow. 16 px display face on a 250x46 key: ~14 characters." },
 
+    { "key": "bench.tap.dial_hint", "text": "TILT TO 45° · STAND IT UP FOR HEAD", "note": "Hint engraved under the draught bench's tilt dial (a half-round dial whose needle shows the glass's angle; 45° fills fastest, upright pours foam). 8 px, one line, ~180 units." },
+    { "key": "bench.tap.col.pint", "text": "PINT", "note": "Word under the draught bench's PINT column (how full the glass is; a line marks the short-pour limit). 8 px, one short word." },
+    { "key": "bench.tap.col.head", "text": "HEAD", "note": "Word under the draught bench's HEAD column (how much foam the pint carries; two lines mark the good band). 8 px, one short word." },
     { "key": "bench.tap.hint", "text": "HOLD THE GLASS AND AIM · TILT IT TO FILL, HOLD IT STRAIGHT FOR FOAM · CLICK A KEG TO SWAP", "note": "Standing instruction under the draught station's title. 8 px, one line across the top of the screen (~1280 units)." },
     { "key": "bench.tap.back_to_room", "text": "◀  BACK TO THE ROOM", "note": "Key on the draught station that returns to the room. Keep the arrow and the two spaces after it. 8 px on a 196x46 key: ~24 characters, one line." },
     { "key": "bench.tap.serve_key", "text": "SERVE IT · CLICK A CUSTOMER", "note": "The primary key on the draught station: closes it with the pint ready; the player then clicks a drinker. 8 px on a 240x34 key (~232 units): ~28 characters, one line." },

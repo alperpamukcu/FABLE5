@@ -272,6 +272,10 @@ namespace LastCall.UI
             // says why (TycoonHud.OnTapClicked toasts it) and this is the second lock: the
             // flow asks the rules rather than trusting the door it was opened by.
             if (Run.BuildingACocktail) return;
+            // AND THE ROOM LIFTS, as it does for the other two benches (2026-09-16, measured): the plaque under the
+            // rail hangs from the room's counter line, and with the drawer shut that line runs UNDER the draught
+            // bench's own counter — the beer's name and the verdict were hanging behind the keg rack.
+            GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(true);
             GoTo(Stage.Tap);
         }
 

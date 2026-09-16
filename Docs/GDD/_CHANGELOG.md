@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The draught bench in the instrument family (2026-09-16):** the verdict moved onto the plaque under the rail with
+  the beer's name and a small hint-then-numbers line; a tilt dial left of the glass shows the angle with a lime
+  notch at 45°; PINT and HEAD columns stand right of the font with the short-pour line and the good head band; a
+  light follows the glass and the pint casts a mirror at rest; SERVE is a real key bottom right; the room lifts
+  when the bench opens, so the plaque no longer hangs behind the keg rack. Levels 2 and 3 of the font derived
+  from level 1 wait on the preview page.
+
 - **The drink reaches the bottle's foot (2026-09-16):** the round foot drawn on 2026-09-14 had become the drink's
   lower boundary, leaving the base's corners empty under a full bottle in the hand and in the cellar; the drink
   now runs to the foot and the disc lies over it as the base seen through the drink. The hand bottle's drink is
