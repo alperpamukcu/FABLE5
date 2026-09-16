@@ -484,7 +484,8 @@ namespace LastCall.UI
             var face = NewRect("Face", plaque);
             Place(face, new Vector2(0.5f, 0f), new Vector2(DialW, DialH), new Vector2(0f, 20f));
             var fi = face.gameObject.AddComponent<Image>();
-            fi.sprite = ChromeArt.DialFace((int)(DialW / 2f), (int)(DialH / 2f), BottlePour.StepCount);   // drawn at half, shown at 2x
+            fi.sprite = ChromeArt.DialFace((int)(DialW / 2f), (int)(DialH / 2f), BottlePour.StepCount,
+                CounterFinish.Current.Rim, CounterFinish.Current.Id);   // drawn at half, shown at 2x; the arc in the finish's rim
             fi.raycastTarget = false;
 
             // The needle turns about the hub, which the face draws two texels (four units) over its foot.

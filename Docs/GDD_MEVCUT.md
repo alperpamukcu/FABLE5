@@ -1540,6 +1540,31 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.80 · Sıvıya gövde: mahzende silindir gölgeli içki, elde döndükçe dönen gölge ve dökerken kabarcıklar; mahzen loş spotlar ve şişe gölgeleri (2026-09-16)
+
+Yazar: "Şişenin içerisindeki sıvılara desen gerekiyor böyle düz bir renk olarak duruyorlar, sıvı hissiyatı için doku
+belki baloncuklar baloncuk patlama animasyonları şişeden dökülürken. Hem mahzende hem de built aşamasında önemli ...
+Mahzen sahnesine şişelere göre gölgelendirme ve rafların tepesinde loş spot ışığı etkisi verelim mevcut şeyleri
+sıfırlayıp."
+
+- **Mahzen içkisi** (`DiegeticStage`): içki sprite'ı beyaz piksel yerine `ChromeArt.LiquidBody()` (16×16: duvarlarda
+  0,68'e inen silindir gölgesi, üçte birde açık şerit, dibe doğru %10 koyu) — tonla çarpılır, oyuk genişliği ve
+  seviye yüksekliğine gerilir (ölçek artık sprite sınırlarına bölünür).
+- **El şişesi** (`BottleArt`): içki dörtgenine `RectMask2D` + içinde "Grain" — `ChromeArt.LiquidShade(w,h)` plaka
+  boyutunda (ortada saydam, duvarlara koyu %38, %33'te açık şerit) şişe çerçevesine +tilt ile döndürülür; ölçek
+  `SetLevel` her kare: konum `half − (A+B)/2` (dörtgenin merkezi → kap merkezi). **Kabarcıklar**: seviye altında 6
+  `Image` (`ChromeArt.Bubble()` 6 px halka); şişe 25°'den fazla yatıkken içkinin alt yarısında doğar, dünya-yukarı
+  yükselir (10–24 birim/sn·unit, hafif salınım), yüzeyin 2 texel altında patlar (0,14 sn büyür-solar), 0,15–0,65 sn
+  sonra yeniden; şişe dikilince hepsi patlar. LCG rastgelesi (kural katmanı değil, resim). `dt` 0,05'e kırpılır.
+  `Dry()` hepsini söndürür.
+- **Mahzen ışığı sıfırlandı**: nokta ışıklar KONİ oldu (`pointLightInnerAngle 70°, outer 120°`, aşağı bakar, roll
+  180°), yoğunluk 1,05→0,80 ("loş"), iç yarıçap 0,42→0,22.
+- **Şişe gölgeleri** (`PlaceCellarShadow`): her yuvada şişenin kendi silüeti siyah %30, (+3, −2) px kaydırılmış,
+  order 30 ve z −0,001 (sayacın önünde, z −0,002'deki arka plakanın arkasında); ayağın altında %42 siyah elips (genişlik
+  ×1,25, 5 px). Hover sallanmasında silüet gölge şişeyle gider, ayak gölgesi kalır. Görünürlük şişeyle.
+- **Kadran yayı** finişin `Rim` rengini alır (`ChromeArt.DialFace(w,h,ticks,rim,finish)`).
+- Doğrulama: r27 sondası (mahzen, gin dik, gin 60° dökümde kabarcıklar); EditMode/PlayMode takımı.
+
 ### 9.79 · Tezgâhın boyası: neonla açılış, bir kerelik boya kiti, beş finiş; tezgâhlar ve UI aksanı boyayı izler; dil ANINDA uygulanır; kstudent kadrodan çıktı (2026-09-16)
 
 Yazar: "Mevcut olan hariç hepsi eklenecek. Başlangıçta C olucak marketten 1 geliştirme satın alınarak masa rengi

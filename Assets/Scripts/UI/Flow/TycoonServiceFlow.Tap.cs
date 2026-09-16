@@ -499,7 +499,7 @@ namespace LastCall.UI
             var face = NewRect("Face", dial);
             Place(face, new Vector2(0.5f, 0f), new Vector2(176f, 88f), new Vector2(0f, 20f));
             var fi = face.gameObject.AddComponent<Image>();
-            fi.sprite = ChromeArt.DialFace(88, 44, 6); fi.raycastTarget = false;   // drawn at half, shown at 2x: 0..90° in sixths
+            fi.sprite = ChromeArt.DialFace(88, 44, 6, CounterFinish.Current.Rim, CounterFinish.Current.Id); fi.raycastTarget = false;   // drawn at half, shown at 2x: 0..90° in sixths
             // the good window: a lime notch straight up, where 45° stands (TapPour.IdealTilt)
             var good = NewRect("Good", dial);
             Place(good, new Vector2(0.5f, 0f), new Vector2(4f, 12f), new Vector2(0f, 20f + 88f - 16f));

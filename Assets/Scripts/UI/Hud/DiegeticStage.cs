@@ -292,6 +292,11 @@ namespace LastCall.UI
         // is what draws it over the drink (Renderer2D sorts a tie by depth); the order above is the bottle's front.
         private readonly List<SpriteRenderer> _cellarFace = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _cellarFoot = new List<SpriteRenderer>();
+        // THE CELLAR'S SHADOWS (2026-09-16, the author: "Mahzen sahnesine şişelere göre gölgelendirme ve rafların
+        // tepesinde loş spot ışığı etkisi verelim"): behind every bottle its own silhouette, black and faint, a few
+        // pixels right and down — the spot at the bay's ceiling throws it — and under its foot a soft ellipse.
+        private readonly List<SpriteRenderer> _cellarShadow = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _cellarFootShadow = new List<SpriteRenderer>();
         private readonly List<Rect> _cellarCavity = new List<Rect>();   // opaque bbox of the mask, in art px
         private Sprite _whitePx;
         private RectTransform _cellarDoorRoot;
@@ -436,6 +441,7 @@ namespace LastCall.UI
                 {
                     _cellarBack[i].gameObject.SetActive(false);
                     _cellarDrink[i].gameObject.SetActive(false);
+                    if (i < _cellarShadow.Count) { _cellarShadow[i].gameObject.SetActive(false); _cellarFootShadow[i].gameObject.SetActive(false); }
                     _cellarFace[i].gameObject.SetActive(false);
                     _cellarFoot[i].gameObject.SetActive(false);
                     _cellarMask[i].gameObject.SetActive(false);
@@ -544,7 +550,7 @@ namespace LastCall.UI
                 mask.isCustomRangeActive = true;
                 mask.frontSortingLayerID = mask.backSortingLayerID = back.sortingLayerID;
                 mask.frontSortingOrder = 31; mask.backSortingOrder = 31;
-                var drink = WorldSprite("StockDrink" + i, WhitePixel(), order: 31);
+                var drink = WorldSprite("StockDrink" + i, ChromeArt.LiquidBody(), order: 31);   // shaded like a cylinder (2026-09-16)
                 drink.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
                 var face = WorldSprite("StockFace" + i, GlassArt.SurfaceDisc(), order: 31);
                 face.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
@@ -588,6 +594,7 @@ namespace LastCall.UI
             var glow = CellarGlow(index);
             if (glow != null) glow.HaloHidden = !shown;   // the card draws the halo with the copy
             _cellarStock[index].enabled = shown;
+            if (index < _cellarShadow.Count) { _cellarShadow[index].enabled = shown; _cellarFootShadow[index].enabled = shown; }
             if (index < _cellarBack.Count) _cellarBack[index].enabled = shown;
             if (index < _cellarDrink.Count) _cellarDrink[index].enabled = shown && _cellarDrinkOn(index);
             if (index < _cellarFace.Count)
@@ -638,6 +645,7 @@ namespace LastCall.UI
                 if (i < _cellarBack.Count) movers.Add(_cellarBack[i].transform);
                 if (i < _cellarDrink.Count) movers.Add(_cellarDrink[i].transform);
                 if (i < _cellarFace.Count) { movers.Add(_cellarFace[i].transform); movers.Add(_cellarFoot[i].transform); }
+                if (i < _cellarShadow.Count) movers.Add(_cellarShadow[i].transform);   // the cast shadow rocks with it; the foot's stays
                 if (i < _cellarMask.Count) movers.Add(_cellarMask[i].transform);
                 glow.Movers = movers.ToArray();
             }
@@ -686,7 +694,8 @@ namespace LastCall.UI
                 if (rise * 2f >= hgt) rise = 0f;
                 // The drink reaches the foot; the arc is a shade over it (2026-09-16, with BottleArt.SetLevel:
                 // the base's corners stood empty under a full bottle while the quad began `rise` up).
-                d.transform.localScale = new Vector3(w, hgt, 1f);
+                var body = d.sprite != null ? d.sprite.bounds.size : Vector3.one;
+                d.transform.localScale = new Vector3(w / Mathf.Max(0.001f, body.x), hgt / Mathf.Max(0.001f, body.y), 1f);
                 // Both hang under _world: place in the parent's frame, so a scaled stage (a
                 // wide monitor, DesignFrame.SceneScale > 1) cannot push the level up.
                 var at = _cellarMask[i].transform.localPosition;
@@ -1330,6 +1339,33 @@ namespace LastCall.UI
         }
 
         /// <summary>Slot i, filled shelf by shelf and bay by bay, the way a bar restocks.</summary>
+        /// <summary>The bottle's two shadows, made on first use and moved with it: its silhouette (order 30, a hair
+        /// nearer than the counter, a hair farther than the back plate) and the ellipse under its foot.</summary>
+        private void PlaceCellarShadow(SpriteRenderer sr, int i, float x, float footY)
+        {
+            while (_cellarShadow.Count <= i)
+            {
+                int k = _cellarShadow.Count;
+                var cast = WorldSprite("StockShadow" + k, null, order: 30);
+                cast.color = new Color(0f, 0f, 0f, 0.30f);
+                var foot = WorldSprite("StockFootShadow" + k, GlassArt.SurfaceDisc(), order: 30);
+                foot.color = new Color(0f, 0f, 0f, 0.42f);
+                _cellarShadow.Add(cast); _cellarFootShadow.Add(foot);
+            }
+            var lift = _world != null ? _world.position : Vector3.zero;
+            var cast2 = _cellarShadow[i];
+            cast2.sprite = sr.sprite;
+            cast2.transform.localScale = sr.transform.localScale;
+            cast2.transform.position = sr.transform.position + new Vector3(3f, -2f, -0.001f);
+            cast2.enabled = sr.enabled; cast2.gameObject.SetActive(sr.gameObject.activeSelf);
+            var foot2 = _cellarFootShadow[i];
+            var disc = foot2.sprite != null ? foot2.sprite.bounds.size : Vector3.one;
+            float w = i < _cellarSlotW.Count ? _cellarSlotW[i] : CellarBottleH * 0.5f;
+            foot2.transform.localScale = new Vector3(w * 1.25f / Mathf.Max(0.001f, disc.x), 5f / Mathf.Max(0.001f, disc.y), 1f);
+            foot2.transform.position = new Vector3(x, footY + 1f, -0.001f) + lift;
+            foot2.enabled = sr.enabled; foot2.gameObject.SetActive(sr.gameObject.activeSelf);
+        }
+
         private void PlaceCellarSlot(SpriteRenderer sr, int i)
         {
             CellarSlotArt(i, out float artX, out float artFoot);
@@ -1355,12 +1391,13 @@ namespace LastCall.UI
                 artX + shift - _counterNative.x * 0.5f,
                 counterTop - artFoot + CellarBottleH * 0.5f, 0f)
                 + (_world != null ? _world.position : Vector3.zero);
+            PlaceCellarShadow(sr, i, artX + shift - _counterNative.x * 0.5f, counterTop - artFoot);
             // The sandwich rides the same transform as the front: same plate canvas, same
             // scale, same position — 1:1 by construction.
             if (i < _cellarBack.Count)
             {
                 _cellarBack[i].transform.localScale = sr.transform.localScale;
-                _cellarBack[i].transform.position = sr.transform.position;
+                _cellarBack[i].transform.position = sr.transform.position + new Vector3(0f, 0f, -0.002f);   // a hair nearer than the shadow
                 _cellarMask[i].transform.localScale = sr.transform.localScale;
                 _cellarMask[i].transform.position = sr.transform.position;
             }
@@ -1387,8 +1424,9 @@ namespace LastCall.UI
         /// <summary>Where the falloff starts, and how hard it burns. Held wide, because a
         /// shelf strip is a diffuse line and not a bulb: at the house default the whole pool
         /// is spent on the bottle necks and the feet stay in the dark they were in.</summary>
-        private const float CellarLightInner = 0.42f;
-        private const float CellarLightIntensity = 1.05f;
+        private const float CellarLightInner = 0.22f;      // 0.42 until 2026-09-16: a softer fall from the ceiling
+        private const float CellarLightIntensity = 0.80f;  // 1.05 until 2026-09-16: "loş" — dim
+        private const float CellarSpotInnerAngle = 70f, CellarSpotOuterAngle = 120f, CellarSpotRoll = 180f;   // pointing down
         /// <summary>Warm, because the light in this room is tungsten and the cellar is part
         /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
         /// shelf actually reads against the lamps over it.</summary>
@@ -1405,6 +1443,11 @@ namespace LastCall.UI
                     var l = PointLight($"CellarLight{shelf}_{bay}",
                         CellarLightTint, 0f, CellarLightRadius);
                     l.pointLightInnerRadius = CellarLightRadius * CellarLightInner;
+                    // A SPOT, NOT A BULB (2026-09-16): a cone from the bay's ceiling down onto the board — dim, so the
+                    // bottles' own shadows read (PlaceCellarShadow). Reset from the 2026 point light on the author's word.
+                    l.pointLightInnerAngle = CellarSpotInnerAngle;
+                    l.pointLightOuterAngle = CellarSpotOuterAngle;
+                    l.transform.localRotation = Quaternion.Euler(0f, 0f, CellarSpotRoll);
                     LightLayers(l, LayerCounter);
                     _cellarLights.Add(l);
                 }

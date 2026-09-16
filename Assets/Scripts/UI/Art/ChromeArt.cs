@@ -2023,6 +2023,68 @@ namespace LastCall.UI
         /// </summary>
         public static Sprite CounterRecess() => CounterRecess(Hex(0x17121B), Hex(0x100B14), Hex(0x2B2433), "night");
 
+        // ── THE LIQUID'S BODY (2026-09-16, the author: "Şişenin içerisindeki sıvılara desen gerekiyor böyle düz bir
+        // renk olarak duruyorlar, sıvı hissiyatı için doku belki baloncuklar") ─────────────────────────────────
+        /// <summary>A drink's body for the cellar's still bottles: white, shaded like a cylinder — dark at both walls,
+        /// a light column a third of the way across, a little darker toward the foot. Multiplied by the drink's
+        /// tone, stretched over the cavity's width and the level's height.</summary>
+        public static Sprite LiquidBody()
+        {
+            const string Key = "liquid:body";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 16, H = 16;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float u = (x + 0.5f) / W;
+                    float wall = 1f - Mathf.Pow(Mathf.Abs(u - 0.5f) * 2f, 2.2f) * 0.32f;   // 1 in the middle, 0.68 at the walls
+                    float streak = Mathf.Abs(u - 0.32f) < 0.08f ? 1.06f : 1f;               // the light down the near side
+                    float depth = 0.90f + 0.10f * (y / (float)(H - 1));                     // a shade darker at the foot
+                    float k = Mathf.Clamp01(wall * streak * depth);
+                    byte v = (byte)Mathf.RoundToInt(255f * k);
+                    px[y * W + x] = new Color32(v, v, v, 255);
+                }
+            return Cache[Key] = Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>The same shading as an OVERLAY for the hand bottle: transparent down the middle, dark toward the
+        /// walls, a pale streak a third across — laid over the flat drink and turned with the bottle, so the body
+        /// of the liquid reads at every tilt. Sized to the plate's texels.</summary>
+        public static Sprite LiquidShade(int w, int h)
+        {
+            string key = $"liquid:shade:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float u = (x + 0.5f) / w;
+                    float dark = Mathf.Pow(Mathf.Abs(u - 0.5f) * 2f, 2.4f) * 0.38f;
+                    bool streak = Mathf.Abs(u - 0.33f) < 0.05f;
+                    px[y * w + x] = streak ? new Color32(255, 255, 255, 40) : new Color32(0, 0, 0, (byte)Mathf.RoundToInt(255f * dark));
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>A bubble: a pale ring with a faint centre, 6 texels.</summary>
+        public static Sprite Bubble()
+        {
+            const string Key = "liquid:bubble";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 6;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = x + 0.5f - S * 0.5f, dy = y + 0.5f - S * 0.5f;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    byte a = d > 3f ? (byte)0 : d > 2f ? (byte)190 : (byte)60;
+                    px[y * S + x] = new Color32(255, 255, 255, a);
+                }
+            return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
         /// <summary>The recess in a finish's own tones (2026-09-16, CounterFinish.Recess): the well, its shadowed top
         /// and left, its lit bottom and right.</summary>
         public static Sprite CounterRecess(Color32 well, Color32 dark, Color32 lit, string finish)
@@ -2046,12 +2108,15 @@ namespace LastCall.UI
         /// marks from the left horizontal round to the right, the last one longer. The needle is the caller's (an
         /// Image pivoted at the face's foot, turned by the reading). Drawn at half size and shown at 2x.
         /// </summary>
-        public static Sprite DialFace(int w, int h, int ticks)
+        public static Sprite DialFace(int w, int h, int ticks) => DialFace(w, h, ticks, UITheme.Amber[1], "amber");
+
+        /// <summary>The dial with its arc in a finish's rim colour (2026-09-16, CounterFinish).</summary>
+        public static Sprite DialFace(int w, int h, int ticks, Color32 rim, string finish)
         {
-            string key = $"dial:{w}x{h}:{ticks}";
+            string key = $"dial:{w}x{h}:{ticks}:{finish}";
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             var px = new Color32[w * h];
-            Color32 well = Hex(0x17121B), rim = UITheme.Amber[1], tick = UITheme.Cream[2], hub = UITheme.Cream[3];
+            Color32 well = Hex(0x17121B), tick = UITheme.Cream[2], hub = UITheme.Cream[3];
             float cx = (w - 1) * 0.5f, cy = 2f;                  // the hub two texels up from the foot
             float R = Mathf.Min(cx, h - 3f);
             for (int y = 0; y < h; y++)

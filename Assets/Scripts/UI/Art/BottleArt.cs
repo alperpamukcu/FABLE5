@@ -32,6 +32,16 @@ namespace LastCall.UI
     {
         private readonly RectTransform _root;
         private readonly Image _back, _stencil, _drink, _surface, _floor, _front;
+        // THE LIQUID'S BODY (2026-09-16): a bottle-aligned shade over the flat drink, and bubbles that rise to the
+        // face and pop while the bottle is tipped to pour (the author: "sıvı hissiyatı için doku belki baloncuklar
+        // baloncuk patlama animasyonları şişeden dökülürken").
+        private readonly Image _grain;
+        private readonly RectTransform _grainRt;
+        private readonly Image[] _bubbles;
+        private struct BubbleState { public float x, y, vy, life; public bool popping; }
+        private readonly BubbleState[] _bubbleState;
+        private uint _seed = 2463534242u;
+        private float Rand() { _seed = _seed * 1664525u + 1013904223u; return (_seed >> 8) / 16777216f; }
         private readonly RectTransform _level, _drinkRt, _surfaceRt, _floorRt;
         // THE CHORD TABLE (2026-09-14): per tilt bucket, per one-texel slab along world-up from the cavity's lowest texel,
         // how many cavity texels the slab holds (its width) and the sum of their positions along world-right (its middle).
@@ -47,12 +57,16 @@ namespace LastCall.UI
         private const int Rows = 64;          // fraction resolution of the table
 
         private BottleArt(RectTransform root, Image back, Image stencil, RectTransform level,
-                          Image drink, Image floor, Image surface, Image front)
+                          Image drink, Image floor, Image surface, Image front, Image grain, Image[] bubbles)
         {
             _root = root; _back = back; _stencil = stencil; _level = level;
             _drink = drink; _drinkRt = drink.rectTransform;
             _floor = floor; _floorRt = floor.rectTransform;
             _surface = surface; _surfaceRt = surface.rectTransform; _front = front;
+            _grain = grain; _grainRt = grain != null ? grain.rectTransform : null;
+            _bubbles = bubbles ?? new Image[0];
+            _bubbleState = new BubbleState[_bubbles.Length];
+            for (int i = 0; i < _bubbleState.Length; i++) _bubbleState[i].life = 0.2f + Rand() * 0.6f;
         }
 
         /// <summary>
@@ -100,12 +114,31 @@ namespace LastCall.UI
             level.pivot = new Vector2(0.5f, 0.5f);
             level.anchoredPosition = Vector2.zero;
             var drink = Plate("Drink", level, false);
+            // The shade rides INSIDE the drink's quad (clipped to it by the quad's own mask, and to the cavity by
+            // the stencil above), centred on the vessel and turned back to the bottle's frame in SetLevel.
+            drink.gameObject.AddComponent<RectMask2D>();
+            var grain = Plate("Grain", drink.transform, false);
+            grain.rectTransform.anchorMin = grain.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            grain.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            grain.rectTransform.sizeDelta = Vector2.zero;
+            grain.enabled = false;
             var floor = Plate("Floor", level, false);       // the drink's round foot (2026-09-14)
             var surface = Plate("Surface", level, false);   // the drink's oval face (2026-09-14)
             floor.sprite = GlassArt.SurfaceDisc();
             surface.sprite = GlassArt.SurfaceDisc();
+            var bubbles = new Image[6];
+            for (int i = 0; i < bubbles.Length; i++)
+            {
+                var b = Plate("Bubble" + i, level, false);
+                b.rectTransform.anchorMin = b.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                b.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                b.rectTransform.sizeDelta = new Vector2(6f, 6f);
+                b.sprite = ChromeArt.Bubble();
+                b.enabled = false;
+                bubbles[i] = b;
+            }
             var front = Plate("Front", root, true);
-            return new BottleArt(root, back, stencil, level, drink, floor, surface, front);
+            return new BottleArt(root, back, stencil, level, drink, floor, surface, front, grain, bubbles);
         }
 
         public void Show(ItemArt.BottlePlates plates)
@@ -117,6 +150,8 @@ namespace LastCall.UI
             _back.sprite = plates.Back; _back.enabled = plates.Back != null;
             _stencil.sprite = plates.Mask; _stencil.enabled = plates.Mask != null;
             _front.sprite = plates.Front; _front.enabled = plates.Front != null;
+            if (_grain != null) _grain.sprite = plates.Mask != null
+                ? ChromeArt.LiquidShade((int)plates.Mask.rect.width, (int)plates.Mask.rect.height) : null;
             _lut = null; _maskPx = null;
         }
 
@@ -125,11 +160,19 @@ namespace LastCall.UI
         /// in <paramref name="tone"/>, with the surface level for a bottle tilted by
         /// <paramref name="tiltDeg"/> (the parent's z rotation, counter-clockwise positive).
         /// </summary>
+        /// <summary>Nothing to show: the drink, its face, foot, shade and bubbles all off.</summary>
+        private void Dry()
+        {
+            _drink.enabled = _surface.enabled = _floor.enabled = false;
+            if (_grain != null) _grain.enabled = false;
+            foreach (var b in _bubbles) if (b != null) b.enabled = false;
+        }
+
         public void SetLevel(Color tone, double fraction, float tiltDeg)
         {
-            if (_plates == null || _plates.Mask == null) { _drink.enabled = _surface.enabled = _floor.enabled = false; return; }
+            if (_plates == null || _plates.Mask == null) { Dry(); return; }
             float f = Mathf.Clamp01((float)fraction);
-            if (f <= 0f) { _drink.enabled = _surface.enabled = _floor.enabled = false; return; }
+            if (f <= 0f) { Dry(); return; }
             _drink.enabled = _surface.enabled = true;
             // A LITTLE GLASS IN THE DRINK (2026-09-16, the author: "sıvılarda sıvı dokusu olsa daha gerçekçi olur"):
             // the drink is 90% over the back plate, so the interior's own gradient — light down the middle, dark
@@ -211,6 +254,65 @@ namespace LastCall.UI
             _surfaceRt.sizeDelta = new Vector2(chord * unit, Mathf.Max(unit, chord * unit * GlassArt.SurfaceSquash));
             _surfaceRt.anchoredPosition = new Vector2(chordMid * unit, y);
             _surface.enabled = chord > 0f;
+
+            // THE SHADE, in the bottle's frame over the drink's quad: sized to the plate, centred on the vessel
+            // (the quad's centre sits (A+B)/2 up the level; the vessel's centre sits `half` up), turned by +tilt to
+            // undo the level's counter-rotation.
+            if (_grainRt != null && _grain.sprite != null)
+            {
+                float a = Mathf.Clamp(bottom + half, 0f, diag), b = Mathf.Clamp(y + half, 0f, diag);
+                _grain.enabled = true;
+                _grainRt.sizeDelta = new Vector2(artW, artH);
+                _grainRt.anchoredPosition = new Vector2(0f, half - (a + b) * 0.5f);
+                _grainRt.localRotation = Quaternion.Euler(0f, 0f, tiltDeg);
+            }
+            StepBubbles(tiltDeg, bottom, y, footChord * unit, footMid * unit, unit);
+        }
+
+        /// <summary>Bubbles while the bottle pours: born low in the drink, they rise to the face along world-up (the
+        /// level's frame), pop as a ring that grows and fades, and come again after a beat. Still when the bottle
+        /// stands. The clock is clamped so a slow frame does not throw them across the bottle.</summary>
+        private void StepBubbles(float tiltDeg, float floorY, float surfY, float chord, float mid, float unit)
+        {
+            if (_bubbles.Length == 0) return;
+            bool active = Mathf.Abs(Mathf.DeltaAngle(0f, tiltDeg)) > 25f && surfY - floorY > 6f * unit;
+            float dt = Mathf.Min(Time.deltaTime, 0.05f);
+            for (int i = 0; i < _bubbles.Length; i++)
+            {
+                var img = _bubbles[i];
+                if (img == null) continue;
+                var rt = img.rectTransform;
+                ref var s = ref _bubbleState[i];
+                if (!img.enabled)
+                {
+                    if (!active) continue;
+                    s.life -= dt;
+                    if (s.life > 0f) continue;
+                    s.x = mid + (Rand() - 0.5f) * chord * 0.8f;
+                    s.y = floorY + Rand() * (surfY - floorY) * 0.5f;
+                    s.vy = (10f + Rand() * 14f) * unit;
+                    s.popping = false; s.life = 0f;
+                    rt.sizeDelta = new Vector2(6f, 6f) * (0.6f + Rand() * 0.6f);
+                    rt.localScale = Vector3.one; img.color = Color.white;
+                    img.enabled = true;
+                }
+                else if (!s.popping)
+                {
+                    s.y += s.vy * dt;
+                    s.x += Mathf.Sin(s.y * 0.15f) * 6f * dt;
+                    if (s.y >= surfY - 2f * unit) { s.popping = true; s.life = 0.14f; }
+                }
+                else
+                {
+                    s.life -= dt;
+                    float k = 1f + (0.14f - s.life) * 4f;
+                    rt.localScale = new Vector3(k, k, 1f);
+                    img.color = new Color(1f, 1f, 1f, Mathf.Clamp01(s.life / 0.14f));
+                    if (s.life <= 0f) { img.enabled = false; rt.localScale = Vector3.one; img.color = Color.white; s.life = 0.15f + Rand() * 0.5f; }
+                }
+                if (!active && img.enabled && !s.popping) { s.popping = true; s.life = 0.14f; }   // the bottle stood up: they burst
+                rt.anchoredPosition = new Vector2(s.x, s.y);
+            }
         }
 
         /// <summary>How wide the cavity is in slab <paramref name="bin"/> of a tilt bucket (texels) and where its middle

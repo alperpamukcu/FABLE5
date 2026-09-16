@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The liquid has a body, the cellar is lit by spots (2026-09-16):** the cellar's drinks are shaded like a cylinder;
+  the hand bottle's drink carries a bottle-aligned shade and, while it pours, bubbles that rise to the face and
+  pop; the cellar's bay lights are dim downward cones and every bottle casts its silhouette behind it and an
+  ellipse under its foot; the dial arcs take the finish's rim colour.
+
 - **The counter's finish (2026-09-16):** the bar opens in neon (pink frames, a dark plum back); the refinish kit,
   bought once at the market, unlocks five finishes as swatches cut from the counter's own drawing; a finish
   recolours the counter and the shutter by family, the bench counter takes the same slab tone and the bench
