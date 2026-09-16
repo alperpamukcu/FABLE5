@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The song list, the seek bar, and the ratings in a well (2026-09-16):** the settings' NOW PLAYING title is a
+  key that opens every song the bar owns in a list above it, the one playing lit; a TRACK row under it drags
+  through the song with its clock beside it (Sfx.PlaySong, MusicProgress, MusicClock, AllSongs); the place line
+  counts the song's own list. On the beam the five stars and the SERVICE and COMFORT strips stand in a well of the
+  same make as the night's and the player's.
+
 - **The spoon is the first star's lesson (2026-09-16):** Black Russian moves from rank 8 to rank 9 (one star), so
   no zero-star page stirs; the first stirred page on the menu brings the bar spoon (TycoonRun.SpoonUnlocked), the
   bench shows the spoon and its towel only from then on, Core refuses a stir without one, the market card of a

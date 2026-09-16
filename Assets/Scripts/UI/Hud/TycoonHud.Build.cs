@@ -235,8 +235,26 @@ namespace LastCall.UI
             const float BlockRight = RightEdge - 56f;              // clear of the 42-unit key
             float starsW = _ratingStars.Length * StarGap;
 
-            var standing = NewRect("Standing", top);
-            Place(standing, new Vector2(1, 0.5f), new Vector2(starsW, TopBarH), new Vector2(BlockRight, 0));
+            // IN A WELL OF THE BEAM'S OWN MAKE (2026-09-16, the author: "Üst bardaki tasarıma yıldız ve
+            // puanlamaları dahil et onları da üst bar tasarımına uygun bir hale getir"). The night's well and the
+            // player's well are the beam's instruments; the stars and the two strips stood bare beside them, the
+            // one reading on the beam without a glass over it. The same well holds all three now — the captions,
+            // the two strips, the five stars — at the player's 42, so the beam reads as one row of the same
+            // fittings. This is the WELL, not the 2026-08-14 box: no border drawn round a widget, the display
+            // glass every other reading on the beam already sits in.
+            const float WellPad = 10f;
+            float wellW = WellPad + 70f + HouseStripW + 26f + starsW + WellPad;
+            var ratingWell = NewRect("RatingWell", top);
+            Place(ratingWell, new Vector2(1, 0.5f), new Vector2(wellW, PlayerH), new Vector2(BlockRight + WellPad, 0));
+            ratingWell.pivot = new Vector2(1, 0.5f);
+            var wellImg = ratingWell.gameObject.AddComponent<Image>();
+            wellImg.sprite = ChromeArt.Well();
+            wellImg.type = Image.Type.Sliced;
+            wellImg.color = Color.white;
+            wellImg.raycastTarget = true;
+
+            var standing = NewRect("Standing", ratingWell);
+            Place(standing, new Vector2(1, 0.5f), new Vector2(starsW, PlayerH), new Vector2(-WellPad, 0));
             standing.pivot = new Vector2(1, 0.5f);
 
             // ONE CENTRE LINE (2026-09-07, the author: "yıldız konfor kalp kısmını hizalı ...
@@ -294,9 +312,9 @@ namespace LastCall.UI
             // minute (the medallion — COMFORT), as two strips of five left of the standing.
             // No numbers, exactly as the stars carry none: the fill IS the reading, and the
             // night files the lower of the two under the stars' menu ceiling.
-            var house = NewRect("House", top);
-            Place(house, new Vector2(1, 0.5f), new Vector2(HouseStripW, TopBarH),
-                new Vector2(BlockRight - starsW - 26f, 0));
+            var house = NewRect("House", ratingWell);
+            Place(house, new Vector2(1, 0.5f), new Vector2(HouseStripW, PlayerH),
+                new Vector2(-WellPad - starsW - 26f, 0));
             house.pivot = new Vector2(1, 0.5f);
             _serviceFill = IconStrip(house, "Service", ItemArt.Heart(false, 16f), ItemArt.Heart(true, 16f), RowY - 9f);
             _comfortFill = IconStrip(house, "Comfort", ItemArt.Medal(false, 16f), ItemArt.Medal(true, 16f), RowY + 9f);

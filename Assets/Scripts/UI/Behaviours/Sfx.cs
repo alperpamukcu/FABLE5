@@ -430,11 +430,15 @@ namespace LastCall.UI
         {
             get
             {
-                var i = Instance;
-                string from = i.ResolvedMood(out var list);
-                if (from == null || list.Count == 0) return (0, 0);
-                i._musicCursor.TryGetValue(from, out int next);
-                return (((next - 1) % list.Count + list.Count) % list.Count + 1, list.Count);
+                // Read off the SONG, not the mood's cursor (2026-09-16): a song picked from the list may belong to
+                // another mood than the night's, and its place is in its own list — "DAY'S END · 1 / 2", never
+                // "1 / 5" borrowed from the night's five.
+                string song = NowPlaying;
+                if (song == null) return (0, 0);
+                int cut = song.LastIndexOf('_');
+                if (cut < 0 || !int.TryParse(song.Substring(cut + 1), out int n)) return (0, 0);
+                var list = Instance.Playlist(song.Substring(0, cut));
+                return list.Count == 0 ? (0, 0) : (n, list.Count);
             }
         }
 
@@ -467,6 +471,74 @@ namespace LastCall.UI
         }
 
         private bool _musicPaused;
+
+        // ── THE LIST AND THE SEEK (2026-09-16, the author: "now playing kısmında tüm şarkıları açılan bir combobox ile
+        // görüntüleyip istenilen seçilebilmeli, şarkıyı ileri saran bir player olmalı") ────────────────────────────
+        /// <summary>Every song the bar owns, by file tail, in the order the moods play them: night, dayend, lastcall,
+        /// story. Read once off the Resources and kept.</summary>
+        public static IReadOnlyList<string> AllSongs
+        {
+            get
+            {
+                var i = Instance;
+                if (i._allSongs == null)
+                {
+                    var all = new List<string>();
+                    foreach (var mood in new[] { "night", "dayend", "lastcall", "story" })
+                        foreach (var c in i.Playlist(mood))
+                            all.Add(c.name.StartsWith("music_") ? c.name.Substring(6) : c.name);
+                    i._allSongs = all;
+                }
+                return i._allSongs;
+            }
+        }
+        private List<string> _allSongs;
+
+        /// <summary>Plays this song now — "night_3", "dayend_1" — fading into it as the player does between songs.
+        /// Its mood's list goes on from the song after it; the night's own mood keeps deciding what follows.</summary>
+        public static void PlaySong(string song)
+        {
+            var i = Instance;
+            if (string.IsNullOrEmpty(song) || i._music == null) return;
+            int cut = song.LastIndexOf('_');
+            if (cut < 0 || !int.TryParse(song.Substring(cut + 1), out int n)) return;
+            var list = i.Playlist(song.Substring(0, cut));
+            if (n < 1 || n > list.Count) return;
+            i._musicCursor[song.Substring(0, cut)] = n;
+            i.StartClip(list[n - 1]);
+            i._musicPaused = false;
+        }
+
+        /// <summary>Where the song stands, 0–1; set to seek. Nothing while no song plays.</summary>
+        public static float MusicProgress
+        {
+            get
+            {
+                var a = ActiveMusic;
+                return a == null || a.clip == null || a.clip.length <= 0f ? 0f : a.time / a.clip.length;
+            }
+            set
+            {
+                var a = ActiveMusic;
+                if (a == null || a.clip == null) return;
+                a.time = Mathf.Clamp01(value) * Mathf.Max(0f, a.clip.length - 0.05f);
+            }
+        }
+
+        /// <summary>The song's clock: seconds in, and its length. (0, 0) with no song.</summary>
+        public static (float at, float length) MusicClock
+        {
+            get
+            {
+                var a = ActiveMusic;
+                return a == null || a.clip == null ? (0f, 0f) : (a.time, a.clip.length);
+            }
+        }
+
+        private static AudioSource ActiveMusic
+        {
+            get { var i = Instance; return i._music != null ? i._music[i._musicActive] : null; }
+        }
 
         /// <summary>The mood whose list is playing — the mood itself, or the nearest one with songs.</summary>
         private string ResolvedMood(out List<AudioClip> list)
@@ -510,7 +582,13 @@ namespace LastCall.UI
                 _musicCursor[from] = at + 1;
             }
             else clip = Clip("ambience_loop");
-            if (clip == null) return;
+            StartClip(clip);
+        }
+
+        /// <summary>Puts a clip on the quiet source and makes it the active one; StepMusic fades it up.</summary>
+        private void StartClip(AudioClip clip)
+        {
+            if (clip == null || _music == null) return;
             var incoming = _music[1 - _musicActive];
             incoming.clip = clip;
             incoming.volume = 0f;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using LastCall.Core;
 using LastCall.Game;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -32,6 +33,13 @@ namespace LastCall.UI
     public sealed partial class TycoonHud
     {
         private const float SetW = 800f, SetH = 540f, SetPad = 44f, SetRow = 56f, CapH = 32f;
+        // The audio page's rows are 50, not 56: six of them (three meters, the switch, the player, the track) have to
+        // stand between the tabs and the foot, and a 32 key on a 50 row is still a key with room around it.
+        private const float AudioRow = 50f, SeekW = 300f, SongRowH = 22f;
+        private RectTransform _settingsSongKey, _songList, _seekFill, _seekKnob;
+        private readonly Dictionary<string, Text> _songRows = new Dictionary<string, Text>();
+        private Text _seekClock;
+        private bool _songListOpen, _seekDragging;
         private readonly Dictionary<string, RectTransform> _settingsPages = new Dictionary<string, RectTransform>();
         private readonly Dictionary<string, RectTransform> _settingsTabs = new Dictionary<string, RectTransform>();
         private string _settingsPage = "AUDIO";
@@ -83,6 +91,8 @@ namespace LastCall.UI
             else
             {
                 _bindListening = null;
+                ToggleSongList(false);
+                _seekDragging = false;
                 if (_settingsFromPause && _pausePanel != null)
                 {
                     // BACK goes back to where the window came from; the night stays held meanwhile.
@@ -160,6 +170,7 @@ namespace LastCall.UI
         {
             _settingsPage = id;
             _bindListening = null;
+            ToggleSongList(false);
             foreach (var pair in _settingsPages) pair.Value.gameObject.SetActive(pair.Key == id);
             foreach (var pair in _settingsTabs) RetoneWordKey(pair.Value, pair.Key == id ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
             RefreshSettings();
@@ -172,11 +183,11 @@ namespace LastCall.UI
             var page = NewRect("Page_AUDIO", plate);
             Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -140f));
             float y = 0f;
-            _settingsMeter = MeterRow(page, "MASTER", UIText.T("chrome.settings.master"), "speaker", ref y, () => Sound.Volume, v => Sound.Volume = v, out _settingsVolume);
-            _settingsMusicMeter = MeterRow(page, "MUSIC", UIText.T("chrome.settings.music"), "note", ref y, () => Sound.MusicVolume, v => Sound.MusicVolume = v, out _settingsMusicPct);
-            _settingsEffectsMeter = MeterRow(page, "EFFECTS", UIText.T("chrome.settings.effects"), "glass", ref y, () => Sound.EffectsVolume, v => Sound.EffectsVolume = v, out _settingsEffectsPct);
+            _settingsMeter = MeterRow(page, "MASTER", UIText.T("chrome.settings.master"), "speaker", ref y, () => Sound.Volume, v => Sound.Volume = v, out _settingsVolume, AudioRow);
+            _settingsMusicMeter = MeterRow(page, "MUSIC", UIText.T("chrome.settings.music"), "note", ref y, () => Sound.MusicVolume, v => Sound.MusicVolume = v, out _settingsMusicPct, AudioRow);
+            _settingsEffectsMeter = MeterRow(page, "EFFECTS", UIText.T("chrome.settings.effects"), "glass", ref y, () => Sound.EffectsVolume, v => Sound.EffectsVolume = v, out _settingsEffectsPct, AudioRow);
 
-            var snd = SettingsRow(page, "SOUND", UIText.T("chrome.settings.sound"), "speaker", ref y);
+            var snd = SettingsRow(page, "SOUND", UIText.T("chrome.settings.sound"), "speaker", ref y, AudioRow);
             _settingsMuteKey = PackIconKey(snd, "MUTE", "sound_on", MenuPack.Tone.Green, new Vector2(0, 0.5f), new Vector2(300f, 0), () =>
             {
                 Sound.Muted = !Sound.Muted;
@@ -188,7 +199,7 @@ namespace LastCall.UI
             _settingsMute.rectTransform.pivot = new Vector2(0, 0.5f);
             _settingsMute.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            var now = SettingsRow(page, "NOW PLAYING", UIText.T("chrome.settings.now_playing"), "note", ref y);
+            var now = SettingsRow(page, "NOW PLAYING", UIText.T("chrome.settings.now_playing"), "note", ref y, AudioRow);
             float kx = 300f;
             PackIconKey(now, "PREV", "prev", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(kx, 0), () => { Sfx.SkipTrack(-1); Sfx.Play("click"); });
             kx += 40f;
@@ -196,15 +207,145 @@ namespace LastCall.UI
             kx += 40f;
             PackIconKey(now, "NEXT", "next", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(kx, 0), () => { Sfx.SkipTrack(+1); Sfx.Play("click"); });
             kx += 32f + 12f;
-            _settingsNowTitle = NewText("Title", now, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
-            Place(_settingsNowTitle.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 12), new Vector2(kx, 8f));
-            _settingsNowTitle.rectTransform.pivot = new Vector2(0, 0.5f);
-            _settingsNowTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _settingsNowPlace = NewText("Place", now, _body, 8, TextAnchor.MiddleLeft, UITheme.Magenta[3]);
-            Place(_settingsNowPlace.rectTransform, new Vector2(0, 0.5f), new Vector2(300, 12), new Vector2(kx, -8f));
-            _settingsNowPlace.rectTransform.pivot = new Vector2(0, 0.5f);
+            // THE SONG IS A KEY, AND THE KEY OPENS THE LIST (2026-09-16, the author: "now playing kısmında tüm
+            // şarkıları açılan bir combobox ile görüntüleyip istenilen seçilebilmeli"): the title sits on a pack key
+            // with a chevron at its end; pressed, every song the bar owns unrolls ABOVE it (there is room above and
+            // none below), in the order the moods play them, the one playing lit. Under the key, small, which list
+            // the song is on and its place in it.
+            float songW = SetW - SetPad * 2f - kx;
+            _settingsSongKey = PackWordKey(now, "SONG", "", null, MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(songW, 32f),
+                new Vector2(kx, 0), () => { Sfx.Play("click"); ToggleSongList(!_songListOpen); }, songW, 0f);
+            _settingsNowTitle = _settingsSongKey.Find("Face/Label").GetComponent<Text>();
+            var drop = NewRect("Drop", _settingsSongKey.Find("Face") as RectTransform);
+            Place(drop, new Vector2(1, 0.5f), new Vector2(16, 16), new Vector2(-10f, 1f));
+            drop.pivot = new Vector2(1, 0.5f);
+            drop.localRotation = Quaternion.Euler(0, 0, 90f);   // the bench's left chevron, turned to point down
+            var di = drop.gameObject.AddComponent<Image>();
+            di.sprite = ChromeArt.Mark("chevron_left"); di.color = MenuPack.Word(MenuPack.Tone.Grey); di.raycastTarget = false;
+            _settingsNowPlace = NewText("Place", now, _body, 8, TextAnchor.MiddleRight, UITheme.Magenta[3]);
+            Place(_settingsNowPlace.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 12), new Vector2(-4f, -21f));
+            _settingsNowPlace.rectTransform.pivot = new Vector2(1, 0.5f);
             _settingsNowPlace.horizontalOverflow = HorizontalWrapMode.Overflow;
+            BuildSongList(now, kx, songW);
+
+            // THE TRACK, SEEKABLE (the author: "şarkıyı ileri saran bir player olmalı"): a rail the pointer presses or
+            // drags through the song, the knob on it, and the clock beside it — read off the player every frame the
+            // window is up (StepSeek), except while the hand is on it.
+            var track = SettingsRow(page, "TRACK", UIText.T("chrome.settings.track"), "note", ref y, 44f);
+            var seek = NewRect("Seek", track);
+            Place(seek, new Vector2(0, 0.5f), new Vector2(SeekW, 24f), new Vector2(300f, 0));
+            seek.pivot = new Vector2(0, 0.5f);
+            var seekHit = seek.gameObject.AddComponent<Image>();
+            seekHit.color = new Color(0, 0, 0, 0.001f);   // the whole 24 answers the hand, not the 6 of the rail
+            var rail = NewRect("Rail", seek);
+            Place(rail, new Vector2(0, 0.5f), new Vector2(SeekW, 6f), Vector2.zero);
+            rail.pivot = new Vector2(0, 0.5f);
+            var railImg = rail.gameObject.AddComponent<Image>(); railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
+            _seekFill = NewRect("Fill", seek);
+            Place(_seekFill, new Vector2(0, 0.5f), new Vector2(0f, 6f), Vector2.zero);
+            _seekFill.pivot = new Vector2(0, 0.5f);
+            var fillImg = _seekFill.gameObject.AddComponent<Image>(); fillImg.color = UITheme.Cyan[3]; fillImg.raycastTarget = false;
+            _seekKnob = NewRect("Knob", seek);
+            Place(_seekKnob, new Vector2(0, 0.5f), new Vector2(6f, 16f), Vector2.zero);
+            _seekKnob.pivot = new Vector2(0.5f, 0.5f);
+            var knobImg = _seekKnob.gameObject.AddComponent<Image>(); knobImg.color = UITheme.Cream[4]; knobImg.raycastTarget = false;
+            var trig = seek.gameObject.AddComponent<EventTrigger>();
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(e => { _seekDragging = true; SeekTo(seek, (PointerEventData)e); });
+            var drag = new EventTrigger.Entry { eventID = EventTriggerType.Drag };
+            drag.callback.AddListener(e => SeekTo(seek, (PointerEventData)e));
+            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            up.callback.AddListener(e => { SeekTo(seek, (PointerEventData)e); _seekDragging = false; });
+            trig.triggers.Add(down); trig.triggers.Add(drag); trig.triggers.Add(up);
+            _seekClock = NewText("Clock", track, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            Place(_seekClock.rectTransform, new Vector2(0, 0.5f), new Vector2(140, 20), new Vector2(300f + SeekW + 14f, 0));
+            _seekClock.rectTransform.pivot = new Vector2(0, 0.5f);
+            _seekClock.horizontalOverflow = HorizontalWrapMode.Overflow;
+            PaintSeek(0f);
             return page;
+        }
+
+        /// <summary>The list of every song, closed until the song key opens it: a well of the beam's make standing
+        /// above the key, one row a song — its title, and small at the right which list it is on.</summary>
+        private void BuildSongList(RectTransform row, float x, float w)
+        {
+            var songs = Sfx.AllSongs;
+            float h = songs.Count * SongRowH + 8f;
+            _songList = NewRect("SongList", row);
+            Place(_songList, new Vector2(0, 0.5f), new Vector2(w, h), new Vector2(x + w * 0.5f, 16f + 4f + h * 0.5f));
+            _songList.pivot = new Vector2(0.5f, 0.5f);
+            var plate = _songList.gameObject.AddComponent<Image>();
+            plate.sprite = ChromeArt.Well(); plate.type = Image.Type.Sliced; plate.color = Color.white; plate.raycastTarget = true;
+            _songRows.Clear();
+            for (int i = 0; i < songs.Count; i++)
+            {
+                string song = songs[i];
+                var r = NewRect("S_" + song, _songList);
+                Place(r, new Vector2(0, 1), new Vector2(w - 8f, SongRowH), new Vector2(4f, -4f - i * SongRowH));
+                r.pivot = new Vector2(0, 1);
+                var bg = r.gameObject.AddComponent<Image>();
+                bg.color = new Color(1f, 1f, 1f, 0f); bg.raycastTarget = true;
+                var relay = r.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => bg.color = UITheme.Night[3];
+                relay.Exited = () => bg.color = new Color(1f, 1f, 1f, 0f);
+                var btn = r.gameObject.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.AddListener(() =>
+                {
+                    Sfx.PlaySong(song); Sfx.Play("click");
+                    ToggleSongList(false);
+                    RefreshSettings(); RefreshMusicPlayer(true);
+                });
+                var title = NewText("Title", r, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+                Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(w - 90f, 20), new Vector2(8f, 0));
+                title.rectTransform.pivot = new Vector2(0, 0.5f);
+                title.horizontalOverflow = HorizontalWrapMode.Overflow; title.raycastTarget = false;
+                title.text = SongTitle(song);
+                _songRows[song] = title;
+                int cut = song.LastIndexOf('_');
+                var mood = NewText("Mood", r, _body, 8, TextAnchor.MiddleRight, UITheme.Magenta[3]);
+                Place(mood.rectTransform, new Vector2(1, 0.5f), new Vector2(80, 12), new Vector2(-8f, 0));
+                mood.rectTransform.pivot = new Vector2(1, 0.5f);
+                mood.horizontalOverflow = HorizontalWrapMode.Overflow; mood.raycastTarget = false;
+                mood.text = MoodWord(cut < 0 ? song : song.Substring(0, cut));
+            }
+            _songList.gameObject.SetActive(false);
+        }
+
+        private void ToggleSongList(bool open)
+        {
+            _songListOpen = open && _songList != null;
+            if (_songList != null) _songList.gameObject.SetActive(_songListOpen);
+        }
+
+        private void SeekTo(RectTransform bar, PointerEventData e)
+        {
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(bar, e.position, e.pressEventCamera, out var local)) return;
+            float p = Mathf.Clamp01(local.x / SeekW);
+            Sfx.MusicProgress = p;
+            PaintSeek(p);
+        }
+
+        private void PaintSeek(float p)
+        {
+            if (_seekFill == null) return;
+            _seekFill.sizeDelta = new Vector2(p * SeekW, 6f);
+            _seekKnob.anchoredPosition = new Vector2(p * SeekW, 0f);
+            var (at, length) = Sfx.MusicClock;
+            _seekClock.text = length <= 0f ? "" : UIText.T("chrome.settings.clock", ("at", Clock(at)), ("of", Clock(length)));
+        }
+
+        private static string Clock(float seconds)
+        {
+            int s = Mathf.Max(0, Mathf.RoundToInt(seconds));
+            return (s / 60) + ":" + (s % 60).ToString("00");
+        }
+
+        /// <summary>The seek bar follows the song while the window is up and the hand is off it.</summary>
+        private void StepSeek()
+        {
+            if (_seekFill == null || _settingsPage != "AUDIO" || _seekDragging) return;
+            PaintSeek(Sfx.MusicProgress);
         }
 
         /// <summary>A row: a mark, the name beside it, a hairline under; the control is placed by the caller from
@@ -234,9 +375,9 @@ namespace LastCall.UI
 
         /// <summary>A level on a ten-cell meter between the pack's - and + keys, its percentage after it. The cells
         /// are returned for the refresh, the percentage text through <paramref name="pct"/>.</summary>
-        private Image[] MeterRow(RectTransform page, string id, string name, string mark, ref float y, Func<float> get, Action<float> set, out Text pct)
+        private Image[] MeterRow(RectTransform page, string id, string name, string mark, ref float y, Func<float> get, Action<float> set, out Text pct, float rowH = SetRow)
         {
-            var row = SettingsRow(page, id, name, mark, ref y);
+            var row = SettingsRow(page, id, name, mark, ref y, rowH);
             const float KeyW = 32f, Cell = 26f;
             float x = 300f;
             PackIconKey(row, "MINUS", "minus", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0), () =>
@@ -361,6 +502,7 @@ namespace LastCall.UI
         private void StepSettings()
         {
             if (_settingsPanel == null || !_settingsPanel.gameObject.activeSelf) return;
+            StepSeek();
             var kb = Keyboard.current;
             bool blink = ((int)(Time.unscaledTime * 4f) & 1) == 0;
             foreach (var pair in _bindCaps)
@@ -515,6 +657,8 @@ namespace LastCall.UI
                 string mood = now == null ? "" : now.Substring(0, now.LastIndexOf('_') < 0 ? now.Length : now.LastIndexOf('_'));
                 _settingsNowPlace.text = of == 0 ? "" : UIText.T("build.player.place", ("mood", MoodWord(mood)), ("at", at), ("of", of));
                 if (_settingsHoldKey != null) ReiconKey(_settingsHoldKey, MenuPack.Tone.Grey, Sfx.MusicPaused ? "play" : "pause");
+                foreach (var pair in _songRows) pair.Value.color = pair.Key == now ? UITheme.Cyan[4] : UITheme.Cream[4];
+                PaintSeek(Sfx.MusicProgress);
             }
             _capDown.Clear();
             foreach (var pair in _bindHints)

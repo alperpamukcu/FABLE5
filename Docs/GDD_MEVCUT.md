@@ -1540,6 +1540,30 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.76 · ESC'de şarkı listesi ve ileri sarma; kemerde yıldız ve puanların kuyusu (2026-09-16)
+
+Yazar: "ESC menüsünde now playing kısmında tüm şarkıları açılan bir combobox ile görüntüleyip istenilen
+seçilebilmeli, şarkıyı ileri saran bir player olmalı. Üst bardaki tasarıma yıldız ve puanlamaları da dahil et onları
+da üst bar tasarımına uygun bir hale getir."
+
+- **Şarkı tuşu ve liste** (AYARLAR → SES → NOW PLAYING): başlık artık paket tuşunun üstünde, ucunda aşağı çevrik
+  `chevron_left`; basılınca barın sahip olduğu her şarkı tuşun ÜSTÜNDE bir kuyuda açılır (`ChromeArt.Well`;
+  altında yer yok) — mood sırasıyla (night 1–5, dayend 1–2, lastcall, story), sağda 8 px mood sözcüğü, çalan
+  Cyan[4], hover Night[3]. Seçim `Sfx.PlaySong(song)`: klibi sessiz kaynağa koyar ve geçişle yükselir
+  (`StartClip`, `NextTrack`'ten ayrıldı); mood'un imleci o şarkının sonrasına alınır, gecenin mood'u sıradakini
+  yine kendi seçer. Tuşun altında küçük yer satırı: `Sfx.NowPlayingPlace` artık ŞARKININ kendi listesini sayar
+  ("DAY'S END · 1 / 2"), gecenin 5'ini ödünç almaz. `Sfx.AllSongs` Resources'tan bir kez okunur.
+- **TRACK satırı** (44 yüksek): 300 birim ray + Cyan[3] dolgu + Cream[4] düğme; basma/sürükleme
+  `Sfx.MusicProgress` (0–1, set = sar) — `EventTrigger` PointerDown/Drag/Up, 24 birimlik tutma alanı; saat
+  `chrome.settings.clock` "{at} / {of}" (`Sfx.MusicClock`). `StepSeek` pencere açıkken her kare izler, el
+  üzerindeyken izlemez. Ses sayfasının satırları 56→50 (`AudioRow`): altı satır sekmeyle ayak arasına sığar.
+- **Kemerde puan kuyusu** (`TycoonHud.Build`): SERVICE/COMFORT şeritleri ve beş yıldız artık oyuncu kuyusuyla aynı
+  yapımda 42 birimlik bir kuyuda (`RatingWell`, genişlik 10+70+90+26+190+10=396, sağ kenar BlockRight+10) —
+  kemerin gecesi ve oynatıcısı gibi bir alet; 2026-08-14'teki "kutu" değil, kemerin kendi cam zemini. Yıldız
+  boyu ve aralığı değişmedi (36/38). Ölçüldü: kuyu x 826..1222, oynatıcı 408..784, çark 1222..1264.
+- Doğrulama: EditMode 596/596; PlayMode 13/13. r20 sondası: kemer, ses sayfası, açık liste, dayend_1'e atlayıp
+  yarıya sarma (1:07 / 2:09).
+
 ### 9.75 · Kaşık ilk yıldızın dersi: karıştırılan ilk sayfa kaşığı getirir, kaşıksız bar karıştıramaz (2026-09-16)
 
 Yazar: "oyunda kaşık çok kullanılmıyor bazı tariflerde kaşık ve shake mekaniği zorunlu olmalı ve bu tariflerde
