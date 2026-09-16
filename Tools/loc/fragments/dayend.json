@@ -132,6 +132,7 @@
 
     { "key": "dayend.host.fallback", "text": "THE HOUSE", "note": "Title bar of the host's message box on the market tablet when the host has no name to show. Shop bold face 16 px, one line." },
     { "key": "dayend.host.go_on", "text": "GO ON", "note": "Key in the host's message box on the market: show her next line. Shop bold face 16 px on a 240 px key, ~14 characters." },
-    { "key": "dayend.host.got_it", "text": "GOT IT", "note": "Key in the host's message box on the market, on her last line: close the box. Shop bold face 16 px on a 240 px key, ~14 characters." }
+    { "key": "dayend.host.got_it", "text": "GOT IT", "note": "Key in the host's message box on the market, on her last line: close the box. Shop bold face 16 px on a 240 px key, ~14 characters." },
+    { "key": "dayend.recipes.brings_spoon", "text": "Comes with the bar spoon — from then on the tin can be stirred, not only shaken.", "note": "Extra sentence on a stirred recipe's market card while the bar has no bar spoon yet: buying the first stirred recipe puts the spoon on the bench. Wraps." }
   ]
 }

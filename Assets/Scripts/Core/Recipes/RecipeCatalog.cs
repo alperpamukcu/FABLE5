@@ -17,7 +17,7 @@ namespace LastCall.Core
     ///
     /// Four difficulty tiers, priced and gated by rank (see TycoonRun.RecipeStarGate):
     ///   starter  ranks 1–8   — two parts, generous bands; 1–3 open from day one
-    ///   mid      ranks 9–14  — three parts or a shake; gates 1.0★ (9–11) / 2.0★ (12–14)
+    ///   mid      ranks 9–14  — three parts, a shake, or the spoon; gates 1.0★ (9–11) / 2.0★ (12–14)
     ///   hard     ranks 15–21 — shaken sours, four bands, tighter; 3.0★
     ///   veryhard ranks 22+   — stirred precision, thirds, five-plus bands; 4.0★
     ///   (five gates since the 2026-08-10 one-star split — TycoonRun.RecipeStarGate is
@@ -76,7 +76,12 @@ namespace LastCall.Core
                 // The first drink that wants the spoon. Two heavy liquids and no fizz: shaking
                 // one only foams the coffee liqueur, so it is stirred — which is how the bar
                 // teaches the verb before the vermouth shelf opens at four stars.
-                Cocktail("black_russian", "Black Russian", 8, 20, 2, 15, 1, PrepMethod.Stirred, "rocks",
+                // RANK 9 SINCE 2026-09-16 (the author: "kaşık oyunun ilk yıldızında açılan bir
+                // oynanış özelliği olmalı yani ilk yıldız kokteyllerinden sonra kaşık isteyen
+                // tarifler çıkmalı"): the page opens at ONE star, after the zero-star drinks,
+                // and it BRINGS the spoon with it (TycoonRun.SpoonUnlocked) — a bar that has not
+                // bought a stirred page has no spoon on its bench and cannot stir.
+                Cocktail("black_russian", "Black Russian", 9, 20, 2, 15, 1, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("vodka", .55, .75), Band("coffee_liqueur", .25, .45)),

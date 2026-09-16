@@ -196,7 +196,7 @@ kullanan ilk merdivendi; **2026-08-25'te lavabo ikincisi oldu**: `counter_sink` 
 | Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, John Wanderer, Maliboo…) |
 | Başlangıç rafı | 6 | vodka_astra, gin_boothby, soda_klara, lemon_fresh, syrup_house, beer_kestrel (+bootstrap'ta sabit) |
 | Gazlı bayrağı | **5** | cola, tonic, energy + **soda_klara, ginger_kicker (2026-08-11'de çevrildi** — §12 borcu kapandı). **2026-08-13:** gazlılar arka bar duvarına GERİ döndü; Serve dolabı kaldırıldı (aşağı) |
-| Tarif | **54** | Built 19 · Shaken 22 · Stirred 13; pint 1 / rocks 14 / highball 22 / coupe 10 / martini 7. **2026-08-15:** black_russian (rank 8, 0★) ve mint_julep (rank 21) Built→**Stirred** — kaşık artık ilk basamakta öğreniliyor; en erken karıştırılan tarif rank 22 (4★) idi ve `MixRequired` yöntemi okuduğundan tezgâhın yarısı görünmüyordu |
+| Tarif | **54** | Built 19 · Shaken 22 · Stirred 13; pint 1 / rocks 14 / highball 22 / coupe 10 / martini 7. **2026-08-15:** black_russian (rank 8, 0★) ve mint_julep (rank 21) Built→**Stirred** — kaşık artık ilk basamakta öğreniliyor; en erken karıştırılan tarif rank 22 (4★) idi ve `MixRequired` yöntemi okuduğundan tezgâhın yarısı görünmüyordu. **2026-09-16:** black_russian rank **9 (1★)** — kaşık ilk yıldızın dersi; sayfa alınınca kaşık tezgâha gelir (`TycoonRun.SpoonUnlocked`, §9.75); `liqueur_kafa` unlockStars 1.0 |
 | Bardak | 5 | 6'şar kademe (T1 + 5 satın alım) |
 | Arketip | 8 | ağırlık toplamı 24, Easygoing/Particular 12–12 dengeli |
 | Çizili müşteri | **9** | 2026-08-19 rig'i; hepsinin yıldız kapısı 0 — yani *şimdiki kadronun tamamı başlangıç müşterisi*, kilit açma ileride eklenecekler için. **spanishsuit 2026-08-25'te kesildi** (yazar: görseli ve animasyonları bozuk); 200 karesi silindi, üretim kaydı `Tools/patron_trial_state.json`'da kaldı ve o kareler yeniden gönderilmemeli |
@@ -1539,6 +1539,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   15 kare, yürüyüş dikişi 0. Hepsi mürekkep geçidinden geçti, kadro satırları yaz çekiminden yeniden ölçüldü. Kadro 23 kişi.
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
+
+### 9.75 · Kaşık ilk yıldızın dersi: karıştırılan ilk sayfa kaşığı getirir, kaşıksız bar karıştıramaz (2026-09-16)
+
+Yazar: "oyunda kaşık çok kullanılmıyor bazı tariflerde kaşık ve shake mekaniği zorunlu olmalı ve bu tariflerde
+belirtilmeli. Kaşık oyunun ilk yıldızında açılan bir oynanış özelliği olmalı yani ilk yıldız kokteyllerinden sonra
+kaşık isteyen tarifler çıkmalı ... Kaşık isteyen ilk tarif alındıktan sonra kaşık otomatik olarak sahneye eklenir."
+
+- **Zaten yerinde olan:** her tarif yöntemini taşır (`RecipeDefinition.Prep` Built/Shaken/Stirred — 19/22/13);
+  kitap sayfası, lisans kartı ve pazar kartı yöntemi yazar (`recipes.prep.*`, "STIRRED"); zorunlu karıştırma
+  (`MixRequired`, §21 §14) işlenmemiş tenekeyi bardağa dökmeyi reddeder; yargıç yöntemi puanlar
+  (`ServiceJudge.MethodScore`, ustalığın %40'ı: çalkalanmış Martini sıfır alır). Tezgâhın 3. adımı tarife göre
+  kaşık/kapak/çalkalama resmi gösterir (§9.74).
+- **Değişen — kaşık kazanılır.** `TycoonRun.SpoonUnlocked`: menüde (açık ya da satın alınmış) Stirred bir sayfa varsa
+  kaşık vardır; kitabı hâlâ her Stirred sayfayı mühürlü tutan barın kaşığı yoktur. (Hiç mühürlü Stirred sayfası
+  olmayan kitap — bir iki sayfadan kurulan test koşuları — kaşığı hiç saklamamıştır.) `Stir()` kaşıksız reddeder
+  (`rule.stir_no_spoon`); kurallar katmanı UI'ya güvenmez.
+- **Black Russian rank 8 → 9 (0★ → 1★).** İlk karıştırılan sayfa artık ilk yıldızın basamağında; sıfır yıldız
+  sayfaları Built + Shaken öğretir (`EveryVerb_IsTaughtAtZeroStars` buna göre: sıfırda Stirred YOK, 1★'da bir tane
+  VAR). Kahve likörü `liqueur_kafa` `unlockStars 1.0` — şişe, onu döken sayfayla aynı basamakta açılır (pazar
+  testi "move one to meet the other"). Fiyat eğrisi rank'tan gelir; sayfa biraz pahalandı.
+- **Tezgâh:** `RefreshShaker` her açılışta `run.SpoonUnlocked`'a bakar; kaşık ve havlusu (`_spoonRt`, `_napkinRt`)
+  yalnız kaşık varken sahnede. Sayfa gece alınır, sabah kaşık tezgâhtadır. Tezgâh taban resmi yeniden çizildi
+  (sahne kitabı mühürlü: kaşıksız tezgâh).
+- **Pazar kartı:** kaşık yokken Stirred bir sayfanın kartında bir cümle daha: `dayend.recipes.brings_spoon`
+  "Comes with the bar spoon — from then on the tin can be stirred, not only shaken." Alım bir araç alımıdır da.
+- **Bot:** kitap dışı yapısal karıştırmada kaşık yoksa çalkalar (`TycoonSimulator`).
+- Testler: `TheSpoon_ComesWithTheFirstStirredPage` (mühürlü kitapta `SpoonUnlocked` false, `Stir` fırlatır, `Shake`
+  olur; sayfa açık kopyasıyla true ve karıştırır). Doğrulama: EditMode 596/596; PlayMode iki koşu, ikincisi 13/13.
+- Kaşık gibi başka **araç kilitleri** (yazarın kararına, yapılmadı): Docs/PLAN_bench_scene.md §6.
 
 ### 9.74 · Tezgâhın alet ailesi: resimli adımlar, dökme kadranı, MIX sütunu, büyük BARA DÖN, çizili çöp kutusu, mat ve limon, ışık ve yansıma; arka plandaki cızırtı sustu (2026-09-16)
 

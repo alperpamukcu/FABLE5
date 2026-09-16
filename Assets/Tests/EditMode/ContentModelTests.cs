@@ -77,7 +77,8 @@ namespace LastCall.Tests
         /// <summary>
         /// The other half of the same rule, and the one the ladder was missing (2026-08-15):
         /// a page that says Stirred holds the tin until the spoon goes in. Black Russian is
-        /// the zero-star page that carries it — two heavy liquids, no fizz, nothing to shake —
+        /// the one-star page that carries it (rank 9 since 2026-09-16 — the spoon is the first
+        /// star's lesson) — two heavy liquids, no fizz, nothing to shake —
         /// so this is the verb a new bar actually meets rather than one it reads about.
         /// </summary>
         [Test]
@@ -88,7 +89,7 @@ namespace LastCall.Tests
             // of the matcher until they are bought at a day's end), so it is poured here
             // through a copy that is open: same rank, same bands, same method.
             var shipped = RecipeCatalog.CreateDefault().Single(r => r.Id == "black_russian");
-            Assert.AreEqual(PrepMethod.Stirred, shipped.Prep, "the zero-star page that carries the spoon");
+            Assert.AreEqual(PrepMethod.Stirred, shipped.Prep, "the one-star page that carries the spoon");
 
             var open = new RecipeDefinition(shipped.Id, shipped.Name, shipped.Rank,
                 shipped.BaseFlavor, shipped.BaseMult, shipped.FlavorPerLevel, shipped.MultPerLevel,

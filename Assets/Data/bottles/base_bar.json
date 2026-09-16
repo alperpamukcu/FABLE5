@@ -433,6 +433,7 @@
    "category": "liqueur",
    "tier": 1,
    "price": 11,
+   "unlockStars": 1.0,
    "locked": false,
    "origin": "Addis Ababa, Ethiopia",
    "abv": 20,

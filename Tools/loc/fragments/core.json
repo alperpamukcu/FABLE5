@@ -151,6 +151,7 @@
     {"key": "prep.draught.description", "text": "Pulled from the tap.", "note": "One-line description of the draught preparation, shown in a hover tip. No slots."},
 
     {"key": "papers.hometown.unknown", "text": "this side of town", "note": "Hometown printed on an ID card for a person with no town of record (shown in capitals on the card's citizenship line). No slots."},
-    {"key": "papers.hometown.named", "text": "{town}", "note": "Hometown printed on an ID card. {town} is the town's name as the data file wrote it (a place name, not translated); leave as {town} unless the language wraps place names."}
+    {"key": "papers.hometown.named", "text": "{town}", "note": "Hometown printed on an ID card. {town} is the town's name as the data file wrote it (a place name, not translated); leave as {town} unless the language wraps place names."},
+    {"key": "rule.stir_no_spoon", "text": "No bar spoon behind this bar yet — the first stirred recipe brings it.", "note": "Refusal when the tin is stirred before the bar owns a bar spoon (the spoon comes with the first stirred recipe bought). No slots."}
   ]
 }

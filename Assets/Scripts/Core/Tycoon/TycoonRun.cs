@@ -229,6 +229,28 @@ namespace LastCall.Core
         /// recipe's prep method yet, so shaking a Martini is legal and merely wrong.</summary>
         public bool IsMixed => IsShaken || IsStirred;
 
+        /// <summary>
+        /// IS THERE A BAR SPOON BEHIND THIS BAR (2026-09-16, the author: "Kaşık oyunun ilk
+        /// yıldızında açılan bir oynanış özelliği olmalı ... Kaşık isteyen ilk tarif alındıktan
+        /// sonra kaşık otomatik olarak sahneye eklenir")? The spoon comes with the first
+        /// STIRRED page on the menu — bought, or open from the start — and the bench shows it
+        /// from then on. A book that holds no sealed stirred page has never withheld the spoon
+        /// (that is every test run built from a page or two, and it keeps them honest about
+        /// what they test), so only a bar whose book still SEALS every stirred drink is without
+        /// one. <see cref="Stir"/> refuses without it: the rules layer never trusts the UI.
+        /// </summary>
+        public bool SpoonUnlocked
+        {
+            get
+            {
+                foreach (var r in _recipes)
+                    if (r.Prep == PrepMethod.Stirred) return true;
+                foreach (var r in AllRecipes)
+                    if (r.Prep == PrepMethod.Stirred && r.Locked) return false;
+                return true;
+            }
+        }
+
         public string PouringId { get; private set; }
 
         private readonly List<MarketOffer> _marketOffers = new List<MarketOffer>();
@@ -1864,6 +1886,9 @@ namespace LastCall.Core
         public void Stir(double energy = 1.0)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            if (!SpoonUnlocked)
+                throw Said.With(new InvalidOperationException("No bar spoon behind this bar yet."),
+                    Line.Of("rule.stir_no_spoon"));
             if (Glass.IsEmpty)
                 throw Said.With(new InvalidOperationException("Nothing in the shaker to stir."),
                     Line.Of("rule.stir_empty"));

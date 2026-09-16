@@ -280,12 +280,21 @@ namespace LastCall.Tests
             var taught = book.Where(r => run.RecipeStarGate(r) <= 0.0)
                 .Select(r => r.Prep).Distinct().ToList();
 
-            foreach (var verb in new[] { PrepMethod.Built, PrepMethod.Shaken, PrepMethod.Stirred })
+            foreach (var verb in new[] { PrepMethod.Built, PrepMethod.Shaken })
                 CollectionAssert.Contains(taught, verb,
                     $"no zero-star page is {verb}, so a new bar never learns that half of the " +
                     "bench. Zero-star pages: " + string.Join(", ", book
                         .Where(r => run.RecipeStarGate(r) <= 0.0)
                         .Select(r => $"{r.Id}({r.Prep})")));
+
+            // THE SPOON IS THE FIRST STAR'S LESSON (2026-09-16, the author: "kaşık oyunun ilk
+            // yıldızında açılan bir oynanış özelliği olmalı yani ilk yıldız kokteyllerinden
+            // sonra kaşık isteyen tarifler çıkmalı"): no zero-star page stirs, and the first
+            // rung holds one that does — the page that brings the spoon to the bench.
+            CollectionAssert.DoesNotContain(taught, PrepMethod.Stirred,
+                "a zero-star page is Stirred, so the spoon would be a night-one thing again");
+            Assert.IsTrue(book.Any(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) == 1.0),
+                "no one-star page is Stirred, so the first star teaches nothing new");
         }
     }
 

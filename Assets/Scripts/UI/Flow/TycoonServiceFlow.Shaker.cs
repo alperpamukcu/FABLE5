@@ -170,6 +170,7 @@ namespace LastCall.UI
         // CAP — the spoon only works an OPEN tin, the shake only a capped one — so the two
         // mixing verbs can never fight over one gesture.
         private RectTransform _spoonRt;
+        private RectTransform _napkinRt;     // the towel under the spoon — comes and goes with it
         private Vector2 _spoonRest;
         /// <summary>Where the spoon stands (2026-09-16): between the lid and the tin, its foot 70 under the bench
         /// line so the towel under it clears the plaque above (measured; the BACK key is in another column).</summary>
@@ -1070,6 +1071,16 @@ namespace LastCall.UI
             bool inHand = _focusBottle != null;
             if (_pourBottle != null && _pourBottle.gameObject.activeSelf != inHand)
                 _pourBottle.gameObject.SetActive(inHand);
+            // THE SPOON IS EARNED (2026-09-16, the author: "Kaşık isteyen ilk tarif alındıktan
+            // sonra kaşık otomatik olarak sahneye eklenir"). Core says whether there is one
+            // behind the bar (TycoonRun.SpoonUnlocked: the first stirred page on the menu
+            // brings it); until then the towel and the spoon are simply not on the bench,
+            // and the tin is shaken. The bench asks every time it opens, so the night the
+            // page is bought the spoon is standing there in the morning.
+            bool spoon = run.SpoonUnlocked;
+            if (_spoonRt != null && _spoonRt.gameObject.activeSelf != spoon) _spoonRt.gameObject.SetActive(spoon);
+            if (_napkinRt != null && _napkinRt.gameObject.activeSelf != spoon) _napkinRt.gameObject.SetActive(spoon);
+            if (!spoon) _spoonHeld = false;
             if (_bottleShadow != null && _bottleShadow.gameObject.activeSelf != inHand)
                 _bottleShadow.gameObject.SetActive(inHand);
             if (inHand) PushFocusBottleArt(run);
@@ -2513,6 +2524,7 @@ namespace LastCall.UI
             nimg.sprite = ChromeArt.Napkin(56, 96);
             nimg.raycastTarget = false;
             napkin.localRotation = Quaternion.Euler(0, 0, -4f);   // set down by hand, not laid square
+            _napkinRt = napkin;
 
             _spoonRest = new Vector2(SpoonX, SpoonFootY + 256f);
             _spoonRt = NewRect("BarSpoon", _pourSurface);

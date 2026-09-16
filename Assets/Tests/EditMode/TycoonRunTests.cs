@@ -1038,6 +1038,47 @@ namespace LastCall.Tests
                 "nothing in the shaker to stir");
         }
 
+        /// <summary>
+        /// THE SPOON COMES WITH THE FIRST STIRRED PAGE (2026-09-16, the author: "Kaşık isteyen
+        /// ilk tarif alındıktan sonra kaşık otomatik olarak sahneye eklenir"). A bar whose
+        /// book still seals every stirred drink has no spoon: the tin can be shaken, never
+        /// stirred, and Core says so — the bench only draws what the rule allows.
+        /// </summary>
+        [Test]
+        public void TheSpoon_ComesWithTheFirstStirredPage()
+        {
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Booze("gin_b", "gin"), capacity: 20),
+                new ShelfBottle(Booze("vermouth_b", "liqueur"), capacity: 20),
+            });
+            var sealedBook = RecipeCatalog.CreateDefault();
+            var run = new TycoonRun(shelf, sealedBook, new RunRng("no-spoon"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+            Assert.IsFalse(run.SpoonUnlocked, "every stirred page in the shipped book is sealed");
+            run.PourMeasure("gin_b", 0.4);
+            run.PourMeasure("vermouth_b", 0.3);
+            Assert.Throws<InvalidOperationException>(() => run.Stir(0.8), "no spoon behind the bar");
+            Assert.IsFalse(run.IsStirred);
+            run.Shake(1.0);
+            Assert.IsTrue(run.IsShaken, "the tin can still be shaken");
+
+            // The same book with its first stirred page open: the spoon is on the bench.
+            var stirred = sealedBook.First(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) == 1.0);
+            var open = new RecipeDefinition(stirred.Id, stirred.Name, stirred.Rank,
+                stirred.BaseFlavor, stirred.BaseMult, stirred.FlavorPerLevel, stirred.MultPerLevel,
+                stirred.Requirements, ratioRequirements: stirred.RatioRequirements,
+                minFill: stirred.MinFill, prep: stirred.Prep, glassId: stirred.GlassId);
+            var book = sealedBook.Where(r => r.Id != stirred.Id).Concat(new[] { open }).ToList();
+            var spooned = new TycoonRun(shelf, book, new RunRng("spoon"),
+                config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+            Assert.IsTrue(spooned.SpoonUnlocked, "the open stirred page brings the spoon");
+            spooned.PourMeasure("gin_b", 0.4);
+            spooned.PourMeasure("vermouth_b", 0.3);
+            spooned.Stir(0.8);
+            Assert.IsTrue(spooned.IsStirred);
+        }
+
         [Test]
         public void APourIntoAMixedTin_UnmixesIt()
         {

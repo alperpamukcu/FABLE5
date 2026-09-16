@@ -2308,7 +2308,12 @@ namespace LastCall.UI
                         Identity = UIText.Caps(UIText.Data("recipe", r.Id, "name", r.Name)),
                         MetaLine = UIText.T("dayend.recipes.meta_line", ("difficulty", DifficultyWord(hard)),
                                             ("prep", PrepWord(r)), ("glass", GlassNameFor(r))),
-                        Body = DifficultySentence(hard),
+                        // THE PAGE THAT BRINGS THE SPOON SAYS SO (2026-09-16): while the bar has
+                        // no bar spoon, a stirred page's card carries one more sentence — the
+                        // buy is a tool as much as a drink, and that has to be a decision too.
+                        Body = r.Prep == PrepMethod.Stirred && !run.SpoonUnlocked
+                            ? DifficultySentence(hard) + " " + UIText.T("dayend.recipes.brings_spoon")
+                            : DifficultySentence(hard),
                         BuffA = new Buff(BuffKind.Gain, UIText.T("dayend.recipes.on_menu")),
                         BuffB = new Buff(hard == DrinkDifficulty.Hard ? BuffKind.Bad
                                          : hard == DrinkDifficulty.Medium ? BuffKind.Cost : BuffKind.Gain,

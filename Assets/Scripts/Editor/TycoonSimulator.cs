@@ -1323,7 +1323,7 @@ namespace LastCall.EditorTools
                 if (forget) { }
                 else if (recipe.Prep == PrepMethod.Shaken) run.Shake(1.0);
                 else if (recipe.Prep == PrepMethod.Stirred) run.Stir(1.0);
-                else if (run.MixRequired) run.Stir(1.0);
+                else if (run.MixRequired) { if (run.SpoonUnlocked) run.Stir(1.0); else run.Shake(1.0); }
             }
 
             // Into the glass, dead on the rim. The bot used to hand the shaker over whole, which

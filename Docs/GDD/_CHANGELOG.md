@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The spoon is the first star's lesson (2026-09-16):** Black Russian moves from rank 8 to rank 9 (one star), so
+  no zero-star page stirs; the first stirred page on the menu brings the bar spoon (TycoonRun.SpoonUnlocked), the
+  bench shows the spoon and its towel only from then on, Core refuses a stir without one, the market card of a
+  stirred page says it comes with the spoon, and the coffee liqueur waits for its page at one star. Tool-ladder
+  ideas that follow the same pattern: Docs/PLAN_bench_scene.md §6.
+
 - **The bench's instrument family, and the hiss is gone (2026-09-16):** every gauge on the bench is cut into the
   counter the same way (recess, brass rim, engraved word): the steps carry pictograms (fill, cap, shake or stir by
   the recipe, glass); the lift ladder is a half-round pour dial with a needle under the bottle's foot; the work
