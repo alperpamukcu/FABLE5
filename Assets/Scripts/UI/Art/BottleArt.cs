@@ -235,7 +235,9 @@ namespace LastCall.UI
                 _floorRt.anchorMin = _floorRt.anchorMax = _floorRt.pivot = new Vector2(0.5f, 0.5f);
                 _floorRt.sizeDelta = new Vector2(footChord * unit, rise * 2f);
                 _floorRt.anchoredPosition = new Vector2(footMid * unit, lowest * unit + rise);
-                _floor.color = new Color(tone.r * 0.80f, tone.g * 0.80f, tone.b * 0.80f, tone.a);
+                // Lighter and thinner than the 80% it was (the author, 2026-09-16, second look: the ring still read
+                // as the drink's bottom): a hint of the base, not a line the eye stops at.
+                _floor.color = new Color(tone.r * 0.88f, tone.g * 0.88f, tone.b * 0.88f, tone.a * 0.55f);
                 _floor.enabled = true;
             }
             else _floor.enabled = false;

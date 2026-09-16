@@ -726,7 +726,7 @@ namespace LastCall.UI
             face.transform.localScale = new Vector3(faceW / size.x, faceH / size.y, 1f);
             face.transform.localPosition = at + new Vector3(cx, footY + hgt, -0.01f);   // a hair nearer: over the drink
             face.enabled = faceW > 0f;
-            low.color = new Color(tone.r * 0.80f, tone.g * 0.80f, tone.b * 0.80f, tone.a);   // the base seen through the drink
+            low.color = new Color(tone.r * 0.88f, tone.g * 0.88f, tone.b * 0.88f, tone.a * 0.55f);   // the base seen through the drink, faint
             low.transform.localScale = new Vector3(rise > 0f ? footW / size.x : 0f, rise * 2f / size.y, 1f);
             low.transform.localPosition = at + new Vector3(cx, footY + rise, -0.01f);      // a hair nearer: over the drink
             low.enabled = rise > 0f && footW > 0f;
