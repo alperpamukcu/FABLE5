@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bench's instrument family, and the hiss is gone (2026-09-16):** every gauge on the bench is cut into the
+  counter the same way (recess, brass rim, engraved word): the steps carry pictograms (fill, cap, shake or stir by
+  the recipe, glass); the lift ladder is a half-round pour dial with a needle under the bottle's foot; the work
+  meter stands as a MIX column beside the measure; BACK TO THE BAR is a big recess key with a chevron; the bin is a
+  drawn pedal bin whose lid lifts on hover; a bar mat, two lemon wheels and a water ring dress the counter; a light
+  follows the pour (bottle and tin, then the cap) and the tin and bottle cast reflections. The rain bed that hissed
+  under every room was deleted and the ambience source stops with it.
+
 - **The bench re-laid (2026-09-16):** a recess cut into the counter under the rail carries the steps and the
   readout on every bench (the draught bench's title came down from under the beam); the work meter is the drink
   itself — the tin frosts as it is shaken, the measure's bands blend as the mix comes, the plaque says the figure;

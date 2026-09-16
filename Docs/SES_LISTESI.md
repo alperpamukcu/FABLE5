@@ -191,7 +191,7 @@ istemiyorsak bu beş dosya silinir.
 
 ### 2.2 Ortam yatakları (mevcut tek yatağın yerine/yanına)
 
-> **Durum (2026-09-15):** yalnız `ambience_rain` oyunda; `ambience_crowd` aynı gün yazarın isteğiyle ("arkada konuşma sesleri olmasın") çıktı. Boş bar (buzdolabı) ve neon vızıltısı bilerek yok: sabit uğultu 2026-08-27'de kaldırılan şeydi.
+> **Durum (2026-09-16):** yatak yok — `ambience_rain` yazarın isteğiyle çıktı ("müzik hariç arkaplanda ses var cızırtı gibi bunu kaldır"); oda müzik ve ellerin sesinden ibaret. 2026-09-15'te yalnız `ambience_rain` oyundaydı; `ambience_crowd` aynı gün yazarın isteğiyle ("arkada konuşma sesleri olmasın") çıktı. Boş bar (buzdolabı) ve neon vızıltısı bilerek yok: sabit uğultu 2026-08-27'de kaldırılan şeydi.
 
 | İhtiyaç | Uzunluk | Not |
 |---|---|---|

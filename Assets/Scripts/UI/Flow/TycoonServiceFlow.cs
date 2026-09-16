@@ -847,23 +847,60 @@ namespace LastCall.UI
         private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
             string caption = null)   // null: bench.back_to_bar
         {
+            // BIGGER, AND A PLATE OF THE BENCH'S OWN (2026-09-16, the author: "bara dön butonu çok daha büyük ve
+            // farklı bir tasarımda olmalı"): a 216x64 recess cut into the counter's front at the bench's left foot,
+            // brass-rimmed like the instruments (the plaque, the dial, the column), a chevron at 2x and the word
+            // in the 16 px face. The spoon's towel starts at 240, the plate ends at 232.
             var rt = NewRect("EdgeBack", panel);
+            Place(rt, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH), new Vector2(16f, 18f));
             RegisterFixed(panel, rt);    // ...and so is the way out
-            // Inside the author's 1149-wide working margin, and CLEAR OF THE SPOON: the
-            // bar spoon's slot hangs off the band's bottom-left at x 108..172, and a key
-            // starting at 66 stood under its bowl (2026-08-26, seen in play).
-            Place(rt, new Vector2(0f, 0f), new Vector2(196, KeyStripH),
-                  new Vector2(190, KeyStripY));
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.CounterRecess();
+            img.type = Image.Type.Sliced;
+            img.color = Color.white;
+            img.raycastTarget = true;
             var btn = rt.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.targetGraphic = img;
             btn.onClick.AddListener(() => GoTo(back));
+            BrassRim(rt);
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            KeyPlate.Dress(rt, UITheme.Night[3], btn, face);      // THE ONE KEY (GDD 16 §2)
-            // 8, not 12 — the size that face actually has (GDD 16 §0).
-            var label = NewText("L", face, _body, 8, TextAnchor.MiddleCenter, UITheme.TextPrimary);
-            Stretch(label.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(4, 4 + KeyPlate.Throw), new Vector2(-4, -4));
-            label.text = caption ?? UIText.T("bench.back_to_bar");
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var mark = NewRect("Mark", face);
+            Place(mark, new Vector2(0f, 0.5f), new Vector2(32, 32), new Vector2(14f, 0f));
+            mark.pivot = new Vector2(0f, 0.5f);
+            var mi = mark.gameObject.AddComponent<Image>();
+            mi.sprite = ChromeArt.Mark("chevron_left");
+            mi.color = UITheme.Amber[3];
+            mi.raycastTarget = false;
+            var label = NewText("L", face, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Place(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(BackKeyW - 62f, 20f), new Vector2(54f, 0f));
+            label.rectTransform.pivot = new Vector2(0f, 0.5f);
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // the chevron is drawn, so the line's own arrow (kept in the string for the old key) comes off
+            label.text = (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' ');
+            Engraved(label);
+        }
+
+        private const float BackKeyW = 216f, BackKeyH = 64f;
+
+        /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
+        private void BrassRim(RectTransform plate)
+        {
+            var rim = new Color(UITheme.Amber[1].r, UITheme.Amber[1].g, UITheme.Amber[1].b, 0.85f);
+            foreach (var (name, min, max, offMin, offMax) in new[] {
+                ("RimT", new Vector2(0, 1), new Vector2(1, 1), new Vector2(2, -4), new Vector2(-2, -2)),
+                ("RimB", new Vector2(0, 0), new Vector2(1, 0), new Vector2(2, 2), new Vector2(-2, 4)),
+                ("RimL", new Vector2(0, 0), new Vector2(0, 1), new Vector2(2, 2), new Vector2(4, -2)),
+                ("RimR", new Vector2(1, 0), new Vector2(1, 1), new Vector2(-4, 2), new Vector2(-2, -2)) })
+            {
+                var r = NewRect(name, plate);
+                Stretch(r, min, max, offMin, offMax);
+                var ri = r.gameObject.AddComponent<Image>();
+                ri.color = rim; ri.raycastTarget = false;
+            }
         }
 
         private void OpenBottle(IngredientCard card)
@@ -1016,6 +1053,7 @@ namespace LastCall.UI
             // The bar top, ONCE. It used to be built three times, one per bench, which is
             // what made a stage change move it.
             AddBenchCounter(_benchStage, 0.675f);
+            BuildBenchDressing();
         }
 
         // ── tiny UI helpers ──────────────────────────────────────────────────────
@@ -1038,42 +1076,32 @@ namespace LastCall.UI
         /// </summary>
         private void AddBinButton(RectTransform parent)
         {
+            // A REAL BIN (2026-09-16, the author: "çöp için ise arkaplanda gerçek bir çöp kutusu ile
+            // tasarlanabilir"): the pedal bin ChromeArt draws, standing at the counter's right end at 2x, its lid
+            // lifting under the pointer; pressing it throws the drink away. The word is engraved over it, in the
+            // small face. The red key it replaces (2026-09-04's cap) is gone with its face and travel.
             var rt = NewRect("Bin", parent);
-            RegisterFixed(parent, rt);   // the bin is the same key in the same place on both benches
-            // On the ledge, clear of the key strip (2026-08-26): the way forward is a key
-            // on that strip, and a bin sharing its row is one slip away from the press
-            // nobody wants to make by accident. Wide enough now to carry its own name.
-            Place(rt, new Vector2(1, 0), new Vector2(BinKeyW, BinKeyH),
-                  new Vector2(-262f, 20f));
+            Place(rt, new Vector2(1, 0), new Vector2(64, 96), new Vector2(-16f, 18f));
+            RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.KeyCap(UITheme.ViceRed, false, "bin");
-            img.type = Image.Type.Sliced;
+            img.sprite = ChromeArt.Bin(false);
             img.color = Color.white;
+            img.raycastTarget = true;
+            img.alphaHitTestMinimumThreshold = 0.1f;      // the drawing takes the press, not its box
             var btn = rt.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
             btn.targetGraphic = img;
-
-            // The face — mark and word together — rides on the cap. It is parented to the
-            // key and shifted by the cap's own travel when the key goes down, so the
-            // writing sinks with the plastic instead of hovering over it.
-            var face = NewRect("Face", rt);
-            Stretch(face, Vector2.zero, Vector2.one,
-                    new Vector2(0, 0), new Vector2(0, -ChromeArt.KeyCapFaceUp));
-            // Inside the CAP's margin, not the key's: the socket wall and the cap's own
-            // edge eat the first six pixels, so a mark placed against the key's left edge
-            // sits half on the plastic and half on the frame.
-            var mark = NewRect("Mark", face);
-            Place(mark, new Vector2(0, 0.5f), new Vector2(22, 22), new Vector2(26, 0));
-            var mimg = mark.gameObject.AddComponent<Image>();
-            mimg.sprite = ChromeArt.Mark("bin");
-            mimg.preserveAspect = true;
-            mimg.color = UITheme.ViceRed[0];
-            mimg.raycastTarget = false;
-            var word = NewText("L", face, _body, 16, TextAnchor.MiddleLeft, UITheme.ViceRed[0]);
-            Place(word.rectTransform, new Vector2(0, 0.5f), new Vector2(BinKeyW - 68f, 18),
-                  new Vector2(56, 0));
-            word.rectTransform.pivot = new Vector2(0, 0.5f);
+            var relay = rt.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => img.sprite = ChromeArt.Bin(true);
+            relay.Exited = () => img.sprite = ChromeArt.Bin(false);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = rt; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var word = NewText("BinWord", parent, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
+            Place(word.rectTransform, new Vector2(1, 0), new Vector2(96, 12), new Vector2(0f, 120f));
+            RegisterFixed(parent, word.rectTransform);
             word.text = UIText.T("bench.bin");
             word.raycastTarget = false;
+            Engraved(word);
 
             btn.onClick.AddListener(() =>
             {
@@ -1088,20 +1116,6 @@ namespace LastCall.UI
                     : UIText.T("bench.binned"));
             });
 
-            // Swapped rather than loaded: both plates are drawn in code, so this does not
-            // go through GiveKeyPress (which fetches its down state from Resources by
-            // name). PressSink is deliberately NOT added on top — the cap's own six
-            // pixels of throw are the movement, and sinking the whole object as well read
-            // as the key falling through the counter.
-            btn.transition = Selectable.Transition.SpriteSwap;
-            var st = btn.spriteState;
-            st.pressedSprite = ChromeArt.KeyCap(UITheme.ViceRed, true, "bin");
-            st.selectedSprite = img.sprite;
-            btn.spriteState = st;
-            var travel = face.gameObject.AddComponent<KeyFaceTravel>();
-            travel.Button = btn;
-            travel.Up = -ChromeArt.KeyCapFaceUp;
-            travel.Down = -ChromeArt.KeyCapFaceDown;
         }
 
         /// <summary>

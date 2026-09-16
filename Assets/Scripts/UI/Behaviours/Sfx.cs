@@ -351,12 +351,12 @@ namespace LastCall.UI
         /// notices otherwise; isPlaying is a field read, and this is already called every frame.</summary>
         public static void Ambience(bool ducked)
         {
+            // NO BED AT ALL (2026-09-16, the author: "müzik hariç arkaplanda ses var cızırtı gibi bunu kaldır"): the
+            // rain on the window read as static under the music, so the room is silent but for the music and what
+            // the hands do. The source and the fade stay for a bed the author may want later.
             var i = Instance;
-            var rain = i.Clip("ambience_rain");
-            if (rain == null) return;
-            if (i._rain.clip != rain) i._rain.clip = rain;
-            if (!i._rain.isPlaying) i._rain.Play();
-            i._rainTarget = RainLevel * (ducked ? BedDuck : 1f) * Sound.Effective;
+            if (i._rain.isPlaying) i._rain.Stop();
+            i._rainTarget = 0f;
         }
 
         /// <summary>

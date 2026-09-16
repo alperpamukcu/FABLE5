@@ -710,7 +710,8 @@ namespace LastCall.UI
             // with the aim line on its lower row.
             _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH);
             BuildStepStrip(_servePlaque,
-                new[] { UIText.T("bench.serve.step.tip"), UIText.T("bench.serve.step.serve") }, _serveStepRows);
+                new[] { UIText.T("bench.serve.step.tip"), UIText.T("bench.serve.step.serve") },
+                new[] { "step_fill", "step_glass" }, _serveStepRows);
 
             // ON THE BAND (2026-08-26): what is left in the tin reads under the step
             // card in the left column, what is in the glass reads over the name plate on

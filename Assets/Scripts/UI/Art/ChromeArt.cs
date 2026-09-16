@@ -332,6 +332,124 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // THE BENCH'S FOUR STEPS AS PICTURES (2026-09-16, the author: "1-2-3-4 daha profesyonel bir şekilde
+            // belirtilmeli görsellerle ne yapması gerektiği"): a bottle tipped over a tin, a lid coming down on a tin,
+            // a tin thrown with motion lines, a spoon circling in an open tin, a filled glass. 16 px, one colour.
+            ["step_fill"] = new[]
+            {
+                "..##............",
+                "..###...........",
+                "...###..........",
+                "....###.........",
+                ".....###........",
+                "......###.......",
+                ".......##.......",
+                "........#.......",
+                ".....#####......",
+                ".....#.#.#......",
+                ".....#.#.#......",
+                ".....#####......",
+                ".....#####......",
+                ".....#####......",
+                "......###.......",
+                "................",
+            },
+            ["step_cap"] = new[]
+            {
+                "......####......",
+                ".....######.....",
+                "....########....",
+                "................",
+                "...##########...",
+                "................",
+                ".....######.....",
+                ".....#....#.....",
+                ".....#....#.....",
+                ".....#....#.....",
+                ".....#....#.....",
+                ".....#....#.....",
+                ".....######.....",
+                "......####......",
+                "................",
+                "................",
+            },
+            ["step_shake"] = new[]
+            {
+                "......####......",
+                ".....######.....",
+                "#....######....#",
+                ".#...######...#.",
+                ".....######.....",
+                "#....######....#",
+                ".#...######...#.",
+                ".....######.....",
+                "#....######....#",
+                ".#...######...#.",
+                ".....######.....",
+                "......####......",
+                "................",
+                "................",
+                "................",
+                "................",
+            },
+            ["step_stir"] = new[]
+            {
+                "...........##...",
+                "..........##....",
+                ".........##.....",
+                "........##......",
+                ".......##.......",
+                "....#####.......",
+                "....#.##.#......",
+                "....#.#..#......",
+                "....#.#..#......",
+                "....#....#......",
+                "....#....#......",
+                "....######......",
+                ".....####.......",
+                "................",
+                "................",
+                "................",
+            },
+            ["step_glass"] = new[]
+            {
+                "...########.....",
+                "...#......#.....",
+                "...#......#.....",
+                "...########.....",
+                "...########.....",
+                "...########.....",
+                "...########.....",
+                "...########.....",
+                "....######......",
+                ".....####.......",
+                "......##........",
+                "......##........",
+                "......##........",
+                "....######......",
+                "................",
+                "................",
+            },
+            // THE WAY BACK (2026-09-16): a big chevron for the bench's back key, drawn at 2x on the key.
+            ["chevron_left"] = new[]
+            {
+                "..........##....",
+                ".........###....",
+                "........###.....",
+                ".......###......",
+                "......###.......",
+                ".....###........",
+                "....###.........",
+                "...###..........",
+                "....###.........",
+                ".....###........",
+                "......###.......",
+                ".......###......",
+                "........###.....",
+                ".........###....",
+                "..........##....",
+                "................",
+            },
             // A COG, for the one control that is not part of the night.
             ["cog"] = new[]
             {
@@ -1917,6 +2035,115 @@ namespace LastCall.UI
                     px[y * S + x] = top || left ? dark : bottom || right ? lit : well;
                 }
             return Cache[Key] = Make(px, S, S, new Vector4(2, 2, 2, 2));
+        }
+
+        /// <summary>
+        /// A DIAL FACE (2026-09-16, the bench's pour gauge — the author: "Dökülme hızı göstergesini beğenmedim daha
+        /// profesyonel olsun"): a half-round face cut into the counter, its rim a brass arc, <paramref name="ticks"/>
+        /// marks from the left horizontal round to the right, the last one longer. The needle is the caller's (an
+        /// Image pivoted at the face's foot, turned by the reading). Drawn at half size and shown at 2x.
+        /// </summary>
+        public static Sprite DialFace(int w, int h, int ticks)
+        {
+            string key = $"dial:{w}x{h}:{ticks}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            Color32 well = Hex(0x17121B), rim = UITheme.Amber[1], tick = UITheme.Cream[2], hub = UITheme.Cream[3];
+            float cx = (w - 1) * 0.5f, cy = 2f;                  // the hub two texels up from the foot
+            float R = Mathf.Min(cx, h - 3f);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = x - cx, dy = y - cy;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (dy < -0.5f || d > R + 0.5f) continue;
+                    Color32 c = well;
+                    if (d > R - 1.5f) c = rim;                                   // the brass arc
+                    else if (d < 2.2f) c = hub;                                  // the hub
+                    else
+                        for (int t = 0; t < ticks; t++)
+                        {
+                            float a = Mathf.PI * (1f - (t + 0.5f) / ticks);      // left round to right
+                            float len = t == ticks - 1 ? 5f : 3f;
+                            Vector2 p = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                            float along = dx * p.x + dy * p.y, across = Mathf.Abs(-dx * p.y + dy * p.x);
+                            if (across < 0.6f && along > R - 1.5f - len && along < R - 1.5f) { c = tick; break; }
+                        }
+                    px[y * w + x] = c;
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>
+        /// A PEDAL BIN (2026-09-16, the author: "çöp için ise arkaplanda gerçek bir çöp kutusu"): steel, a darker
+        /// lid with a knob, a pedal at its foot — standing at the bench's right end, the key that throws a drink
+        /// away. Two drawings: the lid down, and up under the pointer. 32x48, shown at 2x.
+        /// </summary>
+        public static Sprite Bin(bool open)
+        {
+            string key = "bin:" + (open ? "open" : "shut");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 32, H = 48;
+            var px = new Color32[W * H];
+            Color32 ink = UITheme.Night[0], body = UITheme.Graphite[3], lit = UITheme.Graphite[4], dark = UITheme.Graphite[2],
+                    lid = UITheme.Graphite[2], lidLit = UITheme.Graphite[3], inside = UITheme.Night[1];
+            void Set(int x, int y, Color32 c) { if (x >= 0 && x < W && y >= 0 && y < H) px[(H - 1 - y) * W + x] = c; }
+            // the body: a tapered can, rows 10..44 from the top, 2 texels narrower at the foot
+            for (int y = 10; y < 44; y++)
+            {
+                float t = (y - 10) / 34f;
+                int half = Mathf.RoundToInt(11f - 1.5f * t);
+                for (int x = 16 - half; x <= 15 + half; x++)
+                {
+                    bool edge = x == 16 - half || x == 15 + half || y == 43;
+                    Color32 c = edge ? ink : x < 16 - half + 3 ? lit : x > 15 + half - 4 ? dark : body;
+                    if (!edge && (y == 20 || y == 34)) c = dark;                  // two bands round the can
+                    Set(x, y, c);
+                }
+            }
+            // the mouth, dark inside, and the lid — down, or up on its hinge at the back
+            for (int x = 6; x <= 25; x++) Set(x, 10, inside);
+            if (!open)
+            {
+                for (int y = 6; y < 10; y++)
+                    for (int x = 4; x <= 27; x++)
+                        Set(x, y, x == 4 || x == 27 || y == 6 ? ink : y == 7 ? lidLit : lid);
+                for (int y = 3; y < 6; y++) for (int x = 14; x <= 17; x++) Set(x, y, y == 3 ? ink : lidLit);   // the knob
+            }
+            else
+            {
+                for (int y = 0; y < 10; y++)                                   // the lid stands up at the back
+                    for (int x = 20; x <= 24; x++)
+                        Set(x, y, x == 20 || x == 24 || y == 0 ? ink : x == 21 ? lidLit : lid);
+                for (int x = 6; x <= 25; x++) Set(x, 11, inside);
+            }
+            // the pedal, out at the foot on the near side
+            for (int x = 2; x <= 9; x++) { Set(x, 44, ink); Set(x, 45, dark); Set(x, 46, ink); }
+            for (int y = 44; y < 47; y++) Set(9, y, ink);
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>
+        /// A RUBBER BAR MAT (2026-09-16, the author: "bar tezgahının arkasına bir de bar matı"): the ribbed runner
+        /// every bar keeps along its back edge — dark rubber, ribs a shade lighter, a raised rim. A 16x12 tile with
+        /// 4-texel borders, sliced; shown at 2x.
+        /// </summary>
+        public static Sprite BarMat()
+        {
+            const string Key = "bench:barmat";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 16, H = 12;
+            var px = new Color32[W * H];
+            Color32 rubber = Hex(0x141117), rib = Hex(0x241F2A), rim = Hex(0x2E2739), ink = Hex(0x0B090D);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    bool border = x == 0 || y == 0 || x == W - 1 || y == H - 1;
+                    bool lip = x == 1 || y == 1 || x == W - 2 || y == H - 2;
+                    Color32 c = border ? ink : lip ? rim : (x % 4 == 0 ? rib : rubber);
+                    px[y * W + x] = c;
+                }
+            return Cache[Key] = Make(px, W, H, new Vector4(4, 4, 4, 4));
         }
 
         /// <summary>

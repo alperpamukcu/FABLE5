@@ -1540,6 +1540,51 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.74 · Tezgâhın alet ailesi: resimli adımlar, dökme kadranı, MIX sütunu, büyük BARA DÖN, çizili çöp kutusu, mat ve limon, ışık ve yansıma; arka plandaki cızırtı sustu (2026-09-16)
+
+Yazar: "1-2-3-4 daha profesyonel bir şekilde belirtilmeli görsellerle ne yapması gerektiği, Çalkalama/karıştırma doluluk
+barı ölçü barının yanında gözükebilir ... Dökülme hızı göstergesini beğenmedim daha profesyonel olsun arka plana
+yedirilme işini beğendim bunu diğer tüm arkaplana bağlı olan ölçü/plaka'larla beraber tasarla, bara dön butonu çok
+daha büyük ve farklı bir tasarımda olmalı, çöp için ise arkaplanda gerçek bir çöp kutusu ... bar tezgahının arkasına
+birda bar matı koyulanilir yanda dilimlenmiş limonlar ve su lekesi olabilir ... tezgaha ışıklandırma ve yansıma
+gerekiyor profesyonel bir biçimde, odak şişe ve shakerda olmalı dökerken, şişe dolduktan sonra odak kapağa geçmeli ...
+müzik hariç arkaplanda ses var cızırtı gibi bunu kaldır."
+
+- **Tek aile.** Tezgâha bağlı her gösterge aynı dilde: `ChromeArt.CounterRecess` (tezgâha oyulmuş yuva) + `BrassRim`
+  (Amber[1] dört çizgi) + `Engraved` (1,-1 gölgeli yazı). Plaka (§9.73), dökme kadranı, BARA DÖN tuşu ve MIX sütunu
+  bu aileden; hiçbiri havada duran bir kutu değil.
+- **Resimli adımlar.** Şeritteki her adım 8 px numara + 16 px piktogram + sözcük: `step_fill` (tenekeye dökülen
+  şişe), `step_cap` (kapak), `step_shake` / `step_stir` (tarife göre; `UpdateStepCard` 3. adımın resmini
+  `run.TinMethod`'a göre değiştirir — Built için kapak), `step_glass` (bardak). Servis tezgâhında `step_fill` +
+  `step_glass`. Maskeler `ChromeArt` içinde, `StepNumberW=10`.
+- **Dökme kadranı** (`BuildLiftLadder` → "PourDial", 180×110 yuva, şişenin ayağının altında). Yarım daire kadran
+  `DialFace(88,44,StepCount)` 2× gösterilir, pirinç yay ve `BottlePour.StepCount` kadar tık; 4×66 ibre
+  `LightLiftLadder(step)` ile döner (a = 180 − 180(step−0,5)/n). Altında oyma ipucu `bench.shaker.lift_hint`
+  "LIFT HIGHER · POURS FASTER". Eski merdiven çizgileri gitti. Yuva, şişenin aynasının ÜSTÜNE çizilir (ayna kadranın
+  yüzüne düşüyordu).
+- **MIX sütunu** (`BuildWorkColumn`): ölçünün solunda 24×300 dikey tüp (GaugeTube + Filled Vertical + GaugeGlass), 72%
+  yeterli çizgisi, başlık `bench.shaker.work.head` "MIX". `SetFrost` doldurur: kehribar, 72%'yi geçince Lime. Buz ve
+  karışım (§9.73) yerinde.
+- **BARA DÖN**: 216×64 yuva, `chevron_left` 32 px Amber[3] + 16 px oyma sözcük, `PressSink` (Depth 3, Lift 2).
+  `BackKeyW/H` sabitleri; tuş kapağı bu tezgâhta yok.
+- **Çöp kutusu**: sağ altta 64×96 çizili pedallı kutu (`ChromeArt.Bin(open)`, Graphite rampası; hover'da kapak
+  kalkar), üstünde `bench.bin` "ÇÖP". `alphaHitTest 0.1` — yalnız kutunun kendisi tıklanır. Eski ÇÖP tuşu gitti.
+- **Tezgâh donatımı** (`BuildBenchDressing`): raydan asılı 360×48 bar matı (`ChromeArt.BarMat` 16×12 döşeme, Tiled
+  ppu 0,5), sağda iki 64 px limon dilimi (`counter_lemon`), teneke ile kadran arasında su halkası (`Smudge(11)`
+  96×36, alfa 0,38), ray boyunca 1180×240 Cream[4] %7 parıltı.
+- **Işık ve yansıma**: `_benchLight` (760×460 Cream[4] %16 hale, yüzeyin ilk çocuğu) `StepBenchLight` ile odak
+  değiştirir — dökerken şişe/teneke ortası, şişe bırakılınca teneke, kapak kapanınca kapak. `AddMirror` ile
+  teneke ve şişenin ayağının altında dikey çevrilmiş yansımalar (%14, pivot (0.5,0)); şişe aynası yalnız şişe
+  dururken ve kapak açıkken.
+- **Cızırtı**: `ambience_rain.ogg` silindi, `Sfx.Ambience` yağmur kaynağını durdurur; `Tools/sfx_picks.json`
+  `beds: {}`; Docs/SES_LISTESI.md güncel. Odada müzik dışında yatak sesi yok.
+- Yerleşim (1280×720, ölçüldü): plaka (16..480, y 340..410); dökme kadranı (850..1030, 585..695); MIX sütunu x≈1024
+  (y 322..622); ölçü/teneke 1060..1190; BARA DÖN (18..234, 638..702); çöp kutusu 1200..1264 × 606..702, ÇÖP y 588;
+  mat 500..860 × 340..388; limonlar 1150..1260 × 350..410; su halkası 730..800 × 670..700.
+- Doğrulama: EditMode 595/595; PlayMode iki koşu — ilkinde yalnız tezgâh tabanı yeniden çizildi ve bakıldı, ikincisinde
+  13/13 (89,4 sn). r19 sondası: 0% / 51% vodka, 60% çalkalama (MIX kehribar, buz), 6. basamak ibre, servis ve musluk
+  tezgâhlarında aynı BARA DÖN ve kutu.
+
 ### 9.73 · Tezgâh yeniden dizildi: plaka, buzlanan shaker, kaldırma merdiveni, peçete, fırçalı tezgâh; menüde koyu perde ve cam (2026-09-16)
 
 Yazar: "Arkaplan biraz daha karartılsın. Bu desen built sahnesindeki tezgah desenine benziyor, olmaz. Built ekranında

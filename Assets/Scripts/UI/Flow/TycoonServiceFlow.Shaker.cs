@@ -107,6 +107,63 @@ namespace LastCall.UI
         // contact shadows on the counter line, each following its prop's x and thinning as
         // it is lifted away — a shaken tin is in the air, and its shadow should know.
         private RectTransform _tinShadow, _bottleShadow;
+        // ...and since 2026-09-16 the light on the work and the two mirrors (StepBenchLight).
+        private RectTransform _benchLight, _tinMirror, _bottleMirror;
+
+        /// <summary>A faint, squashed, upside-down copy of a prop on the stone under its foot: what a wiped counter
+        /// gives back. Hung from its top edge, flipped by its scale; its picture is set each frame.</summary>
+        private RectTransform AddMirror(string name, float w, float h)
+        {
+            var rt = NewRect(name, _pourSurface);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+            // the pivot at the FOOT: flipped by its scale, a rect grows the other way from its pivot, so a foot pivot
+            // is what hangs the mirror under the line rather than over it (seen in play: the first cut hid behind the bottle)
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(w, h);
+            rt.localScale = new Vector3(1f, -1f, 1f);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.color = new Color(1f, 1f, 1f, 0.14f);
+            img.raycastTarget = false;
+            img.preserveAspect = false;
+            rt.SetSiblingIndex(1);
+            return rt;
+        }
+
+        /// <summary>Every frame: the light follows the work, the mirrors stand under their props.</summary>
+        private void StepBenchLight()
+        {
+            if (_benchLight == null || _shakerVessel == null) return;
+            Vector2 want = _capped ? _shakerVessel.anchoredPosition + new Vector2(0f, 40f)
+                : _bottleGrabbed && _bottleHand.Held ? _bottleHand.GripPoint
+                : (_shakerVessel.anchoredPosition + _bottleRest) * 0.5f + new Vector2(0f, 20f);
+            _benchLight.anchoredPosition = Vector2.Lerp(_benchLight.anchoredPosition, want,
+                1f - Mathf.Exp(-6f * Time.unscaledDeltaTime));
+            if (_tinMirror != null)
+            {
+                var img = _tinMirror.GetComponent<Image>();
+                var art = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
+                bool show = art != null && !_shaking && _blowT <= 0f;
+                if (_tinMirror.gameObject.activeSelf != show) _tinMirror.gameObject.SetActive(show);
+                if (show)
+                {
+                    if (img.sprite != art) img.sprite = art;
+                    _tinMirror.anchoredPosition = new Vector2(_shakerVessel.anchoredPosition.x, TinFootY + 2f);
+                }
+            }
+            if (_bottleMirror != null)
+            {
+                var img = _bottleMirror.GetComponent<Image>();
+                var art = _pourPlates != null && _pourPlates.Front != null ? _pourPlates.Front
+                    : _pourBottleBody != null ? _pourBottleBody.sprite : null;
+                bool show = art != null && _pourBottle != null && _pourBottle.gameObject.activeSelf && _bottleHand.AtRest && !_capped;
+                if (_bottleMirror.gameObject.activeSelf != show) _bottleMirror.gameObject.SetActive(show);
+                if (show)
+                {
+                    if (img.sprite != art) img.sprite = art;
+                    _bottleMirror.anchoredPosition = new Vector2(_bottleRest.x, BottleFootY + 2f);
+                }
+            }
+        }
 
         // The STIR (GDD 21 §14, 2026-08-11): the mandatory mix made Preparations.Stirred
         // load-bearing, so the bench grew a bar spoon. Stir and shake are told apart by the
@@ -170,8 +227,56 @@ namespace LastCall.UI
         private readonly Dictionary<RectTransform, List<(Image img, Color tone)>> _gaugeBands =
             new Dictionary<RectTransform, List<(Image, Color)>>();
 
-        /// <summary>Puts a reading on the drink: the frost, the blend, and the plaque's figure with the mark it is
-        /// working toward — green once past it.</summary>
+        // ...AND BESIDE THE MEASURE, A COLUMN (2026-09-16, the author: "Çalkalama/karıştırma doluluk barı ölçü
+        // barının yanında gözükebilir"): the house gauge stood on end at the measure's left, MIX engraved under it,
+        // the enough mark scratched across it, its fill amber until the mark and lime past it. It reads what the
+        // frost reads; the frost stays on the tin, where the eye is while shaking.
+        private Image _workFill;
+        private const float WorkColW = 24f, WorkColGap = 20f;
+
+        private void BuildWorkColumn(RectTransform panel)
+        {
+            var rig = NewRect("WorkColumn", panel);
+            Place(rig, new Vector2(0.5f, 0.5f), new Vector2(WorkColW, MeasureSize.y),
+                  new Vector2(MeasureAt.x - MeasureSize.x * 0.5f - WorkColGap - WorkColW * 0.5f, MeasureAt.y));
+            var tube = rig.gameObject.AddComponent<Image>();
+            tube.sprite = ChromeArt.GaugeTube((int)WorkColW, (int)MeasureSize.y);
+            tube.color = UITheme.Night[2];
+            tube.raycastTarget = false;
+            var inner = NewRect("Inner", rig);
+            Stretch(inner, Vector2.zero, Vector2.one, new Vector2(2, 2), new Vector2(-2, -2));
+            var fill = NewRect("Fill", inner);
+            Stretch(fill, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _workFill = fill.gameObject.AddComponent<Image>();
+            _workFill.sprite = ChromeArt.Solid();          // a fill needs something to fill (ChromeArt.Solid)
+            _workFill.type = Image.Type.Filled;
+            _workFill.fillMethod = Image.FillMethod.Vertical;
+            _workFill.fillOrigin = (int)Image.OriginVertical.Bottom;
+            _workFill.fillAmount = 0f;
+            _workFill.raycastTarget = false;
+            var glass = NewRect("Glass", rig);
+            Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var gi = glass.gameObject.AddComponent<Image>();
+            gi.sprite = ChromeArt.GaugeGlass((int)WorkColW, (int)MeasureSize.y, 5);
+            gi.raycastTarget = false;
+            // where enough is: a line scratched across the tube, a little wider than it
+            var mark = NewRect("Enough", rig);
+            Place(mark, new Vector2(0.5f, 0f), new Vector2(WorkColW + 8f, 2f), new Vector2(0f, 2f + EnoughMark * (MeasureSize.y - 4f)));
+            mark.pivot = new Vector2(0.5f, 0.5f);
+            var mi = mark.gameObject.AddComponent<Image>();
+            mi.color = UITheme.Cream[4];
+            mi.raycastTarget = false;
+            var word = NewText("Head", rig, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
+            word.rectTransform.anchorMin = new Vector2(0, 0); word.rectTransform.anchorMax = new Vector2(1, 0);
+            word.rectTransform.pivot = new Vector2(0.5f, 1);
+            word.rectTransform.offsetMin = new Vector2(-20, -16); word.rectTransform.offsetMax = new Vector2(20, -4);
+            word.text = UIText.T("bench.shaker.work.head");
+            word.raycastTarget = false;
+            Engraved(word);
+        }
+
+        /// <summary>Puts a reading on the drink: the frost, the blend, the column, and the plaque's figure with the
+        /// mark it is working toward — green once past it.</summary>
         private void ShowWorkMeter(float amount, Color tone, string caption)
         {
             _meterHeldThisFrame = true;
@@ -194,6 +299,11 @@ namespace LastCall.UI
         /// <summary>The frost on the tin's body: <paramref name="level"/> of the front plate's height, from its base.</summary>
         private void SetFrost(float level)
         {
+            if (_workFill != null)
+            {
+                _workFill.fillAmount = Mathf.Clamp01(level);
+                _workFill.color = level >= EnoughMark ? UITheme.Lime[3] : UITheme.Amber[3];
+            }
             if (_tinFrostRt == null) return;
             bool on = level > 0.02f;
             if (_tinFrostRt.gameObject.activeSelf != on) _tinFrostRt.gameObject.SetActive(on);
@@ -332,7 +442,8 @@ namespace LastCall.UI
             // name goes to a quiet text the bench still writes to (see BuildStepStrip).
             _shakerTitle = BuildStepStrip(_shakerPlaque,
                 new[] { UIText.T("bench.shaker.step.fill"), UIText.T("bench.shaker.step.cap"),
-                        UIText.T("bench.shaker.step.mix"), UIText.T("bench.shaker.step.to_glass") }, _stepRows);
+                        UIText.T("bench.shaker.step.mix"), UIText.T("bench.shaker.step.to_glass") },
+                new[] { "step_fill", "step_cap", "step_shake", "step_glass" }, _stepRows);
         }
 
         /// <summary>A dark edge under the letters, the way a cut in stone catches shadow: the strip's ink, for
@@ -344,53 +455,61 @@ namespace LastCall.UI
             cut.effectDistance = new Vector2(1f, -1f);
         }
 
-        // ── the lift ladder ───────────────────────────────────────────────────────
+        // ── the pour dial ─────────────────────────────────────────────────────────
+        //
+        // SECOND TAKE (2026-09-16, the author of the nine rungs: "Dökülme hızı göstergesini beğenmedim daha
+        // profesyonel olsun arka plana yedirilme işini beğendim"): the same reading as an INSTRUMENT — a half-round
+        // dial cut into the counter under the bottle's rest, a brass arc, nine ticks for Core's nine steps of flow
+        // (BottlePour, 1·1·2·3·5·8·13·21·34), and an amber needle that swings from the left as the bottle is
+        // lifted. It is the instrument family the plaque belongs to: the same recess, the same brass, the same
+        // engraved captions.
 
-        private Image[] _liftRungs;
-        private const float LadderW = 180f, LadderH = 64f;
+        private RectTransform _pourNeedle;
+        private const float DialPlaqueW = 180f, DialPlaqueH = 110f, DialW = 176f, DialH = 88f, NeedleH = 66f;
 
         private void BuildLiftLadder()
         {
-            // A recess under the bottle's rest: its foot line is BottleFootY, the recess a hand under it.
-            var plaque = NewRect("LiftLadder", _pourSurface);
-            Place(plaque, new Vector2(0.5f, 0.5f), new Vector2(LadderW, LadderH),
-                  new Vector2(_bottleRest.x, BottleFootY - 22f - LadderH * 0.5f));
+            var plaque = NewRect("PourDial", _pourSurface);
+            Place(plaque, new Vector2(0.5f, 0.5f), new Vector2(DialPlaqueW, DialPlaqueH),
+                  new Vector2(_bottleRest.x, BottleFootY - 22f - DialPlaqueH * 0.5f));
             var img = plaque.gameObject.AddComponent<Image>();
             img.sprite = ChromeArt.CounterRecess();
             img.type = Image.Type.Sliced;
             img.raycastTarget = false;
-            plaque.SetAsFirstSibling();   // under the bottle's shadow and the bottle
+            // Under the bottle's shadow and the bottle, but OVER the mirrors (the bottle's reflection lay across the
+            // face in play): just after the last mirror in the surface's order.
+            plaque.SetSiblingIndex(_bottleMirror != null ? _bottleMirror.GetSiblingIndex() + 1 : 0);
 
-            int n = BottlePour.StepCount;
-            _liftRungs = new Image[n];
-            const float RungW = 8f, Gap = 4f;
-            float x0 = -(n * RungW + (n - 1) * Gap) * 0.5f;
-            for (int i = 0; i < n; i++)
-            {
-                var rung = NewRect("R" + i, plaque);
-                // each rung as tall as its step's share of full flow (Core's own ladder, read through LiftShare)
-                float h = 4f + 24f * (float)BottlePour.LiftShare((i + 0.5) / n, 1.0);
-                rung.anchorMin = rung.anchorMax = new Vector2(0.5f, 0f);
-                rung.pivot = new Vector2(0f, 0f);
-                rung.sizeDelta = new Vector2(RungW, Mathf.Round(h));
-                rung.anchoredPosition = new Vector2(x0 + i * (RungW + Gap), 22f);
-                _liftRungs[i] = rung.gameObject.AddComponent<Image>();
-                _liftRungs[i].raycastTarget = false;
-            }
+            var face = NewRect("Face", plaque);
+            Place(face, new Vector2(0.5f, 0f), new Vector2(DialW, DialH), new Vector2(0f, 20f));
+            var fi = face.gameObject.AddComponent<Image>();
+            fi.sprite = ChromeArt.DialFace((int)(DialW / 2f), (int)(DialH / 2f), BottlePour.StepCount);   // drawn at half, shown at 2x
+            fi.raycastTarget = false;
+
+            // The needle turns about the hub, which the face draws two texels (four units) over its foot.
+            _pourNeedle = NewRect("Needle", plaque);
+            _pourNeedle.anchorMin = _pourNeedle.anchorMax = new Vector2(0.5f, 0f);
+            _pourNeedle.pivot = new Vector2(0.5f, 0f);
+            _pourNeedle.sizeDelta = new Vector2(4f, NeedleH);
+            _pourNeedle.anchoredPosition = new Vector2(0f, 24f);
+            var ni = _pourNeedle.gameObject.AddComponent<Image>();
+            ni.color = UITheme.Amber[3];
+            ni.raycastTarget = false;
+
             var word = NewText("Hint", plaque, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
-            Stretch(word.rectTransform, Vector2.zero, new Vector2(1f, 0f), new Vector2(4f, 6f), new Vector2(-4f, 18f));
+            Stretch(word.rectTransform, Vector2.zero, new Vector2(1f, 0f), new Vector2(4f, 4f), new Vector2(-4f, 16f));
             word.text = UIText.T("bench.shaker.lift_hint");
             Engraved(word);
             LightLiftLadder(0);
         }
 
-        /// <summary>The rungs up to <paramref name="step"/> lit in amber, the rest in the counter's own dark.</summary>
+        /// <summary>The needle on <paramref name="step"/>'s tick (1..9), or lying at the left for none.</summary>
         private void LightLiftLadder(int step)
         {
-            if (_liftRungs == null) return;
-            for (int i = 0; i < _liftRungs.Length; i++)
-                if (_liftRungs[i] != null)
-                    _liftRungs[i].color = i < step ? UITheme.Amber[3] : UITheme.Night[4];
+            if (_pourNeedle == null) return;
+            int n = BottlePour.StepCount;
+            float a = step <= 0 ? 180f : 180f * (1f - (step - 0.5f) / n);   // degrees from the right, left round
+            _pourNeedle.localRotation = Quaternion.Euler(0f, 0f, a - 90f);
         }
 
         // ── THE STEPS ARE CUT INTO THE COUNTER (2026-09-13) ─────────────────────
@@ -403,8 +522,8 @@ namespace LastCall.UI
         // when the step is done, side by side under the props' feet and above the keys. No
         // plate, no box: the same ink rules as ever (PaintSteps), on the stone itself.
 
-        /// <summary>The height of one step on the strip.</summary>
-        private const float StepStripH = 20f;
+        /// <summary>The height of one step on the strip, and the room its figure takes before the picture.</summary>
+        private const float StepStripH = 20f, StepNumberW = 10f;
 
         // ── THE PLAQUE (2026-09-16, the author: "yazıları yönergeleri arkaplana göm ... yerleşimleri mevcut
         // arkaplana göre yap") ───────────────────────────────────────────────────────────────────────────────────
@@ -440,7 +559,7 @@ namespace LastCall.UI
             return rt;
         }
 
-        private Text BuildStepStrip(RectTransform plaque, string[] words,
+        private Text BuildStepStrip(RectTransform plaque, string[] words, string[] marks,
             List<(Image icon, Text label, Image tick)> rows)
         {
             // ON THE PLAQUE (2026-09-16), left to right from its edge — the strip used to be centred across the
@@ -455,22 +574,26 @@ namespace LastCall.UI
                 cell.pivot = new Vector2(0f, 0.5f);
                 cell.sizeDelta = new Vector2(10f, StepStripH);
 
-                // THE NUMBER, IN A SOCKET — where you are in a checklist is the one thing a
-                // glance needs (2026-08-26's reason, kept).
-                var mark = NewRect("I", cell);
-                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), Vector2.zero);
-                var mimg = mark.gameObject.AddComponent<Image>();
-                mimg.sprite = ChromeArt.Card();
-                mimg.type = Image.Type.Sliced;
-                mimg.color = UITheme.Night[3];
-                mimg.raycastTarget = false;
-                var num = NewText("N", mark, _display, 8, TextAnchor.MiddleCenter, UITheme.Night[0]);
-                Stretch(num.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                // THE NUMBER, THEN THE PICTURE (2026-09-16, the author: "1-2-3-4 daha profesyonel bir şekilde
+                // belirtilmeli görsellerle ne yapması gerektiği"): the step's figure in the small face, then a 16 px
+                // drawing of the thing to do (ChromeArt's step_* marks — the bottle over the tin, the lid, the shaken
+                // tin, the spoon, the glass), then the word. The socket the number sat in is gone.
+                var num = NewText("N", cell, _display, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+                Place(num.rectTransform, new Vector2(0, 0.5f), new Vector2(10, 14), Vector2.zero);
+                num.rectTransform.pivot = new Vector2(0, 0.5f);
                 num.text = (i + 1).ToString();
                 num.raycastTarget = false;
+                Engraved(num);
+                var mark = NewRect("I", cell);
+                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(StepNumberW, 0));
+                mark.pivot = new Vector2(0, 0.5f);
+                var mimg = mark.gameObject.AddComponent<Image>();
+                mimg.sprite = ChromeArt.Mark(marks[i]);
+                mimg.preserveAspect = true;
+                mimg.raycastTarget = false;
 
                 var text = NewText("L", cell, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(240, 14), new Vector2(22, 0));
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(240, 14), new Vector2(StepNumberW + 16f + 6f, 0));
                 text.horizontalOverflow = HorizontalWrapMode.Overflow;
                 text.text = words[i];
                 // ENGRAVED: a dark edge under the letters, the way a cut in stone catches shadow.
@@ -500,7 +623,7 @@ namespace LastCall.UI
         /// words. Called again whenever a step's words change (the third names the method).</summary>
         private static void LayOutStrip(List<(Image icon, Text label, Image tick)> rows)
         {
-            const float Socket = 16f, Gap = 6f, TickGap = 4f, TickW = 10f, Between = 28f;
+            const float Socket = StepNumberW + 16f, Gap = 6f, TickGap = 4f, TickW = 10f, Between = 28f;
             var widths = new float[rows.Count];
             float total = 0f;
             for (int i = 0; i < rows.Count; i++)
@@ -567,6 +690,9 @@ namespace LastCall.UI
                     : method == PrepMethod.Built ? UIText.T("bench.shaker.step.built")
                     : UIText.T("bench.shaker.step.mix");
                 if (_stepRows[2].label.text != wasThird) LayOutStrip(_stepRows);
+                // ...and its picture (2026-09-16): the thrown tin, the spoon, or the lid for a drink built as it is.
+                var pic = ChromeArt.Mark(method == PrepMethod.Stirred ? "step_stir" : method == PrepMethod.Built ? "step_cap" : "step_shake");
+                if (_stepRows[2].icon.sprite != pic) _stepRows[2].icon.sprite = pic;
                 if (method == PrepMethod.Built) { optional = 2; optionalDone = true; }
             }
             PaintSteps(_stepRows, at, optional, optionalDone);
@@ -1021,9 +1147,10 @@ namespace LastCall.UI
                 _bottleHand.Step(Time.deltaTime, pointer,
                     Rect.MinMaxRect(Mathf.Max(-halfW + 30f, leftmost), -halfH + 20f, halfW - 30f, halfH + HandAbove));
                 _bottleHand.Apply(_pourBottle);
-                // The ladder under the rest shows the step the lift is on (2026-09-16).
+                // The dial under the rest shows the step the lift is on (2026-09-16).
                 LightLiftLadder(_bottleGrabbed && _bottleHand.Held ? BottlePour.LiftStep(_bottleHand.PourLift01) : 0);
             }
+            StepBenchLight();
 
             bool pourNow = false;
             if (_bottleGrabbed && _bottleHand.Held)
@@ -1877,6 +2004,46 @@ namespace LastCall.UI
         private static Color Hex(int v) =>
             new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f);
 
+        // ── the counter's dressing (2026-09-16, the author: "bar tezgahının arkasına bir de bar matı koyulabilir
+        // yanda dilimlenmiş limonlar ve su lekesi olabilir ... tezgaha ışıklandırma ve yansıma gerekiyor") ────────
+        //
+        // On the shared stage, under every bench: the room's light lying on the stone under the rail, a rubber bar
+        // mat along the back edge, and two lemon wheels in the far corner. All hung from the rail, so they stay on
+        // the counter's own line. The water ring and the mirrors are the shaker bench's (BuildShakerPanel).
+
+        private void BuildBenchDressing()
+        {
+            var sheen = NewRect("Sheen", _benchStage);
+            Place(sheen, new Vector2(0.5f, 0f), new Vector2(1180f, 240f), new Vector2(0f, 0f));
+            var si = sheen.gameObject.AddComponent<Image>();
+            si.sprite = ChromeArt.Halo();
+            si.color = new Color(UITheme.Cream[4].r, UITheme.Cream[4].g, UITheme.Cream[4].b, 0.07f);   // Cream[4] at 7%: light, not paint
+            si.raycastTarget = false;
+            _railHung.Add((sheen, RailBandH - 30f + 240f));
+
+            var mat = NewRect("BarMat", _benchStage);
+            Place(mat, new Vector2(0f, 0f), new Vector2(360f, 48f), new Vector2(500f, 0f));
+            var mi = mat.gameObject.AddComponent<Image>();
+            mi.sprite = ChromeArt.BarMat();
+            mi.type = Image.Type.Tiled;          // the rim from the border, the ribs REPEATED across the middle
+            mi.pixelsPerUnitMultiplier = 0.5f;   // the 16x12 tile at 2x
+            mi.raycastTarget = false;
+            _railHung.Add((mat, RailBandH + 8f + 48f));
+
+            var lemon = ItemArt.Load("counter_lemon");
+            for (int i = 0; i < 2; i++)
+            {
+                var wheel = NewRect("Lemon" + i, _benchStage);
+                Place(wheel, new Vector2(1f, 0f), new Vector2(64f, 64f), new Vector2(-16f - i * 28f, 0f));
+                wheel.pivot = new Vector2(1f, 0f);
+                var li = wheel.gameObject.AddComponent<Image>();
+                li.sprite = lemon; li.preserveAspect = true; li.raycastTarget = false;
+                li.enabled = lemon != null;
+                _railHung.Add((wheel, RailBandH + 6f + 64f));
+                wheel.SetAsLastSibling();
+            }
+        }
+
         private void AddBenchCounter(RectTransform panel, float fromY)
         {
             // It goes in BEHIND EVERYTHING on the panel: a band added after the title is a
@@ -2027,6 +2194,27 @@ namespace LastCall.UI
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
             _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
             _bottleShadow = AddContactShadow(_pourSurface, 128f, new Vector2(_bottleRest.x, BottleFootY));
+            // LIGHT ON THE WORK, AND THE STONE ANSWERING (2026-09-16, the author: "tezgaha ışıklandırma ve yansıma
+            // gerekiyor ... odak şişe ve shakerda olmalı dökerken, şişe dolduktan sonra odak kapağa geçmeli"): a
+            // soft bloom behind whatever the hand is on — the bottle while it pours, the tin once the lid is on,
+            // both at rest — and a faint mirror of the tin and the bottle on the counter under their feet
+            // (StepBenchLight). Built before the props, so they draw over it; the water ring with them.
+            _benchLight = NewRect("Light", _pourSurface);
+            Place(_benchLight, new Vector2(0.5f, 0.5f), new Vector2(760f, 460f), new Vector2(120f, -60f));
+            var lightImg = _benchLight.gameObject.AddComponent<Image>();
+            lightImg.sprite = ChromeArt.Halo();
+            lightImg.color = new Color(UITheme.Cream[4].r, UITheme.Cream[4].g, UITheme.Cream[4].b, 0.16f);   // Cream[4] at 16%: light
+            lightImg.raycastTarget = false;
+            _benchLight.SetAsFirstSibling();
+            _tinMirror = AddMirror("TinMirror", TinW, TinH * 0.3f);
+            _bottleMirror = AddMirror("BottleMirror", 180f, BottleH * 0.3f);
+            var ring = NewRect("WaterRing", _pourSurface);
+            Place(ring, new Vector2(0.5f, 0.5f), new Vector2(96f, 36f), new Vector2(130f, -292f));   // between the tin and the dial, on the counter
+            var ringImg = ring.gameObject.AddComponent<Image>();
+            ringImg.sprite = ChromeArt.Smudge(11);
+            ringImg.color = new Color(1f, 1f, 1f, 0.38f);
+            ringImg.raycastTarget = false;
+            ring.SetSiblingIndex(1);
             _shakerVessel = NewRect("Shaker", _pourSurface);
             Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(TinW, TinH), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();
@@ -2271,6 +2459,7 @@ namespace LastCall.UI
             // inside the 1149-wide working area the serve bench measures against, and
             // its captions still have their air to the left.
             _shakerMixBar = BuildStandingGauge(_shakerPanel, MeasureAt, MeasureSize, UIText.T("bench.shaker.gauge.head"));
+            BuildWorkColumn(_shakerPanel);
 
             // THE WORK METER, FOURTH TAKE (2026-09-16): it was a flat bar (2026-08-26, "çok amatörce duruyor"),
             // then the house's tube gauge, and the author sent that back too ("karıştırma ve çalkalama sırasındaki

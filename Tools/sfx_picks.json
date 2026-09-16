@@ -70,7 +70,5 @@
     "star_earn": {"src": "music/kenney_jingles_sax07.ogg", "mode": "whole"},
     "level_up": {"src": "music/oga_fupi_winvibraphone.ogg", "mode": "whole"}
   },
-  "beds": {
-    "ambience_rain": {"src": "ambience/ambience_rain/fs473554_timothyd4y_light_rain_inside_shut_window.ogg", "lufs": -28.0, "crossfade": 2.0}
-  }
+  "beds": {}
 }
