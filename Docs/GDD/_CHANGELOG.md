@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **No light on the benches, a brighter cellar, drinks to the outline, no bubbles, the gauge clipped to its fill
+  (2026-09-16):** the halos that followed the hand are gone; the cellar's spots are brighter and wider; the bottle
+  plates are extended as they load so every drink fills to the outline at the foot; the bubbles are off until a
+  liquid pattern is chosen from the Water+ page; the shaker gauge shows only as much silhouette as the fill plus
+  five units, never the lid, and its band labels clear the MIX column.
+
 - **The liquid has a body, the cellar is lit by spots (2026-09-16):** the cellar's drinks are shaded like a cylinder;
   the hand bottle's drink carries a bottle-aligned shade and, while it pours, bubbles that rise to the face and
   pop; the cellar's bay lights are dim downward cones and every bottle casts its silhouette behind it and an

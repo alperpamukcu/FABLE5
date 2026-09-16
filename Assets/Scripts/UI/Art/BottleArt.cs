@@ -126,7 +126,9 @@ namespace LastCall.UI
             var surface = Plate("Surface", level, false);   // the drink's oval face (2026-09-14)
             floor.sprite = GlassArt.SurfaceDisc();
             surface.sprite = GlassArt.SurfaceDisc();
-            var bubbles = new Image[6];
+            // NO BUBBLES (2026-09-16, the author's third list: "baloncuklar çok çakma"): the pool is empty until a
+            // liquid pattern is chosen from the preview page; the machinery stays for it.
+            var bubbles = new Image[0];
             for (int i = 0; i < bubbles.Length; i++)
             {
                 var b = Plate("Bubble" + i, level, false);

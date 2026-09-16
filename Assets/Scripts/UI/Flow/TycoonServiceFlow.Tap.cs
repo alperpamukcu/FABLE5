@@ -288,12 +288,7 @@ namespace LastCall.UI
             // LIGHT ON THE FONT AND A MIRROR UNDER THE PINT (2026-09-16, the shaker bench's own light and mirrors,
             // StepBenchLight): a warm halo on the counter that follows the glass while it is held, and a faint flipped
             // pint under the glass's rest. Both before the props, so the props draw over them.
-            _tapLight = NewRect("Light", _tapSurface);
-            Place(_tapLight, new Vector2(0.5f, 0.5f), new Vector2(760f, 460f), new Vector2(TowerX, CounterY + 120f));
-            var tapLightImg = _tapLight.gameObject.AddComponent<Image>();
-            tapLightImg.sprite = ChromeArt.Halo();
-            tapLightImg.color = new Color(UITheme.Cream[4].r, UITheme.Cream[4].g, UITheme.Cream[4].b, 0.16f);
-            tapLightImg.raycastTarget = false;
+            // NO LIGHT (2026-09-16, the author: "Built sahnesindeki ışığı kaldır"); the mirror stays.
             _pintMirror = NewRect("PintMirror", _tapSurface);
             _pintMirror.anchorMin = _pintMirror.anchorMax = new Vector2(0.5f, 0.5f);
             _pintMirror.pivot = new Vector2(0.5f, 0f);       // the foot: flipped, it hangs under the line

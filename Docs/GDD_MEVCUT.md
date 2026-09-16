@@ -1540,6 +1540,30 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.81 · Tezgâh ışığı kalktı; mahzen aydınlandı; içki dış çizgiye kadar (plakalar yüklenirken uzatılır); kabarcıklar kapandı; ölçü silüeti dolduğu kadar (2026-09-16, üçüncü liste)
+
+Yazar: "Built sahnesindeki ışığı kaldır. Işıklandırma yetersiz şişeler çok karanlık kalıyor. Soda şişesinde olduğu gibi
+şişelerin hala altı düz gidiyor ... siyah pixeller sınırında dolmalı tüm şişelerde aynı hata var. Sıvılara eklenen
+baloncuklar çok çakma ... Water+.png ... önizleme ile göster. Ekranda üst üste binen öğeler var. Shakerin doluluğunu
+gösteren shaker silüetinin kapak kısmı olmamalı sadece dolduğu yerden 5 birim yukarıya kadar uzun olmalı."
+
+- **Işık yok:** shaker ve bira tezgâhındaki eli izleyen hale kaldırıldı (`_benchLight`/`_tapLight` null); aynalar
+  kaldı — `StepBenchLight` artık ışıksız da aynaları yerleştirir (ilk denemede gri bir levha ortada kalmıştı).
+- **Mahzen daha aydınlık:** spot yoğunluğu 0,80→1,55, koni 100°/160°, yarıçap 128→150, iç 0,30; gölgeler %22 / %32.
+- **İçki dış çizgiye kadar** (`ItemArt.FootFilled`, plakalar yüklenirken): sütun sütun maske en alt satırından dış
+  çizginin mürekkebine (luma<40) kadar aşağı taşınır, ön plakanın o banttaki pikselleri alfa 96 filme iner; içkinin
+  dibi stencil'den tabanın yuvarlak şeklini alır. Sevk edilen plakalar ve yazarın el düzenlemeleri dokunulmadan
+  kalır; sonuç sprite adıyla önbelleğe alınır (`ItemArt.ClearCache` ile gider). Mahzen setleri (`_c`) de aynı yoldan.
+- **Kabarcıklar kapalı** (havuz 0; mekanizma duruyor). Desen kararı için ayrı önizleme sayfası:
+  https://claude.ai/artifact/MF3yPhFSkBHTds5e69cNnd ("Water+ Sıvı Dokusu Denemeleri") — dört Water+ karosu (ince dalga, elmas ağ, iri
+  dalga, kırık parıltı) beş bağlamda (şişe dik/dökülürken, bardak, shaker ölçüsü, raf). Üretici
+  `scratchpad/water_preview.py`.
+- **Ölçü silüeti:** `BuildStandingGauge` oyuk ve dış çizgiyi bir `RectMask2D` "Reveal" içine alır; `FillGauge` onu
+  oyuk dibi + dolum + 5 birime kadar açar (kapak hiç görünmez), "%" yazısı 8 birim üstünde. Bant etiketleri kutusu
+  MIX sütununun soluna taşındı (56 birim) — "KLARA %100" artık sütuna binmiyor.
+- Ölçüldü (r28/r29): mahzen; soda dik/eğik — taban dış çizgiye kadar dolu; ölçü %0 ve %100; servis bardağı; gri
+  levha yok.
+
 ### 9.80 · Sıvıya gövde: mahzende silindir gölgeli içki, elde döndükçe dönen gölge ve dökerken kabarcıklar; mahzen loş spotlar ve şişe gölgeleri (2026-09-16)
 
 Yazar: "Şişenin içerisindeki sıvılara desen gerekiyor böyle düz bir renk olarak duruyorlar, sıvı hissiyatı için doku

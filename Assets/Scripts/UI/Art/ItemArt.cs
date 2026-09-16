@@ -198,8 +198,63 @@ namespace LastCall.UI
             string s = cellar ? "_c" : "";
             var front = Load("v4_" + card.Id + "_front" + s);
             if (front == null) return null;
-            return new BottlePlates(Load("v4_" + card.Id + "_back" + s),
-                                    Load("v4_" + card.Id + "_mask" + s), front);
+            var mask = Load("v4_" + card.Id + "_mask" + s);
+            var plates = new BottlePlates(Load("v4_" + card.Id + "_back" + s), mask, front);
+            return mask != null ? FootFilled(plates, "v4_" + card.Id + s) : plates;
+        }
+
+        /// <summary>
+        /// THE DRINK TO THE OUTLINE (2026-09-16, the author: "şişelerin hala altı düz gidiyor şişenin altı 3 boyutlu
+        /// düşünülmeli ve görseldeki siyah pixeller sınırında dolmalı tüm şişelerde aynı hata var"). The shipped mask
+        /// stops three rows over the foot (Tools/v4_bottles/process.py BASE) and the front's base rows are opaque
+        /// glass, so every bottle showed a flat line of empty base under its drink. Fixed here, as the plates are
+        /// loaded, rather than by re-shipping over the author's hand-edited fronts: column by column the mask is
+        /// carried down from its lowest row to the outline's ink (the drink then takes the base's rounded shape from
+        /// the stencil), and the front's pixels over that band go to a film so the drink shows through the base's
+        /// own shading. Cached against the sprite's name.
+        /// </summary>
+        private static BottlePlates FootFilled(BottlePlates p, string key)
+        {
+            string mk = key + ":foot:mask", fk = key + ":foot:front";
+            if (Cache.TryGetValue(mk, out var gm) && gm != null && Cache.TryGetValue(fk, out var gf) && gf != null)
+                return new BottlePlates(p.Back, gm, gf);
+            var mt = p.Mask.texture; var ft = p.Front.texture;
+            if (mt == null || ft == null || mt.width != ft.width || mt.height != ft.height) return p;
+            int w = mt.width, h = mt.height;
+            Color32[] m, f;
+            try { m = mt.GetPixels32(); f = ft.GetPixels32(); }
+            catch (UnityException) { return p; }   // an unreadable texture keeps its plates as shipped
+            const byte Film = 96;
+            int changed = 0;
+            for (int x = 0; x < w; x++)
+            {
+                int low = -1;                                  // the mask's lowest opaque row (y counts up)
+                for (int y = 0; y < h; y++) if (m[y * w + x].a >= 128) { low = y; break; }
+                if (low <= 0) continue;
+                for (int y = low - 1; y >= 0; y--)
+                {
+                    var c = f[y * w + x];
+                    if (c.a == 0) break;                                                   // off the silhouette
+                    if (c.r * 0.299f + c.g * 0.587f + c.b * 0.114f < 40f) break;            // the outline's ink
+                    m[y * w + x] = new Color32(255, 255, 255, 255);
+                    if (c.a > Film) f[y * w + x] = new Color32(c.r, c.g, c.b, Film);
+                    changed++;
+                }
+            }
+            if (changed == 0) return p;
+            Sprite Copy(Texture2D src, Color32[] px, Sprite like)
+            {
+                var t = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = src.filterMode, wrapMode = src.wrapMode, name = src.name + "_foot" };
+                t.SetPixels32(px); t.Apply(false, false);
+                var sp = Sprite.Create(t, like.rect, new Vector2(like.pivot.x / like.rect.width, like.pivot.y / like.rect.height),
+                    like.pixelsPerUnit, 0, SpriteMeshType.FullRect, like.border);
+                sp.name = like.name + "_foot";
+                return sp;
+            }
+            var mask2 = Copy(mt, m, p.Mask);
+            var front2 = Copy(ft, f, p.Front);
+            Cache[mk] = mask2; Cache[fk] = front2;
+            return new BottlePlates(p.Back, mask2, front2);
         }
 
         public sealed class BottlePlates

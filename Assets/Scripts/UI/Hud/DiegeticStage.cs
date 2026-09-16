@@ -1347,9 +1347,9 @@ namespace LastCall.UI
             {
                 int k = _cellarShadow.Count;
                 var cast = WorldSprite("StockShadow" + k, null, order: 30);
-                cast.color = new Color(0f, 0f, 0f, 0.30f);
+                cast.color = new Color(0f, 0f, 0f, 0.22f);
                 var foot = WorldSprite("StockFootShadow" + k, GlassArt.SurfaceDisc(), order: 30);
-                foot.color = new Color(0f, 0f, 0f, 0.42f);
+                foot.color = new Color(0f, 0f, 0f, 0.32f);
                 _cellarShadow.Add(cast); _cellarFootShadow.Add(foot);
             }
             var lift = _world != null ? _world.position : Vector3.zero;
@@ -1420,13 +1420,13 @@ namespace LastCall.UI
         private const float CellarLightDropPx = 11f;
         /// <summary>Its reach. A bay is 175 wide and a compartment ~78 deep, so this carries
         /// the length of one bay and dies before the next one's post.</summary>
-        private const float CellarLightRadius = 128f;
+        private const float CellarLightRadius = 150f;   // 128 until 2026-09-16: reaches the board's far corners
         /// <summary>Where the falloff starts, and how hard it burns. Held wide, because a
         /// shelf strip is a diffuse line and not a bulb: at the house default the whole pool
         /// is spent on the bottle necks and the feet stay in the dark they were in.</summary>
-        private const float CellarLightInner = 0.22f;      // 0.42 until 2026-09-16: a softer fall from the ceiling
-        private const float CellarLightIntensity = 0.80f;  // 1.05 until 2026-09-16: "loş" — dim
-        private const float CellarSpotInnerAngle = 70f, CellarSpotOuterAngle = 120f, CellarSpotRoll = 180f;   // pointing down
+        private const float CellarLightInner = 0.30f;
+        private const float CellarLightIntensity = 1.55f;  // 0.80 was "loş" and too dark (the author, second look: "şişeler çok karanlık kalıyor")
+        private const float CellarSpotInnerAngle = 100f, CellarSpotOuterAngle = 160f, CellarSpotRoll = 180f;   // a wide cone, pointing down
         /// <summary>Warm, because the light in this room is tungsten and the cellar is part
         /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
         /// shelf actually reads against the lamps over it.</summary>

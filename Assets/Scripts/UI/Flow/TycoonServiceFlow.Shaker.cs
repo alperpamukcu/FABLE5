@@ -132,12 +132,17 @@ namespace LastCall.UI
         /// <summary>Every frame: the light follows the work, the mirrors stand under their props.</summary>
         private void StepBenchLight()
         {
-            if (_benchLight == null || _shakerVessel == null) return;
-            Vector2 want = _capped ? _shakerVessel.anchoredPosition + new Vector2(0f, 40f)
-                : _bottleGrabbed && _bottleHand.Held ? _bottleHand.GripPoint
-                : (_shakerVessel.anchoredPosition + _bottleRest) * 0.5f + new Vector2(0f, 20f);
-            _benchLight.anchoredPosition = Vector2.Lerp(_benchLight.anchoredPosition, want,
-                1f - Mathf.Exp(-6f * Time.unscaledDeltaTime));
+            if (_shakerVessel == null) return;
+            // The light is gone (2026-09-16) but the mirrors are not: this used to return on a null light, which
+            // left both mirrors unplaced and spriteless — a grey slab in the middle of the bench.
+            if (_benchLight != null)
+            {
+                Vector2 want = _capped ? _shakerVessel.anchoredPosition + new Vector2(0f, 40f)
+                    : _bottleGrabbed && _bottleHand.Held ? _bottleHand.GripPoint
+                    : (_shakerVessel.anchoredPosition + _bottleRest) * 0.5f + new Vector2(0f, 20f);
+                _benchLight.anchoredPosition = Vector2.Lerp(_benchLight.anchoredPosition, want,
+                    1f - Mathf.Exp(-6f * Time.unscaledDeltaTime));
+            }
             if (_tinMirror != null)
             {
                 var img = _tinMirror.GetComponent<Image>();
@@ -743,7 +748,9 @@ namespace LastCall.UI
         {
             foreach (Transform child in bar) Destroy(child.gameObject);
             // bore → Cavity (the mask) → the rig, which carries the labels and the reading.
-            var rig = bar.parent != null ? bar.parent.parent as RectTransform : null;
+            Transform up = bar;
+            while (up != null && up.name != "MixTrack") up = up.parent;   // bore -> cavity -> reveal -> rig
+            var rig = up as RectTransform;
             var host = rig != null ? rig.Find("Labels") as RectTransform : null;
             if (host != null) foreach (Transform child in host) Destroy(child.gameObject);
             float h = bar.rect.height, y = 0f;
@@ -787,7 +794,9 @@ namespace LastCall.UI
                 total.fontSize = LanguageFonts.Size(total.font, fill < 0.34f ? 16 : fill < 0.67f ? 24 : 32);
                 total.text = Mathf.RoundToInt(fill * 100f) + "%";
                 float boreFoot = rig.rect.height * (1f - ChromeArt.ShakerGaugeCavity.y);
-                totalRt.anchoredPosition = new Vector2(0f, boreFoot + y + 4f);
+                totalRt.anchoredPosition = new Vector2(0f, boreFoot + y + 8f);
+                var reveal = rig.Find("Reveal") as RectTransform;
+                if (reveal != null) reveal.offsetMax = new Vector2(0f, boreFoot + y + 5f);   // five units over the drink
             }
             // Layers while unmixed, one colour once mixed (2026-09-16): what Core says of the tin, on both benches.
             BlendGauge(bar, run.IsMixed ? 1f : 0f);
@@ -869,8 +878,19 @@ namespace LastCall.UI
 
             // The contents first and the outline over them, CUT TO THE SILHOUETTE: the mask is
             // the outline's own silhouette, so the two never disagree about where the wall is.
-            var maskRt = NewRect("Cavity", rig);
-            Stretch(maskRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // ONLY AS TALL AS THE FILL (2026-09-16, the author: "Shakerin doluluğunu gösteren shaker silüetinin
+            // kapak kısmı olmamalı sadece dolduğu yerden 5 birim yukarıya kadar uzun olmalı"): the cavity and the
+            // outline sit inside a clip that FillGauge raises with the level — five units over the drink, and never
+            // up to the lid, which the drawing carries but the bench no longer shows.
+            var reveal = NewRect("Reveal", rig);
+            reveal.anchorMin = Vector2.zero; reveal.anchorMax = new Vector2(1f, 0f);
+            reveal.pivot = new Vector2(0.5f, 0f);
+            reveal.offsetMin = Vector2.zero; reveal.offsetMax = new Vector2(0f, 24f);
+            reveal.gameObject.AddComponent<RectMask2D>();
+            var maskRt = NewRect("Cavity", reveal);
+            maskRt.anchorMin = Vector2.zero; maskRt.anchorMax = new Vector2(1f, 0f);
+            maskRt.pivot = new Vector2(0.5f, 0f);
+            maskRt.offsetMin = Vector2.zero; maskRt.offsetMax = new Vector2(0f, size.y);   // the rig's full height, from its foot
             var mimg = maskRt.gameObject.AddComponent<Image>();
             mimg.sprite = ItemArt.Load("gauge_tin_solid") ?? ChromeArt.ShakerSolid((int)size.x, (int)size.y);
             mimg.preserveAspect = true;
@@ -892,9 +912,14 @@ namespace LastCall.UI
             var labels = NewRect("Labels", rig);
             Stretch(labels, new Vector2(0, 1f - cavity.y), new Vector2(1, 1f - cavity.x),
                     Vector2.zero, Vector2.zero);
+            // the band labels stand LEFT of the measure, and the MIX column stands there too (2026-09-16): the
+            // labels' box reaches further left, past the column and its gap, so the two never overprint
+            labels.offsetMin = new Vector2(-(WorkColW + WorkColGap + 12f + 8f), labels.offsetMin.y);
 
-            var shell = NewRect("Outline", rig);
-            Stretch(shell, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var shell = NewRect("Outline", reveal);
+            shell.anchorMin = Vector2.zero; shell.anchorMax = new Vector2(1f, 0f);
+            shell.pivot = new Vector2(0.5f, 0f);
+            shell.offsetMin = Vector2.zero; shell.offsetMax = new Vector2(0f, size.y);
             var simg = shell.gameObject.AddComponent<Image>();
             simg.sprite = ItemArt.Load("gauge_tin") ?? ChromeArt.ShakerOutline((int)size.x, (int)size.y);
             simg.preserveAspect = true;
@@ -2214,13 +2239,8 @@ namespace LastCall.UI
             // soft bloom behind whatever the hand is on — the bottle while it pours, the tin once the lid is on,
             // both at rest — and a faint mirror of the tin and the bottle on the counter under their feet
             // (StepBenchLight). Built before the props, so they draw over it; the water ring with them.
-            _benchLight = NewRect("Light", _pourSurface);
-            Place(_benchLight, new Vector2(0.5f, 0.5f), new Vector2(760f, 460f), new Vector2(120f, -60f));
-            var lightImg = _benchLight.gameObject.AddComponent<Image>();
-            lightImg.sprite = ChromeArt.Halo();
-            lightImg.color = new Color(UITheme.Cream[4].r, UITheme.Cream[4].g, UITheme.Cream[4].b, 0.16f);   // Cream[4] at 16%: light
-            lightImg.raycastTarget = false;
-            _benchLight.SetAsFirstSibling();
+            // NO LIGHT (2026-09-16, the author's third list: "Built sahnesindeki ışığı kaldır"): the halo that
+            // followed the hand is gone; the mirrors stay. _benchLight is null and StepBenchLight skips it.
             _tinMirror = AddMirror("TinMirror", TinW, TinH * 0.3f);
             _bottleMirror = AddMirror("BottleMirror", 180f, BottleH * 0.3f);
             var ring = NewRect("WaterRing", _pourSurface);
