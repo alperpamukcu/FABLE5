@@ -672,11 +672,13 @@ namespace LastCall.UI
                 }
                 float rise = footW * GlassArt.SurfaceSquash * 0.5f;
                 if (rise * 2f >= hgt) rise = 0f;
-                d.transform.localScale = new Vector3(w, hgt - rise, 1f);
+                // The drink reaches the foot; the arc is a shade over it (2026-09-16, with BottleArt.SetLevel:
+                // the base's corners stood empty under a full bottle while the quad began `rise` up).
+                d.transform.localScale = new Vector3(w, hgt, 1f);
                 // Both hang under _world: place in the parent's frame, so a scaled stage (a
                 // wide monitor, DesignFrame.SceneScale > 1) cannot push the level up.
                 var at = _cellarMask[i].transform.localPosition;
-                d.transform.localPosition = at + new Vector3(cx, footY + rise + (hgt - rise) * 0.5f, 0f);
+                d.transform.localPosition = at + new Vector3(cx, footY + hgt * 0.5f, 0f);
                 PlaceRoundDrink(i, at, cx, footY, hgt, faceW, footW, rise, d.color);
             }
         }
@@ -703,9 +705,9 @@ namespace LastCall.UI
             face.transform.localScale = new Vector3(faceW / size.x, faceH / size.y, 1f);
             face.transform.localPosition = at + new Vector3(cx, footY + hgt, -0.01f);   // a hair nearer: over the drink
             face.enabled = faceW > 0f;
-            low.color = tone;
+            low.color = new Color(tone.r * 0.80f, tone.g * 0.80f, tone.b * 0.80f, tone.a);   // the base seen through the drink
             low.transform.localScale = new Vector3(rise > 0f ? footW / size.x : 0f, rise * 2f / size.y, 1f);
-            low.transform.localPosition = at + new Vector3(cx, footY + rise, 0f);
+            low.transform.localPosition = at + new Vector3(cx, footY + rise, -0.01f);      // a hair nearer: over the drink
             low.enabled = rise > 0f && footW > 0f;
         }
 

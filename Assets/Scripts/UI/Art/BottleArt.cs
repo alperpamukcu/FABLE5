@@ -131,7 +131,11 @@ namespace LastCall.UI
             float f = Mathf.Clamp01((float)fraction);
             if (f <= 0f) { _drink.enabled = _surface.enabled = _floor.enabled = false; return; }
             _drink.enabled = _surface.enabled = true;
-            _drink.color = tone;
+            // A LITTLE GLASS IN THE DRINK (2026-09-16, the author: "sıvılarda sıvı dokusu olsa daha gerçekçi olur"):
+            // the drink is 90% over the back plate, so the interior's own gradient — light down the middle, dark
+            // at the walls — shows through it as the body of a liquid in a round bottle, and the front's streak
+            // lies over that. A flat swatch at 100% read as paint.
+            _drink.color = new Color(tone.r, tone.g, tone.b, tone.a * 0.9f);
             _surface.color = new Color(Mathf.Min(1f, tone.r * 1.18f + 0.07f),
                                        Mathf.Min(1f, tone.g * 1.18f + 0.07f),
                                        Mathf.Min(1f, tone.b * 1.18f + 0.07f), tone.a);
@@ -174,16 +178,21 @@ namespace LastCall.UI
             // THE FOOT IS AN ARC WHILE IT STANDS (2026-09-14, the author: "bardağın içerisindeki sıvı ve şişelerin içerisindeki sıvı da 3 boyutlu olmalı altı ve üstü bardağın yüzeylerine göre dairesel hissini vermeli"): the drink's lowest edge is the
             // near half of the base's oval — its middle on the cavity's lowest row, its sides a squashed half-width
             // higher. Only near upright: lying over, the low side of the drink is a wall, not a floor.
+            // ...AND THE DRINK STILL REACHES THE FOOT (2026-09-16, the author: "şişelerin büyük hallerinin altındaki
+            // kısımlar dolmuyor"). The arc used to be the drink's LOWER BOUNDARY: the quad started `rise` above the
+            // cavity's lowest row and only the disc reached down, so at 2x the base's two corners stood as empty
+            // glass under a full bottle. In a round bottle the liquid runs straight down the walls to the foot; the
+            // near edge of the base's oval is a shading line across it, not where it ends. So the quad goes to the
+            // foot, and the disc lies OVER it a shade darker — the base seen through the drink.
             float upright = Mathf.Clamp01(1f - Mathf.Abs(Mathf.DeltaAngle(0f, tiltDeg)) / 20f);
             ChordAt(bucket, 2, out float footChord, out float footMid);
             float rise = footChord * unit * GlassArt.SurfaceSquash * 0.5f * upright;
             if (rise > 0.5f * unit && y > lowest * unit + rise * 2f)
             {
-                bottom = lowest * unit + rise;
                 _floorRt.anchorMin = _floorRt.anchorMax = _floorRt.pivot = new Vector2(0.5f, 0.5f);
                 _floorRt.sizeDelta = new Vector2(footChord * unit, rise * 2f);
-                _floorRt.anchoredPosition = new Vector2(footMid * unit, bottom);
-                _floor.color = tone;
+                _floorRt.anchoredPosition = new Vector2(footMid * unit, lowest * unit + rise);
+                _floor.color = new Color(tone.r * 0.80f, tone.g * 0.80f, tone.b * 0.80f, tone.a);
                 _floor.enabled = true;
             }
             else _floor.enabled = false;

@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The drink reaches the bottle's foot (2026-09-16):** the round foot drawn on 2026-09-14 had become the drink's
+  lower boundary, leaving the base's corners empty under a full bottle in the hand and in the cellar; the drink
+  now runs to the foot and the disc lies over it as the base seen through the drink. The hand bottle's drink is
+  90% over the back plate so the interior's gradient reads as a liquid body. Backbar colour alternatives and
+  three ways of drawing the cellar bottles are on a preview page for the author; nothing of that entered the game.
+
 - **The song list, the seek bar, and the ratings in a well (2026-09-16):** the settings' NOW PLAYING title is a
   key that opens every song the bar owns in a list above it, the one playing lit; a TRACK row under it drags
   through the song with its clock beside it (Sfx.PlaySong, MusicProgress, MusicClock, AllSongs); the place line

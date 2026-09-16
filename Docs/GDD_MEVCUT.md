@@ -1540,6 +1540,29 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.77 · Şişede içki ayağa iner, biraz cam görünür; backbar ve küçük şişe önizlemesi (2026-09-16)
+
+Yazar: "Şişelerin büyük hallerinin altındaki kısımlar dolmuyor ... sıvılarda sıvı dokusu olsa daha gerçekçi olur
+... Şişelerin küçük görselleri kötü gözükmeye başladı ... büyük görselleri küçültüp sahneye koy ... backbar
+renklerini görsel tasarımını yapısını bozmadan tekrardan tasarla alternatifleri elimizde olsun."
+
+- **Teşhis (ölçüldü):** plakalar suçlu değil — v4 ön plakada taban satırları çoğunlukla film (alfa 77), maske
+  ayağa 3 satır kala biter. Boşluk `BottleArt.SetLevel`'dan geliyordu: yuvarlak ayak (2026-09-14) içkinin ALT
+  SINIRIydı — dörtgen oyuğun en alt satırından `rise` (ayak oval yarı yüksekliği, ≈14 px @2x) yukarıda
+  başlıyor, yalnız disk aşağı iniyordu; iki köşe dolu şişenin altında boş cam kalıyordu. Mahzende aynı kural
+  (`DiegeticStage`, `hgt - rise`).
+- **Düzeltme:** içki dörtgeni ayağa kadar iner (`bottom = lowest − 2`), ayak diski içkinin ÜSTÜNE %80 tonda
+  gölge olarak çizilir (içkiden görünen taban); mahzende `d.localScale.y = hgt`, disk z −0,01 ile önde. Sıvı
+  %90 alfa: arka plakanın iç gradyanı (ortada açık, duvarda koyu) içkiden görünür — yuvarlak şişede sıvı gövdesi;
+  ön plakanın parlama şeridi üstünde kalır. Düz %100 leke boya gibi okunuyordu.
+- Ölçüldü (r22): gin_boothby dik/eğik, syrup_house, mahzen vodka — taban köşeleri dolu, ayak ovali gölge.
+- **Önizleme sayfası** (oyuna girmedi): https://claude.ai/artifact/LZVdvnsKdFQDU2uNetLkFP — A: counter.png'nin
+  üç ailesi (çerçeve / raf arkası / plaka) parlaklık sırasıyla yeni rampalara: Mevcut, Ceviz-pirinç, Çam yeşili
+  lake, Siyah-neon, Krem-bordo, Gece mavisi-bakır; raflarda mevcut mahzen şişeleri. B: 12 şişe için mevcut
+  `cellar_box` seti vs 96×192'nin düz kutu küçültmesi vs 48×96 orta çözünürlük (yuvaya inince yine 32×64 —
+  yuva büyümeden anlamı yok), 1x ve 4x. Üretici `scratchpad/backbar_preview.py`.
+- Doğrulama: EditMode 596/596; PlayMode iki koşu (tezgâh tabanı: şişe ayağı değişti), ikincisi 13/13.
+
 ### 9.76 · ESC'de şarkı listesi ve ileri sarma; kemerde yıldız ve puanların kuyusu (2026-09-16)
 
 Yazar: "ESC menüsünde now playing kısmında tüm şarkıları açılan bir combobox ile görüntüleyip istenilen
