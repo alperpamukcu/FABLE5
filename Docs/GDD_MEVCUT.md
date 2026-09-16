@@ -1540,6 +1540,21 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.82 · Sıvıda dökme sıvının pixel ditheri: şişe (el ve mahzen) ve ölçü bantları (2026-09-17)
+
+Yazar: "sıvıda pixel dokusu yapıyorduk o tarz olsun dökülürkenki gibi. yenilerin hiçbirini sevmedim." (Water+ karoları
+ve beş prosedürel desen reddedildi.)
+
+- Ölçüldü: bardaktaki `MetaballFluid` sıvısı iki yakın tonun 2 birimlik (`LiquidTexel = 2`) damalı ditheriyle
+  çiziliyor (B8D4ED / B4CBDF). Aynı hücre her durgun sıvıya taşındı:
+  - **El şişesi:** `ChromeArt.LiquidShade` (şişeyle dönen gölge katmanı) tek texel (2x'te 2 px) damalı hücrelerde
+    alfa +22 siyah — döküm sırasında bardaktaki dokuyla aynı okunuyor.
+  - **Mahzen:** `ChromeArt.LiquidBody(w,h)` içki gövdesini oyuk boyutunda piksel piksel üretir (silindir gölgesi +
+    2 px damalı ×0,93), boyut başına önbellek; gerilme yok.
+  - **Ölçü bantları:** `GaugeBand` üstüne `ChromeArt.LiquidChecker()` (4×4, 2 birimlik hücreler, alfa 22) döşeli.
+- Kabarcık yok; Water+ ve prosedürel önizleme sayfaları karar dışı kaldı.
+- Ölçüldü (r30): soda dik/eğik, mahzen vodka, ölçü %100 (70BBF1/75C3FB damalı).
+
 ### 9.81 · Tezgâh ışığı kalktı; mahzen aydınlandı; içki dış çizgiye kadar (plakalar yüklenirken uzatılır); kabarcıklar kapandı; ölçü silüeti dolduğu kadar (2026-09-16, üçüncü liste)
 
 Yazar: "Built sahnesindeki ışığı kaldır. Işıklandırma yetersiz şişeler çok karanlık kalıyor. Soda şişesinde olduğu gibi

@@ -2,6 +2,10 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The pouring liquid's dither on every still liquid (2026-09-17):** the two-unit checker MetaballFluid draws the
+  glass with now lies on the hand bottle's drink (turning with the bottle), on the cellar's drink bodies (drawn at
+  their own pixel size) and on the gauge's bands; the Water+ tiles and the procedural patterns were rejected.
+
 - **No light on the benches, a brighter cellar, drinks to the outline, no bubbles, the gauge clipped to its fill
   (2026-09-16):** the halos that followed the hand are gone; the cellar's spots are brighter and wider; the bottle
   plates are extended as they load so every drink fills to the outline at the foot; the bubbles are off until a

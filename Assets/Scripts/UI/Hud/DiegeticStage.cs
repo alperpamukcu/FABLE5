@@ -694,6 +694,8 @@ namespace LastCall.UI
                 if (rise * 2f >= hgt) rise = 0f;
                 // The drink reaches the foot; the arc is a shade over it (2026-09-16, with BottleArt.SetLevel:
                 // the base's corners stood empty under a full bottle while the quad began `rise` up).
+                // the body at its own size in pixels, so its two-pixel checker stays two pixels (2026-09-17)
+                d.sprite = ChromeArt.LiquidBody(Mathf.Max(2, Mathf.RoundToInt(w)), Mathf.Max(2, Mathf.RoundToInt(hgt)));
                 var body = d.sprite != null ? d.sprite.bounds.size : Vector3.one;
                 d.transform.localScale = new Vector3(w / Mathf.Max(0.001f, body.x), hgt / Mathf.Max(0.001f, body.y), 1f);
                 // Both hang under _world: place in the parent's frame, so a scaled stage (a

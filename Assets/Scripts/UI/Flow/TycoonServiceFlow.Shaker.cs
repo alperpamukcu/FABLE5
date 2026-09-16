@@ -812,6 +812,13 @@ namespace LastCall.UI
             var img = seg.gameObject.AddComponent<Image>();
             img.color = fill;
             img.raycastTarget = false;
+            // the pouring liquid's checker over the band (2026-09-17), two-unit cells tiled
+            var grain = NewRect("Grain", seg);
+            Stretch(grain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var gi = grain.gameObject.AddComponent<Image>();
+            gi.sprite = ChromeArt.LiquidChecker();
+            gi.type = Image.Type.Tiled;
+            gi.raycastTarget = false;
             return seg;
         }
 

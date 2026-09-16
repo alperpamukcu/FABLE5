@@ -2048,6 +2048,40 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, W, H, Vector4.zero);
         }
 
+        /// <summary>The cellar's drink body at its own size in pixels: the cylinder shading of <see cref="LiquidBody()"/>
+        /// with the pouring liquid's checker laid over it in two-pixel cells (2026-09-17). One sprite a size, cached.</summary>
+        public static Sprite LiquidBody(int w, int h)
+        {
+            string key = $"liquid:body:{w}x{h}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float u = (x + 0.5f) / w;
+                    float wall = 1f - Mathf.Pow(Mathf.Abs(u - 0.5f) * 2f, 2.2f) * 0.32f;
+                    float streak = Mathf.Abs(u - 0.32f) < 0.08f ? 1.06f : 1f;
+                    float depth = 0.90f + 0.10f * (y / (float)Mathf.Max(1, h - 1));
+                    bool cell = (((x >> 1) + (y >> 1)) & 1) == 0;
+                    float k = Mathf.Clamp01(wall * streak * depth * (cell ? 0.93f : 1f));
+                    byte v = (byte)Mathf.RoundToInt(255f * k);
+                    px[y * w + x] = new Color32(v, v, v, 255);
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
+        /// <summary>The checker alone, as a tile for the gauge's bands: two-unit cells, a shade darker on the odd ones.</summary>
+        public static Sprite LiquidChecker()
+        {
+            const string Key = "liquid:checker";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            var px = new Color32[16];
+            for (int y = 0; y < 4; y++)
+                for (int x = 0; x < 4; x++)
+                    px[y * 4 + x] = (((x >> 1) + (y >> 1)) & 1) == 0 ? new Color32(0, 0, 0, 22) : new Color32(0, 0, 0, 0);
+            return Cache[Key] = Make(px, 4, 4, Vector4.zero);
+        }
+
         /// <summary>The same shading as an OVERLAY for the hand bottle: transparent down the middle, dark toward the
         /// walls, a pale streak a third across — laid over the flat drink and turned with the bottle, so the body
         /// of the liquid reads at every tilt. Sized to the plate's texels.</summary>
@@ -2062,7 +2096,12 @@ namespace LastCall.UI
                     float u = (x + 0.5f) / w;
                     float dark = Mathf.Pow(Mathf.Abs(u - 0.5f) * 2f, 2.4f) * 0.38f;
                     bool streak = Mathf.Abs(u - 0.33f) < 0.05f;
-                    px[y * w + x] = streak ? new Color32(255, 255, 255, 40) : new Color32(0, 0, 0, (byte)Mathf.RoundToInt(255f * dark));
+                    // THE POURING LIQUID'S DITHER (2026-09-17, the author: "sıvıda pixel dokusu yapıyorduk o tarz olsun
+                    // dökülürkenki gibi"): a checker of one-texel cells — two units on the bench, where the plate is
+                    // shown at 2x, the same cell MetaballFluid draws its bands with — a shade darker on the odd cells.
+                    bool cell = ((x + y) & 1) == 0;
+                    px[y * w + x] = streak ? new Color32(255, 255, 255, 40)
+                        : new Color32(0, 0, 0, (byte)Mathf.Min(255, Mathf.RoundToInt(255f * dark) + (cell ? 22 : 0)));
                 }
             return Cache[key] = Make(px, w, h, Vector4.zero);
         }
