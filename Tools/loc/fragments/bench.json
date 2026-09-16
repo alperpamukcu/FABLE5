@@ -6,6 +6,8 @@
     { "key": "bench.binned", "text": "BINNED", "note": "Toast after the bin key throws the drink away and nothing is charged. One line." },
     { "key": "bench.binned_fee", "text": "BINNED · -{fee}", "note": "Toast after the bin key throws a drink away at a cost. {fee} is the money lost with its currency sign, e.g. \"$4\" (the minus stays in the text). One line." },
     { "key": "bench.take_lid_off_to_add", "text": "TAKE THE LID OFF TO ADD IT", "note": "Red readout line on the shaker bench when a bottle is picked from the cellar while the tin is capped and finished. 16 px, one line across the bench (~1250 units)." },
+    { "key": "bench.shaker.lift_hint", "text": "LIFT HIGHER · POURS FASTER", "note": "Words engraved under the nine growing rungs on the small plaque beneath the bottle's resting place on the shaker bench: the higher the bottle is lifted, the faster it pours. 8 px, one line in ~170 units: ~28 characters." },
+    { "key": "bench.shaker.work.enough", "text": "ENOUGH AT {mark}", "note": "Appended to the shaker bench's readout while the tin is being shaken or stirred, after the figure so far: where the work is enough. {mark} is a percentage, e.g. \"72%\". 16 px, part of one line." },
 
     { "key": "bench.shaker.owed.cap", "text": "CAP THE TIN FIRST", "note": "Red readout line on the shaker bench when a bottle is picked from the cellar while the tin still needs its lid. 16 px, one line." },
     { "key": "bench.shaker.owed.mix", "text": "SHAKE OR STIR IT FIRST", "note": "Red readout line on the shaker bench when a bottle is picked from the cellar while the capped tin still needs mixing. 16 px, one line." },

@@ -108,13 +108,13 @@ namespace LastCall.UI
             var dim = NewRect("Dim", _settingsPanel);
             Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var dimImg = dim.gameObject.AddComponent<Image>();
-            dimImg.color = UITheme.Scrim;
+            dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
             var dimBtn = dim.gameObject.AddComponent<Button>();
             dimBtn.transition = Selectable.Transition.None;
             dimBtn.onClick.AddListener(ToggleSettings);
 
-            var plate = NightPlate(_settingsPanel, "Plate", new Vector2(SetW, SetH), 0.10f);
+            var plate = NightPlate(_settingsPanel, "Plate", new Vector2(SetW, SetH), 0f);
             NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
             SunsetRules(plate, -66f, SetW - 80f);
 

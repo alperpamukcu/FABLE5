@@ -1897,9 +1897,52 @@ namespace LastCall.UI
             return Cache[key] = Make(px, w, h, Vector4.zero);
         }
 
-        /// <summary>Which grain the counter wears. SLATE by default: it is the one whose
-        /// detail is ARCHITECTURE — the top is laid in panels, with a hairline seam where
-        /// they meet — so leaning in finds structure rather than more noise.</summary>
+        /// <summary>
+        /// A RECESS CUT INTO THE COUNTER (2026-09-16, the author: "yazıları yönergeleri arkaplana göm"): a shallow
+        /// well one shade under the slab, its upper-left lip in shadow and its lower-right lip catching the light,
+        /// for the bench's words to be engraved in. 9-sliced at 2, in the counter's own sampled shades (the bench's
+        /// BenchSlab family), so it reads as the stone and not as a card laid on it.
+        /// </summary>
+        public static Sprite CounterRecess()
+        {
+            const string Key = "counter:recess";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int S = 6;
+            var px = new Color32[S * S];
+            Color32 well = Hex(0x17121B), dark = Hex(0x100B14), lit = Hex(0x2B2433);
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    bool top = y == S - 1, left = x == 0, bottom = y == 0, right = x == S - 1;   // y counts up
+                    px[y * S + x] = top || left ? dark : bottom || right ? lit : well;
+                }
+            return Cache[Key] = Make(px, S, S, new Vector4(2, 2, 2, 2));
+        }
+
+        /// <summary>
+        /// FROST (2026-09-16): a shaken tin frosts from the base up, and that is the bench's work meter now — the
+        /// reading is on the thing being shaken. One column of white, opaque at the foot and gone at the top, drawn
+        /// over the tin's body at the height the shake has reached, so the frost's edge is a soft line and not a bar.
+        /// </summary>
+        public static Sprite FrostGradient()
+        {
+            const string Key = "frost:gradient";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int H = 32;
+            var px = new Color32[H];
+            for (int y = 0; y < H; y++)
+            {
+                float t = y / (float)(H - 1);                     // 0 at the foot, 1 at the frost line
+                float a = t < 0.7f ? 1f : 1f - (t - 0.7f) / 0.3f;   // solid, then a short fade to the line
+                px[y] = new Color32(255, 255, 255, (byte)(a * 255f));
+            }
+            return Cache[Key] = Make(px, 1, H, Vector4.zero);
+        }
+
+        /// <summary>Which grain the counter wears. BRUSHED since 2026-09-16: the slate's panel seams read as a
+        /// grid — the author saw the pause menu's gridded tile in it ("Bu desen built sahnesindeki tezgah desenine
+        /// benziyor") — and a wiped-down top has structure without lines. The author's own drawing takes over
+        /// whenever Items/bench_counter.png exists (TycoonServiceFlow.AddBenchCounter).</summary>
         public enum CounterGrain { Slate, Speck, Brushed, Weave, Terrazzo }
 
         /// <summary>The counter's surface. Tile it; never stretch it.</summary>

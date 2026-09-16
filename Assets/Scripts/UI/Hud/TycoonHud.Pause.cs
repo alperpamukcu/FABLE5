@@ -34,6 +34,10 @@ namespace LastCall.UI
 
         private const float PauseKeyH = 50f, PauseKeyMinW = 352f, PausePlateW = 440f, PausePlateH = 500f;
 
+        /// <summary>What the room goes under while a menu is up: the house scrim's night at 85% (2026-09-16, the
+        /// author, after the 70% scrim: "Arkaplan biraz daha karartılsın") — an alpha of a token.</summary>
+        private static Color MenuScrim => new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.85f);
+
         private void BuildPauseMenu(RectTransform root)
         {
             _pausePanel = NewRect("Pause", root);
@@ -49,10 +53,10 @@ namespace LastCall.UI
             var dim = NewRect("Dim", _pausePanel);
             Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var dimImg = dim.gameObject.AddComponent<Image>();
-            dimImg.color = UITheme.Scrim;
+            dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
 
-            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0.10f);
+            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0f);
 
             // the title, a shadow copy under it, and the three sunset rules under that
             NightTitle(plate, UIText.T("chrome.pause.title"), -36f);
@@ -164,11 +168,10 @@ namespace LastCall.UI
             Place(art, new Vector2(0.5f, 0.5f), new Vector2(w * 2, h * 2), Vector2.zero);
             var ai = art.gameObject.AddComponent<Image>();
             ai.sprite = NightArt.Picture(w, h);
-            ai.type = NightArt.UseFlatBackdrop ? Image.Type.Tiled : Image.Type.Simple;
-            ai.pixelsPerUnitMultiplier = 0.5f;
+            ai.type = Image.Type.Simple;
             ai.color = Color.white;
             ai.raycastTarget = false;
-            UiAuditExempt.Mark(art, "the menu's drawn night, " + w + "x" + h + " shown at exactly 2x inside its frame");
+            UiAuditExempt.Mark(art, "the menu's glass (or drawn night), " + w + "x" + h + " shown at exactly 2x inside its frame");
             var glass = NewRect("Tint", pic);
             Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var gi = glass.gameObject.AddComponent<Image>();

@@ -52,7 +52,8 @@ namespace LastCall.EditorTools
             // THE MAT IS TILED (2026-09-06, it grows with the garnish rail), and a tiled sprite
             // wants a Full Rect mesh or Unity draws the run wrong and says so in the console
             // (2026-09-07). Same rule the counter has, for the same reason.
-            if (file == "fx_prep_mat")
+            // ...and the author's own bench counter (2026-09-16), tiled at 4x across the benches.
+            if (file == "fx_prep_mat" || file == "bench_counter")
             {
                 var matSettings = new TextureImporterSettings();
                 ti.ReadTextureSettings(matSettings);

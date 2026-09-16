@@ -234,12 +234,20 @@ namespace LastCall.UI
             block.color = new Color(0f, 0f, 0f, 0f);
             Swallow(_tapPanel);
 
-            _tapTitle = NewText("Title", _tapPanel, _display, 16, TextAnchor.UpperCenter, UITheme.TextPrimary);
-            Stretch(_tapTitle.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -46), new Vector2(0, -18));
+            // ON A PLAQUE UNDER THE RAIL (2026-09-16), like the other two benches' words. The title and the hint
+            // used to stand at the top of the panel — under the HUD's beam, where the music player now is.
+            var tapPlaque = AddCounterPlaque(_tapPanel, 344f, 62f);
+            _tapTitle = NewText("Title", tapPlaque, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Place(_tapTitle.rectTransform, new Vector2(0f, 0f), new Vector2(344f - PlaquePad * 2f, 20f),
+                  new Vector2(PlaquePad, 36f));
+            _tapTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Engraved(_tapTitle);
 
-            var hint = NewText("Hint", _tapPanel, _body, 8, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            Stretch(hint.rectTransform, new Vector2(0, 1), Vector2.one, new Vector2(0, -68), new Vector2(0, -44));
+            var hint = NewText("Hint", tapPlaque, _body, 8, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(hint.rectTransform, new Vector2(0f, 0f), new Vector2(344f - PlaquePad * 2f, 30f),
+                  new Vector2(PlaquePad, 4f));
             hint.text = UIText.T("bench.tap.hint");
+            Engraved(hint);
 
             _tapSurface = NewRect("TapSurface", _tapPanel);
             Stretch(_tapSurface, Vector2.zero, Vector2.one, new Vector2(20, 84), new Vector2(-20, -82));

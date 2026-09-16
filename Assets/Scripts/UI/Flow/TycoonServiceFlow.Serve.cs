@@ -29,6 +29,7 @@ namespace LastCall.UI
         // The serve pour uses the same tilt model (GDD 24 §3): grab the shaker, tip it over
         // the glass. How well the mouth lines up over the glass is the aim — off-centre spills.
         private Text _serveShakerText;
+        private RectTransform _servePlaque;   // the recess under the rail the steps and the aim line are cut into
         private readonly List<(Image icon, Text label, Image tick)> _serveStepRows =
             new List<(Image, Text, Image)>();
         private Text _serveGlassText;
@@ -705,8 +706,10 @@ namespace LastCall.UI
             // TWO steps, because that is what this bench does now (2026-08-26): the ice
             // and the garnish moved to the room's own counter with the rail, and a card
             // that still listed them here would be directions to a station that left.
-            // Cut into the counter like the tin bench's (2026-09-13).
-            BuildStepStrip(_servePanel,
+            // Cut into the counter like the tin bench's (2026-09-13) — on the same plaque under the rail (2026-09-16),
+            // with the aim line on its lower row.
+            _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH);
+            BuildStepStrip(_servePlaque,
                 new[] { UIText.T("bench.serve.step.tip"), UIText.T("bench.serve.step.serve") }, _serveStepRows);
 
             // ON THE BAND (2026-08-26): what is left in the tin reads under the step
@@ -745,11 +748,12 @@ namespace LastCall.UI
             // behind the scrim now, so a drawn one would be a second bar inside the first.
             // The bar top stays — it is the surface the glass and its shadow stand on.
 
-            _aimText = NewText("AimText", _servePanel, _body, 16, TextAnchor.UpperCenter, UITheme.TextSecondary);
-            // On the band (2026-08-26): the same shelf the tin bench's readout sits on,
-            // so the eye finds the bench's one sentence in one place on both screens.
-            Stretch(_aimText.rectTransform, new Vector2(0, 0), new Vector2(1, 0),
-                    new Vector2(16, 326), new Vector2(-16, 349));   // up under the rail, over the glass (2026-09-14)
+            // On the plaque's lower row (2026-09-16): the same place the tin bench's readout sits, so the eye finds
+            // the bench's one sentence in one place on both screens.
+            _aimText = NewText("AimText", _servePlaque, _body, 16, TextAnchor.UpperLeft, UITheme.TextSecondary);
+            Place(_aimText.rectTransform, new Vector2(0f, 0f), new Vector2(PlaqueW - PlaquePad * 2f, PlaqueLineH),
+                  new Vector2(PlaquePad, PlaqueLineY));
+            _aimText.horizontalOverflow = HorizontalWrapMode.Wrap;   // a long line takes the plaque's second row
 
             // The play surface — a COORDINATE SPACE, not a thing you can see. It is where
             // the glass, the tin and the hand bottle are placed and where the pointer is
@@ -912,14 +916,9 @@ namespace LastCall.UI
             // The way back is the left-edge key now (the loop rework's one back, one place).
             AddEdgeBack(_servePanel);
             AddBinButton(_servePanel);      // see the shaker's, above
-            // THE WORDS OVER THE GLASS (2026-09-14): the strip and the aim line went up under the rail when the glass
-            // came down to the bottom, and a tall glass stands in that band — so they draw after it, outlined.
-            var aimOutline = _aimText.gameObject.AddComponent<Outline>();
-            aimOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            aimOutline.effectDistance = new Vector2(1f, -1f);
-            _aimText.transform.SetAsLastSibling();
-            foreach (Transform child in _servePanel)
-                if (child.name == "Steps") { child.SetAsLastSibling(); break; }
+            // ENGRAVED like the strip's words (2026-09-16): the plaque stands left of the glass, so nothing needs
+            // to draw over the glass any more.
+            Engraved(_aimText);
 
 
             var done = NewRect("Done", _servePanel);

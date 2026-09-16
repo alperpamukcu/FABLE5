@@ -21,7 +21,7 @@ namespace LastCall.UI
     public static class NightArt
     {
         /// <summary>The author's fallback, now the choice (2026-09-16: "arkaplan olarak daha az göz alan bir arkaplan
-        /// seçilsin"): a flat patterned wall inside the frame instead of the drawn night, which stays one line away.</summary>
+        /// seçilsin"): a quiet glass inside the frame instead of the drawn night, which stays one line away.</summary>
         public const bool UseFlatBackdrop = true;
 
         private static readonly Dictionary<string, Sprite> Cache = new Dictionary<string, Sprite>();
@@ -48,9 +48,9 @@ namespace LastCall.UI
 
         // ── the night ─────────────────────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>What stands inside a menu's frame: the night drawn at <paramref name="w"/>x<paramref name="h"/>
-        /// to be shown at 2x — or the flat pattern, to be tiled, when <see cref="UseFlatBackdrop"/>.</summary>
-        public static Sprite Picture(int w, int h) => UseFlatBackdrop ? FlatPattern() : Night(w, h);
+        /// <summary>What stands inside a menu's frame, drawn at <paramref name="w"/>x<paramref name="h"/> to be
+        /// shown at 2x: the night, or the glass when <see cref="UseFlatBackdrop"/>.</summary>
+        public static Sprite Picture(int w, int h) => UseFlatBackdrop ? Glass(w, h) : Night(w, h);
 
         /// <summary>The drawn night at any size: the composition of the first 640x360 wall, its heights scaled to
         /// the box and its palms stood at the same fractions of the width; the small pair of palms only where there
@@ -173,25 +173,21 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
-        /// <summary>The flat pattern: a 32x32 tile of the night with a grid one shade up, a two-unit stud in the next
-        /// shade where the lines cross, and a single dot at each cell's middle — quiet enough to sit behind a page
-        /// of keys (the first cut's club-blue lines and magenta studs drew the eye, which is what the author sent it
-        /// back for). Shown tiled at 2x.</summary>
-        private static Sprite FlatPattern()
+        /// <summary>The glass: the night in four bands, a shade lighter at the top than at the foot, and nothing else
+        /// — a surface, not a pattern (2026-09-16, the author, of the gridded tile that stood here for an hour: "Bu
+        /// desen built sahnesindeki tezgah desenine benziyor, olmaz"). The scanlines over it are the only texture.</summary>
+        private static Sprite Glass(int W, int H)
         {
-            const string Key = "night:flat";
-            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
-            const int S = 32;
-            var px = new Color32[S * S];
-            var ground = C(UITheme.Night[1]);
-            var line = C(UITheme.Night[2]);
-            var stud = C(UITheme.Night[3]);
-            for (int y = 0; y < S; y++)
-                for (int x = 0; x < S; x++)
-                    px[y * S + x] = x == 0 || y == 0 ? line : ground;
-            px[0] = stud; px[1] = stud; px[S] = stud; px[S + 1] = stud;
-            px[(S / 2) * S + S / 2] = line;
-            return Cache[Key] = Make(px, S, S, Vector4.zero);
+            string key = "night:glass:" + W + "x" + H;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var bands = new[] { C(UITheme.Night[2]), C(UITheme.Night[1]), C(UITheme.Night[1]), C(UITheme.Night[0]) };
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                var c = bands[Mathf.Min(bands.Length - 1, y * bands.Length / H)];   // y counts from the top
+                for (int x = 0; x < W; x++) px[(H - 1 - y) * W + x] = c;
+            }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
         /// <summary>Four rows, the last one dark: tiled over a plate, the scanlines of the direction's every surface.

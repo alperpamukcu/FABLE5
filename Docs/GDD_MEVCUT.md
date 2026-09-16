@@ -1540,6 +1540,58 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.73 · Tezgâh yeniden dizildi: plaka, buzlanan shaker, kaldırma merdiveni, peçete, fırçalı tezgâh; menüde koyu perde ve cam (2026-09-16)
+
+Yazar: "Arkaplan biraz daha karartılsın. Bu desen built sahnesindeki tezgah desenine benziyor, olmaz. Built ekranında
+kullanılan tezgahı aseprite da editleyecem oyunda kullanılan boyunda o görseli png olarak ver, aynısını ana sahnede
+kullandığımız doluluk göstergesi olan shakeri da ver. O sahnenin de arkaplanındaki deseni değiştir o sahneyi
+tekrardan tasarla yerleşimleri mevcut arkaplana göre yap. yazıları yönergeleri arkaplana göm, şişeyi kaldırdıkça
+dolum hızının arttığı gibi detayları oyuncuya belirt, karıştırma ve çalkalama sırasındaki barın tasarımını değiştir.
+Gerekli iconları görselleri üret, kaşığın arkasındaki peçetenin boyutu kaşığı kaplasın, bu sahnenin tasarımı çok
+önemli ... yemek/içecek built etmeli oyunlardaki sahne tasarımlarını incele detayları öğren ve ona göre bu sahnede her
+nesneyi yerleştir ... yeni oynanış katabilecek şeyler."
+
+Araştırma, ilkeler ve yapılmamış oynanış fikirleri `Docs/PLAN_bench_scene.md`'de; tasarım sayfası (önce/sonra,
+bölgeler, araştırma tablosu) yazara verildi.
+
+- **Menü:** odanın perdesi %85 (`TycoonHud.Pause.MenuScrim`, Night[0]'ın alfası); çerçevenin içi artık desen değil
+  **cam** (`NightArt.Glass`: dört bantlı gece, üstte bir ton açık; `UseFlatBackdrop = true`) — ızgara karosu tezgâha
+  benzediği için gitti. Çizilmiş gece bir satır ötede duruyor.
+- **Tezgâh görselleri yazara** (`Tools/bench_export.py` → `Desktop/konsept art/export/bench/`): tezgâhın tamamı
+  sanat ölçeğinde `bench_counter_native_320x122.png` (kenar bantları 8/5/5×6/5 birim = 2/1,25/… px, doku, parlaklık;
+  düzenlenecek olan), ekran boyu `bench_counter_ingame_1280x486.png`, doku karosu `bench_counter_tile_320x96.png`
+  (editörden `ChromeArt.Counter` ile alındı); `shaker_prop_48x48` (+t2, oyunda 2×), `tin_open_116x208` (+Front,
+  +t2), `shaker_cap*_116x208`, `bench_spoon_32x128` (hepsi 2×), ölçünün silüeti `gauge_tin_outline/solid_136x300`
+  (`ChromeArt.ShakerOutline/Solid`); README oyundaki boyları yazıyor. **Kanca:** `Items/bench_counter.png` varsa
+  `AddBenchCounter` onu 4× döşer ve kodun kenar bantlarını/parlaklığını çizmez (çizim kendi kenarını taşır);
+  `PatronArtPostprocessor` ona FullRect mesh verir. Yoksa kodun dokusu — **Slate → Brushed** (levha dikişleri ızgara
+  gibi okunuyordu).
+- **Plaka** (`AddCounterPlaque`, `ChromeArt.CounterRecess` 6×6, 2'den 9 dilim; sol üst kenar gölgede, sağ alt aydınlık):
+  464×64, x 16, rayın ayağının 6 altında, **raydan asılı** (`_railHung`, `AlignBenchCounters` bandı nereye koyarsa
+  onunla iner-çıkar). Üst satır adım şeridi (`BuildStepStrip` artık plakaya, sola dayalı — `LayOutStrip` 0'dan),
+  alt satır okuma satırı (shaker) / nişan satırı (bardak): 16 px, uzun cümle ikinci satıra sarar (`PlaqueLineH` 32),
+  oyma gölge (`Engraved`). Musluk tezgâhında başlık + yönerge aynı plakada (344×62) — üst bardaki oynatıcının
+  altından kurtuldu. Plaka tenekenin sütununa girmiyor (teneke 464..696; kapaklıyken ortada 524..756).
+- **Yerleşim:** shaker x −120→−60; kapak −330→−510, çizim merkezi −185→−140 (dinlenme dikdörtgeninin merkezi
+  BARA DÖN'ün sütununun üstüne düşüyordu ve `Tipping_the_tin_pours_into_the_tall_glass` kapağı tutamadı — geri
+  tuşu basışı yutuyordu; ölçüldü ve yukarı alındı); kaşık −520→−340, ayağı `BenchFootY − 70`; **peçete 140×240**
+  (`ChromeArt.Napkin(56, 96)`), kaşığın (64×256) ortasında, −4° — kaşığı kaplıyor; şerit/okuma artık ortada değil.
+- **Çalışma göstergesi tüp değil, içki:** `ShowWorkMeter` (tek besleme noktası) → tenekenin ön plakasına bağlı
+  **buz** (`_tinFrostRt`, `ChromeArt.FrostGradient` 1×32, ön plakaya `Mask` — çelikte kalır; yükseklik enerji ×
+  plaka), ölçekteki bantların **karışması** (`BlendGauge`: her bant kendi renginden `UITheme.DrinkColor`'a enerji
+  kadar; dinlenmede `Run.IsMixed` — karışmamış katmanlı, karışmış tek renk, dökülünce yeniden katmanlı; `FillGauge`
+  bantları `_gaugeBands`'e yazıyor, her iki tezgâh) ve plakada rakam: "SHAKE 55% · ENOUGH AT 72%"
+  (`bench.shaker.work.enough`), geçince Lime. Tüpün rig'i, çizgisi ve kaptürü silindi; buz elin bıraktığı yerde
+  kalıyor (`_workLevel`), sahneye çalkalanmış girilince `ShakeEnergy`.
+- **Kaldırma merdiveni** (`BuildLiftLadder` / `LightLiftLadder`): şişenin dinlenme yerinin altında 180×64 çukur
+  plaka, dokuz basamak `BottlePour.LiftShare` oranında büyüyor (Core'un 1·1·2·3·5·8·13·21·34'ü), altında
+  `bench.shaker.lift_hint` "LIFT HIGHER · POURS FASTER"; el şişeyi kaldırırken `BottlePour.LiftStep` basamağına
+  kadar Amber[3] yanıyor, dinlenmede Night[4].
+- Yerelleştirme: iki yeni anahtar (`bench.shaker.lift_hint`, `bench.shaker.work.enough`), en.json 1932.
+- Tezgâhın görünüm tabanı (`bench.png`) bu düzen için yeniden çizildi ve bakılarak onaylandı (yalnız o taban silindi;
+  arka bar ve sepet tabanları dokunulmadı).
+- Doğrulama: EditMode 595/595; PlayMode iki koşu — ilkinde yalnız tezgâh tabanı ('no blessed picture', yeniden çizildi ve bakıldı), ikincisinde 13/13 (88,3 sn; uzun bardak testi kapağın dinlenme merkezi tuştan çıkınca yeşil). Oyunda ölçüldü: plaka, kapak, kaşık/peçete, shaker, şişe, merdiven, ölçü dikdörtgenleri (§9.73 yerleşim); 51% vodka ile ölçekte bant ve etiket; 55% / 86% çalkalamada buz ve karışım kaptürle; musluk plakası üst barın altında değil.
+
 ### 9.72 · Çerçeveli gece: oda arkada kalır, ESC her şeyi durdurur, bayraklı dil seçimi, yazarın buton paketi ve tuş kapakları (2026-09-15)
 
 Yazar: "ESC menüsü için arkaplan ana ekran kalsın sadece butonların üstünde olduğu çerçevenin arkaplanı olsun. Dil

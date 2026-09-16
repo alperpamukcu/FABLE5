@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bench re-laid (2026-09-16):** a recess cut into the counter under the rail carries the steps and the
+  readout on every bench (the draught bench's title came down from under the beam); the work meter is the drink
+  itself — the tin frosts as it is shaken, the measure's bands blend as the mix comes, the plaque says the figure;
+  a lift ladder under the bottle shows and says that lifting higher pours faster; the towel covers the spoon; the
+  counter is brushed, and the author's own drawing takes over from Items/bench_counter.png. The bench art was
+  exported for the author at its native and screen sizes. The menus' scrim is 85% and their frame holds a quiet
+  glass. Research and gameplay ideas: Docs/PLAN_bench_scene.md.
+
 - **The menus darken the room, sit their words dead centre, wear a quiet pattern, and no hover leaves the
   screen (2026-09-16):** the house scrim under the pause menu and the settings; a pack key's word centred on its
   face (measured); the flat pattern inside the frame instead of the drawn night; every hover plate clamped to the
