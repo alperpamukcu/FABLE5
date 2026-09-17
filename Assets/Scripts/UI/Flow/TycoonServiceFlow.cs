@@ -1013,37 +1013,13 @@ namespace LastCall.UI
             // AT THE FOOT OF THE COLUMN (2026-09-17, the author: "Çöp ve back to the bar butonları tekrardan
             // üretilsin ve sayfa düzenine göre tekrardan tasarlansın"): the same width and the same thick frame as
             // the step and dial panels above it, so the left edge of the bench is one instrument column.
-            var rt = NewRect("EdgeBack", panel);
-            Place(rt, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH), new Vector2(16f, 16f));
+            // THE PACK'S OWN KEY (2026-09-17, the author: "ESC menüsündeki tarzda butonlar kullanılabilir aynı
+            // boyutta yer kaplayacak, renkleri farklı olacak"): the button the pause menu is built from, at the
+            // column's width, in grey — the bench's colour is the frame around the key, not the key.
+            var rt = PackKeyFlow(panel, "EdgeBack", (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' '),
+                "back", MenuPack.Tone.Grey, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
+                new Vector2(16f, 16f), () => GoTo(back), out _, out _);
             RegisterFixed(panel, rt);    // ...and so is the way out
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = CounterFinish.Panel();
-            img.type = Image.Type.Sliced;
-            img.pixelsPerUnitMultiplier = 0.5f;
-            img.color = Color.white;
-            img.raycastTarget = true;
-            var btn = rt.gameObject.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => GoTo(back));
-            var face = NewRect("Face", rt);
-            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
-            var mark = NewRect("Mark", face);
-            Place(mark, new Vector2(0f, 0.5f), new Vector2(24, 24), new Vector2(14f, 0f));
-            mark.pivot = new Vector2(0f, 0.5f);
-            var mi = mark.gameObject.AddComponent<Image>();
-            mi.sprite = ChromeArt.Mark("chevron_left");
-            mi.color = CounterFinish.Current.Accent;
-            mi.raycastTarget = false;
-            var label = NewText("L", face, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(BackKeyW - 52f, 14f), new Vector2(44f, 0f));
-            label.rectTransform.pivot = new Vector2(0f, 0.5f);
-            label.horizontalOverflow = HorizontalWrapMode.Overflow;
-            // the chevron is drawn, so the line's own arrow (kept in the string for the old key) comes off
-            label.text = (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' ');
-            Engraved(label);
         }
 
         private const float BackKeyW = 224f, BackKeyH = 56f;   // the column's width and its foot's height (2026-09-17)
@@ -1245,24 +1221,14 @@ namespace LastCall.UI
             // small face. The red key it replaces (2026-09-04's cap) is gone with its face and travel.
             // THE SAME FAMILY AS THE COLUMN (2026-09-17): a framed plate at the bench's other corner with the
             // drawn bin standing in it and its word cut into the foot — not a drawing loose on the counter.
-            var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(1, 0), new Vector2(80, 140), new Vector2(-16f, 16f));   // 80: clear of the measure's rect (2026-09-17)
+            // THE PACK'S KEY WITH THE BIN STANDING IN IT (2026-09-17): same footprint as before, the ESC menu's
+            // plate under it, orange because it is the one key on the bench that throws work away.
+            var rt = PackKeyFlow(parent, "Bin", null, null, MenuPack.Tone.Orange, new Vector2(1, 0),
+                new Vector2(80, 140), new Vector2(-16f, 16f), null, out var btn, out _);   // 1184..1264, as before
             RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
-            var plate = rt.gameObject.AddComponent<Image>();
-            plate.sprite = CounterFinish.Panel();
-            plate.type = Image.Type.Sliced;
-            plate.pixelsPerUnitMultiplier = 0.5f;
-            plate.color = Color.white;
-            plate.raycastTarget = true;
-            var btn = rt.gameObject.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.targetGraphic = plate;
-            var face = NewRect("Face", rt);
-            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var face = rt.Find("Face") as RectTransform;
             var drawn = NewRect("Drawing", face);
-            Place(drawn, new Vector2(0.5f, 0f), new Vector2(64, 96), new Vector2(0f, 30f));
+            Place(drawn, new Vector2(0.5f, 0f), new Vector2(64, 96), new Vector2(0f, 26f));
             var img = drawn.gameObject.AddComponent<Image>();
             img.sprite = ChromeArt.Bin(false);
             img.color = Color.white;
@@ -1270,11 +1236,10 @@ namespace LastCall.UI
             var relay = rt.gameObject.AddComponent<HoverRelay>();
             relay.Entered = () => img.sprite = ChromeArt.Bin(true);
             relay.Exited = () => img.sprite = ChromeArt.Bin(false);
-            var word = NewText("BinWord", face, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
+            var word = NewText("BinWord", face, _body, 8, TextAnchor.LowerCenter, MenuPack.Word(MenuPack.Tone.Orange));
             Place(word.rectTransform, new Vector2(0.5f, 0f), new Vector2(72, 12), new Vector2(0f, 12f));
             word.text = UIText.T("bench.bin");
             word.raycastTarget = false;
-            Engraved(word);
 
             btn.onClick.AddListener(() =>
             {

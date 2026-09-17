@@ -214,7 +214,8 @@ namespace LastCall.UI
                 _tapHandle.anchoredPosition = _tapTowerPos + _rig.Valve;
             }
             _tapGlassRest = new Vector2(TowerX + _rig.Rest, CounterY + PintH * GlassPivotY);
-            if (_pintMirror != null) _pintMirror.anchoredPosition = new Vector2(_tapGlassRest.x, CounterY + 2f);
+            // +6 with the tin bench's: a shadow falls to one side of the thing casting it, a reflection does not
+            if (_pintMirror != null) _pintMirror.anchoredPosition = new Vector2(_tapGlassRest.x + 6f, CounterY + 2f);
             // The glass only moves home if it is not in the player's hand: re-standing the
             // font mid-pour would tear the pint out of it.
             if (_tapGlass != null && !_glassHeld)
@@ -300,9 +301,12 @@ namespace LastCall.UI
             _pintMirror.anchorMin = _pintMirror.anchorMax = new Vector2(0.5f, 0.5f);
             _pintMirror.pivot = new Vector2(0.5f, 0f);       // the foot: flipped, it hangs under the line
             _pintMirror.sizeDelta = new Vector2(PintW, PintH * 0.3f);
-            _pintMirror.localScale = new Vector3(1f, -1f, 1f);
+            _pintMirror.localScale = new Vector3(1f, -0.86f, 1f);
+            _pintMirror.localRotation = Quaternion.Euler(0f, 0f, -58f);   // laid over to the right, like the tin bench's
             _pintMirrorImg = _pintMirror.gameObject.AddComponent<Image>();
-            _pintMirrorImg.color = new Color(1f, 1f, 1f, 0.14f);
+            // THE GLASS'S OWN SHADOW, NOT A REFLECTION (2026-09-17, with the tin bench's: the author asked for
+            // the props' shadows in their own shapes and said the reflection was the thing he did not want).
+            _pintMirrorImg.color = new Color(0f, 0f, 0f, 0.45f);
             _pintMirrorImg.raycastTarget = false;
             _pintMirrorImg.preserveAspect = false;
 

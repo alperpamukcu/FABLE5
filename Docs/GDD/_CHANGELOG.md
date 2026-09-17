@@ -2,6 +2,18 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bench's props throw their own shadows, and the gauges come inside their frames (2026-09-17, the sixth
+  list):** the reflection under the bottle is gone - the tin, the bottle, the lid and the draught bench's pint
+  each lay down their OWN silhouette instead, black at a fifth, squashed and leaning off to one side, with the
+  old contact ovals cut to a third so the two do not stack; LIFT HIGHER is no longer a needle on an arc but nine
+  rungs that CLIMB, one per step of Core's flow, filling from the left with the top three in the finish's accent;
+  both column panels clear their frame by four units on every side with their contents centred in what is left
+  (the pad was inside the metal before); the tin gauge's outline is the panels' own wall bent round the tin
+  instead of a grey hairline; BACK TO THE BAR and the bin are the author's own key pack at their old footprints
+  in new colours; the glass bench's glass and tin keep their 260 units apart but straddle the centre as a pair;
+  and SERVE IT is the loudest key on that bench in three drawings - green and proud, pressed, and grey and dead
+  while the glass is empty. GDD_MEVCUT §9.86.
+
 - **The room is lit by the hour (2026-09-17, three passes the same day):** the window's sky is DRAWN — palette
   bands dithered from a keyed model (`sky_cycle.json`), a sun that sinks behind the author's skyline over the
   first third of the night, stars, drifting clouds, a moon, flocks of birds — while the city stays the thirty-one

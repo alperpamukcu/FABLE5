@@ -1781,24 +1781,40 @@ namespace LastCall.UI
         // same object: same shoulders, same collar, same taper. If that art is ever
         // replaced, its gauge changes with it and no one has to remember to redraw this.
 
-        /// <summary>Half of the fill gauge: the shaker in outline, one pixel wide and
-        /// hollow. Draw <see cref="ShakerGaugeCavity"/>'s contents behind it.</summary>
-        public static Sprite ShakerOutline(int w, int h)
+        /// <summary>Half of the fill gauge: the shaker in outline, hollow, in the house cream.
+        /// Draw <see cref="ShakerGaugeCavity"/>'s contents behind it. (Cream[0] is the darkest
+        /// end of that ramp and Cream[4] the lightest, so the sawn edge is 0 and the lit face 4.)</summary>
+        public static Sprite ShakerOutline(int w, int h) =>
+            ShakerOutline(w, h, UITheme.Cream[2], UITheme.Cream[4], UITheme.Cream[0], "cream");
+
+        /// <summary>
+        /// THE MEASURE'S SILHOUETTE, DRAWN LIKE THE PANELS AROUND IT (2026-09-17, the author: "Shakerin doluluğunu
+        /// gösteren silüette o sahnedeki çerçevelerle aynı çerçevede olsun şu an beyaz-gri 1-2 pixel kalınlığında").
+        /// The tin's edge is THE PANEL'S OWN WALL bent round the tin, row for row: a sawn dark edge outside,
+        /// three rows of the finish's metal (lit down the left and along the foot, where the panel catches the
+        /// light), and the dark reveal inside — <see cref="FramedPanel"/>'s d==0 / d&lt;=3 / d==4, at 1× instead of
+        /// the panel's 2×, because the gauge is drawn at the size it is shown. Two rows of plain rim metal
+        /// (2026-09-17's first cut) read as the grey hairline it was meant to replace.
+        /// </summary>
+        public static Sprite ShakerOutline(int w, int h, Color32 rim, Color32 lit, Color32 dark, string finish)
         {
-            string key = $"shakergauge:{w}x{h}";
+            string key = $"shakergauge:{w}x{h}:{finish}:wall";
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             var span = ShakerSpans(w, h);
             var px = new Color32[w * h];
-            Color32 ink = UITheme.Cream[2];
             for (int y = 0; y < h; y++)
             {
                 int a = span[y].x, b = span[y].y;
                 int pa = y > 0 ? span[y - 1].x : a, pb = y > 0 ? span[y - 1].y : b;
                 int na = y < h - 1 ? span[y + 1].x : a, nb = y < h - 1 ? span[y + 1].y : b;
                 for (int x = a; x <= b; x++)
-                    if (x == a || x == b || y == 0 || y == h - 1
-                        || x < pa || x > pb || x < na || x > nb)
-                        px[(h - 1 - y) * w + x] = ink;
+                {
+                    int depth = Mathf.Min(Mathf.Min(x - a, b - x), Mathf.Min(y, h - 1 - y));
+                    bool shoulder = x < pa || x > pb || x < na || x > nb;      // where the silhouette turns
+                    if (depth > 4 && !shoulder) continue;
+                    px[(h - 1 - y) * w + x] = depth == 0 || depth == 4 ? dark
+                                            : x - a <= 2 || y <= 2 ? lit : rim;
+                }
             }
             return Cache[key] = Make(px, w, h, Vector4.zero);
         }

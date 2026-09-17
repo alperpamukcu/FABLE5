@@ -114,6 +114,10 @@ namespace LastCall.UI
         // the key dims until one does — the ToGlass key's own law, applied here.
         private Button _serveDoneBtn;
         private CanvasGroup _serveDoneGroup;
+        private RectTransform _serveDone;
+        private PackKey _serveDonePack;
+        private PressSink _serveDoneSink;
+        private bool _serveDoneReady = true;
 
         // ── the serve stage ──────────────────────────────────────────────────────
 
@@ -215,7 +219,18 @@ namespace LastCall.UI
         }
 
         private float _glassCatchX = ServeGlassRestX, _glassCatchV, _glassAx, _glassSway, _glassSwayV, _glassCatchLast = ServeGlassRestX;
-        private const float ServeGlassRestX = -110f;
+        // THE PAIR IS CENTRED, NOT THE GLASS (2026-09-17, the author: "bardak tam ortada konumlanmasın,
+        // bardak ve shaker ikisi sahnenin ortasında olacak ama iç içe olmayacak aynı şu anki mesafe olacak
+        // aralarında"): the two keep the 260 units they have always had between them, and it is the PAIR's
+        // middle that stands on the SCREEN's centre line now.
+        //
+        // The numbers look strange until you measure the surface they are in: ServeSurface is stretched 0.26..0.95
+        // of the panel, so ITS middle is at screen 774, not 640. That is how -110 put the glass at screen 664 -
+        // near enough dead centre for the author to say so - and the first fix here, -130, actually walked it ONTO
+        // 644. Centred as a pair on the screen, the glass is at -264 (screen 510) and the tin at -4 (screen 770),
+        // with the same 260 between them; the tin's right shoulder passes six units behind SERVE IT's plate, which
+        // is a key drawn after it.
+        private const float ServeGlassRestX = -264f;
         private float _serveFall01, _servePan;   // the tin's pour, heard: how far it drops, where on the bench (2026-09-15)
 
         /// <summary>Where a stream into the serving glass lands, surface-local: the top of the drink in it, its floor
@@ -280,8 +295,16 @@ namespace LastCall.UI
         {
             if (_serveDoneGroup == null || run == null) return;
             bool ready = !run.ServingGlass.IsEmpty;
-            _serveDoneGroup.alpha = ready ? 1f : 0.45f;
+            _serveDoneGroup.alpha = ready ? 1f : 0.8f;
             if (_serveDoneBtn != null) _serveDoneBtn.interactable = ready;
+            if (_serveDoneReady == ready) return;
+            // THE THIRD DRAWING (2026-09-17): not the green key at half opacity, which still looked pressable,
+            // but the pack's own GREY plate with its lit and pressed states taken off it - so nothing under the
+            // pointer promises anything until there is a drink in the glass to hand over.
+            _serveDoneReady = ready;
+            RetonePackKey(_serveDone, ready ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
+            if (_serveDonePack != null) _serveDonePack.enabled = ready;
+            if (_serveDoneSink != null) _serveDoneSink.enabled = ready;
         }
 
         /// <summary>
@@ -848,7 +871,8 @@ namespace LastCall.UI
             // bench's own 200×358, with the cap SEATED: this bench only ever meets the
             // tin closed.
             // 150, not 190 (2026-09-13): the measuring glass stands at the right of the bench now.
-            _serveShakerRest = new Vector2(150, BenchFootY + 0.22f * ServeVesselH);
+            // -4 since 2026-09-17: the same 260 from the glass, the pair centred on the screen (ServeGlassRestX).
+            _serveShakerRest = new Vector2(-4, BenchFootY + 0.22f * ServeVesselH);
             _serveShaker = NewRect("Shaker", _serveSurface);
             _serveShaker.pivot = new Vector2(0.5f, 0.22f);
             _serveShaker.sizeDelta = new Vector2(TinW, ServeVesselH);
@@ -934,43 +958,48 @@ namespace LastCall.UI
             Engraved(_aimText);
 
 
-            var done = NewRect("Done", _servePanel);
-            // On the key strip with the others, at the key strip's own height — and 250
-            // wide, because the one key that finishes the job earns the widest plate.
-            // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under
-            // the aim line once the bench's text came down for the props (measured: the line 439..841 x
-            // 32..55 over the key 635..885 x 26..72). Key row height, 10 short of the bin.
-            Place(done, new Vector2(1f, 0f), new Vector2(240, KeyStripH), new Vector2(-160f, 0f));
-            _serveDoneBtn = done.gameObject.AddComponent<Button>();
-            _serveDoneBtn.onClick.AddListener(() =>
-            {
-                // Ready to hand over: close the flow, then click a seat to deliver — and
-                // the bench is put back the way it stood (2026-08-25).
-                if (Run.ServingGlass.IsEmpty) return;
-                ResetServeHand();
-                GoTo(Stage.Closed);
-                // ...AND THE CELLAR SHUTS BEHIND YOU (2026-08-26, the author: "serve it'e
-                // basıldığında kapak kapalı bir şekilde oyuna dönmeli"). The drawer was
-                // opened to reach the bottle and stayed open through the build, so SERVE IT
-                // dropped you into a room still standing on its shelves — with a drink in
-                // hand and a drinker waiting, which is exactly the moment the room should be
-                // a bar again. Only THIS door closes it: BACK TO THE BAR keeps the cellar
-                // open, because the way back is for reaching another bottle.
-                GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
-                Sfx.Play("serve_it", 1f);
-            });
-            _serveDoneGroup = done.gameObject.AddComponent<CanvasGroup>();
-            var doneFace = NewRect("Face", done);
-            Stretch(doneFace, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            KeyPlate.Dress(done, UITheme.PrimaryAction, _serveDoneBtn, doneFace);   // GDD 16 §2
+            // THE LOUDEST KEY ON THE BENCH, IN THREE DRAWINGS (2026-09-17, the author: "Serve It tasarımı en
+            // göz alıcı en dikkat çekici buton olmalı ... eğer bardak boşsa basılamaz renksiz gri tarzı,
+            // basılabilir çıkıntılı 2.5d tarzı, basıldığı an tarzı. 3 adet şekli olmalı"). All three come from the
+            // author's own key pack - the one place in this game a drawn button may come from a picture rather
+            // than from the procedural kit (GDD 14, the written exception): the green plate standing proud of its
+            // shadow, the pressed plate a row lower under the finger, and the grey dead plate for a glass with
+            // nothing in it, which PushServeDone swaps in. The widest key on the bench and the only green thing
+            // on it, which is the whole of what "en dikkat çekici" asks for.
+            //
+            // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under the
+            // aim line once the bench's text came down for the props (measured: the line 439..841 x 32..55 over
+            // the key 635..885 x 26..72). 880..1168 now, sixteen units short of the bin at 1184.
+            _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
+                MenuPack.Tone.Green, new Vector2(1f, 0f), new Vector2(288f, 72f), new Vector2(-112f, 16f),
+                () =>
+                {
+                    // Ready to hand over: close the flow, then click a seat to deliver - and
+                    // the bench is put back the way it stood (2026-08-25).
+                    if (Run.ServingGlass.IsEmpty) return;
+                    ResetServeHand();
+                    GoTo(Stage.Closed);
+                    // ...AND THE CELLAR SHUTS BEHIND YOU (2026-08-26, the author: "serve it'e
+                    // basıldığında kapak kapalı bir şekilde oyuna dönmeli"). The drawer was
+                    // opened to reach the bottle and stayed open through the build, so SERVE IT
+                    // dropped you into a room still standing on its shelves - with a drink in
+                    // hand and a drinker waiting, which is exactly the moment the room should be
+                    // a bar again. Only THIS door closes it: BACK TO THE BAR keeps the cellar
+                    // open, because the way back is for reaching another bottle.
+                    GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
+                    Sfx.Play("serve_it", 1f);
+                }, out _serveDoneBtn, out _serveDonePack, 16);
+            RegisterFixed(_servePanel, _serveDone);
+            _serveDoneSink = _serveDone.GetComponent<PressSink>();
+            _serveDoneGroup = _serveDone.gameObject.AddComponent<CanvasGroup>();
             // ONE LOUD LINE (2026-08-26, the author's screenshot: the old caption was
-            // twenty-six 8px characters on a 240 plate — a whisper on the one key that
+            // twenty-six 8px characters on a 240 plate - a whisper on the one key that
             // matters). What to do AFTER pressing it is the room's job to say, and the
-            // room already says it over the standing drink.
-            var doneLabel = NewText("Label", doneFace, _display, 16, TextAnchor.MiddleCenter, UITheme.TextOnAmber);
-            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
-            doneLabel.text = UIText.T("bench.serve.serve_key");
+            // room already says it over the standing drink. Dead centre on the face: the
+            // key carries no glyph, so nothing pulls the word off the middle.
+            var doneLabel = _serveDone.Find("Face/Label").GetComponent<Text>();
+            doneLabel.font = _display;   // the display face on the one key that ends the drink, as it always had
+            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 4f), new Vector2(-6f, 0f));
         }
 
     }

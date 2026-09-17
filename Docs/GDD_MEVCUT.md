@@ -1540,6 +1540,71 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.86 · Yansıma gitti, nesnelerin kendi gölgesi geldi; LIFT HIGHER bir merdiven; sütun çerçeveden 4 birim içeride; bardak ve shaker çift olarak ortada; SERVE IT üç çizim (2026-09-17, altıncı liste)
+
+Yazar: "1. görseldeki yazılar çok eski sürümden kalmış olmalı kaldır bunu. 2. ve 3. görseldeki buton tasarımını
+değiştir ESC menüsündeki tarzda butonlar kullanılabilir aynı boyutta yer kaplayacak, renkleri farklı olacak, built
+sahnesindeki şişenin yansıması çok kötü yansıma istemiyorum shaker kapağı gövdesi ve şişenin gölgesini istiyorum
+kendi şekillerinde silik bir şekilde. Lift Higher'de kullanılan gösterge yerine farklı tarzda bir gösterge kullan ve
+yazılar ve görseller çerçeveden taşmasın tam ortalansın ve her zaman çerçeveyle minimum bir birimde mesafe olsun
+bunu onun üstündeki 1-2-3-4 içide geçerli. bardak sahnesinde bardak tam ortada konumlanmasın, bardak ve shaker ikisi
+sahnenin ortasında olacak ama iç içe olmayacak aynı şu anki mesafe olacak aralarında. Shakerin doluluğunu gösteren
+silüette o sahnedeki çerçevelerle aynı çerçevede olsun şu an beyaz-gri 1-2 pixel kalınlığında. Bardak sahnesinde
+Serve It tasarımı en göz alıcı en dikkat çekici buton olmalı ... eğer bardak boşsa basılamaz renksiz gri tarzı,
+basılabilir çıkıntılı 2.5d tarzı, basıldığı an tarzı. 3 adet şekli olmalı."
+
+- **Eski plaka satırı silindi**: teneke tezgâhının plakası hâlâ `ShakerLine(run)`'ı yazıyordu — "SHAKER %48 —
+  GARDEN'S GIN %100", yüzdelerin ekranda okunduğu sürümden kalma bir satır. İki çağrı yeri de
+  `ShakerHintFor(run.TinMethod, !_capped)` oldu: plaka artık sayı değil, sıradaki hareketi söylüyor.
+- **BARA DÖN ve ÇÖP yazarın kendi tuş paketinden** (`MenuPack` + `PackKey` + `PressSink`, GDD 14'ün yazılı
+  istisnası — oyunda çizilmiş tuşun geldiği tek yer): ayak izleri aynı (224×56 ve 80×140, 1184..1264), renkleri
+  farklı — yol gri, çöp turuncu, çizili kutu turuncu plakanın yüzünde durur. Akış `TycoonHud`'ın özel
+  kurucusunu çağıramadığı için ikizi `PackKeyFlow` yazıldı (`RetonePackKey` ton değiştirir).
+  (Çöpü bir ara 112'ye çıkardım — §9.85'in metni öyle diyordu — ve oyunda TIN göstergesinin üzerine bindiğini
+  gördüm; sevk edilen ölçü 80'di. Ölçü de 12 birim sola çekildi: duvarı 1193'e kadar gidiyordu, çöp 1184'te
+  başlıyor.)
+- **Yansıma değil, GÖLGE** (`AddMirror` → `AddCastShadow`): aynı çizim, siyah %45, y'de −0,86 ezilmiş,
+  −58° yatırılmış ve 6 birim yana kaydırılmış — nesnenin KENDİ şekli, kendi ayağından. İki sayı da ekranda
+  ölçülerek bulundu: tezgâhın slab'i (21,18,27) okuyor, yani siyahın beşte biri taşı iki seviye oynatıyor
+  (görünmüyor), %45 dokuz seviye; ve teneke ile kapak ekranın altından kırk birim yükseklikte durdukları için
+  dikine düşen gölge kadrajdan çıkıyordu — 58° yatınca tezgâhta kalıyor. Teneke, şişe ve **kapak** (yeni
+  `_capCast`; kapak tenekenin üstündeyken gizli, çünkü orada gövdenin çizimiyle aynı şeyi çizer) ayrı ayrı gölge
+  düşürür; musluk tezgâhının bardağı da aynı muameleyi görür (`_pintMirror`). Eski oval temas gölgeleri kalıyor
+  ama üçte bire indi (`PushPropShadow` alfa 1 → 0,34): silüet "ışık nereden geliyor"u, oval "nereye değiyor"u
+  söylüyor; ikisi tam güçte üst üste binince tenekenin altı leke oluyordu.
+- **LIFT HIGHER bir MERDİVEN** (yarım daire kadran gitti): Core'un dokuz adımı (`BottlePour`, 1·1·2·3·5·8·13·21·34)
+  dokuz basamak — 16 birim geniş, aralarında 4, 14'ten 46'ya yükselerek — soldan sağa dolar, son üçü finişin
+  `Accent`'inde. Okunan şey hızın kendisi değil ŞİŞENİN YÜKSEKLİĞİ, o yüzden gösterge de yükseliyor; kadranın yayı
+  ayrıca hızlı ucu çerçevenin tepesine yapıştırıyordu, yani yazarın ikinci şikâyeti de aynı çizimdendi.
+- **Çerçeveyle mesafe** (hem LIFT HIGHER hem 1-2-3-4): `ColPad` 10 → 16. Panelin çerçevesi altı dokulu, yani evin
+  2× dokusunda 12 birim; onluk boşlukta satırların numarası ve tiki metalin ÜSTÜNDE oturuyordu. On altı, dört
+  birim — tam bir doku — açıklık bırakıyor. Satır 24 → 22'ye inerek bunu ödüyor, böylece sütunun boyu ve üstündeki
+  proplar yerinde kalıyor (`ColDialH` 112 → 120, `ColStepsY` 208 → 216). Merdiven ve altındaki söz panelin içinde
+  yatay ve dikey ortalı; söz artık `Wrap`, yani uzun bir dil çerçeveden dışarı değil alta taşıyor.
+- **TIN silueti sahnenin çerçevesiyle**: `ChromeArt.ShakerOutline(w, h, rim, lit, dark, finish)` — panelin
+  duvarının ta kendisi, sıra sıra tenekeye bükülmüş: dışında kesik koyu bir sıra, içeride üç sıra finiş metali
+  (solda ve tabanda ışık alanı), en içte yine koyu boşluk — `FramedPanel`'in d==0 / d≤3 / d==4'sü, panelin 2×'i
+  yerine 1×'te, çünkü gösterge göründüğü boyutta çiziliyor. Temelde piksel piksel doğrulandı: panel çerçevesi
+  (13,13,20) · (199,114,172) · (182,84,151) · (13,13,20), gösterge duvarı aynı sıra. İlk deneme iki sıra düz rim
+  metaliydi ve değiştirmeye çalıştığı gri kıl çizgi gibi okunuyordu.
+- **Bardak ve shaker çift olarak ortada**: bardak −110 → −264, teneke 150 → −4. Aralarındaki 260 birim aynı;
+  değişen, ortada duranın BARDAK değil ÇİFT olması. Sayıların tuhaflığı yüzeyi ölçünce geçiyor: `ServeSurface`
+  panelin 0,26..0,95'ine geriliyor, yani ONUN ortası ekranın 640'ı değil 774'ü. Eski −110 bardakı 664'e, yani
+  yazarın şikâyet ettiği yere koyuyordu; buradaki ilk düzeltme (−130) onu tam 644'e, yani ekranın orta çizgisine
+  yürüttü. Çift olarak ortalanınca bardak 510'da, teneke 770'te, ortaları 640'ta.
+- **SERVE IT üç çizim**: paketin yeşil plakası (`pack:blank:Green:up`, gölgesinden çıkıntılı), bir sıra aşağı
+  basılmış plakası (`:down`) ve bardak boşken paketin gri ölü plakası (`Grey:up`) — `PushServeDone` değiştirir, gri
+  hâlde `PackKey` ile `PressSink` de kapanır, yani işaretçinin altında hiçbir şey söz vermez. 288×72, display
+  yüzünde 16 px tek satır, tezgâhın en geniş ve tek yeşil tuşu; 880..1168, çöpten (1184) 16 birim uzakta.
+- Doğrulama (oyun içinde ölçüldü, 1280×720): sütun 16..240 — adım paneli 384..504, LIFT HIGHER 516..636, yol
+  648..704; merdivenin dokuz basamağı 40..216 arasında (her iki yandan 24 birim), en alçağı 14 en yüksek 46 birim,
+  tabanı panelin 50'sinde, altındaki söz 24..48'de — yani hiçbir şey çerçevenin 12 birimine 4 birimden fazla
+  yaklaşmıyor; adım satırları 32..224 × 400..488. Ölçü 1045..1181, çöp 1184..1264. Bardak tezgâhında bardak
+  510, teneke 770, SERVE IT 880..1168 (boşken `Grey:up` + sönük, doluyken `Green:up`, basılınca `Green:down`).
+  Üç gölge de kendi çizimini taşıyor (`tin_open`, `v4_vodka_astra_front_foot`, `shaker_cap`).
+  Testler: PlayMode iki kez — tezgâh temeli yeniden çizildi, BAKILDI (şişenin gölgesi kendi şekliyle yatıyor),
+  sonra iki bakış testi de yeşil; EditMode.
+
 ### 9.85 · Tezgâhta alet sütunu: dikey 1-2-3-4, altında aynı genişlikte LIFT HIGHER, altında BARA DÖN; TIN+MIX çifti; yeni çöp; aşınmış tezgâh; mahzende kare doku ve lamba (2026-09-17, beşinci liste)
 
 Yazar: "sahne biraz fazla neon oldu ... Mahzendeki sıvıların içerisinde sıvılar kare kare gözüküyor png gibi bunu
