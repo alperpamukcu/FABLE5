@@ -283,6 +283,17 @@ This is where v2's Miami survives — as the view, not the room.
 - **Night (LAST CALL):** `Night[0–2]` sky, sparse lit windows (`Amber[3]`, single px), palms
   near-black against it.
 
+**AS BUILT (2026-09-17): the view is a CLOCK, not plates.** The window draws itself from
+`Resources/Data/sky_cycle.json` (`SkyClock` + `WindowSky`): palette-token stops top to horizon
+per key hour, blended continuously and quantised with 4×4 Bayer onto a 24-colour sky palette;
+a sun disc that sinks on a straight line behind the author's own skyline (cut from the old
+sheet by `Tools/window_sky.py derive`, never redrawn); city windows that come on one by one on
+the sun's clock; stars, drifting clouds, and flocks of M-shaped birds in `Night[1]` while there
+is light. The room's light is the same evaluation (GDD_MEVCUT §9.84): the sun's cone, a
+window-shaped shaft on the plaster that climbs as the sun drops, the sky's fill, an ambient by
+the hour, the house on one dusk, a fill on the people alone, and cast shadows off the sun then
+the lamps. The three-plate spec above is the design it grew from and is kept for the palette.
+
 ## 7b. NO LIGHT IS PAINTED IN, AND THE LOUD COLOURS ARE ACCENTS (2026-08-15)
 
 Two rules from the same session, and they are the same rule twice: **the plate carries

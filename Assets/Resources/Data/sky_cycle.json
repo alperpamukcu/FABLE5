@@ -1,0 +1,49 @@
+{
+  "_comment": "The evening outside the bar's window, 18:00 (t=0) to 02:00 (t=1). Read by DiegeticStage's WindowSky/SkyClock (the game) and by Tools/window_sky.py (the preview twin). Colours are palette tokens (UITheme ramp + step); sky stops run from the top of the sky to the skyline's base; rows are source px on the 71x137 view.",
+  "stopsV": [0.0, 0.3, 0.55, 0.8, 1.0],
+  "skyPalette": [
+    "Night0", "Night1", "Night2", "Night3", "Night4",
+    "ClubBlue0", "ClubBlue1", "ClubBlue2", "ClubBlue3",
+    "Magenta0", "Magenta1", "Magenta2", "Magenta3", "Magenta4",
+    "ViceRed1", "ViceRed2", "ViceRed3", "ViceRed4",
+    "Amber1", "Amber2", "Amber3", "Amber4",
+    "Cream3", "Cream4"
+  ],
+  "keys": [
+    { "t": 0.00, "hour": "18:00 golden hour", "stops": ["ClubBlue2", "Magenta1", "Magenta2", "ViceRed3", "Amber3"] },
+    { "t": 0.14, "hour": "19:07 the sun on the towers", "stops": ["ClubBlue1", "Magenta1", "Magenta3", "ViceRed3", "Amber2"] },
+    { "t": 0.26, "hour": "20:05 the pink band", "stops": ["Night3", "Magenta0", "Magenta1", "Magenta2", "ViceRed3"] },
+    { "t": 0.40, "hour": "21:12 blue hour", "stops": ["Night1", "Night2", "Night3", "Magenta0", "Magenta1"] },
+    { "t": 0.58, "hour": "22:38 night", "stops": ["Night0", "Night1", "Night2", "Night3", "Magenta0"] },
+    { "t": 1.00, "hour": "02:00 deep night", "stops": ["Night0", "Night0", "Night1", "Night2", "Night3"] }
+  ],
+  "sun": {
+    "col": 40, "radius": 7,
+    "rowStart": 34, "rowEnd": 98, "setBy": 0.30, "horizonRow": 84,
+    "coreHigh": "Cream4", "coreLow": "Amber3", "rimHigh": "Amber4", "rimLow": "ViceRed3", "halo": "Amber4",
+    "haloRadius": 26, "haloHigh": 0.62, "haloLow": 0.50
+  },
+  "stars": { "count": 34, "rowMax": 50, "from": 0.30, "to": 0.62, "lumaMax": 0.22 },
+  "city": {
+    "buildingFrom": 0.14, "buildingTo": 0.46,
+    "windowFrom": 0.13, "windowTo": 0.44,
+    "windowOffShare": 0.22, "windowOffFrom": 0.72,
+    "cloudDrift": 0.35, "ditherSpread": 34
+  },
+  "birds": { "until": 0.36, "everyMin": 18, "everyMax": 40, "flockMin": 5, "flockMax": 9, "speed": 9.0 },
+  "moon": { "from": 0.44, "fade": 0.08, "xStart": 10, "xEnd": 58, "yStart": 40, "yEnd": 12, "arc": 8 },
+  "room": {
+    "_comment": "The room's own ambient by the hour: a palette token pulled toward white by keep (1 = the full hue), and its strength. dayFrom/dayTo: where the sky's fill dies; duskFrom/duskTo: where the house lamps come up; lateFrom: the small hours.",
+    "keys": [
+      { "t": 0.00, "ambient": "Amber4", "keep": 0.46, "intensity": 0.40 },
+      { "t": 0.14, "ambient": "ViceRed4", "keep": 0.42, "intensity": 0.38 },
+      { "t": 0.26, "ambient": "Magenta3", "keep": 0.44, "intensity": 0.32 },
+      { "t": 0.40, "ambient": "ClubBlue3", "keep": 0.48, "intensity": 0.28 },
+      { "t": 0.58, "ambient": "Amber3", "keep": 0.56, "intensity": 0.34 },
+      { "t": 1.00, "ambient": "Amber3", "keep": 0.56, "intensity": 0.34 }
+    ],
+    "sunShadowNearX": 6, "sunShadowNearY": -5, "sunShadowFarX": 14, "sunShadowFarY": -2, "sunShadowAlpha": 0.38, "skyShadowAlpha": 0.18,
+    "lampShadowX": 3, "lampShadowY": -4, "lampShadowAlpha": 0.34, "shadowFloor": 0.18,
+    "dayFrom": 0.10, "dayTo": 0.50, "duskFrom": 0.14, "duskTo": 0.42, "lateFrom": 0.55
+  }
+}

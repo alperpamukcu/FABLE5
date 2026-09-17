@@ -482,7 +482,10 @@ namespace LastCall.UI
                 var stageForBody = stage != null ? stage : FindFirstObjectByType<DiegeticStage>();
                 if (stageForBody != null)
                 {
-                    seat.Body = stageForBody.NewStageSprite($"Patron{i}", 25);
+                    // ...AND THEY CAST A SHADOW ON THE WALL (2026-09-17, the author:
+                    // "müşterilerin arkaplandan ayrılması, sıyrılması"): the stage hangs a
+                    // dark copy of the body one step behind it, off the hour's light.
+                    seat.Body = stageForBody.NewStageSprite($"Patron{i}", 25, castsShadow: true);
                     seat.Body.gameObject.SetActive(false);
                     // CLICKING A DRINKER IS THE GAME'S FIRST VERB and nothing said so. The
                     // stool's hit plate is a transparent rectangle over a WORLD sprite, so
