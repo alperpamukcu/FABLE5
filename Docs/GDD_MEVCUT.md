@@ -1540,6 +1540,39 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.85 · Tezgâhta alet sütunu: dikey 1-2-3-4, altında aynı genişlikte LIFT HIGHER, altında BARA DÖN; TIN+MIX çifti; yeni çöp; aşınmış tezgâh; mahzende kare doku ve lamba (2026-09-17, beşinci liste)
+
+Yazar: "sahne biraz fazla neon oldu ... Mahzendeki sıvıların içerisinde sıvılar kare kare gözüküyor png gibi bunu
+kaldır ... Marketten tezgahı değiştirince Built sahnesi de tezgaha göre değişmeli ... 1-2-3-4 aşama sayısına göre
+alt alta madde maddeymiş gibi sıralanmalı ekranın en solunda. Onun altında Lift Higher olmalı genişliği ve tasarımı
+tam olarak 1-2-3-4 paneli ile aynı olmalı, panelin dışı kalın çerçeve kaplı olmalı. Ekrandan limon görsellerini
+kaldır ... düz desenin yanına masada gerçekte kullanıma bağlı aşınmalar da olsun ... Tın ve Mix barları birbirleri
+ile uyumlu ve orantılı olmalı, mix barı çalışmıyor düzelt. Çöp ve back to the bar butonları tekrardan üretilsin ...
+Mahzendeki ışıklandırmayı tam raflara sabitle ... ışığın çıkış köşesi biraz kırpılmış olmalı."
+
+- **Alet sütunu** (ekranın en solu, x 16, genişlik 224; `ColumnPanel` + `ChromeArt.FramedPanel`): üstte adım paneli
+  (her adım kendi satırında: numara, piktogram, söz, sonda tik — `BuildStepList`), altında aynı genişlikte LIFT
+  HIGHER kadranı, en altta BARA DÖN. Üçü de aynı kalın çerçeve (18 dokulu 9-dilim, finişin `Rim` metali, içeride
+  slab kuyusu). Adım panelinin başı tek bir çizgide (`ColStepsTop`): bardak tezgâhı iki satır listeler, çerçeve
+  zıplamaz. Kapak ve kaşık sütundan çekildi (kapak x −510→−320, kaşık −340→−170).
+- **TIN + MIX çifti**: MIX tüpü artık tenekenin SİLUETİNİN değil OYUĞUNUN satırlarını kaplar (aynı taban, aynı
+  tavan), ölçünün pirinç çerçevesini takar (`BrassRim`). **MIX çalışıyor:** sütun yalnız `ShowWorkMeter`'dan
+  yazılıyordu, bu yüzden çalkalama dışında sıfırda duruyordu; `StepWorkMeter` artık tenekeden okur
+  (`SetWorkColumn`: karışmışsa 1, değilse çalkalama/karıştırma enerjisi).
+- **Çöp ve BARA DÖN yeniden**: ikisi de sütunun ailesinden çerçeveli plakalar — BARA DÖN 224×56 sütunun ayağında,
+  çöp 112×140 karşı köşede, çizili kutu içinde, sözcük ayağa oyulmuş.
+- **Tezgâh düz panel değil**: slab finişin kendi rampasından çizilir (`CounterFinish.CounterSlab`), üstünden raydan
+  aşağı sönen bir ışık düşer (ters çevrilmiş `NeonGradient`, siyah %34) ve **aşınma** tüm bandın boyunda tek
+  çizimde yatar (`ChromeArt.CounterWear`: üç bardak halkası, dokuz sürtme çizgisi, ellerin çalıştığı yerde yıpranmış
+  leke) — döşenmediği için hiçbir iz tekrarlamaz. Market boyası değişince hepsi finişin rampasıyla yeniden çizilir.
+- **Neon azaldı**: yıkama %26→%11, alacakaranlık %14→%8.
+- **Limonlar kaldırıldı.**
+- **Mahzen**: içki gövdesi damalı dokusuz (`LiquidBody(w,h,checker:false)`) — raf ölçeğinde kare kare okunuyordu;
+  el şişesi ve ölçü damalı kalır. Bölme lambaları rafın altına sabit (`CellarLightDropPx` 11→2) ve her koninin
+  tepesinde koyu bir lamba gövdesi (`_cellarLamps`, 30×5, order 31) — ışık rafın arkasından çıkıyor gibi okunur.
+- Doğrulama: çevrimdışı `dotnet build LastCall.UI.csproj` temiz (MCP köprüsü kapalı olduğu için editör ölçümü ve
+  PlayMode koşusu köprü dönünce yapılacak).
+
 ### 9.84 · Ana sahnenin ışığı bir SAAT: model gökyüzü, batan güneş, yanan şehir, kuşlar, duvara düşen güneş lekesi, her nesnenin gölgesi, müşterilerin kendi ışığı (2026-09-17)
 
 Yazar: "Ana sahnenin ışıklandırmasını baştan sonra tekrar tasarla. Günün rengini vermesini istiyorum fakat
@@ -1615,39 +1648,6 @@ aynı renk paletiyle."
   (PatronFill ile GlobalLight aynı katmanı hedefleyince "More than one global light" hatası her testi kırdı —
   yıkama artık Patrons katmanını atlıyor, `GlobalLight()` yardımcısı katmanları tipten ÖNCE veriyor); ve pasif
   nesnede `lightType = Global` demek `ErrorIfDuplicateGlobalLight` içinde NullReference atıyor (ışık AKTİF doğar).
-
-### 9.84 · Tezgâhta alet sütunu: dikey 1-2-3-4, altında aynı genişlikte LIFT HIGHER, altında BARA DÖN; TIN+MIX çifti; yeni çöp; aşınmış tezgâh; mahzende kare doku ve lamba (2026-09-17, beşinci liste)
-
-Yazar: "sahne biraz fazla neon oldu ... Mahzendeki sıvıların içerisinde sıvılar kare kare gözüküyor png gibi bunu
-kaldır ... Marketten tezgahı değiştirince Built sahnesi de tezgaha göre değişmeli ... 1-2-3-4 aşama sayısına göre
-alt alta madde maddeymiş gibi sıralanmalı ekranın en solunda. Onun altında Lift Higher olmalı genişliği ve tasarımı
-tam olarak 1-2-3-4 paneli ile aynı olmalı, panelin dışı kalın çerçeve kaplı olmalı. Ekrandan limon görsellerini
-kaldır ... düz desenin yanına masada gerçekte kullanıma bağlı aşınmalar da olsun ... Tın ve Mix barları birbirleri
-ile uyumlu ve orantılı olmalı, mix barı çalışmıyor düzelt. Çöp ve back to the bar butonları tekrardan üretilsin ...
-Mahzendeki ışıklandırmayı tam raflara sabitle ... ışığın çıkış köşesi biraz kırpılmış olmalı."
-
-- **Alet sütunu** (ekranın en solu, x 16, genişlik 224; `ColumnPanel` + `ChromeArt.FramedPanel`): üstte adım paneli
-  (her adım kendi satırında: numara, piktogram, söz, sonda tik — `BuildStepList`), altında aynı genişlikte LIFT
-  HIGHER kadranı, en altta BARA DÖN. Üçü de aynı kalın çerçeve (18 dokulu 9-dilim, finişin `Rim` metali, içeride
-  slab kuyusu). Adım panelinin başı tek bir çizgide (`ColStepsTop`): bardak tezgâhı iki satır listeler, çerçeve
-  zıplamaz. Kapak ve kaşık sütundan çekildi (kapak x −510→−320, kaşık −340→−170).
-- **TIN + MIX çifti**: MIX tüpü artık tenekenin SİLUETİNİN değil OYUĞUNUN satırlarını kaplar (aynı taban, aynı
-  tavan), ölçünün pirinç çerçevesini takar (`BrassRim`). **MIX çalışıyor:** sütun yalnız `ShowWorkMeter`'dan
-  yazılıyordu, bu yüzden çalkalama dışında sıfırda duruyordu; `StepWorkMeter` artık tenekeden okur
-  (`SetWorkColumn`: karışmışsa 1, değilse çalkalama/karıştırma enerjisi).
-- **Çöp ve BARA DÖN yeniden**: ikisi de sütunun ailesinden çerçeveli plakalar — BARA DÖN 224×56 sütunun ayağında,
-  çöp 112×140 karşı köşede, çizili kutu içinde, sözcük ayağa oyulmuş.
-- **Tezgâh düz panel değil**: slab finişin kendi rampasından çizilir (`CounterFinish.CounterSlab`), üstünden raydan
-  aşağı sönen bir ışık düşer (ters çevrilmiş `NeonGradient`, siyah %34) ve **aşınma** tüm bandın boyunda tek
-  çizimde yatar (`ChromeArt.CounterWear`: üç bardak halkası, dokuz sürtme çizgisi, ellerin çalıştığı yerde yıpranmış
-  leke) — döşenmediği için hiçbir iz tekrarlamaz. Market boyası değişince hepsi finişin rampasıyla yeniden çizilir.
-- **Neon azaldı**: yıkama %26→%11, alacakaranlık %14→%8.
-- **Limonlar kaldırıldı.**
-- **Mahzen**: içki gövdesi damalı dokusuz (`LiquidBody(w,h,checker:false)`) — raf ölçeğinde kare kare okunuyordu;
-  el şişesi ve ölçü damalı kalır. Bölme lambaları rafın altına sabit (`CellarLightDropPx` 11→2) ve her koninin
-  tepesinde koyu bir lamba gövdesi (`_cellarLamps`, 30×5, order 31) — ışık rafın arkasından çıkıyor gibi okunur.
-- Doğrulama: çevrimdışı `dotnet build LastCall.UI.csproj` temiz (MCP köprüsü kapalı olduğu için editör ölçümü ve
-  PlayMode koşusu köprü dönünce yapılacak).
 
 ### 9.83 · Tezgâh sahnesi: plaka düzeni, odak parlaklığı kapalı, her prop gölgeli, loş pembe neon, oda kararması, giriş animasyonu, shaker→bardak yerinde geçiş, ölçünün boş silüeti (2026-09-17, dördüncü liste)
 
