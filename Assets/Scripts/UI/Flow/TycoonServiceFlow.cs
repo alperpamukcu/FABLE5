@@ -1003,7 +1003,7 @@ namespace LastCall.UI
         /// given height, so a four-row card and a two-row card start at the same edge.</summary>
         private static float CardSeat(float height) => 422f - height;
 
-        private void AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
+        private RectTransform AddEdgeBack(RectTransform panel, Stage back = Stage.Closed,
             string caption = null)   // null: bench.back_to_bar
         {
             // BIGGER, AND A PLATE OF THE BENCH'S OWN (2026-09-16, the author: "bara dön butonu çok daha büyük ve
@@ -1017,9 +1017,10 @@ namespace LastCall.UI
             // boyutta yer kaplayacak, renkleri farklı olacak"): the button the pause menu is built from, at the
             // column's width, in grey — the bench's colour is the frame around the key, not the key.
             var rt = PackKeyFlow(panel, "EdgeBack", (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' '),
-                "back", MenuPack.Tone.Grey, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
+                "back", KeyWay, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
                 new Vector2(16f, 16f), () => GoTo(back), out _, out _);
             RegisterFixed(panel, rt);    // ...and so is the way out
+            return rt;
         }
 
         private const float BackKeyW = 224f, BackKeyH = 56f;   // the column's width and its foot's height (2026-09-17)
@@ -1213,7 +1214,7 @@ namespace LastCall.UI
         /// mark and the word ride ON the cap and travel with it, so the whole face moves
         /// as one object.
         /// </summary>
-        private void AddBinButton(RectTransform parent)
+        private RectTransform AddBinButton(RectTransform parent)
         {
             // A REAL BIN (2026-09-16, the author: "çöp için ise arkaplanda gerçek bir çöp kutusu ile
             // tasarlanabilir"): the pedal bin ChromeArt draws, standing at the counter's right end at 2x, its lid
@@ -1223,7 +1224,7 @@ namespace LastCall.UI
             // drawn bin standing in it and its word cut into the foot — not a drawing loose on the counter.
             // THE PACK'S KEY WITH THE BIN STANDING IN IT (2026-09-17): same footprint as before, the ESC menu's
             // plate under it, orange because it is the one key on the bench that throws work away.
-            var rt = PackKeyFlow(parent, "Bin", null, null, MenuPack.Tone.Orange, new Vector2(1, 0),
+            var rt = PackKeyFlow(parent, "Bin", null, null, KeyBin, new Vector2(1, 0),
                 new Vector2(80, 140), new Vector2(-16f, 16f), null, out var btn, out _);   // 1184..1264, as before
             RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
             var face = rt.Find("Face") as RectTransform;
@@ -1236,9 +1237,11 @@ namespace LastCall.UI
             var relay = rt.gameObject.AddComponent<HoverRelay>();
             relay.Entered = () => img.sprite = ChromeArt.Bin(true);
             relay.Exited = () => img.sprite = ChromeArt.Bin(false);
-            var word = NewText("BinWord", face, _body, 8, TextAnchor.LowerCenter, MenuPack.Word(MenuPack.Tone.Orange));
-            Place(word.rectTransform, new Vector2(0.5f, 0f), new Vector2(72, 12), new Vector2(0f, 12f));
+            var word = NewText("BinWord", face, _display, 16, TextAnchor.LowerCenter, MenuPack.WordOn(KeyRamp(KeyBin)));
+            Place(word.rectTransform, new Vector2(0.5f, 0f), new Vector2(76, 22), new Vector2(0f, 8f));
             word.text = UIText.T("bench.bin");
+            // BIN and ÇÖP fit at 16; BASURA and PRULLENBAK do not, and this key is 80 wide in every language
+            FitWord(word, new Vector2(76f, 22f), 16);
             word.raycastTarget = false;
 
             btn.onClick.AddListener(() =>
@@ -1253,7 +1256,7 @@ namespace LastCall.UI
                     ? UIText.T("bench.binned_fee", ("fee", "$" + fee))
                     : UIText.T("bench.binned"));
             });
-
+            return rt;
         }
 
         /// <summary>

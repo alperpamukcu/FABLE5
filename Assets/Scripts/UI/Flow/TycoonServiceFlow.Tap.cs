@@ -292,7 +292,7 @@ namespace LastCall.UI
             // NO LIGHT (2026-09-16, the author: "Built sahnesindeki ışığı kaldır"); the mirror stays.
             // ...and shadows under the font and the pint (2026-09-17), with the neon wash and the dusk under all.
             // over the counter's front and lip (the surface's first two children), under everything else
-            AddNeonWash(_tapSurface, CounterY + 180f, over: 2);
+            AddNeonWash(_tapSurface, over: 2);
             _tapFontShadow = AddContactShadow(_tapSurface, 120f, new Vector2(TowerX, CounterY + 4f));
             _tapFontShadow.SetSiblingIndex(4);
             _tapPintShadow = AddContactShadow(_tapSurface, PintW * 0.8f, new Vector2(TowerX + _rig.Rest, CounterY + 4f));

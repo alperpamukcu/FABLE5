@@ -57,7 +57,7 @@
     { "key": "advice.type.spirit", "text": "spirit", "note": "Ingredient type named when a recipe band has no style; fills {ingredient} in advice.pour.*. Lower case." },
     { "key": "advice.type.sweet", "text": "sweet", "note": "Ingredient type named when a recipe band has no style; fills {ingredient} in advice.pour.*. Lower case." },
     { "key": "bench.back_to_bar", "text": "◀  BACK TO THE BAR", "note": "Key on the shaker and glass benches' front strip that closes the bench and returns to the room. Keep the arrow and the two spaces after it. 8 px on a 196x46 key (~180 units of face): ~24 characters at most, one line." },
-    { "key": "bench.bin", "text": "ÇÖP", "note": "The word on the red bin key on the shaker and glass benches, beside a bin mark (it is Turkish for 'bin' and ships that way in English). 16 px on a 150x52 key, 82 units after the mark: ~5 characters." },
+    { "key": "bench.bin", "text": "BIN", "note": "The word on the bin key on the shaker and glass benches, under a drawn pedal bin. It shipped as the Turkish 'ÇÖP' in every language until 2026-09-17, when the author saw it in English. 16 px on an 80-unit face: ~5 characters." },
     { "key": "bench.binned", "text": "BINNED", "note": "Toast after the bin key throws the drink away and nothing is charged. One line." },
     { "key": "bench.binned_fee", "text": "BINNED · -{fee}", "note": "Toast after the bin key throws a drink away at a cost. {fee} is the money lost with its currency sign, e.g. \"$4\" (the minus stays in the text). One line." },
     { "key": "bench.serve.aim.clean", "text": "CLEAN POUR", "note": "Glass bench's live line while the tin pours dead over the glass. 16 px, one line." },

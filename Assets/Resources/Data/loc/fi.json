@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "väkevää", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "makeaa", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  TAKAISIN BAARIIN", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "ROSKIS", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "ROSKIS", "src": "BIN"},
     {"key": "bench.binned", "text": "KAADETTU POIS", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "KAADETTU POIS · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "PUHDAS KAATO", "src": "CLEAN POUR"},

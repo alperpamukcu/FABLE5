@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "spiritus", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "sødme", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  TILBAGE TIL BAREN", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "SKRALD", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "SKRALD", "src": "BIN"},
     {"key": "bench.binned", "text": "HÆLDT UD", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "HÆLDT UD · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "PÆNT HÆLDT", "src": "CLEAN POUR"},

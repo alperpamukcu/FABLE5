@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "spirit", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "manis", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  KEMBALI KE BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "BUANG", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "BUANG", "src": "BIN"},
     {"key": "bench.binned", "text": "DIBUANG", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "DIBUANG · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "TUANGAN BERSIH", "src": "CLEAN POUR"},

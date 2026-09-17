@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "destilado", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "dulce", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  VOLVER A LA BARRA", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "TIRAR", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "TIRAR", "src": "BIN"},
     {"key": "bench.binned", "text": "A LA BASURA", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "A LA BASURA · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "VERTIDO LIMPIO", "src": "CLEAN POUR"},

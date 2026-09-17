@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "sprit", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "sött", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  TILLBAKA TILL BAREN", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "SLÄNG", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "SLÄNG", "src": "BIN"},
     {"key": "bench.binned", "text": "SLÄNGD", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "SLÄNGD · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "RENT HÄLLT", "src": "CLEAN POUR"},

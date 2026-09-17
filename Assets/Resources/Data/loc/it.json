@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "distillato"},
     {"key": "advice.type.sweet", "text": "dolce"},
     {"key": "bench.back_to_bar", "text": "◀  TORNA AL BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "BUTTA", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "BUTTA", "src": "BIN"},
     {"key": "bench.binned", "text": "BUTTATO", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "BUTTATO · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "VERSATA PULITA", "src": "CLEAN POUR"},

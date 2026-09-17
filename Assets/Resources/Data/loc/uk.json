@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "міцного", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "солодкого", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  НАЗАД ДО ШИНКВАСУ", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "СМІТТЯ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "СМІТТЯ", "src": "BIN"},
     {"key": "bench.binned", "text": "У СМІТТЯ", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "У СМІТТЯ · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "ЧИСТИЙ НАЛИВ", "src": "CLEAN POUR"},

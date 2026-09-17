@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "sterke drank", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "zoet", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  TERUG NAAR DE BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "WEG", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "WEG", "src": "BIN"},
     {"key": "bench.binned", "text": "WEGGEGOOID", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "WEGGEGOOID · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "MOOI GESCHONKEN", "src": "CLEAN POUR"},

@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "крепкое", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "сладкое", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  НАЗАД К СТОЙКЕ", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "МУСОР", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "МУСОР", "src": "BIN"},
     {"key": "bench.binned", "text": "В МУСОР", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "В МУСОР · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "ЧИСТЫЙ НАЛИВ", "src": "CLEAN POUR"},

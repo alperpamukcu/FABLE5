@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "基酒"},
     {"key": "advice.type.sweet", "text": "甜味料"},
     {"key": "bench.back_to_bar", "text": "◀  回到吧台", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "倒掉", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "倒掉", "src": "BIN"},
     {"key": "bench.binned", "text": "已倒掉", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "已倒掉 · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "倒得干净", "src": "CLEAN POUR"},

@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "sert içki", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "tatlı", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  BARA DÖN", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "ÇÖP", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "ÇÖP", "src": "BIN"},
     {"key": "bench.binned", "text": "ÇÖPE GİTTİ", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "ÇÖPE GİTTİ · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "TEMİZ DÖKÜM", "src": "CLEAN POUR"},

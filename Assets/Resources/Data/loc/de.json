@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "Spirituose"},
     {"key": "advice.type.sweet", "text": "Süßes"},
     {"key": "bench.back_to_bar", "text": "◀  ZURÜCK ZUR BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "MÜLL", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "MÜLL", "src": "BIN"},
     {"key": "bench.binned", "text": "IM MÜLL", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "IM MÜLL · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "SAUBER GEGOSSEN", "src": "CLEAN POUR"},

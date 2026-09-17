@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "mocny alkohol", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "słodkie", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  WRÓĆ DO BARU", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "KOSZ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "KOSZ", "src": "BIN"},
     {"key": "bench.binned", "text": "DO KOSZA", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "DO KOSZA · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "CZYSTE NALEWANIE", "src": "CLEAN POUR"},

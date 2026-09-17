@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "tömény", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "édes", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  VISSZA A PULTHOZ", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "KUKA", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "KUKA", "src": "BIN"},
     {"key": "bench.binned", "text": "KIÖNTVE", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "KIÖNTVE · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "TISZTA TÖLTÉS", "src": "CLEAN POUR"},

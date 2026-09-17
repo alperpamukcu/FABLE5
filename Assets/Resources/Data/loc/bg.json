@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "твърд алкохол", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "сладко", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  ОБРАТНО КЪМ БАРА", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "КОШ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "КОШ", "src": "BIN"},
     {"key": "bench.binned", "text": "В КОША", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "В КОША · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "ЧИСТО НАЛИВАНЕ", "src": "CLEAN POUR"},

@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The bench loses its mat and its pink light, and its keys join the palette (2026-09-17, the seventh list):**
+  the rubber bar mat and the magenta wash that fell from the rail are both out (the wash was the fifth list's own
+  ask, cut twice and now gone; the counter's DRAWN neon rail stays); the plaque is seated in a band of its own
+  between that rail and the counter's pale sheen, which moves down under it; the bench's keys are the author's
+  pack repainted onto GDD 16's ramps rather than the pack's own palette - amber for SERVE IT, vice red for the
+  bin, night for the way out - with their words up from 8 px to 16; SERVE IT carries a ring of thirty fairground
+  lamps chasing round its face, out while the glass is empty; the bench draws in three layers, counter then
+  instruments then props; and the bin's key says BIN in English at last, with its own word in all 29 languages -
+  it had shipped as the Turkish "ÇÖP" everywhere. GDD_MEVCUT §9.87.
+
 - **The bench's props throw their own shadows, and the gauges come inside their frames (2026-09-17, the sixth
   list):** the reflection under the bottle is gone - the tin, the bottle, the lid and the draught bench's pint
   each lay down their OWN silhouette instead, black at a fifth, squashed and leaning off to one side, with the

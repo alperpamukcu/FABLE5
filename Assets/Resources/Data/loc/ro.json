@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "tărie", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "îndulcitor", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  ÎNAPOI LA BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "ARUNCĂ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "ARUNCĂ", "src": "BIN"},
     {"key": "bench.binned", "text": "ARUNCAT", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "ARUNCAT · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "TURNARE CURATĂ", "src": "CLEAN POUR"},

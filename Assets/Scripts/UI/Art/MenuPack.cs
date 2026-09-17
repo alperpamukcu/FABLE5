@@ -103,6 +103,74 @@ namespace LastCall.UI
             return Cut(tex, key, new Rect(c * CellPx, tex.height - (r + 1) * CellPx, CellPx, CellPx), Vector4.zero);
         }
 
+        /// <summary>
+        /// THE PACK'S PLATE IN THE GAME'S OWN COLOURS (2026-09-17, the author's seventh list: "Built sahnesinde
+        /// butonların rengi oyuna uygun değil butonların rengini bizim oyun tasarımımıza uygun renk paletinden
+        /// seç"). The pack keeps its palette in the pause menu, where it is the whole look; on the BENCH it now
+        /// stands beside a counter, a plaque and two gauges that are all cut from GDD 16's ramps, and the pack's
+        /// own blue-grey and its poster orange were the only things on the screen that came from somewhere else.
+        ///
+        /// Not a tint: a tint multiplies, so an amber key over a mid-grey plate comes out mud. The plate is
+        /// REPAINTED the way the counter's drawing is (CounterFinish.Repaint): each of the drawing's own colours
+        /// is placed on the target ramp by its brightness, so the pack's bevel, its lit top edge and the row of
+        /// shadow under it all survive - the key is the author's key, in the game's colours.
+        /// </summary>
+        public static Sprite Plate(string name, Color[] ramp, bool pressed)
+        {
+            string key = "pack:plate:" + name + (pressed ? ":down" : ":up");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var src = Blank(Tone.Grey, pressed);
+            if (src == null || ramp == null || ramp.Length == 0) return src;
+            var tex = src.texture;
+            var px = tex.GetPixels32();
+
+            // the drawing's own range, so the darkest pixel lands on the ramp's foot and the lightest on its head
+            float lo = float.MaxValue, hi = float.MinValue;
+            foreach (var c in px)
+            {
+                if (c.a == 0) continue;
+                float l = Lum(c);
+                if (l < lo) lo = l;
+                if (l > hi) hi = l;
+            }
+            var map = new Dictionary<int, Color32>();
+            for (int i = 0; i < px.Length; i++)
+            {
+                var c = px[i];
+                if (c.a == 0) continue;
+                int k = (c.r << 16) | (c.g << 8) | c.b;
+                if (!map.TryGetValue(k, out var to))
+                {
+                    float t = hi <= lo ? 0.5f : (Lum(c) - lo) / (hi - lo);
+                    to = Step(ramp, t);
+                    map[k] = to;
+                }
+                px[i] = new Color32(to.r, to.g, to.b, c.a);
+            }
+            var copy = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false)
+            { filterMode = tex.filterMode, wrapMode = tex.wrapMode, name = tex.name + "_" + name };
+            copy.SetPixels32(px);
+            copy.Apply(false, false);
+            var s = Sprite.Create(copy, src.rect, new Vector2(0.5f, 0.5f), src.pixelsPerUnit, 0,
+                                  SpriteMeshType.FullRect, src.border);
+            s.name = key;
+            return Cache[key] = s;
+        }
+
+        private static float Lum(Color32 c) => 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+
+        /// <summary>A ramp read at 0..1, between its steps — CounterFinish's Ramp, for a Color[] rather than a
+        /// Color32[].</summary>
+        private static Color32 Step(Color[] ramp, float t)
+        {
+            float f = Mathf.Clamp01(t) * (ramp.Length - 1);
+            int i = Mathf.Clamp(Mathf.FloorToInt(f), 0, ramp.Length - 2);
+            return Color32.Lerp(ramp[i], ramp[i + 1], f - i);
+        }
+
+        /// <summary>The word's ink on a repainted plate: the palette's own answer for reading on that fill.</summary>
+        public static Color WordOn(Color[] ramp) => UITheme.InkOn(Step(ramp, 0.62f));
+
         /// <summary>The face colour a tone's cells are filled with (Tools/menu_pack.py measured them).</summary>
         public static Color Face(Tone tone) =>
             tone == Tone.Orange ? new Color32(230, 69, 57, 255)

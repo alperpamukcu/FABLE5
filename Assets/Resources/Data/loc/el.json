@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "απόσταγμα", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "γλυκό", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  ΠΙΣΩ ΣΤΟ ΜΠΑΡ", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "ΚΑΔΟΣ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "ΚΑΔΟΣ", "src": "BIN"},
     {"key": "bench.binned", "text": "ΣΤΑ ΣΚΟΥΠΙΔΙΑ", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "ΣΤΑ ΣΚΟΥΠΙΔΙΑ · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "ΚΑΘΑΡΟ ΡΙΞΙΜΟ", "src": "CLEAN POUR"},

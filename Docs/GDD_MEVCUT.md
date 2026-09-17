@@ -1540,6 +1540,47 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.87 · Bar matı ve pembe neon gitti, plaka kendi bandına oturdu, tuşlar oyunun paletine geçti, SERVE IT'in panayır ampulleri, tezgâh üç katman (2026-09-17, yedinci liste)
+
+Yazar: "Çöp'ün üzerinde İngilizcede de 'çöp' yazıyor. Built sahnelerinden bar matını kaldıralım. Görselde 'The glass
+is full - serve it' yazan kısım renkli neon şerit gibi arkada bar matının arasında kalan pembe üst neon efekti ile
+aşağıda açık renkli birkaç pixellik düz şeridin arasına oturtulsun, arkaplan görseli ona göre güncellensin. Pembe
+neon ışık efekti hiç güzel olmuyor kaldıralım. Built sahnesinde butonların rengi oyuna uygun değil, butonların
+rengini bizim oyun tasarımımıza uygun renk paletinden seç. İçerisinde yazanlar büyük olsun. Serve it butonunun
+içerisinde açık renkli yüzeyinin etrafında spot ampuller gibi yanıp sönen panayır ışığı istiyorum. Butonlar, lift
+higher, 1-2-3-4, tin barı, mix barı bunların hepsi arkaplan katmanının bir üstünde olmalı, shaker şişe kapak bunlar
+üstte olmalı."
+
+- **Çöp artık İngilizce "BIN"**: `bench.bin` İNGİLİZCEDE Türkçe "ÇÖP" olarak sevk ediliyordu — en.json'daki
+  not bunu bilerek yapıldığını bile yazıyordu. Fragment düzeltildi, `merge_fragments --update --write` ile en.json
+  yenilendi, yirmi sekiz dilin `src`'i "BIN"e çevrildi. **Çevirilere dokunulmadı:** önce hepsini kendi
+  sözlüğümden yeniden yazdım, sonra diff'e bakınca çevirmenlerin zaten çevirdiğini gördüm (fr JETER, ja 捨てる,
+  nl WEG, es TIRAR, vi BỎ) — hepsi benim yazdığım isimlerden (POUBELLE, PRULLENBAK, BASURA) daha kısa, yani
+  80 birimlik tuşa 16 px'te sığıyorlar. Yanlış olan tek şey İngilizceydi. `--stale` artık temiz.
+- **Bar matı kaldırıldı** (`BuildBenchDressing`). Limonlarla aynı sebep: ikisi de beşinci listede istenmişti, ikisi
+  de işin olduğu bandı süslüyordu. `ChromeArt.BarMat` çizim olarak duruyor, çağıran yok.
+- **Pembe neon efekti kaldırıldı**: raydan tezgâha düşen macenta yıkama gitti (`AddNeonWash` artık yalnız alacakaranlığı
+  koyuyor). Beşinci listede istenmiş, altıncıda %26'dan %8'e indirilmişti; yedincide tamamen çıktı. Tezgâhın ÇİZİLİ
+  neon rayı duruyor — kaldırılan ışık efektiydi, şeridin kendisi değil.
+- **Plaka kendi bandında**: tezgâhın açık renkli parlaklık şeridi (`Sheen`) rayın 62..74 birim altında, yani tam
+  plakanın ortasından geçiyordu. Artık plakanın ALTINA iniyor (`SheenUnderPlaque`): ray bandı 0..48, plaka 54..118,
+  şerit 124..136. Yazının oturduğu bant böylece üstte pembe ray, altta açık şeritle sınırlanıyor.
+- **Tuşlar oyunun paletinden**: `MenuPack.Plate(name, ramp, pressed)` paketin plakasını YENİDEN BOYUYOR — tint
+  değil, çünkü tint çarpar ve kehribar bir tuş orta griden çamur çıkar; çizimin kendi renkleri parlaklıklarına göre
+  hedef rampaya oturtuluyor (tezgâh çiziminde `CounterFinish.Repaint`'in yaptığı iş), böylece paketin pahı, üst
+  ışığı ve altındaki gölge satırı korunuyor. Roller GDD 16 §3'ten: **SERVE IT kehribar** (PrimaryAction, ekranda bir
+  tane), **çöp vice red** (ret), **bara dön night** (krom). Tuş yazıları 8 px'ten **16 px**'e çıktı ve sarıyor —
+  İngilizce "BACK TO THE BAR" 16 px'te 224 birimlik plakadan geniş.
+- **SERVE IT'in panayır ışığı**: kehribar yüzün 14 birim içinde, 20 birimde bir dizilmiş otuz ampul
+  (`ChromeArt.Bulb` + `MarqueeBulbs`); üçte biri yanık ve sıra dönüyor, yani ışık levhanın çevresinde koşuyor.
+  Bardak boşken levha sönüyor (`MarqueeBulbs.On`) — basılamayan tuş kendini ilan etmez.
+- **Üç katman**: tezgâh ve alacakaranlığı en altta, bütün aletler ve tuşlar onun bir üstünde, teneke/şişe/kapak
+  hepsinin üstünde (`_pourSurface.SetAsLastSibling`). Bardak tezgâhı bu sırayla zaten kuruluyordu; teneke tezgâhı
+  ters kurulmuş ve yalnızca hiçbir şey çakışmadığı için sorun çıkmamıştı. **Tuşlar propların da üstüne alınıyor**
+  ve bu bir kaçamak değil: plakaları hiçbir propun çizimini örtmüyor (kapağın çeliği 250'de başlar, yol 240'ta
+  biter) ama kapağın DİKDÖRTGENİ çiziminin iki katı genişlikte ve yolun üstüne taşıyor — üstte duran prop tıklamayı
+  yutar, hiçbir şeyi gizlemeden.
+
 ### 9.86 · Yansıma gitti, nesnelerin kendi gölgesi geldi; LIFT HIGHER bir merdiven; sütun çerçeveden 4 birim içeride; bardak ve shaker çift olarak ortada; SERVE IT üç çizim (2026-09-17, altıncı liste)
 
 Yazar: "1. görseldeki yazılar çok eski sürümden kalmış olmalı kaldır bunu. 2. ve 3. görseldeki buton tasarımını

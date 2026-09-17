@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "sprit", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "sødme", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  TILBAKE TIL BAREN", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "KAST", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "KAST", "src": "BIN"},
     {"key": "bench.binned", "text": "KASTET", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "KASTET · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "RETT I GLASSET", "src": "CLEAN POUR"},

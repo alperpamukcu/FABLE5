@@ -1619,6 +1619,31 @@ namespace LastCall.UI
             return Cache[Key] = Make(new[] { new Color32(255, 255, 255, 255) }, 1, 1, Vector4.zero);
         }
 
+        /// <summary>
+        /// A FAIRGROUND BULB (2026-09-17, the author: "serve it butonunun içerisinde açık renkli yüzeyinin
+        /// etrafında spot ampuller gibi yanıp sönen panayır ışığı istiyorum"). One round lamp, <paramref name="px"/>
+        /// across: a filled disc with a darker rim and a single bright pixel up and left where the glass catches
+        /// the light, drawn in white so the caller can run it between its lit and its dead colour.
+        /// </summary>
+        public static Sprite Bulb(int px)
+        {
+            string key = $"bulb:{px}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var buf = new Color32[px * px];
+            float r = px * 0.5f, edge = r - 0.9f;
+            for (int y = 0; y < px; y++)
+                for (int x = 0; x < px; x++)
+                {
+                    float dx = x + 0.5f - r, dy = y + 0.5f - r;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    byte a = d > r ? (byte)0 : (byte)255;
+                    byte v = d > edge ? (byte)150 : (byte)255;
+                    if (dx < -r * 0.2f && dy > r * 0.2f && d < edge) v = 255;
+                    buf[y * px + x] = new Color32(v, v, v, a);
+                }
+            return Cache[key] = Make(buf, px, px, Vector4.zero);
+        }
+
         /// <summary>The liquid ladder: one texel per 20-point measure, in the reading's own
         /// colours. Drawn as a filled image, so the level cuts it on a measure line exactly.</summary>
         public static Sprite GaugeLadder(Color[] bands)

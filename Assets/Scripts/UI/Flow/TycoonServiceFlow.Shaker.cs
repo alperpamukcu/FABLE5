@@ -645,21 +645,24 @@ namespace LastCall.UI
                         (byte)Mathf.RoundToInt(c.b * 255f), 255);
 
         /// <summary>
-        /// A KEY FROM THE AUTHOR'S OWN PACK (2026-09-17, the author: "ESC menüsündeki tarzda butonlar kullanılabilir
-        /// aynı boyutta yer kaplayacak, renkleri farklı olacak"). The same drawing the pause menu's keys are built
-        /// from — MenuPack's plate, its pressed state and its inks — laid at the size the bench already gave the key.
-        /// The bench cannot call TycoonHud's builder (another component), so this is its twin.
+        /// A KEY FROM THE AUTHOR'S OWN PACK, IN THE GAME'S COLOURS (2026-09-17). The same drawing the pause menu's
+        /// keys are built from — MenuPack's plate, its pressed state, its bevel — repainted onto one of GDD 16's
+        /// ramps (<see cref="MenuPack.Plate"/>), because on the bench the pack's own blue-grey and poster orange
+        /// were the only things on the screen that came from outside the palette ("butonların rengini bizim oyun
+        /// tasarımımıza uygun renk paletinden seç"). The bench cannot call TycoonHud's builder (another component),
+        /// so this is its twin.
         /// </summary>
         private RectTransform PackKeyFlow(RectTransform parent, string id, string label, string glyph,
-            MenuPack.Tone tone, Vector2 anchor, Vector2 size, Vector2 pos, System.Action onClick,
-            out Button button, out PackKey pack, int fontSize = 8)
+            string tone, Vector2 anchor, Vector2 size, Vector2 pos, System.Action onClick,
+            out Button button, out PackKey pack, int fontSize = 16)
         {
+            var ramp = KeyRamp(tone);
             var rt = NewRect(id, parent);
             rt.anchorMin = rt.anchorMax = rt.pivot = anchor;
             rt.sizeDelta = size;
             rt.anchoredPosition = pos;
             var plate = rt.gameObject.AddComponent<Image>();
-            plate.sprite = MenuPack.Blank(tone, false);
+            plate.sprite = MenuPack.Plate(tone, ramp, false);
             plate.type = Image.Type.Sliced;
             plate.pixelsPerUnitMultiplier = 0.5f;          // the pack at exactly 2x
             plate.color = Color.white;
@@ -672,6 +675,8 @@ namespace LastCall.UI
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var sink = rt.gameObject.AddComponent<PressSink>();
             sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var ink = MenuPack.WordOn(ramp);
+            var inkLit = Color.Lerp(ink, Color.white, 0.35f);
             Image glyphImg = null;
             if (glyph != null)
             {
@@ -680,34 +685,120 @@ namespace LastCall.UI
                 g.pivot = new Vector2(0, 0.5f);
                 glyphImg = g.gameObject.AddComponent<Image>();
                 glyphImg.sprite = MenuPack.Glyph(glyph);
-                glyphImg.color = MenuPack.Ink(tone, false);
+                glyphImg.color = ink;
                 glyphImg.raycastTarget = false;
             }
             pack = rt.gameObject.AddComponent<PackKey>();
             pack.Plate = plate;
-            pack.Rest = plate.sprite; pack.Lit = plate.sprite; pack.Pressed = MenuPack.Blank(tone, true);
-            pack.Glyph = glyphImg; pack.GlyphRest = MenuPack.Ink(tone, false); pack.GlyphLit = MenuPack.Ink(tone, true);
+            pack.Rest = plate.sprite; pack.Lit = plate.sprite; pack.Pressed = MenuPack.Plate(tone, ramp, true);
+            pack.Glyph = glyphImg; pack.GlyphRest = ink; pack.GlyphLit = inkLit;
             if (label != null)
             {
                 // dead centre on the face, two units up: the pack's face runs from the rim under the outline to the
-                // shadow, whose middle sits over the rect's (the pause menu measured this in 2026-09-16)
-                var text = NewText("Label", face, _body, fontSize, TextAnchor.MiddleCenter, MenuPack.Word(tone));
-                Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(9f, 4f), new Vector2(-7f, 0f));
-                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                // shadow, whose middle sits over the rect's (the pause menu measured this in 2026-09-16).
+                // SIXTEEN, not eight (2026-09-17, the author: "İçerisinde yazanlar büyük olsun") — and wrapping,
+                // because a fifteen-character English key at 16 px is wider than a 224-unit plate is.
+                var text = NewText("Label", face, _display, fontSize, TextAnchor.MiddleCenter, ink);
+                // 44 in from the left clears the glyph, 20 from the right keeps the last letter off the rim — and
+                // the box is DELIBERATELY narrower than the longest line: at 160 units "BACK TO THE BAR" breaks
+                // after TO rather than running "BACK TO THE" into the plate's edge, which is what 176 did.
+                Stretch(text.rectTransform, Vector2.zero, Vector2.one,
+                        new Vector2(glyph != null ? 44f : 12f, 4f), new Vector2(-20f, 0f));
+                text.horizontalOverflow = HorizontalWrapMode.Wrap;
                 text.text = label;
+                FitWord(text, size - new Vector2(glyph != null ? 64f : 32f, 8f), fontSize);
             }
             return rt;
         }
 
-        /// <summary>The same key in another tone — SERVE IT greys out when the glass is empty.</summary>
-        private static void RetonePackKey(RectTransform key, MenuPack.Tone tone)
+        /// <summary>Which of the palette's ramps a bench key is cut from. The names are the repaint's cache keys,
+        /// so they must stay stable.</summary>
+        private static Color[] KeyRamp(string tone) =>
+            tone == KeyGo ? UITheme.Amber : tone == KeyBin ? UITheme.ViceRed : WayRamp;
+
+        /// <summary>
+        /// The way out's chrome: NIGHT from its second step up. The whole ramp put the plate's face on Night[2]
+        /// and the key read as a hole cut in the counter next to the column's lit frames (seen in play, 2026-09-17).
+        /// Still nothing but Night steps — the rule is stay on the ramp, not use all of it.
+        /// </summary>
+        private static readonly Color[] WayRamp =
+            { UITheme.Night[1], UITheme.Night[2], UITheme.Night[3], UITheme.Night[4] };
+
+        /// <summary>
+        /// A word at the size it fits. The bench's keys went to 16 px on the author's word ("İçerisinde yazanlar
+        /// büyük olsun"), and 16 px fits the English and the Turkish — but a key is one plate in twenty-nine
+        /// languages, and PRULLENBAK is a single unbreakable word half again as wide as BIN. So the big size is
+        /// tried first and the small one is the fallback: nothing on a key is ever drawn past its rim.
+        /// </summary>
+        private static void FitWord(Text t, Vector2 box, int big, int small = 8)
+        {
+            t.fontSize = big;
+            string full = t.text ?? string.Empty;
+            // Unity's preferredWidth measures the whole string as ONE line whatever the wrap mode is, so it says
+            // "too wide" about every key that wraps happily. What actually cannot be broken is the longest WORD;
+            // the rest is the line count, which is the unbroken width over the box's.
+            string longest = string.Empty;
+            foreach (var w in full.Split(' '))
+                if (w.Length > longest.Length) longest = w;
+            t.text = longest;
+            float wordW = t.preferredWidth;
+            t.text = full;
+            int lines = box.x <= 0f ? 1 : Mathf.Max(1, Mathf.CeilToInt(t.preferredWidth / box.x));
+            if (wordW <= box.x && lines * big * 1.25f <= box.y) return;
+            t.fontSize = small;
+        }
+
+        /// <summary>
+        /// The bench's three key roles, straight out of GDD 16 §3: AMBER is PrimaryAction, one to a screen, and on
+        /// this bench that one is SERVE IT; VICE RED is the refusal, which is what the bin is; NIGHT is chrome, for
+        /// the door you came in by. Nothing else on the bench wears a key colour.
+        /// </summary>
+        private const string KeyGo = "amber", KeyBin = "vicered", KeyWay = "night";
+
+        /// <summary>The same key on another ramp — SERVE IT goes dead when the glass is empty.</summary>
+        private static void RetonePackKey(RectTransform key, string tone)
         {
             var pack = key != null ? key.GetComponent<PackKey>() : null;
             if (pack == null) return;
-            pack.Refit(MenuPack.Blank(tone, false), MenuPack.Blank(tone, false), MenuPack.Blank(tone, true),
-                       MenuPack.Ink(tone, false), MenuPack.Ink(tone, true));
+            var ramp = KeyRamp(tone);
+            var ink = MenuPack.WordOn(ramp);
+            pack.Refit(MenuPack.Plate(tone, ramp, false), MenuPack.Plate(tone, ramp, false),
+                       MenuPack.Plate(tone, ramp, true), ink, Color.Lerp(ink, Color.white, 0.35f));
             var label = key.Find("Face/Label");
-            if (label != null) label.GetComponent<Text>().color = MenuPack.Word(tone);
+            if (label != null) label.GetComponent<Text>().color = ink;
+        }
+
+        /// <summary>
+        /// A RING OF FAIRGROUND LAMPS just inside a key's face (2026-09-17, the author: "serve it butonunun
+        /// içerisinde açık renkli yüzeyinin etrafında spot ampuller gibi yanıp sönen panayır ışığı istiyorum").
+        /// Walked round the face's perimeter at a whole spacing, so the corners carry a lamp and the runs between
+        /// them are even; <see cref="MarqueeBulbs"/> chases them. They ride the FACE, so they sink with the press.
+        /// </summary>
+        private MarqueeBulbs AddMarquee(RectTransform face, Vector2 size, float inset, float step, int px,
+                                        Color lit, Color dead)
+        {
+            float w = size.x - inset * 2f, h = size.y - inset * 2f;
+            int nx = Mathf.Max(1, Mathf.RoundToInt(w / step)), ny = Mathf.Max(1, Mathf.RoundToInt(h / step));
+            var spots = new List<Vector2>();
+            for (int i = 0; i < nx; i++) spots.Add(new Vector2(i * w / nx, 0f));                 // the foot, left to right
+            for (int i = 0; i < ny; i++) spots.Add(new Vector2(w, i * h / ny));                  // up the right
+            for (int i = nx; i > 0; i--) spots.Add(new Vector2(i * w / nx, h));                  // the head, right to left
+            for (int i = ny; i > 0; i--) spots.Add(new Vector2(0f, i * h / ny));                 // down the left
+            var bulbs = new Image[spots.Count];
+            for (int i = 0; i < spots.Count; i++)
+            {
+                var b = NewRect("Bulb" + i, face);
+                Place(b, new Vector2(0f, 0f), new Vector2(px, px),
+                      new Vector2(inset + spots[i].x - px * 0.5f, inset + spots[i].y - px * 0.5f));
+                var img = b.gameObject.AddComponent<Image>();
+                img.sprite = ChromeArt.Bulb(px / 2);     // drawn at half, shown at the house's 2x
+                img.color = dead;
+                img.raycastTarget = false;
+                bulbs[i] = img;
+            }
+            var sign = face.gameObject.AddComponent<MarqueeBulbs>();
+            sign.Bulbs = bulbs; sign.Lit = lit; sign.Dead = dead;
+            return sign;
         }
 
         private RectTransform ColumnPanel(RectTransform panel, string name, float y, float h)
@@ -790,6 +881,14 @@ namespace LastCall.UI
         private const float PlaqueLineY = 8f, PlaqueLineH = 48f;   // the steps left the plaque on 2026-09-17
         /// <summary>The counter's far edge: ridge, seam, six rails and a seam (AddBenchCounter's bands).</summary>
         private const float RailBandH = 8f + 5f + 5f * 6f + 5f;
+        /// <summary>
+        /// THE PLAQUE SITS IN A BAND OF ITS OWN (2026-09-17, the author's seventh list: the words should be seated
+        /// "arkada ... pembe üst neon efekti ile aşağıda açık renkli birkaç pixellik düz şeridin arasına" — between
+        /// the rail's pink neon above and the counter's pale sheen below — "arkaplan görseli ona göre güncellesin").
+        /// So the counter's sheen, which used to run at 62..74 under the rail and therefore straight THROUGH the
+        /// plaque, is laid under it instead: the plaque takes 54..118 and the sheen starts six units below that.
+        /// </summary>
+        private const float SheenUnderPlaque = 6f;
 
         private readonly List<(RectTransform rt, float dy)> _railHung = new List<(RectTransform, float)>();
 
@@ -2233,11 +2332,15 @@ namespace LastCall.UI
         // mat along the back edge, and two lemon wheels in the far corner. All hung from the rail, so they stay on
         // the counter's own line. The water ring and the mirrors are the shaker bench's (BuildShakerPanel).
 
-        /// <summary>THE BENCH UNDER A DIM PINK NEON (2026-09-17, the author: "sahne genel loş pembe neon ile
-        /// aydınlanır"): a magenta wash falling from the rail down the counter, and a thin dusk over the whole surface
-        /// under the props, so the bench sits in the rail's own light rather than a flat grey. First siblings, under
-        /// everything.</summary>
-        private void AddNeonWash(RectTransform panel, float railTop, int over = -1)
+        /// <summary>
+        /// A THIN DUSK, AND NO MORE PINK (2026-09-17, the author's seventh list: "Pembe neon ışık efekti hiç güzel
+        /// olmuyor kaldıralım"). The magenta wash that fell from the rail down the counter is gone — it was asked
+        /// for in the fifth list ("sahne genel loş pembe neon ile aydınlanır"), cut from 26% to 8% in the sixth
+        /// when it still read as paint, and taken out here. What is left is the dusk: a neutral eighth of Night
+        /// over the whole surface under the props, which is a room being dim rather than a colour being sprayed
+        /// on it. First siblings, under everything.
+        /// </summary>
+        private void AddNeonWash(RectTransform panel, int over = -1)
         {
             // Under the props but over the counter's bands: right after however many bands the panel carries
             // (the shaker and glass benches keep theirs in _benchCounters; the draught bench passes its own count).
@@ -2249,18 +2352,11 @@ namespace LastCall.UI
             di.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.08f);
             di.raycastTarget = false;
             dusk.SetSiblingIndex(after);
-            var wash = NewRect("NeonWash", panel);
-            Place(wash, new Vector2(0.5f, 0.5f), new Vector2(1400f, 300f), new Vector2(0f, railTop - 150f));
-            var wi = wash.gameObject.AddComponent<Image>();
-            wi.sprite = ChromeArt.NeonGradient();
-            wi.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.08f);   // 0.26 read as neon paint (2026-09-17)
-            wi.raycastTarget = false;
-            wash.SetSiblingIndex(after + 1);
         }
 
         private void BuildBenchDressing()
         {
-            AddNeonWash(_benchStage, 60f);    // the stage under every bench: one wash for all, over the band, under the props
+            AddNeonWash(_benchStage);    // the stage under every bench: one dusk for all, over the band, under the props
             var sheen = NewRect("Sheen", _benchStage);
             Place(sheen, new Vector2(0.5f, 0f), new Vector2(1180f, 240f), new Vector2(0f, 0f));
             var si = sheen.gameObject.AddComponent<Image>();
@@ -2269,16 +2365,10 @@ namespace LastCall.UI
             si.raycastTarget = false;
             _railHung.Add((sheen, RailBandH - 30f + 240f));
 
-            var mat = NewRect("BarMat", _benchStage);
-            Place(mat, new Vector2(0f, 0f), new Vector2(360f, 48f), new Vector2(500f, 0f));
-            var mi = mat.gameObject.AddComponent<Image>();
-            mi.sprite = ChromeArt.BarMat();
-            mi.type = Image.Type.Tiled;          // the rim from the border, the ribs REPEATED across the middle
-            mi.pixelsPerUnitMultiplier = 0.5f;   // the 16x12 tile at 2x
-            mi.raycastTarget = false;
-            _railHung.Add((mat, RailBandH + 8f + 48f));
-
-            // (The lemon wheels came down on 2026-09-17: "Ekrandan limon görsellerini kaldır".)
+            // (The lemon wheels came down on 2026-09-17: "Ekrandan limon görsellerini kaldır", and the rubber
+            //  bar mat with them on the seventh list: "Built sahnelerinden bar matını kaldıralım". Both were the
+            //  fifth list's own asks; what they had in common is that they dressed the counter where the work
+            //  happens, and the work is the only thing this band is for. ChromeArt.BarMat stays drawn, unused.)
         }
 
         private void AddBenchCounter(RectTransform panel, float fromY)
@@ -2368,8 +2458,9 @@ namespace LastCall.UI
             var sheen = NewRect("Sheen", top);
             sheen.anchorMin = new Vector2(0f, 1f); sheen.anchorMax = Vector2.one;
             sheen.pivot = new Vector2(0.5f, 1f);
-            sheen.offsetMin = new Vector2(0, -y - 74f);
-            sheen.offsetMax = new Vector2(0, -y - 62f);
+            float sheenTop = PlaqueUnderRail + PlaqueH + SheenUnderPlaque;   // clear under the plaque, not across it
+            sheen.offsetMin = new Vector2(0, -y - sheenTop - 12f);
+            sheen.offsetMax = new Vector2(0, -y - sheenTop);
             var simg = sheen.gameObject.AddComponent<Image>();
             // A LIFT, not a band, now that there is stone under it: the sheen used to be
             // a flat #292630 rectangle, which over marble is a strip with the veining
@@ -2886,12 +2977,30 @@ namespace LastCall.UI
 
             // The way back wears the LEFT edge (the loop rework): one key, one place,
             // every station.
-            AddEdgeBack(_shakerPanel);
+            var backKey = AddEdgeBack(_shakerPanel);
             // THE BIN COMES TO THE BENCH (2026-08-22). It used to stand on the back-bar page,
             // which is the page the cellar replaced — and the room's own bin refuses while a
             // bench is open (OnBinClicked), by design, so without this a botched build could
             // not be thrown away at all until you had walked out of the room you botched it in.
-            AddBinButton(_shakerPanel);
+            var binKey = AddBinButton(_shakerPanel);
+
+            // ── THREE LAYERS (2026-09-17, the author's seventh list: "Butonlar, lift higher, 1-2-3-4, tin barı,
+            // mix barı bunların hepsi arkaplan katmanının bir üstünde olmalı shaker şişe kapak bunlar üstte
+            // olmalı") ──────────────────────────────────────────────────────────────────────────────────────
+            //
+            // The counter and its dusk at the back; every instrument and key on one layer above it; the tin, the
+            // bottle and the lid over all of it. The glass bench has been built in that order since it was
+            // written (its plaque and its step panel go in before its surface); this bench grew the other way
+            // round — the column, the plaque and the gauges were all added after the props — and got away with it
+            // only because none of them happened to overlap.
+            //
+            // The KEYS then come back up over the props, and this is not a hedge: their plates never cover a
+            // prop's drawing (the lid's steel starts at 250, the way out ends at 240), but the lid's RECT is
+            // 232 wide against art half that, so it reaches across the way out — and a prop on top of a key eats
+            // the click rather than hiding anything. Draw order says props on top; the raycast says keys.
+            _pourSurface.SetAsLastSibling();
+            if (backKey != null) backKey.SetAsLastSibling();
+            if (binKey != null) binKey.SetAsLastSibling();
         }
 
     }

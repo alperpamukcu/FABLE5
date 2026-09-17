@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "스피릿"},
     {"key": "advice.type.sweet", "text": "단맛"},
     {"key": "bench.back_to_bar", "text": "◀  카운터로 돌아가기", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "버리기", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "버리기", "src": "BIN"},
     {"key": "bench.binned", "text": "버렸습니다", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "버렸습니다 · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "깔끔하게 따르는 중", "src": "CLEAN POUR"},

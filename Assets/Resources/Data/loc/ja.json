@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "スピリッツ"},
     {"key": "advice.type.sweet", "text": "甘味"},
     {"key": "bench.back_to_bar", "text": "◀  バーに戻る", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "捨てる", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "捨てる", "src": "BIN"},
     {"key": "bench.binned", "text": "廃棄", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "廃棄 · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "きれいな注ぎ", "src": "CLEAN POUR"},

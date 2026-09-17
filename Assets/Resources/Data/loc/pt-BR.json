@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "destilado"},
     {"key": "advice.type.sweet", "text": "doce"},
     {"key": "bench.back_to_bar", "text": "◀  VOLTAR AO BAR", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "LIXO", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "LIXO", "src": "BIN"},
     {"key": "bench.binned", "text": "NO LIXO", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "NO LIXO · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "DESPEJANDO CERTO", "src": "CLEAN POUR"},

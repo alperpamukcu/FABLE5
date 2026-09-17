@@ -57,7 +57,7 @@
     {"key": "advice.type.spirit", "text": "destilát", "src": "spirit"},
     {"key": "advice.type.sweet", "text": "sladké", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  ZPĚT K BARU", "src": "◀  BACK TO THE BAR"},
-    {"key": "bench.bin", "text": "KOŠ", "src": "ÇÖP"},
+    {"key": "bench.bin", "text": "KOŠ", "src": "BIN"},
     {"key": "bench.binned", "text": "VYLITO", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "VYLITO · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "ČISTÉ NALITÍ", "src": "CLEAN POUR"},

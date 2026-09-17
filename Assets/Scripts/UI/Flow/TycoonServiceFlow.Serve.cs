@@ -117,6 +117,7 @@ namespace LastCall.UI
         private RectTransform _serveDone;
         private PackKey _serveDonePack;
         private PressSink _serveDoneSink;
+        private MarqueeBulbs _serveSign;
         private bool _serveDoneReady = true;
 
         // ── the serve stage ──────────────────────────────────────────────────────
@@ -298,11 +299,12 @@ namespace LastCall.UI
             _serveDoneGroup.alpha = ready ? 1f : 0.8f;
             if (_serveDoneBtn != null) _serveDoneBtn.interactable = ready;
             if (_serveDoneReady == ready) return;
-            // THE THIRD DRAWING (2026-09-17): not the green key at half opacity, which still looked pressable,
-            // but the pack's own GREY plate with its lit and pressed states taken off it - so nothing under the
-            // pointer promises anything until there is a drink in the glass to hand over.
+            // THE THIRD DRAWING (2026-09-17): not the amber key at half opacity, which still looked pressable,
+            // but the same plate cut from NIGHT with its lit and pressed states taken off it and its lamps put
+            // out - so nothing under the pointer promises anything until there is a drink in the glass.
             _serveDoneReady = ready;
-            RetonePackKey(_serveDone, ready ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
+            RetonePackKey(_serveDone, ready ? KeyGo : KeyWay);
+            if (_serveSign != null) _serveSign.On = ready;   // a key that cannot be pressed stops advertising
             if (_serveDonePack != null) _serveDonePack.enabled = ready;
             if (_serveDoneSink != null) _serveDoneSink.enabled = ready;
         }
@@ -960,18 +962,22 @@ namespace LastCall.UI
 
             // THE LOUDEST KEY ON THE BENCH, IN THREE DRAWINGS (2026-09-17, the author: "Serve It tasarımı en
             // göz alıcı en dikkat çekici buton olmalı ... eğer bardak boşsa basılamaz renksiz gri tarzı,
-            // basılabilir çıkıntılı 2.5d tarzı, basıldığı an tarzı. 3 adet şekli olmalı"). All three come from the
-            // author's own key pack - the one place in this game a drawn button may come from a picture rather
-            // than from the procedural kit (GDD 14, the written exception): the green plate standing proud of its
-            // shadow, the pressed plate a row lower under the finger, and the grey dead plate for a glass with
-            // nothing in it, which PushServeDone swaps in. The widest key on the bench and the only green thing
-            // on it, which is the whole of what "en dikkat çekici" asks for.
+            // basılabilir çıkıntılı 2.5d tarzı, basıldığı an tarzı. 3 adet şekli olmalı"). All three are the
+            // author's own key pack's plate - the one place in this game a drawn button may come from a picture
+            // rather than the procedural kit (GDD 14, the written exception) - repainted onto AMBER, which is
+            // GDD 16's PrimaryAction and allowed one to a screen: proud of its shadow at rest, a row lower under
+            // the finger, and cut from Night with its lamps out while the glass is empty (PushServeDone).
+            //
+            // AND IT ADVERTISES (2026-09-17's seventh list: "spot ampuller gibi yanıp sönen panayır ışığı"): a
+            // ring of fairground lamps just inside the amber face, chasing round it. Nothing else on the bench
+            // moves when it is not being touched, so the sign is the only thing pulling the eye - which is what
+            // "en dikkat çekici" asks for, said in light rather than in size.
             //
             // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under the
             // aim line once the bench's text came down for the props (measured: the line 439..841 x 32..55 over
             // the key 635..885 x 26..72). 880..1168 now, sixteen units short of the bin at 1184.
             _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
-                MenuPack.Tone.Green, new Vector2(1f, 0f), new Vector2(288f, 72f), new Vector2(-112f, 16f),
+                KeyGo, new Vector2(1f, 0f), new Vector2(288f, 72f), new Vector2(-112f, 16f),
                 () =>
                 {
                     // Ready to hand over: close the flow, then click a seat to deliver - and
@@ -999,7 +1005,13 @@ namespace LastCall.UI
             // key carries no glyph, so nothing pulls the word off the middle.
             var doneLabel = _serveDone.Find("Face/Label").GetComponent<Text>();
             doneLabel.font = _display;   // the display face on the one key that ends the drink, as it always had
-            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 4f), new Vector2(-6f, 0f));
+            Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 4f), new Vector2(-26f, 0f));
+            // The lamps: 14 units in from the plate's edge, which clears the pack's own bevel, every 20 units
+            // round - thirteen along each long side and two up each end, so the corners carry one. The word goes
+            // back on top AFTERWARDS: a lamp may stand beside a letter, never over it.
+            _serveSign = AddMarquee(_serveDone.Find("Face") as RectTransform, new Vector2(288f, 72f), 14f, 20f, 8,
+                                    UITheme.Cream[4], UITheme.Amber[1]);
+            doneLabel.transform.SetAsLastSibling();
         }
 
     }
