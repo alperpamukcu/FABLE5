@@ -300,9 +300,13 @@ namespace LastCall.UI
             _pintMirror = NewRect("PintMirror", _tapSurface);
             _pintMirror.anchorMin = _pintMirror.anchorMax = new Vector2(0.5f, 0.5f);
             _pintMirror.pivot = new Vector2(0.5f, 0f);       // the foot: flipped, it hangs under the line
-            _pintMirror.sizeDelta = new Vector2(PintW, PintH * 0.3f);
+            // A SHORT ONE, ON A SHALLOW COUNTER (2026-09-17, seen in play): this bench's counter band is barely
+            // sixteen units deep from the pint's foot to its front edge, so the tin bench's 0.3 of the prop ran
+            // straight off the lip and down the counter's face. A sixth of the glass, laid almost flat, stays on
+            // the stone and still says which way the light comes from.
+            _pintMirror.sizeDelta = new Vector2(PintW, PintH * 0.16f);
             _pintMirror.localScale = new Vector3(1f, -0.86f, 1f);
-            _pintMirror.localRotation = Quaternion.Euler(0f, 0f, -58f);   // laid over to the right, like the tin bench's
+            _pintMirror.localRotation = Quaternion.Euler(0f, 0f, -75f);   // laid almost flat, the tin bench's light
             _pintMirrorImg = _pintMirror.gameObject.AddComponent<Image>();
             // THE GLASS'S OWN SHADOW, NOT A REFLECTION (2026-09-17, with the tin bench's: the author asked for
             // the props' shadows in their own shapes and said the reflection was the thing he did not want).
