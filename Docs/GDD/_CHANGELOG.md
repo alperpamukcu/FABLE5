@@ -2,6 +2,21 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The room is lit by the hour (2026-09-17):** the window's thirty-one frames are replaced by a drawn sky —
+  palette bands dithered from a keyed model (`sky_cycle.json`), a sun that sinks behind the author's skyline,
+  city windows coming on one by one, stars, drifting clouds, flocks of birds — and the room lights itself from
+  the same model instead of sampling the glass: a sun key and a window-shaped shaft on the wall that climbs and
+  reddens as the sun sets, an ambient that walks cream → coral → pink → blue → tungsten, the house lamps on one
+  dusk, a fill on the drinkers alone, and cast shadows on everything standing, swinging from the sun's line to
+  the lamps'. GDD 14 §7 as-built note; GDD_MEVCUT §9.84.
+
+- **The bench's instrument column (2026-09-17):** the steps stand one under another down the far left, the pour
+  dial under them at the same width, the way out at the column's foot, all three in one thick frame; the MIX tube
+  spans the tin's cavity rows and reads the tin at rest (it only moved while shaking before); the bin is a framed
+  plate at the far corner; the counter is drawn in the finish's ramp with a fall of light and the wear real use
+  leaves; less neon, no lemons; and in the cellar the drinks lose the checker while each bay's lamp sits on its
+  board with the cone's apex hidden behind a housing.
+
 - **The bench scene, fourth pass (2026-09-17):** the plaques widened so their words sit whole (the draught font
   moved right of its plaque); no brightness on the props under the pointer; a shadow under every prop; a dim pink
   neon falling from the rail over every bench and a thin dusk on the counter; the room behind dimmed a little;

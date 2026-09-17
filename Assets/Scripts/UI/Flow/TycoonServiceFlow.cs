@@ -1010,32 +1010,35 @@ namespace LastCall.UI
             // farklı bir tasarımda olmalı"): a 216x64 recess cut into the counter's front at the bench's left foot,
             // brass-rimmed like the instruments (the plaque, the dial, the column), a chevron at 2x and the word
             // in the 16 px face. The spoon's towel starts at 240, the plate ends at 232.
+            // AT THE FOOT OF THE COLUMN (2026-09-17, the author: "Çöp ve back to the bar butonları tekrardan
+            // üretilsin ve sayfa düzenine göre tekrardan tasarlansın"): the same width and the same thick frame as
+            // the step and dial panels above it, so the left edge of the bench is one instrument column.
             var rt = NewRect("EdgeBack", panel);
-            Place(rt, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH), new Vector2(16f, 18f));
+            Place(rt, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH), new Vector2(16f, 16f));
             RegisterFixed(panel, rt);    // ...and so is the way out
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = CounterFinish.Recess();
+            img.sprite = CounterFinish.Panel();
             img.type = Image.Type.Sliced;
+            img.pixelsPerUnitMultiplier = 0.5f;
             img.color = Color.white;
             img.raycastTarget = true;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => GoTo(back));
-            BrassRim(rt);
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var sink = rt.gameObject.AddComponent<PressSink>();
             sink.Face = face; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
             var mark = NewRect("Mark", face);
-            Place(mark, new Vector2(0f, 0.5f), new Vector2(32, 32), new Vector2(14f, 0f));
+            Place(mark, new Vector2(0f, 0.5f), new Vector2(24, 24), new Vector2(14f, 0f));
             mark.pivot = new Vector2(0f, 0.5f);
             var mi = mark.gameObject.AddComponent<Image>();
             mi.sprite = ChromeArt.Mark("chevron_left");
             mi.color = CounterFinish.Current.Accent;
             mi.raycastTarget = false;
-            var label = NewText("L", face, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(BackKeyW - 62f, 20f), new Vector2(54f, 0f));
+            var label = NewText("L", face, _body, 8, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+            Place(label.rectTransform, new Vector2(0f, 0.5f), new Vector2(BackKeyW - 52f, 14f), new Vector2(44f, 0f));
             label.rectTransform.pivot = new Vector2(0f, 0.5f);
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             // the chevron is drawn, so the line's own arrow (kept in the string for the old key) comes off
@@ -1043,7 +1046,7 @@ namespace LastCall.UI
             Engraved(label);
         }
 
-        private const float BackKeyW = 216f, BackKeyH = 64f;
+        private const float BackKeyW = 224f, BackKeyH = 56f;   // the column's width and its foot's height (2026-09-17)
 
         /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
         private void BrassRim(RectTransform plate)
@@ -1240,25 +1243,35 @@ namespace LastCall.UI
             // tasarlanabilir"): the pedal bin ChromeArt draws, standing at the counter's right end at 2x, its lid
             // lifting under the pointer; pressing it throws the drink away. The word is engraved over it, in the
             // small face. The red key it replaces (2026-09-04's cap) is gone with its face and travel.
+            // THE SAME FAMILY AS THE COLUMN (2026-09-17): a framed plate at the bench's other corner with the
+            // drawn bin standing in it and its word cut into the foot — not a drawing loose on the counter.
             var rt = NewRect("Bin", parent);
-            Place(rt, new Vector2(1, 0), new Vector2(64, 96), new Vector2(-16f, 18f));
+            Place(rt, new Vector2(1, 0), new Vector2(80, 140), new Vector2(-16f, 16f));   // 80: clear of the measure's rect (2026-09-17)
             RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
-            var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.Bin(false);
-            img.color = Color.white;
-            img.raycastTarget = true;
-            img.alphaHitTestMinimumThreshold = 0.1f;      // the drawing takes the press, not its box
+            var plate = rt.gameObject.AddComponent<Image>();
+            plate.sprite = CounterFinish.Panel();
+            plate.type = Image.Type.Sliced;
+            plate.pixelsPerUnitMultiplier = 0.5f;
+            plate.color = Color.white;
+            plate.raycastTarget = true;
             var btn = rt.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
-            btn.targetGraphic = img;
+            btn.targetGraphic = plate;
+            var face = NewRect("Face", rt);
+            Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var sink = rt.gameObject.AddComponent<PressSink>();
+            sink.Face = face; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            var drawn = NewRect("Drawing", face);
+            Place(drawn, new Vector2(0.5f, 0f), new Vector2(64, 96), new Vector2(0f, 30f));
+            var img = drawn.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.Bin(false);
+            img.color = Color.white;
+            img.raycastTarget = false;
             var relay = rt.gameObject.AddComponent<HoverRelay>();
             relay.Entered = () => img.sprite = ChromeArt.Bin(true);
             relay.Exited = () => img.sprite = ChromeArt.Bin(false);
-            var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = rt; sink.Depth = 3f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
-            var word = NewText("BinWord", parent, _body, 8, TextAnchor.MiddleCenter, UITheme.TextSecondary);
-            Place(word.rectTransform, new Vector2(1, 0), new Vector2(96, 12), new Vector2(0f, 120f));
-            RegisterFixed(parent, word.rectTransform);
+            var word = NewText("BinWord", face, _body, 8, TextAnchor.LowerCenter, UITheme.TextSecondary);
+            Place(word.rectTransform, new Vector2(0.5f, 0f), new Vector2(72, 12), new Vector2(0f, 12f));
             word.text = UIText.T("bench.bin");
             word.raycastTarget = false;
             Engraved(word);

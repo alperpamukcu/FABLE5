@@ -2023,6 +2023,92 @@ namespace LastCall.UI
         /// </summary>
         public static Sprite CounterRecess() => CounterRecess(Hex(0x17121B), Hex(0x100B14), Hex(0x2B2433), "night");
 
+        /// <summary>
+        /// A PANEL IN A THICK FRAME (2026-09-17, the author: "panelin dışı kalın çerçeve kaplı olmalı"). The bench's
+        /// instrument column is built of these: a sawn edge, three rows of the finish's rim metal, a dark reveal and
+        /// the well inside. 9-sliced on 6, so one drawing fits every size in the column.
+        /// </summary>
+        public static Sprite FramedPanel(Color32 rim, Color32 well, Color32 dark, Color32 lit, string finish)
+        {
+            string key = "counter:framed:" + finish;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 18;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    int d = Mathf.Min(Mathf.Min(x, S - 1 - x), Mathf.Min(y, S - 1 - y));
+                    Color32 c;
+                    if (d == 0) c = dark;                                   // the sawn outer edge
+                    else if (d <= 3) c = y >= S - 3 || x <= 2 ? lit : rim;  // metal, catching the light at the top and left
+                    else if (d == 4) c = dark;                              // the reveal under the frame
+                    else c = well;
+                    px[y * S + x] = c;
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(6, 6, 6, 6));
+        }
+
+        /// <summary>
+        /// WHAT THE WORK LEAVES ON THE COUNTER (2026-09-17, the author: "düz desenin yanına masada gerçekte kullanıma
+        /// bağı olacak aşınmalar da olsun"): rings where wet glasses stood, scratches along the line the tin is
+        /// dragged, and a scuffed patch in front of the hands. Transparent everywhere else, drawn once over the slab
+        /// at the band's own size, so nothing repeats.
+        /// </summary>
+        public static Sprite CounterWear(int w, int h, string finish)
+        {
+            string key = $"counter:wear:{w}x{h}:{finish}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var px = new Color32[w * h];
+            var clear = new Color32(0, 0, 0, 0);
+            for (int i = 0; i < px.Length; i++) px[i] = clear;
+            void Dot(int x, int y, byte a, bool light)
+            {
+                if (x < 0 || y < 0 || x >= w || y >= h) return;
+                var had = px[y * w + x];
+                if (had.a >= a) return;
+                px[y * w + x] = light ? new Color32(255, 255, 255, a) : new Color32(0, 0, 0, a);
+            }
+            void Ring(float cx, float cy, float rx, float ry, byte a)
+            {
+                for (float t = 0; t < 6.2832f; t += 0.03f)
+                {
+                    int x = Mathf.RoundToInt(cx + Mathf.Cos(t) * rx), y = Mathf.RoundToInt(cy + Mathf.Sin(t) * ry);
+                    Dot(x, y, a, Hash(x, y, 7) > 0.18f);        // a ring dries broken, not drawn
+                }
+            }
+            void Scratch(int x0, int y0, int len, int dy, byte a)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    int x = x0 + i, y = y0 + (dy * i) / Mathf.Max(1, len);
+                    if (Hash(x, y, 13) < 0.25f) continue;
+                    Dot(x, y, a, Hash(x, y, 17) > 0.5f);
+                }
+            }
+            // three rings, off the grid so none lines up with another
+            // a rocks glass is ~24 art px across at this scale (the band is drawn at 4x), so the rings are that wide
+            Ring(w * 0.30f, h * 0.54f, 22f, 8f, 15);
+            Ring(w * 0.61f, h * 0.36f, 17f, 6f, 11);
+            Ring(w * 0.77f, h * 0.68f, 27f, 10f, 11);
+            // the drag lines, along the counter
+            for (int i = 0; i < 5; i++)
+            {
+                int y = Mathf.RoundToInt(h * (0.26f + 0.13f * i));
+                int x = Mathf.RoundToInt(w * (0.08f + 0.17f * ((i * 3) % 5)));
+                Scratch(x, y, 26 + (i % 3) * 22, (i % 2 == 0 ? 1 : -1), (byte)(8 + (i % 3) * 3));
+            }
+            // the scuffed patch where the hands work
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float u = (x / (float)w - 0.46f) / 0.20f, v = (y / (float)h - 0.45f) / 0.34f;
+                    float d = u * u + v * v;
+                    if (d > 1f) continue;
+                    if (Hash(x, y, 23) > 0.94f) Dot(x, y, (byte)(8 * (1f - d)), Hash(x, y, 29) > 0.5f);
+                }
+            return Cache[key] = Make(px, w, h, Vector4.zero);
+        }
+
         // ── THE LIQUID'S BODY (2026-09-16, the author: "Şişenin içerisindeki sıvılara desen gerekiyor böyle düz bir
         // renk olarak duruyorlar, sıvı hissiyatı için doku belki baloncuklar") ─────────────────────────────────
         /// <summary>A drink's body for the cellar's still bottles: white, shaded like a cylinder — dark at both walls,
@@ -2050,9 +2136,9 @@ namespace LastCall.UI
 
         /// <summary>The cellar's drink body at its own size in pixels: the cylinder shading of <see cref="LiquidBody()"/>
         /// with the pouring liquid's checker laid over it in two-pixel cells (2026-09-17). One sprite a size, cached.</summary>
-        public static Sprite LiquidBody(int w, int h)
+        public static Sprite LiquidBody(int w, int h, bool checker = true)
         {
-            string key = $"liquid:body:{w}x{h}";
+            string key = $"liquid:body:{w}x{h}:{checker}";
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             var px = new Color32[w * h];
             for (int y = 0; y < h; y++)
@@ -2062,7 +2148,9 @@ namespace LastCall.UI
                     float wall = 1f - Mathf.Pow(Mathf.Abs(u - 0.5f) * 2f, 2.2f) * 0.32f;
                     float streak = Mathf.Abs(u - 0.32f) < 0.08f ? 1.06f : 1f;
                     float depth = 0.90f + 0.10f * (y / (float)Mathf.Max(1, h - 1));
-                    bool cell = (((x >> 1) + (y >> 1)) & 1) == 0;
+                    // the checker is the pouring liquid's own texture; the cellar asks for none (2026-09-17, the
+                    // author: "Mahzendeki sıvıların içerisinde sıvılar kare kare gözüküyor png gibi bunu kaldır")
+                    bool cell = checker && (((x >> 1) + (y >> 1)) & 1) == 0;
                     float k = Mathf.Clamp01(wall * streak * depth * (cell ? 0.93f : 1f));
                     byte v = (byte)Mathf.RoundToInt(255f * k);
                     px[y * w + x] = new Color32(v, v, v, 255);

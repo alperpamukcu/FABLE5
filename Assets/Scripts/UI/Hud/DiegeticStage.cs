@@ -551,6 +551,9 @@ namespace LastCall.UI
                 mask.frontSortingLayerID = mask.backSortingLayerID = back.sortingLayerID;
                 mask.frontSortingOrder = 31; mask.backSortingOrder = 31;
                 var drink = WorldSprite("StockDrink" + i, ChromeArt.LiquidBody(), order: 31);   // shaded like a cylinder (2026-09-16)
+                // ...and NO CHECKER on the shelf (2026-09-17, the author: "Mahzendeki sıvıların içerisinde sıvılar
+                // kare kare gözüküyor png gibi bunu kaldır"): at 20 px wide the pouring liquid's two-unit cells read
+                // as a tiled picture rather than a texture. The hand bottle and the gauge keep theirs.
                 drink.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
                 var face = WorldSprite("StockFace" + i, GlassArt.SurfaceDisc(), order: 31);
                 face.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
@@ -695,7 +698,7 @@ namespace LastCall.UI
                 // The drink reaches the foot; the arc is a shade over it (2026-09-16, with BottleArt.SetLevel:
                 // the base's corners stood empty under a full bottle while the quad began `rise` up).
                 // the body at its own size in pixels, so its two-pixel checker stays two pixels (2026-09-17)
-                d.sprite = ChromeArt.LiquidBody(Mathf.Max(2, Mathf.RoundToInt(w)), Mathf.Max(2, Mathf.RoundToInt(hgt)));
+                d.sprite = ChromeArt.LiquidBody(Mathf.Max(2, Mathf.RoundToInt(w)), Mathf.Max(2, Mathf.RoundToInt(hgt)), checker: false);
                 var body = d.sprite != null ? d.sprite.bounds.size : Vector3.one;
                 d.transform.localScale = new Vector3(w / Mathf.Max(0.001f, body.x), hgt / Mathf.Max(0.001f, body.y), 1f);
                 // Both hang under _world: place in the parent's frame, so a scaled stage (a
@@ -1419,7 +1422,7 @@ namespace LastCall.UI
         // ceiling, aimed at the counter layer alone so the wall and the drinkers keep the
         // light plan they already have.
         /// <summary>How far under the compartment's ceiling the strip hangs, in art px.</summary>
-        private const float CellarLightDropPx = 11f;
+        private const float CellarLightDropPx = 2f;   // 11 until 2026-09-17: the lamp hangs ON the board it is under
         /// <summary>Its reach. A bay is 175 wide and a compartment ~78 deep, so this carries
         /// the length of one bay and dies before the next one's post.</summary>
         private const float CellarLightRadius = 150f;   // 128 until 2026-09-16: reaches the board's far corners
@@ -1434,6 +1437,10 @@ namespace LastCall.UI
         /// shelf actually reads against the lamps over it.</summary>
         private static readonly Color CellarLightTint = new Color(1f, 0.87f, 0.68f);
         private readonly List<Light2D> _cellarLights = new List<Light2D>();
+        // THE LAMP THE LIGHT COMES OUT OF (2026-09-17, the author: "ışığın çıkış köşesi biraz kırpılmış olmalı"): a
+        // dark housing on the board's underside over each cone's apex, so the light reads as coming from behind the
+        // shelf rather than from a bright point hanging in the bay.
+        private readonly List<SpriteRenderer> _cellarLamps = new List<SpriteRenderer>();
 
         /// <summary>One strip per compartment, born dark: the drawer is what turns them on.</summary>
         private void BuildCellarLights()
@@ -1452,6 +1459,9 @@ namespace LastCall.UI
                     l.transform.localRotation = Quaternion.Euler(0f, 0f, CellarSpotRoll);
                     LightLayers(l, LayerCounter);
                     _cellarLights.Add(l);
+                    var lamp = WorldSprite($"CellarLamp{shelf}_{bay}", WhitePixel(), order: 31);
+                    lamp.color = new Color(0.05f, 0.04f, 0.06f, 0.92f);
+                    _cellarLamps.Add(lamp);
                 }
             PlaceCellarLights();
         }
@@ -1469,9 +1479,17 @@ namespace LastCall.UI
                 for (int bay = 0; bay < CellarBayCentrePx.Length; bay++, i++)
                 {
                     if (i >= _cellarLights.Count || _cellarLights[i] == null) continue;
-                    _cellarLights[i].transform.position = new Vector3(
+                    var at = new Vector3(
                         CellarBayCentrePx[bay] - _counterNative.x * 0.5f,
                         counterTop - CellarShelfCeilPx[shelf] - CellarLightDropPx, 0f) + lift;
+                    _cellarLights[i].transform.position = at;
+                    if (i < _cellarLamps.Count && _cellarLamps[i] != null)
+                    {
+                        var lamp = _cellarLamps[i];
+                        var size = lamp.sprite != null ? lamp.sprite.bounds.size : Vector3.one;
+                        lamp.transform.localScale = new Vector3(30f / Mathf.Max(0.001f, size.x), 5f / Mathf.Max(0.001f, size.y), 1f);
+                        lamp.transform.position = at + new Vector3(0f, 2f, 0f);
+                    }
                 }
         }
 
@@ -1483,6 +1501,9 @@ namespace LastCall.UI
             for (int i = 0; i < _cellarLights.Count; i++)
                 if (_cellarLights[i] != null)
                     _cellarLights[i].intensity = CellarLightIntensity * _drawerT;
+            for (int i = 0; i < _cellarLamps.Count; i++)
+                if (_cellarLamps[i] != null)
+                    _cellarLamps[i].enabled = _drawerT > 0.05f;
         }
 
         private void ApplyDrawer()

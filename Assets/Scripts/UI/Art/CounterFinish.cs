@@ -161,5 +161,19 @@ namespace LastCall.UI
         /// <summary>The bench's recess in the current finish: cut from the slab ramp.</summary>
         public static Sprite Recess() =>
             ChromeArt.CounterRecess(Ramp(Current.Slab, 0.35f), Ramp(Current.Slab, 0.02f), Ramp(Current.Slab, 0.9f), Current.Id);
+
+        /// <summary>The instrument column's panel: the finish's rim around a well of its slab (2026-09-17).</summary>
+        public static Sprite Panel() =>
+            ChromeArt.FramedPanel(To32(Current.Rim), Ramp(Current.Slab, 0.30f), Ramp(Current.Slab, 0.0f),
+                                  Ramp(Current.Frame, 0.75f), Current.Id);
+
+        /// <summary>The counter's slab in this finish, and the wear the work leaves on it (2026-09-17).</summary>
+        public static Sprite CounterSlab(int w, int h) =>
+            ChromeArt.Counter(w, h, ChromeArt.CounterGrain.Brushed, Ramp(Current.Slab, 0.42f));
+
+        public static Sprite CounterWear(int w, int h) => ChromeArt.CounterWear(w, h, Current.Id);
+
+        private static Color32 To32(Color c) =>
+            new Color32((byte)Mathf.RoundToInt(c.r * 255f), (byte)Mathf.RoundToInt(c.g * 255f), (byte)Mathf.RoundToInt(c.b * 255f), 255);
     }
 }

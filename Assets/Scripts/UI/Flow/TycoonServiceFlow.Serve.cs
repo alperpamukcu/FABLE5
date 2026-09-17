@@ -713,8 +713,10 @@ namespace LastCall.UI
             // that still listed them here would be directions to a station that left.
             // Cut into the counter like the tin bench's (2026-09-13) — on the same plaque under the rail (2026-09-16),
             // with the aim line on its lower row.
-            _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH);
-            BuildStepStrip(_servePlaque,
+            _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH, PlaqueUnderRail, ColX + ColW + 16f);
+            // the same column as the tin's bench, two rows deep (2026-09-17)
+            var serveSteps = ColumnPanel(_servePanel, "StepPanel", ColStepsTop - StepPanelH(2), StepPanelH(2));
+            BuildStepList(serveSteps,
                 new[] { UIText.T("bench.serve.step.tip"), UIText.T("bench.serve.step.serve") },
                 new[] { "step_fill", "step_glass" }, _serveStepRows);
 

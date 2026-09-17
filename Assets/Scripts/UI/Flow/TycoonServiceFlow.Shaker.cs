@@ -130,7 +130,7 @@ namespace LastCall.UI
             rt.sizeDelta = new Vector2(w, h);
             rt.localScale = new Vector3(1f, -1f, 1f);
             var img = rt.gameObject.AddComponent<Image>();
-            img.color = new Color(1f, 1f, 1f, 0.14f);
+            img.color = new Color(1f, 1f, 1f, 0.08f);   // 0.14 read as a smear on the lighter counter (2026-09-17)
             img.raycastTarget = false;
             img.preserveAspect = false;
             rt.SetSiblingIndex(1);
@@ -187,7 +187,7 @@ namespace LastCall.UI
         private Vector2 _spoonRest;
         /// <summary>Where the spoon stands (2026-09-16): between the lid and the tin, its foot 70 under the bench
         /// line so the towel under it clears the plaque above (measured; the BACK key is in another column).</summary>
-        private const float SpoonX = -340f, SpoonFootY = BenchFootY - 70f;
+        private const float SpoonX = -170f, SpoonFootY = BenchFootY - 70f;   // -340 until 2026-09-17: clear of the column
         private RectTransform _shakerPlaque;
         private bool _spoonHeld;
         private Vector2 _spoonGrabOffset;   // the hand keeps its grip (2026-09-06, the seventh list)
@@ -250,11 +250,17 @@ namespace LastCall.UI
 
         private void BuildWorkColumn(RectTransform panel)
         {
+            // THE PAIR (2026-09-17, the author: "Tın ve Mix barları birbirleri ile uyumlu ve sayfa düzeninde
+            // birbirleriyle orantılı olmalı"): the MIX tube stands beside the tin's CAVITY — the same rows the drink
+            // fills, not the whole silhouette — and the two share one framed board (BuildGaugeBoard).
+            var cavity = ChromeArt.ShakerGaugeCavity;
+            float boreH = MeasureSize.y * (cavity.y - cavity.x);
+            float boreMidY = MeasureAt.y - MeasureSize.y * 0.5f + MeasureSize.y * (1f - cavity.y) + boreH * 0.5f;
             var rig = NewRect("WorkColumn", panel);
-            Place(rig, new Vector2(0.5f, 0.5f), new Vector2(WorkColW, MeasureSize.y),
-                  new Vector2(MeasureAt.x - MeasureSize.x * 0.5f - WorkColGap - WorkColW * 0.5f, MeasureAt.y));
+            Place(rig, new Vector2(0.5f, 0.5f), new Vector2(WorkColW, boreH),
+                  new Vector2(MeasureAt.x - MeasureSize.x * 0.5f - WorkColGap - WorkColW * 0.5f, boreMidY));
             var tube = rig.gameObject.AddComponent<Image>();
-            tube.sprite = ChromeArt.GaugeTube((int)WorkColW, (int)MeasureSize.y);
+            tube.sprite = ChromeArt.GaugeTube((int)WorkColW, (int)boreH);
             tube.color = UITheme.Night[2];
             tube.raycastTarget = false;
             var inner = NewRect("Inner", rig);
@@ -271,11 +277,12 @@ namespace LastCall.UI
             var glass = NewRect("Glass", rig);
             Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var gi = glass.gameObject.AddComponent<Image>();
-            gi.sprite = ChromeArt.GaugeGlass((int)WorkColW, (int)MeasureSize.y, 5);
+            gi.sprite = ChromeArt.GaugeGlass((int)WorkColW, (int)boreH, 5);
             gi.raycastTarget = false;
+            BrassRim(rig);   // the same rim the measure wears: the pair reads as one instrument (2026-09-17)
             // where enough is: a line scratched across the tube, a little wider than it
             var mark = NewRect("Enough", rig);
-            Place(mark, new Vector2(0.5f, 0f), new Vector2(WorkColW + 8f, 2f), new Vector2(0f, 2f + EnoughMark * (MeasureSize.y - 4f)));
+            Place(mark, new Vector2(0.5f, 0f), new Vector2(WorkColW + 8f, 2f), new Vector2(0f, 2f + EnoughMark * (boreH - 4f)));
             mark.pivot = new Vector2(0.5f, 0.5f);
             var mi = mark.gameObject.AddComponent<Image>();
             mi.color = UITheme.Cream[4];
@@ -306,18 +313,27 @@ namespace LastCall.UI
         /// <summary>At rest the frost stays where the shake left it, and the bands blend by what Core says.</summary>
         private void StepWorkMeter()
         {
+            // ...AND THE MIX COLUMN READS THE TIN (2026-09-17, the author: "mix barı çalışmıyor düzelt"). It was
+            // written only by ShowWorkMeter, so it stood at zero except during the shake itself — a mixed drink
+            // showed an empty column. The tin's own state drives it whenever nothing else claims the meter.
+            if (!_meterHeldThisFrame && Run != null)
+                SetWorkColumn(Run.IsMixed ? 1f : Mathf.Max((float)_shakeEnergy, (float)_stirEnergy));
             if (!_meterHeldThisFrame && Run != null) BlendGauge(_shakerMixBar, Run.IsMixed ? 1f : 0f);
             _meterHeldThisFrame = false;
         }
 
         /// <summary>The frost on the tin's body: <paramref name="level"/> of the front plate's height, from its base.</summary>
+        /// <summary>The MIX column alone — the tube beside the measure (2026-09-17).</summary>
+        private void SetWorkColumn(float level)
+        {
+            if (_workFill == null) return;
+            _workFill.fillAmount = Mathf.Clamp01(level);
+            _workFill.color = level >= EnoughMark ? UITheme.Lime[3] : CounterFinish.Current.Accent;
+        }
+
         private void SetFrost(float level)
         {
-            if (_workFill != null)
-            {
-                _workFill.fillAmount = Mathf.Clamp01(level);
-                _workFill.color = level >= EnoughMark ? UITheme.Lime[3] : CounterFinish.Current.Accent;
-            }
+            SetWorkColumn(level);
             if (_tinFrostRt == null) return;
             bool on = level > 0.02f;
             if (_tinFrostRt.gameObject.activeSelf != on) _tinFrostRt.gameObject.SetActive(on);
@@ -449,12 +465,14 @@ namespace LastCall.UI
 
         private readonly List<(Image icon, Text label, Image tick)> _stepRows =
             new List<(Image, Text, Image)>();
+        private RectTransform _shakerSteps;
 
         private void BuildStepCard(RectTransform panel)
         {
+            _shakerSteps = ColumnPanel(panel, "StepPanel", ColStepsTop - StepPanelH(4), StepPanelH(4));
             // The bottle's name used to ride the card's head; the strip has no head, so the
-            // name goes to a quiet text the bench still writes to (see BuildStepStrip).
-            _shakerTitle = BuildStepStrip(_shakerPlaque,
+            // name goes to a quiet text the bench still writes to (see BuildStepList).
+            _shakerTitle = BuildStepList(_shakerSteps,
                 new[] { UIText.T("bench.shaker.step.fill"), UIText.T("bench.shaker.step.cap"),
                         UIText.T("bench.shaker.step.mix"), UIText.T("bench.shaker.step.to_glass") },
                 new[] { "step_fill", "step_cap", "step_shake", "step_glass" }, _stepRows);
@@ -479,23 +497,17 @@ namespace LastCall.UI
         // engraved captions.
 
         private RectTransform _pourNeedle;
-        private const float DialPlaqueW = 180f, DialPlaqueH = 110f, DialW = 176f, DialH = 88f, NeedleH = 66f;
+        // (DialPlaqueW/H went with the recess the dial used to sit in: it is a column panel now, 2026-09-17.)
+        private const float DialW = 176f, DialH = 88f, NeedleH = 66f;
 
         private void BuildLiftLadder()
         {
-            var plaque = NewRect("PourDial", _pourSurface);
-            Place(plaque, new Vector2(0.5f, 0.5f), new Vector2(DialPlaqueW, DialPlaqueH),
-                  new Vector2(_bottleRest.x, BottleFootY - 22f - DialPlaqueH * 0.5f));
-            var img = plaque.gameObject.AddComponent<Image>();
-            img.sprite = CounterFinish.Recess();
-            img.type = Image.Type.Sliced;
-            img.raycastTarget = false;
-            // Under the bottle's shadow and the bottle, but OVER the mirrors (the bottle's reflection lay across the
-            // face in play): just after the last mirror in the surface's order.
-            plaque.SetSiblingIndex(_bottleMirror != null ? _bottleMirror.GetSiblingIndex() + 1 : 0);
+            // IN THE COLUMN, UNDER THE STEPS (2026-09-17, the author: "Onun altında Lift Higher olmalı genişliği
+            // ve tasarımı tam olarak 1-2-3-4 paneli ile aynı olmalı"): the same width and the same thick frame.
+            var plaque = ColumnPanel(_shakerPanel, "PourDial", ColDialY, ColDialH);
 
             var face = NewRect("Face", plaque);
-            Place(face, new Vector2(0.5f, 0f), new Vector2(DialW, DialH), new Vector2(0f, 20f));
+            Place(face, new Vector2(0.5f, 0f), new Vector2(DialW, DialH), new Vector2(0f, 18f));
             var fi = face.gameObject.AddComponent<Image>();
             fi.sprite = ChromeArt.DialFace((int)(DialW / 2f), (int)(DialH / 2f), BottlePour.StepCount,
                 CounterFinish.Current.Rim, CounterFinish.Current.Id);   // drawn at half, shown at 2x; the arc in the finish's rim
@@ -506,7 +518,7 @@ namespace LastCall.UI
             _pourNeedle.anchorMin = _pourNeedle.anchorMax = new Vector2(0.5f, 0f);
             _pourNeedle.pivot = new Vector2(0.5f, 0f);
             _pourNeedle.sizeDelta = new Vector2(4f, NeedleH);
-            _pourNeedle.anchoredPosition = new Vector2(0f, 24f);
+            _pourNeedle.anchoredPosition = new Vector2(0f, 22f);
             var ni = _pourNeedle.gameObject.AddComponent<Image>();
             ni.color = CounterFinish.Current.Accent;
             ni.raycastTarget = false;
@@ -538,7 +550,82 @@ namespace LastCall.UI
         // plate, no box: the same ink rules as ever (PaintSteps), on the stone itself.
 
         /// <summary>The height of one step on the strip, and the room its figure takes before the picture.</summary>
-        private const float StepStripH = 20f, StepNumberW = 10f;
+        private const float StepNumberW = 10f;
+
+        // THE INSTRUMENT COLUMN (2026-09-17, the author: "1-2-3-4 aşama sayısına göre alt alta madde maddeymiş gibi
+        // sıralanmalı ekranın en solunda. Onun altında Lift Higher olmalı genişliği ve tasarımı tam olarak 1-2-3-4
+        // paneli ile aynı olmalı"): one width down the far left — the steps listed, the pour dial under them, the way
+        // out under that, each in the same framed panel.
+        private const float ColX = 16f, ColW = 224f, ColRowH = 24f, ColPad = 10f;
+        private const float ColBackY = 16f, ColBackH = 56f, ColDialY = 84f, ColDialH = 112f, ColStepsY = 208f;
+        /// <summary>The line the step panel's head sits on, whatever its row count (the glass bench lists two).</summary>
+        private const float ColStepsTop = ColStepsY + ColPad * 2f + 4f * ColRowH;
+        private static float StepPanelH(int rows) => ColPad * 2f + rows * ColRowH;
+
+        /// <summary>One panel of the column: the framed plate, at <paramref name="y"/> from the panel's foot.</summary>
+        private RectTransform ColumnPanel(RectTransform panel, string name, float y, float h)
+        {
+            var rt = NewRect(name, panel);
+            Place(rt, new Vector2(0f, 0f), new Vector2(ColW, h), new Vector2(ColX, y));
+            RegisterFixed(panel, rt);
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = CounterFinish.Panel();
+            img.type = Image.Type.Sliced;
+            img.pixelsPerUnitMultiplier = 0.5f;    // the 18-texel drawing at 2x: a thick frame
+            img.color = Color.white;
+            img.raycastTarget = false;
+            return rt;
+        }
+
+        /// <summary>The steps ONE UNDER ANOTHER (2026-09-17): number, picture, word, and the tick at the row's end.</summary>
+        private Text BuildStepList(RectTransform panel, string[] words, string[] marks,
+            List<(Image icon, Text label, Image tick)> rows)
+        {
+            for (int i = 0; i < words.Length; i++)
+            {
+                var cell = NewRect("Step" + i, panel);
+                Place(cell, new Vector2(0f, 1f), new Vector2(ColW - ColPad * 2f, ColRowH),
+                      new Vector2(ColPad, -ColPad - i * ColRowH));
+                cell.pivot = new Vector2(0f, 1f);
+
+                var num = NewText("N", cell, _display, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+                Place(num.rectTransform, new Vector2(0, 0.5f), new Vector2(10, 14), Vector2.zero);
+                num.rectTransform.pivot = new Vector2(0, 0.5f);
+                num.text = (i + 1).ToString();
+                num.raycastTarget = false;
+                Engraved(num);
+
+                var mark = NewRect("I", cell);
+                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(StepNumberW + 2f, 0));
+                mark.pivot = new Vector2(0, 0.5f);
+                var mimg = mark.gameObject.AddComponent<Image>();
+                mimg.sprite = ChromeArt.Mark(marks[i]);
+                mimg.preserveAspect = true;
+                mimg.raycastTarget = false;
+
+                var text = NewText("L", cell, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
+                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(ColW - ColPad * 2f - 46f, 14f),
+                      new Vector2(StepNumberW + 20f, 0));
+                text.rectTransform.pivot = new Vector2(0, 0.5f);
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                text.text = words[i];
+                Engraved(text);
+
+                var tick = NewRect("T", cell);
+                Place(tick, new Vector2(1, 0.5f), new Vector2(10, 10), new Vector2(-2f, 0f));
+                tick.pivot = new Vector2(1, 0.5f);
+                var timg = tick.gameObject.AddComponent<Image>();
+                timg.sprite = ChromeArt.Mark("tick");
+                timg.preserveAspect = true;
+                timg.raycastTarget = false;
+                timg.enabled = false;
+
+                rows.Add((mimg, text, timg));
+            }
+            var title = NewText("H", panel, _body, 8, TextAnchor.MiddleCenter, CounterFinish.Current.Accent);
+            title.gameObject.SetActive(false);
+            return title;
+        }
 
         // ── THE PLAQUE (2026-09-16, the author: "yazıları yönergeleri arkaplana göm ... yerleşimleri mevcut
         // arkaplana göre yap") ───────────────────────────────────────────────────────────────────────────────────
@@ -553,7 +640,7 @@ namespace LastCall.UI
         /// wide: the tin's rect starts at 464 but its steel at ~500, and the capped tin stands at the centre.</summary>
         private const float PlaqueX = 16f, PlaqueW = 560f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
         /// <summary>The strip's and the readout's bottoms, from the plaque's own; the readout has two lines' room.</summary>
-        private const float PlaqueStepsY = 42f, PlaqueLineY = 6f, PlaqueLineH = 32f;
+        private const float PlaqueLineY = 8f, PlaqueLineH = 48f;   // the steps left the plaque on 2026-09-17
         /// <summary>The counter's far edge: ridge, seam, six rails and a seam (AddBenchCounter's bands).</summary>
         private const float RailBandH = 8f + 5f + 5f * 6f + 5f;
 
@@ -561,10 +648,11 @@ namespace LastCall.UI
 
         /// <summary>A recess in the counter for a bench's words, hung <paramref name="dyFromRailFoot"/> under the
         /// far edge's foot. Its children ride it.</summary>
-        private RectTransform AddCounterPlaque(RectTransform panel, float w, float h, float dyFromRailFoot = PlaqueUnderRail)
+        private RectTransform AddCounterPlaque(RectTransform panel, float w, float h, float dyFromRailFoot = PlaqueUnderRail,
+                                               float x = PlaqueX)
         {
             var rt = NewRect("Plaque", panel);
-            Place(rt, new Vector2(0f, 0f), new Vector2(w, h), new Vector2(PlaqueX, 0f));
+            Place(rt, new Vector2(0f, 0f), new Vector2(w, h), new Vector2(x, 0f));
             var img = rt.gameObject.AddComponent<Image>();
             img.sprite = CounterFinish.Recess();
             img.type = Image.Type.Sliced;
@@ -574,89 +662,8 @@ namespace LastCall.UI
             return rt;
         }
 
-        private Text BuildStepStrip(RectTransform plaque, string[] words, string[] marks,
-            List<(Image icon, Text label, Image tick)> rows)
-        {
-            // ON THE PLAQUE (2026-09-16), left to right from its edge — the strip used to be centred across the
-            // bench, where the capped tin stands and stood in front of it.
-            var strip = NewRect("Steps", plaque);
-            Place(strip, new Vector2(0f, 0f), new Vector2(plaque.sizeDelta.x - PlaquePad * 2f, StepStripH),
-                  new Vector2(PlaquePad, PlaqueStepsY));
-            for (int i = 0; i < words.Length; i++)
-            {
-                var cell = NewRect("Step" + i, strip);
-                cell.anchorMin = cell.anchorMax = new Vector2(0f, 0.5f);
-                cell.pivot = new Vector2(0f, 0.5f);
-                cell.sizeDelta = new Vector2(10f, StepStripH);
-
-                // THE NUMBER, THEN THE PICTURE (2026-09-16, the author: "1-2-3-4 daha profesyonel bir şekilde
-                // belirtilmeli görsellerle ne yapması gerektiği"): the step's figure in the small face, then a 16 px
-                // drawing of the thing to do (ChromeArt's step_* marks — the bottle over the tin, the lid, the shaken
-                // tin, the spoon, the glass), then the word. The socket the number sat in is gone.
-                var num = NewText("N", cell, _display, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-                Place(num.rectTransform, new Vector2(0, 0.5f), new Vector2(10, 14), Vector2.zero);
-                num.rectTransform.pivot = new Vector2(0, 0.5f);
-                num.text = (i + 1).ToString();
-                num.raycastTarget = false;
-                Engraved(num);
-                var mark = NewRect("I", cell);
-                Place(mark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(StepNumberW, 0));
-                mark.pivot = new Vector2(0, 0.5f);
-                var mimg = mark.gameObject.AddComponent<Image>();
-                mimg.sprite = ChromeArt.Mark(marks[i]);
-                mimg.preserveAspect = true;
-                mimg.raycastTarget = false;
-
-                var text = NewText("L", cell, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-                Place(text.rectTransform, new Vector2(0, 0.5f), new Vector2(240, 14), new Vector2(StepNumberW + 16f + 6f, 0));
-                text.horizontalOverflow = HorizontalWrapMode.Overflow;
-                text.text = words[i];
-                // ENGRAVED: a dark edge under the letters, the way a cut in stone catches shadow.
-                var cut = text.gameObject.AddComponent<Shadow>();
-                cut.effectColor = new Color(0f, 0f, 0f, 0.85f);
-                cut.effectDistance = new Vector2(1f, -1f);
-
-                var tick = NewRect("T", cell);
-                Place(tick, new Vector2(0, 0.5f), new Vector2(10, 10), Vector2.zero);
-                var timg = tick.gameObject.AddComponent<Image>();
-                timg.sprite = ChromeArt.Mark("tick");
-                timg.preserveAspect = true;
-                timg.raycastTarget = false;
-                timg.enabled = false;
-
-                rows.Add((mimg, text, timg));
-            }
-            LayOutStrip(rows);
-            // What the bench still writes the bottle's name to. Not drawn: the measuring glass
-            // names every bottle that went in, in its own band.
-            var title = NewText("H", strip, _body, 8, TextAnchor.MiddleCenter, CounterFinish.Current.Accent);
-            title.gameObject.SetActive(false);
-            return title;
-        }
-
-        /// <summary>Stands the strip's steps side by side and centred, each as wide as its own
-        /// words. Called again whenever a step's words change (the third names the method).</summary>
-        private static void LayOutStrip(List<(Image icon, Text label, Image tick)> rows)
-        {
-            const float Socket = StepNumberW + 16f, Gap = 6f, TickGap = 4f, TickW = 10f, Between = 28f;
-            var widths = new float[rows.Count];
-            float total = 0f;
-            for (int i = 0; i < rows.Count; i++)
-            {
-                widths[i] = Socket + Gap + rows[i].label.preferredWidth + TickGap + TickW;
-                total += widths[i] + (i > 0 ? Between : 0f);
-            }
-            float x = 0f;
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var cell = (RectTransform)rows[i].label.transform.parent;
-                cell.anchoredPosition = new Vector2(x, 0f);
-                cell.sizeDelta = new Vector2(widths[i], cell.sizeDelta.y);
-                var tick = (RectTransform)rows[i].tick.transform;
-                tick.anchoredPosition = new Vector2(Socket + Gap + rows[i].label.preferredWidth + TickGap, 0f);
-                x += widths[i] + Between;
-            }
-        }
+        // (The horizontal strip and its LayOutStrip came down on 2026-09-17: the steps are a vertical list in
+        // the instrument column now — BuildStepList — and a list needs no re-flow when a word changes.)
 
         /// <summary>
         /// WHETHER THE TIN STILL HAS WORK IN IT (2026-08-14, the author's bug: picking a
@@ -704,7 +711,6 @@ namespace LastCall.UI
                     : method == PrepMethod.Stirred ? UIText.T("bench.shaker.step.stir")
                     : method == PrepMethod.Built ? UIText.T("bench.shaker.step.built")
                     : UIText.T("bench.shaker.step.mix");
-                if (_stepRows[2].label.text != wasThird) LayOutStrip(_stepRows);
                 // ...and its picture (2026-09-16): the thrown tin, the spoon, or the lid for a drink built as it is.
                 var pic = ChromeArt.Mark(method == PrepMethod.Stirred ? "step_stir" : method == PrepMethod.Built ? "step_cap" : "step_shake");
                 if (_stepRows[2].icon.sprite != pic) _stepRows[2].icon.sprite = pic;
@@ -2046,7 +2052,7 @@ namespace LastCall.UI
 
         /// <summary>Which grain the bench tops wear. One line, because "quieter" and
         /// "busier" is a taste call made by eye — see ChromeArt.CounterGrain.</summary>
-        private const ChromeArt.CounterGrain BenchGrain = ChromeArt.CounterGrain.Brushed;   // Slate until 2026-09-16 (ChromeArt.CounterGrain)
+        // (BenchGrain moved into CounterFinish.CounterSlab on 2026-09-17: the slab is cut from the finish, grain and all.)
 
         /// <summary>How far a gauge caption stands off the band it names. Enough to clear
         /// the shaker's widest point, so no tick starts inside the steel.</summary>
@@ -2083,14 +2089,14 @@ namespace LastCall.UI
             var dusk = NewRect("Dusk", panel);
             Stretch(dusk, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var di = dusk.gameObject.AddComponent<Image>();
-            di.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.14f);
+            di.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.08f);
             di.raycastTarget = false;
             dusk.SetSiblingIndex(after);
             var wash = NewRect("NeonWash", panel);
             Place(wash, new Vector2(0.5f, 0.5f), new Vector2(1400f, 300f), new Vector2(0f, railTop - 150f));
             var wi = wash.gameObject.AddComponent<Image>();
             wi.sprite = ChromeArt.NeonGradient();
-            wi.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.26f);
+            wi.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g, UITheme.Magenta[3].b, 0.08f);   // 0.26 read as neon paint (2026-09-17)
             wi.raycastTarget = false;
             wash.SetSiblingIndex(after + 1);
         }
@@ -2115,18 +2121,7 @@ namespace LastCall.UI
             mi.raycastTarget = false;
             _railHung.Add((mat, RailBandH + 8f + 48f));
 
-            var lemon = ItemArt.Load("counter_lemon");
-            for (int i = 0; i < 2; i++)
-            {
-                var wheel = NewRect("Lemon" + i, _benchStage);
-                Place(wheel, new Vector2(1f, 0f), new Vector2(64f, 64f), new Vector2(-16f - i * 28f, 0f));
-                wheel.pivot = new Vector2(1f, 0f);
-                var li = wheel.gameObject.AddComponent<Image>();
-                li.sprite = lemon; li.preserveAspect = true; li.raycastTarget = false;
-                li.enabled = lemon != null;
-                _railHung.Add((wheel, RailBandH + 6f + 64f));
-                wheel.SetAsLastSibling();
-            }
+            // (The lemon wheels came down on 2026-09-17: "Ekrandan limon görsellerini kaldır".)
         }
 
         private void AddBenchCounter(RectTransform panel, float fromY)
@@ -2162,12 +2157,31 @@ namespace LastCall.UI
             var own = ItemArt.Load("bench_counter");
             // ...IN THE COUNTER'S FINISH (2026-09-16): the author's drawing with its slab family recoloured, or the
             // brushed tile cut in the finish's slab tone (CounterFinish.Current, set by the HUD before the benches build).
+            // NOT A FLAT PANEL (2026-09-17, the author: "Mevcut arkaplan ana sahnedeki tezgaha benzemiyor mevcut
+            // arkaplan dümdüz bir panel"): the slab is drawn in the finish's own ramp rather than one near-black
+            // tone, a fall of light runs back to front across it, and the wear the work leaves is laid over the
+            // whole band at once (CounterWear — one drawing at the band's size, so no mark repeats).
             timg.sprite = own != null ? CounterFinish.RecolourSlab(own, CounterFinish.Current.Id)
-                                      : ChromeArt.Counter(320, 96, BenchGrain, CounterFinish.Current.Counter);
+                                      : CounterFinish.CounterSlab(320, 96);
             timg.type = Image.Type.Tiled;
             timg.pixelsPerUnitMultiplier = 0.25f;
             timg.color = timg.sprite != null ? Color.white : BenchSlab;
             timg.raycastTarget = false;
+
+            var fall = NewRect("Fall", top);
+            Stretch(fall, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            fall.localScale = new Vector3(1f, -1f, 1f);     // the gradient turned over: dark at the near edge
+            var fimg = fall.gameObject.AddComponent<Image>();
+            fimg.sprite = ChromeArt.NeonGradient();
+            fimg.color = new Color(0f, 0f, 0f, 0.34f);      // lit under the rail, falling away toward the player
+            fimg.raycastTarget = false;
+
+            var wear = NewRect("Wear", top);
+            Stretch(wear, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var wimg = wear.gameObject.AddComponent<Image>();
+            wimg.sprite = CounterFinish.CounterWear(320, 122);
+            wimg.type = Image.Type.Simple;
+            wimg.raycastTarget = false;
             if (own != null) return;   // the drawing carries its own edge and sheen
 
             // The counter's FAR EDGE, zoomed: the ridge that catches the room, the seam,
@@ -2284,7 +2298,7 @@ namespace LastCall.UI
             _bottleShadow = AddContactShadow(_pourSurface, 128f, new Vector2(_bottleRest.x, BottleFootY));
             // EVERY PROP CASTS ONE (2026-09-17, the author: "Bu sahnede her nesnenin gölgelendirmesi olmalı"): the
             // lid and the spoon follow their props (PushPropShadow), the towel's lies still under it.
-            _lidShadow = AddContactShadow(_pourSurface, 150f, new Vector2(-510f, -140f - CapArtOffset * TinH - 60f));
+            _lidShadow = AddContactShadow(_pourSurface, 150f, new Vector2(-320f, -140f - CapArtOffset * TinH - 60f));
             _spoonShadow = AddContactShadow(_pourSurface, 50f, new Vector2(SpoonX, SpoonFootY));
             _towelShadow = AddContactShadow(_pourSurface, 150f, new Vector2(SpoonX, SpoonFootY + 2f));
             _towelShadow.sizeDelta = new Vector2(150f, 26f);
@@ -2407,7 +2421,7 @@ namespace LastCall.UI
             // centre fell on the BACK key's column — a press on the lid's middle landed on the key instead (the
             // tall-glass test caught it: "the lid went on and the bench never moved to the glass"). Measured: the
             // rect's centre is at 636 on screen now, the key starts at 672.
-            _capRest = new Vector2(-510, -140f - CapArtOffset * TinH);
+            _capRest = new Vector2(-320, -140f - CapArtOffset * TinH);   // -510 until 2026-09-17: the column stands there now
             _shakerTop = NewRect("ShakerCap", _pourSurface);
             _shakerTop.anchorMin = _shakerTop.anchorMax = _shakerTop.pivot = new Vector2(0.5f, 0.5f);
             _shakerTop.sizeDelta = _shakerOpenSize;
@@ -2534,7 +2548,9 @@ namespace LastCall.UI
             // THE PLAQUE (2026-09-16): the recess under the rail that carries the bench's words — the steps on its
             // upper row (BuildStepCard, below), the readout on its lower. 13 → 16: pinned to the pixel faces' 8px
             // grid (CLAUDE.md), like every other size in the rebuild. Engraved, the way the strip's words are.
-            _shakerPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, PlaqueH);
+            // BESIDE THE COLUMN (2026-09-17): the instrument column owns the far left, so the sentence's plaque
+            // starts where the column ends — nothing stacks on anything.
+            _shakerPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, PlaqueH, PlaqueUnderRail, ColX + ColW + 16f);
             _shakerReadout = NewText("Readout", _shakerPlaque, _body, 16, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(_shakerReadout.rectTransform, new Vector2(0f, 0f), new Vector2(PlaqueW - PlaquePad * 2f, PlaqueLineH),
                   new Vector2(PlaquePad, PlaqueLineY));

@@ -1540,6 +1540,115 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.84 · Ana sahnenin ışığı bir SAAT: model gökyüzü, batan güneş, yanan şehir, kuşlar, duvara düşen güneş lekesi, her nesnenin gölgesi, müşterilerin kendi ışığı (2026-09-17)
+
+Yazar: "Ana sahnenin ışıklandırmasını baştan sonra tekrar tasarla. Günün rengini vermesini istiyorum fakat
+müşterilerin arkaplandan ayrılması sıyrılmasını da istiyorum ... gün batımı içerisinin rengini ve tonunu
+değiştirmeli, nesnelerin gölgeleri olmalı ... güneş batmıyor yok oluyor, hava renk değişimi daha smooth olmalı,
+güneş aşağı doğru batmalı, şehir ışıkları ona göre yanmalı. arada gökyüzünde M şeklinde uçan kuşlar yapılabilir
+aynı renk paletiyle."
+
+- **Pencere artık çizilir, oynatılmaz.** `Scene/window_cycle.png`'nin 31 karesi camdan kalktı (dosya duruyor: artık
+  şehrin KAYNAĞI). `WindowSky` gökyüzünü 71×137 kaynak çözünürlükte kurup 2× büyüterek 141×274'lük plakaya yazar
+  (saat 1/1600 kaydıkça, hareket açıkken yıldızlar için ~9 Hz; plaka `Sprite-Unlit-Default` — dışarısı odanın
+  lambalarıyla çarpılmaz, palmiyeler ve cam parıltısı da). Gökyüzü beş palet durağının (tepe→ufuk, v 0/.3/.55/.8/1)
+  saate göre karışımı, kuantalamadan önce sürekli RGB, sonra 4×4 Bayer (yayılım 34) ile 24 renklik gök paletine
+  en-yakın renk — her an piksel sanat, her an sürekli. **Güneş:** yarıçap 7, 34. satırdan 98. satıra düz çizgiyle
+  iner (τ 0→0.30 = 18:00→20:25; 0.25 ilk probda diski 19:30'da bitiriyordu), şehrin ARKASINDA çizilir yani
+  kulelerin arkasına batar — çizimden ölçülen görünen pay 19:08'de 0.68, 19:57'de 0; çekirdek Cream4→Amber3,
+  kenar Amber4→ViceRed3, kuantalamadan önce eklenen Amber4 hale (yarıçap 26, .62→.50) dither halkalara döner.
+  **Yıldızlar:** 34 tane, τ 0.30–0.62'de doğar, yalnız yerel gök luma'sı 0.22'nin altındayken ve bulut yokken
+  görünür, her biri kendi periyodunda (2.2–4.2 sn) Cream4/Cream3/Cream2 arasında kırpar. **Bulutlar:** 0. karenin
+  kendi maskesi (205 px), bandından bir kademe koyu (×0.80), aynalı kopyasının üstünde 0.35 px/sn kayar.
+- **Şehir yazarın kendi silüeti, üç plaka, yeniden çizilmedi:** `py -3 Tools/window_sky.py derive` 0. (altın saat)
+  ve 30. (gece) karelerden `Scene/window_city.bytes` (LCSK) üretir — gündüz-sönük, gece-sönük, gece-yanık RGB +
+  maske (gök/bina/pencere) + bulut + sütun başına silüet satırı (59..82). Yanık pencereler (sıcak ve duvarından
+  açık, ya da beyaz: 134 px) medyanla boyanıp söndürülür. Bina pikselleri τ 0.14–0.46'da Bayer sırasıyla gündüz
+  morundan gece lacivertine geçer; pencereler τ 0.13–0.44'te her biri kendi hash saatinde yanar (güneş kulelere
+  değince ilk ışıklar), %22'si τ 0.72'den sonra tekrar söner. Hash iki tarafta aynı (`WindowSky.Hash01`).
+- **Kuşlar:** `WindowSky.Flock` — 7×4 px üç kareli M (Night1, kanat yukarı/düz/aşağı), 5–9 kuşluk gevşek sıra,
+  sağdan sola 9 px/sn, sinüs salınım, 8 fps çırpış; ilk sürü erken, sonra 18–40 sn arayla, yalnız τ ≤ 0.36 (kuş
+  karanlıkta uçmaz); plakanın çocuğu sprite'lar (sıra 5, z −0.01, palmiyelerin altında), oda plakası dışını keser.
+  `Motion.Reduced`'da uçmazlar.
+- **Ay:** perdenin kendi hilali (`Scene/curtain_moon`, 24 px, camın 2×'inde 12 kaynak px) plakanın üstünde sprite;
+  τ 0.44'te belirir (0.08'de içeri solar), kapanışa kadar (10,40)'tan (58,12)'ye 8 satırlık bir yayla geçer —
+  güneş gittikten sonra gecenin HAREKET ettiğini söyleyen tek şey. `json.moon`.
+- **Model tek dosya, iki okuyucu:** `Resources/Data/sky_cycle.json` — anahtar saatler (18:00 altın, 19:07 güneş
+  kulelerde, 20:05 pembe bant, 21:12 mavi saat, 22:38 gece, 02:00 derin gece), güneş, yıldız, şehir, kuş ve ODA.
+  `SkyClock.Evaluate(τ, güneşinGörünenPayı)` → `Daylight`: SunStrength (diskin silüetin üstünde kalan payı,
+  ÇİZİMDEN ölçülür — `WindowSky.SunVisible`), Day (0.10–0.50'de söner), Dusk (0.14–0.42'de kalkar), LateNight
+  (0.55'ten), gök durakları, oda ambiyansı (token + keep + şiddet), gölge vektörü. Python ikizi aynı json'u okur:
+  `py -3 Tools/window_sky.py preview` → `Tools/window_sky_preview.png` (on bir saat yan yana). İkisi ayrıştığında
+  yanlış olan C#'tır.
+- **Oda ışığı saatten; camdan okuma silindi** (SkyPunch, AmbientPull, MidShare, WashPunch, WashDay/Night,
+  NightBounce, BounceTint, luma aralığı, SkyGlowFull, SkyAlphaCut, Key/Wash/Mid satırları, `ReadSky*`,
+  `LoadWindowFrames`). **WindowLight** = güneş konisi, güneşin rengi, SunStrength ile 1.0→0.14 (1.75 ilk probda
+  camın yanındaki duvarı beyaza uçurdu; duvardaki güneşi artık leke taşıyor; gece ClubBlue3 şehir parıltısı,
+  odanın tek soğuk kaynağı). **SkyGlow** = gök orta/alt bandının %62'si beyaza çekilmiş hâli, Day ile 0.60→0.10
+  (1.05 ve tam renk, pembe bantta bütün odayı düz pembeye boyuyordu — sıva kendi rengini kaybetti). **GlobalLight**
+  = odanın saat ambiyansı: Amber4 keep .46 ×.40 (18:00) → ViceRed4 .42 ×.38 → Magenta3 .44 ×.32 → ClubBlue3 .48
+  ×.28 (mavi saat çukuru) → Amber3 .56 ×.34 (tungsten). İlk prob (.52/.47/.38/.34/.42) her saatte düz ve
+  fazla aydınlıktı; duvar bir stop indi, lekeler ve lamba havuzları okunur oldu. Duvar lambaları (.30→1), tezgâh
+  spotları (.18→.52), neon (.34→.58) Dusk üzerinde. `RoomWashLight` = model ambiyansı (kitap ve çerez matı bunu
+  giyer). Kapanış beat'i eskisi gibi `_washBase/_houseBase/_barDownBase/_sunKeyBase`'ten iner.
+- **Güneş lekesi (`SunShaft`):** `Light2D.LightType.Sprite`, kod-çizimi dört kanatlı eğik cookie (132×100, 0.5
+  shear, üst/alt 7 satır iki kademeli dither), rengi güneşin, şiddeti 1.35×SunStrength; art (215,150)'den
+  (400,235)'e kayar ve yatayda 1.5× yayılır — güneş alçaldıkça leke duvarda sağa ve yukarı yürür, kızarır, diskle
+  birlikte söner. Background+Patrons+Counter katmanları; `_world`'ün çocuğu (çekmece kaldırınca odayla kalkar).
+- **Müşteriler bir stop önde:** `PatronFill` yalnız Patrons katmanına giden global ışık (0.22 gündüz → 0.32 gece,
+  hafif sıcak beyaz) — her saatte figür duvarından parlak (oyunda ölçüldü: 19:15 ve 23:05 karelerinde figür
+  sıvadan açık, gölgesi sağında).
+- **Gölgeler:** `CastShadow` (Behaviours) — kaynağın sprite/flip/ölçek/sıralama/alfasını her LateUpdate kopyalayan
+  siyah kopya, bir sıra altta, z −0.0001; `CastShadow.Offset/Alpha` statik, `ApplyDaylight` her kare yazar:
+  güneş (6,−5)→(14,−2) × SunStrength·0.38, GÖK (14,−2) × (1−SunStrength)·Day·0.18 (güneş gidince lambalar
+  gelene kadar cam hâlâ en parlak kaynak — ilk probda gölgeler pembe bantta yarım dakika kayboluyordu) ve lamba
+  (3,−4) × Dusk·0.34 ağırlıklı karışım, taban 0.18 — güneş battıkça gölge uzar ve yatar, lambalar alınca altına
+  çekilir, geçişte sıçramaz. Müşteri gövdeleri
+  (`NewStageSprite(castsShadow:true)`), yerde/duvarda duran her fikstür (mat hariç; tezgâh üstü 0.7). Kaynak yok
+  olunca kendini siler. Mahzen şişelerinin kendi gölgeleri (§9.80) aynen.
+- Ölçüm: çevrimdışı `dotnet build` (UI, Editor, Tests, PlayTests) 0 hata; Python ve C# piksel hash'i 5/5 aynı;
+  oyunda iki gece çekildi (scratchpad h*/i* kareleri, `light_probe.py`): ilk gece ölçümleri yukarıdaki düzeltmeleri
+  verdi, ikinci gecede 18:20 lekesi duvarın altında cama yakın, 19:15'te yükselmiş ve amber, 20:35 pembe-mor loş,
+  21:45 mavi saat, 23:05 tungsten; 62 fps. Testler: EditMode 596/597 (kırmızı olan yazarın çalışma ağacındaki
+  v4 plakası, 32×66), PlayMode 12/13 — tek kırmızı bench bakış çizgisi (`RoomWashLight` + aynı gün tezgâh
+  paketi), kapanış beat'i dahil geri kalanı yeşil. İki tuzak ödendi: URP 2D katman başına TEK global ışık ister
+  (PatronFill ile GlobalLight aynı katmanı hedefleyince "More than one global light" hatası her testi kırdı —
+  yıkama artık Patrons katmanını atlıyor, `GlobalLight()` yardımcısı katmanları tipten ÖNCE veriyor); ve pasif
+  nesnede `lightType = Global` demek `ErrorIfDuplicateGlobalLight` içinde NullReference atıyor (ışık AKTİF doğar).
+
+### 9.84 · Tezgâhta alet sütunu: dikey 1-2-3-4, altında aynı genişlikte LIFT HIGHER, altında BARA DÖN; TIN+MIX çifti; yeni çöp; aşınmış tezgâh; mahzende kare doku ve lamba (2026-09-17, beşinci liste)
+
+Yazar: "sahne biraz fazla neon oldu ... Mahzendeki sıvıların içerisinde sıvılar kare kare gözüküyor png gibi bunu
+kaldır ... Marketten tezgahı değiştirince Built sahnesi de tezgaha göre değişmeli ... 1-2-3-4 aşama sayısına göre
+alt alta madde maddeymiş gibi sıralanmalı ekranın en solunda. Onun altında Lift Higher olmalı genişliği ve tasarımı
+tam olarak 1-2-3-4 paneli ile aynı olmalı, panelin dışı kalın çerçeve kaplı olmalı. Ekrandan limon görsellerini
+kaldır ... düz desenin yanına masada gerçekte kullanıma bağlı aşınmalar da olsun ... Tın ve Mix barları birbirleri
+ile uyumlu ve orantılı olmalı, mix barı çalışmıyor düzelt. Çöp ve back to the bar butonları tekrardan üretilsin ...
+Mahzendeki ışıklandırmayı tam raflara sabitle ... ışığın çıkış köşesi biraz kırpılmış olmalı."
+
+- **Alet sütunu** (ekranın en solu, x 16, genişlik 224; `ColumnPanel` + `ChromeArt.FramedPanel`): üstte adım paneli
+  (her adım kendi satırında: numara, piktogram, söz, sonda tik — `BuildStepList`), altında aynı genişlikte LIFT
+  HIGHER kadranı, en altta BARA DÖN. Üçü de aynı kalın çerçeve (18 dokulu 9-dilim, finişin `Rim` metali, içeride
+  slab kuyusu). Adım panelinin başı tek bir çizgide (`ColStepsTop`): bardak tezgâhı iki satır listeler, çerçeve
+  zıplamaz. Kapak ve kaşık sütundan çekildi (kapak x −510→−320, kaşık −340→−170).
+- **TIN + MIX çifti**: MIX tüpü artık tenekenin SİLUETİNİN değil OYUĞUNUN satırlarını kaplar (aynı taban, aynı
+  tavan), ölçünün pirinç çerçevesini takar (`BrassRim`). **MIX çalışıyor:** sütun yalnız `ShowWorkMeter`'dan
+  yazılıyordu, bu yüzden çalkalama dışında sıfırda duruyordu; `StepWorkMeter` artık tenekeden okur
+  (`SetWorkColumn`: karışmışsa 1, değilse çalkalama/karıştırma enerjisi).
+- **Çöp ve BARA DÖN yeniden**: ikisi de sütunun ailesinden çerçeveli plakalar — BARA DÖN 224×56 sütunun ayağında,
+  çöp 112×140 karşı köşede, çizili kutu içinde, sözcük ayağa oyulmuş.
+- **Tezgâh düz panel değil**: slab finişin kendi rampasından çizilir (`CounterFinish.CounterSlab`), üstünden raydan
+  aşağı sönen bir ışık düşer (ters çevrilmiş `NeonGradient`, siyah %34) ve **aşınma** tüm bandın boyunda tek
+  çizimde yatar (`ChromeArt.CounterWear`: üç bardak halkası, dokuz sürtme çizgisi, ellerin çalıştığı yerde yıpranmış
+  leke) — döşenmediği için hiçbir iz tekrarlamaz. Market boyası değişince hepsi finişin rampasıyla yeniden çizilir.
+- **Neon azaldı**: yıkama %26→%11, alacakaranlık %14→%8.
+- **Limonlar kaldırıldı.**
+- **Mahzen**: içki gövdesi damalı dokusuz (`LiquidBody(w,h,checker:false)`) — raf ölçeğinde kare kare okunuyordu;
+  el şişesi ve ölçü damalı kalır. Bölme lambaları rafın altına sabit (`CellarLightDropPx` 11→2) ve her koninin
+  tepesinde koyu bir lamba gövdesi (`_cellarLamps`, 30×5, order 31) — ışık rafın arkasından çıkıyor gibi okunur.
+- Doğrulama: çevrimdışı `dotnet build LastCall.UI.csproj` temiz (MCP köprüsü kapalı olduğu için editör ölçümü ve
+  PlayMode koşusu köprü dönünce yapılacak).
+
 ### 9.83 · Tezgâh sahnesi: plaka düzeni, odak parlaklığı kapalı, her prop gölgeli, loş pembe neon, oda kararması, giriş animasyonu, shaker→bardak yerinde geçiş, ölçünün boş silüeti (2026-09-17, dördüncü liste)
 
 Yazar: "Görseldeki yazıları ve talimatları sahneye düzenli bir şekilde entegre et. bu sahnedeki odak parlaklığını

@@ -30,6 +30,7 @@ OUT = os.path.join(os.path.expanduser('~'), 'Desktop', 'konsept art', 'export', 
 TILE = os.path.join(HERE, 'bench_export_tile.png')          # ChromeArt.Counter(320, 96, Slate), written by the editor
 OUTLINE = os.path.join(HERE, 'bench_export_gauge_outline.png')
 SOLID = os.path.join(HERE, 'bench_export_gauge_solid.png')
+WEAR = os.path.join(HERE, 'bench_export_wear.png')           # ChromeArt.CounterWear(320, 122), written by the editor
 
 # the bench's far edge, in UNITS (TycoonServiceFlow.Shaker.AddBenchCounter): one art pixel is four units
 RIDGE = (0x31, 0x2E, 0x3A); SEAM = (0x17, 0x14, 0x1C)
@@ -70,6 +71,17 @@ def counter(scale):
         for xx in range(w):
             r, g, b, a = im.getpixel((xx, yy))
             im.putpixel((xx, yy), (min(255, r + 12), min(255, g + 12), min(255, b + 12), 255))
+    # THE FALL OF LIGHT AND THE WEAR (2026-09-17): the counter is lit under the rail and falls away toward the
+    # player, and the work's rings and scratches lie over the whole band at once (never tiled).
+    for yy in range(h):
+        t = yy / float(max(1, h - 1))
+        k = 1.0 - 0.34 * (t * t)
+        for xx in range(w):
+            r, g, b, a = im.getpixel((xx, yy))
+            im.putpixel((xx, yy), (int(r * k), int(g * k), int(b * k), a))
+    if os.path.exists(WEAR):
+        wear = Image.open(WEAR).convert('RGBA').resize((w, h), Image.NEAREST)
+        im.alpha_composite(wear)
     return im
 
 
