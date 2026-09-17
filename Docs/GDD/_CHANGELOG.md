@@ -2,13 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
-- **The room is lit by the hour (2026-09-17):** the window's thirty-one frames are replaced by a drawn sky —
-  palette bands dithered from a keyed model (`sky_cycle.json`), a sun that sinks behind the author's skyline,
-  city windows coming on one by one, stars, drifting clouds, flocks of birds — and the room lights itself from
-  the same model instead of sampling the glass: a sun key and a window-shaped shaft on the wall that climbs and
-  reddens as the sun sets, an ambient that walks cream → coral → pink → blue → tungsten, the house lamps on one
-  dusk, a fill on the drinkers alone, and cast shadows on everything standing, swinging from the sun's line to
-  the lamps'. GDD 14 §7 as-built note; GDD_MEVCUT §9.84.
+- **The room is lit by the hour (2026-09-17, three passes the same day):** the window's sky is DRAWN — palette
+  bands dithered from a keyed model (`sky_cycle.json`), a sun that sinks behind the author's skyline over the
+  first third of the night, stars, drifting clouds, a moon, flocks of birds — while the city stays the thirty-one
+  frames' own progression (a pixel-by-pixel re-scheduling was tried and sent back); and the room lights itself
+  from the same model instead of sampling the glass: a WARM pool through the glass (amber → coral → hot pink →
+  plum, strong at the window and dying across the room, on the counter too) over a COOL fill (blue → violet →
+  blue hour → tungsten), so the sunset reads as light with a direction and not as paint; a window-shaped shaft
+  on the wall that climbs and reddens as the sun sets; the house lamps on one dusk; a fill on the drinkers
+  alone; and cast shadows on everything standing, swinging from the sun's line to the lamps'. GDD 14 §7
+  as-built note; GDD_MEVCUT §9.84.
 
 - **The bench's instrument column (2026-09-17):** the steps stand one under another down the far left, the pour
   dial under them at the same width, the way out at the column's foot, all three in one thick frame; the MIX tube

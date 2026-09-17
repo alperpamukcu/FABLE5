@@ -20,11 +20,10 @@ namespace LastCall.UI
     ///   THE SUN is a disc with a rim and a halo, and it goes DOWN: a straight line from
     ///   well above the towers at 18:00 to behind them by a quarter past the shift, drawn
     ///   under the city so the skyline takes it the way a skyline does.
-    ///   THE CITY is the author's own skyline, cut from the sheet by Tools/window_sky.py
-    ///   into three plates — golden-hour, night-unlit, night-lit — and every pixel of it
-    ///   switches between them on its own hour: the buildings walk to their night colour in
-    ///   an ordered dither across the dusk, the windows come on one at a time, and a few go
-    ///   dark again in the small hours.
+    ///   THE CITY is the author's own: every frame's city pixels, cut from the sheet by
+    ///   Tools/window_sky.py, and the hour shows the frame it is nearest to — the towers
+    ///   walking from purple to navy and the windows coming on the way PixelLab drew them
+    ///   (a first cut re-scheduled them pixel by pixel; the author preferred the frames).
     ///   STARS come out where the sky has gone dark enough; CLOUDS are the sheet's own,
     ///   a step darker than the band they stand in, drifting.
     ///   BIRDS are sprites over the plate (<see cref="Flock"/>), an M of four rows in the
@@ -45,8 +44,13 @@ namespace LastCall.UI
         private readonly Texture2D _tex;
         private readonly Color32[] _cell = new Color32[CellW * CellH];
         private readonly Color32[] _src = new Color32[SrcW * SrcH];
-        private readonly Color32[] _day, _nightUnlit, _nightLit;
-        private readonly byte[] _mask;        // 0 sky · 1 building · 2 window
+        // THE CITY IS THE FRAMES' OWN (2026-09-17, the author: "şehirdeki değişimi sevmedim,
+        // onu önceki gibi kullanabilir miyiz?"): every frame's city pixels, in mask order, and
+        // the hour picks the frame. The first cut flipped pixels between three plates on a
+        // schedule of its own; the author preferred the thirty-one frames' progression.
+        private readonly Color32[][] _cityFrames;
+        private readonly int[] _cityAt;       // pixel -> index into a frame's city list, or -1
+        private readonly byte[] _mask;        // 0 sky · 1 city
         private readonly bool[] _cloud;
         private readonly int[] _skyline;      // first city row per column
         private readonly Color[] _palette;
@@ -74,29 +78,26 @@ namespace LastCall.UI
             var asset = Resources.Load<TextAsset>("Scene/window_city");
             if (asset == null) return null;
             var b = asset.bytes;
-            if (b.Length < 8 || b[0] != (byte)'L' || b[1] != (byte)'C' || b[2] != (byte)'S' || b[3] != (byte)'K')
+            if (b.Length < 10 || b[0] != (byte)'L' || b[1] != (byte)'C' || b[2] != (byte)'S' || b[3] != (byte)'2')
             {
-                Debug.LogWarning("WindowSky: window_city.bytes is not an LCSK file.");
+                Debug.LogWarning("WindowSky: window_city.bytes is not an LCS2 file.");
                 return null;
             }
-            int w = b[4] | (b[5] << 8), h = b[6] | (b[7] << 8);
+            int w = b[4] | (b[5] << 8), h = b[6] | (b[7] << 8), count = b[8] | (b[9] << 8);
             int n = w * h;
-            if (w != SrcW || h != SrcH || b.Length < 8 + n * 11 + w)
+            if (w != SrcW || h != SrcH || count < 1 || b.Length < 10 + n * 2 + w)
             {
-                Debug.LogWarning($"WindowSky: window_city.bytes is {w}×{h}, expected {SrcW}×{SrcH}.");
+                Debug.LogWarning($"WindowSky: window_city.bytes is {w}×{h}×{count}, expected {SrcW}×{SrcH}.");
                 return null;
             }
-            return new WindowSky(clock, b);
+            return new WindowSky(clock, b, count);
         }
 
-        private WindowSky(SkyClock clock, byte[] b)
+        private WindowSky(SkyClock clock, byte[] b, int count)
         {
             Clock = clock;
             int n = SrcW * SrcH;
-            int at = 8;
-            _day = ReadPlate(b, ref at, n);
-            _nightUnlit = ReadPlate(b, ref at, n);
-            _nightLit = ReadPlate(b, ref at, n);
+            int at = 10;
             _mask = new byte[n];
             System.Array.Copy(b, at, _mask, 0, n); at += n;
             _cloud = new bool[n];
@@ -104,6 +105,17 @@ namespace LastCall.UI
             at += n;
             _skyline = new int[SrcW];
             for (int x = 0; x < SrcW; x++) _skyline[x] = b[at + x];
+            at += SrcW;
+            _cityAt = new int[n];
+            int cityCount = 0;
+            for (int i = 0; i < n; i++) _cityAt[i] = _mask[i] != 0 ? cityCount++ : -1;
+            if (b.Length < at + count * cityCount * 3)
+            {
+                Debug.LogWarning("WindowSky: window_city.bytes is short of its frames; the city will be its first.");
+                count = Mathf.Max(1, (b.Length - at) / Mathf.Max(1, cityCount * 3));
+            }
+            _cityFrames = new Color32[count][];
+            for (int f = 0; f < count; f++) _cityFrames[f] = ReadPlate(b, ref at, cityCount);
 
             var pal = clock.Spec.skyPalette;
             _palette = new Color[pal.Length];
@@ -270,8 +282,11 @@ namespace LastCall.UI
             float haloRr = haloC.r * 255f, haloGg = haloC.g * 255f, haloBb = haloC.b * 255f;
             float spread = city.ditherSpread;
             int drift = motion ? (int)((clock * city.cloudDrift) % (2 * SrcW)) : 0;
-            float wFrom = city.windowFrom, wSpan = city.windowTo - city.windowFrom;
-            float bFrom = city.buildingFrom, bSpan = city.buildingTo - city.buildingFrom;
+            // The city's frame: the hour, a little behind the sun, over the frames there are.
+            float lag = Mathf.Clamp(city.frameLag, 0f, 0.5f);
+            int frame = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(0f, tau - lag) / (1f - lag) * (_cityFrames.Length - 1)),
+                                    0, _cityFrames.Length - 1);
+            var cityNow = _cityFrames[frame];
 
             for (int y = 0; y < SrcH; y++)
             {
@@ -279,19 +294,7 @@ namespace LastCall.UI
                 {
                     int i = y * SrcW + x;
                     float thr = Bayer[(y & 3) * 4 + (x & 3)];
-                    byte m = _mask[i];
-                    if (m != 0)
-                    {
-                        // The city: which of its three plates this pixel wears right now.
-                        float flip = bFrom + thr * bSpan;
-                        if (m == 1) { _src[i] = tau >= flip ? _nightUnlit[i] : _day[i]; continue; }
-                        float on = wFrom + Hash01(x, y, 7) * wSpan;
-                        bool late = Hash01(x, y, 9) < city.windowOffShare;
-                        float off = city.windowOffFrom + Hash01(x, y, 13) * (1f - city.windowOffFrom);
-                        if (tau >= on && !(late && tau >= off)) _src[i] = _nightLit[i];
-                        else _src[i] = tau >= flip ? _nightUnlit[i] : _day[i];
-                        continue;
-                    }
+                    if (_mask[i] != 0) { _src[i] = cityNow[_cityAt[i]]; continue; }
 
                     float r = _rowR[y], g = _rowG[y], b = _rowB[y];
                     // The sun's halo warms the sky before the quantiser sees it: that is what

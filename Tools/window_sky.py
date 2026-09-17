@@ -45,6 +45,7 @@ CITY_PREVIEW = os.path.join(HERE, 'window_city_preview.png')
 CELL_W, CELL_H = 141, 274
 SRC_W, SRC_H = 71, 137
 ZOOM = 2
+FRAME_COUNT = 31
 
 # The 55 colours, by ramp (UITheme, GDD 14 v3 s3). Every pixel the sky puts up is one of these.
 RAMPS = {
@@ -138,13 +139,13 @@ def derive():
         skyline[x] = min(skyline[x], max(skyline[x - 1], skyline[x + 1]) + 6)
         city[skyline[x]:, x] = True
 
-    lit_night = bright(night) & city
-    lit_day = bright(day) & city
-    day_unlit = inpaint(day, lit_day)
-    night_unlit = inpaint(night, lit_night)
-    window = lit_night & city
-    mask = np.where(window, 2, np.where(city, 1, 0)).astype(np.uint8)
-
+    # THE CITY IS THE FRAMES' OWN (2026-09-17, the author: "şehirdeki değişimi sevmedim, onu
+    # önceki gibi kullanabilir miyiz?"). The first cut flipped the city pixel by pixel between
+    # three plates on a schedule of its own; the author preferred the thirty-one frames' own
+    # progression - the towers walking from purple to navy and the windows coming on the way
+    # PixelLab drew them. So every frame's city pixels ship, in mask order, and the stage
+    # shows the frame the hour is nearest to. Only the SKY is drawn.
+    mask = city.astype(np.uint8)
     # Clouds: what stands off its row's own colour in the upper sky of the golden frame,
     # kept only where it is a shape and not a band edge (two rows tall at least).
     cloud = np.zeros((SRC_H, SRC_W), bool)
@@ -168,30 +169,29 @@ def derive():
             keep[y, x] = n >= 2
     cloud = keep
 
+    frames = [frame(i) for i in range(FRAME_COUNT)]
     with open(CITY_OUT, 'wb') as f:
-        f.write(b'LCSK')
-        f.write(struct.pack('<HH', SRC_W, SRC_H))
-        f.write(day_unlit.astype(np.uint8).tobytes())
-        f.write(night_unlit.astype(np.uint8).tobytes())
-        f.write(night.astype(np.uint8).tobytes())
+        f.write(b'LCS2')
+        f.write(struct.pack('<HHH', SRC_W, SRC_H, FRAME_COUNT))
         f.write(mask.tobytes())
         f.write(cloud.astype(np.uint8).tobytes())
         f.write(skyline.astype(np.uint8).tobytes())
-    print('wrote %s: %d city px, %d windows, %d cloud px, skyline rows %d..%d'
-          % (os.path.relpath(CITY_OUT, ROOT), int(city.sum()), int(window.sum()),
+        for fr in frames:
+            f.write(fr[city].astype(np.uint8).tobytes())      # mask order: row-major over city px
+    print('wrote %s: %d frames x %d city px, %d cloud px, skyline rows %d..%d'
+          % (os.path.relpath(CITY_OUT, ROOT), FRAME_COUNT, int(city.sum()),
              int(cloud.sum()), int(skyline.min()), int(skyline[skyline < SRC_H].max())))
 
-    # A contact sheet of what was cut: day unlit / night unlit / night lit / masks.
+    # A contact sheet of what was cut: the city at frames 0, 10, 20, 30, and the masks.
     tiles = []
-    for img in (day_unlit, night_unlit, night):
+    for i in (0, 10, 20, 30):
         t = np.zeros((SRC_H, SRC_W, 4), np.uint8)
-        t[:, :, :3] = img
+        t[:, :, :3] = frames[i]
         t[:, :, 3] = np.where(city, 255, 0)
         tiles.append(t)
     m = np.zeros((SRC_H, SRC_W, 4), np.uint8)
     m[:, :, 3] = 255
     m[mask == 1] = (60, 60, 90, 255)
-    m[mask == 2] = (255, 200, 80, 255)
     m[cloud] = (200, 200, 255, 255)
     tiles.append(m)
     sheet = Image.new('RGBA', (SRC_W * 4 * len(tiles) + 8 * (len(tiles) - 1), SRC_H * 4), (20, 20, 20, 255))
@@ -203,16 +203,15 @@ def derive():
 
 def read_city():
     with open(CITY_OUT, 'rb') as f:
-        assert f.read(4) == b'LCSK'
-        w, h = struct.unpack('<HH', f.read(4))
+        assert f.read(4) == b'LCS2'
+        w, h, count = struct.unpack('<HHH', f.read(6))
         n = w * h
-        day = np.frombuffer(f.read(n * 3), np.uint8).reshape(h, w, 3).astype(float)
-        night_unlit = np.frombuffer(f.read(n * 3), np.uint8).reshape(h, w, 3).astype(float)
-        night = np.frombuffer(f.read(n * 3), np.uint8).reshape(h, w, 3).astype(float)
         mask = np.frombuffer(f.read(n), np.uint8).reshape(h, w)
         cloud = np.frombuffer(f.read(n), np.uint8).reshape(h, w).astype(bool)
         skyline = np.frombuffer(f.read(w), np.uint8).astype(int)
-    return day, night_unlit, night, mask, cloud, skyline
+        c = int((mask == 1).sum())
+        frames = [np.frombuffer(f.read(c * 3), np.uint8).reshape(c, 3).copy() for _ in range(count)]
+    return frames, mask, cloud, skyline
 
 
 # ── the model ────────────────────────────────────────────────────────────────
@@ -268,7 +267,7 @@ class Sky:
         return core, rim
 
     def render(self, tau, clock, city, motion=True):
-        day, night_unlit, night, mask, cloud, skyline = city
+        frames, mask, cloud, skyline = city
         H, W = SRC_H, SRC_W
         stops = self.bands(tau)
         horizon = float(self.sun['horizonRow'])
@@ -328,26 +327,13 @@ class Sky:
             elif tw > 0.22:
                 out[sy, sx] = token('Cream3' if bright_star else 'Cream2')
 
-        # THE CITY COMES ON. Building pixels walk from their golden-hour colour to their
-        # night colour in an ordered dither across the dusk; windows come on one by one on
-        # their own hashed hour, and a few go dark again late.
+        # THE CITY, from the frame the hour is nearest to - the author's own progression,
+        # a little behind the sun (frameLag) so the windows start as the disc touches the towers.
         cm = self.city
-        for y in range(H):
-            for x in range(W):
-                m = mask[y, x]
-                if m == 0:
-                    continue
-                flip = float(cm['buildingFrom']) + thr[y, x] * (float(cm['buildingTo']) - float(cm['buildingFrom']))
-                if m == 1:
-                    out[y, x] = night_unlit[y, x] if tau >= flip else day[y, x]
-                    continue
-                on = float(cm['windowFrom']) + hash01(x, y, 7) * (float(cm['windowTo']) - float(cm['windowFrom']))
-                late = hash01(x, y, 9) < float(cm['windowOffShare'])
-                off = float(cm['windowOffFrom']) + hash01(x, y, 13) * (1.0 - float(cm['windowOffFrom']))
-                if tau >= on and not (late and tau >= off):
-                    out[y, x] = night[y, x]
-                else:
-                    out[y, x] = night_unlit[y, x] if tau >= flip else day[y, x]
+        lag = float(cm.get('frameLag', 0.0))
+        idx = int(round(max(0.0, tau - lag) / max(1e-4, 1.0 - lag) * (len(frames) - 1)))
+        idx = min(len(frames) - 1, max(0, idx))
+        out[mask == 1] = frames[idx]
         return out.astype(np.uint8)
 
 

@@ -46,6 +46,11 @@ namespace LastCall.UI
             /// white by its "keep" - and how strong it is.</summary>
             public Color Ambient;
             public float AmbientIntensity;
+            /// <summary>The glow through the glass — the sunset as LIGHT on the near wall — and
+            /// its strength; the shaft's own colour.</summary>
+            public Color Glow;
+            public float GlowIntensity;
+            public Color Shaft;
             /// <summary>Where a cast shadow falls, in stage units, and how dark it is.</summary>
             public Vector2 ShadowOffset;
             public float ShadowAlpha;
@@ -57,19 +62,30 @@ namespace LastCall.UI
         {
             public float col, radius, rowStart, rowEnd, setBy, horizonRow;
             public string coreHigh, coreLow, rimHigh, rimLow, halo;
+            /// <summary>The colour of the patch of sun on the wall, high and at the set —
+            /// hotter than the disc's own, because a shaft of sunset light really is.</summary>
+            public string shaftHigh, shaftLow;
             public float haloRadius, haloHigh, haloLow;
         }
         [Serializable] public class StarSpec { public int count, rowMax; public float from, to, lumaMax; }
         [Serializable] public class CitySpec
         {
-            public float buildingFrom, buildingTo, windowFrom, windowTo, windowOffShare, windowOffFrom;
+            /// <summary>How far behind the hour the city's frames run, as a fraction of the
+            /// night, so the windows start as the disc touches the towers.</summary>
+            public float frameLag;
             public float cloudDrift, ditherSpread;
         }
         [Serializable] public class BirdSpec { public float until, everyMin, everyMax, speed; public int flockMin, flockMax; }
         /// <summary>The moon: up from `from`, faded in over `fade`, crossing from (xStart,yStart)
         /// to (xEnd,yEnd) in source px by closing time, with `arc` rows of lift at mid-crossing.</summary>
         [Serializable] public class MoonSpec { public float from, fade, xStart, xEnd, yStart, yEnd, arc; }
-        [Serializable] public class RoomKey { public float t; public string ambient; public float keep, intensity; }
+        [Serializable] public class RoomKey
+        {
+            public float t;
+            public string ambient; public float keep, intensity;
+            /// <summary>The sky's colour arriving through the glass: a pool at the window.</summary>
+            public string glow; public float glowKeep, glowIntensity;
+        }
         [Serializable] public class RoomSpec
         {
             public RoomKey[] keys;
@@ -95,7 +111,7 @@ namespace LastCall.UI
 
         public readonly Model Spec;
         private readonly Color[][] _keyStops;
-        private readonly Color[] _roomAmbient;
+        private readonly Color[] _roomAmbient, _roomGlow;
 
         public SkyClock(Model model)
         {
@@ -108,8 +124,13 @@ namespace LastCall.UI
                     _keyStops[i][s] = Token(model.keys[i].stops[s]);
             }
             _roomAmbient = new Color[model.room.keys.Length];
+            _roomGlow = new Color[model.room.keys.Length];
             for (int i = 0; i < model.room.keys.Length; i++)
+            {
                 _roomAmbient[i] = Token(model.room.keys[i].ambient);
+                _roomGlow[i] = string.IsNullOrEmpty(model.room.keys[i].glow)
+                    ? Color.white : Token(model.room.keys[i].glow);
+            }
         }
 
         /// <summary>Reads Resources/Data/sky_cycle.json. Null when it is missing, and the
@@ -167,6 +188,12 @@ namespace LastCall.UI
             return r[Mathf.Clamp(idx, 0, r.Length - 1)];
         }
 
+        /// <summary>Walks a colour toward white by 1 − keep: a light MULTIPLIES what it lands
+        /// on, so one that is only part of the way to a hue tints, and one that goes all the
+        /// way paints over.</summary>
+        public static Color Pull(Color c, float keep) =>
+            new Color(1f + (c.r - 1f) * keep, 1f + (c.g - 1f) * keep, 1f + (c.b - 1f) * keep, 1f);
+
         public static float SmoothStep(float a, float b, float x)
         {
             float t = Mathf.Clamp01((x - a) / Mathf.Max(0.0001f, b - a));
@@ -208,6 +235,8 @@ namespace LastCall.UI
             d.SunCore = Color.Lerp(Token(sun.coreHigh), Token(sun.coreLow), sink);
             d.SunRim = Color.Lerp(Token(sun.rimHigh), Token(sun.rimLow), sink);
             d.SunHalo = string.IsNullOrEmpty(sun.halo) ? d.SunCore : Token(sun.halo);
+            d.Shaft = string.IsNullOrEmpty(sun.shaftHigh) ? d.SunCore
+                : Color.Lerp(Token(sun.shaftHigh), Token(string.IsNullOrEmpty(sun.shaftLow) ? sun.shaftHigh : sun.shaftLow), sink);
             // The key through the glass follows the DISC: eased, so it dies as the last of
             // the sun goes behind the towers rather than snapping off at the horizon row.
             d.SunStrength = SmoothStep(0f, 1f, sunVisible);
@@ -227,23 +256,23 @@ namespace LastCall.UI
             // light MULTIPLIES what it lands on, so one that is only part of the way to a hue
             // tints the plaster, and one that goes all the way paints over it.
             var rk = room.keys;
-            Color amb; float keep, inten;
-            if (tau <= rk[0].t) { amb = _roomAmbient[0]; keep = rk[0].keep; inten = rk[0].intensity; }
+            int last = rk.Length - 1;
+            int ka = last, kb = last; float f = 0f;
+            if (tau <= rk[0].t) { ka = kb = 0; }
             else
-            {
-                amb = _roomAmbient[rk.Length - 1]; keep = rk[rk.Length - 1].keep; inten = rk[rk.Length - 1].intensity;
-                for (int i = 0; i < rk.Length - 1; i++)
+                for (int i = 0; i < last; i++)
                 {
                     if (tau > rk[i + 1].t) continue;
-                    float f = SmoothStep(rk[i].t, rk[i + 1].t, tau);
-                    amb = Color.Lerp(_roomAmbient[i], _roomAmbient[i + 1], f);
-                    keep = Mathf.Lerp(rk[i].keep, rk[i + 1].keep, f);
-                    inten = Mathf.Lerp(rk[i].intensity, rk[i + 1].intensity, f);
+                    ka = i; kb = i + 1; f = SmoothStep(rk[i].t, rk[i + 1].t, tau);
                     break;
                 }
-            }
-            d.Ambient = new Color(1f + (amb.r - 1f) * keep, 1f + (amb.g - 1f) * keep, 1f + (amb.b - 1f) * keep, 1f);
-            d.AmbientIntensity = inten;
+            var amb = Color.Lerp(_roomAmbient[ka], _roomAmbient[kb], f);
+            float keep = Mathf.Lerp(rk[ka].keep, rk[kb].keep, f);
+            d.Ambient = Pull(amb, keep);
+            d.AmbientIntensity = Mathf.Lerp(rk[ka].intensity, rk[kb].intensity, f);
+            var glow = Color.Lerp(_roomGlow[ka], _roomGlow[kb], f);
+            d.Glow = Pull(glow, Mathf.Lerp(rk[ka].glowKeep, rk[kb].glowKeep, f));
+            d.GlowIntensity = Mathf.Lerp(rk[ka].glowIntensity, rk[kb].glowIntensity, f);
 
             // WHERE SHADOWS FALL. The sun stands outside the left window: high at opening,
             // so shadows are short and fall down and to the right; low at the set, so they

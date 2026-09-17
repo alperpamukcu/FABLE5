@@ -1767,15 +1767,16 @@ namespace LastCall.UI
         //     after, blended by how much light each is throwing.
         /// <summary>The sun's cone through the glass, at its loudest and as the city glow.</summary>
         // 1.75 for the first probe (2026-09-17) blew the wall by the glass to white with the shaft
-        // on top of it; the shaft carries the sun on the wall now and the cone is the fill behind it.
-        private const float SunKeyDay = 1.0f, SunKeyNight = 0.14f;
+        // on top of it; the shaft carries the sun on the wall now and the cone is the fill behind
+        // it — and since the glow took the colour (third pass, below), the cone is quieter still.
+        private const float SunKeyDay = 0.7f, SunKeyNight = 0.14f;
         /// <summary>What comes through the glass once the sun is gone: the city's own light,
         /// cool and faint — the one cold source in a room of tungsten.</summary>
         private static Color NightGlassTint => UITheme.ClubBlue[3];
         /// <summary>The patch of sun on the wall, at full strength; where it lands while the
         /// sun is high and where it has climbed to by the set (room art px); how much it
         /// stretches sideways as the light comes in flatter.</summary>
-        private const float ShaftDay = 1.35f, ShaftStretch = 1.5f;
+        private const float ShaftDay = 1.5f, ShaftStretch = 1.5f;
         private static readonly Vector2 ShaftNear = new Vector2(215f, 150f);
         private static readonly Vector2 ShaftFar = new Vector2(400f, 235f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
@@ -1940,11 +1941,18 @@ namespace LastCall.UI
         private const float SkyGlowRadius = 560f;
         /// <summary>The pink's own arc. It is atmosphere, not a lamp: broad and soft, up
         /// while the sky burns, down to the city's faint air after.</summary>
-        // 1.05 painted the whole room flat pink through the band (first probe, 2026-09-17: the
-        // plaster lost its own colour). Lower, and the colour is pulled toward white below.
-        private const float SkyGlowDay = 0.60f, SkyGlowNight = 0.10f;
-        /// <summary>How much of the sky's hue the glow keeps. 1 = the band itself as a lamp.</summary>
-        private const float SkyGlowKeep = 0.62f;
+        // THE SUNSET IS LIGHT, NOT PAINT (third pass, 2026-09-17, the author: "Gün ışığı ortam
+        // ışığını çok değiştirmeli, o sarı pembe turuncu renk oyunumuzun miami temasının
+        // unsurlarından biri"). The first probe's flat pink was a saturated glow OVER a warm
+        // ambient: the whole wall took the same colour and read as paint. The Miami answer is
+        // the oldest one in lighting — a WARM KEY and a COOL FILL: the glow through the glass
+        // is now loud and coloured (the room's "glow" keys: amber, coral, hot pink, plum) and
+        // the ambient under it is cool (blue, violet, plum, blue), so the wall goes orange
+        // where the sky lands on it and violet where it does not, and the colour has a
+        // direction. Both come from the json now; the constants went with the flat look.
+        /// <summary>The glow's second light, on the counter alone, at this share of it — the
+        /// bar top catches the sunset too, a little less than the wall it faces away from.</summary>
+        private const float CounterGlowShare = 0.55f;
 
         /// <summary>The evening's model and the view drawn from it. Null when the json or
         /// the city plates are missing — the still plate hangs and the room lights itself
@@ -1953,7 +1961,7 @@ namespace LastCall.UI
         private WindowSky _sky;
         private WindowSky.Flock _flock;
         private Light2D _windowLight;
-        private Light2D _skyGlow;
+        private Light2D _skyGlow, _counterGlow;
         private Light2D _sunShaft;
         private Light2D _patronFill;
         /// <summary>The unlit material the outside wears: the view, the palms, the pane.</summary>
@@ -2373,6 +2381,11 @@ namespace LastCall.UI
                 _skyGlow = PointLight("SkyGlow", GlobalTint, 0f, SkyGlowRadius);
                 _skyGlow.falloffIntensity = 0.86f;
                 LightLayers(_skyGlow, LayerBackground, LayerPatrons);
+                // ...and the same pool on the bar top, quieter (CounterGlowShare): one light
+                // cannot give two layers two strengths, so the counter has its own.
+                _counterGlow = PointLight("SkyGlowCounter", GlobalTint, 0f, SkyGlowRadius);
+                _counterGlow.falloffIntensity = 0.86f;
+                LightLayers(_counterGlow, LayerCounter);
                 // A throw, not a bulb: see WindowSetback / WindowAimDegrees above.
                 LightLayers(_windowLight, LayerBackground, LayerPatrons);
                 _windowLight.pointLightInnerRadius = WindowRadius * WindowInner;
@@ -2706,6 +2719,8 @@ namespace LastCall.UI
                     if (_skyGlow != null)
                         _skyGlow.transform.position = _windowSr.transform.position
                             + new Vector3(30f * _backgroundScale, 0f, 0f);
+                    if (_counterGlow != null && _skyGlow != null)
+                        _counterGlow.transform.position = _skyGlow.transform.position;
                 }
 
                 // (The wall lamps ride the fixture path — PlaceFixtures re-hangs them
@@ -3404,13 +3419,17 @@ namespace LastCall.UI
             }
             if (_skyGlow != null)
             {
-                var air = Color.Lerp(Color.white, Color.Lerp(d.SkyMid, d.SkyLow, 0.5f), SkyGlowKeep);
-                _skyGlow.color = Color.Lerp(NightGlassTint, air, d.Day);
-                _skyGlow.intensity = Mathf.Lerp(SkyGlowNight, SkyGlowDay, d.Day);
+                _skyGlow.color = d.Glow;
+                _skyGlow.intensity = d.GlowIntensity;
+            }
+            if (_counterGlow != null)
+            {
+                _counterGlow.color = d.Glow;
+                _counterGlow.intensity = d.GlowIntensity * CounterGlowShare;
             }
             if (_sunShaft != null)
             {
-                _sunShaft.color = d.SunCore;
+                _sunShaft.color = d.Shaft;
                 _sunShaft.intensity = ShaftDay * d.SunStrength * Mathf.Lerp(1f, ClosingWash, closing);
                 // Where the patch lands: low and near the glass while the sun is high, far
                 // and high on the wall as it sinks — the sun's own line, in the room's art
@@ -3500,7 +3519,7 @@ namespace LastCall.UI
         /// the model's own ambient tint, the very colour on the GlobalLight, so a prop and
         /// the plaster behind it are one room; told rather than computed twice.
         /// </summary>
-        public Color RoomWashLight => _now.Ambient;
+        public Color RoomWashLight => Color.Lerp(_now.Ambient, _now.Glow, 0.5f * Mathf.Clamp01(_now.GlowIntensity));
 
 
         // ── the wall television (2026-09-04) ────────────────────────────────────

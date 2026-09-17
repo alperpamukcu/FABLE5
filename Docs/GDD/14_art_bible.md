@@ -286,13 +286,14 @@ This is where v2's Miami survives — as the view, not the room.
 **AS BUILT (2026-09-17): the view is a CLOCK, not plates.** The window draws itself from
 `Resources/Data/sky_cycle.json` (`SkyClock` + `WindowSky`): palette-token stops top to horizon
 per key hour, blended continuously and quantised with 4×4 Bayer onto a 24-colour sky palette;
-a sun disc that sinks on a straight line behind the author's own skyline (cut from the old
-sheet by `Tools/window_sky.py derive`, never redrawn); city windows that come on one by one on
-the sun's clock; stars, drifting clouds, and flocks of M-shaped birds in `Night[1]` while there
-is light. The room's light is the same evaluation (GDD_MEVCUT §9.84): the sun's cone, a
-window-shaped shaft on the plaster that climbs as the sun drops, the sky's fill, an ambient by
-the hour, the house on one dusk, a fill on the people alone, and cast shadows off the sun then
-the lamps. The three-plate spec above is the design it grew from and is kept for the palette.
+a sun disc that sinks on a straight line behind the author's own skyline; the city itself is
+the old sheet's thirty-one frames, cut by `Tools/window_sky.py derive` and shown by the hour,
+never redrawn; stars, drifting clouds, a moon, and flocks of M-shaped birds in `Night[1]` while
+there is light. The room's light is the same evaluation (GDD_MEVCUT §9.84): a warm pool through
+the glass over a cool fill — the sunset as light with a direction — the sun's cone, a
+window-shaped shaft on the plaster that climbs as the sun drops, the house on one dusk, a fill
+on the people alone, and cast shadows off the sun then the lamps. The three-plate spec above
+is the design it grew from and is kept for the palette.
 
 ## 7b. NO LIGHT IS PAINTED IN, AND THE LOUD COLOURS ARE ACCENTS (2026-08-15)
 

@@ -1570,8 +1570,10 @@ Mahzendeki ışıklandırmayı tam raflara sabitle ... ışığın çıkış kö
 - **Mahzen**: içki gövdesi damalı dokusuz (`LiquidBody(w,h,checker:false)`) — raf ölçeğinde kare kare okunuyordu;
   el şişesi ve ölçü damalı kalır. Bölme lambaları rafın altına sabit (`CellarLightDropPx` 11→2) ve her koninin
   tepesinde koyu bir lamba gövdesi (`_cellarLamps`, 30×5, order 31) — ışık rafın arkasından çıkıyor gibi okunur.
-- Doğrulama: çevrimdışı `dotnet build LastCall.UI.csproj` temiz (MCP köprüsü kapalı olduğu için editör ölçümü ve
-  PlayMode koşusu köprü dönünce yapılacak).
+- Doğrulama: EditMode 596/597 (tek kırmızı yazarın commit edilmemiş 32×66 `v4_bourbon_hollow_oak_front_c.png`ı),
+  PlayMode iki kez (tezgâh temeli yeniden çizildi, bakıldı, sonra 13/13). Oyun içinde ölçüldü: sütun 16..240
+  (adımlar 396..512, kadran 524..636, yol 648..704), plaka yanında 256..816, MIX tüpü tenekenin kendi
+  satırlarında (1013..1037 × 420..615) çalkalamadan sonra 0,90 okuyor, çöp 1184..1264 temiz.
 
 ### 9.84 · Ana sahnenin ışığı bir SAAT: model gökyüzü, batan güneş, yanan şehir, kuşlar, duvara düşen güneş lekesi, her nesnenin gölgesi, müşterilerin kendi ışığı (2026-09-17)
 
@@ -1587,18 +1589,21 @@ aynı renk paletiyle."
   lambalarıyla çarpılmaz, palmiyeler ve cam parıltısı da). Gökyüzü beş palet durağının (tepe→ufuk, v 0/.3/.55/.8/1)
   saate göre karışımı, kuantalamadan önce sürekli RGB, sonra 4×4 Bayer (yayılım 34) ile 24 renklik gök paletine
   en-yakın renk — her an piksel sanat, her an sürekli. **Güneş:** yarıçap 7, 34. satırdan 98. satıra düz çizgiyle
-  iner (τ 0→0.30 = 18:00→20:25; 0.25 ilk probda diski 19:30'da bitiriyordu), şehrin ARKASINDA çizilir yani
-  kulelerin arkasına batar — çizimden ölçülen görünen pay 19:08'de 0.68, 19:57'de 0; çekirdek Cream4→Amber3,
+  iner (τ 0→0.36 = 18:00→20:50; 0.25 ilk probda diski 19:30'da bitiriyordu, 0.30 ikinci turda; yazar "güneş
+  hızlı batmıyor mu?" deyince 0.36 — gece 95 sn olduğu için 34 sn, oyun saatiyle 2 saat 50 dakika, gerçek
+  bir yaz batışının oranı), şehrin ARKASINDA çizilir yani kulelerin arkasına batar; çekirdek Cream4→Amber3,
   kenar Amber4→ViceRed3, kuantalamadan önce eklenen Amber4 hale (yarıçap 26, .62→.50) dither halkalara döner.
   **Yıldızlar:** 34 tane, τ 0.30–0.62'de doğar, yalnız yerel gök luma'sı 0.22'nin altındayken ve bulut yokken
   görünür, her biri kendi periyodunda (2.2–4.2 sn) Cream4/Cream3/Cream2 arasında kırpar. **Bulutlar:** 0. karenin
   kendi maskesi (205 px), bandından bir kademe koyu (×0.80), aynalı kopyasının üstünde 0.35 px/sn kayar.
-- **Şehir yazarın kendi silüeti, üç plaka, yeniden çizilmedi:** `py -3 Tools/window_sky.py derive` 0. (altın saat)
-  ve 30. (gece) karelerden `Scene/window_city.bytes` (LCSK) üretir — gündüz-sönük, gece-sönük, gece-yanık RGB +
-  maske (gök/bina/pencere) + bulut + sütun başına silüet satırı (59..82). Yanık pencereler (sıcak ve duvarından
-  açık, ya da beyaz: 134 px) medyanla boyanıp söndürülür. Bina pikselleri τ 0.14–0.46'da Bayer sırasıyla gündüz
-  morundan gece lacivertine geçer; pencereler τ 0.13–0.44'te her biri kendi hash saatinde yanar (güneş kulelere
-  değince ilk ışıklar), %22'si τ 0.72'den sonra tekrar söner. Hash iki tarafta aynı (`WindowSky.Hash01`).
+- **Şehir 31 karenin KENDİ ilerleyişi (aynı gün ikinci tur, yazar: "şehirdeki değişimi sevmedim onu önceki
+  gibi kullanabilir miyiz?"):** ilk kesim şehri üç plakadan (gündüz-sönük / gece-sönük / gece-yanık) Bayer +
+  hash takvimiyle piksel piksel yakıyordu; "kare kare" okundu ve reddedildi. Artık `py -3 Tools/window_sky.py
+  derive` `Scene/window_city.bytes` (LCS2) içine maske (gök/şehir) + bulut + sütun başına silüet satırı
+  (59..82) + 31 KARENİN şehir piksellerini (maske sırasında, 4675 px × 3 × 31 ≈ 435 KB) yazar; `WindowSky`
+  saatin en yakın olduğu kareyi gösterir (`city.frameLag` 0.06: pencereler disk kulelere değince başlar).
+  Kuleler mor→lacivert ve pencereler PixelLab'in çizdiği gibi; yeniden zamanlama, dither, hash yok. Yalnız
+  GÖKYÜZÜ çizilir.
 - **Kuşlar:** `WindowSky.Flock` — 7×4 px üç kareli M (Night1, kanat yukarı/düz/aşağı), 5–9 kuşluk gevşek sıra,
   sağdan sola 9 px/sn, sinüs salınım, 8 fps çırpış; ilk sürü erken, sonra 18–40 sn arayla, yalnız τ ≤ 0.36 (kuş
   karanlıkta uçmaz); plakanın çocuğu sprite'lar (sıra 5, z −0.01, palmiyelerin altında), oda plakası dışını keser.
@@ -1615,17 +1620,22 @@ aynı renk paletiyle."
   yanlış olan C#'tır.
 - **Oda ışığı saatten; camdan okuma silindi** (SkyPunch, AmbientPull, MidShare, WashPunch, WashDay/Night,
   NightBounce, BounceTint, luma aralığı, SkyGlowFull, SkyAlphaCut, Key/Wash/Mid satırları, `ReadSky*`,
-  `LoadWindowFrames`). **WindowLight** = güneş konisi, güneşin rengi, SunStrength ile 1.0→0.14 (1.75 ilk probda
-  camın yanındaki duvarı beyaza uçurdu; duvardaki güneşi artık leke taşıyor; gece ClubBlue3 şehir parıltısı,
-  odanın tek soğuk kaynağı). **SkyGlow** = gök orta/alt bandının %62'si beyaza çekilmiş hâli, Day ile 0.60→0.10
-  (1.05 ve tam renk, pembe bantta bütün odayı düz pembeye boyuyordu — sıva kendi rengini kaybetti). **GlobalLight**
-  = odanın saat ambiyansı: Amber4 keep .46 ×.40 (18:00) → ViceRed4 .42 ×.38 → Magenta3 .44 ×.32 → ClubBlue3 .48
-  ×.28 (mavi saat çukuru) → Amber3 .56 ×.34 (tungsten). İlk prob (.52/.47/.38/.34/.42) her saatte düz ve
-  fazla aydınlıktı; duvar bir stop indi, lekeler ve lamba havuzları okunur oldu. Duvar lambaları (.30→1), tezgâh
-  spotları (.18→.52), neon (.34→.58) Dusk üzerinde. `RoomWashLight` = model ambiyansı (kitap ve çerez matı bunu
-  giyer). Kapanış beat'i eskisi gibi `_washBase/_houseBase/_barDownBase/_sunKeyBase`'ten iner.
+  `LoadWindowFrames`). **ÜÇÜNCÜ TUR — SICAK ANAHTAR, SOĞUK DOLGU (yazar: "Gün ışığı ortam ışığını çok
+  değiştirmeli, o sarı pembe turuncu renk oyunumuzun miami temasının unsurlarından biri"):** ilk probdaki
+  "düz pembe" sorunu renk değil, sıcak ambiyans üstüne yönsüz sıcak parıltıydı. Şimdi `room.keys[]` her saatte
+  İKİ renk taşır: **glow** = gökyüzünün camdan gelen rengi (`SkyGlow`, cam kenarında 560 yarıçaplı havuz,
+  soldan sağa söner; Amber3 keep .80 ×1.10 (18:00) → ViceRed4 .85 ×1.20 (19:17) → Magenta3 .85 ×1.10
+  (20:24) → Magenta2 .70 ×.55 (21:31) → ClubBlue3 .60 ×.12 (gece, şehir parıltısı)) ve **ambient** =
+  altındaki SOĞUK dolgu (`GlobalLight`, ClubBlue3 keep .38 ×.30 → Night4 .48 ×.30 → Magenta1 .46 ×.30 →
+  ClubBlue2 .55 ×.28 → Amber3 .56 ×.34 tungsten): duvar gökyüzünün vurduğu yerde turuncu/pembe, vurmadığı
+  yerde mor — renk boya değil ışık olarak okunur, yönü vardır. Aynı havuz tezgâh katmanına ayrı bir ışıkla
+  (`SkyGlowCounter`, %55) düşer. **WindowLight** = güneş konisi, güneşin rengi, SunStrength ile 0.7→0.14 (gece
+  ClubBlue3 şehir parıltısı). Duvar lambaları (.30→1), tezgâh spotları (.18→.52), neon (.34→.58) Dusk üzerinde
+  (0.18–0.46). `RoomWashLight` = ambiyans ile glow'un yarı yarıya karışımı (kitap ve çerez matı bunu giyer).
+  Kapanış beat'i eskisi gibi `_washBase/_houseBase/_barDownBase/_sunKeyBase`'ten iner.
 - **Güneş lekesi (`SunShaft`):** `Light2D.LightType.Sprite`, kod-çizimi dört kanatlı eğik cookie (132×100, 0.5
-  shear, üst/alt 7 satır iki kademeli dither), rengi güneşin, şiddeti 1.35×SunStrength; art (215,150)'den
+  shear, üst/alt 7 satır iki kademeli dither), rengi `sun.shaftHigh→shaftLow` (Amber4→ViceRed4, diskten daha
+  sıcak — bir gün batımı şeridi gerçekten öyledir), şiddeti 1.5×SunStrength; art (215,150)'den
   (400,235)'e kayar ve yatayda 1.5× yayılır — güneş alçaldıkça leke duvarda sağa ve yukarı yürür, kızarır, diskle
   birlikte söner. Background+Patrons+Counter katmanları; `_world`'ün çocuğu (çekmece kaldırınca odayla kalkar).
 - **Müşteriler bir stop önde:** `PatronFill` yalnız Patrons katmanına giden global ışık (0.22 gündüz → 0.32 gece,
@@ -1640,9 +1650,10 @@ aynı renk paletiyle."
   (`NewStageSprite(castsShadow:true)`), yerde/duvarda duran her fikstür (mat hariç; tezgâh üstü 0.7). Kaynak yok
   olunca kendini siler. Mahzen şişelerinin kendi gölgeleri (§9.80) aynen.
 - Ölçüm: çevrimdışı `dotnet build` (UI, Editor, Tests, PlayTests) 0 hata; Python ve C# piksel hash'i 5/5 aynı;
-  oyunda iki gece çekildi (scratchpad h*/i* kareleri, `light_probe.py`): ilk gece ölçümleri yukarıdaki düzeltmeleri
-  verdi, ikinci gecede 18:20 lekesi duvarın altında cama yakın, 19:15'te yükselmiş ve amber, 20:35 pembe-mor loş,
-  21:45 mavi saat, 23:05 tungsten; 62 fps. Testler: EditMode 596/597 (kırmızı olan yazarın çalışma ağacındaki
+  oyunda dört gece çekildi (scratchpad h*/i*/j*/k* kareleri, `light_probe.py`): ilk gece ölçümleri yukarıdaki
+  düzeltmeleri verdi; üçüncü turda (sıcak anahtar / soğuk dolgu) 18:15 cam kenarı amber ve sağa doğru serin,
+  19:00 mercan havuz soldan sağa sönüyor, 20:30 cam kenarı sıcak pembe ve uzak duvar mor (pembe bandın dolgusu
+  Magenta1'den ClubBlue2'ye alındı — aynı tonda dolgu yine düz pembeye götürüyordu), 23:25 tungsten; 62 fps. Testler: EditMode 596/597 (kırmızı olan yazarın çalışma ağacındaki
   v4 plakası, 32×66), PlayMode 12/13 — tek kırmızı bench bakış çizgisi (`RoomWashLight` + aynı gün tezgâh
   paketi), kapanış beat'i dahil geri kalanı yeşil. İki tuzak ödendi: URP 2D katman başına TEK global ışık ister
   (PatronFill ile GlobalLight aynı katmanı hedefleyince "More than one global light" hatası her testi kırdı —
