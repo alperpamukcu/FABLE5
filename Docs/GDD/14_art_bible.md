@@ -134,6 +134,23 @@ actually reads.
 - The v2 signature ("amber key above, neon rim behind") now describes SERVICE and LAST CALL
   only. Day has no rim and no lit neon — that contrast is the point.
 
+### 4b. The light language (2026-09-21) — five tokens and one grade
+
+Every light in the room is one of five things, and each has one colour (`LightLanguage`, UI/Art):
+
+| Token | Colour | Who |
+|---|---|---|
+| **KEY** | Amber[4] a third to white (#F8D9A2) | every lamp the house owns: the bar's downlights, the wall lamps, the cellar, the counter lamps, the guest's lamp |
+| **FILL** | the hour's ambient token from `sky_cycle.json` | the room's wash — cool while the sky is warm, tungsten late |
+| **NEON** | Magenta[4] or Cyan[4], nothing between | the counter's tube, every sign |
+| **SCREEN** | ClubBlue[4] | the set's spill |
+| **SUN** | the json's cores, rims and glows | the window's cone, the sky glow, the shaft |
+
+The fixture data keeps naming a colour per piece; the room snaps it to the language at load (`LightLanguage.Snap`),
+so nothing bought can bring a sixth tint in. The grade is one filter on the game's own volume — lift toward the
+club's blue, gain toward the amber, a little contrast, a Night[0] vignette — and never a tonemapper, because the
+palette is tokened (§3) and a tonemapper is a regrade. The HUD is an overlay and takes none of it.
+
 ## 5. The room is a SHELL; everything standing in it is a PROP (2026-08-17)
 
 The venue is built in layers, on the author's call: the room master is **EMPTY** — walls,

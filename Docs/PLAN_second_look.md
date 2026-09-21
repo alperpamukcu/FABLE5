@@ -41,7 +41,7 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 | 10 | The beer scene from scratch, with its assets (PixelLab → report → pick) | ◐ the author picked **A**; four takes on `Docs/reports/third_look/` (T1–T4), waiting on the pick |
 | 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ☑ (GDD_MEVCUT 9.94) |
 | 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ◐ opens DOWNWARD; two takes on `Docs/reports/third_look/` (D1, D2, or in code), waiting on the pick |
-| 13 | Kitchen lamps over the counter with their light | ◐ folded into the lighting pass (§5.4) |
+| 13 | Kitchen lamps over the counter with their light | ◐ the hook, the light's hang and four takes are in (`Docs/reports/lighting/` L1–L4); the piece waits on the pick |
 | 14 | The see-through characters and dishes: the bodies rode the HUD group's fade at a middle alpha and the rail's dishes faded to 55%/40% — both solid now (`TycoonHud.Seats`: a body is whole or gone, a dish darkens instead of fading; the counter glass and the carried glass and tin at full alpha). The enclosed holes in the idle frames (34 faces) are the arm-to-body gaps, real; sheet at `Docs/reports/patron_holes/index.html`. **The waist (2026-09-21, the author's four pictures):** those very pockets, closed at import by `PatronArtPostprocessor` — every one of them, since "katı olması gerekiyor" — 4,384 frames, 0 pockets left, the PNGs untouched | ☑ |
 
 ## 4. The proposals (2026-09-21) — the author picks a direction, then the work is measured and built
@@ -119,3 +119,5 @@ The author's picks on §4 (in the order they will be built, each measured in pla
    counter lamps (§4.13) as the key light over the till, and one URP Volume built in code (colour adjustments,
    lift/gamma/gain, a vignette — modest) — a before/after sheet, then the look tests re-blessed after LOOKING.
    `DefaultVolumeProfile.asset` is the author's working file and is not edited; the volume is a scene object.
+   **Built (GDD_MEVCUT 9.95):** the tokens, the snap, the grade on `LastCallVolume` (the game's own asset, not the
+   author's default profile), the sheet. Open: the grade's strength (one place to turn), the lamp pick.

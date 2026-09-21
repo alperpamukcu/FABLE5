@@ -312,7 +312,7 @@ namespace LastCall.Game
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
                         f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group,
                         f.washSeconds, f.hasX ? f.x : float.NaN, f.hasY ? f.y : float.NaN, f.order,
-                        f.workSpeed));
+                        f.workSpeed, f.lightDy));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -784,6 +784,7 @@ namespace LastCall.Game
             public float lightB;
             public float lightIntensity;
             public float lightRadius;
+            public float lightDy;       // the light's hang against the drawing, art px (0: where it stands)
             // The room opens with this one already standing in it (the first beer font).
             // Defaults false, so every entry that does not mention it is unchanged.
             public bool startsInTheRoom;

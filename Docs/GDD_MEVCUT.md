@@ -1540,6 +1540,32 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.95 · Işık dili: beş ton, bir filtre, tezgâh lambalarının kancası (2026-09-21)
+
+Yazar: "Oyundaki ışıklandırma için profesyonel bir oyun sanat tasarımı dokunuşu lazım, oyunda belli tonlar belli
+filtrelerimiz olmalı tüm ışıklandırmalar yansımalar buna göre olmalı."
+
+- **Beş ton** (`LightLanguage`, UI/Art): KEY tungsten (Amber[4] üçte bir beyaza, #F8D9A2) — barın üç tepe ışığı,
+  duvar lambaları, kiler, son çağrının lambası, tezgâh lambaları; FILL saatin (sky_cycle.json'un ambient
+  token'ı, gökyüzü sıcakken soğuk, geç saatte amber); NEON PINK Magenta[4] ve NEON CYAN Cyan[4] — tezgâhın tüpü ve
+  tabelalar, arası yok; SCREEN ClubBlue[4]; SUN aynı json'dan. Fikstür verisi renk söylemeye devam eder, oda onu
+  yüklerken dile ÇIVİLER (`LightLanguage.Snap`: ekran → SCREEN; doygunluğu 0,40 üstü ve bir tüpün tonuna 0,13
+  içinde → o tüp; gerisi lamba → KEY). Ölçüldü (r78, 00:30): önce altı sıcak kaynak beş ayrı amberde, bir mercan
+  lamba, bir pembe lamba, bir mor tabela; sonra tek tungsten, tek pembe. `CellarLightTint`, `LampTint`,
+  `PatronFillTint` sabitleri token'a bağlandı.
+- **Bir filtre** (`LastCallVolume`, `LastCall → Setup Light Grade` sayıları koddan yazar): lift kulübün mavisine
+  (0,97/0,98/1,04), gain ambere (1,04/1,02/0,97), kontrast +12, doygunluk +8, Night[0] vinyet 0,22. Tonemap yok,
+  bloom pasif, HDR kapalı. Oda kamerasında post-processing bu tek geçiş için yeniden açık (`RoomGrade`, 2026-09-11'in
+  "düşük sistem" kapatmasını bilerek geri alır; ölçüm: editör döngüsünde açık/kapalı fark gürültünün altında,
+  tek LDR tam ekran blit). HUD screen-space overlay, filtreden pay almaz.
+- **Tezgâh lambaları**: `counter_lamps` kancası veride (x 320, y 268, asılı, ev ışığı); fikstür ışığı artık
+  çiziminden farklı yükseklikte asılabilir (`FixtureDefinition.LightDy`, `lightDy` JSON, art px) — ray tavanda,
+  ışık tezgâhta. Parça yazarın seçimini bekler (`Docs/reports/lighting/` L1–L4).
+- Sayfa: `Docs/reports/lighting/index.html` — üç saatte önce/sonra, token tablosu, 25 ışığın önce/sonra rengi,
+  filtre sayıları, maliyet, dört lamba adayı.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Look testleri yeşil kaldı (13/13): karşılaştırılan
+  kareler kanvas katmanında, oda kamerasının filtresi onlara değmiyor - yeniden kutsama gerekmedi.
+
 ### 9.94 · Shaker tezgâhı "Uygula": deck tek parça kalkar, plakada karışım çubukları, SERVE IT plakanın sağ ucunda (2026-09-21)
 
 Yazar (ikinci bakış, 7): "alkol yapma sahnesinde shaker ve şişeler hariç tüm butonlar ve paneller arkaplana yapışık

@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The light language (2026-09-21):** five tokens - KEY tungsten, the hour's FILL, NEON pink and cyan, SCREEN -
+  every fixture's light snapped to them at load, the room's own tints bound to them; one grade on the game's
+  volume (lift blue, gain amber, contrast, vignette; no tonemap, no bloom, no HDR) with post back on for it
+  alone; the `counter_lamps` hook and a light that may hang under its drawing (`lightDy`). Sheet at
+  `Docs/reports/lighting/`. GDD_MEVCUT §9.95; GDD 14 §4b.
+
 - **The shaker bench as proposed (2026-09-21, "Uygula"):** the entrance lifts the counter and everything cut
   into it as one piece and sets the props down after; one bar per pour on the plaque - the bottle's picture, its
   name, a bar in its liquid colour to its share, the number; SERVE IT on the plate family in the one accent at

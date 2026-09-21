@@ -68,6 +68,15 @@
       "place": "The back wall"
     },
     {
+      "id": "counter_lamps",
+      "x": 320,
+      "y": 268,
+      "hangs": true,
+      "houseLight": true,
+      "title": "Counter lamps",
+      "place": "Over the counter"
+    },
+    {
       "id": "wall_center",
       "x": 319,
       "y": 190,

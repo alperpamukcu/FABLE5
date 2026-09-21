@@ -31,6 +31,53 @@ namespace LastCall.EditorTools
             "Assets/Settings/Mobile_RPAsset.asset",
         };
 
+        /// <summary>
+        /// THE GRADE ON THE GAME'S OWN VOLUME (2026-09-21, LightLanguage): colour adjustments, lift/gamma/gain and a
+        /// vignette from the language's numbers, written onto LastCallVolume - the profile both RP assets point at,
+        /// which is what the room's camera reads once post-processing is on. The bloom stays in the profile but
+        /// INACTIVE: with HDR off nothing could cross its threshold, and its passes are the expensive ones. Rerunnable;
+        /// the numbers live in code, the asset only carries them.
+        /// </summary>
+        [MenuItem("LastCall/Setup Light Grade")]
+        public static void SetupGrade()
+        {
+            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(VolumePath);
+            if (profile == null) { Run(); profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(VolumePath); }
+            if (profile == null) { Debug.LogWarning("[LastCall] no volume profile to grade"); return; }
+            if (profile.TryGet<Bloom>(out var bloom)) bloom.active = false;
+            if (!profile.TryGet<ColorAdjustments>(out var ca))
+            {
+                ca = profile.Add<ColorAdjustments>(overrides: false);
+                AssetDatabase.AddObjectToAsset(ca, profile);
+            }
+            ca.active = true;
+            ca.contrast.Override(LastCall.UI.LightLanguage.GradeContrast);
+            ca.saturation.Override(LastCall.UI.LightLanguage.GradeSaturation);
+            if (!profile.TryGet<LiftGammaGain>(out var lgg))
+            {
+                lgg = profile.Add<LiftGammaGain>(overrides: false);
+                AssetDatabase.AddObjectToAsset(lgg, profile);
+            }
+            lgg.active = true;
+            lgg.lift.Override(LastCall.UI.LightLanguage.GradeLift);
+            lgg.gamma.Override(LastCall.UI.LightLanguage.GradeGamma);
+            lgg.gain.Override(LastCall.UI.LightLanguage.GradeGain);
+            if (!profile.TryGet<Vignette>(out var vig))
+            {
+                vig = profile.Add<Vignette>(overrides: false);
+                AssetDatabase.AddObjectToAsset(vig, profile);
+            }
+            vig.active = true;
+            vig.intensity.Override(LastCall.UI.LightLanguage.VignetteIntensity);
+            vig.smoothness.Override(LastCall.UI.LightLanguage.VignetteSmoothness);
+            vig.color.Override(LastCall.UI.LightLanguage.VignetteColor);
+            EditorUtility.SetDirty(profile);
+            foreach (var c in profile.components) if (c != null) EditorUtility.SetDirty(c);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[LastCall] the light grade is on LastCallVolume: contrast " + LastCall.UI.LightLanguage.GradeContrast
+                + ", saturation " + LastCall.UI.LightLanguage.GradeSaturation + ", vignette " + LastCall.UI.LightLanguage.VignetteIntensity);
+        }
+
         [MenuItem("LastCall/Setup 2D Lighting")]
         public static void Run()
         {

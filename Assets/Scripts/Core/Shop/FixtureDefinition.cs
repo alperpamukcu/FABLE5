@@ -185,6 +185,10 @@ namespace LastCall.Core
         public float LightB { get; }
         public float LightIntensity { get; }
         public float LightRadius { get; }
+        /// <summary>Where the light hangs against the drawing, in art px from the piece's own light line (two
+        /// thirds up its height): the lamps over the counter are drawn at the ceiling and light the counter,
+        /// so their light hangs well under them (2026-09-21). Zero for every piece that lights where it stands.</summary>
+        public float LightDy { get; }
 
         public FixtureDefinition(string id, string name, string slot, int price,
             double stars, string flavor, string sprite,
@@ -194,7 +198,8 @@ namespace LastCall.Core
             bool isDrain = false, bool drainsFree = false, bool isScreen = false,
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
             string swatch = null, string group = null, double washSeconds = 0,
-            float x = float.NaN, float y = float.NaN, int order = 0, double workSpeed = 0)
+            float x = float.NaN, float y = float.NaN, int order = 0, double workSpeed = 0,
+            float lightDy = 0f)
         {
             if (workSpeed < 0) throw new ArgumentOutOfRangeException(nameof(workSpeed), $"Fixture '{id}' works at a negative speed.");
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
@@ -240,6 +245,7 @@ namespace LastCall.Core
             LightR = lightR; LightG = lightG; LightB = lightB;
             LightIntensity = lightIntensity;
             LightRadius = lightRadius;
+            LightDy = lightDy;
             StartsInTheRoom = startsInTheRoom;
             TapLevel = tapLevel;
             Level = tapLevel > 0 ? tapLevel : level;

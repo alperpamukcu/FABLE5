@@ -1439,7 +1439,7 @@ namespace LastCall.UI
         /// <summary>Warm, because the light in this room is tungsten and the cellar is part
         /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
         /// shelf actually reads against the lamps over it.</summary>
-        private static readonly Color CellarLightTint = new Color(1f, 0.87f, 0.68f);
+        private static readonly Color CellarLightTint = LightLanguage.Key;   // one tungsten for the house (2026-09-21)
         private readonly List<Light2D> _cellarLights = new List<Light2D>();
         // THE LAMP THE LIGHT COMES OUT OF (2026-09-17, the author: "ışığın çıkış köşesi biraz kırpılmış olmalı"): a
         // dark housing on the board's underside over each cone's apex, so the light reads as coming from behind the
@@ -1732,7 +1732,7 @@ namespace LastCall.UI
         private const float GlobalIntensity = 0.45f;
         /// <summary>The house tungsten: the closing beat's lamp, and the colour a plate with
         /// no sky left in it falls back to.</summary>
-        private static readonly Color LampTint = new Color(1f, 0.80f, 0.52f);
+        private static readonly Color LampTint = LightLanguage.Key;   // the language's one tungsten (2026-09-21)
         private const float LampIntensity = 0.55f;
         private const float LampRadius = 92f;
 
@@ -1785,7 +1785,7 @@ namespace LastCall.UI
         private static readonly Vector2 ShaftFar = new Vector2(400f, 235f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
         private const float PatronFillDay = 0.22f, PatronFillNight = 0.32f;
-        private static readonly Color PatronFillTint = new Color(1f, 0.97f, 0.92f);
+        private static readonly Color PatronFillTint = LightLanguage.PatronLift;   // the key, most of the way to white
 
         // ── A WINDOW IS AN AREA, NOT A BULB (2026-08-19) ────────────────────────
         //
@@ -2265,13 +2265,18 @@ namespace LastCall.UI
             // RTX 4070 — and memory bandwidth is what a cheap laptop's graphics lack most.
             // Bloom comes back with RoomBloom, and only means anything once a light is pushed
             // past 1.1.
+            // THE GRADE (2026-09-21, the author: "belli tonlar belli filtrelerimiz olmalı"): post-processing
+            // is back on for the one filter the room wears - LightLanguage's grade on LastCallVolume: lift toward
+            // the club's blue, gain toward the amber, a little contrast, a vignette - and NOTHING else: HDR stays
+            // off and the volume's bloom is inactive, so the cost is the uber pass alone, one LDR full-screen
+            // blit at 1280x720 (measured, r79). RoomGrade is the one switch if a machine cannot pay it.
             var data = cam.GetUniversalAdditionalCameraData();
-            if (data != null) data.renderPostProcessing = RoomBloom;
-            cam.allowHDR = RoomBloom;
+            if (data != null) data.renderPostProcessing = RoomGrade;
+            cam.allowHDR = false;
         }
 
-        /// <summary>Post-processing and HDR on the room's camera — see FillTheWindow.</summary>
-        private const bool RoomBloom = false;
+        /// <summary>Post-processing on the room's camera, for the grade alone — see FillTheWindow.</summary>
+        private const bool RoomGrade = true;
 
         /// <summary>The width the room is BUILT at — the reference, always. The window is not
         /// the room's business any more: everything under the stage root is laid out at
@@ -3126,8 +3131,10 @@ namespace LastCall.UI
                         string glowName = house
                             ? "HouseLight" + _houseLights.Count
                             : "FxGlow_" + def.Id + suffix;
+                        // IN THE LANGUAGE (2026-09-21): the data's colour is a wish; the room snaps it to
+                        // the house's tungsten, one of the two tubes, or the screen (LightLanguage.Snap).
                         glow = PointLight(glowName,
-                            new Color(def.LightR, def.LightG, def.LightB),
+                            LightLanguage.Snap(new Color(def.LightR, def.LightG, def.LightB), def.IsScreen),
                             def.LightIntensity, def.LightRadius);
                         if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3361,7 +3368,7 @@ namespace LastCall.UI
                 // The glow hangs at the piece's own light line — the flame, the belly of
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)
-                    placed.Glow.transform.position = basePos + new Vector3(0f, h * 0.66f, 0f);
+                    placed.Glow.transform.position = basePos + new Vector3(0f, h * 0.66f + placed.Def.LightDy * k, 0f);
             }
 
             // The blobs ride their own pieces, so a re-fitted window moves the shadow with

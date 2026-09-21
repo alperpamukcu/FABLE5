@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Light Language</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0D0813; --panel:#1A1023; --ink:#F2E8D5; --ink2:#C9BCA8; --accent:#E8A33D; }
+body { margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--ink); font:16px/1.5 Georgia, "Times New Roman", serif; }
+main { max-width:1320px; margin:0 auto; }
+h1 { font-size:28px; margin:0 0 4px; font-weight:normal; }
+h2 { font-size:20px; margin:40px 0 8px; font-weight:normal; color:var(--accent); }
+p { max-width:78ch; color:var(--ink2); margin:6px 0; }
+.pair { display:flex; flex-wrap:wrap; gap:16px; margin:12px 0; }
+.card { background:var(--panel); padding:10px; }
+.card img { display:block; max-width:100%%; image-rendering:pixelated; }
+.card .k { font-size:14px; color:var(--ink2); margin-top:4px; }
+.card .k b { color:var(--accent); font-weight:normal; }
+table { border-collapse:collapse; font-size:14px; margin:8px 0; }
+td, th { padding:3px 12px 3px 0; color:var(--ink2); text-align:left; vertical-align:top; }
+th { color:var(--ink); font-weight:normal; border-bottom:1px solid #362447; }
+.sw { display:inline-block; width:14px; height:14px; vertical-align:middle; margin-right:6px; border:1px solid #000; }
+.ask { border-left:3px solid var(--accent); padding:8px 12px; margin:24px 0; color:var(--ink); }
+code { color:var(--ink); }
+</style></head><body><main>
+<h1>The light language</h1>
+<p>2026-09-21, the fourth pick of the third look: "belli tonlar, belli filtrelerimiz olmalı; tüm ışıklandırmalar, yansımalar buna göre." What is in the game now, measured, and the one thing left to pick.</p>
+
+<h2>1. Before and after, three hours</h2>
+<div class="pair"><div class="card"><img src="before_t00.png" width="640" height="360" alt=""><div class="k">18:15, golden hour, <b>before</b></div></div><div class="card"><img src="after_t00.png" width="640" height="360" alt=""><div class="k">18:15, golden hour, <b>after</b>: the lamps on one tungsten, the tube on one pink, the grade</div></div></div>
+<div class="pair"><div class="card"><img src="before_t44.png" width="640" height="360" alt=""><div class="k">21:35, blue hour, <b>before</b></div></div><div class="card"><img src="after_t44.png" width="640" height="360" alt=""><div class="k">21:35, blue hour, <b>after</b>: the lamps on one tungsten, the tube on one pink, the grade</div></div></div>
+<div class="pair"><div class="card"><img src="before_t80.png" width="640" height="360" alt=""><div class="k">00:30, night, <b>before</b></div></div><div class="card"><img src="after_t80.png" width="640" height="360" alt=""><div class="k">00:30, night, <b>after</b>: the lamps on one tungsten, the tube on one pink, the grade</div></div></div>
+
+<h2>2. The five tokens (<code>LightLanguage</code>)</h2>
+<p>Every emitter in the room is one of these. The data still names a colour per fixture; the room snaps it to the language at load, so a lamp bought in the market cannot bring a sixth tint in.</p>
+<table>
+<tr><th>Token</th><th>Colour</th><th>Who</th></tr>
+<tr><td>KEY</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2, Amber[4] a third to white</td><td>the bar's three downlights, the wall lamps, the cellar, the guest's lamp at last call, the counter lamps</td></tr>
+<tr><td>FILL</td><td>the hour's, from <code>sky_cycle.json</code></td><td>the room's ambient: ClubBlue while the sky is warm, Amber late (the warm key / cool fill the room already lit by)</td></tr>
+<tr><td>NEON PINK</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6, Magenta[4]</td><td>the counter's tube (seven lights), the flamingo, the sun, the bird, the glass</td></tr>
+<tr><td>NEON CYAN</td><td><span class="sw" style="background:#7DF0E3"></span>#7DF0E3, Cyan[4]</td><td>the martini sign</td></tr>
+<tr><td>SCREEN</td><td><span class="sw" style="background:#6E93F0"></span>#6E93F0, ClubBlue[4]</td><td>the set's spill</td></tr>
+<tr><td>SUN</td><td>from the same json</td><td>the window's cone, the sky glow, the shaft</td></tr>
+</table>
+
+<h2>3. Every light in the room at 00:30, before and after</h2>
+<table><tr><th>Light</th><th>Before</th><th>After</th><th>Intensity</th><th>Reach</th></tr>
+<tr><td>BarDownlight0</td><td><span class="sw" style="background:#FFCC84"></span>#FFCC84</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.52</td><td>300</td></tr>
+<tr><td>BarDownlight1</td><td><span class="sw" style="background:#FFCC84"></span>#FFCC84</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.52</td><td>300</td></tr>
+<tr><td>BarDownlight2</td><td><span class="sw" style="background:#FFCC84"></span>#FFCC84</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.52</td><td>300</td></tr>
+<tr><td>BarNeon0</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon1</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon2</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon3</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon4</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon5</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>BarNeon6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6</td><td>0.58</td><td>70</td></tr>
+<tr><td>CellarLight0_0</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>CellarLight0_1</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>CellarLight0_2</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>CellarLight1_0</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>CellarLight1_1</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>CellarLight1_2</td><td><span class="sw" style="background:#FFDDAD"></span>#FFDDAD</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>0.00</td><td>150</td></tr>
+<tr><td>FxGlow_neon_flamingo</td><td><span class="sw" style="background:#FF59CC"></span>#FF59CC</td><td><span class="sw" style="background:#FF7DC6"></span>#FF7DC6 &larr; snapped</td><td>0.80</td><td>55</td></tr>
+<tr><td>GlobalLight</td><td><span class="sw" style="background:#F2CB92"></span>#F2CB92</td><td><span class="sw" style="background:#F2CB92"></span>#F2CB92</td><td>0.34</td><td>1</td></tr>
+<tr><td>HouseLight0</td><td><span class="sw" style="background:#FFEDD3"></span>#FFEDD3</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>1.00</td><td>132</td></tr>
+<tr><td>HouseLight1</td><td><span class="sw" style="background:#FFEDD3"></span>#FFEDD3</td><td><span class="sw" style="background:#F8D9A2"></span>#F8D9A2 &larr; snapped</td><td>1.00</td><td>132</td></tr>
+<tr><td>PatronFill</td><td><span class="sw" style="background:#F8E1BE"></span>#F8E1BE</td><td><span class="sw" style="background:#F7DDB6"></span>#F7DDB6 &larr; snapped</td><td>0.66</td><td>1</td></tr>
+<tr><td>SkyGlow</td><td><span class="sw" style="background:#8EA3E0"></span>#8EA3E0</td><td><span class="sw" style="background:#8EA3E0"></span>#8EA3E0</td><td>0.12</td><td>560</td></tr>
+<tr><td>SkyGlowCounter</td><td><span class="sw" style="background:#8EA3E0"></span>#8EA3E0</td><td><span class="sw" style="background:#8EA3E0"></span>#8EA3E0</td><td>0.07</td><td>560</td></tr>
+<tr><td>SunShaft</td><td><span class="sw" style="background:#F27D8A"></span>#F27D8A</td><td><span class="sw" style="background:#F27D8A"></span>#F27D8A</td><td>0.00</td><td>1</td></tr>
+<tr><td>WindowLight</td><td><span class="sw" style="background:#4467CC"></span>#4467CC</td><td><span class="sw" style="background:#4467CC"></span>#4467CC</td><td>0.14</td><td>640</td></tr>
+</table>
+
+<h2>4. The grade</h2>
+<p>One filter, on the game's own volume (<code>LastCallVolume</code>, written by LastCall &rarr; Setup Light Grade from the numbers in <code>LightLanguage</code>): lift toward the club's blue (0.97, 0.98, 1.04), gain toward the amber (1.04, 1.02, 0.97), contrast +12, saturation +8, a vignette of 0.22 in Night[0]. No tonemapping, no bloom (inactive), no HDR: the palette stays tokened. The HUD is a screen-space overlay and takes none of it. Post-processing is back on the room's camera for this alone; <code>RoomGrade</code> is the one switch.</p>
+<p>Cost, measured in the editor's loop with vsync off, 240 frames a sample: grade off 47.93|1456.2 ms, on 48.47|1504.4 ms; off again 48.12|1492.0, on again 49.11|1504.4 (mean|worst). The difference is under the loop's own noise; the pass is one LDR full-screen blit at 1280&times;720.</p>
+
+<h2>5. The lamps over the counter (a pick)</h2>
+<p>"Tam tezgahın üstüne mutfak tezgah lambalarından yerleştir, tezgaha ışık vursun." A rail of three pendants, drawn at the room's scale (120&times;32, shown here at four times), hung from the ceiling above the drinkers' heads at the new <code>counter_lamps</code> hook (x 320, y 268), its light hung 169 px under the drawing so it lands ON the counter (<code>lightDy</code>, new in the fixture data), in KEY, on the house's clock like the wall lamps. The hook is in the data now; the piece goes in with the pick.</p>
+<div class="pair">
+<div class="card"><img src="lamps_L1.png" width="480" height="128" alt=""><div class="k"><b>L1</b></div></div>
+<div class="card"><img src="lamps_L2.png" width="480" height="128" alt=""><div class="k"><b>L2</b></div></div>
+<div class="card"><img src="lamps_L3.png" width="480" height="128" alt=""><div class="k"><b>L3</b></div></div>
+<div class="card"><img src="lamps_L4.png" width="480" height="128" alt=""><div class="k"><b>L4</b></div></div>
+</div>
+<div class="ask">Reply with one rail (L1&ndash;L4) or say what to change; and say if the grade should be stronger or gentler, the numbers are one place.</div>
+</main></body></html>
