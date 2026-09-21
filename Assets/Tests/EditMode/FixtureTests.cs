@@ -394,6 +394,22 @@ namespace LastCall.Tests
         // ── the tower ladder (2026-08-19) ───────────────────────────────────────
 
         [Test]
+        public void TheRoomHasOneTower_DrawnAsTheAuthorsTapBeer()
+        {
+            // 2026-09-21, the author: the tower's drawing no longer changes with the beer upgrade; the ladder's
+            // rungs add the lines instead (TycoonRun.TapLevel). The catalogue keeps one tower, standing from
+            // the start, and no taller one to buy over it.
+            string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
+            var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
+            var towers = loaded.Fixtures.Where(f => f.IsTap).ToList();
+            Assert.AreEqual(1, towers.Count, "one tower in the shipped catalogue");
+            Assert.AreEqual("taps_one", towers[0].Id);
+            Assert.IsTrue(towers[0].StartsInTheRoom, "and the room opens with it");
+            Assert.AreEqual("fx_tap_beer", towers[0].Sprite, "the author's tap_beer at every line count");
+            Assert.AreEqual(1, towers[0].TapLevel, "its own line is the first; the ladder brings the rest");
+        }
+
+        [Test]
         public void TheLadder_ParsesAsThreeLevelsInOneSlot()
         {
             var loaded = DataLoader.ParseFixtures(@"{" + Slots + @" ""fixtures"": [

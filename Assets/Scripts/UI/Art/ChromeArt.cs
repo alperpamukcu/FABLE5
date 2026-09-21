@@ -3109,6 +3109,13 @@ namespace LastCall.UI
         public static Sprite CardSlotL() => Resliced("card_slot_l", new Vector4(0, 10, 8, 10), "card:slot:l");
         public static Sprite CardBodyL() => Resliced("card_body_l", new Vector4(6, 6, 6, 6), "card:body:l");
 
+        /// <summary>THE BLUE PLATE (2026-09-21, the author's ui_blue: "card_slot.png ve diğerlerinin farklı renk
+        /// hali ... oyunun UI dili birbirine yakın olsun"): the card family's box in the cyan ramp — a bright
+        /// outer ring, a darker inner one, a near-solid fill — 108×90, sliced six deep so its rounded corners
+        /// never stretch, shown at 2x like the rest of the family. The fill is nine parts in ten, so a panel
+        /// that stands on it lays a solid of the same ink underneath (TycoonHud.BluePlate).</summary>
+        public static Sprite BluePlate() => Resliced("ui_blue", new Vector4(6, 6, 6, 6), "ui:blue");
+
         private static Sprite Resliced(string item, Vector4 border, string key)
         {
             if (Cache.TryGetValue(key, out var got) && got != null) return got;

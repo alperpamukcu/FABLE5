@@ -369,7 +369,10 @@ two old bars translate straight across: 0.75 satisfaction is 4.0 stars, 0.40 is 
 and 5 stars, each with a title the top bar wears and a short list of what it opens: ice and the lemon twist at a
 half star; the door (module 28) and the salt and sugar rims at one; the bar spoon and the olive and mint jars at
 two. Below a rung Core refuses the verb (`BarRank`, `TycoonRun.Has`); the room only hides it. A rung crossed at
-the night's end opens a window that says what is new, and the star row reopens it. Plan: `Docs/PLAN_rank_ladder.md`.
+the night's end opens a window that says what is new — a certificate on the author's blue plate — and the star
+row reopens it. The shop reads the same number, carried through tonight (`TycoonRun.ShopStars`), so what a rung
+opens is in that evening's market and stays open; the draught lines climb with the rungs too (a second at two
+stars, a third at three — GDD 21 §10). Plan: `Docs/PLAN_rank_ladder.md`.
 
 Two things now key off the standing rather than off last night's mood:
 

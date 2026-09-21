@@ -46,8 +46,8 @@ the standing while the unlocks stay, that is one line in `BarRank`.)
 | 0 | 0 | NOBODY'S HEARD OF IT | the bar as it opens: pour, shake, cap, the card as the order |
 | 1 | 0.5 | TALK OF THE STREET | **ice** and the **lemon twist** on the counter; orders may ask for them |
 | 2 | 1.0 | THE BLOCK'S BEST | **the door** — papers behind the card, forgeries, the KICK key, the fine and the thanks; **salt** and **sugar** rims on the counter |
-| 3 | 2.0 | TALK OF THE TOWN | **the bar spoon** (stirred drinks); **olives** and **mint** appear in the market |
-| 4 | 3.0 | THE CITY'S BEST | (title only — the existing 3-star bottles and recipes are the content) |
+| 3 | 2.0 | TALK OF THE TOWN | **the bar spoon** (stirred drinks); **olives** and **mint** appear in the market; **a second draught line** (L4) |
+| 4 | 3.0 | THE CITY'S BEST | **a third draught line** (L4); the 3-star bottles and recipes |
 | 5 | 4.0 | THE COUNTRY'S BEST | (title only — the 4-star bottles and recipes) |
 | 6 | 5.0 | THE BEST THERE IS | (title only — the endgame) |
 
@@ -118,11 +118,21 @@ yet celebrated wears a small "NEW" flag on the star row until the window has bee
 - Both suites green; the ceremony looked at in play at every rung (the dev presets park the standing at 2.6 and
   5.0 — `DevPreset` must move `BestStanding` with it).
 
-## 3. Open decisions (for the author)
+### L4 — The author's six answers, and the certificate ☑ (2026-09-21)
+- Titles in Turkish (mine; the author renames): `tr.json` `rank.title.r0..r6`.
+- Rungs 3 and 4 carry the draught lines (`Feature.SecondLine`, `Feature.ThirdLine`; `BarRank.DraughtLines`;
+  `TycoonRun.TapLevel` reads them). `taps_two`/`taps_three` left the catalogue; the tower is drawn as the
+  author's `fx_tap_beer` at every count. Verbs for rungs 4–6 beyond that: ideas offered, none chosen yet.
+- The market lag is gone: `TycoonRun.ShopStars` (the high-water mark carried through tonight) is what every
+  star gate reads; `OpenedLastNight` reads the same interval; `BarRating.PreviousBestStanding`.
+- Dev keys (Settings → dev bench → MERDİVEN) open the climb and the standing window.
+- The window is a certificate on the blue plate (`ChromeArt.BluePlate`, `TycoonHud.BluePlate`).
+- Tests: `BarRankTests`, `LadderWiringTests` (+3), `FixtureTests` (+1), the keg test rewritten. GDD_MEVCUT 9.89.
 
-1. The six titles are drafts in English — the Turkish table will carry the author's own words.
+## 3. Open decisions (for the author) — answered 2026-09-21 except where noted
+
+1. ~~The six titles are drafts in English~~ — Turkish titles written (L4); the author may rename.
 2. High-water mark vs. following the standing (§1.1).
-3. Rungs 4–6 have no new verb; the screen lists what the market opened there. Add verbs later?
-4. The market lag: olives and mint reached at rung 3 show up in the NEXT evening's market (how the market has
-   always read the standing). The screen says "in tomorrow's market". If the author wants them the same evening, the
-   market must read the night's preview — a separate decision with its own tests.
+3. Rungs 3 and 4 now carry the draught lines (L4). The author wants verbs on 3–5 and is open to ideas; none chosen yet.
+4. ~~The market lag~~ — fixed (L4): the shop reads `ShopStars`, the same evening. Side effect, deliberate: the
+   shop's gates are high-water now, like the rungs — a bad week does not take a listing away.

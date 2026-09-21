@@ -455,10 +455,11 @@ namespace LastCall.Tests
         public void ASecondKeg_NeedsASecondLineToComeOutOf()
         {
             // The author, 2026-08-19: "marketten musluğu geliştirmeden bir üst seviye fıçı
-            // bira alınmamalı." The bar has five stars and all the money in the world; what
-            // it does not have is somewhere to plug the second keg in.
+            // bira alınmamalı." — and since 2026-09-21 the lines come with the ladder's rungs
+            // (the author: "ilerleyen yıldızlarda 2 ve 3. bira alınabilecek"): a bar under two
+            // stars, with all the money in the world, has nowhere to plug the second keg in.
             var run = BarWithKegs();
-            run.Rating.DevSet(5.0);
+            run.Rating.DevSet(1.9);
             RunDayToClose(run);
 
             var ids = run.MarketOffers.Select(o => o.Bottle.Id).ToList();
@@ -470,16 +471,22 @@ namespace LastCall.Tests
             // merely early must not look like a keg the game forgot.
             var held = run.GatedStock().Where(g => g.Card.Id == "beer_two").ToList();
             Assert.AreEqual(1, held.Count, "the stout is shown as held back, not hidden");
-            Assert.That(held[0].Sentence, Does.Contain("2-LINE"));
+            Assert.That(held[0].Sentence, Does.Contain("2 DRAUGHT LINES"));
 
-            run.BuyFixture("tower_2");
+            // Two stars bring the second line (BarRank.DraughtLines), three the third.
             run.ContinueToNextDay();
-            run.Rating.DevSet(5.0);
+            run.Rating.DevSet(2.0);
             RunDayToClose(run);
 
             ids = run.MarketOffers.Select(o => o.Bottle.Id).ToList();
             CollectionAssert.Contains(ids, "beer_two", "a second line, a second keg");
             CollectionAssert.DoesNotContain(ids, "beer_three", "and no further than that");
+
+            run.ContinueToNextDay();
+            run.Rating.DevSet(3.0);
+            RunDayToClose(run);
+            ids = run.MarketOffers.Select(o => o.Bottle.Id).ToList();
+            CollectionAssert.Contains(ids, "beer_three", "three stars, three lines");
         }
 
         [Test]

@@ -120,6 +120,106 @@ namespace LastCall.Tests
 
         // ── the door ─────────────────────────────────────────────────────────────────────────────
 
+        // ── the shop reads the night's climb (2026-09-21) ──────────────────────────────────────
+
+        private static TycoonRun NewRunWith(double stars, string seed, params FixtureDefinition[] fixtures)
+        {
+            var run = new TycoonRun(NewShelf(), Book, new RunRng(seed),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0),
+                fixtures: fixtures);
+            run.Rating.DevSet(stars);
+            return run;
+        }
+
+        private static FixtureDefinition Tower() =>
+            new FixtureDefinition("taps_one", "Draught Tower", "taps", 35, 0, "One tower.", "fx_tap_beer",
+                startsInTheRoom: true, tapLevel: 1);
+
+        private static FixtureDefinition Lamps(double comfort) =>
+            new FixtureDefinition("lamps", "Lamps", "wall_lamps", 25, 0, "Two on the wall.", "fx_wall_lamp_lv0",
+                startsInTheRoom: true, comfort: comfort);
+
+        private static FixtureDefinition Picture(double stars) =>
+            new FixtureDefinition("picture", "A Picture", "art", 40, stars, "On the wall.", "fx_art_city",
+                comfort: 0.2);
+
+        /// <summary>Plays the night out serving everyone a spritz and keeping the counter clean.</summary>
+        private static void PlayAGoodNight(TycoonRun run)
+        {
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen)
+            {
+                Assert.Less(guard++, 4000, "the night must end");
+                run.Tick(5);
+                TestNight.Clean(run);
+                foreach (var visit in run.Floor.Seated.ToList())
+                {
+                    if (visit.State != VisitState.Waiting) continue;
+                    run.PourMeasure("gin", 0.35);
+                    run.PourMeasure("soda", 0.35);
+                    run.PourIntoServingGlass(run.Glass.TotalVolume, accuracy: 1.0);
+                    run.ServeTo(visit);
+                }
+            }
+        }
+
+        [Test]
+        public void ANightThatCrossesARung_OpensTheRungsListings_TheSameEvening()
+        {
+            // The author (2026-09-21): olives and mint reached tonight are in TONIGHT's market. The shop's number
+            // is the ladder's, carried through the night the books have not yet closed.
+            var run = NewRunWith(1.99, "ladder-shop-rise", Tower(), Lamps(5.0), Picture(2.0));
+            Assert.AreEqual(2, run.Rank.Index, "just under the third rung");
+            Assert.AreEqual(1, run.TapLevel, "one line under the third rung");
+            PlayAGoodNight(run);
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
+            Assert.Greater(run.StandingAfterTonight, 2.0, "a night served well and kept clean climbs past two stars");
+            Assert.Less(run.Rating.Average, 2.0, "the books are not closed yet");
+            Assert.AreEqual(3, run.RankAfterTonight.Index);
+            Assert.AreEqual(run.StandingAfterTonight, run.ShopStars, 1e-9, "the shop reads the climb before the books file it");
+            Assert.IsTrue(run.OpenedLastNight(2.0), "a 2.0 listing is NEW tonight");
+            Assert.IsFalse(run.OpenedLastNight(1.0), "a gate long open is not");
+            Assert.DoesNotThrow(() => run.BuyFixture("picture"), "a 2.0-star piece sells the evening the bar reached it");
+            double shop = run.ShopStars;
+            run.ContinueToNextDay();
+            Assert.AreEqual(shop, run.Rating.BestStanding, 1e-9, "the books file exactly what the shop read");
+            Assert.AreEqual(3, run.Rank.Index);
+            Assert.AreEqual(2, run.TapLevel, "and the second draught line is open");
+            Assert.IsFalse(run.OpenedLastNight(2.5), "a gate still shut is not new");
+        }
+
+        [Test]
+        public void WhenTheStandingFalls_TheShopKeepsWhatTheLadderOpened()
+        {
+            var run = NewRunWith(2.0, "ladder-shop-fall", Tower(), Picture(2.0));
+            Assert.AreEqual(2, run.TapLevel);
+            OrdersOfTheNight(run, 400);   // everyone declined: a dreadful night
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
+            Assert.Less(run.StandingAfterTonight, 2.0, "the night drags the standing under the rung");
+            Assert.AreEqual(2.0, run.ShopStars, 1e-9, "the shop reads the mark, not the fall");
+            Assert.DoesNotThrow(() => run.BuyFixture("picture"), "a 2.0-star piece still sells tonight");
+            Assert.IsFalse(run.OpenedLastNight(2.0), "and it is not NEW: it opened before tonight");
+            run.ContinueToNextDay();
+            Assert.Less(run.Rating.Average, 2.0);
+            Assert.AreEqual(2.0, run.ShopStars, 1e-9, "tomorrow too");
+            Assert.AreEqual(2, run.TapLevel, "the lines do not go back either");
+        }
+
+        [Test]
+        public void TheDraughtLines_ComeWithTheRungs_OnTheOneTower()
+        {
+            Assert.AreEqual(0, NewRunWith(3.0, "ladder-no-tower").TapLevel, "no tower, no line: a keg needs a spout");
+            var run = NewRunWith(0.0, "ladder-lines", Tower());
+            Assert.AreEqual(1, run.TapLevel);
+            run.Rating.DevSet(2.0);
+            Assert.AreEqual(2, run.TapLevel, "the second line at two stars");
+            run.Rating.DevSet(3.0);
+            Assert.AreEqual(3, run.TapLevel, "the third at three");
+            Assert.AreEqual("taps_one", run.StandingTap().Id, "the same tower stands on the counter at every count");
+        }
+
+        // ── the door ─────────────────────────────────────────────────────────────────────────────
+
         [Test]
         public void BelowTheSecondRung_NobodyIsAMinor_AndTheKickRefuses()
         {

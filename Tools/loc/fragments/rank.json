@@ -21,7 +21,14 @@
     { "key": "rank.unlock.door", "text": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT", "note": "Unlock line at one star: the papers behind the ID card, forgeries and the KICK key. 8 px, ~56 characters." },
     { "key": "rank.unlock.rims", "text": "SALT AND SUGAR RIMS ON THE COUNTER", "note": "Unlock line at one star. 8 px, ~40 characters." },
     { "key": "rank.unlock.spoon", "text": "THE BAR SPOON: STIRRED DRINKS", "note": "Unlock line at two stars. 8 px, ~40 characters." },
-    { "key": "rank.unlock.jars", "text": "OLIVES AND MINT IN TOMORROW'S MARKET", "note": "Unlock line at two stars: the two garnish jars appear on the market board from the next evening. 8 px, ~40 characters." },
+    { "key": "rank.unlock.jars", "text": "OLIVES AND MINT IN TONIGHT'S MARKET", "note": "Unlock line at two stars: the two garnish jars appear on the market board the same evening the rung is reached. 8 px, ~40 characters." },
+    { "key": "rank.unlock.line2", "text": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET", "note": "Unlock line at two stars: the beer tower can pour a second beer, so a second keg can be bought. 8 px, ~50 characters." },
+    { "key": "rank.unlock.line3", "text": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET", "note": "Unlock line at three stars: a third beer on the tower. 8 px, ~50 characters." },
+    { "key": "rank.cert.heading", "text": "CERTIFICATE OF STANDING", "note": "Heading at the top of the rank-up certificate (the level-up screen is drawn as a certificate on cream paper). 8 px, ~26 characters." },
+    { "key": "rank.cert.known_as", "text": "THIS BAR IS HEREBY KNOWN AS", "note": "Line on the certificate just above the bar's new rank title. 8 px, ~30 characters." },
+    { "key": "rank.cert.risen_from", "text": "RISEN FROM {title}", "note": "Line on the certificate under the stars, naming the rank the bar held before tonight. {title} is a rank title such as TALK OF THE STREET. 8 px, ~40 characters." },
+    { "key": "rank.cert.foot", "text": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE", "note": "Foot line of the certificate on the night the rank is reached. {night} is the night number. 8 px, ~56 characters." },
+    { "key": "rank.cert.foot_again", "text": "STANDING AS OF NIGHT {night}", "note": "Foot line of the certificate when it is reopened from the top bar's star row on a later night. {night} is the night number. 8 px, ~30 characters." },
     { "key": "rank.strip.new", "text": "NEW", "note": "Tiny flag on the top bar's star row when a rung has been reached and its screen not yet opened. 8 px, ~3 characters." },
     { "key": "rank.strip.tip", "text": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS", "note": "Hover tip on the top bar's star row: the first line is the card's title, the second its detail. Keep the newline." }
   ]

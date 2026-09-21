@@ -1780,6 +1780,11 @@
     { "key": "prep.stirred.name", "text": "Stirred", "note": "Preparation name (stirred with a bar spoon); counter prop captions and tips. No slots." },
     { "key": "prep.sugar_rim.description", "text": "The rim run through sugar.", "note": "One-line description of the sugar rim garnish, shown in a hover tip. No slots." },
     { "key": "prep.sugar_rim.name", "text": "Sugar Rim", "note": "Garnish name; counter prop captions and tips. No slots." },
+    { "key": "rank.cert.foot", "text": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE", "note": "Foot line of the certificate on the night the rank is reached. {night} is the night number. 8 px, ~56 characters." },
+    { "key": "rank.cert.foot_again", "text": "STANDING AS OF NIGHT {night}", "note": "Foot line of the certificate when it is reopened from the top bar's star row on a later night. {night} is the night number. 8 px, ~30 characters." },
+    { "key": "rank.cert.heading", "text": "CERTIFICATE OF STANDING", "note": "Heading at the top of the rank-up certificate (the level-up screen is drawn as a certificate on cream paper). 8 px, ~26 characters." },
+    { "key": "rank.cert.known_as", "text": "THIS BAR IS HEREBY KNOWN AS", "note": "Line on the certificate just above the bar's new rank title. 8 px, ~30 characters." },
+    { "key": "rank.cert.risen_from", "text": "RISEN FROM {title}", "note": "Line on the certificate under the stars, naming the rank the bar held before tonight. {title} is a rank title such as TALK OF THE STREET. 8 px, ~40 characters." },
     { "key": "rank.strip.new", "text": "NEW", "note": "Tiny flag on the top bar's star row when a rung has been reached and its screen not yet opened. 8 px, ~3 characters." },
     { "key": "rank.strip.tip", "text": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS", "note": "Hover tip on the top bar's star row: the first line is the card's title, the second its detail. Keep the newline." },
     { "key": "rank.title.r0", "text": "NOBODY'S HEARD OF IT", "note": "The bar's rank title at the foot of the ladder (no stars yet). Worn in the top bar's star row and as the old title on the rank-up screen. Shop bold face 16 px, ~22 characters." },
@@ -1791,7 +1796,9 @@
     { "key": "rank.title.r6", "text": "THE BEST THERE IS", "note": "Rank title at five stars, the top of the ladder. ~22 characters." },
     { "key": "rank.unlock.door", "text": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT", "note": "Unlock line at one star: the papers behind the ID card, forgeries and the KICK key. 8 px, ~56 characters." },
     { "key": "rank.unlock.ice_lemon", "text": "ICE AND A LEMON TWIST ON THE COUNTER", "note": "Unlock line at half a star. 8 px, ~40 characters." },
-    { "key": "rank.unlock.jars", "text": "OLIVES AND MINT IN TOMORROW'S MARKET", "note": "Unlock line at two stars: the two garnish jars appear on the market board from the next evening. 8 px, ~40 characters." },
+    { "key": "rank.unlock.jars", "text": "OLIVES AND MINT IN TONIGHT'S MARKET", "note": "Unlock line at two stars: the two garnish jars appear on the market board the same evening the rung is reached. 8 px, ~40 characters." },
+    { "key": "rank.unlock.line2", "text": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET", "note": "Unlock line at two stars: the beer tower can pour a second beer, so a second keg can be bought. 8 px, ~50 characters." },
+    { "key": "rank.unlock.line3", "text": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET", "note": "Unlock line at three stars: a third beer on the tower. 8 px, ~50 characters." },
     { "key": "rank.unlock.rims", "text": "SALT AND SUGAR RIMS ON THE COUNTER", "note": "Unlock line at one star. 8 px, ~40 characters." },
     { "key": "rank.unlock.spoon", "text": "THE BAR SPOON: STIRRED DRINKS", "note": "Unlock line at two stars. 8 px, ~40 characters." },
     { "key": "rank.window.continue", "text": "CONTINUE", "note": "The rank screen's one key. Shop bold face 16 px on a 240-unit key, ~10 characters." },
@@ -1975,6 +1982,6 @@
     { "key": "unlock.last_call", "text": "EARNED AT THE LAST CALL", "note": "Label under an item earned from a story guest whose name is not known. Capitals, no full stop. No slots." },
     { "key": "unlock.serve_who", "text": "SERVE {who} WHAT THEY ASK FOR", "note": "Label under an item earned by serving a story guest their order. Capitals, no full stop. {who} is the guest's name in capitals (a name, not translated)." },
     { "key": "unlock.stars", "text": "NEEDS {stars} STARS", "note": "Label under a locked shop/book item, capitals, no full stop. {stars} is the star rating wanted with one decimal, e.g. \"2.5\"." },
-    { "key": "unlock.tap_lines", "text": "NEEDS THE {lines}-LINE TOWER", "note": "Label under a keg held back until the draught tower has enough lines. Capitals, no full stop. {lines} is a number (2 or 3)." }
+    { "key": "unlock.tap_lines", "text": "NEEDS {lines} DRAUGHT LINES", "note": "Label under a keg held back until the bar's rank has opened enough draught lines. Capitals, no full stop. {lines} is a number (2 or 3)." }
   ]
 }

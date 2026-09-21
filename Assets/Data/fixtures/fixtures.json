@@ -1232,36 +1232,10 @@
       "price": 35,
       "stars": 0,
       "flavor": "One line, one lager. A start.",
-      "sprite": "fx_tap_single",
+      "sprite": "fx_tap_beer",
       "tapLevel": 1,
       "startsInTheRoom": true,
       "group": "counter"
-    },
-    {
-      "id": "taps_two",
-      "name": "Arched Draught Bridge",
-      "slot": "taps",
-      "price": 65,
-      "comfort": 0.1,
-      "stars": 1.5,
-      "flavor": "A brass bridge on two legs, handles in a row across it.",
-      "sprite": "fx_tap_arch",
-      "tapLevel": 2,
-      "group": "counter",
-      "workSpeed": 1.2
-    },
-    {
-      "id": "taps_three",
-      "name": "Triple Draught Tower",
-      "slot": "taps",
-      "price": 100,
-      "comfort": 0.2,
-      "stars": 3.0,
-      "flavor": "One column, three spouts, and nothing waiting its turn.",
-      "sprite": "fx_tap_tee",
-      "tapLevel": 3,
-      "group": "counter",
-      "workSpeed": 1.4
     },
     {
       "id": "counter_sink",

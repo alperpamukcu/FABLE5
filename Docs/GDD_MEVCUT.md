@@ -1540,6 +1540,54 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.89 · Merdivenin devamı: Türkçe unvanlar, SERTİFİKA penceresi (mavi plaka), aynı akşamın marketi, basamakla gelen fıçı hatları, tek musluk çizimi, dev tuşları (2026-09-21)
+
+Yazar: "1- Kendin ayarla. 2- Evet isterim, şu an bir fikrim yok, fikirlere açığım. 3- Düzelt. 4- Oyun editöründen
+yeni eklenen ekranları göremiyorum. 5- Yeni tap beer'i paylaştım, artık bira upgrade'i görseli değiştirmeyecek,
+sahnede hep bu tap_beer olacak; seviye atlatmak bira slotunu arttıracak (1, sonra 2 ve 3). 6- ui_blue-1.png
+card_slot'un farklı renk hali; UI için bu arkaplanları kullan, UI dili birbirine yakın olsun; panellerde orta
+kısmın şeffaflığı olmamalı." Sonra: "Yıldız seviyesi yükseldiğinde bir level up screen çıkmalı, bu sahnede
+sertifika gibi olabilir." Plan: `Docs/PLAN_rank_ladder.md` (L4).
+
+- **Unvanlar** (`tr.json`, benim seçimlerim — yazar değiştirir): KİMSE ADINI DUYMAMIŞ · SOKAĞIN KONUŞULANI ·
+  MAHALLENİN EN İYİSİ · ŞEHRİN KONUŞULANI · ŞEHRİN EN İYİSİ · ÜLKENİN EN İYİSİ · EN İYİSİ BU. Pencerenin ve
+  sertifikanın bütün satırları da Türkçelendi (`rank.*`, 31 anahtar).
+- **Sertifika** (`TycoonHud.Ladder`): pencere yazarın **mavi plakası** üstünde (`ChromeArt.BluePlate` — ui_blue
+  108×90, halkalar 2+2 px, 6'dan dilimli, 2x; altında opak Cyan[0] dolgu, dolgu halkaların iç kenarından başlar ki
+  köşe yayı bozulmasın) krem bir kâğıt (560×292): iki Malt çizgi (2 px dış, 1 px iç), köşelerde baklava, "CERTIFICATE
+  OF STANDING", "THIS BAR IS HEREBY KNOWN AS" + unvan (16 px, iki satıra sarabilir), tırmanan yıldız sırası, "RISEN
+  FROM {eski unvan}", "NEW BEHIND THE BAR" listesi (buz / kapı / rim / kaşık / kavanoz / musluk işaretleri), sol
+  altta −12° eğik mühür yıldızı, "CONFERRED ON NIGHT {n} BY THE PEOPLE WHO DRINK HERE". Yıldız sırasından açılınca
+  başlık "WHERE THE BAR STANDS", ayak "STANDING AS OF NIGHT {n}", eski unvan satırı boş. Plaka 640×480 — ölçüldü:
+  üç satırlık liste −242'de biter, ayak −262, mühür kâğıdın iç çizgisini 7 birimle geçer; CONTINUE ve "NEXT RUNG
+  AT" plakada kâğıdın altında.
+- **Aynı akşamın marketi** (`TycoonRun.ShopStars`): market (`RollMarket`, `GatedStock`), ödül panosu (`BuyFixture`,
+  `DevPreset`), tarif defteri ve `IUnlockState.Stars` artık TEK sayıyı okur: merdivenin su işareti
+  (`BestStanding`), gece sonunda `StandingAfterTonight` ile taşınmış hali (faturanın önizlemesiyle aynı üç satır).
+  Kapanışta atılan market o gece geçilen basamağın listelerini gösterir ve `ContinueToNextDay` aynı sayıyı su
+  işareti olarak dosyalar (test: "the books file exactly what the shop read"). SONUÇ: bir listeleme bir kez
+  açılınca standing düşse de kapanmaz — basamak gibi (eski kural: market standing'i okurdu, düşünce kapanırdı).
+  `OpenedLastNight` aynı aralığı okur: gece sonunda (BestStanding, ShopStars], ertesi gün
+  (PreviousBestStanding, BestStanding] — `BarRating.PreviousBestStanding` yeni. `RankAfterTonight` de
+  `BarRank.Of(ShopStars)`.
+- **Fıçı hatları basamakla gelir**: `Feature.SecondLine` 3. basamak (2,0★), `Feature.ThirdLine` 4. basamak (3,0★),
+  `BarRank.DraughtLines(stars)` 1/2/3. `TycoonRun.TapLevel` = kule varsa max(kulenin hattı, merdivenin hattı), kule
+  yoksa 0 (fıçıya musluk lazım). `taps_two` ve `taps_three` kataloğdan ÇIKTI (65+100'lük para batağı ve workSpeed
+  1,2/1,4 de gitti — 200 koşuluk sim yeniden okunmalı); `taps_one` yazarın `fx_tap_beer`'i (74×49) ile çizilir,
+  her hat sayısında aynı; odada (220, −84)'te ölçüldü. Fıçı kilidi cümlesi "NEEDS {n} DRAUGHT LINES" /
+  "{n} FIÇI HATTI GEREKİR". Tezgâhın font rig'leri (bench_tap_arch/tee) TapLevel'ı okumaya devam eder —
+  ikinci ve üçüncü fıçıyı dökmek için tutamak lazım.
+- **Dev tezgâhı** (Ayarlar ⚙ → GELİŞTİRİCİ TEZGÂHI → MERDİVEN): "BASAMAK YUKARI" standing'i sonraki basamağa park
+  edip tırmanış penceresini açar (`DevClimbLadder`, faturanın açtığı yol); "MERDİVEN PENCERESİ" yıldız sırasının
+  kapısı. Üst şeritteki yıldızlara tıklamak da açar.
+- Doğrulama: `BarRankTests` +1, `LadderWiringTests` +3 (aynı akşam yükselen gece, düşen gece, hatlar), `FixtureTests`
+  +1 (tek kule, tap_beer), `ASecondKeg_NeedsASecondLineToComeOutOf` basamağa yeniden yazıldı; EditMode 618/619
+  (tek kırmızı yazarın 32×66 v4_bourbon plakası), PlayMode 13/13.
+- Oturum notu: bu sırada aynı editörde başka bir oturum koşuyu birkaç saniyede bir yeniden başlatıyordu (sahne
+  yeniden yükleniyor, geceler hızlı oynatılıyor); sertifika her basamakta TEK KAREDE alındı (ShowLadder +
+  CaptureScreenshot aynı execute_code çağrısında, Motion.Reduced ile yıldızlar hemen konar). Play modu bulunduğu
+  gibi bırakıldı.
+
 ### 9.88 · Merdiven: yıldız basamakları unvan verir ve oyun mekaniği açar; tören penceresi; üst şeritteki yıldızlar tıklanır (2026-09-21)
 
 Yazar: "Her yıldız seviyesi geçildiğinde (0.5-1-2-3-4-5) barın popülerliği değişecek ve her popülerlikte yeni

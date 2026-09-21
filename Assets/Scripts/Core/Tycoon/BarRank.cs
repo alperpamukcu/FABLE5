@@ -21,6 +21,11 @@ namespace LastCall.Core
         Spoon,
         /// <summary>Olives and mint on the market's board.</summary>
         Jars,
+        /// <summary>A second draught line — the second keg in the market (GDD 21 §10; 2026-09-21, the author:
+        /// "Seviye atlatmak bira slotunu arttıracak"). The tower on the counter is the same drawing; the count grows.</summary>
+        SecondLine,
+        /// <summary>A third draught line — the third keg.</summary>
+        ThirdLine,
     }
 
     /// <summary>One rung: where it stands on the star scale, what it is called, what it opens.</summary>
@@ -70,8 +75,8 @@ namespace LastCall.Core
             new Rung(0, 0.0),
             new Rung(1, 0.5, Feature.IceAndLemon),
             new Rung(2, 1.0, Feature.Door, Feature.Rims),
-            new Rung(3, 2.0, Feature.Spoon, Feature.Jars),
-            new Rung(4, 3.0),
+            new Rung(3, 2.0, Feature.Spoon, Feature.Jars, Feature.SecondLine),
+            new Rung(4, 3.0, Feature.ThirdLine),
             new Rung(5, 4.0),
             new Rung(6, 5.0),
         };
@@ -116,6 +121,15 @@ namespace LastCall.Core
             if (Has(stars, Feature.Rims)) { open.Add(Preparations.SaltRim); open.Add(Preparations.SugarRim); }
             return open;
         }
+
+        /// <summary>
+        /// How many draught lines the ladder has opened at <paramref name="stars"/>: one at the foot, a second at
+        /// two stars, a third at three (2026-09-21, the author: "ilk başta 1 bira alınırken ilerleyen yıldızlarda
+        /// 2 ve 3. bira alınabilecek"). The kegs' locks (UnlockCondition.Tap) read the run's TapLevel, which is
+        /// this whenever a tower stands on the counter at all.
+        /// </summary>
+        public static int DraughtLines(double stars) =>
+            1 + (Has(stars, Feature.SecondLine) ? 1 : 0) + (Has(stars, Feature.ThirdLine) ? 1 : 0);
 
         /// <summary>Which feature, if any, holds <paramref name="preparation"/> back; null for a preparation
         /// the ladder never gated (a shake, a stir — those have their own laws).</summary>

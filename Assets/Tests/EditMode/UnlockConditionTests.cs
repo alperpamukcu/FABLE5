@@ -74,9 +74,9 @@ namespace LastCall.Tests
             Assert.IsTrue(gate.MetBy(bar));
             bar.TapLevel = 3;
             Assert.IsTrue(gate.MetBy(bar), "a taller tower still runs the line below it");
-            // It names the thing the player buys, and it names NO star — the shop's "next
+            // It names the lines the bar runs (the ladder's, since 2026-09-21), and it names NO star — the shop's "next
             // at" hint counts stars, and a keg waiting on a counter must not drag it down.
-            Assert.That(gate.Sentence, Does.Contain("2-LINE"));
+            Assert.That(gate.Sentence, Does.Contain("2 DRAUGHT LINES"));
             Assert.IsTrue(double.IsNaN(gate.StarsWanted));
         }
 

@@ -2096,6 +2096,12 @@ namespace LastCall.UI
             DevKey(ref slot, "SON SİPARİŞE ATLA", "geceye atla, sonra sonuna kadar oynat",
                 DevJumpToLastCall);
 
+            DevHeading(ref slot, "MERDİVEN");
+            DevKey(ref slot, "BASAMAK YUKARI", "standing'i sonraki basamağa park et, tırmanış penceresi",
+                () => { ToggleDevBench(); DevClimbLadder(); });
+            DevKey(ref slot, "MERDİVEN PENCERESİ", "bulunulan basamak (üst şeritteki yıldızlar da açar)",
+                () => { ToggleDevBench(); OpenLadderFromTheBeam(); });
+
             DevHeading(ref slot, "İNSANLAR");
             DevKey(ref slot, "ODA", "her müşteri, kâğıtları ve yıldızı",
                 () => { ToggleDevBench(); ToggleGuide(); });

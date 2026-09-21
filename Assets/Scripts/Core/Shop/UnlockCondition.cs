@@ -128,9 +128,9 @@ namespace LastCall.Core
             private readonly int _lines;
             public TapLines(int lines) { _lines = lines; }
             public override bool MetBy(IUnlockState state) => state != null && state.TapLevel >= _lines;
-            // Named after the thing the player buys, because "NEEDS THE 2-LINE TOWER" is a
-            // shelf in the market they can walk to, and "REQUIRES TAPLEVEL 2" is not.
-            public override string Sentence => $"NEEDS THE {_lines}-LINE TOWER";
+            // Named after the thing the bar earns (2026-09-21): the lines come with the ladder's
+            // rungs now, not from a tower on a shelf, so the label counts lines and not towers.
+            public override string Sentence => $"NEEDS {_lines} DRAUGHT LINES";
             public override Line SentenceLine => Line.Of("unlock.tap_lines").With("lines", _lines);
         }
 

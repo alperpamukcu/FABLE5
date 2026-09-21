@@ -44,6 +44,8 @@ namespace LastCall.Tests
             Assert.AreEqual(2, BarRank.Granting(Feature.Rims).Index, "salt and sugar at one star");
             Assert.AreEqual(3, BarRank.Granting(Feature.Spoon).Index, "the spoon at two stars");
             Assert.AreEqual(3, BarRank.Granting(Feature.Jars).Index, "olives and mint at two stars");
+            Assert.AreEqual(3, BarRank.Granting(Feature.SecondLine).Index, "a second draught line at two stars");
+            Assert.AreEqual(4, BarRank.Granting(Feature.ThirdLine).Index, "a third at three");
             foreach (Feature f in Enum.GetValues(typeof(Feature)))
             {
                 int on = 0;
@@ -63,6 +65,17 @@ namespace LastCall.Tests
             Assert.IsFalse(BarRank.Has(1.9, Feature.Spoon));
             Assert.IsTrue(BarRank.Has(2.0, Feature.Spoon));
             Assert.IsTrue(BarRank.Has(5.0, Feature.IceAndLemon), "what a rung opened stays open above it");
+        }
+
+        [Test]
+        public void TheDraughtLines_ClimbWithTheRungs()
+        {
+            Assert.AreEqual(1, BarRank.DraughtLines(0.0), "one line at the foot");
+            Assert.AreEqual(1, BarRank.DraughtLines(1.99));
+            Assert.AreEqual(2, BarRank.DraughtLines(2.0), "the second at two stars");
+            Assert.AreEqual(2, BarRank.DraughtLines(2.99));
+            Assert.AreEqual(3, BarRank.DraughtLines(3.0), "the third at three");
+            Assert.AreEqual(3, BarRank.DraughtLines(5.0));
         }
 
         [Test]

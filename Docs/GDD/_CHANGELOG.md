@@ -2,6 +2,14 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The ladder, continued (2026-09-21):** the rank-up window is a CERTIFICATE now — cream paper ruled in gold on
+  the author's blue plate (ui_blue, sliced, an opaque middle), the title the bar is hereby known as, the stars
+  climbing, the title it rose from, what is new, a seal, the night it was conferred. The shop reads the ladder's
+  number carried through tonight (`TycoonRun.ShopStars`), so olives and mint reached tonight are in tonight's
+  market and a listing once opened stays open. The draught lines come with the rungs — a second at two stars, a
+  third at three — the taller towers left the catalogue, and the room's tower is the author's tap_beer at every
+  count. Turkish rank titles; dev keys to open the screens. GDD_MEVCUT §9.89; `Docs/PLAN_rank_ladder.md` L4.
+
 - **The ladder (2026-09-21):** the standing's six rungs - a half star, then one to five - each carry a title and
   open something the bar did not have: ice and the lemon twist at a half, the door (papers, forgeries, the KICK
   key) and the salt and sugar rims at one, the bar spoon and the olive and mint jars at two. Core refuses below a

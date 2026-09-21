@@ -107,7 +107,7 @@
     {"key": "unlock.stars", "text": "NEEDS {stars} STARS", "note": "Label under a locked shop/book item, capitals, no full stop. {stars} is the star rating wanted with one decimal, e.g. \"2.5\"."},
     {"key": "unlock.last_call", "text": "EARNED AT THE LAST CALL", "note": "Label under an item earned from a story guest whose name is not known. Capitals, no full stop. No slots."},
     {"key": "unlock.serve_who", "text": "SERVE {who} WHAT THEY ASK FOR", "note": "Label under an item earned by serving a story guest their order. Capitals, no full stop. {who} is the guest's name in capitals (a name, not translated)."},
-    {"key": "unlock.tap_lines", "text": "NEEDS THE {lines}-LINE TOWER", "note": "Label under a keg held back until the draught tower has enough lines. Capitals, no full stop. {lines} is a number (2 or 3)."},
+    {"key": "unlock.tap_lines", "text": "NEEDS {lines} DRAUGHT LINES", "note": "Label under a keg held back until the bar's rank has opened enough draught lines. Capitals, no full stop. {lines} is a number (2 or 3)."},
     {"key": "unlock.all", "text": "{first}  ·  {next}", "note": "Joins two lock labels when an item needs both. {first} and {next} are unlock.* labels (the first may itself be a join)."},
 
     {"key": "calendar.week_night", "text": "WEEK {week} · {night}", "note": "Calendar plaque and night slip. {week} is the week number; {night} is calendar.night.*. Capitals."},

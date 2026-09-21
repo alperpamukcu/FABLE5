@@ -97,6 +97,11 @@ namespace LastCall.Core
         /// </summary>
         public double BestStanding { get; private set; } = StartStars;
 
+        /// <summary>The high-water mark BEFORE the last night closed (2026-09-21): the shop reads
+        /// <see cref="BestStanding"/> now (TycoonRun.ShopStars), so what opened last night is what lies
+        /// between this and it.</summary>
+        public double PreviousBestStanding { get; private set; } = StartStars;
+
         /// <summary>The standing BEFORE the last night closed (2026-09-08) — what the market
         /// reads to say what is NEW: a listing whose star gate lies between this and
         /// <see cref="Average"/> opened last night and the player should be told so.</summary>
@@ -145,6 +150,7 @@ namespace LastCall.Core
             double night = Math.Min(ExactStarsFor(nightAverageSatisfaction), cap);
             _nights.Add(night);
             PreviousStanding = _standing;
+            PreviousBestStanding = BestStanding;
             _standing = StandingAfter(night);
             if (_standing > BestStanding) BestStanding = _standing;
         }

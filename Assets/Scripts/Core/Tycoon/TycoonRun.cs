@@ -237,11 +237,26 @@ namespace LastCall.Core
         /// <summary>The rung tonight would leave the bar on, asked without closing the books — the same
         /// preview the bill's climb is drawn from (<see cref="StandingAfterTonight"/>), so the night's end can
         /// celebrate a rung before <see cref="ContinueToNextDay"/> files it, and never one the books refuse.</summary>
-        public Rung RankAfterTonight =>
-            BarRank.Of(Math.Max(Rating.BestStanding, Phase == TycoonPhase.DayEnd ? StandingAfterTonight : Rating.BestStanding));
+        public Rung RankAfterTonight => BarRank.Of(ShopStars);
 
         /// <summary>Has the ladder opened <paramref name="feature"/> for this bar?</summary>
         public bool Has(Feature feature) => BarRank.Has(Rating.BestStanding, feature);
+
+        /// <summary>
+        /// THE STARS THE SHOP READS (2026-09-21, the author: olives and mint reached tonight belong in TONIGHT's
+        /// market, not tomorrow's). Every star gate in the market, the upgrade screen and the recipe book asks
+        /// this and nothing else. It is the ladder's own number — the high-water mark, so a listing once opened
+        /// stays open the way a rung does — carried through the night the books have not yet closed: at the
+        /// night's end it is the standing the close is about to file (<see cref="StandingAfterTonight"/>, the
+        /// same three lines the bill's climb is drawn from), so the market rolled at the close lists what the
+        /// climb just opened, and <see cref="ContinueToNextDay"/> then files exactly that number as the mark.
+        /// </summary>
+        public double ShopStars =>
+            Math.Max(Rating.BestStanding, Phase == TycoonPhase.DayEnd ? StandingAfterTonight : Rating.BestStanding);
+
+        /// <summary>The stars the market before this one was rolled at (see <see cref="OpenedLastNight"/>).</summary>
+        private double ShopStarsBefore =>
+            Phase == TycoonPhase.DayEnd ? Rating.BestStanding : Rating.PreviousBestStanding;
 
         /// <summary>
         /// IS THERE A BAR SPOON BEHIND THIS BAR? The ladder's third rung (2026-09-21, the author: "2. yıldızda
@@ -435,16 +450,20 @@ namespace LastCall.Core
         /// waits for. The shop draws one tile from this so an early aisle does not read as
         /// a finished one.</summary>
         public IEnumerable<(IngredientCard Card, double Stars, string Sentence)> GatedStock() =>
-            Market.GatedFor(_shelf, _brandCatalogue, Rating.Average, this);
+            Market.GatedFor(_shelf, _brandCatalogue, ShopStars, this);
 
         /// <summary>True when a listing behind <paramref name="starGate"/> opened LAST NIGHT:
         /// the gate lay above the standing before the night closed and at or under it
         /// after (2026-09-08, the author: "markete yeni gelen ürünlerin üstünde NEW! bandı
         /// olmalı, oyuncu neyi yeni açtığını bilsin"). NaN — no gate — is never new.</summary>
+        // ...READ THE WAY THE SHOP READS (2026-09-21): between the number the previous market was rolled at
+        // and the number tonight's was. At the night's end that is the mark (the books not yet closed) up to
+        // ShopStars; once the night is filed it is the previous mark up to the mark — the same interval, seen
+        // from either side of ContinueToNextDay.
         public bool OpenedLastNight(double starGate) =>
             !double.IsNaN(starGate)
-            && starGate > Rating.PreviousStanding + 1e-9
-            && starGate <= Rating.Average + 1e-9;
+            && starGate > ShopStarsBefore + 1e-9
+            && starGate <= ShopStars + 1e-9;
 
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
@@ -484,7 +503,7 @@ namespace LastCall.Core
         // ── every lock, asked the same way (GDD 26 §12.2 step 4) ────────────────
 
         /// <summary>The bar's standing, as a lock is allowed to see it.</summary>
-        double IUnlockState.Stars => Rating.Average;
+        double IUnlockState.Stars => ShopStars;
 
         /// <summary>Whether a written night was served the way it was asked for. False for a
         /// run with no story at all, which is most of the test suites.</summary>
@@ -817,7 +836,7 @@ namespace LastCall.Core
             int rungCap = late ? int.MaxValue : 1;
             foreach (var f in _fixtureCatalogue)
             {
-                if (f.Stars > Rating.Average + 1e-9) continue;      // the gate BuyFixture keeps
+                if (f.Stars > ShopStars + 1e-9) continue;      // the gate BuyFixture keeps
                 // THE TOOLS ARE NOT THE DECOR. A rung cap set for the room's LOOK also cut
                 // the things the player WORKS with — the second tap line, the brass basin,
                 // the gold shaker — and a mid preset that cannot pull two lines is a mid
@@ -2529,9 +2548,9 @@ namespace LastCall.Core
         // gate that only exists in a menu is a gate that has already been walked round
         // twice in this project's history.
 
-        /// <summary>How many draught lines the bar can pour — the tallest tower it owns,
-        /// 0 for a bar with no tower at all. What every keg's lock is measured against, and
-        /// what the room reads to decide which tower to stand on the counter.</summary>
+        /// <summary>How many draught lines the bar can pour — 0 for a bar with no tower at
+        /// all, otherwise the tower's own lines or the ladder's, whichever is more. What
+        /// every keg's lock is measured against, and what the bench stands its font on.</summary>
         public int TapLevel
         {
             get
@@ -2539,7 +2558,12 @@ namespace LastCall.Core
                 int best = 0;
                 foreach (var f in _fixtureCatalogue)
                     if (f.TapLevel > best && _fixtures.Contains(f.Id)) best = f.TapLevel;
-                return best;
+                // THE LADDER ADDS THE LINES (2026-09-21, the author: "Seviye atlatmak bira slotunu
+                // arttıracak, ilk başta 1 bira alınırken ilerleyen yıldızlarda 2 ve 3."): a second at
+                // two stars, a third at three (BarRank.DraughtLines). The tower on the counter is one
+                // drawing at every count — the taller towers left the catalogue with this — and a bar
+                // with no tower at all still runs no line, because a keg needs a spout.
+                return best == 0 ? 0 : Math.Max(best, BarRank.DraughtLines(Rating.BestStanding));
             }
         }
 
@@ -2724,13 +2748,13 @@ namespace LastCall.Core
             if (_fixtures.Contains(fixtureId))
                 throw Said.With(new InvalidOperationException($"The bar already has {def.Name}."),
                     Line.Of("rule.fixture_owned").With("fixture", FixtureNameLine(def)));
-            if (Rating.Average < def.Stars)
+            if (ShopStars < def.Stars)
                 throw Said.With(new InvalidOperationException(
-                    $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {Rating.Average:0.0}."),
+                    $"{def.Name} needs a {def.Stars:0.0}-star room; this bar rates {ShopStars:0.0}."),
                     Line.Of("rule.fixture_needs_stars")
                         .With("fixture", FixtureNameLine(def))
                         .With("stars", def.Stars.ToString("0.0"))
-                        .With("rating", Rating.Average.ToString("0.0")));
+                        .With("rating", ShopStars.ToString("0.0")));
             // A ladder is bought one rung at a time. Buying the triple over a bar that
             // never ran two lines would hand it every keg in the catalogue for one payment
             // — the whole ladder skipped in a single click — and the wall lamps climb the
@@ -2955,10 +2979,11 @@ namespace LastCall.Core
         private void RollMarket()
         {
             // Deterministic: new stock (styles you lack) + better bottles (brands you do
-            // not own yet), the higher rungs gated by the bar's standing.
+            // not own yet), the higher rungs gated by the bar's standing — read as the shop
+            // reads it (ShopStars, 2026-09-21): tonight's climb counts, the same evening.
             _newStockIds.Clear();   // yesterday's "NEW" flashes have worn off
             _marketOffers.Clear();
-            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, Rating.Average, this));
+            _marketOffers.AddRange(Market.OffersFor(_shelf, _brandCatalogue, ShopStars, this));
         }
 
         /// <summary>A garnish press, as a share of the shaker (survives PourResolver).</summary>
