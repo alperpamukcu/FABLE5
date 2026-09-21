@@ -47,6 +47,12 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayOpen);
             if (visit == null) throw new ArgumentNullException(nameof(visit));
+            // THE DOOR IS THE LADDER'S SECOND RUNG (2026-09-21, the author: "1. yıldızdan sonra ... kovma
+            // mekanikleri gelecek"). Below it nobody is rolled a minor (NextArrival) and nobody can be shown
+            // the door — the one guard here that is about the BAR rather than about the person.
+            if (!Has(Feature.Door))
+                throw Said.With(new InvalidOperationException("The door is not yours yet."),
+                    Line.Of("rule.kick_no_door"));
             if (ReferenceEquals(visit, LastCustomer))
                 throw Said.With(new InvalidOperationException("The guest of the house is not yours to show the door."),
                     Line.Of("rule.kick_guest_of_house"));

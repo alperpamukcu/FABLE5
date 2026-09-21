@@ -1540,6 +1540,42 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.88 · Merdiven: yıldız basamakları unvan verir ve oyun mekaniği açar; tören penceresi; üst şeritteki yıldızlar tıklanır (2026-09-21)
+
+Yazar: "Her yıldız seviyesi geçildiğinde (0.5-1-2-3-4-5) barın popülerliği değişecek ve her popülerlikte yeni
+oynanış özellikleri açılmalı. 1. yıldızdan sonra kimlik sorgulama, sahte kimlik tespiti ve kovma; 2. yıldızda kaşık
+ile karıştırma. Yarım yıldızda buz ve limon; 1 yıldızda tuz ve şeker; zeytin ve nane 2 yıldızda, yalnız onlar
+markette kilitli. Her seviyeye ulaşıldığında kutlayan, eski ile yeni seviye arasındaki geçişi ve yeni açılanları
+gösteren bir ekran açılmalı; üst bardaki yıldız barına tıklayarak tekrar açılabilmeli." Plan: `Docs/PLAN_rank_ladder.md`.
+
+- **Basamaklar** (`BarRank`, saf Core): 0 · 0,5 · 1 · 2 · 3 · 4 · 5 yıldız; her birinin bir unvanı (`rank.title.r0..r6`,
+  İngilizce taslak — yazar adlandıracak) ve açtığı şeyler: yarımda **buz + limon**, birde **kapı** (kimlik arkasındaki
+  kağıtlar, sahte kartlar, KICK tuşu, ceza ve teşekkür) ve **tuz + şeker**, ikide **kaşık** ve **zeytin + nane**.
+  3-4-5 yalnız unvan; pencere o basamakta marketin açtıklarını listeler.
+- **Rütbe bir SU İŞARETİ**: `BarRating.BestStanding` — standing düşse de basamak düşmez, açılan açık kalır.
+  `TycoonRun.Rank`, `Has(Feature)`, `RankAfterTonight` (faturanın önizlemesiyle aynı üç satır; kapanışın reddedeceği
+  bir basamağı vaat edemez).
+- **Kurallar katmanı reddeder, oda gizler**: `AddPreparation[AtGlass]` basamağın açmadığı hazırlığı reddeder
+  (`rule.prep_not_yet`); siparişler yalnız rayın taşıdığını ister (`ServingSpec.Roll(allowed)` — sıfır basamakta
+  hep sade); `IdPapers.Roll(doorOpen)` kapı kapalıyken herkesi dürüst çevirir (aynı çekimler yakılır, tohumlar
+  oynamaz; bir kez çekilen kağıt ömür boyu dürüst kalır); `Kick` basamağın altında "kapı henüz senin değil"
+  (`rule.kick_no_door`); `SpoonUnlocked` artık basamak — 2026-09-16'nın "ilk karıştırılan sayfa" kuralı kalktı.
+  Sim botu kaşıksız karıştırmalı tarifi çalkalar (yanlış, reddedilmemiş).
+- **Veri**: `mint_fresh`, `olive_luca` ve **vermut** 2,0'da; Dirty Martini ve Mint Julep rank 14 (2,0 basamağı) —
+  "her şişe onu isteyen ilk sayfanın basamağında açılır" değişmezi (BaseBarContentTests) böyle korunuyor.
+- **Oda** (L1): ray kabı basamak getirmeden kurulmaz (`RefreshRail`), KICK tuşu ikinci basamaktan önce çizilmez.
+- **Pencere** (`TycoonHud.Ladder`): fatura panosundaki tırmanış yeni bir basamağa konduğu an açılır (tek sefer);
+  solda ESKİ unvan + yıldızlar, sağda YENİ'ye tırmanan yıldızlar, altta "NEW BEHIND THE BAR" listesi (buz/kapı/
+  rim/kaşık/kavanoz işaretleriyle), sonraki basamağın eşiği, CONTINUE. Üst şeritteki yıldız sırası artık bir tuş:
+  aynı pencereyi tırmanışsız, bulunulan basamak için açar; görülmemiş bir basamak yıldızların üstünde **NEW**
+  bayrağı taşır. `Ceremony.Pace` ve `Motion.Reduced`'a uyar; sıralama 28 (fatura/market üstü, ESC altı).
+- Doğrulama: `BarRankTests` (8) + `LadderWiringTests` (8) + yeniden tohumlanmış kaşık/kapı/bardak testleri;
+  EditMode 613/614 (tek kırmızı yazarın 32×66 v4_bourbon plakası); PlayMode 13/13. Oyunda bakıldı: sıfır
+  basamakta ray boş, 2,0'a park edince dört kap ve kaşık, pencere ölçüldü (yıldız sıraları yarımlarında ortalı,
+  eski unvan iki satıra sarılıyor ve satır aralığı 1,3'te okunuyor).
+- Açık kararlar (plan §3): unvanların Türkçesi; rütbe su işareti mi standing'i mi izlesin; 3-4-5'e fiil; zeytin ve
+  nanenin ertesi akşamın marketine düşmesi (market standing'i kapanışta okur).
+
 ### 9.87 · Bar matı ve pembe neon gitti, plaka kendi bandına oturdu, tuşlar oyunun paletine geçti, SERVE IT'in panayır ampulleri, tezgâh üç katman (2026-09-17, yedinci liste)
 
 Yazar: "Çöp'ün üzerinde İngilizcede de 'çöp' yazıyor. Built sahnelerinden bar matını kaldıralım. Görselde 'The glass

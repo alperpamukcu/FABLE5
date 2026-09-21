@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LastCall.Core;
@@ -27,6 +27,23 @@ namespace LastCall.Tests
         /// <summary>The quarantined half: stock that exists but waits for its recipe.</summary>
         private static IReadOnlyList<IngredientCard> Locked() =>
             DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json")).LockedCards;
+
+        /// <summary>THE JARS ARE ON THE LADDER'S THIRD RUNG (2026-09-21, the author: "Zeytin ve nane ise 2
+        /// yıldızda oyuna eklenecek. Sadece zeytin ve nane markette kilitli olacak"). The market's gate is data
+        /// (unlockStars) and the ladder's rung is code; this holds the two to one number, so neither can drift.</summary>
+        [Test]
+        public void TheOlivesAndTheMint_WaitOnTheLaddersThirdRung()
+        {
+            var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
+            double rung = BarRank.Granting(Feature.Jars).Stars;
+            foreach (string id in new[] { "olive_luca", "mint_fresh" })
+            {
+                var card = deck.Cards.Concat(deck.LockedCards).FirstOrDefault(c => c.Id == id);
+                Assert.IsNotNull(card, id + " is in the base bar");
+                Assert.IsNotNull(card.Info?.Unlock, id + " carries a lock");
+                Assert.AreEqual(rung, card.Info.Unlock.StarsWanted, 1e-9, id + " opens with the jars' rung");
+            }
+        }
 
         [Test]
         public void TheOpeningWall_IsSmallEnoughToKnowByHeart()

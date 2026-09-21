@@ -39,10 +39,16 @@ namespace LastCall.Tests
                 new[] { "this side of town" }),
         });
 
-        private static TycoonRun NewRun(string seed = "door", bool people = true) =>
-            new TycoonRun(NewShelf(), Book, new RunRng(seed),
+        /// <summary>A bar that HAS the door: the ladder's second rung (2026-09-21). Below it nobody is rolled
+        /// a minor and nobody can be kicked - that is BelowTheRung_NobodyIsAMinor_AndTheKickRefuses, below.</summary>
+        private static TycoonRun NewRun(string seed = "door", bool people = true, bool door = true)
+        {
+            var run = new TycoonRun(NewShelf(), Book, new RunRng(seed),
                 config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0),
                 regulars: people ? People() : null);
+            if (door) run.Rating.DevSet(BarRank.Granting(Feature.Door).Stars);
+            return run;
+        }
 
         private static ServiceVerdict Serve(TycoonRun run, CustomerVisit v)
         {

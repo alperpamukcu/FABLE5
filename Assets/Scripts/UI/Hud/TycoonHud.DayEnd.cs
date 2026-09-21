@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -1587,6 +1587,7 @@ namespace LastCall.UI
                 _chipPop = 1f;
             }
             Sfx.Play("key_press", 0.5f);
+            OfferLadderForTonight(Run);   // the beat the climb lands: if it crossed a rung, the window (2026-09-21)
         }
 
         private void ApplyStanding(float stars)

@@ -1322,7 +1322,9 @@ namespace LastCall.EditorTools
                 bool forget = !run.MixRequired && hands.Slips(hands.ForgetMix, 10);
                 if (forget) { }
                 else if (recipe.Prep == PrepMethod.Shaken) run.Shake(1.0);
-                else if (recipe.Prep == PrepMethod.Stirred) run.Stir(1.0);
+                // A STIRRED PAGE WITHOUT A SPOON IS SHAKEN (2026-09-21, the ladder): the bot walks into the
+                // same refusal the player would, so it does what the player does - the wrong method, graded.
+                else if (recipe.Prep == PrepMethod.Stirred) { if (run.SpoonUnlocked) run.Stir(1.0); else run.Shake(1.0); }
                 else if (run.MixRequired) { if (run.SpoonUnlocked) run.Stir(1.0); else run.Shake(1.0); }
             }
 

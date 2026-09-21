@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -90,6 +90,13 @@ namespace LastCall.Core
         /// <summary>The bar's standing overall — what the top corner shows.</summary>
         public double Average => _standing;
 
+        /// <summary>
+        /// THE HIGHEST THE STANDING HAS EVER STOOD (2026-09-21, the ladder). The rank is read off this and not
+        /// off <see cref="Average"/>, so what a rung opened stays open: a reputation can be lost, a bar spoon
+        /// cannot be un-bought. Moved by <see cref="CloseNight"/> and by <see cref="DevSet"/>, nowhere else.
+        /// </summary>
+        public double BestStanding { get; private set; } = StartStars;
+
         /// <summary>The standing BEFORE the last night closed (2026-09-08) — what the market
         /// reads to say what is NEW: a listing whose star gate lies between this and
         /// <see cref="Average"/> opened last night and the player should be told so.</summary>
@@ -139,6 +146,7 @@ namespace LastCall.Core
             _nights.Add(night);
             PreviousStanding = _standing;
             _standing = StandingAfter(night);
+            if (_standing > BestStanding) BestStanding = _standing;
         }
 
         /// <summary>
@@ -159,9 +167,13 @@ namespace LastCall.Core
             return Math.Max(0.0, Math.Min(MaxStars, _standing + move));
         }
 
-        /// <summary>Dev tooling only: parks the standing for the game-mode presets.</summary>
-        public void DevSet(double stars) =>
+        /// <summary>Dev tooling only: parks the standing for the game-mode presets — and the high-water mark
+        /// with it, so a parked five-star bar is a five-star bar on the ladder too.</summary>
+        public void DevSet(double stars)
+        {
             _standing = Math.Max(0.0, Math.Min(MaxStars, stars));
+            if (_standing > BestStanding) BestStanding = _standing;
+        }
 
         /// <summary>
         /// How the standing bends the arrival rate (GDD 23 §7). A well-reviewed bar is

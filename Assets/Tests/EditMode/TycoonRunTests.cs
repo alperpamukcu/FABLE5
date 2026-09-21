@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
@@ -342,7 +342,8 @@ namespace LastCall.Tests
             Assert.IsTrue(run.MarketOffers.Any(o => o.Bottle.Info?.Style == "tonic"),
                 "buying the recipe releases its stock to the shop");
 
-            // The house pride wants stars a fresh bar does not have (neutral is 3.0 < 4.0).
+            // The house pride wants stars a fresh bar does not have (the martini's page is on the
+            // ladder's third rung, 2.0, since 2026-09-21; a new bar stands at zero).
             Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("dirty_martini"),
                 "the star gate holds until the room talks");
         }
@@ -736,6 +737,7 @@ namespace LastCall.Tests
             // it (v5 P14). Without the glass-side verb every serving spec asking for ice on one
             // was unmeetable.
             var run = NewRun();
+            run.Rating.DevSet(BarRank.Granting(Feature.Rims).Stars);   // the rail is out (the ladder, 2026-09-21)
             run.PourAtGlass("soda", 0.4);
             run.AddPreparationAtGlass(Preparations.Ice);
 
@@ -752,7 +754,9 @@ namespace LastCall.Tests
             // has never touched TotalVolume — so refusing one for want of room applied a
             // volume rule to something with no volume, and it read as the bench seizing up
             // the moment the pour came out right. A rim of salt displaces nothing.
+            // (On the rail's rung since 2026-09-21: this is about the glass, not the ladder.)
             var run = NewRun();
+            run.Rating.DevSet(BarRank.Granting(Feature.Rims).Stars);
             run.PourAtGlass("soda", run.ServingGlass.Capacity);
 
             Assert.IsTrue(run.ServingGlass.IsFull);
@@ -870,6 +874,7 @@ namespace LastCall.Tests
             // liquid and the pinch of garnish that pours like one. A preparation is a step
             // on a list and goes on regardless (2026-08-10).
             var run = NewRun();
+            run.Rating.DevSet(BarRank.Granting(Feature.Rims).Stars);   // the rail is out (the ladder, 2026-09-21)
             run.PourMeasure("gin", 0.6);
             double taken = run.PourMeasure("soda", 0.9);   // only 0.4 of it can fit
 
@@ -925,7 +930,11 @@ namespace LastCall.Tests
             new IngredientCard(id, id, IngredientType.Spirit, 6,
                 info: new IngredientInfo(style: category, category: category));
 
-        private static TycoonRun MixRun() => new TycoonRun(new Shelf(new[]
+        /// <summary>A bar on the ladder's third rung, where the spoon is (2026-09-21): these tests are about
+        /// mixing, so they stand where both mixes are allowed. Seeded the way the dev presets seed a standing.</summary>
+        private static TycoonRun MixRun()
+        {
+            var run = new TycoonRun(new Shelf(new[]
             {
                 new ShelfBottle(Booze("gin_b", "gin"), capacity: 20),
                 new ShelfBottle(Booze("vermouth_b", "liqueur"), capacity: 20),
@@ -933,6 +942,9 @@ namespace LastCall.Tests
                     capacity: 20),
             }), Book, new RunRng("mix"),
             config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
+            run.Rating.DevSet(BarRank.Granting(Feature.Spoon).Stars);
+            return run;
+        }
 
         [Test]
         public void TwoSpirits_Unmixed_RefuseThePourOut()
@@ -1045,7 +1057,7 @@ namespace LastCall.Tests
         /// stirred, and Core says so — the bench only draws what the rule allows.
         /// </summary>
         [Test]
-        public void TheSpoon_ComesWithTheFirstStirredPage()
+        public void TheSpoon_ComesWithTheLaddersThirdRung()
         {
             var shelf = new Shelf(new[]
             {
@@ -1055,28 +1067,35 @@ namespace LastCall.Tests
             var sealedBook = RecipeCatalog.CreateDefault();
             var run = new TycoonRun(shelf, sealedBook, new RunRng("no-spoon"),
                 config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
-            Assert.IsFalse(run.SpoonUnlocked, "every stirred page in the shipped book is sealed");
+            Assert.IsFalse(run.SpoonUnlocked, "a new bar is below the third rung");
             run.PourMeasure("gin_b", 0.4);
             run.PourMeasure("vermouth_b", 0.3);
             Assert.Throws<InvalidOperationException>(() => run.Stir(0.8), "no spoon behind the bar");
-            Assert.IsFalse(run.IsStirred);
-            run.Shake(1.0);
-            Assert.IsTrue(run.IsShaken, "the tin can still be shaken");
+            // ...and the ladder is what brings it: not a page, not a purchase, the second star.
+            run.Rating.DevSet(1.99);
+            Assert.IsFalse(run.SpoonUnlocked, "just under the rung is still without");
+            run.Rating.DevSet(2.0);
+            Assert.IsTrue(run.SpoonUnlocked, "on the rung exactly, the spoon is there");
+            run.Stir(0.8);
+            Assert.IsTrue(run.IsStirred);
 
-            // The same book with its first stirred page open: the spoon is on the bench.
+            // A BOOK WITH AN OPEN STIRRED PAGE BRINGS NOTHING BY ITSELF any more (the 2026-09-16 rule this
+            // test used to state): below the rung a stirred page is a drink the bar can only shake, and Core
+            // says so - the bench draws no spoon and the sim shakes the Martini.
             var stirred = sealedBook.First(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) == 1.0);
             var open = new RecipeDefinition(stirred.Id, stirred.Name, stirred.Rank,
                 stirred.BaseFlavor, stirred.BaseMult, stirred.FlavorPerLevel, stirred.MultPerLevel,
                 stirred.Requirements, ratioRequirements: stirred.RatioRequirements,
                 minFill: stirred.MinFill, prep: stirred.Prep, glassId: stirred.GlassId);
             var book = sealedBook.Where(r => r.Id != stirred.Id).Concat(new[] { open }).ToList();
-            var spooned = new TycoonRun(shelf, book, new RunRng("spoon"),
+            var paged = new TycoonRun(shelf, book, new RunRng("spoon"),
                 config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0));
-            Assert.IsTrue(spooned.SpoonUnlocked, "the open stirred page brings the spoon");
-            spooned.PourMeasure("gin_b", 0.4);
-            spooned.PourMeasure("vermouth_b", 0.3);
-            spooned.Stir(0.8);
-            Assert.IsTrue(spooned.IsStirred);
+            Assert.IsFalse(paged.SpoonUnlocked, "an open stirred page is not a spoon");
+            paged.PourMeasure("gin_b", 0.4);
+            paged.PourMeasure("vermouth_b", 0.3);
+            Assert.Throws<InvalidOperationException>(() => paged.Stir(0.8));
+            paged.Shake(1.0);
+            Assert.IsTrue(paged.IsShaken, "the tin can still be shaken - wrong, not refused");
         }
 
         /// <summary>THE COUNTER'S FINISH (2026-09-16, the author: "marketten 1 geliştirme satın alınarak masa rengi

@@ -1805,6 +1805,8 @@ namespace LastCall.UI
 
             RefreshJobStrip(run);
             StepJobStrip();
+            RefreshLadderFlag(run);
+            StepLadder();
 
             // ECE SETTLES UP THE MOMENT IT LANDS (2026-09-06). The run raises the flag on the
             // serve — or on the night, for a clean week — and the room says so once, with the

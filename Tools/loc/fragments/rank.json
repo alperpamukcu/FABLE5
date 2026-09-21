@@ -1,0 +1,28 @@
+{
+  "group": "rank",
+  "strings": [
+    { "key": "rank.title.r0", "text": "NOBODY'S HEARD OF IT", "note": "The bar's rank title at the foot of the ladder (no stars yet). Worn in the top bar's star row and as the old title on the rank-up screen. Shop bold face 16 px, ~22 characters." },
+    { "key": "rank.title.r1", "text": "TALK OF THE STREET", "note": "Rank title at half a star. Same place and size as rank.title.r0, ~22 characters." },
+    { "key": "rank.title.r2", "text": "THE BLOCK'S BEST", "note": "Rank title at one star. ~22 characters." },
+    { "key": "rank.title.r3", "text": "TALK OF THE TOWN", "note": "Rank title at two stars. ~22 characters." },
+    { "key": "rank.title.r4", "text": "THE CITY'S BEST", "note": "Rank title at three stars. ~22 characters." },
+    { "key": "rank.title.r5", "text": "THE COUNTRY'S BEST", "note": "Rank title at four stars. ~22 characters." },
+    { "key": "rank.title.r6", "text": "THE BEST THERE IS", "note": "Rank title at five stars, the top of the ladder. ~22 characters." },
+    { "key": "rank.window.title", "text": "THE BAR IS GOING PLACES", "note": "Headline of the rank-up screen that opens at the night's end when the stars cross a rung. Shop bold face 16 px on a 640-unit plate, ~30 characters." },
+    { "key": "rank.window.title_again", "text": "WHERE THE BAR STANDS", "note": "Headline of the same screen when it is reopened from the top bar's star row (no climb, just the current rank). ~30 characters." },
+    { "key": "rank.window.from", "text": "WAS", "note": "Small label over the old rank's title and stars on the rank-up screen. 8 px, ~6 characters." },
+    { "key": "rank.window.to", "text": "NOW", "note": "Small label over the new rank's title and stars on the rank-up screen. 8 px, ~6 characters." },
+    { "key": "rank.window.new", "text": "NEW BEHIND THE BAR", "note": "Heading over the list of what the new rank opened. 8 px, ~24 characters." },
+    { "key": "rank.window.nothing_new", "text": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME", "note": "Line shown instead of the unlock list on a rung that opens no verb (three stars and up). 8 px, one line, ~50 characters." },
+    { "key": "rank.window.next", "text": "NEXT RUNG AT {stars} STARS", "note": "Foot line of the rank screen saying where the next rung is. {stars} is a number like \"2.0\". 8 px, ~28 characters." },
+    { "key": "rank.window.top", "text": "THE TOP OF THE LADDER", "note": "Foot line of the rank screen at five stars, where there is no next rung. 8 px, ~28 characters." },
+    { "key": "rank.window.continue", "text": "CONTINUE", "note": "The rank screen's one key. Shop bold face 16 px on a 240-unit key, ~10 characters." },
+    { "key": "rank.unlock.ice_lemon", "text": "ICE AND A LEMON TWIST ON THE COUNTER", "note": "Unlock line at half a star. 8 px, ~40 characters." },
+    { "key": "rank.unlock.door", "text": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT", "note": "Unlock line at one star: the papers behind the ID card, forgeries and the KICK key. 8 px, ~56 characters." },
+    { "key": "rank.unlock.rims", "text": "SALT AND SUGAR RIMS ON THE COUNTER", "note": "Unlock line at one star. 8 px, ~40 characters." },
+    { "key": "rank.unlock.spoon", "text": "THE BAR SPOON: STIRRED DRINKS", "note": "Unlock line at two stars. 8 px, ~40 characters." },
+    { "key": "rank.unlock.jars", "text": "OLIVES AND MINT IN TOMORROW'S MARKET", "note": "Unlock line at two stars: the two garnish jars appear on the market board from the next evening. 8 px, ~40 characters." },
+    { "key": "rank.strip.new", "text": "NEW", "note": "Tiny flag on the top bar's star row when a rung has been reached and its screen not yet opened. 8 px, ~3 characters." },
+    { "key": "rank.strip.tip", "text": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS", "note": "Hover tip on the top bar's star row: the first line is the card's title, the second its detail. Keep the newline." }
+  ]
+}

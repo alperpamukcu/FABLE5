@@ -365,6 +365,12 @@ the counter's mess was counted — and tomorrow's crowd reads the customers' sid
 what the top corner shows and what the crowd reads, replacing the TONIGHT satisfaction bar. The
 two old bars translate straight across: 0.75 satisfaction is 4.0 stars, 0.40 is 2.6.
 
+**The ladder (2026-09-21).** The standing's high-water mark also carries a RANK — six rungs at 0.5, 1, 2, 3, 4
+and 5 stars, each with a title the top bar wears and a short list of what it opens: ice and the lemon twist at a
+half star; the door (module 28) and the salt and sugar rims at one; the bar spoon and the olive and mint jars at
+two. Below a rung Core refuses the verb (`BarRank`, `TycoonRun.Has`); the room only hides it. A rung crossed at
+the night's end opens a window that says what is new, and the star row reopens it. Plan: `Docs/PLAN_rank_ladder.md`.
+
 Two things now key off the standing rather than off last night's mood:
 
 - **The crowd** (§7 above). A single bad night no longer empties the room of money, and one

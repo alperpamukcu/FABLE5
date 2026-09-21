@@ -64,7 +64,11 @@ namespace LastCall.Core
         /// built drink never sees a shaker. Asking for something the recipe forbids would be an
         /// order nobody could fill — the one thing an order must never be.
         /// </summary>
-        public static ServingSpec Roll(RecipeDefinition recipe, SeededRng rng)
+        /// <param name="allowed">The preparations the bar can actually put on a glass — the ladder's answer
+        /// (BarRank.PreparationsOpen, 2026-09-21). Null means all four, which is every bench setup and old test.
+        /// An empty list is a bar with nothing on its rail yet: the order is plain, whatever was rolled.</param>
+        public static ServingSpec Roll(RecipeDefinition recipe, SeededRng rng,
+            IReadOnlyList<PreparationDefinition> allowed = null)
         {
             if (recipe == null) return Plain;
 
@@ -77,7 +81,8 @@ namespace LastCall.Core
             var garnishes = new List<PreparationDefinition>(2);
             if (!draught)
             {
-                var bag = new List<PreparationDefinition>(GarnishPool);
+                var bag = new List<PreparationDefinition>(allowed ?? GarnishPool);
+                if (bag.Count == 0) return Plain;
                 int count = rng.NextInt(100) < 65 ? 1 : 2;
                 for (int i = 0; i < count && bag.Count > 0; i++)
                 {

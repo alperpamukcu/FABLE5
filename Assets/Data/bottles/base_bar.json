@@ -90,7 +90,7 @@
    "blurb": "Sweet red vermouth. Softens what ended badly.",
    "art_prompt": "an elegant red vermouth bottle with a burgundy label and ornate serif frame",
    "locked": false,
-   "unlockStars": 4.0
+   "unlockStars": 2.0
   },
   {
    "id": "syrup_house",
@@ -166,7 +166,7 @@
    "blurb": "A sprig on top. Small, green, and quietly restorative.",
    "art_prompt": "a small glass jar of fresh mint sprigs, bright green",
    "locked": false,
-   "unlockStars": 3.0
+   "unlockStars": 2.0
   },
   {
    "id": "olive_luca",
@@ -182,7 +182,7 @@
    "blurb": "Brined and patient. Takes the edge off an argument.",
    "art_prompt": "a small jar of green olives in brine with a rustic olive-branch label",
    "locked": false,
-   "unlockStars": 4.0
+   "unlockStars": 2.0
   },
   {
    "id": "beer_kestrel",

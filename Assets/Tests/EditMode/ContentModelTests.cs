@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -102,6 +102,7 @@ namespace LastCall.Tests
             var run = new TycoonRun(
                 new Shelf(new[] { new ShelfBottle(kahlua, 20), new ShelfBottle(vodka, 20) }),
                 new[] { open }, new RunRng("stir-seed"));
+            run.Rating.DevSet(BarRank.Granting(Feature.Spoon).Stars);   // the spoon is the ladder's (2026-09-21)
             run.PourMeasure("vodka_astra", 0.65);
             run.PourMeasure("liqueur_kafa", 0.35);
 

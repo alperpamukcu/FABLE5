@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -268,6 +268,23 @@ namespace LastCall.UI
             Place(starsRow, new Vector2(0, 0.5f), new Vector2(starsW, StarSize),
                 new Vector2(0, RowY));
             starsRow.pivot = new Vector2(0, 0.5f);
+            // THE STARS OPEN THE LADDER (2026-09-21, the author: "bu ekran üst bardaki yıldız barına tıklayarak
+            // tekrar açılabilmeli"): a catcher over the row, a key on it, and a NEW flag while a rung reached has
+            // not been looked at.
+            var starsCatch = starsRow.gameObject.AddComponent<Image>();
+            starsCatch.color = new Color(0f, 0f, 0f, 0.004f);
+            starsCatch.raycastTarget = true;
+            var starsBtn = starsRow.gameObject.AddComponent<Button>();
+            starsBtn.transition = Selectable.Transition.None;
+            starsBtn.onClick.AddListener(OpenLadderFromTheBeam);
+            _ladderNewFlag = NewRect("New", starsRow);
+            Place(_ladderNewFlag, new Vector2(1f, 1f), new Vector2(28f, 12f), new Vector2(6f, 8f));
+            var flagImg = _ladderNewFlag.gameObject.AddComponent<Image>();
+            flagImg.color = UITheme.Magenta[2]; flagImg.raycastTarget = false;
+            var flagText = NewText("L", _ladderNewFlag, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(flagText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            flagText.text = UIText.T("rank.strip.new");
+            _ladderNewFlag.gameObject.SetActive(false);
             for (int i = 0; i < _ratingStars.Length; i++)
             {
                 var star = NewRect($"B{i}", starsRow);
@@ -394,6 +411,7 @@ namespace LastCall.UI
                 UIText.T("build.settings.tip"));
             BuildMusicPlayer(top);   // the beam's middle (2026-09-15)
             BuildSettings(root);
+            BuildLadderWindow(root); // the rank's window (2026-09-21), under the pause menu
             BuildPauseMenu(root);    // Escape with nothing open (2026-09-15)
             BuildOrderTip(root);
 

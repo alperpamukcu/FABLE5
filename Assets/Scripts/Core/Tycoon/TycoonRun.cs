@@ -229,26 +229,44 @@ namespace LastCall.Core
         /// recipe's prep method yet, so shaking a Martini is legal and merely wrong.</summary>
         public bool IsMixed => IsShaken || IsStirred;
 
+        // ── the ladder (PLAN_rank_ladder, 2026-09-21) ────────────────────────────────────────
+
+        /// <summary>The rung the bar stands on: the highest its standing has ever reached (<see cref="BarRank"/>).</summary>
+        public Rung Rank => BarRank.Of(Rating.BestStanding);
+
+        /// <summary>The rung tonight would leave the bar on, asked without closing the books — the same
+        /// preview the bill's climb is drawn from (<see cref="StandingAfterTonight"/>), so the night's end can
+        /// celebrate a rung before <see cref="ContinueToNextDay"/> files it, and never one the books refuse.</summary>
+        public Rung RankAfterTonight =>
+            BarRank.Of(Math.Max(Rating.BestStanding, Phase == TycoonPhase.DayEnd ? StandingAfterTonight : Rating.BestStanding));
+
+        /// <summary>Has the ladder opened <paramref name="feature"/> for this bar?</summary>
+        public bool Has(Feature feature) => BarRank.Has(Rating.BestStanding, feature);
+
         /// <summary>
-        /// IS THERE A BAR SPOON BEHIND THIS BAR (2026-09-16, the author: "Kaşık oyunun ilk
-        /// yıldızında açılan bir oynanış özelliği olmalı ... Kaşık isteyen ilk tarif alındıktan
-        /// sonra kaşık otomatik olarak sahneye eklenir")? The spoon comes with the first
-        /// STIRRED page on the menu — bought, or open from the start — and the bench shows it
-        /// from then on. A book that holds no sealed stirred page has never withheld the spoon
-        /// (that is every test run built from a page or two, and it keeps them honest about
-        /// what they test), so only a bar whose book still SEALS every stirred drink is without
-        /// one. <see cref="Stir"/> refuses without it: the rules layer never trusts the UI.
+        /// IS THERE A BAR SPOON BEHIND THIS BAR? The ladder's third rung (2026-09-21, the author: "2. yıldızda
+        /// kaşık ile karıştırma oyuna eklenecek"), which supersedes the 2026-09-16 rule that tied the spoon to the
+        /// first stirred page on the menu. <see cref="Stir"/> refuses without it: the rules layer never trusts the
+        /// UI, and the bench only draws the spoon this says is there.
         /// </summary>
-        public bool SpoonUnlocked
+        public bool SpoonUnlocked => Has(Feature.Spoon);
+
+        /// <summary>The preparations the counter rail carries at this rank — what orders may ask for and what
+        /// <see cref="AddPreparationAtGlass"/> takes. The two are one list on purpose.</summary>
+        public IReadOnlyList<PreparationDefinition> PreparationsOpen => BarRank.PreparationsOpen(Rating.BestStanding);
+
+        /// <summary>Whether the ladder lets <paramref name="preparation"/> onto a glass yet.</summary>
+        public bool PreparationOpen(PreparationDefinition preparation)
         {
-            get
-            {
-                foreach (var r in _recipes)
-                    if (r.Prep == PrepMethod.Stirred) return true;
-                foreach (var r in AllRecipes)
-                    if (r.Prep == PrepMethod.Stirred && r.Locked) return false;
-                return true;
-            }
+            var gate = BarRank.Gating(preparation);
+            return gate == null || Has(gate.Value);
+        }
+
+        private void EnsurePreparationOpen(PreparationDefinition preparation)
+        {
+            if (PreparationOpen(preparation)) return;
+            throw Said.With(new InvalidOperationException($"The bar has no {preparation.Name} yet."),
+                Line.Of("rule.prep_not_yet").With("what", preparation.NameLine));
         }
 
         public string PouringId { get; private set; }
@@ -1351,8 +1369,10 @@ namespace LastCall.Core
             // THE PAPERS ARE THE PERSON'S, ROLLED ONCE (GDD 28 §3): on their first arrival,
             // on a stream of their own, so no seed's crowd or orders move until the first
             // minor is met. A returning face comes back with the card it had.
+            // ...AND HONEST UNTIL THE DOOR IS YOURS (2026-09-21, the ladder's second rung): a face met before
+            // the bar had the door rolls honest and stays that way, being rolled once.
             if (!regular.PapersRolled)
-                regular.SetPapers(IdPapers.Roll(_rng.GetStream("papers"), Day, regular.Age));
+                regular.SetPapers(IdPapers.Roll(_rng.GetStream("papers"), Day, regular.Age, doorOpen: Has(Feature.Door)));
             if (regular.Papers.ShouldBeKicked) MinorsMet++;
 
             return new CustomerVisit(order, patience, regular, decide);
@@ -1360,7 +1380,7 @@ namespace LastCall.Core
 
         private DrinkOrder RollOrder()
         {
-            var order = DrinkOrder.Roll(_recipes, Day, _config, _rng.GetStream("orders"));
+            var order = DrinkOrder.Roll(_recipes, Day, _config, _rng.GetStream("orders"), PreparationsOpen);
             int price = PriceOf(order.Wanted);
             return price == order.Price
                 ? order
@@ -1778,6 +1798,7 @@ namespace LastCall.Core
         public void AddPreparation(PreparationDefinition preparation)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            EnsurePreparationOpen(preparation);
             // No fullness test, for the same reason as at the glass: a preparation is a
             // recorded step with no volume, so a brimful tin still takes a twist.
             Glass.AddPreparation(preparation);
@@ -1808,6 +1829,7 @@ namespace LastCall.Core
         public void AddPreparationAtGlass(PreparationDefinition preparation)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            EnsurePreparationOpen(preparation);   // the ladder (2026-09-21): no ice before the first rung, no rim before the second
             // No fullness test: a rim of salt and a twist of lemon displace nothing, so a
             // glass poured to the brim can still be finished (2026-08-10).
             ServingGlass.AddPreparation(preparation);
@@ -2017,6 +2039,32 @@ namespace LastCall.Core
         /// <summary>The crowd's own stream (2026-09-06): what a customer says is picked on
         /// it, so a seeded night says the same things twice. Named like the rest.</summary>
         public SeededRng VoiceStream => _rng.GetStream("voice");
+
+        private readonly List<int> _iceRolls = new List<int>();
+
+        /// <summary>WHICH CUBE WENT IN (2026-09-18, the author drew three cubes: "rastgele
+        /// olarak 3ünden birisi"). One opaque roll per cube standing in the serving glass, in
+        /// the order they were dropped, off the run's own "ice" stream — Core does not know
+        /// how many drawings of ice there are, so the caller takes these modulo however many
+        /// it has.
+        ///
+        /// Rolled ONCE per cube and kept, which is the whole point of it living here rather
+        /// than in the screen that draws it. Both screens that draw the drink — the bench it
+        /// is built on and the hand that carries it out — read this one list, so the pile is
+        /// the same pile on both and does not reshuffle between refreshes; and a seeded night
+        /// pours the same ice twice, which is the house rule on randomness.
+        ///
+        /// It tops itself up rather than being filled by the ice verb, because ice also
+        /// arrives at this glass from the shaker (GlassContents.TransferInto), and it starts
+        /// over whenever the count falls — a fresh glass, or an emptied one.</summary>
+        public IReadOnlyList<int> IceCubeRolls()
+        {
+            int want = ServingGlass?.IceCubes ?? 0;
+            if (want < _iceRolls.Count) _iceRolls.Clear();
+            var stream = _rng.GetStream("ice");
+            while (_iceRolls.Count < want) _iceRolls.Add(stream.NextInt(1 << 20));
+            return _iceRolls;
+        }
 
         /// <summary>Dollars per glass-unit of drink deliberately binned (2026-07-31, the
         /// author: a mistake must cost). Small on purpose — a full shaker is ~$2. First cut

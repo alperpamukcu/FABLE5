@@ -1351,7 +1351,7 @@
   {
    "id": "dirty_martini",
    "name": "Dirty Martini",
-   "rank": 23,
+   "rank": 14,
    "baseFlavor": 30,
    "baseMult": 3,
    "flavorPerLevel": 20,
@@ -2229,7 +2229,7 @@
   {
    "id": "mint_julep",
    "name": "Mint Julep",
-   "rank": 21,
+   "rank": 14,
    "baseFlavor": 30,
    "baseMult": 3,
    "flavorPerLevel": 20,

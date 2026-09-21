@@ -147,6 +147,8 @@ when the customer sits, before any card is read. So:
 
 ## 4. The kick
 
+> **On the ladder (2026-09-21).** The door is the ladder's second rung (1.0 star, `Docs/PLAN_rank_ladder.md`): below it the papers stream rolls everyone honest (`IdPapers.Roll(doorOpen: false)` burns the same draws), `Kick` refuses ("the door is not yours yet"), and the KICK key is not drawn on the card. Everything in this module holds from the rung up.
+
 `TycoonRun.Kick(visit)` — the door's only verb.
 
 - **Guards:** day open; the visit is seated and waiting; **`IdInspected`** (hidden information: you

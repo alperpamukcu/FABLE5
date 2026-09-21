@@ -118,12 +118,16 @@ namespace LastCall.Core
         /// the answer to "could they pass for nineteen". The draws are deterministic per seed
         /// and touch no other stream.
         /// </summary>
-        public static IdPapers Roll(SeededRng rng, int day, int registryAge)
+        /// <param name="doorOpen">Whether the bar has the door yet (the ladder's second rung, 2026-09-21).
+        /// While it is shut everyone rolled is honest — the same draws are burnt, so an honest adult's papers
+        /// are the same papers whichever rung they were met on.</param>
+        public static IdPapers Roll(SeededRng rng, int day, int registryAge, bool doorOpen = true)
         {
             if (rng == null) throw new ArgumentNullException(nameof(rng));
             if (registryAge < DrinkingAge) throw new ArgumentOutOfRangeException(nameof(registryAge),
                 "The registry rolls adults; minors are rolled here.");
-            if (rng.NextDouble() >= MinorChance(day))
+            double minor = rng.NextDouble();
+            if (!doorOpen || minor >= MinorChance(day))
             {
                 bool young = rng.NextDouble() < YoungAdultShare;
                 return new IdPapers(registryAge, registryAge, Forgery.None, young);

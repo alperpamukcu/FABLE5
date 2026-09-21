@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The ladder (2026-09-21):** the standing's six rungs - a half star, then one to five - each carry a title and
+  open something the bar did not have: ice and the lemon twist at a half, the door (papers, forgeries, the KICK
+  key) and the salt and sugar rims at one, the bar spoon and the olive and mint jars at two. Core refuses below a
+  rung (a preparation the ladder has not opened, a kick before the door is yours, a stir without a spoon), orders
+  ask only for what the rail carries, and the papers stream rolls everyone honest until the door opens. The rank
+  is a high-water mark, so a bad week takes the standing down and nothing else. A window opens the beat the bill's
+  climb crosses a rung - the old title and stars, the climb, the new title, what is new - and the top bar's star
+  row opens it again for the rank the bar is on. `Docs/PLAN_rank_ladder.md`; GDD 23 §7, GDD 28 §4; GDD_MEVCUT §9.88.
+
 - **The bench loses its mat and its pink light, and its keys join the palette (2026-09-17, the seventh list):**
   the rubber bar mat and the magenta wash that fell from the rail are both out (the wash was the fifth list's own
   ask, cut twice and now gone; the counter's DRAWN neon rail stays); the plaque is seated in a band of its own

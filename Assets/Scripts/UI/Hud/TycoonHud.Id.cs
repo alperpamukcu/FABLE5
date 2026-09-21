@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -130,7 +130,9 @@ namespace LastCall.UI
             IdPapers truth = visit.Papers;
             if (truth != null && truth.Forgery == Forgery.Borrowed)
                 idLook = LenderFor(visit, ownLook) ?? idLook;
-            if (_idKick != null) _idKick.gameObject.SetActive(!visit.OnTheHouse);
+            // ...and not before the ladder's second rung (2026-09-21): the door is not the bar's yet, and
+            // run.Kick would refuse it — the key is not drawn rather than drawn dead.
+            if (_idKick != null) _idKick.gameObject.SetActive(!visit.OnTheHouse && Run != null && Run.Has(Feature.Door));
             _idPhoto.sprite = idLook?.Face;
             _idPhoto.color = _idPhoto.sprite != null ? Color.white : UITheme.Night[3];
 

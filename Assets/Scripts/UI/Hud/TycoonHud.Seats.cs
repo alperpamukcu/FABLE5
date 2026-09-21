@@ -1078,6 +1078,23 @@ namespace LastCall.UI
         // turned off separately. The stool, the till and the room keep every sound they had;
         // only the mouths are quiet.
         private float _grainCarried;
+
+        // ── the ice pour and the shake in the hand (2026-09-18) ──────────────────
+        //
+        // The author: "bardağın içine buzu aynı sıvı döker gibi bardağın içine atmamız
+        // gereksin. Ve sallanmalı hem taşınırken hem de sıvı içerisinde." Held over the
+        // mouth, the hand tips a cube in at this rate; in the drink they are GlassDecor's,
+        // riding its bob. In the hand they are neither still nor falling, so the cube
+        // swings on the wrist — a slow sine, wider the faster the hand is travelling,
+        // because a cube carried at speed swings and one held still barely does.
+        private float _icePoured = -1f;           // when the last cube went in, or -1 for none
+        private int _icePourCount;                // cubes this pour has dropped
+        private const float IceEvery = 0.40f;     // seconds between cubes while it is held
+        private const float CarrySwing = 11f;     // degrees at a standstill
+        private const float CarrySwingRate = 5.2f;
+        private const float CarrySwingDrift = 0.22f;   // extra degrees per unit of hand speed
+        private const float CarrySwingMax = 26f;
+        private float _carrySwing;
         private float _clothSprayed;              // travel banked toward the next wipe drop
         private const float ClothSprayEvery = 16f;
         private const float GrainEvery = 26f;     // units of travel between crystals
@@ -1105,7 +1122,9 @@ namespace LastCall.UI
              string style, string word, string carry, float carryH)[] rail =
             {
                 ("ice", "counter_ice", Preparations.Ice, null, UIText.T("seats.rail.ice"),
-                 "glass_ice", 34f),
+                 "ice-1", 34f),
+                // The hand carries one of the author's three cubes (2026-09-18); which one
+                // FALLS is the run's own roll for that cube, dressed in DropCube.
                 ("lemon_twist", "counter_lemon", Preparations.LemonTwist,
                  null, UIText.T("seats.rail.lemon"), "glass_lemon", 40f),
                 // A PINCH, not the dish (2026-08-26, the author: "surukledigimiz tuz ve
@@ -1248,6 +1267,10 @@ namespace LastCall.UI
             _prepCarry.SetAsLastSibling();
             _grainCarried = 0f;
             _grainLastAt = _prepCarry.anchoredPosition;
+            _icePoured = -1f;
+            _icePourCount = 0;
+            _carrySwing = 0f;
+            _prepCarry.localRotation = Quaternion.identity;
             if (prop.IsRim) Sfx.Play("grain_pinch", 0.5f);
             HidePropTip(prop.Rt);
             Sfx.Play("click", 0.4f);
@@ -1271,6 +1294,17 @@ namespace LastCall.UI
                     _grainCarried += (at - _grainLastAt).magnitude;
                     while (_grainCarried >= GrainEvery) { _grainCarried -= GrainEvery; ShedGrain(at); }
                 }
+                // IT SWINGS IN THE HAND (2026-09-18). The travel is already measured for the
+                // grains; a cube leans by how fast it is moving and rocks on top of that, so a
+                // piece crossing the bar reads as carried rather than as dragged.
+                if (!_prepHeld.IsRim)
+                {
+                    float speed = (at - _grainLastAt).magnitude / Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
+                    float want = Mathf.Min(CarrySwing + speed * CarrySwingDrift, CarrySwingMax);
+                    _carrySwing = Mathf.Lerp(_carrySwing, want, 1f - Mathf.Exp(-6f * Time.unscaledDeltaTime));
+                    _prepCarry.localRotation = Quaternion.Euler(0, 0,
+                        Mathf.Sin(Time.unscaledTime * CarrySwingRate) * _carrySwing);
+                }
                 _grainLastAt = at;
                 _prepCarry.anchoredPosition = at;
             }
@@ -1286,13 +1320,47 @@ namespace LastCall.UI
             }
             else ShowRimRing(false);
 
-            if (mouse.leftButton.isPressed) return;
-
-            bool overGlass = glassOut
+            bool overTheGlass = glassOut
                 && RectTransformUtility.RectangleContainsScreenPoint(
                        _drinkGlass, mouse.position.ReadValue(), null);
-            if (!overGlass && _prepHeld != null) Sfx.Play("dish_down", 0.55f);
-            DropPrep(overGlass);
+
+            // ICE IS POURED, NOT PLACED (2026-09-18, the author: "bardağın içine buzu aynı
+            // sıvı döker gibi bardağın içine atmamız gereksin"). A cube used to be one drag
+            // for one cube: four cubes meant four round trips to the bucket, and the bar's
+            // other way of putting something in a glass — hold it over and let it run — was
+            // nowhere in it. Held over the glass, the hand now TIPS: the first cube goes in
+            // the moment it is over the mouth and another follows every IceEvery for as long
+            // as the button is down, each one falling into the drink on its own.
+            if (_prepHeld.Id == "ice" && _prepHeld.Prep != null)
+            {
+                if (!overTheGlass) _icePoured = -1f;
+                else
+                {
+                    float now = Time.unscaledTime;
+                    if (_icePoured < 0f || now - _icePoured >= IceEvery)
+                    {
+                        _icePoured = now;
+                        run.AddPreparationAtGlass(_prepHeld.Prep);
+                        DropCube(_prepCarry.anchoredPosition);
+                        Sfx.Play("ice_drop", 0.7f);
+                        _icePourCount++;
+                    }
+                }
+            }
+
+            if (mouse.leftButton.isPressed) return;
+
+            // The ice already went in while it was held, so the release only puts the tongs
+            // down — and it says how many cubes the pour turned out to be.
+            if (_icePourCount > 0)
+            {
+                Toast(UIText.T("seats.garnish.ice_in", ("cubes", run.ServingGlass.IceCubes)),
+                      UITheme.Cyan[3]);
+                DropPrep(false);
+                return;
+            }
+            if (!overTheGlass && _prepHeld != null) Sfx.Play("dish_down", 0.55f);
+            DropPrep(overTheGlass);
         }
 
         /// <summary>One crystal off the pinch, thrown a little sideways and then falling.
@@ -2198,11 +2266,43 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>One cube out of the hand and into the drink: it leaves with the hand's
+        /// own sideways drift, falls, and is gone by the time it reaches the level — the pile
+        /// GlassDecor draws is what it turns into. The sideways kick comes from the COUNT, the
+        /// same walked arithmetic the shed grains use, so a pour repeats exactly.</summary>
+        private void DropCube(Vector2 at)
+        {
+            if (_prepCarry == null) return;
+            var rt = NewRect("Cube", (RectTransform)_prepCarry.parent);
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = _prepCarry.sizeDelta;
+            rt.anchoredPosition = at + new Vector2(0f, -10f);
+            var img = rt.gameObject.AddComponent<Image>();
+            // WHAT FALLS IS WHAT LANDS: the cube just added has a roll of its own, and the
+            // pile GlassDecor is about to draw will show that same drawing at that index.
+            var run = Run;
+            var rolls = run != null ? run.IceCubeRolls() : null;
+            img.sprite = rolls != null && rolls.Count > 0
+                ? GlassDecor.IceSprite(rolls[rolls.Count - 1])
+                : (_prepCarryImg != null ? _prepCarryImg.sprite : null);
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
+            float kick = ((_grains.Count * 37) % 41) / 20f - 1f;   // -1..1, walked, not rolled
+            _grains.Add((rt, img, new Vector2(kick * 22f, -30f), Time.unscaledTime));
+        }
+
         private void DropPrep(bool intoTheGlass)
         {
             var prop = _prepHeld;
             _prepHeld = null;
-            if (_prepCarry != null) _prepCarry.gameObject.SetActive(false);
+            _icePoured = -1f;
+            _icePourCount = 0;
+            if (_prepCarry != null)
+            {
+                _prepCarry.localRotation = Quaternion.identity;
+                _prepCarry.gameObject.SetActive(false);
+            }
             ShowRimRing(false);
             _rimAngleKnown = false;
             _rimLoopWanted = false;
@@ -2462,7 +2562,10 @@ namespace LastCall.UI
             int slot = 0;
             foreach (var prop in _prepProps)
             {
-                bool stocked = prop.Style == null || GarnishOnTheShelf(run, prop.Style) != null;
+                // ...AND WHAT THE LADDER HAS OPENED (2026-09-21): ice and the twist at half a star, the rims at
+                // one — a dish the rank has not brought is not on the counter, and Core would refuse the drop anyway.
+                bool stocked = prop.Prep != null ? run.PreparationOpen(prop.Prep)
+                             : prop.Style == null || GarnishOnTheShelf(run, prop.Style) != null;
                 if (prop.Rt.gameObject.activeSelf != stocked)
                     prop.Rt.gameObject.SetActive(stocked);
                 if (!stocked) continue;
@@ -2659,6 +2762,12 @@ namespace LastCall.UI
             // The rim's crust rides over the front crop (2026-09-14): GlassDecor hangs it here.
             _drinkGlassRimOver = NewRect("RimOver", _drinkGlass);
             Stretch(_drinkGlassRimOver, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // ...and the lemon wheel rides UNDER the drink (2026-09-18, the author: "limon katman
+            // olarak sıvı katmanında arkasında olacak"). Slotted in at the liquid's own index, which
+            // pushes the liquid one on: sheet, front face, wheel, drink.
+            _drinkGlassUnder = NewRect("Under", _drinkGlass);
+            Stretch(_drinkGlassUnder, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _drinkGlassUnder.SetSiblingIndex(liquid.GetSiblingIndex());
             // The glow's drawing, now that there is one: the front face is the glass you see.
             if (_drinkGlassGlow != null) _drinkGlassGlow.Graphics = new Graphic[] { _drinkGlassArt };
 
@@ -3052,7 +3161,8 @@ namespace LastCall.UI
             _rimSwept.TryGetValue("salt_rim", out float sweptSalt);
             _rimSwept.TryGetValue("sugar_rim", out float sweptSugar);
             GlassDecor.Sync(_drinkGlass, piece, run.ServingGlass, run,
-                            sweptSalt / RimLap, sweptSugar / RimLap, _drinkGlassRimOver);
+                            sweptSalt / RimLap, sweptSugar / RimLap, _drinkGlassRimOver,
+                            _drinkGlassUnder);
             // The decor puts itself last every sync; the front crop goes back over it, and the crust
             // over that — only when the order is actually wrong, so the canvas is not re-sorted per frame.
             if (_drinkGlassLip != null && _drinkGlassLip.enabled)

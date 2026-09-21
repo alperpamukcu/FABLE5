@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,7 +50,7 @@ namespace LastCall.Core
         /// recipes on the bar's menu, the pool growing by one each day.
         /// </summary>
         public static DrinkOrder Roll(IReadOnlyList<RecipeDefinition> recipes, int day,
-            TycoonConfig config, SeededRng rng)
+            TycoonConfig config, SeededRng rng, IReadOnlyList<PreparationDefinition> garnishes = null)
         {
             var pool = recipes
                 .Where(r => r.RatioRequirements.Count > 0)
@@ -62,7 +62,7 @@ namespace LastCall.Core
                     Line.Of("rule.no_pourable_drinks"));
 
             var pick = pool[rng.NextInt(pool.Count)];
-            return new DrinkOrder(pick, MenuPrice(pick), ServingSpec.Roll(pick, rng));
+            return new DrinkOrder(pick, MenuPrice(pick), ServingSpec.Roll(pick, rng, garnishes));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -173,7 +173,10 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("gin", .70, .90), Band("vermouth", .10, .30)),
-                Cocktail("dirty_martini", "Dirty Martini", 23, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
+                // RANK 14, NOT 23 (2026-09-21, the ladder): olives open on the third rung (2.0), and a jar with no
+                // page to use it would break EveryBottle_OpensOnTheRungOfTheFirstPageThatWantsIt - so the first
+                // olive page stands on the same rung as the spoon it needs.
+                Cocktail("dirty_martini", "Dirty Martini", 14, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
                     new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
                     locked: true,
                     Band("gin", .60, .85), Band("vermouth", .08, .28), Band("olive", .05, .20)),
@@ -260,7 +263,9 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(2, so) },
                     locked: true,
                     Band("tequila", .35, .55), Band("pineapple", .30, .50), Band("lime", .08, .22)),
-                Cocktail("mint_julep", "Mint Julep", 21, 30, 3, 20, 1, PrepMethod.Stirred, "rocks",
+                // RANK 14, NOT 21 (2026-09-21, the ladder): mint opens on the third rung with the spoon, and the
+                // julep is the stirred mint page - the drink the rung is for.
+                Cocktail("mint_julep", "Mint Julep", 14, 30, 3, 20, 1, PrepMethod.Stirred, "rocks",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
                     locked: true,
                     Band("bourbon", .68, .88), Band("syrup", .08, .24), Band("mint", .03, .15)),
