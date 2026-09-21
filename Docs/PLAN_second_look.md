@@ -42,4 +42,50 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 | 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ☐ report |
 | 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ☐ report |
 | 13 | Kitchen lamps over the counter with their light | ☐ report |
-| 14 | The see-through characters: 34 of 54 idle frames have enclosed holes; an import-time fill with a size threshold, shown per face for the author to accept | ☐ report |
+| 14 | The see-through characters: 34 of 54 idle frames have enclosed holes; an import-time fill with a size threshold, shown per face for the author to accept | ◐ sheet at `Docs/reports/patron_holes/index.html` |
+
+## 4. The proposals (2026-09-21) — the author picks a direction, then the work is measured and built
+
+**10. The beer scene from scratch.** What stands today: `TycoonServiceFlow.Tap` (1210 lines) stands one of three
+font drawings (`bench_tap_single/arch/tee`, chosen by `TapLevel`) on a bench panel with the pint at a rest
+measured off the spout, the pull by the pointer's height, the head settling on the glass, and a plaque of keys.
+The room's tower is the author's `fx_tap_beer` at every count now, so the bench and the room disagree. Three
+directions, one asset list each:
+- A — *the tower at four times*: the room's own `tap_beer` redrawn at bench scale (one drawing, three handles;
+  the second and third handle dead until the ladder opens them), the pint under the spout, the head read off the
+  glass with no gauge, one key (SERVE IT). Assets: the tower at bench scale, three handle states, a drip tray.
+- B — *the keg room*: kegs on the left carrying the beer's cellar plate (`v4_beer_*_c`), the tower centre, the tray
+  right; a keg is tapped by dragging its line to a handle. Assets: three keg drawings, a line/coupler, the tower.
+- C — *the counter in close-up*: the camera moves to the room's tap; nothing new is drawn, the room's tower is
+  the font. Assets: none; the cost is code (the bench becomes a camera move and a hand).
+Whichever it is, the assets come through PixelLab → `Tools/.../report.html` → the author's pick → `ship.py`, as
+the bottles did; and the colour rule holds (the counter's finish, one accent on the handle in play).
+
+**11. The shaker bench.** Three separate asks, in order of certainty: (a) *the panels ride the background*: the
+lift ladder, the plaque and the keys move with `_pourSurface` (the slide) instead of standing on `_shakerPanel`;
+only the shaker and the bottles stay in the hand's plane — a re-parenting, measured against the entrance slide
+(`PlayBenchEntrance`). (b) *the mix bars*: today one blended gauge (`_shakerMixBar`); proposed: one bar per
+pour in the tin, the bottle's own liquid colour, its NAME and its share as a number, 16 px tall, stacked left to
+right in pour order, on the plaque's band. (c) *SERVE IT*: the key drawn again on the plate family in the one
+accent, at the plaque's right end, wider than tall, the word alone; the lamps come off it. A mock of (b) and (c)
+at 640×360 first, then code.
+
+**12. The cupboard door.** The shutter is a roller over rows 65..241 of the counter's opening (176 art px tall,
+`ShutterOpeningTopPx`); the sound is a wooden door now. Proposed: a single wooden panel the opening's exact size,
+hung from its top and RISING into the counter to open (a portcullis), the roller's travel and rail kept
+(`ShutterTravel`, `ShutterRail`). Assets: one panel drawing in the counter's finish family (PixelLab, three
+candidates) — or drawn in code the way `BackBarArt` draws the wall, if the author prefers no generated art here.
+
+**13. Kitchen lamps over the counter.** A new slot (`counter_lamps`, x 320, y at the counter's top edge) with a
+fixture that starts in the room: a rail of three shades, each with the fixture light the room already has
+(`lightR/G/B`, `lightIntensity`, `lightRadius`, glow at two thirds of the sprite). Assets: the rail drawing
+(PixelLab, three candidates at the room's 640×360 scale). Measured question for the author: warm (the bar's
+amber) or the counter's magenta tube?
+
+**14. The see-through characters.** The sheet `Docs/reports/patron_holes/index.html` paints every enclosed
+transparent hole in the idle frames magenta (34 faces; the largest: eastasianman 387 px, analyst 204, bilbao
+175, clubgirl 169, canton 130). Proposed: `PatronArtPostprocessor` fills holes under a threshold (say 40 px)
+with the nearest opaque colour at import, so the author's PNGs stay untouched and the big true gaps (an arm off
+the hip) stay open; the author names any face whose gap must stay. The garnish dishes and the glass garnishes
+have no holes and no soft alpha — if something on the rail shows the background, it is the dimmed dish
+(`Seats.cs` alpha 0.85) and that is one number.
