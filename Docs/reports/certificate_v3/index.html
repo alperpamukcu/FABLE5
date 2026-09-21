@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Sertifika v3 ön izleme</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg: #0d0813; --ink: #f2e8d5; --dim: #9c8f80; --line: #362447; --accent: #e8a33d; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Georgia, "Times New Roman", serif; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 16px; margin: 32px 0 8px; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+  p { max-width: 68ch; color: var(--dim); margin: 6px 0 12px; }
+  img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); image-rendering: pixelated; }
+  figure { margin: 0 0 24px; }
+  figcaption { color: var(--dim); font-size: 13px; margin-top: 6px; }
+  ul { color: var(--dim); max-width: 68ch; padding-left: 20px; }
+  li { margin: 4px 0; }
+  code { color: var(--ink); font: 13px ui-monospace, Consolas, monospace; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sertifika v3 — ilk kazanıldığındaki tören</h1>
+  <p>21 Eylül 2026. Oyunun kendi karelerinden (1280×720, tek kare yakalama), plaka bölgesi kırpılıp yarıya indirildi.
+  GIF on kareyi 0,28 sn arayla oynatır; oyunda tören ölçeksiz saatte 3,2 sn sürer, sonrasında sayfa durur.</p>
+
+  <h2>Tören</h2>
+  <figure>
+    <img src="certificate_climb.gif" alt="Sertifikanın açılışı: plaka oturur, kâğıt yukarıdan aşağı açılır, yıldızlar tırmanır, mühür basılır, kutular gelir, konfeti yağar" width="464" height="308">
+    <figcaption>Sıra: plaka oturur (0,25 sn) ve kâğıt yukarıdan aşağı açılır (0,5 sn); 0,6 sn'de yıldızlar eskiden yeniye tırmanır, dolan her yıldız bir kez büyüyüp iner (star_earn); tırmanış konunca cheer_sfx ve ikinci konfeti dalgası, mühür basılır (stamp) ve kurdeleler iner; kutular sırayla belirir. Açılışta level_up çalar.</figcaption>
+  </figure>
+
+  <h2>Kareler</h2>
+  <figure>
+    <img src="r67_climb_04.png" alt="Tırmanışın ortası" width="1280" height="720">
+    <figcaption>Tırmanışın ortası: iki yıldız dolmuş, kutular henüz gelmemiş (bu karede sınıf başlıkları erken görünüyordu; düzeltildi, artık kutuyla birlikte belirir).</figcaption>
+  </figure>
+  <figure>
+    <img src="r67_climb_09.png" alt="Tören bitti" width="1280" height="720">
+    <figcaption>Tören bitti: unvan, yıldızlar, tek satır meta ("RISEN FROM ..., NIGHT 6"), KONFOR madalyayla ve SERVİS kalple (üst şeritteki gibi), kâğıdın içinde sınıf sınıf kutular, sağ altta mühür.</figcaption>
+  </figure>
+  <figure>
+    <img src="r67_rest4.png" alt="Yıldız sırasından açılınca, 3 yıldız" width="1280" height="720">
+    <figcaption>Yıldız sırasından açılınca (3,0★): tırmanış yok, "STANDING AS OF NIGHT 6"; marketin şişeleri ve defterin sayfaları kutu olarak, ikinci sıranın son kutusu kalanı sayar.</figcaption>
+  </figure>
+
+  <h2>Neden böyle</h2>
+  <ul>
+    <li>Üç renk rolü: plaka (Cyan[0]), kâğıt (Cream[4]) üstünde gece mürekkebi (Night[0/1]), tek vurgu Amber (yıldızlar, mühür, tuş). Altın/kırmızı/magenta süsler gitti.</li>
+    <li>Bir başlık (unvan, 24 px), bir ana nesne (yıldızlar), bir liste (kutular), bir tuş. "CERTIFICATE OF STANDING", "THIS BAR IS HEREBY KNOWN AS", "CONFERRED ON NIGHT" satırları silindi; geriye tek meta satırı kaldı.</li>
+    <li>Kutular kâğıdın İÇİNDE; kâğıdın boyu kutu sırasına göre (310 / 426), plaka kâğıda göre. En fazla iki sıra, fazlası "+N".</li>
+    <li>Tek hareket dizisi: kâğıt açılır → yıldızlar tırmanır → mühür → kutular; konfeti ve ses üstüne. Azaltılmış harekette hepsi hazır durur.</li>
+    <li>Döndürülmüş hiçbir şey yok; mühür düz bir disk ve oyunun kendi martini bardağı.</li>
+  </ul>
+</main>
+</body>
+</html>

@@ -1732,6 +1732,7 @@
     {"key": "rank.cert.foot_again", "text": "{night}. GECE İTİBARİYLE", "src": "STANDING AS OF NIGHT {night}"},
     {"key": "rank.cert.heading", "text": "İTİBAR BELGESİ", "src": "CERTIFICATE OF STANDING"},
     {"key": "rank.cert.known_as", "text": "BU BAR BUNDAN BÖYLE ŞÖYLE ANILIR", "src": "THIS BAR IS HEREBY KNOWN AS"},
+    {"key": "rank.cert.meta_climb", "text": "ESKİ UNVANI {title}, {night}. GECE", "src": "RISEN FROM {title}, NIGHT {night}"},
     {"key": "rank.cert.risen_from", "text": "ESKİ UNVANI: {title}", "src": "RISEN FROM {title}"},
     {"key": "rank.cert.service", "text": "SERVİS", "src": "SERVICE"},
     {"key": "rank.strip.new", "text": "YENİ", "src": "NEW"},

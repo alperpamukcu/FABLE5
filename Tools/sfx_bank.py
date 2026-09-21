@@ -333,68 +333,44 @@ def s_stool_take():
     return lowpass(out, 5200.0)
 
 def s_cellar_open():
-    """THE CELLAR IS A ROLLER SHUTTER, NOT A DRAWER (2026-08-27, the author:
-    "backbar kapaginin acilma sesi kisa ve kotu").
+    """THE CELLAR IS A CUPBOARD DOOR NOW (2026-09-21, the author: "kepenin acilma
+    kapanma sesi degistirilsin cok kulak tirmaliyor" - the roller's rattle grated).
 
-    They are right twice. It WAS short — 0.46s — and it was the wrong object: a band
-    of noise and a wooden knock, which is a drawer sliding and stopping. What is
-    actually over the cellar is a metal roller: dozens of slats running up a track,
-    and the sound of that is RHYTHMIC. Each slat crossing the guide is its own small
-    metallic tick, and the ticks come faster or slower as the shutter moves.
-
-    Two things make it read as a real one. First the rate DECELERATES — a shutter
-    thrown upward slows as it runs out of throw, so the ticks spread out toward the
-    end, and a constant rate is the giveaway of a synthesised rattle. Second the
-    whole curtain RINGS underneath: a sheet of linked metal has a body, so the ticks
-    drive a resonance rather than sitting on silence. It ends with the shutter
-    reaching its stop and the curtain ringing off.
-    """
-    d = 1.30
+    A wooden door over the opening under the counter: the latch gives, the panel
+    swings on its hinge with a low wooden groan, and it settles against its stop.
+    Nothing metallic, nothing rhythmic: three soft wooden events and a body under
+    them, a little under half a second."""
+    d = 0.62
     out = silence(d)
-    r = rng('roll:open')
-    # The slats, decelerating. Time is walked forward by a gap that grows.
-    at = 0.02
-    gap = 0.028
-    k = 0
-    while at < 1.02:
-        tick = impact(0.030, 'ro%d' % k, tone=r.uniform(1700, 3100), q=3.0, crack=0.0011)
-        tick += metal_body(0.030, r.uniform(700, 1150), 'rom%d' % k, amp=0.35, decay=0.012)
-        place(out, at, tick * env_ad(0.030, 0.0003, 0.010), r.uniform(0.9, 1.5))
-        at += gap
-        gap *= 1.055          # every slat takes a little longer than the last
-        k += 1
-    # The curtain itself: the ticks drive its body, so it is a sheet and not a list.
-    out = out + bandpass(out, 520.0, 1.1) * 0.55
-    # And it arrives at the top stop.
-    place(out, 1.03, (impact(0.22, 'ro_stop', tone=820.0, q=1.5, crack=0.0026) * 1.2
-                      + metal_body(0.22, 300.0, 'ro_stopm', amp=0.9, decay=0.085))
-          * env_ad(0.22, 0.0006, 0.075), 0.75)
-    return lowpass(out, 7000.0)
+    # the latch: a small dry click with a wooden body
+    place(out, 0.01, (impact(0.05, 'cd_latch', tone=1400.0, q=2.4, crack=0.0009) * 0.5
+                      + wood_body(0.05, 380.0, 'cd_latchw', amp=0.4, decay=0.018))
+          * env_ad(0.05, 0.0004, 0.02), 0.55)
+    # the swing: the panel's groan, a low wooden body swelling and fading
+    swing = wood_body(0.38, 96.0, 'cd_swing', amp=0.9, decay=0.16)
+    swing = swing + bandpass(paper(0.38, 'cd_rustle', bright=1400.0, bursts=2), 620.0, 0.9) * 0.35
+    place(out, 0.06, swing * env_ad(0.38, 0.04, 0.22), 0.5)
+    # and it meets its stop, softly
+    place(out, 0.40, (impact(0.18, 'cd_stop', tone=520.0, q=1.6, crack=0.0018) * 0.7
+                      + wood_body(0.18, 150.0, 'cd_stopw', amp=0.9, decay=0.07))
+          * env_ad(0.18, 0.0006, 0.07), 0.6)
+    return lowpass(out, 4200.0)
 
 def s_cellar_close():
-    """The same curtain coming down. Gravity is the difference: it ACCELERATES where
-    the opening decelerates, so the ticks crowd together toward the end, and it lands
-    harder because it arrives with the weight of the whole sheet behind it."""
-    d = 1.15
+    """The door drops back over the opening: the panel swings shut with the same
+    low groan, meets the frame with a wooden knock, and the latch takes."""
+    d = 0.58
     out = silence(d)
-    r = rng('roll:close')
-    at = 0.02
-    gap = 0.058
-    k = 0
-    while at < 0.88:
-        tick = impact(0.028, 'rc%d' % k, tone=r.uniform(1500, 2800), q=3.0, crack=0.0011)
-        tick += metal_body(0.028, r.uniform(620, 1000), 'rcm%d' % k, amp=0.35, decay=0.012)
-        place(out, at, tick * env_ad(0.028, 0.0003, 0.010), r.uniform(0.85, 1.45))
-        at += gap
-        gap *= 0.955          # falling: each slat arrives sooner than the last
-        k += 1
-    out = out + bandpass(out, 470.0, 1.1) * 0.55
-    # It meets the sill with the sheet's whole weight on it.
-    place(out, 0.90, (impact(0.26, 'rc_stop', tone=560.0, q=1.3, crack=0.0032) * 1.4
-                      + metal_body(0.26, 220.0, 'rc_stopm', amp=1.0, decay=0.10)
-                      + wood_body(0.26, 120.0, 'rc_sill', amp=0.7, decay=0.055))
-          * env_ad(0.26, 0.0006, 0.090), 1.2)
-    return lowpass(out, 5800.0)
+    swing = wood_body(0.30, 96.0, 'cc_swing', amp=0.8, decay=0.14)
+    swing = swing + bandpass(paper(0.30, 'cc_rustle', bright=1400.0, bursts=2), 620.0, 0.9) * 0.3
+    place(out, 0.02, swing * env_ad(0.30, 0.03, 0.18), 0.45)
+    place(out, 0.30, (impact(0.20, 'cc_knock', tone=440.0, q=1.5, crack=0.0022) * 0.9
+                      + wood_body(0.20, 130.0, 'cc_knockw', amp=1.0, decay=0.075))
+          * env_ad(0.20, 0.0006, 0.08), 0.75)
+    place(out, 0.44, (impact(0.06, 'cc_latch', tone=1500.0, q=2.4, crack=0.0009) * 0.45
+                      + wood_body(0.06, 400.0, 'cc_latchw', amp=0.35, decay=0.02))
+          * env_ad(0.06, 0.0004, 0.025), 0.5)
+    return lowpass(out, 4000.0)
 
 def s_bottle_open():
     """A cap coming off: the crack of the seal, then the gas."""

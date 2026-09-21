@@ -606,7 +606,14 @@ namespace LastCall.UI
                 if (img == null) continue;
                 bool on = i < step;
                 if (img.enabled != on) img.enabled = on;
-                if (on) img.color = i >= _liftRungs.Length - 3 ? CounterFinish.Current.Accent : UITheme.Cream[3];
+                // GREEN TO RED UP THE LADDER (2026-09-21, the author: "Lift higher renkleri yeşilden kırmızıya
+                // doğru gitmeli"): lime at the foot, amber through the middle, the vice red at the top.
+                if (on)
+                {
+                    float t = _liftRungs.Length > 1 ? i / (float)(_liftRungs.Length - 1) : 1f;
+                    img.color = t < 0.5f ? Color.Lerp(UITheme.Lime[3], UITheme.Amber[3], t * 2f)
+                                         : Color.Lerp(UITheme.Amber[3], UITheme.ViceRed[3], (t - 0.5f) * 2f);
+                }
             }
         }
 

@@ -1084,7 +1084,9 @@ namespace LastCall.UI
             // loaded the word as its no-art guard, so the sign — and the OpenSignArrow the
             // PlayMode suite presses — silently stopped being built once the editor's
             // Resources cache no longer had the deleted file. What is drawn is what gates.
-            var arrow = ItemArt.Load("sign_open_arrow");
+            // THE ARROW IS GONE (2026-09-21, the author: "Ne olursa olsun üstündeki pembe aşağı oku kaldır"):
+            // the roller opens as it did, without the chevron struck on it.
+            var arrow = (Sprite)null;
             if (arrow == null) return;   // no art on disk: a bare roller still opens
 
             _cellarOpenSign = NewRect("OpenSign", _shutterDoor);
@@ -1124,9 +1126,11 @@ namespace LastCall.UI
         /// </summary>
         private void BuildShutSign()
         {
+            // THE ARROW IS GONE (2026-09-21, the author: "Ne olursa olsun üstündeki pembe aşağı oku kaldır"). The
+            // rail still shuts the cellar; it just no longer wears a chevron saying so.
             if (_shutterDoor == null || _cellarShutSign != null) return;
-            var mark = ItemArt.Load("sign_shut_arrow");
-            if (mark == null) return;    // no art on disk: the rail still shuts the cellar
+            var mark = (Sprite)null;
+            if (mark == null) return;
 
             _cellarShutSign = NewRect("ShutSign", _shutterDoor);
             _cellarShutSign.anchorMin = _cellarShutSign.anchorMax = new Vector2(0.5f, 1f);
@@ -3348,7 +3352,12 @@ namespace LastCall.UI
                 // The scale is deliberately tiny: 360 art rows come to 0.72 world units,
                 // nowhere near the camera's clip planes, and Z never outranks a sorting
                 // order — it only decides who goes first when two pieces are already equal.
-                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, atY * 0.002f);
+                // GREENERY STANDS BEHIND THE FURNITURE (2026-09-21, the author: "bitkiler sandalyelerin
+                // arkasında olmalı hiyerarşide"): the pothos at x 150 shares its footprint with the left table,
+                // and the depth rule alone put it in front. A plant is pushed a hair further back than any
+                // piece of floor dressing can stand, so the tie always falls the furniture's way.
+                float back = placed.Def.Group == "greenery" ? 0.3f : 0f;
+                placed.Body.position = basePos + new Vector3(0f, h * 0.5f, atY * 0.002f + back);
                 // The glow hangs at the piece's own light line — the flame, the belly of
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)

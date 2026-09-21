@@ -27,6 +27,7 @@
     { "key": "rank.cert.heading", "text": "CERTIFICATE OF STANDING", "note": "Heading at the top of the rank-up certificate (the level-up screen is drawn as a certificate on cream paper). 8 px, ~26 characters." },
     { "key": "rank.cert.known_as", "text": "THIS BAR IS HEREBY KNOWN AS", "note": "Line on the certificate just above the bar's new rank title. 8 px, ~30 characters." },
     { "key": "rank.cert.risen_from", "text": "RISEN FROM {title}", "note": "Line on the certificate under the stars, naming the rank the bar held before tonight. {title} is a rank title such as TALK OF THE STREET. 8 px, ~40 characters." },
+    { "key": "rank.cert.meta_climb", "text": "RISEN FROM {title}, NIGHT {night}", "note": "The one small line under the stars on the rank certificate the night a rank is reached: the rank it rose from and the night number. {title} is a rank title such as TALK OF THE STREET. 8 px, ~44 characters." },
     { "key": "rank.cert.foot", "text": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE", "note": "Foot line of the certificate on the night the rank is reached. {night} is the night number. 8 px, ~56 characters." },
     { "key": "rank.cert.foot_again", "text": "STANDING AS OF NIGHT {night}", "note": "Foot line of the certificate when it is reopened from the top bar's star row on a later night. {night} is the night number. 8 px, ~30 characters." },
     { "key": "rank.cert.comfort", "text": "COMFORT", "note": "Label before the five hearts on the rank certificate. 8 px, ~8 characters." },

@@ -1672,7 +1672,7 @@ namespace LastCall.UI
                 // stopped would be the pause bug in miniature.
                 if (_clothFlyT >= 0f)
                 {
-                    _clothFlyT += Mathf.Max(0f, RoomDelta) / ClothFlySeconds;
+                    _clothFlyT += Mathf.Max(0f, AnimDelta) / ClothFlySeconds;
                     if (_clothFlyT >= 1f) _clothFlyT = -1f;
                     else home = Vector2.Lerp(_clothFlyFrom, home, Tweening.OutCubic(_clothFlyT));
                 }
@@ -4241,7 +4241,7 @@ namespace LastCall.UI
                 // stool was given (SeatWalkClock), so the step that lands here is the cycle's
                 // first frame - the pose ARRIVE was drawn from.
                 bool stillWalking = view.WalkT < 1f;
-                view.WalkT = Mathf.Min(1f, view.WalkT + RoomDelta * WalkSpeed / dist);
+                view.WalkT = Mathf.Min(1f, view.WalkT + AnimDelta * WalkSpeed / dist);
                 if (stillWalking && view.WalkT >= 1f)
                 {
                     Sfx.Play("stool_take", 0.7f);
@@ -4306,7 +4306,7 @@ namespace LastCall.UI
             // The entrance run backwards, at the entrance's one steady pace (see AdvanceWalkIn).
             float exitX = _hudRoot.rect.width + OffscreenMargin;
             float dist = Mathf.Max(1f, exitX - view.SeatX);
-            view.ExitT = Mathf.Min(1f, view.ExitT + RoomDelta * WalkSpeed / dist);
+            view.ExitT = Mathf.Min(1f, view.ExitT + AnimDelta * WalkSpeed / dist);
             view.Root.anchoredPosition = new Vector2(
                 Mathf.Lerp(view.SeatX, exitX, view.ExitT), SeatLineY);
             // Solid the whole way out, for the same reason they walk in solid: exitX is past
@@ -4315,7 +4315,7 @@ namespace LastCall.UI
 
             // Mirror the walk so they face the way they are leaving (to the right).
             UpdatePatronFrame(view, PatronClip.Walk, view.AnimClock, facing: -1);
-            view.AnimClock += RoomDelta;
+            view.AnimClock += AnimDelta;
 
             if (view.ExitT >= 1f)
             {
@@ -4364,7 +4364,7 @@ namespace LastCall.UI
             }
             view.WasOrdered = ordered;
 
-            if (drinking) view.DrinkT += RoomDelta; else view.DrinkT = 0f;
+            if (drinking) view.DrinkT += AnimDelta; else view.DrinkT = 0f;
 
             PatronClip clip; float t;
             if (!seated)                      { clip = PatronClip.Walk;  t = view.AnimClock; }   // faces left, walking in
@@ -4376,7 +4376,7 @@ namespace LastCall.UI
             else                              { clip = PatronClip.Idle;  t = view.AnimClock; }
             // The walk's clock runs on the room's time, the time the floor is moved by, so the
             // step that reaches the stool is the frame the walk-in was phased for (SeatWalkClock).
-            view.AnimClock += seated ? Time.deltaTime : RoomDelta;
+            view.AnimClock += AnimDelta;   // seated or walking, the frames keep their own time (2026-09-21)
 
             // A seated customer's idle is a STILL frame, so the life in it comes from where
             // they are looking. This runs only in the idle branch — somebody speaking their

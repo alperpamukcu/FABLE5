@@ -2384,6 +2384,12 @@ namespace LastCall.UI
         /// the night is stopped is the bug this exists to make impossible.</summary>
         private float RoomDelta => Time.deltaTime * RoomScale;
 
+        /// <summary>The characters' own delta (2026-09-21, the author: "oyun yavaş akarken karakter animasyonları
+        /// slow mode olmasın, sadece bekleme süreleri yavaşlasın ... oyun durduruluyorsa animasyonlar durdurulur"):
+        /// the engine's delta, which the book and the working menus leave alone and the pause stops outright.
+        /// Walks, frames and drinking run on this; patience, arrival and reaction timers stay on RoomDelta.</summary>
+        private float AnimDelta => Time.deltaTime;
+
         private Coroutine _bookAnim;
 
         // The booklet, placed against menu_booklet.py's printed ruler at exactly 2× —

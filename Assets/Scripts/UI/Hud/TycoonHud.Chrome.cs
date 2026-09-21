@@ -1812,6 +1812,7 @@ namespace LastCall.UI
             StepJobStrip();
             RefreshLadderFlag(run);
             StepLadder();
+            StepHouseWave(run);
 
             // ECE SETTLES UP THE MOMENT IT LANDS (2026-09-06). The run raises the flag on the
             // serve — or on the night, for a clean week — and the room says so once, with the
@@ -2084,10 +2085,13 @@ namespace LastCall.UI
             DevHeading(ref slot, "KOŞU");
             DevKey(ref slot, "YENİ KOŞU", "1. gün, boş bar",
                 () => { _bootstrap.StartNewRun(null); ToggleDevBench(); });
-            DevKey(ref slot, "ORTA OYUN", "12. gün, stoklu",
-                () => { _bootstrap.StartNewRun(null); Run.DevPreset(1); ApplyBarLook(); ToggleDevBench(); });
-            DevKey(ref slot, "SON OYUN", "geç koşu, dolu raf",
-                () => { _bootstrap.StartNewRun(null); Run.DevPreset(2); ApplyBarLook(); ToggleDevBench(); });
+            // A RUN AT EVERY RUNG (2026-09-21, the author: "her yıldız seviyesi için dev tool testi oluştur şu
+            // ankiler yerine"): the six certificate levels, each with the fittings, stock, book and calendar of a bar
+            // that stands there (TycoonRun.DevPresetStars).
+            DevKeyRow(ref slot, "basamağın donanımıyla yeni koşu (gün, raf, defter, eşya)",
+                ("0,5★", () => DevRunAt(0.5)), ("1★", () => DevRunAt(1.0)), ("2★", () => DevRunAt(2.0)));
+            DevKeyRow(ref slot, null,
+                ("3★", () => DevRunAt(3.0)), ("4★", () => DevRunAt(4.0)), ("5★", () => DevRunAt(5.0)));
 
             DevHeading(ref slot, "SAAT");
             DevKey(ref slot, "GÜN SONUNA ATLA", "şimdi kapat, marketi aç", () =>
@@ -2203,6 +2207,84 @@ namespace LastCall.UI
 
         /// <summary>One verb: its NAME on the key, and what it does underneath it rather than
         /// crammed inside it. That is the whole reason this panel exists.</summary>
+        // ── THE WAVE (2026-09-21, the author: "dolu olan yıldızlar 5 saniyede bir animasyona girsin ... meksika
+        // dalgası") ───────────────────────────────────────────────────────────────────────────────────
+        private float _houseWaveT;
+        private const float HouseWaveEvery = 5f, HouseWaveStep = 0.08f, HouseWaveLen = 0.3f;
+
+        /// <summary>Every five seconds the lit stars, medals and hearts in the top bar rise and settle one after
+        /// another, left to right — a wave over what the bar has earned, and nothing over what it has not.</summary>
+        private void StepHouseWave(TycoonRun run)
+        {
+            if (run == null || _starsFill == null || Motion.Reduced) return;
+            _houseWaveT += Time.unscaledDeltaTime;
+            if (_houseWaveT >= HouseWaveEvery) _houseWaveT -= HouseWaveEvery;
+            WaveRow(_starsFill, run.Rating.Average, _houseWaveT);
+            if (_comfortFill != null) WaveRow(_comfortFill, run.ComfortNow, _houseWaveT + HouseWaveStep);
+            if (_serviceFill != null) WaveRow(_serviceFill, run.ServiceTonight, _houseWaveT + HouseWaveStep * 2f);
+        }
+
+        /// <summary>One strip: the lit cells under <paramref name="fill"/> and the sockets beside it (siblings
+        /// named S0..S4 / B0..B4) scale together, each cell at its own beat; a cell more than half filled counts.</summary>
+        private static void WaveRow(RectTransform fill, double value, float t)
+        {
+            int lit = (int)Math.Floor(value + 0.5 + 1e-9);
+            var row = fill.parent as RectTransform;
+            for (int i = 0; i < fill.childCount; i++)
+            {
+                float p = i < lit ? Mathf.Clamp01((t - i * HouseWaveStep) / HouseWaveLen) : 1f;
+                float sc = 1f + 0.3f * Mathf.Sin(p * Mathf.PI);
+                var scale = new Vector3(sc, sc, 1f);
+                (fill.GetChild(i) as RectTransform).localScale = scale;
+                if (row == null) continue;
+                var socket = row.Find("S" + i) ?? row.Find("B" + i);
+                if (socket != null) socket.localScale = scale;
+            }
+        }
+
+        private void DevRunAt(double stars)
+        {
+            _bootstrap.StartNewRun(null);
+            Run.DevPresetStars(stars);
+            ApplyBarLook();
+            ToggleDevBench();
+        }
+
+        /// <summary>A row of small keys on the rail, side by side, with one note under them (or none).</summary>
+        private void DevKeyRow(ref int slot, string what, params (string name, Action onClick)[] keys)
+        {
+            const float gap = 6f;
+            float w = (DevRailW - gap * (keys.Length - 1)) / keys.Length;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                var (name, onClick) = keys[i];
+                var row = NewRect("DK_" + name, _devPanel);
+                Place(row, new Vector2(0, 1), new Vector2(w, 28),
+                    new Vector2(DevRailX + i * (w + gap), -56f - slot * DevSlotH));
+                row.pivot = new Vector2(0, 1);
+                var btn = row.gameObject.AddComponent<Button>();
+                var click = onClick;
+                btn.onClick.AddListener(() => click());
+                var face = NewRect("Face", row);
+                Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                KeyPlate.Dress(row, UITheme.Night[3], btn, face);
+                var label = NewText("L", face, Plain, 14, TextAnchor.MiddleCenter, UITheme.TextPrimary);
+                Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(4, KeyPlate.Throw), new Vector2(-4, 0));
+                label.fontStyle = FontStyle.Bold;
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.text = name;
+            }
+            slot++;
+            if (what == null) return;
+            var note = NewText("N_row" + slot, _devPanel, Plain, 12, TextAnchor.UpperLeft, UITheme.Cream[2]);
+            Place(note.rectTransform, new Vector2(0, 1), new Vector2(DevRailW - 8f, 18),
+                new Vector2(DevRailX + 10f, -56f - slot * DevSlotH + 10f));
+            note.rectTransform.pivot = new Vector2(0, 1);
+            note.horizontalOverflow = HorizontalWrapMode.Overflow;
+            note.text = what;
+            slot++;
+        }
+
         private void DevKey(ref int slot, string name, string what, Action onClick)
         {
             var row = NewRect("DK_" + name, _devPanel);

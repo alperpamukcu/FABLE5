@@ -123,6 +123,7 @@ namespace LastCall.UI
                                               || glass.HasPreparation("sugar_rim"));
                 float want = done ? 1f : Mathf.Clamp01(Mathf.Max(BuildSalt, BuildSugar));
                 if (!Mathf.Approximately(_crust.fillAmount, want)) _crust.fillAmount = want;
+                if (_crustFront != null && !Mathf.Approximately(_crustFront.fillAmount, want)) _crustFront.fillAmount = want;
             }
         }
 
@@ -131,6 +132,7 @@ namespace LastCall.UI
         /// time. The finished preparation on the glass still wins over both.</summary>
         public float BuildSalt, BuildSugar;
         private Image _crust;
+        private Image _crustFront;   // the near arc of the crust over the front crop (the author's FRONT plates, 2026-09-21)
         private RectTransform _rimOver;   // the crust's host over the front crop, when given
 
         private void Rebuild(GlassContents glass, bool mint, bool olive)
@@ -141,6 +143,7 @@ namespace LastCall.UI
                 for (int i = _rimOver.childCount - 1; i >= 0; i--)
                     Destroy(_rimOver.GetChild(i).gameObject);
             _crust = null;
+            _crustFront = null;
             _ice.Clear();
             _mint = _olive = null;
             if (glass == null) return;
@@ -191,9 +194,31 @@ namespace LastCall.UI
                     // RimPlacement answers in the LIP's frame — an offset from the rect's TOP
                     // for a top-pivoted child — and NewChild builds a CENTRE-pivoted one, so
                     // the offset was half a glass adrift. Half the height puts it back.
+                    // THE AUTHOR'S FRONT PLATES (2026-09-21, glass3d_*_rim_*_FRONT): when the near arc is
+                    // drawn on its own, the whole ring stays here in the decor - over the drink, under the
+                    // front crop, so the far side of the crust is seen through the glass - and only the
+                    // near arc rides the rimOver host, over the glass. Without a front plate the ring rides
+                    // the host whole, as it did before the plates were drawn.
+                    var front = ItemArt.Load(drawn.name + "_FRONT");
                     var crust = NewChild("Crust", crustSize,
                         new Vector2(crustTop.x, h * 0.5f + crustTop.y - crustSize.y * 0.5f));
-                    if (_rimOver != null) crust.SetParent(_rimOver, false);
+                    if (_rimOver != null && front == null) crust.SetParent(_rimOver, false);
+                    if (_rimOver != null && front != null)
+                    {
+                        float kf = crustSize.x / Mathf.Max(1f, drawn.rect.width);
+                        var frontSize = new Vector2(front.rect.width * kf, front.rect.height * kf);
+                        var near = NewChild("CrustFront", frontSize,
+                            new Vector2(crustTop.x, h * 0.5f + crustTop.y - crustSize.y + frontSize.y * 0.5f));
+                        near.SetParent(_rimOver, false);
+                        _crustFront = near.gameObject.AddComponent<Image>();
+                        _crustFront.sprite = front;
+                        _crustFront.preserveAspect = true;
+                        _crustFront.raycastTarget = false;
+                        _crustFront.type = Image.Type.Filled;
+                        _crustFront.fillMethod = Image.FillMethod.Horizontal;
+                        _crustFront.fillOrigin = (int)Image.OriginHorizontal.Left;
+                        _crustFront.fillAmount = applied ? 1f : Mathf.Clamp01(salt ? BuildSalt : BuildSugar);
+                    }
                     _crust = crust.gameObject.AddComponent<Image>();
                     _crust.sprite = drawn;
                     _crust.preserveAspect = true;

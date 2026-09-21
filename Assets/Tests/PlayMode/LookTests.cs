@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using LastCall.Core;
@@ -390,9 +390,9 @@ namespace LastCall.PlayTests
                 // bottom of the screen - a click there lands nowhere.
                 // The ARROW since 2026-08-26: the word came off the roller and the chevron
                 // is the whole sign now, drawn at 3× where the word used to sit.
-                var key = Find("OpenSignArrow");
-                Assert.That(key, Is.Not.Null, "the roller carries no OPEN to press");
-                yield return ClickOn(key);
+                var roller = TheRoller();
+                Assert.That(roller, Is.Not.Null, "there is no roller to press");
+                yield return ClickAt(RollerFace(roller));
                 yield return new WaitForSecondsRealtime(0.6f);   // the roller's own travel
             }
             var lostDoor = Find(doorName);
@@ -702,6 +702,38 @@ namespace LastCall.PlayTests
         {
             Assert.That(target, Is.Not.Null, "there is nothing there to click");
             var at = RectTransformUtility.WorldToScreenPoint(null, target.TransformPoint(target.rect.center));
+            Set(_mouse.position, at);
+            yield return null;
+            yield return null;
+            Press(_mouse.leftButton);
+            yield return null;
+            yield return null;
+            Release(_mouse.leftButton);
+            yield return new WaitForSecondsRealtime(SettleSeconds);
+        }
+
+
+        /// <summary>WHERE THE ROLLER IS PRESSED (2026-09-21): the arrow is gone (the author: "pembe aşağı oku
+        /// kaldır"), so the suite presses the roller's own face sixty units under its top edge — the band the
+        /// player sees — because the rect is hung by its top and its centre is off the bottom of the screen.</summary>
+        private RectTransform TheRoller()
+        {
+            var root = Find("ShutterDoor");
+            if (root == null) return null;
+            var key = root.GetComponentInChildren<UnityEngine.UI.Button>(true);   // the canvas is named like its door
+            return key != null ? key.GetComponent<RectTransform>() : root;
+        }
+
+        private static Vector2 RollerFace(RectTransform door)
+        {
+            var c = new Vector3[4];
+            door.GetWorldCorners(c);
+            var top = RectTransformUtility.WorldToScreenPoint(null, (c[1] + c[2]) * 0.5f);
+            return top + new Vector2(0f, -60f);
+        }
+
+        private IEnumerator ClickAt(Vector2 at)
+        {
             Set(_mouse.position, at);
             yield return null;
             yield return null;

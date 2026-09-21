@@ -1540,6 +1540,47 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.91 · İkinci bakış, ilk dilim: sertifika v3 (tek vurgu, kutular kâğıdın içinde, açılış, ses), basamak başına dev preset, üst şerit dalgası, sarmaşık geride, kepenk oksuz ve yumuşak sesli, animasyonlar yavaş saatten bağımsız, kaldırma yeşilden kırmızıya, kenar ön plakaları (2026-09-21)
+
+Yazar (tek mesajda on dört madde; plan: `Docs/PLAN_second_look.md`): "Senin yaptığın tasarımlar AI slop oluyor ...
+renk teorisi ... kilit teoriler"; eklediği görseller güncellenmemiş; nane ve zeytin ekstra olmalı; yavaş saatte
+karakter animasyonu yavaşlamasın; üst şeritteki dolular 5 saniyede bir dalgalansın; bira sahnesi sıfırdan;
+shaker paneli; şeffaf karakterler; sarmaşık masanın arkasına; tezgâh lambaları; kepenk sesi ve pembe ok; açılanlar
+sertifikanın içine; her yıldız için dev preset; törenin ön izlemesi.
+
+- **Sertifika v3** (`TycoonHud.Ladder`, hafıza kuralı `ui-design-not-ai-slop`): üç renk rolü — mavi plaka, krem
+  kâğıt üstünde gece mürekkebi, TEK vurgu Amber (yıldızlar, mühür, tuş). Kâğıtta: unvan 24 px, yıldızlar, tek meta
+  satırı ("RISEN FROM {eski}, NIGHT {n}" / "STANDING AS OF NIGHT {n}"), KONFOR madalyayla ve SERVİS kalple (üst
+  şeritle aynı; v2 tersti), bir çizgi, "NEW BEHIND THE BAR" ve kutular KÂĞIDIN İÇİNDE (72 px, 80 adım, sırada 8,
+  en fazla 2 sıra, fazlası "+N"; sınıf başlığı ilk kutuya bağlı). Kâğıdın boyu kutu sırasına göre (310/426), plaka
+  kâğıda göre (494/610). Mühür: düz Amber disk + oyunun martini bardağı, iki kurdele; döndürme yok, süs yok.
+  Açılış: plaka 0,92→1 oturur, kâğıt RectMask2D ile yukarıdan aşağı açılır (0,5 sn), 0,6 sn'de yıldızlar 1,2 sn
+  tırmanır ve dolan her yıldız bir kez büyür (`star_earn`), tırmanış konunca `cheer_sfx` + ikinci konfeti dalgası,
+  mühür `stamp` ile basılır, kutular 0,05 sn arayla belirir; açılışta `level_up`. Konfeti Amber/Cream/Cyan.
+  Ön izleme: `Docs/reports/certificate_v3/index.html` (GIF + kareler).
+- **Basamak başına dev preset** (`TycoonRun.DevPresetStars(stars)`): standing ve su işareti, kapısı standing'in
+  altındaki her sayfa ve stoğu, bardak katmanı, koltuk, tezgâh katmanı, eşya (dekor basamak tavanı: <1★ çıplak,
+  <3★ 1, <4★ 2, <5★ 3), gün (3/6/12/18/24/30), para. Dev tezgâhında ORTA/SON OYUN yerine iki sıra tuş: 0,5★ 1★ 2★ /
+  3★ 4★ 5★ (`DevKeyRow`). Eski `DevPreset(1/2)` testler için olduğu gibi. Test: `TheDevPresets_StandOnTheirRungs`.
+- **Üst şerit dalgası** (`StepHouseWave`): her 5 sn'de dolu yıldızlar, madalyalar ve kalpler soldan sağa 0,08 sn
+  arayla 1,3× büyüyüp iner (ölçeksiz saat, `Motion.Reduced`'da yok); yarısından fazla dolu hücre dolu sayılır.
+- **Sarmaşık geride** (`PlaceFixtures`): greenery grubu z'de 0,3 geriye — aynı sıralama katındaki mobilyanın
+  hep arkasında.
+- **Kepenk**: `sign_open_arrow` (kapalı kepenkteki büyük pembe ok) ve `sign_shut_arrow` (raydaki küçük ok)
+  artık kurulmuyor. `cellar_open`/`cellar_close` yeniden yazıldı (`Tools/sfx_bank.py`): metal makara yerine ahşap
+  dolap kapağı — mandal, alçak ahşap gövde, yumuşak durma; 0,95 sn.
+- **Animasyon saati** (`TycoonHud.AnimDelta` = `Time.deltaTime`): yürüyüş, kare saati, içme ve bez uçuşu artık
+  odanın yavaşlatılmış saatine (`RoomDelta`: defter 0,3, menü 0,3) bağlı değil; sabır/varış/tepki sayaçları
+  RoomDelta'da kaldı. ESC `timeScale=0` → animasyon durur.
+- **Kaldırma merdiveni** (`LightLiftLadder`): Lime → Amber → ViceRed.
+- **Kenar ön plakaları** (`GlassDecor`, yazarın dosyası, yalnız benim hunk'larım): `glass3d_{cam}_rim_{tuz|şeker}_FRONT`
+  varsa tam halka dekorda (içkinin üstünde, ön kesitin altında), ön yay `rimOver`'da; kenar döndürülürken ikisi
+  de aynı dolumu izler (`_crustFront`).
+- Doğrulama: EditMode 620/621 (tek kırmızı yazarın 32×66 v4_bourbon plakası), PlayMode 13/13. Oyunda (r67/r68): tören on karede, sarmaşık
+  masanın arkasında, ok yok, dalga.
+- Bekleyen (plan §2-3): nane/zeytin ekstra; bira sahnesi, shaker paneli/mix barları/SERVE IT, dolap kapağı,
+  tezgâh lambaları, şeffaf karakter delikleri — önce öneri raporu.
+
 ### 9.90 · Sertifika sayfası v2 (kutlama, mühür ve kurdele, kutulu açılanlar, konfor/servis), ESC ailesi mavi plakada, mavi ipucu (2026-09-21)
 
 Yazar: "ESC menüsü backbar tasarımı ile uyumlu olmalı. Pembe hover kullanılmayan yerlerde mavi hover kullanılsın,

@@ -220,6 +220,27 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheDevPresets_StandOnTheirRungs()
+        {
+            // The bench's six keys (2026-09-21): each parks the bar on its rung with the calendar, the book and the
+            // lines of a bar that got there — and never on a rung above it.
+            double[] stars = { 0.5, 1.0, 2.0, 3.0, 4.0, 5.0 };
+            int lastDay = 0;
+            foreach (double s in stars)
+            {
+                var run = NewRunWith(0.0, "preset-" + s, Tower());
+                run.DevPresetStars(s);
+                Assert.AreEqual(BarRank.Of(s).Index, run.Rank.Index, s + " stars stands on its own rung");
+                Assert.AreEqual(TycoonPhase.DayOpen, run.Phase);
+                Assert.Greater(run.Day, lastDay, "the calendar climbs with the rungs");
+                lastDay = run.Day;
+                Assert.AreEqual(BarRank.DraughtLines(s), run.TapLevel, "the lines the rung brings, on the one tower");
+                Assert.AreEqual(s >= 2.0, run.SpoonUnlocked);
+                Assert.IsEmpty(run.RecipesOpeningAt(s), "every page this standing has earned is in the book");
+            }
+        }
+
+        [Test]
         public void TheCertificate_ListsWhatTheRungBringsToTheShop()
         {
             // The certificate's tiles (2026-09-21): a rung's bottles and pages are the ones whose star gate is

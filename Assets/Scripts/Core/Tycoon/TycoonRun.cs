@@ -898,6 +898,89 @@ namespace LastCall.Core
         /// or storms off exactly as they would have, the rent still lands, the market still
         /// rolls. The only thing skipped is the waiting. No-op outside an open day.
         /// </summary>
+        /// <summary>
+        /// A PRESET FOR EVERY RUNG (2026-09-21, the author: "her yıldız seviyesi için dev tool testi ... hepsi o
+        /// yıldız seviyesine göre donanıma sahip olsun"): the bar as it plausibly stands at <paramref name="stars"/>
+        /// — the standing parked there (and the ladder's mark with it), the book open to every page whose star gate
+        /// the standing clears, the shelf stocked for those pages, the glassware, the seats, the counter and the
+        /// fittings the shop would have sold by then, and the calendar at the night such a bar would be on. Dev
+        /// tooling only: it moves state directly and asks no one for money. The two older presets
+        /// (<see cref="DevPreset"/>) stay as they were for the tests that ride them.
+        /// </summary>
+        public void DevPresetStars(double stars)
+        {
+            stars = Math.Max(0.0, Math.Min(BarRating.MaxStars, stars));
+            bool top = stars >= BarRating.MaxStars - 1e-9;
+            Money = StarEconomy.PriceAt(120 + (int)Math.Round(stars * 96), stars);
+            Rating.DevSet(stars);
+            int tier = stars < 1 ? 1 : stars < 2 ? 2 : stars < 4 ? 3 : stars < 5 ? 4 : MaxGlassTier;
+            foreach (var g in _glassware)
+                _glassTiers[g.Id] = Math.Min(MaxGlassTier,
+                    stars >= 2 && stars < 3 && !(g.Id == "rocks" || g.Id == "highball") ? 2 : tier);
+            int seats = stars < 1 ? 3 : stars < 2 ? 4 : stars < 3 ? 5 : stars < 4 ? 6 : _config.MaxSeats;
+            while (Seats < Math.Min(_config.MaxSeats, seats)) Seats++;
+            CounterTier = stars < 1 ? 1 : stars < 3 ? 2 : stars < 4 ? 3 : _config.MaxAmbienceTier;
+
+            var toUnlock = new List<RecipeDefinition>();
+            foreach (var r in AllRecipes)
+                if (r.Locked && !_boughtRecipes.Contains(r.Id) && RecipeStarGate(r) <= stars + BarRank.Epsilon)
+                    toUnlock.Add(r);
+            foreach (var r in toUnlock)
+            {
+                _boughtRecipes.Add(r.Id);
+                _recipes.Add(r);
+                var styles = new HashSet<string>();
+                foreach (var band in r.RatioRequirements)
+                    if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
+                for (int i = _lockedStock.Count - 1; i >= 0; i--)
+                {
+                    var card = _lockedStock[i];
+                    if (card.Info?.Style != null && styles.Contains(card.Info.Style))
+                    { _brandCatalogue.Add(card); _lockedStock.RemoveAt(i); }
+                }
+            }
+            foreach (var card in _brandCatalogue)
+            {
+                if (card.Info?.Style == null) continue;
+                bool missing = top ? _shelf.Find(card.Id) == null : Market.FindByStyle(_shelf, card.Info.Style) == null;
+                if (missing) _shelf.Add(new ShelfBottle(card.Clone()));
+            }
+            if (top)
+                for (int i = _lockedStock.Count - 1; i >= 0; i--)
+                {
+                    var card = _lockedStock[i];
+                    if (_shelf.Find(card.Id) == null) _shelf.Add(new ShelfBottle(card.Clone()));
+                    _brandCatalogue.Add(card);
+                    _lockedStock.RemoveAt(i);
+                }
+            foreach (var r in _recipes)
+                if (r.HasAuthoredRatios) _perfectedRecipes.Add(r.Id);
+
+            // The fittings the shop would have sold by this standing, the decor ladders capped a rung below
+            // the top so the room's comfort stays under its ceiling (DevPreset's measured lesson), the tools whole.
+            int rungCap = stars < 1 ? 0 : stars < 3 ? 1 : stars < 4 ? 2 : stars < 5 ? 3 : int.MaxValue;
+            foreach (var f in _fixtureCatalogue)
+            {
+                if (f.Stars > ShopStars + 1e-9) continue;
+                bool tool = f.IsTap || f.IsDrain || f.Slot == "shaker";
+                if (!tool && f.Level > 0 && f.Level > rungCap) continue;
+                if (!tool && !f.StartsInTheRoom && rungCap == 0) continue;
+                _fixtures.Add(f.Id);
+            }
+            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+
+            RollMarket();
+            Day = stars < 1 ? 3 : stars < 2 ? 6 : stars < 3 ? 12 : stars < 4 ? 18 : stars < 5 ? 24 : 30;
+            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
+                _rng.GetStream("mess"));
+            Floor.House.SinkSeconds = SinkSeconds;
+            LastCustomer = null;
+            LastCallBeat = null;
+            Trial = null;
+            _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
+            Phase = TycoonPhase.DayOpen;
+        }
+
         public void DevSkipToDayEnd()
         {
             if (Phase != TycoonPhase.DayOpen) return;

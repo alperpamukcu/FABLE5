@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The second look, first slice (2026-09-21):** the certificate drawn again to three colour roles and one
+  accent, its unlocks inside the sheet, an opening (the sheet unrolls), the climb with a cheer and confetti; a dev
+  preset for every rung; the top bar's lit icons wave every five seconds; greenery behind the furniture; the
+  shutter without its arrows and with a wooden door's sound; character animation off the slowed clock; the lift's
+  rungs green to red; the author's rim FRONT plates over the drink. GDD_MEVCUT §9.91; `Docs/PLAN_second_look.md`.
+
 - **The certificate, celebrated (2026-09-21):** the rank-up page is a whole page now — the sheet with the title,
   the climbing stars that pop and spark as they land, the title it rose from, COMFORT in hearts and SERVICE in
   medals, a wax seal with a cocktail glass embossed in it pressed at the foot's right with two ribbons hanging
