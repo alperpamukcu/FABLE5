@@ -617,15 +617,23 @@ namespace LastCall.UI
         {
             if (Motion.Reduced || panel == null) return;
             _entranceMovers.Clear();
+            _entranceDeck.Clear();
             foreach (Transform t in panel)
             {
                 var rt = t as RectTransform;
                 if (rt == null || !rt.gameObject.activeSelf) continue;
-                if (_benchCounters.Contains(rt)) continue;                 // the slab is the room's; it stays
-                bool hung = false;                                          // the rail-hung ride the alignment instead
+                if (_benchCounters.Contains(rt)) continue;                 // the slab rides the deck by its own offsets (AlignBenchCounters)
+                bool hung = false;                                          // the rail-hung ride the alignment's offset
                 foreach (var (h, _) in _railHung) if (h == rt) { hung = true; break; }
                 if (hung) continue;
-                _entranceMovers.Add((rt, rt.anchoredPosition));
+                // ATTACHED TO THE BACKGROUND (2026-09-21, the author: "shaker ve şişeler hariç tüm butonlar ve paneller
+                // arkaplana yapışık hareket etmeli"). Every instrument and key is cut into the counter and rises WITH
+                // it, as one piece, on one ease; only the work surface - the tin, the lid, the spoon, their shadows -
+                // is a mover of its own, set down a beat later, and the bottle swings down after. Until now each
+                // panel and key rose on its own, a little after the one before, past its rest and back, which is
+                // what a handful of loose things does and not what a counter does.
+                if (rt == surface) _entranceMovers.Add((rt, rt.anchoredPosition));
+                else _entranceDeck.Add((rt, rt.anchoredPosition));
             }
             _entranceSurface = surface; _entranceSurfaceRest = surface != null ? surface.anchoredPosition : Vector2.zero;
             _entranceBottle = bottle; _entranceBottleRest = bottleRest;
@@ -634,8 +642,14 @@ namespace LastCall.UI
             StepBenchEntrance();
         }
 
-        /// <summary>Every frame of the entrance: each mover rises on an ease that overshoots its rest and comes back,
-        /// a little later than the one before; the bottle, inside the surface, is held against the surface's own
+        /// <summary>The instruments and keys that are part of the counter: they take the deck's rise, not their own.</summary>
+        private readonly List<(RectTransform rt, Vector2 rest)> _entranceDeck = new List<(RectTransform, Vector2)>();
+        /// <summary>How long after the deck starts rising the props start: they are set down on it, not built into it.</summary>
+        private const float EntrancePropsLag = 0.12f;
+
+        /// <summary>Every frame of the entrance: the deck - the slab, its rail-hung plaque, every instrument and key -
+        /// rises as one piece on an ease that simply stops; the work surface rises a beat later on an ease that
+        /// overshoots its rest and comes back; the bottle, inside the surface, is held against the surface's own
         /// motion and dropped from the top with a damped swing.</summary>
         private void StepBenchEntrance()
         {
@@ -643,29 +657,31 @@ namespace LastCall.UI
             _entranceT += Mathf.Min(Time.unscaledDeltaTime, 0.05f);   // a hitch must not throw the props home in one frame
             bool done = true;
             float dur = Mathf.Max(0.001f, _entranceDur);
+            float pace = Mathf.Max(1f, LastCall.Game.Ceremony.Pace);
             {
-                // the rail-hung (the plaque, the mat, the lemons) take the same rise through AlignBenchCounters, which
-                // keeps setting their places while the room lifts under the bench
+                // THE DECK: a counter rises and stops. The slab's bands and the rail-hung take the same offset through
+                // AlignBenchCounters, which keeps laying them while this plays.
                 float k0 = Mathf.Clamp01(_entranceT / dur);
-                float u0 = k0 - 1f;
-                float e0 = u0 * u0 * ((1.70158f + 1f) * u0 + 1.70158f) + 1f;
-                _entranceRailOffset = -EntranceRise * (1f - e0);
+                float deck = -EntranceRise * (1f - Tweening.OutCubic(k0));
+                _entranceRailOffset = deck;
+                foreach (var (rt, rest) in _entranceDeck)
+                    if (rt != null) rt.anchoredPosition = rest + new Vector2(0f, deck);
                 if (k0 < 1f) done = false;
             }
+            const float s = 1.70158f;            // ease-out-back: past the rest, then home
             for (int i = 0; i < _entranceMovers.Count; i++)
             {
                 var (rt, rest) = _entranceMovers[i];
                 if (rt == null) continue;
-                float k = Mathf.Clamp01((_entranceT - i * 0.03f / Mathf.Max(1f, LastCall.Game.Ceremony.Pace)) / dur);
+                float k = Mathf.Clamp01((_entranceT - EntrancePropsLag / pace) / dur);
                 if (k < 1f) done = false;
-                const float s = 1.70158f;            // ease-out-back: past the rest, then home
                 float u = k - 1f;
                 float e = u * u * ((s + 1f) * u + s) + 1f;
                 rt.anchoredPosition = rest + new Vector2(0f, -EntranceRise * (1f - e));
             }
             if (_entranceBottle != null && _entranceBottle.gameObject.activeSelf)
             {
-                float kb = Mathf.Clamp01(_entranceT / (dur * 1.25f));
+                float kb = Mathf.Clamp01((_entranceT - EntrancePropsLag / pace) / (dur * 1.25f));
                 if (kb < 1f) done = false;
                 float fall = (1f - kb) * (1f - kb);
                 Vector2 surfaceShift = _entranceSurface != null ? _entranceSurface.anchoredPosition - _entranceSurfaceRest : Vector2.zero;
@@ -675,11 +691,13 @@ namespace LastCall.UI
             if (done)
             {
                 foreach (var (rt, rest) in _entranceMovers) if (rt != null) rt.anchoredPosition = rest;
+                foreach (var (rt, rest) in _entranceDeck) if (rt != null) rt.anchoredPosition = rest;
                 if (_entranceBottle != null) { _entranceBottle.anchoredPosition = _entranceBottleRest; _entranceBottle.localRotation = Quaternion.identity; }
                 _entranceMovers.Clear();
+                _entranceDeck.Clear();
                 _entranceT = -1f;
                 _entranceRailOffset = 0f;
-                _benchCounterTop = -1f;   // one more alignment, so the rail-hung land exactly where the rail is now
+                _benchCounterTop = -1f;   // one more alignment, so the slab and the rail-hung land exactly where the rail is now
             }
         }
         private float _entranceRailOffset;

@@ -117,7 +117,9 @@ namespace LastCall.UI
         private RectTransform _serveDone;
         private PackKey _serveDonePack;
         private PressSink _serveDoneSink;
-        private MarqueeBulbs _serveSign;
+        private MarqueeBulbs _serveSign;   // null since 2026-09-21: the lamps came off the key
+        /// <summary>The key's width: wider than tall, at the plaque's height, at the plaque's right end.</summary>
+        private const float ServeKeyW = 288f;
         private bool _serveDoneReady = true;
 
         // ── the serve stage ──────────────────────────────────────────────────────
@@ -976,8 +978,12 @@ namespace LastCall.UI
             // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under the
             // aim line once the bench's text came down for the props (measured: the line 439..841 x 32..55 over
             // the key 635..885 x 26..72). 880..1168 now, sixteen units short of the bin at 1184.
+            // AT THE PLAQUE'S RIGHT END, HUNG FROM THE RAIL (2026-09-21, the author's "Uygula" on the second look's
+            // proposal: "Serve it butonu en baştan tasarlanmalı"): the one accent on the bench, on the plate family,
+            // wider than tall at the plaque's own height, the word alone and large - the lamps are gone. 832..1120,
+            // sixteen past the plaque's end and sixty-four short of the bin's column.
             _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
-                KeyGo, new Vector2(1f, 0f), new Vector2(288f, 72f), new Vector2(-112f, 16f),
+                KeyGo, new Vector2(0f, 0f), new Vector2(ServeKeyW, PlaqueH), new Vector2(ColX + ColW + 16f + PlaqueW + 16f, 0f),
                 () =>
                 {
                     // Ready to hand over: close the flow, then click a seat to deliver - and
@@ -995,7 +1001,10 @@ namespace LastCall.UI
                     GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
                     Sfx.Play("serve_it", 1f);
                 }, out _serveDoneBtn, out _serveDonePack, 16);
-            RegisterFixed(_servePanel, _serveDone);
+            // Not registered as fixed chrome: the benches cross-fade now and nothing moves, and the settle would
+            // have put a registered key back at the panel's foot. It hangs from the rail like the plaque beside it.
+            _railHung.Add((_serveDone, RailBandH + PlaqueUnderRail + PlaqueH));
+            _benchCounterTop = -1f;
             _serveDoneSink = _serveDone.GetComponent<PressSink>();
             _serveDoneGroup = _serveDone.gameObject.AddComponent<CanvasGroup>();
             // ONE LOUD LINE (2026-08-26, the author's screenshot: the old caption was
@@ -1006,11 +1015,8 @@ namespace LastCall.UI
             var doneLabel = _serveDone.Find("Face/Label").GetComponent<Text>();
             doneLabel.font = _display;   // the display face on the one key that ends the drink, as it always had
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 4f), new Vector2(-26f, 0f));
-            // The lamps: 14 units in from the plate's edge, which clears the pack's own bevel, every 20 units
-            // round - thirteen along each long side and two up each end, so the corners carry one. The word goes
-            // back on top AFTERWARDS: a lamp may stand beside a letter, never over it.
-            _serveSign = AddMarquee(_serveDone.Find("Face") as RectTransform, new Vector2(288f, 72f), 14f, 20f, 8,
-                                    UITheme.Cream[4], UITheme.Amber[1]);
+            // The word at 24 where it fits and 16 where it does not (SERVE IT does; a long translation may not).
+            FitWord(doneLabel, new Vector2(ServeKeyW - 52f, PlaqueH - 8f), 24, 16);
             doneLabel.transform.SetAsLastSibling();
         }
 

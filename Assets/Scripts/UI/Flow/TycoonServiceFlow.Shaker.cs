@@ -488,6 +488,110 @@ namespace LastCall.UI
             // The tin's own column, captioned in the air beside it (labels to the LEFT:
             // the track hugs the right wall, and the TO THE GLASS key is past it).
             FillGauge(_shakerMixBar, glass, run, labelsLeft: true);
+            LayMixRows(run);
+        }
+
+        // ── THE MIX BARS ON THE PLAQUE (2026-09-21, the author: "Mix barlarının tasarımı değişmeli, hangi içkiden ne
+        // kadar konduğu ve ne olduğu belli olmalı, çok küçük kalmış" - and "Uygula" on the proposal) ────────────────
+        //
+        // One row per pour in the tin, in pour order, on the plaque under the rail: the bottle's small picture, its
+        // NAME at 16 px, a bar in its own liquid colour filled to its share of the mix, and the share as a number.
+        // The share is the RATIO - what the recipe book asks for and what the matcher reads - not the share of the
+        // vessel; the tin's fill is on the standing measure already. The plaque grows a row at a time and hangs from
+        // the rail as before, so the readout keeps its two lines at the foot.
+
+        private RectTransform _mixRowsHost;
+        private const float MixRowH = 24f, MixRowsPad = 8f, MixBarH = 16f, MixNameW = 168f, MixShareW = 56f;
+        private const int MixRowsMax = 5;
+
+        private void LayMixRows(TycoonRun run)
+        {
+            if (_shakerPlaque == null || run == null) return;
+            if (_mixRowsHost == null)
+            {
+                _mixRowsHost = NewRect("MixRows", _shakerPlaque);
+                _mixRowsHost.anchorMin = _mixRowsHost.anchorMax = new Vector2(0f, 1f);
+                _mixRowsHost.pivot = new Vector2(0f, 1f);
+                _mixRowsHost.sizeDelta = new Vector2(PlaqueW - PlaquePad * 2f, 0f);
+                _mixRowsHost.anchoredPosition = new Vector2(PlaquePad, -PlaquePad);
+            }
+            foreach (Transform c in _mixRowsHost) Destroy(c.gameObject);
+            var glass = run.Glass;
+            float innerW = PlaqueW - PlaquePad * 2f;
+            int rows = 0;
+            foreach (var id in glass.Ingredients)
+            {
+                if (rows >= MixRowsMax) break;
+                var card = run.Shelf.Find(id)?.Ingredient;
+                float ratio = Mathf.Clamp01((float)glass.RatioOf(id));
+                var tone = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+                var row = NewRect("Row" + rows, _mixRowsHost);
+                row.anchorMin = row.anchorMax = new Vector2(0f, 1f);
+                row.pivot = new Vector2(0f, 1f);
+                row.sizeDelta = new Vector2(innerW, MixRowH);
+                row.anchoredPosition = new Vector2(0f, -rows * MixRowH);
+
+                var icon = NewRect("Icon", row);
+                Place(icon, new Vector2(0f, 0.5f), new Vector2(16f, MixRowH - 2f), Vector2.zero);
+                icon.pivot = new Vector2(0f, 0.5f);
+                var ii = icon.gameObject.AddComponent<Image>();
+                ii.sprite = card != null ? ItemArt.Bottle(card) : null;
+                ii.preserveAspect = true;
+                ii.raycastTarget = false;
+                ii.enabled = ii.sprite != null;
+
+                var name = NewText("Name", row, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+                Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(MixNameW, MixRowH), new Vector2(24f, 0f));
+                name.rectTransform.pivot = new Vector2(0f, 0.5f);
+                name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                name.text = UIText.Caps(UIText.Data("bottle", id, "name", card?.Name ?? id));
+                name.raycastTarget = false;
+                Engraved(name);
+
+                float barX = 24f + MixNameW + 8f, barW = innerW - barX - MixShareW - 8f;
+                var track = NewRect("Track", row);
+                Place(track, new Vector2(0f, 0.5f), new Vector2(barW, MixBarH), new Vector2(barX, 0f));
+                track.pivot = new Vector2(0f, 0.5f);
+                var ti = track.gameObject.AddComponent<Image>();
+                ti.sprite = ChromeArt.GaugeTube((int)(barW * 0.5f), (int)(MixBarH * 0.5f));   // the ladder's channel, at 2x
+                ti.color = CounterFinish.Ramp(CounterFinish.Current.Slab, 0f);
+                ti.raycastTarget = false;
+                var fill = NewRect("Fill", track);
+                fill.anchorMin = new Vector2(0f, 0f); fill.anchorMax = new Vector2(0f, 1f);
+                fill.pivot = new Vector2(0f, 0.5f);
+                fill.sizeDelta = new Vector2(Mathf.Round((barW - 4f) * ratio), -4f);
+                fill.anchoredPosition = new Vector2(2f, 0f);
+                var fi = fill.gameObject.AddComponent<Image>();
+                fi.color = tone;
+                fi.raycastTarget = false;
+                var grain = NewRect("Grain", fill);   // the pouring liquid's checker, as the measure's bands wear it
+                Stretch(grain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var gi = grain.gameObject.AddComponent<Image>();
+                gi.sprite = ChromeArt.LiquidChecker();
+                gi.type = Image.Type.Tiled;
+                gi.raycastTarget = false;
+
+                var share = NewText("Share", row, _display, 16, TextAnchor.MiddleRight, UITheme.TextPrimary);
+                Place(share.rectTransform, new Vector2(1f, 0.5f), new Vector2(MixShareW, MixRowH), Vector2.zero);
+                share.rectTransform.pivot = new Vector2(1f, 0.5f);
+                share.text = ratio.ToString("P0");
+                share.raycastTarget = false;
+                Engraved(share);
+                rows++;
+            }
+            _mixRowsHost.sizeDelta = new Vector2(innerW, rows * MixRowH);
+            RehangPlaque(_shakerPlaque, PlaqueH + (rows > 0 ? MixRowsPad + rows * MixRowH : 0f));
+        }
+
+        /// <summary>A plaque at a new height, still hung the same distance under the rail: the top stays put, the
+        /// foot moves, and the readout placed from the foot moves with it.</summary>
+        private void RehangPlaque(RectTransform plaque, float h)
+        {
+            if (plaque == null || Mathf.Approximately(plaque.sizeDelta.y, h)) return;
+            plaque.sizeDelta = new Vector2(plaque.sizeDelta.x, h);
+            for (int i = 0; i < _railHung.Count; i++)
+                if (_railHung[i].rt == plaque) { _railHung[i] = (plaque, RailBandH + PlaqueUnderRail + h); break; }
+            _benchCounterTop = -1f;   // laid again on the next alignment
         }
 
         // ── the bench's steps, in order (2026-08-14) ─────────────────────────────
@@ -1044,12 +1148,8 @@ namespace LastCall.UI
                     mimg.color = Color.Lerp(tone, UITheme.Cream[4], 0.55f);
                     mimg.raycastTarget = false;
                 }
-                // WHAT IT IS, beside it: a band too thin to hold a line of type is a colour.
-                if (host != null && card != null && segH >= 11f)
-                    GaugeLabel(host, y, segH, labelsLeft, card,
-                        UIText.T("bench.shaker.gauge.band",
-                            ("name", UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name ?? id)).Split(' ')[0]),
-                            ("share", share.ToString("P0"))));
+                // (The 8 px name and share beside each band left on 2026-09-21 - "çok küçük kalmış" - for the
+                //  plaque's bars, LayMixRows, which say the same at 16 px with the bottle's picture and a bar.)
                 y += segH;
             }
 
@@ -2301,8 +2401,10 @@ namespace LastCall.UI
                 if (band == null) continue;
                 band.anchorMin = Vector2.zero;
                 band.anchorMax = new Vector2(1f, fromY);
-                band.offsetMin = Vector2.zero;
-                band.offsetMax = Vector2.zero;
+                // THE SLAB RIDES THE DECK (2026-09-21): while the entrance plays the counter rises as one piece with
+                // everything cut into it; the offset is zero at every other moment.
+                band.offsetMin = new Vector2(0f, _entranceRailOffset);
+                band.offsetMax = new Vector2(0f, _entranceRailOffset);
             }
             // ...and everything hung from the rail goes with it (the plaques, 2026-09-16).
             float railTop = fromY * _field.rect.height;

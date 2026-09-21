@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The shaker bench as proposed (2026-09-21, "Uygula"):** the entrance lifts the counter and everything cut
+  into it as one piece and sets the props down after; one bar per pour on the plaque - the bottle's picture, its
+  name, a bar in its liquid colour to its share, the number; SERVE IT on the plate family in the one accent at
+  the plaque's right end, the word alone, no lamps. And the picks page for the tower and the door
+  (`Docs/reports/third_look/`). GDD_MEVCUT §9.94.
+
 - **The certificate's fourth draft, and four small things (2026-09-21):** the sheet alone over the room with
   the key under it - paper grain, rules and brackets, a watermark, bigger writing, a shadowed title, this rung's
   tiles and the NEXT rung's (dimmed) with bottles drawn full on dark plates; the LOG key off the main screen;

@@ -1540,6 +1540,28 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.94 · Shaker tezgâhı "Uygula": deck tek parça kalkar, plakada karışım çubukları, SERVE IT plakanın sağ ucunda (2026-09-21)
+
+Yazar (ikinci bakış, 7): "alkol yapma sahnesinde shaker ve şişeler hariç tüm butonlar ve paneller arkaplana yapışık
+hareket etmeli. Mix barlarının tasarımı değişmeli, hangi içkiden ne kadar konduğu ve ne olduğu belli olmalı, çok
+küçük kalmış. Serve it butonu en baştan tasarlanmalı." Üçüncü bakışta öneriye "Uygula".
+
+- **Giriş tek parça** (`TycoonServiceFlow.PlayBenchEntrance/StepBenchEntrance`): tezgâh plakası, raydan asılı
+  plaka, sütun panelleri, tuşlar ve ölçü — hepsi bir DECK olarak aynı ease'le (OutCubic, sekmesiz) aşağıdan
+  kalkıp durur (`_entranceDeck`; `AlignBenchCounters` plaka bantlarına da aynı `_entranceRailOffset`'i uygular).
+  Yalnız çalışma yüzeyi — tin, kapak, kaşık, gölgeler — 0,12 sn sonra (`EntrancePropsLag`) sekerek iner, şişe
+  yukarıdan sallanarak düşer. Eskiden her panel ve tuş 0,03 sn arayla kendi başına sekiyordu.
+- **Plakada karışım çubukları** (`LayMixRows`): tindeki her dökümün bir satırı — şişenin küçük resmi, ADI (16 px,
+  oyma), kendi sıvı rengiyle ORANA kadar dolan çubuk (merdivenin kanalı, 2x, damalı tane) ve oran sayısı (16 px
+  display). Oran = karışımdaki pay (tarif kitabının ve eşleyicinin okuduğu), kabın doluluğu duran ölçüde kalır.
+  En çok 5 satır; plaka satır başına 24 büyür ve aynı mesafeden raydan asılı kalır (`RehangPlaque`), okuma satırı
+  ayakta. Duran ölçünün 8 px'lik yan etiketleri kalktı (bantlar ve toplam yüzde kaldı).
+- **SERVE IT** (cam tezgâhı): plaka ailesinde tek vurgu (Amber), plakanın sağ ucunda raydan asılı (832..1120,
+  plaka boyunda 64, 288 geniş), yalnız sözcük (24 px, sığmazsa 16); panayır lambaları kalktı (`_serveSign` null).
+  Sabit krom olarak KAYDEDİLMİYOR: tezgâhlar artık çapraz solar, settle tuşu ayağa geri koyardı.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda (r77): giriş kareleri, iki dökümle plaka
+  (SMIRKOFF VODKA 50% / HOUSE SYRUP 50%), cam tezgâhında tuş.
+
 ### 9.93 · Sertifika v4 (kâğıt dokusu, sıradaki basamak, dolu şişeler, plaka yok), LOG tuşu gitti, peçete tinin altında, boş tinde kaşık yok, karakterlerin kapalı boşlukları dolduruldu (2026-09-21)
 
 Yazar: "Sertifika düz bir kâğıt gibi; desenler, kenarlarda köşelerde kâğıt hissiyatı. LOG butonunu kaldır. Her
