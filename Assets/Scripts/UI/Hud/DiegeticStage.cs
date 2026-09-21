@@ -199,7 +199,7 @@ namespace LastCall.UI
         public void SetCounterFinish(string id)
         {
             if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
-            if (_shutterSr != null && shutterSprite != null) _shutterSr.sprite = CounterFinish.Recolour(shutterSprite, id);
+            if (_shutterSr != null && DoorArt != null) _shutterSr.sprite = CounterFinish.Recolour(DoorArt, id);
         }
         private Vector2 _shutterNative;
         private float _shutterRestLocalY;
@@ -2035,6 +2035,13 @@ namespace LastCall.UI
         /// with no shutter the cabinet simply stands open, which is what the stage did before
         /// the drawer existed.</summary>
         [SerializeField] private Sprite shutterSprite;
+        /// <summary>THE CUPBOARD DOOR (2026-09-22, the author's pick D1a): a ledged plank door with a steel pull and
+        /// a Miami Vice mural, drawn by PixelLab at the roller's own 592 by 186 and snapped to the counter's colour
+        /// families so every finish paints it. It stands where the roller stood and moves exactly as the roller
+        /// moved - down into the counter to open, a crack under the pointer, the rail at the sill - because the
+        /// author asked for a door that opens downward; the roller is the fallback when the drawing is missing.</summary>
+        private Sprite _doorArt;
+        private Sprite DoorArt => _doorArt != null ? _doorArt : (_doorArt = Resources.Load<Sprite>("Scene/counter_door") ?? shutterSprite);
 
 
         // ── the world ───────────────────────────────────────────────────────────
@@ -2489,10 +2496,10 @@ namespace LastCall.UI
             // bottles or it is not shutting anything.
             if (shutterSprite != null)
             {
-                var sh = WorldSprite("Shutter", shutterSprite, order: 33);
+                var sh = WorldSprite("Shutter", DoorArt, order: 33);   // the door, or the roller without it
                 _shutterTr = sh.transform;
                 _shutterSr = sh;
-                _shutterNative = shutterSprite.rect.size;
+                _shutterNative = DoorArt.rect.size;
                 BuildShutterDoor();
             }
 
@@ -3153,7 +3160,11 @@ namespace LastCall.UI
                         glow = PointLight(glowName,
                             LightLanguage.Snap(new Color(def.LightR, def.LightG, def.LightB), def.IsScreen),
                             def.LightIntensity, def.LightRadius);
-                        if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
+                        // A LIGHT HUNG UNDER ITS DRAWING LANDS ON THE COUNTER (2026-09-22, the pendants): it reaches
+                        // the room, the counter and the people at it; measured first without the counter layer, the
+                        // pool never touched the slab (r91: 29.9 to 31.4 luma under the shades).
+                        if (def.LightDy != 0f) LightLayers(glow, LayerBackground, LayerCounter, LayerPatrons);
+                        else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
                         if (house)
                         {

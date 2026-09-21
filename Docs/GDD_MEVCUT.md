@@ -1540,6 +1540,23 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.98 · Dolap kapağı D1a kepenkin yerinde, tezgâh sarkıtları L3 odada (2026-09-22)
+
+Yazar: "D1a", "L3".
+
+- **Kapak** (`DiegeticStage.DoorArt`): `Resources/Scene/counter_door.png` (592×186, D1a — tahtalar ton bazında
+  SrcFrame ailesine çivili, mural ve çelik tutamaç kendi boyasında; `scratchpad/door_snap2.py`) kepenkin
+  sprite'ının yerine geçer; yoksa kepenk (`shutterSprite`) kalır. Mekanik aynen: aynı yolculuk (aşağı, tezgâhın
+  içine), aynı çatlak (hover), aynı ray, `CounterFinish.Recolour` her cilada boyar. ÖLÇÜLDÜ (r89): kapalıyken
+  kapağın yalnız ÜST ÜÇTE BİRİ (186'nın ~60 satırı) ekranda, açıkken eşikte 16 satır — D1a'nın tutamacı ortada
+  olduğundan görünmüyordu; kompozisyonu üst banda taşıyan yeni çekim (kapağın üst üçte birine göre yeniden düzenlenmiş çekimi bekliyor).
+- **Tezgâh sarkıtları**: `Resources/Fixtures/fx_counter_lamps.png` (120×32, L3, 55 palete çivili), `fixtures.json`
+  `counter_lamps` (odada başlar, `lightDy` −169, 1,2 × 170, ev saatinde, KEY'e çivilenir; ad/blurb en+tr).
+  Fikstür ışığı çiziminden farklı yükseklikte asılıysa artık TEZGÂH katmanını da aydınlatır
+  (`DiegeticStage`: Background + Counter + Patrons) — ölçüldü (r91/r92, 00:30): tezgâh katmanı olmadan
+  abajurların altı 29,9 → 31,4, katmanla 31,4 → 42,6 luma; kenarlar değişmedi.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda: kapak kapalı/açık (r89), gece havuzu (r92).
+
 ### 9.97 · Sertifika v5, pencerenin ışık lekesi, kule T4 tezgâhta, kapak D1 varyantları (2026-09-22)
 
 Yazar (dördüncü bakış, 2026-09-21 gece): sertifikada hiyerarşi okunmuyor; arkada desen; başlık büyük ve kalın;

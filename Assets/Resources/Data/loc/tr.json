@@ -446,6 +446,8 @@
     {"key": "data.fixture.ceil_palm.name", "text": "Palmiyeli Tavan", "src": "Palm Ceiling"},
     {"key": "data.fixture.ceil_stucco.blurb", "text": "Elle kıvrılmış sıcak beyaz sıva. Altında salondaki her lamba daha yumuşak görünür.", "src": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it."},
     {"key": "data.fixture.ceil_stucco.name", "text": "Stuko Tavan", "src": "Stucco Ceiling"},
+    {"key": "data.fixture.counter_lamps.blurb", "text": "Kasanın üstünde bir rayda üç pirinç abajur; her biri ellerin çalıştığı tezgâha sıcak bir gölcük düşürür.", "src": "Three brass shades on a rail over the till, each throwing a warm pool on the counter where the hands work."},
+    {"key": "data.fixture.counter_lamps.name", "text": "Tezgâh Sarkıtları", "src": "Counter Pendants"},
     {"key": "data.fixture.counter_sink.blurb", "text": "Soğuk su, kenarı kırık bir gider ve giderden akanı sayan bir ev sahibi.", "src": "Cold water, a chipped drain, and a landlord who counts what goes down it."},
     {"key": "data.fixture.counter_sink.name", "text": "Çelik Lavabo", "src": "Steel Sink"},
     {"key": "data.fixture.flamingo_triptych.blurb", "text": "Üç çerçevede sahil. Flamingo kapanıştan sonra da kalır.", "src": "The coast in three frames. The flamingo stays past closing."},

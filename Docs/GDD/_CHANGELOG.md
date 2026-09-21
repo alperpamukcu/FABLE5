@@ -2,6 +2,10 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The door and the pendants (2026-09-22):** D1a stands where the roller stood on the roller's own travel, painted
+  by every finish; L3 hangs over the counter as a fixture that starts in the room, its light hung under the
+  drawing onto the counter (a light with lightDy reaches the counter layer). GDD_MEVCUT §9.98.
+
 - **The fourth look (2026-09-22):** the certificate's fifth draft - a read hierarchy, a lattice of glasses on
   the paper, PixelLab's seal at 128, smaller thick-framed tiles on a twelve-wide grid, the next rung in full, and
   the clock held while it is open; the window's patch of sun larger, floor-shaped below the skirting and

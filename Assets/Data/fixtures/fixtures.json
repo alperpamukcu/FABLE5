@@ -724,6 +724,25 @@
       "hasY": true
     },
     {
+      "id": "counter_lamps",
+      "name": "Counter Pendants",
+      "slot": "counter_lamps",
+      "price": 40,
+      "stars": 0,
+      "flavor": "Three brass shades on a rail over the till, each throwing a warm pool on the counter where the hands work.",
+      "sprite": "fx_counter_lamps",
+      "lightR": 1.0,
+      "lightG": 0.85,
+      "lightB": 0.55,
+      "lightIntensity": 1.2,
+      "lightRadius": 170,
+      "lightDy": -169,
+      "startsInTheRoom": true,
+      "level": 1,
+      "group": "light",
+      "comfort": 0
+    },
+    {
       "id": "wall_lamps_one",
       "name": "Glass Tube Lamps",
       "slot": "wall_lamps",
