@@ -170,8 +170,13 @@ namespace LastCall.UI
             // THE PALM WALL'S PLATE (2026-09-15, the author's direction): the night glass with a cyan frame and the
             // scanlines every surface of the direction wears; the title in the display face, the line in the body face.
             var plate = _propTip.gameObject.AddComponent<Image>();
-            plate.sprite = NightArt.TipPlate();
+            // THE BLUE HOVER (2026-09-21, the author: "Pembe hover kullanılmayan yerlerde mavi hover kullanılsın,
+            // örneğin backbarda"): the tips over the room's props and the top bar stand on ui_blue as the author
+            // drew it - its middle a shade see-through, which is what a hover wants - at its own size, because a
+            // 22-unit tip has no room for rings at 2x. The cellar's card keeps the pink family it has.
+            plate.sprite = ChromeArt.BluePlate() ?? NightArt.TipPlate();
             plate.type = Image.Type.Sliced;
+            plate.pixelsPerUnitMultiplier = 1f;
             plate.color = Color.white;
             plate.raycastTarget = false;
             Scanlines(_propTip, 0.18f);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -213,7 +213,7 @@ namespace LastCall.Core
                     // would let it drag the aisle's "next at" hint down to a rung that opens
                     // nothing; NaN says "not a number you can count towards" out loud. But a
                     // STAR lock knows exactly which star, and the mixers ride on those now.
-                    held.Add((card, HeldAt(card), HeldSentence(card)));
+                    held.Add((card, GateOf(card), HeldSentence(card)));
 
             foreach (var candidate in catalogue)
             {
@@ -222,14 +222,15 @@ namespace LastCall.Core
                 var current = FindByStyle(shelf, candidate.Info.Style);
                 if (current?.Ingredient.Info == null) continue;
                 if (!ForSale(candidate, stars, state))
-                    held.Add((candidate, HeldAt(candidate), HeldSentence(candidate)));
+                    held.Add((candidate, GateOf(candidate), HeldSentence(candidate)));
             }
             return held;
         }
 
-        /// <summary>The rung a held-back bottle is waiting on: its own lock's answer when it
-        /// carries one, the tier-and-price ladder when it does not.</summary>
-        private static double HeldAt(IngredientCard card) =>
+        /// <summary>The rung a bottle waits on: its own lock's answer when it carries one, the
+        /// tier-and-price ladder when it does not; NaN for a lock that counts no star (a person, a
+        /// draught line). Public since 2026-09-21: the certificate lists what a rung brings.</summary>
+        public static double GateOf(IngredientCard card) =>
             card.Info.Unlock != null
                 ? card.Info.Unlock.StarsWanted
                 : RequiredStars(card.Info.Tier, card.Info.Price);

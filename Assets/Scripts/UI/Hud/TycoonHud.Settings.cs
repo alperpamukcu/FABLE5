@@ -124,7 +124,7 @@ namespace LastCall.UI
             dimBtn.transition = Selectable.Transition.None;
             dimBtn.onClick.AddListener(ToggleSettings);
 
-            var plate = NightPlate(_settingsPanel, "Plate", new Vector2(SetW, SetH), 0f);
+            var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH));   // the ESC family's plate (2026-09-21)
             NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
             SunsetRules(plate, -66f, SetW - 80f);
 

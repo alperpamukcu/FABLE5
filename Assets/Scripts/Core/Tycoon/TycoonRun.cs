@@ -259,6 +259,36 @@ namespace LastCall.Core
             Phase == TycoonPhase.DayEnd ? Rating.BestStanding : Rating.PreviousBestStanding;
 
         /// <summary>
+        /// WHAT A RUNG BRINGS TO THE SHOP besides its verbs (the certificate's tiles, 2026-09-21): every catalogue
+        /// bottle not yet on the shelf whose star gate is exactly <paramref name="stars"/>. A bottle waiting on a
+        /// person or on a draught line has no star to count towards and is not listed.
+        /// </summary>
+        public List<IngredientCard> BottlesOpeningAt(double stars)
+        {
+            var list = new List<IngredientCard>();
+            foreach (var card in _brandCatalogue)
+            {
+                if (card.Info == null || _shelf.Find(card.Id) != null) continue;
+                double at = Market.GateOf(card);
+                if (!double.IsNaN(at) && Math.Abs(at - stars) < BarRank.Epsilon) list.Add(card);
+            }
+            return list;
+        }
+
+        /// <summary>The book's locked pages, not yet bought, whose star gate is exactly <paramref name="stars"/>.</summary>
+        public List<RecipeDefinition> RecipesOpeningAt(double stars)
+        {
+            var list = new List<RecipeDefinition>();
+            foreach (var r in AllRecipes)
+            {
+                if (!r.Locked || _boughtRecipes.Contains(r.Id)) continue;
+                double at = r.Unlock != null ? r.Unlock.StarsWanted : RecipeStarGate(r);
+                if (!double.IsNaN(at) && Math.Abs(at - stars) < BarRank.Epsilon) list.Add(r);
+            }
+            return list;
+        }
+
+        /// <summary>
         /// IS THERE A BAR SPOON BEHIND THIS BAR? The ladder's third rung (2026-09-21, the author: "2. yıldızda
         /// kaşık ile karıştırma oyuna eklenecek"), which supersedes the 2026-09-16 rule that tied the spoon to the
         /// first stirred page on the menu. <see cref="Stir"/> refuses without it: the rules layer never trusts the

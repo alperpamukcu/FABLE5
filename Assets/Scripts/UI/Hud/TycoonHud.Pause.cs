@@ -56,7 +56,9 @@ namespace LastCall.UI
             dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
 
-            var plate = NightPlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH), 0f);
+            // ON THE BLUE PLATE (2026-09-21, the author: "ESC menüsü backbar tasarımı ile uyumlu olmalı"): the
+            // same plate the certificate and the room's tips stand on, opaque in the middle.
+            var plate = BluePlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH));
 
             // the title, a shadow copy under it, and the three sunset rules under that
             NightTitle(plate, UIText.T("chrome.pause.title"), -36f);

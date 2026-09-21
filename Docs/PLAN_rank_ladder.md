@@ -129,6 +129,15 @@ yet celebrated wears a small "NEW" flag on the star row until the window has bee
 - The window is a certificate on the blue plate (`ChromeArt.BluePlate`, `TycoonHud.BluePlate`).
 - Tests: `BarRankTests`, `LadderWiringTests` (+3), `FixtureTests` (+1), the keg test rewritten. GDD_MEVCUT 9.89.
 
+### L5 — The certificate page, the ESC family and the blue hover ☑ (2026-09-21)
+- The page (`TycoonHud.Ladder`): sheet + climbing stars with pops and sparks + comfort/service in hearts and
+  medals + a wax seal with a cocktail glass and ribbons + the rung's unlocks as picture tiles grouped by class
+  (the counter, the door, the bench, the taps, the market's bottles, the book's pages) + confetti. The plate is
+  as tall as the tiles need (576 or 694). No certificate for the foot: the star row toasts when the first comes.
+- Core: `TycoonRun.BottlesOpeningAt` / `RecipesOpeningAt` (the rung's exact star gate), `Market.GateOf` public.
+- The ESC menu and the settings on `BluePlate`; the room's and the top bar's tips on ui_blue at 1x (the blue
+  hover); the cellar's pink card stays. GDD_MEVCUT 9.90.
+
 ## 3. Open decisions (for the author) — answered 2026-09-21 except where noted
 
 1. ~~The six titles are drafts in English~~ — Turkish titles written (L4); the author may rename.

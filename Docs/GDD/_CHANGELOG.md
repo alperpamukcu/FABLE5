@@ -2,6 +2,15 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The certificate, celebrated (2026-09-21):** the rank-up page is a whole page now — the sheet with the title,
+  the climbing stars that pop and spark as they land, the title it rose from, COMFORT in hearts and SERVICE in
+  medals, a wax seal with a cocktail glass embossed in it pressed at the foot's right with two ribbons hanging
+  out past the sheet, and under the sheet the rung's unlocks as picture tiles grouped by where they live (the
+  counter, the door, the bench, the taps, the market's bottles, the book's pages — `TycoonRun.BottlesOpeningAt`,
+  `RecipesOpeningAt`). Confetti falls while the climb plays; no certificate below the first rung. The ESC menu and
+  the settings stand on the blue plate; the room's tips wear the blue hover. GDD_MEVCUT §9.90;
+  `Docs/PLAN_rank_ladder.md` L5.
+
 - **The ladder, continued (2026-09-21):** the rank-up window is a CERTIFICATE now — cream paper ruled in gold on
   the author's blue plate (ui_blue, sliced, an opaque middle), the title the bar is hereby known as, the stars
   climbing, the title it rose from, what is new, a seal, the night it was conferred. The shop reads the ladder's

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using LastCall.Core;
 using NUnit.Framework;
@@ -216,6 +217,42 @@ namespace LastCall.Tests
             run.Rating.DevSet(3.0);
             Assert.AreEqual(3, run.TapLevel, "the third at three");
             Assert.AreEqual("taps_one", run.StandingTap().Id, "the same tower stands on the counter at every count");
+        }
+
+        [Test]
+        public void TheCertificate_ListsWhatTheRungBringsToTheShop()
+        {
+            // The certificate's tiles (2026-09-21): a rung's bottles and pages are the ones whose star gate is
+            // exactly the rung's - a tier-2 bottle and a rank-12 page both open at two stars, and nowhere else.
+            var book = new List<RecipeDefinition>(Book)
+            {
+                new RecipeDefinition("stirred_page", "Stirred Page", rank: 12, baseFlavor: 6, baseMult: 1,
+                    flavorPerLevel: 0, multPerLevel: 0,
+                    requirements: Array.Empty<PatternRequirement>(),
+                    ratioRequirements: new[]
+                    {
+                        new RatioRequirement(IngredientType.Spirit, 0.3, 0.7),
+                        new RatioRequirement(IngredientType.Bubbly, 0.3, 0.7),
+                    },
+                    minFill: 0.5, locked: true),
+            };
+            var run = new TycoonRun(NewShelf(), book, new RunRng("ladder-tiles"),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0),
+                brandCatalogue: new[]
+                {
+                    new IngredientCard("vodka_mid", "Mid Vodka", IngredientType.Spirit, 5,
+                        new IngredientInfo("vodka", 2, 6, "somewhere", 40, "test")),
+                });
+            // The bottle's gate is the tier-and-price ladder's answer (a cheap tier-2 bottle sits on the one-star
+            // rung since 2026-08-10); the page's is the rank table's. Both are asked, never assumed.
+            double bottleGate = Market.RequiredStars(2, 6);
+            Assert.AreEqual(2.0, run.RecipeStarGate(book[1]), 1e-9, "a rank-12 page opens at two stars");
+            CollectionAssert.AreEqual(new[] { "vodka_mid" }, run.BottlesOpeningAt(bottleGate).Select(c => c.Id).ToList());
+            Assert.IsEmpty(run.BottlesOpeningAt(bottleGate + 1.0), "and at no other rung");
+            Assert.IsEmpty(run.BottlesOpeningAt(bottleGate - 0.5));
+            CollectionAssert.AreEqual(new[] { "stirred_page" }, run.RecipesOpeningAt(2.0).Select(r => r.Id).ToList());
+            Assert.IsEmpty(run.RecipesOpeningAt(1.0), "nothing of the book's at one star");
+            Assert.IsEmpty(run.RecipesOpeningAt(3.0), "and nothing at three");
         }
 
         // ── the door ─────────────────────────────────────────────────────────────────────────────

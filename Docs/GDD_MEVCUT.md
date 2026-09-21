@@ -1540,6 +1540,45 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.90 · Sertifika sayfası v2 (kutlama, mühür ve kurdele, kutulu açılanlar, konfor/servis), ESC ailesi mavi plakada, mavi ipucu (2026-09-21)
+
+Yazar: "ESC menüsü backbar tasarımı ile uyumlu olmalı. Pembe hover kullanılmayan yerlerde mavi hover kullanılsın,
+örneğin backbarda. Sertifika ekranı daha çok hareketli ve daha görsel olmalı: kokteyl şeklinde mühür sağ altında,
+kurdele uzanabilir, yıldızlar hareket edebilir; sadece 0,5-1-2-3-4-5 yıldızın sertifikası olmalı ve hepsinde bir
+kutlama efekti; oyuncu sertifika yıldızlarına gelince ekranın ortasına gelmeli. Açılan özellikler kutu kutu
+görselleriyle sertifikanın altında, hangi sınıftan neler açıldıysa; sertifikanın boyutu değişebilir; profesyonel
+bir sayfa tasarımı. Konfor ve servis puanları da sertifikada yazsın."
+
+- **Sayfa** (`TycoonHud.Ladder`, mavi plaka 920 genişlik, boyu kutu sırasına göre 576/694): üstte başlık ve gün
+  batımı çizgileri; **kâğıt** 856×236 (Malt çift çizgi, köşe baklavaları): "CERTIFICATE OF STANDING", "THIS BAR IS
+  HEREBY KNOWN AS" + unvan 24 px, tırmanan yıldız sırası, "RISEN FROM {eski unvan}", **KONFOR** (beş kalp,
+  `ItemArt.Heart`) ve **SERVİS** (beş madalya, `ItemArt.Medal`) sayılarıyla (gece sonunda `ComfortTonight`, gün
+  içinde `ComfortNow`; `ServiceTonight`), sol altta "CONFERRED ON NIGHT n ...", **sağ altta mühür**: 64 px
+  balmumu diski (14 fistolu, kod çizer, `SealWax`), içinde altın (Malt[4]) martini bardağı
+  (`glass3d_martini_t2_Front`), −9° eğik; altından iki **kurdele** kâğıdın kenarını aşıp plakaya sarkar (uçları
+  plaka renginde çentik). **Kutular**: kâğıdın altında "NEW BEHIND THE BAR" başlığı, sonra 80×80 krem kutular
+  (88 adım, en fazla 9×2; fazlası "+N" kutusu) SINIF SINIF — BAR TEZGÂHI (buz/limon/tuz/şeker: `counter_*`),
+  KAPI (`card_body`), TEZGÂH (`bench_spoon`), MUSLUKLAR (`fx_tap_beer`), MARKET (zeytin/nane kavanozları ve o
+  basamakta kapısı açılan ŞİŞELER: `ItemArt.Bottle`), DEFTER (o basamakta açılan TARİFLER: `DrinkIcon.For`); her
+  sınıfın ilk kutusunun üstünde Cyan[4] başlık, altında iki satırlık ad.
+- **Core**: `TycoonRun.BottlesOpeningAt(stars)` (rafta olmayan, kapısı tam o yıldızda olan katalog şişeleri;
+  `Market.GateOf`, eski HeldAt, artık public) ve `RecipesOpeningAt(stars)` (kilitli, alınmamış, kapısı o yıldızda
+  olan sayfalar; kişiye/hatta bağlı kilitler NaN → listelenmez). Test: `TheCertificate_ListsWhatTheRungBringsToTheShop`.
+- **Kutlama** (`StepLadder`, ölçeksiz saat × `Ceremony.Pace`, `Motion.Reduced`'da hepsi hazır durur): plaka
+  0,94→1 oturur; 0,4 sn'de yıldızlar eskiden yeniye 1,4 sn tırmanır, dolan her yıldız 1,5× zıplar ve yedi kıvılcım
+  saçar (`ItemArt.Star` 16, dışa doğru, sönerek); tırmanış konunca "stamp" sesiyle mühür 2,2×→1 basılır, kurdeleler
+  açılır; kutular 0,08 sn arayla zıplayarak gelir; iki dalga konfeti (36 + 30 parça, palet renkleri, xorshift
+  saçılımı — oyun mantığı değil, RunRng'ye dokunmaz). CONTINUE ve dışarı tıklama her an kapatır.
+- **Yalnız 0,5–5 sertifikası**: sıfır basamakta yıldız sırasına tıklamak sayfa açmaz, "NO CERTIFICATE YET. THE
+  FIRST COMES AT 0.5 STARS" tostu.
+- **ESC ailesi mavi plakada**: pause menüsü ve ayarlar `NightPlate` yerine `BluePlate` (ui_blue, opak orta).
+  **Mavi ipucu**: odadaki propların ve üst şeridin ipuçları (`_propTip`) `NightArt.TipPlate` yerine ui_blue'nun
+  çizildiği hâli (orta hafif şeffaf — hover için doğru), 1x (22 birimlik ipucuna 2x halka sığmaz). Kilerin
+  şişe kartı (pembe kart ailesi: card_body/card_slot) olduğu gibi kaldı — "pembe hover kullanılan yer".
+- Loc: `rank.cert.comfort/service`, `rank.cert.class.*` (6), `rank.tile.*` (10), `rank.window.no_certificate`;
+  Türkçeleri tr.json'da. en.json 2001 anahtar.
+- Doğrulama: EditMode 619/620 (tek kırmızı yazarın 32×66 v4_bourbon plakası), PlayMode 13/13. Oyunda: r66 kareleri — 0,5 / 2,0 / 3,0 basamakları dinlenmede, 2,0'nin tırmanış ortası ve konması (konfeti, kıvılcım, mühür, kurdele, kutuların gelişi), yıldız sırası kapısı (3,0), ESC menüsü, ayarlar, musluğun mavi ipucu (108×22). 3,0★'da kutular iki sıra + "+6"; plaka 694, başlık ve CONTINUE ekranda (ilk denemede üç sıraya taşmıştı, sıra tavanı düzeltti).
+
 ### 9.89 · Merdivenin devamı: Türkçe unvanlar, SERTİFİKA penceresi (mavi plaka), aynı akşamın marketi, basamakla gelen fıçı hatları, tek musluk çizimi, dev tuşları (2026-09-21)
 
 Yazar: "1- Kendin ayarla. 2- Evet isterim, şu an bir fikrim yok, fikirlere açığım. 3- Düzelt. 4- Oyun editöründen
