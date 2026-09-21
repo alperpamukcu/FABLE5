@@ -305,6 +305,34 @@ GDD 27 ve 28 artık oyunda. **Kalan:** H6'nın sanatı (resim basamakları 2–3
 yazarın rapordan seçimi), PLAN_last_call S6 (kadro içeriği — üç misafirin yüzü heavyset rig'inde çizilince; Ece'nin yüzü
 kadroya alınıyor, üç aday yazarın seçiminde), PLAN_service_depth P18 (ekonomi/tutorial/kayıt).
 
+### 0.10 · Simülasyon çöktü: merdiven + gün bazlı talep = 21. günde iflas (2026-09-21)
+
+`LastCall → Simulate Tycoon 200 Runs` 2026-09-06'dan beri ilk kez koşuldu (`Docs/tycoon_sim_report.md`). Bot bir
+TABAN'dır (kartı okur, kural ile alışveriş yapar); mutlak sayı değil ŞEKİL okunur — ve şekil bozuk:
+
+| | 2026-09-06 | 2026-09-21 |
+|---|---|---|
+| İflas | 18 (%9) | **200 (%100)**, medyan 21. gün |
+| Gün başına gelir / gider | $232 / $224 | $102 / $114 |
+| Servis başına taban | $10,85 | $5,46 |
+| Reddedilen / geri çevrilen sipariş | 4 / 736 | 156 / 4476 |
+| Ortalama gece yıldızı | 2,13 | 1,29 |
+| Konfor (gece ort.) | 2,44 | 1,36; gecelerin %97'si konfora bağlı |
+| Basamak: 1,0★'a ulaşan | — | %99,5 (medyan 15. gün); 1,5★ **%3**; 2,0★ ve üstü **hiç** |
+
+Okuma: merdiven (4a4c560e, 26e33ae1) şişeleri, tarifleri ve dekor basamaklarını yıldıza bağladı; gece
+`min(servis, konfor)` dosyalıyor; bot yalnız `walls_2`'yi alabiliyor (200 koşuda 200 duvar, başka basamak yok),
+konfor 1,5'te kalıyor, yıldız 1,0'da takılıyor, 1★ rafının içkileri ucuz ($5,46) — ve "alışverişten önce kırmızı"
+sütunu 11. günden itibaren tırmanıyor (%0 → 19. günde %90): kalabalığın istekleri GÜNLE büyürken raf YILDIZLA
+kilitli, "rafın cevaplayamadığı kademe talebi" 63'ün 26'sı, geri çevrilen sipariş altı kat. Yani talep botun
+ALAMAYACAĞI şişeyi çekiyor: ölü bir çekiş.
+
+Bu bir tasarım kararı, yazarın: (a) kalabalık yalnız barın basamağında AÇIK olanı istesin (`DrinkOrder.Roll`
+havuzunu `Market.GateOf ≤ ShopStars` ile süz; garnitür süzgeci zaten var) — talep merdiveni izler; ya da (b)
+kademe talebi günle değil yıldızla yükselsin; ya da (c) ilk basamakların eşiği/fiyatı düşsün (1,0★'da $130'luk
+`walls_3` botun kasasının üstünde). (a) en küçük ve Core'da. Oyuncu botun iki katı kazanır (bahşiş, okuma), ama
+1,5★'a 200 koşudan 6'sının ulaşması, 1,5★'a yazılmış konuğun oyuncuya da geç geleceğini söylüyor.
+
 ## 1 · Yönetici özeti
 
 *(2026-09-06 yenilemesi.)* Oyunun **çekirdeği sağlam ve derin**: kural katmanı saf, deterministik (altın vektörlerle pinli), **483 EditMode testiyle** korunuyor; içki fiziği (dökme/çalkalama/musluk) gerçek; gizli-bilgi mekaniği (kimlik kartı) kodda hakikaten kilitli; ev (iki puan, temizlik, merdivenler — duvar dahil) ve kapı (20 yaş, ödünç/değiştirilmiş kart, kick) oyunda; hikâyenin ev sahibi konuşuyor. Kalan borç: **(a) ekonomi 30 günde yaşıyor ama uzun ufukta kira gelir tavanını 31. gecede kesiyor** (GDD 26 §12.2 — sonlu koşu mu, büyüme mi: yazarın kararı, GDD 23), **(b) UI 28k satır, 10 PlayMode testi bir tabandır, kapsam değil**, **(c) hikâye kadrosu yüz bekliyor** (PixelLab kredisi, S6).

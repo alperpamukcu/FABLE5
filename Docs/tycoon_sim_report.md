@@ -10,48 +10,47 @@ never once affords. Every survival figure is a floor.
 
 | Metric | Value |
 |---|---|
-| Bankruptcies | 18 (9.0%) |
-| Reached the 30-day horizon | 182 (91.0%) |
-| Days survived p25/median/p75 | 30 / 30 / 30 |
-| Final till p25/median/p75 | $133 / $261 / $365 |
-| Avg income / expenses per day | $232.1 / $224.3 |
-| Avg daily satisfaction | 58% |
-| Storm-offs | 8421 (14.6%) |
-| Customers per night | 9.8 |
-| Served per bar-minute | 4.70 |
-| Bar standing (avg night) | 2.13 stars |
-| Serves Exact / Close / Wrong | 67409 (99.9%) / 70 (0.1%) / 1 (0.0%) |
-| Refused (too little in the glass) / declined | 4 (0.0%) / 736 |
-| Take: base / tip | $731948 / $547710 (547710 (42.8%) of it tip) |
-| Avg base / tip per serve | $10.85 / $8.12 |
-| Avg spec score / fill score | 100% / 100% |
-| Orders with a serving spec, fully met | 30350 (100.0%) of 30351 |
-| Garnish craft landed | 36891 (54.7%) |
-| Extra orders earned (of serves) | 18851 (27.9%) |
-| Extra orders earned (of exact) | 18851 (28.0%) |
-| Pour accuracy on exact serves (avg) | 77% |
-| PERFECT makes (of exact serves) | 434 (0.6%) |
-| Recipes revealed by run end (avg) | 0.4 |
-| Draught share of serves | 6541 (9.7%) |
-| Pints in the good head band | 6541 (100.0%) |
+| Bankruptcies | 200 (100.0%) |
+| Reached the 30-day horizon | 0 (0.0%) |
+| Days survived p25/median/p75 | 21 / 21 / 22 |
+| Final till p25/median/p75 | $-280 / $-220 / $-145 |
+| Avg income / expenses per day | $102.3 / $113.5 |
+| Avg daily satisfaction | 49% |
+| Storm-offs | 4187 (10.2%) |
+| Customers per night | 9.6 |
+| Served per bar-minute | 4.60 |
+| Bar standing (avg night) | 1.29 stars |
+| Serves Exact / Close / Wrong | 43439 (99.2%) / 200 (0.5%) / 4 (0.0%) |
+| Refused (too little in the glass) / declined | 156 (0.4%) / 4476 |
+| Take: base / tip | $239157 / $188904 (188904 (44.1%) of it tip) |
+| Avg base / tip per serve | $5.46 / $4.31 |
+| Avg spec score / fill score | 100% / 92% |
+| Orders with a serving spec, fully met | 14990 (99.6%) of 15053 |
+| Garnish craft landed | 20926 (47.8%) |
+| Extra orders earned (of serves) | 11280 (25.8%) |
+| Extra orders earned (of exact) | 11280 (26.0%) |
+| Pour accuracy on exact serves (avg) | 78% |
+| PERFECT makes (of exact serves) | 16 (0.0%) |
+| Recipes revealed by run end (avg) | 0.1 |
+| Draught share of serves | 6091 (13.9%) |
+| Pints in the good head band | 6091 (100.0%) |
 | Average head poured | 18% |
-| Snack serves (of serves) | 22562 (33.4%) · $61866 |
-| Glasses collected / wipes / washes | 43131 / 44551 / 43131 |
-| Service (avg night) / comfort (avg night) | 2.90 / 2.44 |
+| Glasses collected / wipes / washes | 33183 / 34434 / 33183 |
+| Service (avg night) / comfort (avg night) | 2.45 / 1.36 |
 | Avg cleanliness | 100% |
-| Nights comfort-bound (room under service) | 4326 (73.4%) |
+| Nights comfort-bound (room under service) | 4168 (97.2%) |
 | Broke crowd drawn (of nights) | 0 (0.0%) |
-| Comfort base by day 10 / 20 / 30 (median) | 1.85 / 3.33 / 4.21 |
-| Dressing rungs bought (by slot) | counter_end 140 · floor_rug 133 · plant_left 46 · table_left 16 · table_mid 2 · walls 365 |
-| Minors met / shown the door / served (of seats) | 3248 / 3248 / 0 (5.3% of seats) |
+| Comfort base by day 10 / 20 / 30 (median) | 1.50 / 1.50 / — |
+| Dressing rungs bought (by slot) | walls 200 |
+| Minors met / shown the door / served (of seats) | 941 / 941 / 0 (2.2% of seats) |
 | Wrong kicks / cards misread | 0 / 0 |
-| Fines paid (total · per night at 0/1/2/3★) | $0 · 0★ $0.00 · 1★ $0.00 · 2★ $0.00 |
-| State's thanks (total · of income) | $26580 · 1.9% |
-| Recipes bought (of 200 runs) | 2215 |
-| Brand upgrades bought | 657 |
-| Tier demands the shelf could not answer | 223 of 7687 (2.9%) |
-| Demanded upgrades bought | 371 |
-| Demanded upgrades OFFERED | 594 |
+| Fines paid (total · per night at 0/1/2/3★) | $0 · 0★ $0.00 · 1★ $0.00 |
+| State's thanks (total · of income) | $10425 · 2.4% |
+| Recipes bought (of 200 runs) | 1280 |
+| Brand upgrades bought | 4 |
+| Tier demands the shelf could not answer | 26 of 63 (41.3%) |
+| Demanded upgrades bought | 4 |
+| Demanded upgrades OFFERED | 30 |
 
 ## The star track — when a bar reaches each rung
 
@@ -66,11 +65,11 @@ most useful line here: it says a guest written for it would never come.
 | Rung | Runs that reached it | Day p25/median/p75 | Median week |
 |---|---|---|---|
 | 0.0★ | 200 (100.0%) | 1 / 1 / 1 | 1 |
-| 0.5★ | 200 (100.0%) | 6 / 6 / 6 | 1 |
-| 1.0★ | 200 (100.0%) | 11 / 11 / 12 | 2 |
-| 1.5★ | 194 (97.0%) | 16 / 18 / 19 | 3 |
-| 2.0★ | 178 (89.0%) | 21 / 22 / 25 | 4 |
-| 2.5★ | 118 (59.0%) | 25 / 26 / 27 | 5 |
+| 0.5★ | 200 (100.0%) | 6 / 7 / 7 | 2 |
+| 1.0★ | 199 (99.5%) | 13 / 15 / 17 | 3 |
+| 1.5★ | 6 (3.0%) | 21 / 22 / 22 | 4 |
+| 2.0★ | **none of 200** | — | — |
+| 2.5★ | **none of 200** | — | — |
 | 3.0★ | **none of 200** | — | — |
 | 3.5★ | **none of 200** | — | — |
 | 4.0★ | **none of 200** | — | — |
@@ -99,33 +98,30 @@ went shopping. Only the second column is trouble.
 
 | Day | Closed | In the red | Red before shopping |
 |---|---|---|---|
-| 1 | 200 | 95 (47.5%) | 0 (0.0%) |
-| 2 | 200 | 21 (10.5%) | 0 (0.0%) |
-| 3 | 200 | 53 (26.5%) | 0 (0.0%) |
-| 4 | 200 | 67 (33.5%) | 0 (0.0%) |
-| 5 | 200 | 62 (31.0%) | 0 (0.0%) |
-| 6 | 200 | 93 (46.5%) | 0 (0.0%) |
-| 7 | 200 | 76 (38.0%) | 1 (0.5%) |
-| 8 | 200 | 82 (41.0%) | 0 (0.0%) |
-| 9 | 200 | 90 (45.0%) | 0 (0.0%) |
-| 10 | 200 | 74 (37.0%) | 2 (1.0%) |
-| 11 | 200 | 117 (58.5%) | 0 (0.0%) |
-| 12 | 200 | 123 (61.5%) | 2 (1.0%) |
-| 13 | 200 | 58 (29.0%) | 2 (1.0%) |
-| 14 | 200 | 47 (23.5%) | 0 (0.0%) |
-| 15 | 200 | 38 (19.0%) | 4 (2.0%) |
-| 16 | 200 | 35 (17.5%) | 6 (3.0%) |
-| 17 | 200 | 49 (24.5%) | 7 (3.5%) |
-| 18 | 200 | 69 (34.5%) | 13 (6.5%) |
-| 19 | 200 | 83 (41.5%) | 15 (7.5%) |
-| 20 | 200 | 109 (54.5%) | 20 (10.0%) |
-| 21 | 200 | 126 (63.0%) | 39 (19.5%) |
-| 22 | 196 | 120 (61.2%) | 40 (20.4%) |
-| 23 | 195 | 99 (50.8%) | 30 (15.4%) |
-| 24 | 192 | 48 (25.0%) | 23 (12.0%) |
-| 25 | 191 | 45 (23.6%) | 32 (16.8%) |
-| 26 | 187 | 40 (21.4%) | 19 (10.2%) |
-| 27 | 184 | 54 (29.3%) | 22 (12.0%) |
-| 28 | 183 | 44 (24.0%) | 16 (8.7%) |
-| 29 | 183 | 48 (26.2%) | 16 (8.7%) |
-| 30 | 183 | 54 (29.5%) | 23 (12.6%) |
+| 1 | 200 | 52 (26.0%) | 0 (0.0%) |
+| 2 | 200 | 117 (58.5%) | 0 (0.0%) |
+| 3 | 200 | 23 (11.5%) | 0 (0.0%) |
+| 4 | 200 | 71 (35.5%) | 2 (1.0%) |
+| 5 | 200 | 84 (42.0%) | 2 (1.0%) |
+| 6 | 200 | 89 (44.5%) | 3 (1.5%) |
+| 7 | 200 | 82 (41.0%) | 0 (0.0%) |
+| 8 | 200 | 105 (52.5%) | 5 (2.5%) |
+| 9 | 200 | 84 (42.0%) | 3 (1.5%) |
+| 10 | 200 | 65 (32.5%) | 7 (3.5%) |
+| 11 | 200 | 61 (30.5%) | 23 (11.5%) |
+| 12 | 200 | 102 (51.0%) | 63 (31.5%) |
+| 13 | 200 | 117 (58.5%) | 75 (37.5%) |
+| 14 | 200 | 131 (65.5%) | 86 (43.0%) |
+| 15 | 200 | 113 (56.5%) | 95 (47.5%) |
+| 16 | 200 | 140 (70.0%) | 123 (61.5%) |
+| 17 | 200 | 144 (72.0%) | 137 (68.5%) |
+| 18 | 200 | 148 (74.0%) | 148 (74.0%) |
+| 19 | 199 | 180 (90.5%) | 179 (89.9%) |
+| 20 | 195 | 180 (92.3%) | 180 (92.3%) |
+| 21 | 167 | 166 (99.4%) | 166 (99.4%) |
+| 22 | 95 | 94 (98.9%) | 94 (98.9%) |
+| 23 | 21 | 19 (90.5%) | 19 (90.5%) |
+| 24 | 5 | 4 (80.0%) | 4 (80.0%) |
+| 25 | 3 | 3 (100.0%) | 3 (100.0%) |
+| 26 | 2 | 2 (100.0%) | 2 (100.0%) |
+| 27 | 1 | 1 (100.0%) | 1 (100.0%) |
