@@ -1540,6 +1540,29 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.96 · Fıçı bira tezgâhı kokteyl tezgâhının ailesinde: plaka üstünde fıçılar, sütun, eğim merdiveni, SERVE IT, kule 196 (2026-09-21)
+
+Yazar (üçüncü bakış, seçim 1-A): "yeni bira musluğunun 4x kaliteli hali, sahne yine içki yapma sahnesine benzeyecek
+arkaplan tuşlar butonlar olarak." Kule çizimi yazarın seçimini bekler (T1–T4); sahnenin ailesi şimdi kuruldu.
+
+- **Arkaplan**: ahşap tezgâh önü ve pirinç dudak (`BuildTapCounter`) kalktı; sahnenin ortak plakası (bench stage)
+  bu tezgâhın da tezgâhı. Kule, pint ve fıçılar tin ve şişe gibi plakanın üstünde, ekranın ayağına yakın dururlar
+  (`CounterY` −250). Ahşaba kesilen fıçı kapağı (Recess/Bay) ahşapla gitti: fıçılar solda açıkta sırada
+  (`KegX` −340, yedekler −220/−100/20), bağlı olan parlak, yedekler gölgede; hortum fıçının tepesinden tezgâh
+  üstünden kulenin sol ayağına.
+- **Sütun** (tin tezgâhıyla aynı `ColumnPanel`): adımlar 1–4 (`bench.tap.step.glass/pull/head/serve`; `PaintTapSteps`
+  bardaktan okur: boş → 1, ¾ dolmadı → 2, köpük bantta değil → 3, hazır → 4), altında **eğim merdiveni** — yarım daire
+  kadran gitti — dokuz basamak onar derece, bardağın eğimi kadar yanar: 30°'ye kadar amber (dik, köpük döker),
+  40–60° lime (iyi bant, `TapPour.IdealTilt` 45), üstü ViceRed (`SpillTilt` 60); ayakta BACK TO THE ROOM.
+- **Tuşlar**: ÇÖP (`AddBinButton`, pint için de; `Stage.Tap` → `RefreshTap`) ve **SERVE IT** cam tezgâhındaki tuş —
+  plaka ailesi, tek vurgu, plakanın sağ ucunda raydan asılı, sözcük cam tezgâhının (`bench.serve.serve_key`); boş
+  bardakta kroma döner (`RetonePackKey`). Plaka sütunun yanına (`ColX + ColW + 16`).
+- **Kule 196**: `FontRig.FitTo(TapTowerH, PintW)` her fontu 196 yüksekliğe orantılı ölçekler (ağız, vana, kol, pint
+  yeri; pint yeri çizimin kenarından bir el açık tutulur). Odanın musluğu 4x zaten 296×196; seçim gelince tek rig,
+  ikinci/üçüncü musluk merdiven açana kadar sönük. PINT/HEAD sütunları kulenin sağında pirinç çerçeveyle.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda (r82): dinlenirken ve %92 dolu, köpük %12
+  ile ("GOOD PINT", adımlar tikli, tuş amber).
+
 ### 9.95 · Işık dili: beş ton, bir filtre, tezgâh lambalarının kancası (2026-09-21)
 
 Yazar: "Oyundaki ışıklandırma için profesyonel bir oyun sanat tasarımı dokunuşu lazım, oyunda belli tonlar belli

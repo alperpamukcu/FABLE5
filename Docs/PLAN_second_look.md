@@ -38,7 +38,7 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 
 | # | Item | Status |
 |---|---|---|
-| 10 | The beer scene from scratch, with its assets (PixelLab → report → pick) | ◐ the author picked **A**; four takes on `Docs/reports/third_look/` (T1–T4), waiting on the pick |
+| 10 | The beer scene from scratch, with its assets (PixelLab → report → pick) | ◐ the author picked **A**; the bench is in the family now (GDD_MEVCUT 9.96); the tower waits on the pick (`Docs/reports/third_look/` T1–T4) |
 | 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ☑ (GDD_MEVCUT 9.94) |
 | 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ◐ opens DOWNWARD; two takes on `Docs/reports/third_look/` (D1, D2, or in code), waiting on the pick |
 | 13 | Kitchen lamps over the counter with their light | ◐ the hook, the light's hang and four takes are in (`Docs/reports/lighting/` L1–L4); the piece waits on the pick |

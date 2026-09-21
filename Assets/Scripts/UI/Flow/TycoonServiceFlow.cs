@@ -1270,6 +1270,7 @@ namespace LastCall.UI
                 // to come back empty, and which one is on screen is the stage's business.
                 if (_stage == Stage.Shaker) RefreshShaker();
                 else if (_stage == Stage.Serve) RefreshServe();
+                else if (_stage == Stage.Tap) RefreshTap();   // the pint goes too (2026-09-21)
                 GetComponent<TycoonHud>()?.Toast(fee > 0
                     ? UIText.T("bench.binned_fee", ("fee", "$" + fee))
                     : UIText.T("bench.binned"));

@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The draught bench in the family (2026-09-21, direction A):** the shared slab for a counter, the kegs standing
+  on it, the instrument column with the steps and a tilt ladder in the dial's place, the bin, SERVE IT on the plate
+  family at the plaque's right end, every font fitted to the tower's 196 - the room's tap at four times stands in
+  once the author picks it. GDD_MEVCUT §9.96.
+
 - **The light language (2026-09-21):** five tokens - KEY tungsten, the hour's FILL, NEON pink and cyan, SCREEN -
   every fixture's light snapped to them at load, the room's own tints bound to them; one grade on the game's
   volume (lift blue, gain amber, contrast, vignette; no tonemap, no bloom, no HDR) with post back on for it
