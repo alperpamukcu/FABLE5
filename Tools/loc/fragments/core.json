@@ -147,6 +147,10 @@
     {"key": "prep.salt_rim.description", "text": "The rim run through salt.", "note": "One-line description of the salt rim garnish, shown in a hover tip. No slots."},
     {"key": "prep.sugar_rim.name", "text": "Sugar Rim", "note": "Garnish name; counter prop captions and tips. No slots."},
     {"key": "prep.sugar_rim.description", "text": "The rim run through sugar.", "note": "One-line description of the sugar rim garnish, shown in a hover tip. No slots."},
+    {"key": "prep.olive.name", "text": "Olives", "note": "Garnish name; counter prop captions and tips. No slots."},
+    {"key": "prep.olive.description", "text": "A spear of olives in the glass.", "note": "One-line description of the olive garnish, shown in a hover tip. No slots."},
+    {"key": "prep.mint.name", "text": "Mint Sprig", "note": "Garnish name; counter prop captions and tips. No slots."},
+    {"key": "prep.mint.description", "text": "A sprig of mint over the top.", "note": "One-line description of the mint garnish, shown in a hover tip. No slots."},
     {"key": "prep.draught.name", "text": "Draught", "note": "Preparation name for a drink pulled from a keg. No slots."},
     {"key": "prep.draught.description", "text": "Pulled from the tap.", "note": "One-line description of the draught preparation, shown in a hover tip. No slots."},
 
@@ -155,6 +159,7 @@
     {"key": "rule.counter_paint_needs_kit", "text": "The counter is repainted with the refinish kit — this bar does not own one yet.", "note": "Refusal when the counter is repainted before the refinish kit (a one-time market upgrade) is bought. No slots."},
     {"key": "rule.stir_no_spoon", "text": "No bar spoon behind this bar yet — the first stirred recipe brings it.", "note": "Refusal when the tin is stirred before the bar owns a bar spoon (the spoon comes with the first stirred recipe bought). No slots."},
     {"key": "rule.kick_no_door", "text": "The door is not yours yet — reach one star.", "note": "Refusal when KICK is pressed before the ladder's second rung (1.0 star) has opened the door. No slots."},
-    {"key": "rule.prep_not_yet", "text": "No {what} behind this bar yet.", "note": "Refusal when a preparation the ladder has not opened is put on a glass: ice and the lemon twist come at half a star, the salt and sugar rims at one. {what} is the preparation's name, e.g. \"Salt rim\"."}
+    {"key": "rule.prep_not_yet", "text": "No {what} behind this bar yet.", "note": "Refusal when a preparation the ladder has not opened is put on a glass: ice and the lemon twist come at half a star, the salt and sugar rims at one. {what} is the preparation's name, e.g. \"Salt rim\"."},
+    {"key": "rule.garnish_no_jar", "text": "No {what} in the house; the market sells the jar.", "note": "Refusal when olives or mint are put on a glass before their jar has been bought in the market. {what} is the garnish name (Olives, Mint Sprig). Capitals as written, ~50 characters."}
   ]
 }

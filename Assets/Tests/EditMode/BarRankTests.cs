@@ -90,7 +90,11 @@ namespace LastCall.Tests
             Assert.AreEqual(4, one.Count);
             Assert.AreEqual("salt_rim", one[2].Id);
             Assert.AreEqual("sugar_rim", one[3].Id);
-            CollectionAssert.AreEqual(ServingSpec.GarnishPool, one, "at one star the rail carries the whole pool, in its order");
+            var two = BarRank.PreparationsOpen(2.0);
+            Assert.AreEqual(6, two.Count, "the jars' two at two stars");
+            Assert.AreEqual("olive", two[4].Id);
+            Assert.AreEqual("mint", two[5].Id);
+            CollectionAssert.AreEqual(ServingSpec.GarnishPool, two, "at two stars the rail carries the whole pool, in its order");
         }
 
         [Test]
@@ -100,6 +104,8 @@ namespace LastCall.Tests
             Assert.AreEqual(Feature.IceAndLemon, BarRank.Gating(Preparations.LemonTwist));
             Assert.AreEqual(Feature.Rims, BarRank.Gating(Preparations.SaltRim));
             Assert.AreEqual(Feature.Rims, BarRank.Gating(Preparations.SugarRim));
+            Assert.AreEqual(Feature.Jars, BarRank.Gating(Preparations.Olive));
+            Assert.AreEqual(Feature.Jars, BarRank.Gating(Preparations.Mint));
             Assert.IsNull(BarRank.Gating(Preparations.Stirred), "a stir has its own law (the spoon), not this one");
             Assert.IsNull(BarRank.Gating(null));
         }

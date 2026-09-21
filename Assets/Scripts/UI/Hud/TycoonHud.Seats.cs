@@ -1142,9 +1142,11 @@ namespace LastCall.UI
                 // buying a jar of olives opened a gap between the lemon and the salt and
                 // shoved half the rail sideways. The four the house always has keep their
                 // places; a jar arrives at the right-hand end, where a new thing belongs.
-                ("olive", "counter_olive", null, "olive", UIText.T("seats.rail.olive"),
+                // THE JARS ARE EXTRAS (2026-09-21): a spear and a sprig dropped on the glass like ice, never a
+                // pinch poured into it — the dish stands on the rail once the rung and the market's jar allow.
+                ("olive", "counter_olive", Preparations.Olive, null, UIText.T("seats.rail.olive"),
                  "glass_olive", 52f),
-                ("mint", "counter_mint", null, "mint", UIText.T("seats.rail.mint"),
+                ("mint", "counter_mint", Preparations.Mint, null, UIText.T("seats.rail.mint"),
                  "glass_mint", 40f),
             };
             // THE MAT IS THE ROOM'S (2026-09-06, the author: "çerez paspası tezgah, oda,

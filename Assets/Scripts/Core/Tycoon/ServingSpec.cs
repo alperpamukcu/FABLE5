@@ -75,14 +75,21 @@ namespace LastCall.Core
             bool draught = IsDraught(recipe);
 
             // Roughly half of all orders are plain, as before the spec existed.
-            bool wantsSomething = rng.NextInt(100) >= 50;
-            if (!wantsSomething) return Plain;
+            // THE SIGNATURE EXTRA (2026-09-21): a page that names its garnish is always asked for with it — the
+            // extras rolled below come on top, and the stream's draws are the same as before for every other page.
+            var signature = recipe.Garnish != null ? Preparations.Find(recipe.Garnish) : null;
+            var always = signature != null ? new List<PreparationDefinition> { signature } : null;
 
-            var garnishes = new List<PreparationDefinition>(2);
+            bool wantsSomething = rng.NextInt(100) >= 50;
+            if (!wantsSomething) return always != null ? new ServingSpec(always) : Plain;
+
+            var garnishes = new List<PreparationDefinition>(3);
+            if (signature != null) garnishes.Add(signature);
             if (!draught)
             {
                 var bag = new List<PreparationDefinition>(allowed ?? GarnishPool);
-                if (bag.Count == 0) return Plain;
+                if (signature != null) bag.Remove(signature);
+                if (bag.Count == 0) return garnishes.Count == 0 ? Plain : new ServingSpec(garnishes);
                 int count = rng.NextInt(100) < 65 ? 1 : 2;
                 for (int i = 0; i < count && bag.Count > 0; i++)
                 {
@@ -99,10 +106,13 @@ namespace LastCall.Core
             return new ServingSpec(garnishes);
         }
 
-        /// <summary>The garnishes a customer can ask for (the four droppable preparations).</summary>
+        /// <summary>The garnishes a customer can ask for: the six droppable preparations, in the rail's order.
+        /// Olives and mint joined on 2026-09-21 (the author: extras, never a recipe's band); a run hands Roll
+        /// the ones its ladder and its shelf allow.</summary>
         public static readonly IReadOnlyList<PreparationDefinition> GarnishPool = new[]
         {
             Preparations.Ice, Preparations.LemonTwist, Preparations.SaltRim, Preparations.SugarRim,
+            Preparations.Olive, Preparations.Mint,
         };
 
         private static bool IsDraught(RecipeDefinition recipe)

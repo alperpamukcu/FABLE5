@@ -134,6 +134,9 @@ namespace LastCall.Tests
             {
                 if (card.Info == null || opening.Contains(card.Id)) continue;
                 if (card.Type == IngredientType.Beer) continue;
+                // The jars are extras (2026-09-21): no page pours olives or mint; the customer asks for them
+                // and TheOlivesAndTheMint_WaitOnTheLaddersThirdRung holds their jars to the rung.
+                if (card.Type == IngredientType.Garnish) continue;
 
                 // What the shop makes this bottle wait for.
                 double gate = card.Info.Unlock != null

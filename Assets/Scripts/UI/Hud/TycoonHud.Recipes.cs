@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -134,6 +134,9 @@ namespace LastCall.UI
             // wrong. ON TAP stays out — the keg is its own stage and never reads a card.
             if (r.Id != "draught")
                 rows.Add(new SpecRow(null, PrepWord(r)));
+                // THE SIGNATURE EXTRA (2026-09-21): the sprig or the spear the page is served with, as its own row.
+                if (r.Garnish != null && Preparations.Find(r.Garnish) != null)
+                    rows.Add(new SpecRow(null, GarnishWord(Preparations.Find(r.Garnish))));
             var bands = r.RatioRequirements;
             var run = Run;
             // The reveal gate, asked rather than computed: only a perfected page has exact

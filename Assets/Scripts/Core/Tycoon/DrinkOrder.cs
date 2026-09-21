@@ -52,8 +52,12 @@ namespace LastCall.Core
         public static DrinkOrder Roll(IReadOnlyList<RecipeDefinition> recipes, int day,
             TycoonConfig config, SeededRng rng, IReadOnlyList<PreparationDefinition> garnishes = null)
         {
+            // A page whose signature extra the bar cannot give tonight (the ladder's rung, the market's jar —
+            // TycoonRun.PreparationsOpen) is not ordered (2026-09-21): nobody asks for a Southside where there
+            // is no mint. A caller that passes no pool at all keeps every page.
             var pool = recipes
                 .Where(r => r.RatioRequirements.Count > 0)
+                .Where(r => r.Garnish == null || garnishes == null || garnishes.Any(g => g.Id == r.Garnish))
                 .OrderBy(r => r.Rank)
                 .Take(config.OrderPoolSize(day))
                 .ToList();

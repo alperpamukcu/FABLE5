@@ -19,7 +19,7 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 
 | # | Item | Where | Status |
 |---|---|---|---|
-| 1 | Certificate v3: unlocks INSIDE the sheet; one accent; comfort in medals, service in hearts (as the top bar); opening animation (the sheet unrolls); confetti WITH sound (`cheer_sfx`, `level_up`); a preview GIF for the author | `TycoonHud.Ladder` | ☑ |
+| 1 | Certificate v3: unlocks INSIDE the sheet; one accent; comfort in medals, service in hearts (as the top bar); opening animation (the sheet unrolls); confetti WITH sound (`cheer_sfx`, `level_up`); a preview GIF for the author; the sheet keeps its width, 16:9 at the least and taller only when needed | `TycoonHud.Ladder` | ☑ |
 | 2 | A dev preset for every rung (0.5–5★) with the fittings, stock, book, seats and day of that level; the bench's KOŞU keys | `TycoonRun.DevPresetStars`, `TycoonHud.Chrome` | ☑ |
 | 3 | The top bar's lit stars, medals and hearts wave every five seconds | `TycoonHud.Chrome.RefreshStanding` | ☑ |
 | 4 | Greenery behind the furniture (the pothos was in front of the left table) | `DiegeticStage.PlaceFixtures` | ☑ |
@@ -31,7 +31,7 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 
 | # | Item | Status |
 |---|---|---|
-| 8 | Mint and olives are GARNISHES asked for as extras (`Preparations.Mint`, `Preparations.Olives`), never recipe bands; the jars in the market carry no fill; the rail's jars are dishes like ice; Core refuses a garnish whose jar is not stocked; recipes.json ↔ RecipeCatalog under the parity test | ☐ (next) |
+| 8 | Mint and olives are GARNISHES asked for as extras (`Preparations.Mint`, `Preparations.Olive`), never recipe bands, never poured; the rail's jars are dishes like ice; Core refuses a garnish whose jar is not stocked; recipes.json ↔ RecipeCatalog under the parity test | ☑ (GDD_MEVCUT 9.92) |
 | 9 | The author's rim FRONT plates (`glass3d_*_rim_*_FRONT`) drawn over the drink: the whole ring in the decor, the near arc over the front crop | ☑ |
 
 ## 3. Proposals first (the design rule), then code on the author's pick

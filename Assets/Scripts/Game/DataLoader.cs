@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
@@ -184,6 +184,7 @@ namespace LastCall.Game
                     locked: recipe.locked,
                     prep: ParsePrep(recipe.prepMethod, recipe.id),
                     glassId: recipe.glassId,
+                    garnish: recipe.garnish,
                     icon: recipe.icon,
                     unlock: UnlockCondition.All(
                         UnlockCondition.Stars(recipe.unlockStars),
@@ -1025,6 +1026,7 @@ namespace LastCall.Game
             public bool locked;
             public string prepMethod;
             public string glassId;
+            public string garnish;      // the signature extra, a preparation id (2026-09-21)
             public string icon;
             // THE PAGE'S OWN LOCK (GDD 26 §12.2 step 4). Absent on every drink whose gate is
             // only its rank, which is all of them today; `unlockBeat` names the written night

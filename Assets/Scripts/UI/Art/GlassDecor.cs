@@ -100,6 +100,13 @@ namespace LastCall.UI
                     olive |= style == "olive";
                 }
             }
+            // THE JARS ARE EXTRAS NOW (2026-09-21, the author): a sprig or a spear is a preparation dropped on the
+            // glass, not a pour, so the decor reads them off the glass's own steps as well.
+            if (glass != null)
+            {
+                mint |= glass.HasPreparation("mint");
+                olive |= glass.HasPreparation("olive");
+            }
             var sig = new StringBuilder();
             if (glass != null)
                 foreach (var prep in glass.PreparationSteps) sig.Append(prep.Id).Append(';');

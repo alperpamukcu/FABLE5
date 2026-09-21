@@ -531,6 +531,8 @@ namespace LastCall.Tests
                         info: new IngredientInfo(bands[i].Style, Math.Max(1, bands[i].MinTier)));
                     glass.Add(id, pour[i]);
                 }
+                // ...with its signature extra on it, when it has one (2026-09-21): the sprig IS the Southside.
+                if (recipe.Garnish != null) glass.AddPreparation(Preparations.Find(recipe.Garnish));
 
                 var match = RatioRecipeMatcher.Match(glass, book,
                     id => cards.TryGetValue(id, out var c) ? c : null);

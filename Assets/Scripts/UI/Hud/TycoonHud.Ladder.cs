@@ -41,7 +41,8 @@ namespace LastCall.UI
         private TycoonRun _ladderSeenRun;
 
         private const float LadderW = 920f, LadderClimb = 1.2f, LadderStar = 32f;
-        /// <summary>The sheet: 856 wide under the plate's rings; its height follows the tiles.</summary>
+        /// <summary>The sheet: 856 wide under the plate's rings, always; 16:9 at the least, taller only when the
+        /// tiles need it (the author's rule, 2026-09-21).</summary>
         private const float PaperW = 856f, PaperTop = -74f, PaperSide = 40f;
         /// <summary>The tiles inside the sheet: 72 square on an 80 pitch, eight to a row so the seal has the
         /// sheet's right-hand corner to itself, a name of two lines under each, a class caption over the first
@@ -347,7 +348,10 @@ namespace LastCall.UI
                 : UIText.T("rank.window.next", ("stars", next.Stars.ToString("0.0")));
 
             // The sheet is as tall as its tiles, the plate as tall as the sheet; both stand centred.
-            _ladderPaperH = TilesTop + rows * TileRowH + PaperFoot;
+            // NEVER WIDER, ONLY TALLER (2026-09-21, the author: "16:9 olacaksa yatay olarak genişleyemez ama dikey
+            // olarak genişleyebilir, 16:11, 16:16 olabilir ama yatay genişlik hep aynı"): the sheet is 16:9 at the
+            // least, and grows down the same width when the tiles need the room.
+            _ladderPaperH = Mathf.Max(Mathf.Ceil(PaperW * 9f / 16f), TilesTop + rows * TileRowH + PaperFoot);
             _ladderPaper.sizeDelta = new Vector2(PaperW, _ladderPaperH);
             _ladderReveal.sizeDelta = new Vector2(PaperW, moving ? 0f : _ladderPaperH);
             _ladderPlate.sizeDelta = new Vector2(LadderW, PlateAbovePaper + _ladderPaperH + PlateBelowPaper);

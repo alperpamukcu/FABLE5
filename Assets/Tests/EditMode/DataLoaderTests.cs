@@ -55,6 +55,7 @@ namespace LastCall.Tests
                 Assert.AreEqual(expected.Locked, actual.Locked, expected.Id);
                 Assert.AreEqual(expected.Prep, actual.Prep, expected.Id);
                 Assert.AreEqual(expected.GlassId, actual.GlassId, expected.Id);
+                Assert.AreEqual(expected.Garnish, actual.Garnish, expected.Id + ": the signature extra");
                 Assert.AreEqual(expected.Icon, actual.Icon, expected.Id);
                 Assert.AreEqual(expected.RatioRequirements.Count, actual.RatioRequirements.Count, expected.Id);
                 for (int b = 0; b < expected.RatioRequirements.Count; b++)

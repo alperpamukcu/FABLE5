@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -165,7 +165,15 @@ namespace LastCall.Core
             {
                 if (recipe.RatioRequirements == null || recipe.RatioRequirements.Count == 0) continue;
                 if (!Satisfies(glass, byType, byStyle, recipe, lookup)) continue;
-                if (best == null || recipe.Rank > best.Rank) best = recipe;
+                // THE SIGNATURE EXTRA (2026-09-21): a page that names its garnish is that page only with the
+                // garnish on the glass — a Gimlet with a sprig of mint is a Southside, a Gimlet without one is a
+                // Gimlet, whatever the ranks say.
+                if (recipe.Garnish != null && !glass.HasPreparation(recipe.Garnish)) continue;
+                // ...and with it on the glass the signed page outranks its plain twin whatever their ranks: the
+                // olives make a Dirty Martini (14) out of a Dry one (22).
+                bool signed = recipe.Garnish != null, bestSigned = best != null && best.Garnish != null;
+                if (best == null || (signed && !bestSigned) || (signed == bestSigned && recipe.Rank > best.Rank))
+                    best = recipe;
             }
             if (best == null) return null;
 

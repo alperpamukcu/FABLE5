@@ -1540,6 +1540,43 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.92 · Nane ve zeytin EKSTRA: tarif bandı değil, bardağa bırakılan hazırlık; sertifika kâğıdı hep aynı genişlikte, en az 16:9 (2026-09-21)
+
+Yazar: "Mint ve zeytin kullanımı diğer garnishler gibi değil ... şişenin içinde doluluk yapıyorlar. Yapmamalılar;
+kokteyl tariflerinde direkt olarak mint veya zeytin olmamalı, ekstra olarak istenmeli. Oyunun çıkışında böyle
+olacak." Ve: "Sertifikanın ebatları 16:9 olacaksa yatay olarak genişleyemez ama dikey olarak genişleyebilir
+(16:11, 16:16); yatay genişlik hep aynı miktarda pixel olacak."
+
+- **Kavanozlar ekstra** (`Preparations.Olive` "olive", `Preparations.Mint` "mint"; `Preparation.All`'a eklendi):
+  buz gibi bardağa BIRAKILAN hazırlıklar — dökülmez, hacim eklemez (eski yol: rayın kavanoz propu
+  `PourAtGlass` ile bardağa %5 sıvı basıyordu; "doluluk" oydu). Sipariş onları ekstra olarak ister:
+  `ServingSpec.GarnishPool` altıya çıktı (ray sırasıyla); `BarRank.PreparationsOpen` 2,0★'da (Jars) ikisini
+  ekler; `TycoonRun.PreparationsOpen` / `PreparationOpen` kavanoz rafta değilse düşürür (`Market.FindByStyle`
+  "olive"/"mint"); `EnsurePreparationOpen` basamak yoksa `rule.prep_not_yet`, kavanoz yoksa
+  `rule.garnish_no_jar` ("No {what} in the house; the market sells the jar."). Kavanozlar `base_bar.json`'da
+  `locked:false, unlockStars 2.0` — katalogda, markette 2★ kilidiyle satılır; hiçbir sayfaya bağlı değil.
+- **Tarifler**: southside, dirty_martini, mojito, mint_julep, whiskey_smash — `Garnish` gereksinimi ve
+  mint/olive bandı hem `recipes.json`'dan hem `RecipeCatalog`'dan çıktı (parite testi tutuyor). Kalan bantlar
+  1'e toplanabiliyor (ölçüldü). Bir Dirty Martini artık gin+vermut; zeytini müşteri ekstra ister.
+- **İmza ekstrası** (`RecipeDefinition.Garnish`, veri `"garnish": "mint"|"olive"`, `RecipeCatalog`'da aynı; parite
+  testi `Garnish`'i de karşılaştırır): naneyi çıkarınca Southside'ın oranları Gimlet'le, Dirty Martini'ninki
+  Martini'yle aynılaştı (`EveryPerfectPour_ServedExactly_ReadsAsItsOwnRecipe` yakaladı). Sayfa imzasını adıyla
+  taşır: `RatioRecipeMatcher.Match` imzayı bardağın adımlarında arar (dalsız gin+lime+şurup Gimlet, dallı
+  Southside), `ServingSpec.Roll` imzayı her siparişe koyar (rastgele ekstralar üstüne; diğer sayfalar için
+  "orders" akışının çekimleri değişmedi), `DrinkOrder.Roll` imzasını veremeyen barda o sayfayı sipariş etmez.
+  Defter sayfası imzayı SHAKEN/STIRRED satırının altına kendi satırı olarak yazar. Beş sayfa: southside, mojito,
+  mint_julep, whiskey_smash → mint; dirty_martini → olive.
+- **Oda**: rayın zeytin/nane kapları `Prep` taşır (`Preparations.Olive/Mint`), buz gibi düşer
+  (`AddPreparationAtGlass`); `GlassDecor` (yazarın dosyası, tek hunk) dalı/şişi bardağın adımlarından da okur
+  (`HasPreparation("mint"/"olive")`). Kiler zaten Garnish kartlarını göstermiyordu.
+- **Sertifika kâğıdı**: genişlik 856 sabit; boy `max(856·9/16=482, kutular)` — 16:9'dan başlar, yalnız boyca uzar.
+- Testler: `BarRankTests` (2,0'da altı hazırlık, `Gating` → Jars), `LadderWiringTests.TheJars_AreExtras_DroppedNotPoured_AndOnlyWhenStocked`,
+  BaseBar "ilk sayfa" değişmezi Garnish kartlarını atlar (kavanozu basamağa `TheOlivesAndTheMint_...` tutar).
+  EditMode 623/624 (tek kırmızı yazarın 32×66 v4_bourbon plakası), PlayMode 13/13. Oyunda (r69): 2★ preseti iki kavanozu da rafa koyar, ray altı kap;
+  sertifika 856×482.
+- Sim: bot marketten almaz, kavanoz stoklanmaz, spec kavanoz istemez — sayılar tarif bantlarının değişmesiyle
+  oynar; 200 koşu yeniden okunmalı (hâlâ bekliyor).
+
 ### 9.91 · İkinci bakış, ilk dilim: sertifika v3 (tek vurgu, kutular kâğıdın içinde, açılış, ses), basamak başına dev preset, üst şerit dalgası, sarmaşık geride, kepenk oksuz ve yumuşak sesli, animasyonlar yavaş saatten bağımsız, kaldırma yeşilden kırmızıya, kenar ön plakaları (2026-09-21)
 
 Yazar (tek mesajda on dört madde; plan: `Docs/PLAN_second_look.md`): "Senin yaptığın tasarımlar AI slop oluyor ...

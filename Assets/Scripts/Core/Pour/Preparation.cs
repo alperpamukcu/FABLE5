@@ -49,6 +49,13 @@ namespace LastCall.Core
             new PreparationDefinition("salt_rim", "Salt Rim", "The rim run through salt.");
         public static readonly PreparationDefinition SugarRim =
             new PreparationDefinition("sugar_rim", "Sugar Rim", "The rim run through sugar.");
+        /// <summary>THE JARS ARE EXTRAS (2026-09-21, the author: "kokteyl tariflerinde direkt olarak mint veya
+        /// zeytin olmamalı, ekstra olarak istenmeli"): olives and mint are dropped on the glass like ice, asked
+        /// for by the customer, never poured into the mix and never a recipe's band.</summary>
+        public static readonly PreparationDefinition Olive =
+            new PreparationDefinition("olive", "Olives", "A spear of olives in the glass.");
+        public static readonly PreparationDefinition Mint =
+            new PreparationDefinition("mint", "Mint Sprig", "A sprig of mint over the top.");
         /// <summary>Pulled from a keg (GDD 21 §10). Not a step the player chooses — it is how
         /// the drink got into the glass, and it is what tells the judge to grade the head.</summary>
         public static readonly PreparationDefinition Draught =
@@ -56,7 +63,7 @@ namespace LastCall.Core
 
         public static readonly IReadOnlyList<PreparationDefinition> All = new[]
         {
-            Shaken, Stirred, Ice, LemonTwist, SaltRim, SugarRim, Draught
+            Shaken, Stirred, Ice, LemonTwist, SaltRim, SugarRim, Draught, Olive, Mint
         };
 
         public static PreparationDefinition Find(string id)

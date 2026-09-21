@@ -109,7 +109,7 @@ namespace LastCall.Core
         public static bool Has(double stars, Feature feature) => Of(stars).Index >= Granting(feature).Index;
 
         /// <summary>
-        /// The preparations a bar at <paramref name="stars"/> can put on a glass — the four the counter rail
+        /// The preparations a bar at <paramref name="stars"/> can put on a glass — the six the counter rail
         /// carries, in the order it carries them, minus the ones the ladder still holds. What orders may ask for
         /// (ServingSpec.Roll) and what <c>AddPreparationAtGlass</c> accepts are both this list, so a customer can
         /// never ask for a twist the bar cannot give.
@@ -119,6 +119,9 @@ namespace LastCall.Core
             var open = new List<PreparationDefinition>(4);
             if (Has(stars, Feature.IceAndLemon)) { open.Add(Preparations.Ice); open.Add(Preparations.LemonTwist); }
             if (Has(stars, Feature.Rims)) { open.Add(Preparations.SaltRim); open.Add(Preparations.SugarRim); }
+            // The jars (2026-09-21): olives and mint are extras on the rail from the third rung — and only when
+            // the market's jar is on the shelf, which is the run's question (TycoonRun.PreparationsOpen), not the table's.
+            if (Has(stars, Feature.Jars)) { open.Add(Preparations.Olive); open.Add(Preparations.Mint); }
             return open;
         }
 
@@ -142,6 +145,8 @@ namespace LastCall.Core
                 case "lemon_twist": return Feature.IceAndLemon;
                 case "salt_rim":
                 case "sugar_rim": return Feature.Rims;
+                case "olive":
+                case "mint": return Feature.Jars;
                 default: return null;
             }
         }

@@ -116,6 +116,8 @@ namespace LastCall.Tests
                 var glass = new GlassContents(1.0);
                 for (int i = 0; i < perfect.Length; i++)
                     glass.Add(recipe.RatioRequirements[i].Style, perfect[i]);
+                // ...with its signature extra on it, when it has one (2026-09-21): the sprig IS the Southside.
+                if (recipe.Garnish != null) glass.AddPreparation(Preparations.Find(recipe.Garnish));
 
                 var match = RatioRecipeMatcher.Match(glass, all, CardOf);
                 Assert.IsNotNull(match, $"{recipe.Id}: its own perfect matches nothing");

@@ -220,6 +220,66 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void TheJars_AreExtras_DroppedNotPoured_AndOnlyWhenStocked()
+        {
+            // The author (2026-09-21): recipes never carry mint or olives; a customer asks for them as an extra,
+            // and only once the market's jar is on the shelf. Dropping one adds a step, never a drop of liquid.
+            var bare = NewRun(2.0, "ladder-jars-bare");
+            Assert.IsTrue(bare.Has(Feature.Jars));
+            CollectionAssert.DoesNotContain(bare.PreparationsOpen.Select(p => p.Id).ToList(), "olive", "no jar, no olives");
+            Assert.IsFalse(bare.PreparationOpen(Preparations.Mint));
+            Assert.Throws<InvalidOperationException>(() => bare.AddPreparationAtGlass(Preparations.Olive), "the rules layer refuses without the jar");
+
+            var stocked = new TycoonRun(new Shelf(new[]
+                {
+                    new ShelfBottle(new IngredientCard("gin", "Gin", IngredientType.Spirit, 6), capacity: 4000),
+                    new ShelfBottle(new IngredientCard("olive_luca", "Luca Olives", IngredientType.Garnish, 1,
+                        new IngredientInfo("olive", 1, 3, "somewhere", 40, "test")), capacity: 40),
+                }), Book, new RunRng("ladder-jars"),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0));
+            stocked.Rating.DevSet(2.0);
+            var open = stocked.PreparationsOpen.Select(p => p.Id).ToList();
+            CollectionAssert.Contains(open, "olive", "the jar on the shelf opens the olives");
+            CollectionAssert.DoesNotContain(open, "mint", "and no jar of mint, no mint");
+            double before = stocked.ServingGlass.TotalVolume;
+            stocked.AddPreparationAtGlass(Preparations.Olive);
+            Assert.IsTrue(stocked.ServingGlass.HasPreparation("olive"));
+            Assert.AreEqual(before, stocked.ServingGlass.TotalVolume, 1e-9, "a spear of olives is not a pour");
+            foreach (var r in RecipeCatalog.CreateDefault())
+                foreach (var band in r.RatioRequirements)
+                    Assert.IsFalse(band.Style == "mint" || band.Style == "olive", r.Id + " still pours a jar");
+        }
+
+        [Test]
+        public void TheSignatureExtra_MakesThePage_AndTheOrderAlwaysAsksForIt()
+        {
+            // A Dirty Martini is a Dry Martini with a spear of olives (2026-09-21): the same pour reads as the
+            // plain page without the spear and as the signed page with it, whatever their ranks (14 over 22);
+            // and every order for the signed page asks for the spear.
+            var all = RecipeCatalog.CreateDefault();
+            var dirty = all.First(r => r.Id == "dirty_martini");
+            var dry = all.First(r => r.Id == "dry_martini");
+            Assert.AreEqual("olive", dirty.Garnish);
+            Assert.IsNull(dry.Garnish);
+            var perfect = RatioRecipeMatcher.PerfectPour(dirty);
+            var glass = new GlassContents(1.0);
+            for (int i = 0; i < perfect.Length; i++) glass.Add(dirty.RatioRequirements[i].Style, perfect[i]);
+            var cards = new System.Collections.Generic.Dictionary<string, IngredientCard>();
+            foreach (var band in dirty.RatioRequirements)
+                cards[band.Style] = new IngredientCard(band.Style, band.Style, IngredientType.Spirit, 5,
+                    new IngredientInfo(band.Style, 4, 5, "somewhere", 40, "test"));   // top shelf: every band's tier met
+            System.Func<string, IngredientCard> lookup = id => cards.TryGetValue(id, out var c) ? c : null;
+            Assert.AreEqual("dry_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id, "no spear: a dry martini");
+            glass.AddPreparation(Preparations.Olive);
+            Assert.AreEqual("dirty_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id, "the spear makes it a dirty martini");
+
+            var rng = new RunRng("signature").GetStream("orders");
+            for (int i = 0; i < 40; i++)
+                CollectionAssert.Contains(ServingSpec.Roll(dirty, rng, ServingSpec.GarnishPool).Garnishes.Select(g => g.Id).ToList(), "olive",
+                    "every order for a dirty martini asks for its olives");
+        }
+
+        [Test]
         public void TheDevPresets_StandOnTheirRungs()
         {
             // The bench's six keys (2026-09-21): each parks the bar on its rung with the calendar, the book and the

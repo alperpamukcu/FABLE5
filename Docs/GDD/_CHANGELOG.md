@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The jars are extras (2026-09-21):** olives and mint are preparations dropped on the glass like ice - asked
+  for by the customer, never a recipe's band, never poured - open from the third rung and only once the market's
+  jar is on the shelf (`Preparations.Olive/Mint`, `TycoonRun.PreparationsOpen`); five pages lost their jar band.
+  The certificate's sheet keeps its width: 16:9 at the least, taller only when its tiles need it. GDD_MEVCUT §9.92.
+
 - **The second look, first slice (2026-09-21):** the certificate drawn again to three colour roles and one
   accent, its unlocks inside the sheet, an opening (the sheet unrolls), the climb with a cheer and confetti; a dev
   preset for every rung; the top bar's lit icons wave every five seconds; greenery behind the furniture; the

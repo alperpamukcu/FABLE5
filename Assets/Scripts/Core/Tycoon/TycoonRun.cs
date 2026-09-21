@@ -298,20 +298,43 @@ namespace LastCall.Core
 
         /// <summary>The preparations the counter rail carries at this rank — what orders may ask for and what
         /// <see cref="AddPreparationAtGlass"/> takes. The two are one list on purpose.</summary>
-        public IReadOnlyList<PreparationDefinition> PreparationsOpen => BarRank.PreparationsOpen(Rating.BestStanding);
+        public IReadOnlyList<PreparationDefinition> PreparationsOpen
+        {
+            get
+            {
+                var open = new List<PreparationDefinition>(BarRank.PreparationsOpen(Rating.BestStanding));
+                open.RemoveAll(p => JarFor(p) != null && !JarStocked(p));
+                return open;
+            }
+        }
 
-        /// <summary>Whether the ladder lets <paramref name="preparation"/> onto a glass yet.</summary>
+        /// <summary>THE JARS ARE EXTRAS (2026-09-21, the author: "kokteyl tariflerinde direkt olarak mint veya
+        /// zeytin olmamalı, ekstra olarak istenmeli ... şişenin içinde doluluk yapıyorlar, yapmamalılar"): olives
+        /// and mint are dropped on the glass like ice, never poured, never a page's band. The rung opens them; the
+        /// market's jar stocks them — the style the jar carries, on the shelf.</summary>
+        private static string JarFor(PreparationDefinition p) =>
+            p == Preparations.Olive ? "olive" : p == Preparations.Mint ? "mint" : null;
+
+        private bool JarStocked(PreparationDefinition p) => Market.FindByStyle(_shelf, JarFor(p)) != null;
+
+        /// <summary>Whether <paramref name="preparation"/> can go on a glass: the ladder has opened it, and for a
+        /// jar's garnish the jar is on the shelf.</summary>
         public bool PreparationOpen(PreparationDefinition preparation)
         {
             var gate = BarRank.Gating(preparation);
-            return gate == null || Has(gate.Value);
+            if (gate != null && !Has(gate.Value)) return false;
+            return JarFor(preparation) == null || JarStocked(preparation);
         }
 
         private void EnsurePreparationOpen(PreparationDefinition preparation)
         {
             if (PreparationOpen(preparation)) return;
-            throw Said.With(new InvalidOperationException($"The bar has no {preparation.Name} yet."),
-                Line.Of("rule.prep_not_yet").With("what", preparation.NameLine));
+            var gate = BarRank.Gating(preparation);
+            if (gate != null && !Has(gate.Value))
+                throw Said.With(new InvalidOperationException($"The bar has no {preparation.Name} yet."),
+                    Line.Of("rule.prep_not_yet").With("what", preparation.NameLine));
+            throw Said.With(new InvalidOperationException($"No {preparation.Name} in the house; the market sells the jar."),
+                Line.Of("rule.garnish_no_jar").With("what", preparation.NameLine));
         }
 
         public string PouringId { get; private set; }

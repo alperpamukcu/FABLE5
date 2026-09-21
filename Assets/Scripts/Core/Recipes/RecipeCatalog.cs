@@ -163,10 +163,10 @@ namespace LastCall.Core
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, so) },
                     locked: true,
                     TopShelf("gin", .40, .60, 3), Band("triple_sec", .20, .40), Band("lemon", .15, .35)),
-                Cocktail("southside", "Southside", 21, 30, 3, 20, 1, PrepMethod.Shaken, "coupe",
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                Cocktail("southside", "Southside", 21, 30, 3, 20, 1, PrepMethod.Shaken, "coupe", "mint",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("gin", .45, .65), Band("lime", .15, .35), Band("syrup", .08, .25), Band("mint", .03, .15)),
+                    Band("gin", .45, .65), Band("lime", .15, .35), Band("syrup", .08, .25)),
 
                 // ── very hard (ranks 22+): stirred precision, thirds, the long build ─
                 Cocktail("dry_martini", "Dry Martini", 22, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
@@ -176,10 +176,10 @@ namespace LastCall.Core
                 // RANK 14, NOT 23 (2026-09-21, the ladder): olives open on the third rung (2.0), and a jar with no
                 // page to use it would break EveryBottle_OpensOnTheRungOfTheFirstPageThatWantsIt - so the first
                 // olive page stands on the same rung as the spoon it needs.
-                Cocktail("dirty_martini", "Dirty Martini", 14, 30, 3, 20, 1, PrepMethod.Stirred, "martini",
-                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                Cocktail("dirty_martini", "Dirty Martini", 14, 30, 3, 20, 1, PrepMethod.Stirred, "martini", "olive",
+                    new[] { new PatternRequirement(2, s), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("gin", .60, .85), Band("vermouth", .08, .28), Band("olive", .05, .20)),
+                    Band("gin", .60, .85), Band("vermouth", .08, .28)),
                 Cocktail("manhattan", "Manhattan", 24, 35, 3, 25, 2, PrepMethod.Stirred, "coupe",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, bi) },
                     locked: true,
@@ -202,13 +202,12 @@ namespace LastCall.Core
                     locked: true,
                     Band("rum", .30, .50), Band("triple_sec", .08, .22), Band("lime", .08, .22),
                     Band("pineapple", .15, .35), Band("syrup", .04, .14)),
-                Cocktail("mojito", "Mojito", 27, 30, 3, 20, 1, PrepMethod.Built, "highball",
+                Cocktail("mojito", "Mojito", 27, 30, 3, 20, 1, PrepMethod.Built, "highball", "mint",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so),
-                            new PatternRequirement(1, sw), new PatternRequirement(1, bu),
-                            new PatternRequirement(1, g) },
+                            new PatternRequirement(1, sw), new PatternRequirement(1, bu) },
                     locked: true,
                     Band("rum", .28, .48), Band("lime", .10, .28), Band("syrup", .06, .22),
-                    Band("soda", .20, .45), Band("mint", .03, .15)),
+                    Band("soda", .20, .45)),
                 // Seven bands, five of them spirits at a ten-point window each: the capstone.
                 Cocktail("long_island", "Long Island", 28, 40, 4, 25, 2, PrepMethod.Shaken, "highball",
                     new[] { new PatternRequirement(5, s), new PatternRequirement(1, so), new PatternRequirement(1, bu) },
@@ -265,14 +264,14 @@ namespace LastCall.Core
                     Band("tequila", .35, .55), Band("pineapple", .30, .50), Band("lime", .08, .22)),
                 // RANK 14, NOT 21 (2026-09-21, the ladder): mint opens on the third rung with the spoon, and the
                 // julep is the stirred mint page - the drink the rung is for.
-                Cocktail("mint_julep", "Mint Julep", 14, 30, 3, 20, 1, PrepMethod.Stirred, "rocks",
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                Cocktail("mint_julep", "Mint Julep", 14, 30, 3, 20, 1, PrepMethod.Stirred, "rocks", "mint",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("bourbon", .68, .88), Band("syrup", .08, .24), Band("mint", .03, .15)),
-                Cocktail("whiskey_smash", "Whiskey Smash", 21, 30, 3, 20, 1, PrepMethod.Shaken, "rocks",
-                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw), new PatternRequirement(1, g) },
+                    Band("bourbon", .68, .88), Band("syrup", .08, .24)),
+                Cocktail("whiskey_smash", "Whiskey Smash", 21, 30, 3, 20, 1, PrepMethod.Shaken, "rocks", "mint",
+                    new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(1, sw) },
                     locked: true,
-                    Band("bourbon", .45, .65), Band("lemon", .15, .35), Band("syrup", .08, .25), Band("mint", .03, .15)),
+                    Band("bourbon", .45, .65), Band("lemon", .15, .35), Band("syrup", .08, .25)),
                 Cocktail("lemon_drop", "Lemon Drop", 21, 30, 3, 20, 1, PrepMethod.Shaken, "martini",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, so), new PatternRequirement(2, sw) },
                     locked: true,
@@ -350,5 +349,15 @@ namespace LastCall.Core
             PatternRequirement[] requirements, bool locked, params RatioRequirement[] ratios) =>
             new RecipeDefinition(id, name, rank, baseFlavor, baseMult, flavorPerLevel, multPerLevel,
                 requirements, ratioRequirements: ratios, locked: locked, prep: prep, glassId: glassId);
+
+        /// <summary>A page with a signature extra (RecipeDefinition.Garnish): the same page, plus the garnish
+        /// that makes it — "mint" or "olive" — dropped on the glass, never poured.</summary>
+        private static RecipeDefinition Cocktail(string id, string name, int rank,
+            int baseFlavor, int baseMult, int flavorPerLevel, int multPerLevel,
+            PrepMethod prep, string glassId, string garnish,
+            PatternRequirement[] requirements, bool locked, params RatioRequirement[] ratios) =>
+            new RecipeDefinition(id, name, rank, baseFlavor, baseMult, flavorPerLevel, multPerLevel,
+                requirements, ratioRequirements: ratios, locked: locked, prep: prep, glassId: glassId,
+                garnish: garnish);
     }
 }

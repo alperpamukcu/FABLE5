@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace LastCall.Core
@@ -127,6 +127,15 @@ namespace LastCall.Core
         /// <summary>Shaken, stirred, or built straight in the serving glass.</summary>
         public PrepMethod Prep { get; }
 
+        /// <summary>
+        /// THE SIGNATURE EXTRA (2026-09-21, the author: "kokteyl tariflerinde direkt olarak mint veya zeytin
+        /// olmamalı, ekstra olarak istenmeli"): the id of the preparation that makes this page what it is —
+        /// "mint" on a Southside, "olive" on a Dirty Martini — dropped on the glass, never poured, never a band.
+        /// The matcher demands it on the glass (without it the pour reads as the plain twin), every order for
+        /// the page asks for it, and a bar that cannot give it does not take the order. Null for most pages.
+        /// </summary>
+        public string Garnish { get; }
+
         /// <summary>The glass this drink is served in (glassware.json id); "" = the default.</summary>
         public string GlassId { get; }
 
@@ -171,7 +180,8 @@ namespace LastCall.Core
             string glassId = null,
             string icon = null,
             UnlockCondition unlock = null,
-            string unlockBeatId = null)
+            string unlockBeatId = null,
+            string garnish = null)
         {
             // One kind of band per recipe. A style band and a type band can cover the same
             // pour (the gin is also a Spirit), so mixing kinds double-counts shares and lets
@@ -196,6 +206,7 @@ namespace LastCall.Core
             // storing it would make every unlocked page claim to carry a lock.
             Unlock = unlock is null || ReferenceEquals(unlock, UnlockCondition.Open) ? null : unlock;
             UnlockBeatId = string.IsNullOrWhiteSpace(unlockBeatId) ? null : unlockBeatId;
+            Garnish = string.IsNullOrWhiteSpace(garnish) ? null : garnish;
             MinFill = minFill;
             Id = id;
             Name = name;
