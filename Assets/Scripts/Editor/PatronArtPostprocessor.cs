@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
 namespace LastCall.EditorTools
@@ -12,6 +12,64 @@ namespace LastCall.EditorTools
     /// </summary>
     public sealed class PatronArtPostprocessor : AssetPostprocessor
     {
+        /// <summary>
+        /// SOLID FIGURES (2026-09-21, the author: "karakterlerin bel kısımları zeminin üstünde şeffaflaşıyor ...
+        /// katı olması gerekiyor, içerisini gösteremez"): a figure's enclosed transparent pockets — the wedge
+        /// between a hanging arm and the body, the gap between the legs — read as a fade at the waist where the
+        /// floor showed through them (measured, r73/r74: the body itself is opaque, the pockets are in the art).
+        /// At import every transparent pixel the picture's outside cannot reach is filled from its opaque
+        /// neighbours, pass by pass, so the silhouette closes and the author's PNGs stay as they were drawn.
+        /// </summary>
+        private void OnPostprocessTexture(Texture2D tex)
+        {
+            var p = assetPath.Replace('\\', '/');
+            if (!p.Contains("Resources/Patron/") || tex == null) return;
+            int w = tex.width, h = tex.height;
+            var px = tex.GetPixels32();
+            var outside = new bool[w * h];
+            var stack = new System.Collections.Generic.Stack<int>();
+            for (int x = 0; x < w; x++) { Seed(px, outside, stack, x); Seed(px, outside, stack, x + (h - 1) * w); }
+            for (int y = 0; y < h; y++) { Seed(px, outside, stack, y * w); Seed(px, outside, stack, y * w + w - 1); }
+            while (stack.Count > 0)
+            {
+                int i = stack.Pop();
+                int x = i % w, y = i / w;
+                if (x > 0) Seed(px, outside, stack, i - 1);
+                if (x < w - 1) Seed(px, outside, stack, i + 1);
+                if (y > 0) Seed(px, outside, stack, i - w);
+                if (y < h - 1) Seed(px, outside, stack, i + w);
+            }
+            int filled = 0;
+            bool changed = true;
+            while (changed)
+            {
+                changed = false;
+                var next = (Color32[])px.Clone();
+                for (int i = 0; i < px.Length; i++)
+                {
+                    if (px[i].a != 0 || outside[i]) continue;
+                    int x = i % w, y = i / w, r = 0, g = 0, b = 0, n = 0;
+                    if (x > 0 && px[i - 1].a != 0) { r += px[i - 1].r; g += px[i - 1].g; b += px[i - 1].b; n++; }
+                    if (x < w - 1 && px[i + 1].a != 0) { r += px[i + 1].r; g += px[i + 1].g; b += px[i + 1].b; n++; }
+                    if (y > 0 && px[i - w].a != 0) { r += px[i - w].r; g += px[i - w].g; b += px[i - w].b; n++; }
+                    if (y < h - 1 && px[i + w].a != 0) { r += px[i + w].r; g += px[i + w].g; b += px[i + w].b; n++; }
+                    if (n == 0) continue;
+                    next[i] = new Color32((byte)(r / n), (byte)(g / n), (byte)(b / n), 255);
+                    changed = true; filled++;
+                }
+                px = next;
+            }
+            if (filled > 0) { tex.SetPixels32(px); tex.Apply(false, false); }
+        }
+
+        /// <summary>Marks a transparent pixel as reachable from the outside and queues it for the flood.</summary>
+        private static void Seed(Color32[] px, bool[] outside, System.Collections.Generic.Stack<int> stack, int i)
+        {
+            if (outside[i] || px[i].a != 0) return;
+            outside[i] = true;
+            stack.Push(i);
+        }
+
         private void OnPreprocessTexture()
         {
             var p = assetPath.Replace('\\', '/');

@@ -1540,6 +1540,32 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.93 · Sertifika v4 (kâğıt dokusu, sıradaki basamak, dolu şişeler, plaka yok), LOG tuşu gitti, peçete tinin altında, boş tinde kaşık yok, karakterlerin kapalı boşlukları dolduruldu (2026-09-21)
+
+Yazar: "Sertifika düz bir kâğıt gibi; desenler, kenarlarda köşelerde kâğıt hissiyatı. LOG butonunu kaldır. Her
+sertifikada sıradaki açılacaklar gözükmeli, tarifler dahil; daha büyük yazılar; başlık kalınlığı ve stili değişsin;
+şişeler dolu gözüksün, arkaplanın üstünde öne çıksın. Arkaplanda mavi UI olmasın, sadece sertifika ve devam et.
+Şeffaflıktan kastım bu: karakterlerin bel kısımları zeminin üstünde şeffaflaşıyor. Şişe boşken karıştırılamamalı.
+Kaşığın peçetesi shakerin üstüne geliyor."
+
+- **Sertifika v4** (`TycoonHud.Ladder`): mavi plaka yok — karartılmış odanın üstünde yalnız kâğıt (1024 geniş,
+  en az 576 = 16:9, kutular isterse boyca uzar, en çok 648) ve altında DEVAM tuşu. Kâğıt: krem + tane dokusu
+  (kodla üretilen 64'lük benek karosu, 2x, %10 alfa), 12'de 2 px ve 18'de 1 px iki çizgi, köşelerde L köşebentler,
+  ortada %5 alfa yıldız filigranı. Yazılar büyüdü: başlık 16 px, unvan 24 px + 2 px gölge + Amber altçizgi,
+  meta 16 px, KONFOR/SERVİS 16 px. İki kutu bandı: "NEW BEHIND THE BAR" (bu basamak, en çok 2 sıra) ve
+  "NEXT RUNG AT x STARS" (sıradaki basamağın özellikleri, şişeleri ve tarifleri, %55 alfa, 1 sıra, fazlası "+N").
+  Kutular koyu (Night[1]) plakalarda: şişeler v4 kiler plakalarından `BottleArt` ile DOLU çizilir
+  (`SetLevel(1.0)`), tarifler `DrinkIcon`, kap ve tuş görselleri kendi sanatıyla. Sırada 10 kutu (88 adım).
+- **LOG** tuşu ana ekrandan kalktı (`BuildServiceLog` tuşu kurmuyor; sayfa ve `ToggleServiceLog` kodda).
+- **Peçete** shaker'ın altına: `napkin.SetSiblingIndex(_shakerVessel.GetSiblingIndex())`.
+- **Boş tinde kaşık**: Core zaten reddediyordu (`rule.stir_empty`); artık kaşık boş tinle kalkmıyor ve tin
+  boşken %55 koyu duruyor (`_spoonImg`).
+- **Şeffaf bel = kapalı boşluklar**: ölçüldü (r73/r74: tezgâh, gölgeler, ışıklar kapatılıp piksel karşılaştırıldı,
+  gövde tamamen opak; sarkan kolla gövde arasındaki aşağı doğru genişleyen boşluk solma gibi okunuyor).
+  `PatronArtPostprocessor` içe aktarmada dış kenardan ulaşılamayan saydam pikselleri en yakın opak komşuların
+  ortalamasıyla doldurur; kaynak PNG'ler değişmez. 34 yüz (levha: `Docs/reports/patron_holes/index.html`).
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda (r72): sertifika 3. ve 4. basamakta, tırmanış konmuş hali.
+
 ### 9.92 · Nane ve zeytin EKSTRA: tarif bandı değil, bardağa bırakılan hazırlık; sertifika kâğıdı hep aynı genişlikte, en az 16:9 (2026-09-21)
 
 Yazar: "Mint ve zeytin kullanımı diğer garnishler gibi değil ... şişenin içinde doluluk yapıyorlar. Yapmamalılar;

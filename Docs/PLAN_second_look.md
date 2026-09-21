@@ -38,11 +38,11 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 
 | # | Item | Status |
 |---|---|---|
-| 10 | The beer scene from scratch, with its assets (PixelLab → report → pick) | ☐ report |
-| 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ☐ report |
-| 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ☐ report |
-| 13 | Kitchen lamps over the counter with their light | ☐ report |
-| 14 | The see-through characters and dishes: the bodies rode the HUD group's fade at a middle alpha and the rail's dishes faded to 55%/40% — both solid now (`TycoonHud.Seats`: a body is whole or gone, a dish darkens instead of fading; the counter glass and the carried glass and tin at full alpha). The enclosed holes in the idle frames (34 faces) are the arm-to-body gaps, real; sheet at `Docs/reports/patron_holes/index.html` for the author to say if any must close | ☑ |
+| 10 | The beer scene from scratch, with its assets (PixelLab → report → pick) | ◐ the author picked **A** (the room's tower at 4×; background, keys and plaque as the cocktail bench) — candidates next |
+| 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ◐ "Uygula" — building as proposed |
+| 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ◐ the author: it opens **DOWNWARD** — building |
+| 13 | Kitchen lamps over the counter with their light | ◐ folded into the lighting pass (§5.4) |
+| 14 | The see-through characters and dishes: the bodies rode the HUD group's fade at a middle alpha and the rail's dishes faded to 55%/40% — both solid now (`TycoonHud.Seats`: a body is whole or gone, a dish darkens instead of fading; the counter glass and the carried glass and tin at full alpha). The enclosed holes in the idle frames (34 faces) are the arm-to-body gaps, real; sheet at `Docs/reports/patron_holes/index.html`. **The waist (2026-09-21, the author's four pictures):** those very pockets, closed at import by `PatronArtPostprocessor` — every one of them, since "katı olması gerekiyor" — 4,384 frames, 0 pockets left, the PNGs untouched | ☑ |
 
 ## 4. The proposals (2026-09-21) — the author picks a direction, then the work is measured and built
 
@@ -89,3 +89,33 @@ with the nearest opaque colour at import, so the author's PNGs stay untouched an
 the hip) stay open; the author names any face whose gap must stay. The garnish dishes and the glass garnishes
 have no holes and no soft alpha — if something on the rail shows the background, it is the dimmed dish
 (`Seats.cs` alpha 0.85) and that is one number.
+*Outcome (2026-09-21):* the author's four pictures showed exactly these pockets over the floor, so there is no
+threshold — every enclosed transparent pixel is filled from its opaque neighbours' average at import
+(`OnPostprocessTexture`, Resources/Patron only); the census over all 4,384 imported frames finds none left, and
+the three seated drinkers' waists were looked at in play (r75).
+
+## 5. The third look (2026-09-21) — the author's asks and picks
+
+Shipped in the same commit as the hole fill:
+- **Certificate v4** (`TycoonHud.Ladder`): the sheet alone over the dimmed room with CONTINUE under it — no
+  blue plate, so it may stand taller (1024 wide, 576 at the least, 648 at most with two bands); paper grain,
+  two rules, corner brackets, a watermark; bigger writing (16/24 px, a shadowed title over an amber rule); this
+  rung's tiles and the NEXT rung's (features, bottles, recipes; dimmed) on dark plates, the bottles drawn FULL.
+- **LOG** off the main screen (`TycoonHud.Chrome`; the sheet and the toggle stay in code).
+- **The spoon's napkin under the tin**, and **no spoon over an empty tin** (the spoon dims) — `Shaker.cs`.
+
+The author's picks on §4 (in the order they will be built, each measured in play before the next):
+1. **Beer scene — A.** "Yeni bira musluğunun 4x kaliteli hali; sahne yine içki yapma sahnesine benzeyecek —
+   arkaplan, tuşlar, butonlar." PixelLab candidates of the room's `fx_tap_beer` at bench scale (empty,
+   label-less, in the pipeline's rules) → `Docs/reports/tap_tower/index.html` → the author picks → `Tap.cs`
+   rebuilt around it; the bench keeps the cocktail bench's background, plaque and keys.
+2. **Shaker bench — "Uygula."** (a) the plaque, keys and ladder re-parented under the slide; (b) one bar per
+   pour, the bottle's colour, its name and its share; (c) SERVE IT on the plate family in the one accent.
+3. **Cupboard door — DOWNWARD.** The panel hangs from the opening's top and drops INTO the counter's face to
+   open (not a rising portcullis): the roller's travel and rail kept, the panel drawn in the counter's finish.
+4. **Lighting language.** "Profesyonel bir oyun sanat tasarımı dokunuşu; belli tonlar, belli filtreler; tüm
+   ışıklandırmalar ve yansımalar buna göre." A written token set first (key: warm amber; fill: cool night;
+   accents: the neon's magenta and cyan; nothing else emits), every fixture light normalised to it, the
+   counter lamps (§4.13) as the key light over the till, and one URP Volume built in code (colour adjustments,
+   lift/gamma/gain, a vignette — modest) — a before/after sheet, then the look tests re-blessed after LOOKING.
+   `DefaultVolumeProfile.asset` is the author's working file and is not edited; the volume is a scene object.

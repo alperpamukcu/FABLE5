@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The certificate's fourth draft, and four small things (2026-09-21):** the sheet alone over the room with
+  the key under it - paper grain, rules and brackets, a watermark, bigger writing, a shadowed title, this rung's
+  tiles and the NEXT rung's (dimmed) with bottles drawn full on dark plates; the LOG key off the main screen;
+  the spoon's napkin under the tin; no spoon over an empty tin; and the characters' enclosed gaps filled at
+  import, which is what read as see-through waists. GDD_MEVCUT §9.93.
+
 - **Solid, not see-through (2026-09-21):** a character's body no longer rides the HUD group's fade at a middle
   alpha (whole while the group shows, gone when it is out), the rail's dishes darken instead of fading, and the
   counter's glass and the carried glass and tin draw at full alpha.

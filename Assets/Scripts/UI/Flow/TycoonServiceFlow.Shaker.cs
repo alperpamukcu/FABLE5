@@ -218,6 +218,7 @@ namespace LastCall.UI
         // CAP — the spoon only works an OPEN tin, the shake only a capped one — so the two
         // mixing verbs can never fight over one gesture.
         private RectTransform _spoonRt;
+        private Image _spoonImg;             // the spoon's own drawing, dimmed while the tin is empty
         private RectTransform _napkinRt;     // the towel under the spoon — comes and goes with it
         private Vector2 _spoonRest;
         /// <summary>Where the spoon stands (2026-09-16): between the lid and the tin, its foot 70 under the bench
@@ -2064,6 +2065,11 @@ namespace LastCall.UI
 
             if (!_spoonHeld)
             {
+                if (_spoonImg != null)
+                {
+                    var want = run.Glass.IsEmpty ? new Color(0.55f, 0.55f, 0.55f, 1f) : Color.white;
+                    if (_spoonImg.color != want) _spoonImg.color = want;
+                }
                 _spoonRt.anchoredPosition = Vector2.Lerp(
                     _spoonRt.anchoredPosition, _spoonRest, 1f - Mathf.Exp(-12f * dt));
                 _spoonRt.localRotation = Quaternion.Lerp(
@@ -2879,6 +2885,9 @@ namespace LastCall.UI
             nimg.sprite = ChromeArt.Napkin(56, 96);
             nimg.raycastTarget = false;
             napkin.localRotation = Quaternion.Euler(0, 0, -4f);   // set down by hand, not laid square
+            // ...AND UNDER THE TIN (2026-09-21, the author: "kaşığın peçetesi shakerin üstüne geliyor"): built after
+            // the shaker, it drew over it where the two met; it goes down in draw order before the vessel.
+            napkin.SetSiblingIndex(Mathf.Max(0, _shakerVessel.GetSiblingIndex()));
             _napkinRt = napkin;
 
             _spoonRest = new Vector2(SpoonX, SpoonFootY + 256f);
@@ -2900,6 +2909,7 @@ namespace LastCall.UI
                 var sImg = NewRect("Art", _spoonRt);
                 Stretch(sImg, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var si = sImg.gameObject.AddComponent<Image>();
+                _spoonImg = si;
                 si.sprite = spoonArt; si.preserveAspect = true; si.raycastTarget = false;
                 // ...AND IT ANSWERS THE POINTER (2026-09-06, the author: "kaşık parlamıyor").
                 // The glow rides the SLOT, which is what the stir moves, but it lights and
@@ -2940,7 +2950,9 @@ namespace LastCall.UI
             spoonGrab.callback.AddListener(_ =>
             {
                 // The spoon works an OPEN tin only — the cap hands the stage to the shake.
-                if (!_capped && Run != null && Run.Phase == TycoonPhase.DayOpen)
+                // NOT OVER AN EMPTY TIN (2026-09-21, the author: "şişe boşken karıştırılamamalı"): Core refuses the
+                // stir anyway; the spoon simply does not come up until there is something to turn.
+                if (!_capped && Run != null && Run.Phase == TycoonPhase.DayOpen && !Run.Glass.IsEmpty)
                 {
                     _spoonHeld = true; _stirHasPrev = false;
                     // Held where it was taken (the author: "kaşık neresinden tutulursa

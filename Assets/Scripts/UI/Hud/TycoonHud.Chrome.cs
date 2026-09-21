@@ -1919,9 +1919,8 @@ namespace LastCall.UI
 
         private void BuildServiceLog(RectTransform root)
         {
-            // The key stays put under the fascia; only the sheet below it comes and goes.
-            NewButton(root, UIText.T("chrome.log.key"), new Vector2(0, 1), new Vector2(44, 20),
-                new Vector2(10, -66), UITheme.Night[2], ToggleServiceLog).name = "LOG";   // the name stays English
+            // THE KEY IS GONE (2026-09-21, the author: "LOG butonunu ana ekrandan kaldır"); the sheet it opened
+            // is still built below, for the toggle that remains in code.
 
             // THE WEEK'S JOB, BESIDE THE LOG KEY (2026-09-04, the author: "bu görev oyun
             // içerisinde LOG'un olduğu yerde çok yer kaplamamalı"). One line, 8px, on the
