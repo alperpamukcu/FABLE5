@@ -42,7 +42,7 @@ accent, one motion, no ornament, and proposals before new screens. Status: ☐ t
 | 11 | The shaker bench: panels riding the background; mix bars that name the spirit and its share; SERVE IT again | ☐ report |
 | 12 | The cupboard door in the shutter's place (a portcullis over the opening, sized to it) | ☐ report |
 | 13 | Kitchen lamps over the counter with their light | ☐ report |
-| 14 | The see-through characters: 34 of 54 idle frames have enclosed holes; an import-time fill with a size threshold, shown per face for the author to accept | ◐ sheet at `Docs/reports/patron_holes/index.html` |
+| 14 | The see-through characters and dishes: the bodies rode the HUD group's fade at a middle alpha and the rail's dishes faded to 55%/40% — both solid now (`TycoonHud.Seats`: a body is whole or gone, a dish darkens instead of fading; the counter glass and the carried glass and tin at full alpha). The enclosed holes in the idle frames (34 faces) are the arm-to-body gaps, real; sheet at `Docs/reports/patron_holes/index.html` for the author to say if any must close | ☑ |
 
 ## 4. The proposals (2026-09-21) — the author picks a direction, then the work is measured and built
 

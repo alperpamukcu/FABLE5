@@ -763,7 +763,7 @@ namespace LastCall.UI
                         GlassArt.Lip(prop, dirtyPiece);   // the front is on every glass (2026-09-09)
                     }
                     img.preserveAspect = true;
-                    img.color = new Color(1f, 1f, 1f, 0.85f);
+                    img.color = Color.white;   // solid (2026-09-21): the counter never shows through a glass
                     if (img.sprite == null) img.color = new Color(0.8f, 0.9f, 0.95f, 0.5f);
                     var view = v;
                     // PICKED UP, NOT PRESSED (GDD 27 §4.2, H4 2026-09-05): pointer-down
@@ -1946,7 +1946,7 @@ namespace LastCall.UI
                 _glassCarryImg.raycastTarget = false;
             }
             _glassCarryImg.sprite = art;
-            _glassCarryImg.color = art != null ? new Color(1f, 1f, 1f, 0.95f) : new Color(0.8f, 0.9f, 0.95f, 0.5f);
+            _glassCarryImg.color = art != null ? Color.white : new Color(0.8f, 0.9f, 0.95f, 0.5f);   // solid (2026-09-21)
             if (_sinkFadeRt == _glassCarry) { _sinkFadeRt = null; _sinkFadeImg = null; }   // picked up mid-sink
             // THE SAME GLASS IN THE HAND (2026-09-13): the size it stood at on the counter, not a
             // 34x52 stand-in that visibly shrank the moment it was lifted.
@@ -2582,9 +2582,12 @@ namespace LastCall.UI
                 // counted, not applied — which is the one exception the glass already makes.
                 bool done = glass && prop.Prep != null && prop.Id != "ice"
                             && run.ServingGlass.HasPreparation(prop.Id);
+                // DIMMED, NOT SEE-THROUGH (2026-09-21, the author: "garnishlerde şeffaflık var ... katı olması
+                // gerekiyor"): a dish that cannot be used yet, or has been, darkens instead of fading, so the
+                // counter never shows through it.
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
-                float a = !glass ? 0.55f : done ? 0.4f : 1f;
-                prop.Img.color = new Color(baseCol.r, baseCol.g, baseCol.b, a);
+                float dim = !glass ? 0.6f : done ? 0.45f : 1f;
+                prop.Img.color = new Color(baseCol.r * dim, baseCol.g * dim, baseCol.b * dim, 1f);
                 prop.Img.raycastTarget = reachable;
             }
             // THE MAT IS AS LONG AS THE RAIL IS (2026-09-06, the author: "yeni garnish
@@ -3034,7 +3037,7 @@ namespace LastCall.UI
                 _tinCarryImg.raycastTarget = false;
             }
             _tinCarryImg.sprite = _shakerPropImg.sprite;
-            _tinCarryImg.color = new Color(1f, 1f, 1f, 0.95f);
+            _tinCarryImg.color = Color.white;   // solid (2026-09-21)
             if (_sinkFadeRt == _tinCarry) { _sinkFadeRt = null; _sinkFadeImg = null; }   // picked up mid-sink
             _tinCarrying = true;
             _tinPressed = false;
@@ -4797,8 +4800,11 @@ namespace LastCall.UI
                 p.x / StageToHud - StageRef.x * 0.5f,
                 footY + drawnH * 0.5f - StageRef.y * 0.5f, 0f);
 
+            // SOLID OR GONE (2026-09-21, the author: "karakterlerde şeffaflık var ve arka planı gösteriyor, katı
+            // olması gerekiyor"): a body never rides the group's fade at a middle alpha - the room showed through
+            // it. It is drawn whole while the group shows at all, and not at all once the group is out.
             var c = view.Body.color;
-            c.a = view.Group != null ? view.Group.alpha : 1f;
+            c.a = view.Group != null && view.Group.alpha <= 0.001f ? 0f : 1f;
             view.Body.color = c;
         }
 

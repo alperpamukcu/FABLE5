@@ -2,6 +2,10 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **Solid, not see-through (2026-09-21):** a character's body no longer rides the HUD group's fade at a middle
+  alpha (whole while the group shows, gone when it is out), the rail's dishes darken instead of fading, and the
+  counter's glass and the carried glass and tin draw at full alpha.
+
 - **The jars are extras (2026-09-21):** olives and mint are preparations dropped on the glass like ice - asked
   for by the customer, never a recipe's band, never poured - open from the third rung and only once the market's
   jar is on the shelf (`Preparations.Olive/Mint`, `TycoonRun.PreparationsOpen`); five pages lost their jar band.
