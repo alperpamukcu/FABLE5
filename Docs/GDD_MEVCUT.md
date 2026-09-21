@@ -1549,7 +1549,7 @@ Yazar: "D1a", "L3".
   sprite'ının yerine geçer; yoksa kepenk (`shutterSprite`) kalır. Mekanik aynen: aynı yolculuk (aşağı, tezgâhın
   içine), aynı çatlak (hover), aynı ray, `CounterFinish.Recolour` her cilada boyar. ÖLÇÜLDÜ (r89): kapalıyken
   kapağın yalnız ÜST ÜÇTE BİRİ (186'nın ~60 satırı) ekranda, açıkken eşikte 16 satır — D1a'nın tutamacı ortada
-  olduğundan görünmüyordu; kompozisyonu üst banda taşıyan yeni çekim (kapağın üst üçte birine göre yeniden düzenlenmiş çekimi bekliyor).
+  olduğundan görünmüyordu; kompozisyonu üst banda taşıyan yeni çekim D1a-i (tutamaç pervazın hemen altında, flamingo, çizgili güneş, palmiyeler — hepsi üst 60 satırda; `Docs/reports/third_look/` 2c, alternatifi D1a-ii) 2026-09-22 sevk edildi ve odada görüldü (r93).
 - **Tezgâh sarkıtları**: `Resources/Fixtures/fx_counter_lamps.png` (120×32, L3, 55 palete çivili), `fixtures.json`
   `counter_lamps` (odada başlar, `lightDy` −169, 1,2 × 170, ev saatinde, KEY'e çivilenir; ad/blurb en+tr).
   Fikstür ışığı çiziminden farklı yükseklikte asılıysa artık TEZGÂH katmanını da aydınlatır
