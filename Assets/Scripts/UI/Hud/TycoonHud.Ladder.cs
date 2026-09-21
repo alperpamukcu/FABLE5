@@ -29,7 +29,10 @@ namespace LastCall.UI
     {
         private RectTransform _ladderPanel, _ladderGroup, _ladderReveal, _ladderPaper, _ladderBand, _ladderNextBand, _ladderFx, _ladderNewFlag;
         private RectTransform _ladderSeal, _ladderRibbonL, _ladderRibbonR;
-        private Text _ladderHeading, _ladderTo, _ladderToShadow, _ladderMeta, _ladderBandHead, _ladderNextHead, _ladderComfortValue, _ladderServiceValue;
+        private Text _ladderHeading, _ladderTo, _ladderToShadow, _ladderToBold, _ladderMeta, _ladderBandHead, _ladderNextHead, _ladderComfortValue, _ladderServiceValue;
+        /// <summary>Whether this sheet stopped the clock when it opened (2026-09-21, the author: "bu ekran açıkken menüde
+        /// olduğu gibi zaman durmalı"); let go when it closes. Only during the night - at the day's end nothing runs.</summary>
+        private bool _ladderHeldClock;
         private Image[] _ladderToStars, _ladderHearts, _ladderMedals;
         private readonly List<CanvasGroup> _ladderTiles = new List<CanvasGroup>();
         private float _ladderFxT = -1f, _ladderPaperH;
@@ -50,11 +53,15 @@ namespace LastCall.UI
         private const float PaperW = 1024f, PaperMinH = 576f, PaperSide = 48f;
         /// <summary>The tiles: 80 square on an 88 pitch, ten to a row, a name of two lines under each, a class
         /// caption over the first of each group. This rung's band takes two rows at most, the next rung's one.</summary>
-        private const float TileSize = 80f, TilePitch = 88f, TileGroupGap = 16f, TileRowH = 122f;
-        private const int TilesPerRow = 10;
+        // 64 on a 72 pitch, twelve to a row (2026-09-21, the author: "kutular daha kalın çerçeveli ve biraz daha küçük
+        // olsun böylece daha çok yer açılabilir"): a row of new things takes 104 instead of 122.
+        private const float TileSize = 64f, TilePitch = 72f, TileGroupGap = 16f, TileRowH = 104f;
+        private const int TilesPerRow = 12;
         /// <summary>Where this rung's tiles begin under the sheet's top, the gap before the next rung's band (its
         /// head included), and what the sheet keeps under its last row.</summary>
-        private const float TilesTop = 218f, NextBandGap = 36f, PaperFoot = 28f;
+        private const float TilesTop = 232f, NextBandGap = 30f, PaperFoot = 28f;
+        /// <summary>The seal's size on the sheet: PixelLab's drawing at its own 128, or the disc drawn at it.</summary>
+        private const float SealPx = 128f;
         /// <summary>The key under the sheet: the gap above it.</summary>
         private const float KeyGap = 16f;
 
@@ -124,11 +131,19 @@ namespace LastCall.UI
             gi.color = new Color(1f, 1f, 1f, 0.10f); gi.raycastTarget = false;
             UiAuditExempt.Mark(grain, "paper grain, a speckle tile at 2x under a tenth of alpha");
             // the watermark: the house's star, large and almost not there, behind the writing
-            var mark = NewRect("Watermark", _ladderPaper);
-            Place(mark, new Vector2(0.5f, 0.5f), new Vector2(360f, 360f), new Vector2(0f, 0f));
-            var mi = mark.gameObject.AddComponent<Image>();
-            mi.sprite = ItemArt.Star(false, 32f); mi.preserveAspect = true;
-            mi.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.05f); mi.raycastTarget = false;
+            // THE PATTERN (2026-09-21, the author: "kağıdın arkasında bir desen olsun, kağıdın rengine yakın kokteyl bardağı
+            // iconu desenleri"): a lattice of small martini glasses drawn in code, tiled at 2x inside the rules, a step
+            // darker than the paper and a third opaque - a watermark you read as texture, not as a picture.
+            // One sheet-sized drawing shown at 2x rather than a tiled one: a Tiled Image of a code-made sprite drew
+            // a single tile here (measured, r83: 56 lit pixels where 900 were due), so the lattice is laid over the
+            // whole sheet once and stretched to it.
+            var pattern = NewRect("Pattern", _ladderPaper);
+            Place(pattern, new Vector2(0.5f, 1f), new Vector2(PaperW - 40f, 640f - 40f), new Vector2(0f, -20f));
+            pattern.pivot = new Vector2(0.5f, 1f);
+            var pi = pattern.gameObject.AddComponent<Image>();
+            pi.sprite = PaperPattern(492, 300); pi.type = Image.Type.Simple;
+            pi.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.22f); pi.raycastTarget = false;
+            UiAuditExempt.Mark(pattern, "the paper's pattern: cocktail glasses at 2x, near the paper's own colour");
             // the rules: two deep outside, one inside, and a bracket at each corner between them
             var outer = NewRect("RuleOuter", _ladderPaper);
             Stretch(outer, Vector2.zero, Vector2.one, new Vector2(12f, 12f), new Vector2(-12f, -12f));
@@ -139,41 +154,49 @@ namespace LastCall.UI
             foreach (var corner in new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) })
                 Bracket(_ladderPaper, corner);
 
-            _ladderHeading = NewText("Heading", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[2]);
-            Place(_ladderHeading.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -22f));
+            // THE HIERARCHY (2026-09-21, the author: "hangisi başlık hangisi alt başlık hangisi metin anlaşılmıyor"): an
+            // eyebrow in the small face, muted; the TITLE at 32 in the display face, doubled a step to the right for
+            // weight, over its shadow, on an amber rule; the meta line quiet; the scores' words in the accent and their
+            // figures at 24; the bands' heads in the accent too. Four sizes, two faces, three inks - nothing else.
+            _ladderHeading = NewText("Heading", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[3]);
+            Place(_ladderHeading.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -24f));
             _ladderHeading.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // The title the bar is hereby known as: the display face's large size, its shadow two units under
             // and right so it stands off the paper, and the accent's rule under it.
-            _ladderToShadow = NewText("ToShadow", _ladderPaper, _display, 24, TextAnchor.UpperCenter, UITheme.Night[3]);
-            Place(_ladderToShadow.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 32f), new Vector2(2f, -46f));
+            _ladderToShadow = NewText("ToShadow", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[3]);
+            Place(_ladderToShadow.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(3f, -47f));
             _ladderToShadow.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderToShadow.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _ladderTo = NewText("To", _ladderPaper, _display, 24, TextAnchor.UpperCenter, UITheme.Night[0]);
-            Place(_ladderTo.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 32f), new Vector2(0f, -44f));
+            _ladderToBold = NewText("ToBold", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
+            Place(_ladderToBold.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(2f, -44f));
+            _ladderToBold.rectTransform.pivot = new Vector2(0.5f, 1f);
+            _ladderToBold.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _ladderTo = NewText("To", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
+            Place(_ladderTo.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(0f, -44f));
             _ladderTo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderTo.horizontalOverflow = HorizontalWrapMode.Overflow;
             var under = NewRect("Underline", _ladderPaper);
-            Place(under, new Vector2(0.5f, 1f), new Vector2(240f, 2f), new Vector2(0f, -80f));
+            Place(under, new Vector2(0.5f, 1f), new Vector2(320f, 3f), new Vector2(0f, -92f));
             var ui = under.gameObject.AddComponent<Image>();
             ui.color = UITheme.Amber[3]; ui.raycastTarget = false;
 
-            _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -92f), LadderStar, 4f,
+            _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -112f), LadderStar, 4f,
                 UITheme.Amber[3], UITheme.Night[3]);
-            _ladderMeta = NewText("Meta", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[1]);
-            Place(_ladderMeta.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -136f));
+            _ladderMeta = NewText("Meta", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[2]);
+            Place(_ladderMeta.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -148f));
             _ladderMeta.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // COMFORT in the house's medals and SERVICE in its hearts, the way the top bar wears them.
-            _ladderMedals = ScoreGroup("Comfort", -240f, -160f, "rank.cert.comfort", ItemArt.Medal, out _ladderComfortValue);
-            _ladderHearts = ScoreGroup("Service", 240f, -160f, "rank.cert.service", ItemArt.Heart, out _ladderServiceValue);
+            _ladderMedals = ScoreGroup("Comfort", -240f, -176f, "rank.cert.comfort", ItemArt.Medal, out _ladderComfortValue);
+            _ladderHearts = ScoreGroup("Service", 240f, -176f, "rank.cert.service", ItemArt.Heart, out _ladderServiceValue);
 
             var cut = NewRect("Cut", _ladderPaper);
-            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -184f));
+            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -200f));
             var ci = cut.gameObject.AddComponent<Image>();
             ci.color = UITheme.Night[3]; ci.raycastTarget = false;
 
-            _ladderBandHead = BandHead("BandHead", -196f);
+            _ladderBandHead = BandHead("BandHead", -212f);
             _ladderBand = NewRect("Tiles", _ladderPaper);
             Place(_ladderBand, new Vector2(0.5f, 1f), new Vector2(PaperW, TileRowH), new Vector2(0f, -TilesTop));
             _ladderBand.pivot = new Vector2(0.5f, 1f);
@@ -184,27 +207,31 @@ namespace LastCall.UI
 
             // THE SEAL, in the sheet's bottom-right corner: two ribbon tails first (they hang from behind it,
             // out past the sheet's edge), then the disc with the cocktail glass in it. All in the one accent.
-            _ladderRibbonL = Ribbon("RibbonL", -7f, UITheme.Amber[1]);
-            _ladderRibbonR = Ribbon("RibbonR", 7f, UITheme.Amber[2]);
+            _ladderRibbonL = Ribbon("RibbonL", -12f, UITheme.Amber[1]);
+            _ladderRibbonR = Ribbon("RibbonR", 12f, UITheme.Amber[2]);
+            // THE SEAL, DRAWN (2026-09-21, the author: "Mühürü daha büyük ve pixellabden üret"): Items/cert_seal is
+            // PixelLab's amber wax with the martini pressed into it, at 128; without it the disc and the glass stand in.
             _ladderSeal = NewRect("Seal", _ladderPaper);
             _ladderSeal.anchorMin = _ladderSeal.anchorMax = new Vector2(1f, 0f);
             _ladderSeal.pivot = new Vector2(0.5f, 0.5f);
-            _ladderSeal.sizeDelta = new Vector2(56f, 56f);
-            _ladderSeal.anchoredPosition = new Vector2(-PaperSide - 20f, 52f);
+            _ladderSeal.sizeDelta = new Vector2(SealPx, SealPx);
+            _ladderSeal.anchoredPosition = new Vector2(-PaperSide - 52f, 84f);
             var disc = _ladderSeal.gameObject.AddComponent<Image>();
-            disc.sprite = SealDisc(56); disc.color = Color.white; disc.raycastTarget = false;
+            var drawnSeal = ItemArt.Load("cert_seal");
+            disc.sprite = drawnSeal ?? SealDisc((int)SealPx); disc.color = Color.white; disc.raycastTarget = false;
+            disc.preserveAspect = true;
             var glassRt = NewRect("Glass", _ladderSeal);
-            Place(glassRt, new Vector2(0.5f, 0.5f), new Vector2(26f, 32f), new Vector2(0f, 1f));
+            Place(glassRt, new Vector2(0.5f, 0.5f), new Vector2(56f, 68f), new Vector2(0f, 2f));
             var glass = glassRt.gameObject.AddComponent<Image>();
             glass.sprite = ItemArt.Load("glass3d_martini_t2_Front");
             glass.color = UITheme.Cream[4]; glass.preserveAspect = true; glass.raycastTarget = false;
-            glass.enabled = glass.sprite != null;
+            glass.enabled = drawnSeal == null && glass.sprite != null;
         }
 
         /// <summary>A band's head: sixteen-pixel writing, left-aligned at the sheet's side.</summary>
         private Text BandHead(string id, float y)
         {
-            var t = NewText(id, _ladderPaper, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[1]);
+            var t = NewText(id, _ladderPaper, _display, 16, TextAnchor.MiddleLeft, UITheme.Amber[2]);
             Place(t.rectTransform, new Vector2(0f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(PaperSide, y));
             t.rectTransform.pivot = new Vector2(0f, 0.5f);
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -231,11 +258,11 @@ namespace LastCall.UI
         /// <summary>A score on the sheet: its label, five of the house's icons filled to the value, the number.</summary>
         private Image[] ScoreGroup(string id, float x, float y, string labelKey, Func<bool, float, Sprite> art, out Text value)
         {
-            const float px = 16f, gap = 2f, labelW = 110f, valueW = 48f;
+            const float px = 16f, gap = 2f, labelW = 110f, valueW = 64f;
             float rowW = BarRating.MaxStars * (px + gap) - gap;
             float total = labelW + 10f + rowW + 10f + valueW;
             float left = x - total * 0.5f;
-            var label = NewText(id + "Label", _ladderPaper, _body, 16, TextAnchor.MiddleRight, UITheme.Night[1]);
+            var label = NewText(id + "Label", _ladderPaper, _display, 16, TextAnchor.MiddleRight, UITheme.Amber[2]);
             Place(label.rectTransform, new Vector2(0.5f, 1f), new Vector2(labelW, 20f), new Vector2(left + labelW * 0.5f, y));
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = UIText.T(labelKey);
@@ -256,8 +283,8 @@ namespace LastCall.UI
                 oi.type = Image.Type.Filled; oi.fillMethod = Image.FillMethod.Horizontal; oi.fillAmount = 0f;
                 fills[i] = oi;
             }
-            value = NewText(id + "Value", _ladderPaper, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[0]);
-            Place(value.rectTransform, new Vector2(0.5f, 1f), new Vector2(valueW, 20f), new Vector2(left + total - valueW * 0.5f, y));
+            value = NewText(id + "Value", _ladderPaper, _display, 24, TextAnchor.MiddleLeft, UITheme.Night[0]);
+            Place(value.rectTransform, new Vector2(0.5f, 1f), new Vector2(valueW, 28f), new Vector2(left + total - valueW * 0.5f, y));
             value.horizontalOverflow = HorizontalWrapMode.Overflow;
             return fills;
         }
@@ -275,14 +302,40 @@ namespace LastCall.UI
             var rt = NewRect(id, _ladderPaper);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
             rt.pivot = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(12f, 62f);
-            rt.anchoredPosition = new Vector2(-PaperSide - 20f + dx, 52f);
+            rt.sizeDelta = new Vector2(20f, 120f);
+            rt.anchoredPosition = new Vector2(-PaperSide - 52f + dx, 84f);
             var img = rt.gameObject.AddComponent<Image>();
             img.color = ink; img.raycastTarget = false;
             return rt;
         }
 
-        private static Sprite s_sealDisc, s_paperGrain;
+        private static Sprite s_sealDisc, s_paperGrain, s_paperPattern;
+
+        /// <summary>A lattice of martini glasses, two to a tile on the diagonal, drawn in one-pixel lines; white,
+        /// coloured by the Image that wears it. Tiled at 2x it reads as the paper's own printing.</summary>
+        private static Sprite PaperPattern(int w, int h)
+        {
+            if (s_paperPattern != null) return s_paperPattern;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "paper_pattern", wrapMode = TextureWrapMode.Clamp };
+            var clear = new Color(0f, 0f, 0f, 0f);
+            for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) tex.SetPixel(x, y, clear);
+            void Dot(int x, int y) { if (x >= 0 && y >= 0 && x < w && y < h) tex.SetPixel(x, y, Color.white); }
+            void Glass(int cx, int cy)
+            {
+                for (int i = 0; i <= 6; i++) { Dot(cx - 6 + i, cy + 6 - i); Dot(cx + 6 - i, cy + 6 - i); }   // the bowl's two sides
+                for (int i = -6; i <= 6; i++) Dot(cx + i, cy + 7);                                             // the rim
+                for (int i = 1; i <= 5; i++) Dot(cx, cy - i);                                                  // the stem
+                for (int i = -3; i <= 3; i++) Dot(cx + i, cy - 6);                                             // the foot
+            }
+            const int pitch = 48;   // the lattice: a glass every 48, the next row half a step over
+            for (int row = 0, cy = 12; cy < h; row++, cy += pitch / 2)
+                for (int cx = (row % 2 == 0) ? 12 : 12 + pitch / 2; cx < w; cx += pitch)
+                    Glass(cx, cy);
+            tex.Apply(false, false);
+            s_paperPattern = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+            s_paperPattern.name = "paper_pattern";
+            return s_paperPattern;
+        }
 
         /// <summary>The seal's disc: a flat amber circle with a thin lighter ring inside its edge, drawn once.</summary>
         private static Sprite SealDisc(int px)
@@ -396,7 +449,7 @@ namespace LastCall.UI
             var now = BarRank.Of(to);
             bool moving = climb && !Motion.Reduced;
             _ladderHeading.text = UIText.T(climb ? "rank.window.title" : "rank.window.title_again");
-            _ladderTo.text = _ladderToShadow.text = UIText.T(now.Title);
+            _ladderTo.text = _ladderToShadow.text = _ladderToBold.text = UIText.T(now.Title);
             _ladderMeta.text = climb
                 ? UIText.T("rank.cert.meta_climb", ("title", UIText.T(was.Title)), ("night", run.Day.ToString()))
                 : UIText.T("rank.cert.foot_again", ("night", run.Day.ToString()));
@@ -428,7 +481,7 @@ namespace LastCall.UI
             if (next != null)
             {
                 _ladderNextHead.text = UIText.T("rank.window.next", ("stars", next.Stars.ToString("0.0")));
-                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: 1, dim: true);
+                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: 2, dim: true);
             }
             else
             {
@@ -461,6 +514,10 @@ namespace LastCall.UI
             if (now.Index > _ladderSeen) _ladderSeen = now.Index;
             RefreshLadderFlag(run);
             CloseId();
+            // THE CLOCK STOPS (2026-09-21, the author: "bu ekran açıkken menüde olduğu gibi zaman durmalı"): the
+            // engine's clock goes to zero as it does for the menu, while the night is running and nothing else holds
+            // it; the sheet's own motion runs on unscaled time. Let go in CloseLadder.
+            if (run.Phase == TycoonPhase.DayOpen && !Paused) { SetPaused(true); _ladderHeldClock = true; }
             _ladderPanel.gameObject.SetActive(true);
             Sfx.Play(climb ? "level_up" : "menu_open", climb ? 0.9f : 0.7f);
         }
@@ -543,7 +600,7 @@ namespace LastCall.UI
                 var tile = Tile(band, x, y, tiles[i], moving, dim);
                 if (isHead)
                 {
-                    var cap = NewText("Class", tile, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[2]);
+                    var cap = NewText("Class", tile, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[1]);
                     Place(cap.rectTransform, new Vector2(0f, 1f), new Vector2(200f, 12f), new Vector2(0f, 12f));
                     cap.rectTransform.pivot = new Vector2(0f, 1f);
                     cap.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -577,12 +634,12 @@ namespace LastCall.UI
             rt.pivot = new Vector2(0f, 1f);
             var bg = rt.gameObject.AddComponent<Image>();
             bg.color = UITheme.Night[1]; bg.raycastTarget = false;
-            Frame(rt, 1f, UITheme.Cream[2]);
+            Frame(rt, 3f, UITheme.Cream[3]);   // three, not one (2026-09-21): a thick frame on a smaller tile
             if (spec.Bottle != null && ItemArt.Plates(spec.Bottle, cellar: true) is ItemArt.BottlePlates plates)
             {
                 // the bottle whole: its cellar plates at their own size, filled to the brim in its own liquid
                 var vessel = NewRect("Vessel", rt);
-                Place(vessel, new Vector2(0.5f, 0.5f), new Vector2(32f, 64f), new Vector2(0f, 0f));
+                Place(vessel, new Vector2(0.5f, 0.5f), new Vector2(28f, 56f), new Vector2(0f, 0f));
                 var art = BottleArt.Under(vessel);
                 art.Show(plates);
                 if (!plates.Sealed) art.SetLevel(UITheme.LiquidColor(spec.Bottle.Info?.Style, spec.Bottle.Type), 1.0, 0f);
@@ -590,7 +647,7 @@ namespace LastCall.UI
             else
             {
                 var picRt = NewRect("Pic", rt);
-                Place(picRt, new Vector2(0.5f, 0.5f), new Vector2(TileSize - 18f, TileSize - 18f), Vector2.zero);
+                Place(picRt, new Vector2(0.5f, 0.5f), new Vector2(TileSize - 16f, TileSize - 16f), Vector2.zero);
                 var pic = picRt.gameObject.AddComponent<Image>();
                 pic.sprite = spec.Art; pic.preserveAspect = true; pic.raycastTarget = false;
                 pic.enabled = spec.Art != null;
@@ -651,6 +708,7 @@ namespace LastCall.UI
             _ladderFxT = -1f;
             ClearParticles();
             _ladderPanel.gameObject.SetActive(false);
+            if (_ladderHeldClock) { _ladderHeldClock = false; SetPaused(false); }
             Sfx.Play("menu_close", 0.6f);
         }
 

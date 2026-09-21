@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The fourth look (2026-09-22):** the certificate's fifth draft - a read hierarchy, a lattice of glasses on
+  the paper, PixelLab's seal at 128, smaller thick-framed tiles on a twelve-wide grid, the next rung in full, and
+  the clock held while it is open; the window's patch of sun larger, floor-shaped below the skirting and
+  wall-shaped above, off the drinkers; the tower T4 on the draught bench with three levers, the kegs in bays,
+  a plinth and the pint at its own size; D1's handle-and-mural variants on the picks page. GDD_MEVCUT §9.97.
+
 - **The draught bench in the family (2026-09-21, direction A):** the shared slab for a counter, the kegs standing
   on it, the instrument column with the steps and a tilt ladder in the dial's place, the bin, SERVE IT on the plate
   family at the plaque's right end, every font fitted to the tower's 196 - the room's tap at four times stands in

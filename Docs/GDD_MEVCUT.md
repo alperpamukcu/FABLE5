@@ -1540,6 +1540,36 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.97 · Sertifika v5, pencerenin ışık lekesi, kule T4 tezgâhta, kapak D1 varyantları (2026-09-22)
+
+Yazar (dördüncü bakış, 2026-09-21 gece): sertifikada hiyerarşi okunmuyor; arkada desen; başlık büyük ve kalın;
+mühür büyük ve PixelLab'den; kutular küçük ve kalın çerçeveli, yer daha iyi kullanılsın; açıkken zaman dursun.
+Kule T4. Kapak D1, ama metal tutamaçla ve Miami Vice resimleriyle. Işık lekesi büyüsün, zemine göre şekil
+değiştirsin, müşterilerin üstünde olmasın.
+
+- **Sertifika v5** (`TycoonHud.Ladder`): dört boy, iki yüz, üç mürekkep — göz çizgisi 16 px küçük yüz Night[3];
+  BAŞLIK 32 px display, +2 px ikinci kopyayla kalın, Night[3] gölge, 320×3 amber çizgi; meta 16 Night[2];
+  KONFOR/SERVİS sözcükleri display 16 Amber[2], rakamlar display 24 Night[0]; bant başlıkları display 16 Amber[2].
+  Desen: kodla çizilen martini kafesi (48'lik adım, yarım kaydırmalı) tek parça 492×300 dokuda 2x, Cream[2] %22 —
+  Tiled Image kodla üretilen sprite'ı TEK karo çiziyordu (ölçüldü r83: 900 yerine 56 piksel), o yüzden tek çizim.
+  Mühür 128 px `Items/cert_seal` (PixelLab, amber balmumu + martini; dört adaydan S2; yoksa çizilen disk),
+  kurdeleler 20×120. Kutular 64/72 adım, 12'li sıra, 3 px Cream[3] çerçeve, sıra 104; sıradaki basamak iki sıra
+  ("+N" gitti). Kâğıt 1024×576–602. **Saat durur**: gece sürerken açılınca `SetPaused(true)` (menüyle aynı,
+  `_ladderHeldClock`), kapanınca bırakır; gün sonunda dokunmaz.
+- **Işık lekesi** (`DiegeticStage`): duvar çerezi 212×160 (132×100'dü), ZEMİN çerezi 300×72 (`SunFloorCookie`,
+  1,4 eğim, yarıdan kısa) ikinci sprite ışık `_sunFloor`; leke `FloorTopPx` 136'nın altındayken zeminin, üstünde
+  duvarın şeklini alır (±10 çapraz geçiş). `ShaftNear` (200,122): leke camın dibinde zeminde başlar. Katmanlar
+  Background + Counter — Patrons yok (r85: t=0,01 zemin 1,50 / duvar 0; t=0,12 duvar 1,50).
+- **Kule T4** (`Tap.cs`): `Items/bench_tap_tower.png` 296×196 (pro_7 → üç kol silindi, 55 palete çivilendi, ikili
+  alfa; `scratchpad/ship_tower.py`). `FontRig` tek kule, üç ağız (−43,5/−0,5/+42,5; +8), üç vana (+67), kol
+  12×38 (`tap_handle`); `Lines = TapLevel`, sönük kollar koyu. Fıçılar sabit üç yuvada (`BayX` −350/−255/−160),
+  bağlı fıçının yuvası musluğu seçer (`_tapFaucet`); hortum fıçının tepesinden sol bacağın arkasına (grafit).
+  Kule 24'lük plaka (`TowerPlinth`, recess + amber dudak) üstünde; pint kendi boyunda 49×96, ağız payı 20;
+  tepsi ve pint aktif musluğun altında. Eski üç font (single/arch/tee) emekli.
+- **Kapak D1 varyantları**: `Docs/reports/third_look/` D1a/b/c (metal çubuk tutamaç + flamingo/gün batımı/sade),
+  tahtalar ton bazında SrcFrame'e çivili (her cila boyar), mural kendi boyasında. Seçim bekler.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda: r84 sertifika, r85 leke, r88 kule.
+
 ### 9.96 · Fıçı bira tezgâhı kokteyl tezgâhının ailesinde: plaka üstünde fıçılar, sütun, eğim merdiveni, SERVE IT, kule 196 (2026-09-21)
 
 Yazar (üçüncü bakış, seçim 1-A): "yeni bira musluğunun 4x kaliteli hali, sahne yine içki yapma sahnesine benzeyecek

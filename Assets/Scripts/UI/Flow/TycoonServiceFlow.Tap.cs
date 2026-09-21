@@ -22,7 +22,13 @@ namespace LastCall.UI
 
         // The tap (GDD 21 §10): a font you pull the handle on, over the pint it fills. There is
         // no shaker in this stage and no aiming — the whole skill is how far the glass is leaned.
-        private RectTransform _tapPanel, _tapSurface, _tapHandle, _tapGlass;
+        private RectTransform _tapPanel, _tapSurface, _tapGlass;
+        /// <summary>A lever at every faucet (2026-09-22): as many live as the ladder has opened, the rest dark; the
+        /// one on the coupled keg's faucet swings while the pint pulls.</summary>
+        private RectTransform[] _tapLevers;
+        private Image[] _tapLeverImgs;
+        private int _tapFaucet, _tapKegBay;
+        private readonly List<RectTransform> _tapLineSegs = new List<RectTransform>();
         private Image _tapPintImage;
         private GlassArt.Piece _tapPiece;
         private bool _pouringNow;
@@ -43,9 +49,9 @@ namespace LastCall.UI
         private bool _tapDoneReady = true;
         private Image _pintMirrorImg, _pintColFill, _headColFill;
         private const float TapColW = 24f, TapColH = 200f;
-        /// <summary>How tall the tower stands on this bench: the room's tap at four times is 196 (2026-09-21, the
-        /// author's direction A), and every older font is fitted to the same height (FontRig.FitTo).</summary>
-        private const float TapTowerH = 196f;
+        /// <summary>The plate the tower is bolted to (2026-09-22): a recess-finished slab 24 tall under the tower, so
+        /// the spouts stand a pint's height and a hand over the counter; the pint waits on it, under the faucet.</summary>
+        private const float TowerPlinth = 24f, TowerPlinthW = 340f;
         private const double HeadColumnFull = 0.40;   // the HEAD column's top: twice the good band's ceiling
         private IngredientCard _tapKegCard;
         private bool _glassHeld;
@@ -65,7 +71,9 @@ namespace LastCall.UI
         /// wanted ~2170 particles and the pool is capped below that, so asking for a full glass
         /// drew a 58% one — measured, not guessed. This size needs ~1500 and fills.
         /// </summary>
-        private const float PintW = 124f, PintH = 200f;
+        // The pint at its own size (49 by 96, 2026-09-22): under a tower drawn at 296 by 196 a glass half the tower's
+        // height is the true proportion, and the old 124 by 200 stood taller than the faucets.
+        private const float PintW = 49f, PintH = 96f;
         /// <summary>
         /// ONE FONT PER RUNG (2026-08-26, the author: "bira koyma sahnesinde kullanılan
         /// büyük boy fıçı hem yanlış hem de bozuk gözüküyor, 3 seviyeye uygun büyütülmüş
@@ -84,27 +92,27 @@ namespace LastCall.UI
         /// font stands at a whole 2× of its drawing — the house rule for pixel art, and the
         /// reason the sizes are not round numbers.
         /// </summary>
+        /// <summary>
+        /// THE TOWER (2026-09-22, the author's pick T4): the room's own tap redrawn at four times by PixelLab, 296 by
+        /// 196, with THREE faucets. The bench draws a lever at each valve and lights as many as the ladder has opened
+        /// (TycoonRun.TapLevel, BarRank's DraughtLines); the coupled keg's bay picks which faucet pours. Every measure
+        /// is from the drawn rect's centre, y up, taken off the art by Tools (scratchpad/ship_tower.py): the spouts'
+        /// lips eight over the centre, the valves on the bar's top at sixty-seven. The three fonts of the old ladder
+        /// (single, arch, tee) retired with it.
+        /// </summary>
         private readonly struct FontRig
         {
-            public readonly string Art;      // Resources/Items
-            public readonly Vector2 Size;    // the drawn rect: exactly 2× the art
-            public readonly Vector2 Spout;   // the faucet's lip, from the rect's centre
-            public readonly Vector2 Valve;   // where the lever bolts on, from the same centre
-            public readonly Vector2 Lever;   // how big that lever draws on THIS font
-            public readonly float Rest;      // where the pint waits, from the font's own x
+            public readonly string Art;         // Resources/Items
+            public readonly Vector2 Size;       // the drawn rect: the art at 1x
+            public readonly Vector2[] Spouts;   // the faucets' lips, left to right, from the rect's centre
+            public readonly Vector2[] Valves;   // where each lever bolts on, from the same centre
+            public readonly Vector2 Lever;      // how big a lever draws on this tower
+            public readonly int Lines;          // how many faucets are live
 
-            public FontRig(string art, Vector2 size, Vector2 spout, Vector2 valve, Vector2 lever,
-                           float rest)
-            { Art = art; Size = size; Spout = spout; Valve = valve; Lever = lever; Rest = rest; }
-
-            /// <summary>The same rig at another height, every measure scaled with the drawing (2026-09-21): every font
-            /// stands TapTowerH tall on the family bench, and the pint's rest is held a hand clear of the drawing's
-            /// edge whatever the scale did to it.</summary>
-            public FontRig FitTo(float height, float pintW)
+            public FontRig(string art, Vector2 size, Vector2[] spouts, Vector2[] valves, Vector2 lever, int lines)
             {
-                float k = height / Mathf.Max(1f, Size.y);
-                float rest = Mathf.Min(Rest * k, -(Size.x * k) * 0.5f - pintW * 0.5f - 24f);
-                return new FontRig(Art, Size * k, Spout * k, Valve * k, Lever * k, rest);
+                Art = art; Size = size; Spouts = spouts; Valves = valves; Lever = lever;
+                Lines = Mathf.Clamp(lines, 1, spouts.Length);
             }
         }
 
@@ -127,16 +135,10 @@ namespace LastCall.UI
         /// tower: half behind a brass leg, which is a glass nobody would think to pick up.
         /// It is measured off the font's own half-width instead, plus a hand's width of bar.
         /// </summary>
-        private static FontRig RigFor(int tapLevel) =>
-            tapLevel >= 3 ? new FontRig("bench_tap_tee", new Vector2(368f, 462f),
-                                        new Vector2(-2f, 35f), new Vector2(-2f, 159f),
-                                        new Vector2(36f, 80f), -254f)
-          : tapLevel == 2 ? new FontRig("bench_tap_arch", new Vector2(376f, 440f),
-                                        new Vector2(-6f, 40f), new Vector2(-6f, 116f),
-                                        new Vector2(36f, 40f), -258f)
-          :                 new FontRig("bench_tap_single", new Vector2(140f, 324f),
-                                        new Vector2(-58f, 70f), new Vector2(-50f, 156f),
-                                        new Vector2(36f, 96f), -154f);
+        private static FontRig RigFor(int tapLevel) => new FontRig("bench_tap_tower", new Vector2(296f, 196f),
+            new[] { new Vector2(-43.5f, 8f), new Vector2(-0.5f, 8f), new Vector2(42.5f, 8f) },
+            new[] { new Vector2(-43.5f, 67f), new Vector2(-0.5f, 67f), new Vector2(42.5f, 67f) },
+            new Vector2(12f, 38f), tapLevel);
 
         /// <summary>The font standing on the bench this visit. Set by <see cref="StandTheFont"/>,
         /// which is the only writer; everything that needs a faucet reads it.</summary>
@@ -180,13 +182,15 @@ namespace LastCall.UI
         /// <summary>The plumbed bay: the keg standing here is the one on tap, and the beer
         /// line runs from ITS coupler. A swap moves the keg to the line, not the line to
         /// the keg — one line, as in a one-font bar.</summary>
-        private const float KegX = -340f, KegBaseY = CounterY;   // on the slab, at the bench's left (2026-09-21)   // -315 until the counter dropped
+        private const float KegBaseY = CounterY;   // on the slab, at the bench's left (2026-09-21)   // -315 until the counter dropped
         /// <summary>Where the spare kegs park, one bay each, nearest first. The recess holds
         /// four kegs in all (one on the line, three parked); the live cellar carries three
         /// beers, so the bays have never had to turn one away. A fourth beer would still be
         /// reachable from the wall's own keg row, which opens the tap on whatever it is
         /// clicked with — the bays are a shortcut, not the only door.</summary>
-        private static readonly float[] SpareKegX = { -220f, -100f, 20f };
+        /// <summary>The three bays the kegs stand in, left to right, clear of the column and the tower's left leg
+        /// (2026-09-22): a keg keeps its bay whether it is coupled or parked, and its bay picks its faucet.</summary>
+        private static readonly float[] BayX = { -350f, -255f, -160f };
         /// <summary>Where the blank label sits on keg.png, as fractions of the sprite: the pale
         /// band runs from 0.516 to 0.676 of its height, 95% of its width. Measured, so the brand
         /// lands on the label instead of near it.</summary>
@@ -197,7 +201,7 @@ namespace LastCall.UI
         private RectTransform _tapKegRow;
         /// <summary>How far under the faucet the rim is carried — close enough to catch, far
         /// enough that the stream is visibly falling into the glass.</summary>
-        private const float MouthBelowSpout = 34f;
+        private const float MouthBelowSpout = 20f;   // 34 until 2026-09-22: a shorter pint sits closer under the lip
         private Vector2 _tapTowerPos;
         private RectTransform _tapTower, _tapTray;
         private Image _tapTowerImg;
@@ -214,26 +218,21 @@ namespace LastCall.UI
         /// </summary>
         private void StandTheFont(int tapLevel)
         {
-            _rig = RigFor(tapLevel).FitTo(TapTowerH, PintW);
+            _rig = RigFor(tapLevel);
+            _tapFaucet = Mathf.Clamp(_tapKegBay, 0, _rig.Lines - 1);
             if (_tapTower == null) return;
-            _tapTowerPos = new Vector2(TowerX, CounterY + _rig.Size.y * 0.5f);
+            _tapTowerPos = new Vector2(TowerX, CounterY + TowerPlinth + _rig.Size.y * 0.5f);
             _tapTower.sizeDelta = _rig.Size;
             _tapTower.anchoredPosition = _tapTowerPos;
             if (_tapTowerImg != null)
             {
-                // The room's own single font is the fallback: a missing drawing must leave a
-                // tap you can still pour out of, not a magenta hole (the house rule for art).
                 _tapTowerImg.sprite = ItemArt.Load(_rig.Art) ?? ItemArt.Load("tap");
                 _tapTowerImg.color = _tapTowerImg.sprite == null ? UITheme.Amber[2] : Color.white;
             }
             if (_tapTray != null)
-                _tapTray.anchoredPosition = new Vector2(TowerX + _rig.Spout.x, CounterY + 17f);
-            if (_tapHandle != null)
-            {
-                _tapHandle.sizeDelta = _rig.Lever;
-                _tapHandle.anchoredPosition = _tapTowerPos + _rig.Valve;
-            }
-            _tapGlassRest = new Vector2(TowerX + _rig.Rest, CounterY + PintH * GlassPivotY);
+                _tapTray.anchoredPosition = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f);
+            LayLevers();
+            _tapGlassRest = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + PintH * GlassPivotY);
             // +6 with the tin bench's: a shadow falls to one side of the thing casting it, a reflection does not
             if (_pintMirror != null) _pintMirror.anchoredPosition = new Vector2(_tapGlassRest.x + 6f, CounterY + 2f);
             // The glass only moves home if it is not in the player's hand: re-standing the
@@ -311,9 +310,9 @@ namespace LastCall.UI
             // the way the tin and the bottle do. The hatch cut into the timber went with the timber - the kegs stand in
             // a row at the bench's left, in the open, the coupled one bright and the spares parked in the shade.
             AddNeonWash(_tapSurface, over: 0);
-            _tapFontShadow = AddContactShadow(_tapSurface, 220f, new Vector2(TowerX, CounterY + 4f));
+            _tapFontShadow = AddContactShadow(_tapSurface, 320f, new Vector2(TowerX, CounterY + 4f));
             _tapFontShadow.SetSiblingIndex(1);
-            _tapPintShadow = AddContactShadow(_tapSurface, PintW * 0.8f, new Vector2(TowerX + _rig.Rest, CounterY + 4f));
+            _tapPintShadow = AddContactShadow(_tapSurface, PintW * 0.8f, new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 4f));
             _tapPintShadow.SetSiblingIndex(2);
             _pintMirror = NewRect("PintMirror", _tapSurface);
             _pintMirror.anchorMin = _pintMirror.anchorMax = new Vector2(0.5f, 0.5f);
@@ -333,12 +332,22 @@ namespace LastCall.UI
             // plumbed-in rig instead of two props that happen to share a screen. It dives
             // behind the counter on its way. The line is FIXED: it serves the plumbed bay,
             // and a swap stands a different keg under it.
-            BuildBeerLine();
 
             // The drip tray, on the counter directly under the faucet. Re-placed with the
             // font (StandTheFont): a taller tower puts its lip somewhere else along the bar.
+            // THE PLINTH (2026-09-22): the plate the tower is bolted to, in the counter's own recess finish with a brass
+            // lip, standing on the slab under the tower; the tray and the pint stand on it too.
+            var plinth = NewRect("TowerPlinth", _tapSurface);
+            Place(plinth, new Vector2(0.5f, 0.5f), new Vector2(TowerPlinthW, TowerPlinth), new Vector2(TowerX, CounterY + TowerPlinth * 0.5f));
+            var plImg = plinth.gameObject.AddComponent<Image>();
+            plImg.sprite = CounterFinish.Recess(); plImg.type = Image.Type.Sliced; plImg.color = Color.white; plImg.raycastTarget = false;
+            var plLip = NewRect("Lip", plinth);
+            Stretch(plLip, new Vector2(0f, 1f), Vector2.one, new Vector2(3f, -5f), new Vector2(-3f, -3f));
+            var plLipImg = plLip.gameObject.AddComponent<Image>();
+            plLipImg.color = UITheme.Amber[2]; plLipImg.raycastTarget = false;
+
             var tray = _tapTray = NewRect("DripTray", _tapSurface);
-            var trayPos = new Vector2(TowerX + _rig.Spout.x, CounterY + 17f);
+            var trayPos = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f);
             Place(tray, new Vector2(0.5f, 0.5f), new Vector2(132, 33), trayPos);
             var trayImg = tray.gameObject.AddComponent<Image>();
             trayImg.sprite = ItemArt.Load("drip_tray");
@@ -349,7 +358,7 @@ namespace LastCall.UI
             // moving the tower moves the whole rig and the spout stays over the glass. It is
             // seated ON the counter — its base sits on the surface, it does not hover over it.
             var tower = _tapTower = NewRect("Tower", _tapSurface);
-            var towerPos = _tapTowerPos = new Vector2(TowerX, CounterY + _rig.Size.y * 0.5f);
+            var towerPos = _tapTowerPos = new Vector2(TowerX, CounterY + TowerPlinth + _rig.Size.y * 0.5f);
             Place(tower, new Vector2(0.5f, 0.5f), _rig.Size, towerPos);
             var towerImg = _tapTowerImg = tower.gameObject.AddComponent<Image>();
             towerImg.preserveAspect = true; towerImg.raycastTarget = false;
@@ -357,7 +366,7 @@ namespace LastCall.UI
             // The glass is the thing you hold, so it stands on the counter until you pick it up.
             // Its base rests on the surface: the rect is pivoted low, so the pivot sits a
             // fraction of the glass above the counter.
-            _tapGlassRest = new Vector2(TowerX + _rig.Rest, CounterY + PintH * GlassPivotY);
+            _tapGlassRest = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + PintH * GlassPivotY);
             _tapGlass = NewRect("Pint", _tapSurface);
             Place(_tapGlass, new Vector2(0.5f, 0.5f), new Vector2(PintW, PintH), _tapGlassRest);
             // Pivoted low, near where a hand holds it: a glass leans off its base, it does not
@@ -414,13 +423,21 @@ namespace LastCall.UI
             // parked beside the tap rather than the handle bolted to it. Its size and its
             // seat are the RIG's (StandTheFont): every font's own drawn handle is rubbed out
             // at ship time, because one rig must not wear two handles and only this one moves.
-            _tapHandle = NewRect("Handle", _tapSurface);
-            _tapHandle.pivot = new Vector2(0.5f, 0.06f);
-            _tapHandle.anchorMin = _tapHandle.anchorMax = new Vector2(0.5f, 0.5f);
-            var handleImg = _tapHandle.gameObject.AddComponent<Image>();
-            handleImg.sprite = ItemArt.Load("tap_handle");
-            handleImg.preserveAspect = true; handleImg.raycastTarget = false;
-            if (handleImg.sprite == null) handleImg.color = UITheme.Amber[1];
+            // A LEVER AT EVERY FAUCET (2026-09-22): the same drawn lever three times, hung from its foot at each
+            // valve; LayLevers lights the open ones and darkens the rest, UpdateTap swings the one that pours.
+            _tapLevers = new RectTransform[3];
+            _tapLeverImgs = new Image[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var lever = NewRect("Lever" + i, _tapSurface);
+                lever.pivot = new Vector2(0.5f, 0.06f);
+                lever.anchorMin = lever.anchorMax = new Vector2(0.5f, 0.5f);
+                var li = lever.gameObject.AddComponent<Image>();
+                li.sprite = ItemArt.Load("tap_handle");
+                li.preserveAspect = true; li.raycastTarget = false;
+                if (li.sprite == null) li.color = UITheme.Amber[1];
+                _tapLevers[i] = lever; _tapLeverImgs[i] = li;
+            }
             StandTheFont(Run != null ? Run.TapLevel : 1);
 
             // A plate under the verdict and the readout. They used to sit straight on top of the
@@ -623,78 +640,50 @@ namespace LastCall.UI
             if (_tapKegRow == null) return;
             foreach (Transform ch in _tapKegRow) Destroy(ch.gameObject);
             var kegSprite = ItemArt.Load("keg");
-
-            // The keg on tap, in the plumbed bay, cropped by the hatch lintel.
-            var keg = NewRect("Keg", _tapKegRow);
-            keg.anchorMin = keg.anchorMax = new Vector2(0.5f, 0.5f);
-            keg.pivot = new Vector2(0.5f, 0.5f);
-            keg.sizeDelta = new Vector2(KegW, KegH);
-            keg.anchoredPosition = new Vector2(KegX, KegBaseY + KegH * 0.5f);   // its foot on the slab (2026-09-21)
-            _tapKeg = keg.gameObject.AddComponent<Image>();
-            _tapKeg.preserveAspect = true; _tapKeg.raycastTarget = false;
-            // A keg is a keg — steel, whatever is in it. What changes with the beer is the label,
-            // so the brand goes on the blank band and the style tints its ink. The bottle sprite
-            // used to stand in for the keg here, which is why the stage showed a menu icon blown
-            // up to prop size (2026-07-30).
-            _tapKeg.sprite = kegSprite;
-            _tapKeg.color = kegSprite != null ? Color.white
-                : UITheme.StyleColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
-            // The brand, set on the keg's blank label. The art generator cannot spell, so every
-            // word in this game is drawn in engine — the same rule the neon sign follows.
-            _kegLabel = NewText("Brand", keg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[1]);
-            var kl = _kegLabel.rectTransform;
-            kl.anchorMin = new Vector2(0.08f, KegLabelCentreY - KegLabelH * 0.5f);
-            kl.anchorMax = new Vector2(0.92f, KegLabelCentreY + KegLabelH * 0.5f);
-            kl.offsetMin = Vector2.zero; kl.offsetMax = Vector2.zero;
-            _kegLabel.text = KegTitle();
-            var ink = UITheme.StyleColor(_tapKegCard?.Info?.Style, IngredientType.Beer);
-            // Printed ink on a cream label: the style's hue, taken well down so it reads as
-            // print rather than as a glow.
-            _kegLabel.color = new Color(ink.r * 0.35f, ink.g * 0.35f, ink.b * 0.35f, 1f);
-
-            // The spares: every other stocked keg, one bay each. Knocked back so they never
-            // compete with the keg on tap — but only into the shade, not out of reach.
+            _tapKegBay = 0;
             int bay = 0;
+            // EVERY KEG KEEPS ITS BAY (2026-09-22): the stocked kegs stand left to right in shelf order, the coupled
+            // one bright and the spares parked in the shade, clickable; the coupled keg's bay picks the faucet.
             foreach (var b in run.Shelf.Bottles)
             {
                 var card = b.Ingredient;
                 if (card.Type != IngredientType.Beer || b.IsEmpty) continue;
-                if (_tapKegCard != null && card.Id == _tapKegCard.Id) continue;
-                if (bay >= SpareKegX.Length) break;
-
-                var spare = NewRect($"SpareKeg_{card.Id}", _tapKegRow);
-                spare.anchorMin = spare.anchorMax = new Vector2(0.5f, 0.5f);
-                spare.pivot = new Vector2(0.5f, 0.5f);
-                spare.sizeDelta = new Vector2(KegW * 0.88f, KegH * 0.88f);
-                spare.anchoredPosition = new Vector2(SpareKegX[bay], KegBaseY + KegH * 0.88f * 0.5f);
-                var spareImg = spare.gameObject.AddComponent<Image>();
-                spareImg.sprite = kegSprite;
-                spareImg.preserveAspect = true;
-                spareImg.raycastTarget = true;   // the bay answers the pointer: click = couple it
-                spareImg.color = kegSprite != null
-                    ? new Color(0.42f, 0.38f, 0.36f, 1f)   // parked in the shade
-                    : UITheme.StyleColor(card.Info?.Style, IngredientType.Beer);
-
-                var brand = NewText("Brand", spare, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[1]);
+                if (bay >= BayX.Length) break;
+                bool coupled = _tapKegCard != null && card.Id == _tapKegCard.Id;
+                float scale = coupled ? 1f : 0.88f;
+                var keg = NewRect(coupled ? "Keg" : $"SpareKeg_{card.Id}", _tapKegRow);
+                keg.anchorMin = keg.anchorMax = new Vector2(0.5f, 0.5f);
+                keg.pivot = new Vector2(0.5f, 0.5f);
+                keg.sizeDelta = new Vector2(KegW * scale, KegH * scale);
+                keg.anchoredPosition = new Vector2(BayX[bay], KegBaseY + KegH * scale * 0.5f);   // its foot on the slab
+                var img = keg.gameObject.AddComponent<Image>();
+                img.sprite = kegSprite; img.preserveAspect = true;
+                img.raycastTarget = !coupled;   // a spare answers the pointer: click = couple it
+                img.color = kegSprite == null ? UITheme.StyleColor(card.Info?.Style, IngredientType.Beer)
+                          : coupled ? Color.white : new Color(0.42f, 0.38f, 0.36f, 1f);
+                var brand = NewText("Brand", keg, _body, 8, TextAnchor.MiddleCenter, UITheme.Night[1]);
                 var bl = brand.rectTransform;
                 bl.anchorMin = new Vector2(0.08f, KegLabelCentreY - KegLabelH * 0.5f);
                 bl.anchorMax = new Vector2(0.92f, KegLabelCentreY + KegLabelH * 0.5f);
                 bl.offsetMin = Vector2.zero; bl.offsetMax = Vector2.zero;
                 brand.text = UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name));
-                // DARKER than the on-tap keg's ink, not lighter: the whole spare is
-                // multiplied down into the shade, so its label is a mid grey — ink that
-                // was merely dimmed with it disappeared into the label it is printed on.
-                var sink = UITheme.StyleColor(card.Info?.Style, IngredientType.Beer);
-                brand.color = new Color(sink.r * 0.22f, sink.g * 0.22f, sink.b * 0.22f, 1f);
-
-                Pressable(spare, spare, spareImg, lift: 4f, depth: 4f);
-                var c = card;
-                var trig = spare.gameObject.AddComponent<EventTrigger>();
-                var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
-                down.callback.AddListener(_ => SwapKeg(c));
-                trig.triggers.Add(down);
+                var ink = UITheme.StyleColor(card.Info?.Style, IngredientType.Beer);
+                float dim = coupled ? 0.35f : 0.22f;
+                brand.color = new Color(ink.r * dim, ink.g * dim, ink.b * dim, 1f);
+                if (coupled) { _tapKeg = img; _kegLabel = brand; _tapKegBay = bay; }
+                else
+                {
+                    Pressable(keg, keg, img, lift: 4f, depth: 4f);
+                    var c = card;
+                    var trig = keg.gameObject.AddComponent<EventTrigger>();
+                    var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+                    down.callback.AddListener(_ => SwapKeg(c));
+                    trig.triggers.Add(down);
+                }
                 bay++;
             }
+            StandTheFont(run.TapLevel);   // the faucet, the tray, the levers and the pint's rest follow the bay
+            BuildBeerLine();
         }
 
         /// <summary>Couples a different keg to the line. The pull in progress ends, the clicked
@@ -889,7 +878,10 @@ namespace LastCall.UI
             // too — this is what makes the refusal visible.
             bool pouring = _glassHeld && underSpout && run.PullingId != null
                            && !run.ServingGlass.IsFull;
-            _tapHandle.localRotation = Quaternion.Euler(0, 0, pouring ? HandleTilt : 0f);
+            if (_tapLevers != null)
+                for (int i = 0; i < _tapLevers.Length; i++)
+                    if (_tapLevers[i] != null)
+                        _tapLevers[i].localRotation = Quaternion.Euler(0, 0, pouring && i == _tapFaucet ? HandleTilt : 0f);
             // The handle only speaks when it MOVES — comparing against last frame's
             // state, because this runs every frame the station is open.
             if (pouring != _pouringNow)
@@ -1020,12 +1012,21 @@ namespace LastCall.UI
             // Up out of the coupler, along under the bar top, and into the foot of the font.
             // From the coupled keg's top, up a hand, across the counter behind the pint, down into the tower's
             // left foot (2026-09-21: the kegs stand on the slab, so the line runs over it rather than under it).
-            var coupler = new Vector2(KegX, KegBaseY + KegH - 6f);
-            var rise = new Vector2(KegX, KegBaseY + KegH + 14f);
-            var run = new Vector2(TowerX - 100f, KegBaseY + KegH + 14f);
+            // REBUILT WHENEVER A KEG IS COUPLED (2026-09-22): from the coupled keg's bay, up a hand, across the counter
+            // behind the pint, down into the plinth under the faucet that pours.
+            foreach (var seg in _tapLineSegs) if (seg != null) Destroy(seg.gameObject);
+            _tapLineSegs.Clear();
+            if (_tapKegRow == null) return;
+            float kegX = BayX[Mathf.Clamp(_tapKegBay, 0, BayX.Length - 1)];
+            // ...into the tower's LEFT LEG rather than the faucet's own x (r87): the leg hides the drop, and a hose
+            // dropping through the arch's open middle read as a cable over the pint.
+            float tapX = TowerX - 105.5f;   // the left leg's centre in the drawing (art x 17..68 of 296)
+            var coupler = new Vector2(kegX, KegBaseY + KegH - 6f);
+            var rise = new Vector2(kegX, KegBaseY + KegH + 14f);
+            var run = new Vector2(tapX, KegBaseY + KegH + 14f);
             LineSegment(coupler, rise);
             LineSegment(rise, run);
-            LineSegment(run, new Vector2(TowerX - 100f, CounterY + 4f));
+            LineSegment(run, new Vector2(tapX, CounterY + TowerPlinth * 0.5f));
         }
 
         private void LineSegment(Vector2 a, Vector2 b)
@@ -1038,8 +1039,11 @@ namespace LastCall.UI
             seg.anchoredPosition = (a + b) * 0.5f;
             seg.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
             var img = seg.gameObject.AddComponent<Image>();
-            img.color = new Color(0.10f, 0.09f, 0.11f, 1f);   // black rubber hose
+            // GRAPHITE, NOT BLACK (2026-09-22): the hose lies on the slab now, and black on Night was invisible (r86).
+            img.color = UITheme.Graphite[3];
             img.raycastTarget = false;
+            seg.SetSiblingIndex(_tapKegRow.GetSiblingIndex() + 1);   // over the kegs, under the plinth and the tower
+            _tapLineSegs.Add(seg);
         }
 
         /// <summary>The pint's drinkable interior, measured off the glass art.</summary>
@@ -1071,7 +1075,24 @@ namespace LastCall.UI
         }
 
         /// <summary>The faucet's lip, where the beer leaves the font.</summary>
-        private Vector2 SpoutPoint() => _tapTowerPos + _rig.Spout;
+        private Vector2 SpoutPoint() => _tapTowerPos + _rig.Spouts[_tapFaucet];
+
+        /// <summary>The levers on their valves: sized to the rig, the open ones bright, the closed ones dark - the
+        /// second and third handles wait for the ladder (BarRank: SecondLine, ThirdLine).</summary>
+        private void LayLevers()
+        {
+            if (_tapLevers == null) return;
+            for (int i = 0; i < _tapLevers.Length; i++)
+            {
+                var lever = _tapLevers[i];
+                if (lever == null) continue;
+                bool open = i < _rig.Lines && i < _rig.Valves.Length;
+                lever.sizeDelta = _rig.Lever;
+                lever.anchoredPosition = _tapTowerPos + (i < _rig.Valves.Length ? _rig.Valves[i] : Vector2.zero);
+                if (_tapLeverImgs[i] != null && _tapLeverImgs[i].sprite != null)
+                    _tapLeverImgs[i].color = open ? Color.white : new Color(0.32f, 0.30f, 0.34f, 1f);
+            }
+        }
 
         /// <summary>
         /// The point the glass turns about while it is being held: its mouth, parked under the

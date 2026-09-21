@@ -1781,7 +1781,9 @@ namespace LastCall.UI
         /// sun is high and where it has climbed to by the set (room art px); how much it
         /// stretches sideways as the light comes in flatter.</summary>
         private const float ShaftDay = 1.5f, ShaftStretch = 1.5f;
-        private static readonly Vector2 ShaftNear = new Vector2(215f, 150f);
+        // (200, 122), not (215, 150) (2026-09-22): the patch STARTS ON THE FLOOR by the glass - the boards run to
+        // about 135 in the room's art, and 150 was already the wall's foot, so the floor's shape never showed.
+        private static readonly Vector2 ShaftNear = new Vector2(200f, 122f);
         private static readonly Vector2 ShaftFar = new Vector2(400f, 235f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
         private const float PatronFillDay = 0.22f, PatronFillNight = 0.32f;
@@ -1967,6 +1969,12 @@ namespace LastCall.UI
         private Light2D _windowLight;
         private Light2D _skyGlow, _counterGlow;
         private Light2D _sunShaft;
+        /// <summary>The same patch while it lies on the FLOOR (2026-09-21): a second sprite light with the floor's
+        /// cookie, crossed over with the wall's as the patch climbs past the skirting (<see cref="FloorTopPx"/>).</summary>
+        private Light2D _sunFloor;
+        /// <summary>Where the floor meets the wall, in room art px: the patch below it is on the floor and lies
+        /// flat, above it on the wall and stands up. Measured off the room's slots (tables at 126, the signs at 178).</summary>
+        private const float FloorTopPx = 136f;
         private Light2D _patronFill;
         /// <summary>The unlit material the outside wears: the view, the palms, the pane.</summary>
         private Material _viewMaterial;
@@ -2414,7 +2422,16 @@ namespace LastCall.UI
                 _sunShaft.lightCookieSprite = SunShaftCookie();
                 _sunShaft.color = LampTint;
                 _sunShaft.intensity = 0f;
-                LightLayers(_sunShaft, LayerBackground, LayerPatrons, LayerCounter);
+                // NOT THE DRINKERS (2026-09-21, the author: "müşterilerin üstünde olmamalı"): the patch lands on the
+                // room and the counter; the people standing in it take the window's cone and the fill, not the panes.
+                LightLayers(_sunShaft, LayerBackground, LayerCounter);
+                _sunFloor = new GameObject("SunFloor").AddComponent<Light2D>();
+                _sunFloor.transform.SetParent(_world, false);
+                _sunFloor.lightType = Light2D.LightType.Sprite;
+                _sunFloor.lightCookieSprite = SunFloorCookie();
+                _sunFloor.color = LampTint;
+                _sunFloor.intensity = 0f;
+                LightLayers(_sunFloor, LayerBackground, LayerCounter);
             }
             else
             {
@@ -3446,17 +3463,29 @@ namespace LastCall.UI
             if (_sunShaft != null)
             {
                 _sunShaft.color = d.Shaft;
-                _sunShaft.intensity = ShaftDay * d.SunStrength * Mathf.Lerp(1f, ClosingWash, closing);
-                // Where the patch lands: low and near the glass while the sun is high, far
-                // and high on the wall as it sinks — the sun's own line, in the room's art
-                // px, under the world root so the drawer's lift carries it with the room.
+                float shaftBase = ShaftDay * d.SunStrength * Mathf.Lerp(1f, ClosingWash, closing);
+                // Where the patch lands: low and near the glass while the sun is high, far and high on the wall as
+                // it sinks - the sun's own line, in the room's art px, under the world root so the drawer's lift
+                // carries it with the room. THE SURFACE PICKS THE SHAPE (2026-09-21): below the skirting the patch
+                // is the floor's - long, flat, leaning hard the way light through a side window lies on boards -
+                // and above it the wall's, upright; the two cross over across a hand's width of the skirting.
                 float sink = _skyClock != null ? SkyClock.SmoothStep(0f, _skyClock.Spec.sun.setBy, d.Tau) : 0f;
                 var at = Vector2.Lerp(ShaftNear, ShaftFar, sink);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
+                float onWall = SkyClock.SmoothStep(FloorTopPx - 10f, FloorTopPx + 10f, at.y);
+                _sunShaft.intensity = shaftBase * onWall;
                 _sunShaft.transform.localPosition = StageArtPointToWorld(at);
                 _sunShaft.transform.localScale = new Vector3(k * Mathf.Lerp(1f, ShaftStretch, sink), k, 1f);
                 bool shaftOn = d.SunStrength > 0.01f;
                 if (_sunShaft.enabled != shaftOn) _sunShaft.enabled = shaftOn;
+                if (_sunFloor != null)
+                {
+                    _sunFloor.color = d.Shaft;
+                    _sunFloor.intensity = shaftBase * (1f - onWall);
+                    _sunFloor.transform.localPosition = StageArtPointToWorld(at);
+                    _sunFloor.transform.localScale = new Vector3(k, k, 1f);
+                    if (_sunFloor.enabled != shaftOn) _sunFloor.enabled = shaftOn;
+                }
             }
             _washBase = d.AmbientIntensity;
             _houseBase = Mathf.Lerp(HouseDay, HouseNight, d.Dusk);
@@ -3495,9 +3524,10 @@ namespace LastCall.UI
         /// </summary>
         private static Sprite SunShaftCookie()
         {
-            const int W = 132, H = 100;
+            // 212 by 160, up from 132 by 100 (2026-09-21, the author: "boyutunu büyütmeliyiz")
+            const int W = 212, H = 160;
             const float Shear = 0.5f;               // x per row: the lean of the panes on the wall
-            const int Bar = 20, Gap = 8, Bars = 4;
+            const int Bar = 32, Gap = 13, Bars = 4;
             int run = Bars * Bar + (Bars - 1) * Gap;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {
@@ -3516,6 +3546,43 @@ namespace LastCall.UI
                     if (inBar)
                         a = edge < 3 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
                           : edge < 7 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
+                          : (byte)255;
+                    px[y * W + x] = new Color32(255, 255, 255, a);
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+        }
+
+        /// <summary>
+        /// The same four panes lying on the FLOOR (2026-09-21): foreshortened to less than half the height and
+        /// leaning almost three times as hard, because light through a side window lies along the boards in a long
+        /// low sweep. Dithered off at the head and the sill the same way, so the two patches are one family.
+        /// </summary>
+        private static Sprite SunFloorCookie()
+        {
+            const int W = 300, H = 72;
+            const float Shear = 1.4f;
+            const int Bar = 34, Gap = 12, Bars = 4;
+            int run = Bars * Bar + (Bars - 1) * Gap;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "SunFloorCookie",
+            };
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                float lean = (y - H * 0.5f) * Shear;
+                int edge = Mathf.Min(y, H - 1 - y);
+                for (int x = 0; x < W; x++)
+                {
+                    float u = x - lean - (W - run) * 0.5f;
+                    bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
+                    byte a = 0;
+                    if (inBar)
+                        a = edge < 2 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
+                          : edge < 5 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
                           : (byte)255;
                     px[y * W + x] = new Color32(255, 255, 255, a);
                 }
