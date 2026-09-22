@@ -106,7 +106,7 @@ namespace LastCall.UI
         // What the mat used to do: say that the tin and the bottle are ON something. Two
         // contact shadows on the counter line, each following its prop's x and thinning as
         // it is lifted away — a shaken tin is in the air, and its shadow should know.
-        private RectTransform _tinShadow, _bottleShadow, _lidShadow, _spoonShadow, _towelShadow;
+        private RectTransform _tinShadow, _bottleShadow, _lidShadow, _spoonShadow;
 
         /// <summary>A prop's glow with the brightness taken out (2026-09-17, the author: "bu sahnedeki odak parlaklığını
         /// kaldır"): the hover still lifts and sways the prop, it no longer lights it or halos it.</summary>
@@ -115,50 +115,13 @@ namespace LastCall.UI
             if (g == null) return;
             g.Gain = 1f; g.Halo = 0f; g.HaloHidden = true;
         }
-        // ...and since 2026-09-16 the light on the work and the three cast shadows (StepBenchLight).
-        private RectTransform _benchLight, _tinMirror, _bottleMirror, _capCast;
+        // ...and since 2026-09-16 the light on the work (StepBenchLight; the cast copies went on 2026-09-22).
+        private RectTransform _benchLight;
 
-        /// <summary>
-        /// THE PROP'S OWN SHADOW, IN ITS OWN SHAPE (2026-09-17, the author: "şişenin yansıması çok kötü yansıma
-        /// istemiyorum shaker kapağı gövdesi ve şişenin gölgesini istiyorum kendi şekillerinde silik bir şekilde").
-        /// The prop's own drawing again, in black at a fifth, flipped and squashed away from its foot: a bottle
-        /// throws a bottle, a lid throws a lid, and nothing pretends the counter is a mirror. It WAS a white
-        /// reflection, and on a lit stone a reflection reads as a smear rather than as glass.
-        /// Hung from its foot edge, flipped by its scale; its picture is set each frame.
-        /// </summary>
-        private RectTransform AddCastShadow(string name, float w, float h)
-        {
-            var rt = NewRect(name, _pourSurface);
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-            // the pivot at the FOOT: flipped by its scale, a rect grows the other way from its pivot, so a foot pivot
-            // is what hangs the mirror under the line rather than over it (seen in play: the first cut hid behind the bottle)
-            rt.pivot = new Vector2(0.5f, 0f);
-            rt.sizeDelta = new Vector2(w, h);
-            rt.localScale = new Vector3(1f, -0.86f, 1f);   // the light is high, so the shadow lies short...
-            rt.localRotation = Quaternion.Euler(0f, 0f, -58f);   // ...and laid well over to the right, which is both
-                                                                 // what tells it from a reflection at a glance and
-                                                                 // what keeps it on the counter at all: the tin and
-                                                                 // the lid stand within forty units of the bottom of
-                                                                 // the screen, so anything steeper falls out of frame
-                                                                 // (measured: at 16 degrees only the bottle's showed)
-            var img = rt.gameObject.AddComponent<Image>();
-            // "Silik", but measured rather than guessed: the counter's slab reads (21,18,27), so a fifth of black
-            // moved it by two levels - invisible - and even a third only reached five. At 0.45 the tin's shadow
-            // is nine levels under the stone, which is the least that reads at all, and it is still faint on the
-            // lit band where the bottle stands.
-            img.color = new Color(0f, 0f, 0f, 0.45f);
-            img.raycastTarget = false;
-            img.preserveAspect = false;
-            rt.SetSiblingIndex(1);
-            return rt;
-        }
-
-        /// <summary>Every frame: the light follows the work, and each prop's own shadow lies under its foot.</summary>
+        /// <summary>Every frame: the light follows the work.</summary>
         private void StepBenchLight()
         {
             if (_shakerVessel == null) return;
-            // The light is gone (2026-09-16) but the shadows are not: this used to return on a null light, which
-            // left both mirrors unplaced and spriteless — a grey slab in the middle of the bench.
             if (_benchLight != null)
             {
                 Vector2 want = _capped ? _shakerVessel.anchoredPosition + new Vector2(0f, 40f)
@@ -166,50 +129,6 @@ namespace LastCall.UI
                     : (_shakerVessel.anchoredPosition + _bottleRest) * 0.5f + new Vector2(0f, 20f);
                 _benchLight.anchoredPosition = Vector2.Lerp(_benchLight.anchoredPosition, want,
                     1f - Mathf.Exp(-6f * Time.unscaledDeltaTime));
-            }
-            if (_tinMirror != null)
-            {
-                var img = _tinMirror.GetComponent<Image>();
-                var art = _shakerBodyImg != null ? _shakerBodyImg.sprite : null;
-                bool show = art != null && !_shaking && _blowT <= 0f;
-                if (_tinMirror.gameObject.activeSelf != show) _tinMirror.gameObject.SetActive(show);
-                if (show)
-                {
-                    if (img.sprite != art) img.sprite = art;
-                    _tinMirror.anchoredPosition = new Vector2(_shakerVessel.anchoredPosition.x + 6f, TinFootY + 2f);
-                }
-            }
-            // THE LID, wherever it has been put down - but only while it is OFF the tin. A seated cap is drawn at
-            // the body's own size with the body's own art, so its shadow would land exactly on the tin's own and
-            // double its ink; and a cap in the hand, or one blown off, is not resting on anything.
-            if (_capCast != null && _shakerTop != null)
-            {
-                var img = _capCast.GetComponent<Image>();
-                var art = _shakerCapImg != null ? _shakerCapImg.sprite : null;
-                bool show = art != null && _shakerTop.gameObject.activeSelf && !_capped && _capT <= 0.01f
-                            && _blowT <= 0f && !_capGrabbed;
-                if (_capCast.gameObject.activeSelf != show) _capCast.gameObject.SetActive(show);
-                if (show)
-                {
-                    if (img.sprite != art) img.sprite = art;
-                    _capCast.sizeDelta = new Vector2(_shakerTop.rect.width, _shakerTop.rect.height * 0.3f);
-                    // the cap's art sits CapArtOffset up inside its rect, so its foot is not the rect's foot
-                    _capCast.anchoredPosition = new Vector2(_shakerTop.anchoredPosition.x + 4f,
-                        _shakerTop.anchoredPosition.y - _shakerTop.rect.height * (0.5f - CapArtOffset) + 6f);
-                }
-            }
-            if (_bottleMirror != null)
-            {
-                var img = _bottleMirror.GetComponent<Image>();
-                var art = _pourPlates != null && _pourPlates.Front != null ? _pourPlates.Front
-                    : _pourBottleBody != null ? _pourBottleBody.sprite : null;
-                bool show = art != null && _pourBottle != null && _pourBottle.gameObject.activeSelf && _bottleHand.AtRest && !_capped;
-                if (_bottleMirror.gameObject.activeSelf != show) _bottleMirror.gameObject.SetActive(show);
-                if (show)
-                {
-                    if (img.sprite != art) img.sprite = art;
-                    _bottleMirror.anchoredPosition = new Vector2(_bottleRest.x + 6f, BottleFootY + 2f);
-                }
             }
         }
 
@@ -219,7 +138,6 @@ namespace LastCall.UI
         // mixing verbs can never fight over one gesture.
         private RectTransform _spoonRt;
         private Image _spoonImg;             // the spoon's own drawing, dimmed while the tin is empty
-        private RectTransform _napkinRt;     // the towel under the spoon — comes and goes with it
         private Vector2 _spoonRest;
         /// <summary>Where the spoon stands (2026-09-16): between the lid and the tin, its foot 70 under the bench
         /// line so the towel under it clears the plaque above (measured; the BACK key is in another column).</summary>
@@ -501,17 +419,22 @@ namespace LastCall.UI
         // the rail as before, so the readout keeps its two lines at the foot.
 
         private RectTransform _mixRowsHost;
-        private const float MixRowH = 24f, MixRowsPad = 8f, MixBarH = 16f, MixNameW = 168f, MixShareW = 56f;
+        /// <summary>The contents' own plaque, under the words' (2026-09-22, the eighth list); down while the tin is empty.</summary>
+        private RectTransform _mixPlaque;
+        // A SIZE DOWN (2026-09-22, the eighth list: "içeriği gösteren paneli biraz daha küçültebiliriz boyutunu tarzını
+        // beğendim"): the same rows in the same style, 20 high rather than 24, the bar 12 rather than 16, the names in
+        // 150 rather than 168 - the face stays 16, the grid the pixel fonts are drawn on.
+        private const float MixRowH = 20f, MixRowsPad = 8f, MixBarH = 12f, MixNameW = 150f, MixShareW = 64f;   // 64: "100%" is four figures
         // Three, not five (2026-09-22): the rows grow the plaque DOWN the right column, and the gauges stand under
         // it. The tin gauge carries every pour's band, so the fourth and fifth line were its double anyway.
         private const int MixRowsMax = 3;
 
         private void LayMixRows(TycoonRun run)
         {
-            if (_shakerPlaque == null || run == null) return;
+            if (_mixPlaque == null || run == null) return;
             if (_mixRowsHost == null)
             {
-                _mixRowsHost = NewRect("MixRows", _shakerPlaque);
+                _mixRowsHost = NewRect("MixRows", _mixPlaque);
                 _mixRowsHost.anchorMin = _mixRowsHost.anchorMax = new Vector2(0f, 1f);
                 _mixRowsHost.pivot = new Vector2(0f, 1f);
                 _mixRowsHost.sizeDelta = new Vector2(PlaqueW - PlaquePad * 2f, 0f);
@@ -534,7 +457,7 @@ namespace LastCall.UI
                 row.anchoredPosition = new Vector2(0f, -rows * MixRowH);
 
                 var icon = NewRect("Icon", row);
-                Place(icon, new Vector2(0f, 0.5f), new Vector2(16f, MixRowH - 2f), Vector2.zero);
+                Place(icon, new Vector2(0f, 0.5f), new Vector2(14f, MixRowH - 2f), Vector2.zero);
                 icon.pivot = new Vector2(0f, 0.5f);
                 var ii = icon.gameObject.AddComponent<Image>();
                 ii.sprite = card != null ? ItemArt.Bottle(card) : null;
@@ -576,23 +499,26 @@ namespace LastCall.UI
                 var share = NewText("Share", row, _display, 16, TextAnchor.MiddleRight, UITheme.TextPrimary);
                 Place(share.rectTransform, new Vector2(1f, 0.5f), new Vector2(MixShareW, MixRowH), Vector2.zero);
                 share.rectTransform.pivot = new Vector2(1f, 0.5f);
+                share.horizontalOverflow = HorizontalWrapMode.Overflow;   // a share never breaks onto a second line
                 share.text = ratio.ToString("P0");
                 share.raycastTarget = false;
                 Engraved(share);
                 rows++;
             }
             _mixRowsHost.sizeDelta = new Vector2(innerW, rows * MixRowH);
-            RehangPlaque(_shakerPlaque, PlaqueH + (rows > 0 ? MixRowsPad + rows * MixRowH : 0f));
+            // its own plaque now: the words above it keep their place, and it is only there while the tin holds something
+            RehangPlaque(_mixPlaque, Mathf.Max(8f, MixRowsPad * 2f + rows * MixRowH), PlaqueUnderRail + PlaqueH + MixPlaqueGap);
+            if (_mixPlaque.gameObject.activeSelf != rows > 0) _mixPlaque.gameObject.SetActive(rows > 0);
         }
 
         /// <summary>A plaque at a new height, still hung the same distance under the rail: the top stays put, the
         /// foot moves, and the readout placed from the foot moves with it.</summary>
-        private void RehangPlaque(RectTransform plaque, float h)
+        private void RehangPlaque(RectTransform plaque, float h, float dyFromRailFoot = PlaqueUnderRail)
         {
             if (plaque == null || Mathf.Approximately(plaque.sizeDelta.y, h)) return;
             plaque.sizeDelta = new Vector2(plaque.sizeDelta.x, h);
             for (int i = 0; i < _railHung.Count; i++)
-                if (_railHung[i].rt == plaque) { _railHung[i] = (plaque, RailBandH + PlaqueUnderRail + h); break; }
+                if (_railHung[i].rt == plaque) { _railHung[i] = (plaque, RailBandH + dyFromRailFoot + h); break; }
             _benchCounterTop = -1f;   // laid again on the next alignment
         }
 
@@ -933,6 +859,20 @@ namespace LastCall.UI
             img.pixelsPerUnitMultiplier = 0.5f;    // the 18-texel drawing at 2x: a thick frame
             img.color = Color.white;
             img.raycastTarget = false;
+            // A LATTICE IN THE WELL (2026-09-22, the author's eighth list: "1-2-3-4 ve döküm şiddet panelinin arkasındaki
+            // mor arkaplana desen ekle"): the Deco trellis tiled at 2x inside the frame (whose five texels are ten
+            // units), in the frame's own magenta, faint, so the rows and the dial stand on a patterned ground and not
+            // a flat purple one. First under the rows, so they draw over it.
+            var lattice = NewRect("Lattice", rt);
+            Stretch(lattice, Vector2.zero, Vector2.one, new Vector2(10f, 10f), new Vector2(-10f, -10f));
+            var li = lattice.gameObject.AddComponent<Image>();
+            li.sprite = ChromeArt.PanelLattice();
+            li.type = Image.Type.Tiled;
+            li.pixelsPerUnitMultiplier = 0.5f;
+            var lc = UITheme.Magenta[3];
+            li.color = new Color(lc.r, lc.g, lc.b, 0.13f);
+            li.raycastTarget = false;
+            lattice.SetAsFirstSibling();
             return rt;
         }
 
@@ -1002,8 +942,15 @@ namespace LastCall.UI
         // beraber düzenli bir sayfa düzeni oluşturulsun sağ tarafta"). The plaque ran 256..816 beside the column and
         // the tin stood in the middle of it. It is the head of a RIGHT column now, 848..1264, mirroring the left one:
         // the words on top, hung from the rail, and the mix and tin gauges standing under them.
-        private const float RightColX = 848f;
-        private const float PlaqueX = 16f, PlaqueW = 416f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
+        // A PAGE OF ITS OWN (2026-09-22, the author's eighth list: "Sağ kenarı tin, mix, "grab the bottle to pour"
+        // panelleri için bir sayfa düzeni oluşturulsun ... içeriği gösteren paneli biraz daha küçültebiliriz"): the
+        // column is 376 wide against the right edge, and it reads top to bottom - what to do (the words), what is in
+        // the tin (its own plaque, only while there is something), and the two gauges standing on the counter under
+        // them, centred as a pair. Nothing in it shares a row with anything else, so nothing lands on anything.
+        private const float RightColX = 888f;
+        private const float PlaqueX = 16f, PlaqueW = 376f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
+        /// <summary>The gap between the words' plaque and the contents' plaque under it.</summary>
+        private const float MixPlaqueGap = 8f;
         /// <summary>The strip's and the readout's bottoms, from the plaque's own; the readout has two lines' room.</summary>
         private const float PlaqueLineY = 8f, PlaqueLineH = 48f;   // the steps left the plaque on 2026-09-17
         /// <summary>The counter's far edge: ridge, seam, six rails and a seam (AddBenchCounter's bands).</summary>
@@ -1251,7 +1198,10 @@ namespace LastCall.UI
         // UNDER THE WORDS, IN THE RIGHT COLUMN (2026-09-22): the tin gauge and the mix column stand as a pair
         // centred in 848..1264, from a hand over the floor-row keys (88) to a hand under the plaque at its tallest
         // (three mix rows, 235). Drawn with its aspect kept, so it stays a tin, only smaller.
-        private static readonly Vector2 MeasureAt = new Vector2(438f, -202f);   // -87 until the props came down;
+        // (458, -240) since the eighth list: the column moved to 888..1264 and the bin left the right foot, so the pair -
+        // the MIX tube, its gap and the tin - is centred in the column and stands 120 over the floor, clear under the
+        // contents' plaque at its tallest.
+        private static readonly Vector2 MeasureAt = new Vector2(458f, -240f);   // -87 until the props came down;
                                                                                // 485 ran the tin's wall under the bin
         /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
         private static readonly Vector2 MeasureSize = new Vector2(136f, 136f);
@@ -1299,7 +1249,9 @@ namespace LastCall.UI
             var inside = NewRect("Inside", maskRt);
             Stretch(inside, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var inImg = inside.gameObject.AddComponent<Image>();
-            inImg.color = new Color(0.03f, 0.02f, 0.05f, 0.55f);
+            // SOLID (2026-09-22, the author's eighth list: "Tin barının karartılmış kısmı şeffaf olmasın"): at 55% the
+            // counter's stripes showed through the empty tin, so the measure read as a hole in the bench.
+            inImg.color = UITheme.Night[0];
             inImg.raycastTarget = false;
 
             var cavity = ChromeArt.ShakerGaugeCavity;    // top / bottom, as fractions from the top
@@ -1505,8 +1457,6 @@ namespace LastCall.UI
             // page is bought the spoon is standing there in the morning.
             bool spoon = run.SpoonUnlocked;
             if (_spoonRt != null && _spoonRt.gameObject.activeSelf != spoon) _spoonRt.gameObject.SetActive(spoon);
-            if (_napkinRt != null && _napkinRt.gameObject.activeSelf != spoon) _napkinRt.gameObject.SetActive(spoon);
-            if (_towelShadow != null && _towelShadow.gameObject.activeSelf != spoon) _towelShadow.gameObject.SetActive(spoon);
             if (_spoonShadow != null && _spoonShadow.gameObject.activeSelf != spoon) _spoonShadow.gameObject.SetActive(spoon);
             if (!spoon) _spoonHeld = false;
             if (_bottleShadow != null && _bottleShadow.gameObject.activeSelf != inHand)
@@ -1786,12 +1736,22 @@ namespace LastCall.UI
             // silhouette now (StepBenchLight), and the two at full strength stacked into a blot under the tin.
             // What the oval is still for is the CONTACT - the dark right where the prop meets the stone, which a
             // shadow thrown off to one side cannot say.
-            PushPropShadow(_tinShadow, _shakerVessel, _shakerHome.y, TinFootY, 158f, 0.34f);
-            PushPropShadow(_bottleShadow, _pourBottle, _bottleRest.y, BottleFootY, 128f, 0.34f * (1f - _capT));
+            // THE POOL UNDER THE FOOT, ALL THE TIME (2026-09-22, the eighth list): with the thrown copies gone, each
+            // prop's contact shadow is its whole shadow, so it is drawn at full strength and it STAYS when the prop is
+            // lifted - on the counter under it, wider and fainter the higher it goes, the way a thing held under a lamp
+            // keeps its shadow. The last argument is only the prop's own visibility.
+            PushPropShadow(_tinShadow, _shakerVessel, _shakerHome.y, TinFootY, 158f * (TinW / 200f) * 1.35f, 1f);
+            // ten under the grip line's foot: the bottle's drawing stands on its rect's bottom edge, so a pool centred on
+            // BottleFootY hid behind the glass (measured r151: pool 140..176 against a foot at 152)
+            PushPropShadow(_bottleShadow, _pourBottle, _bottleRest.y, BottleFootY - 10f, 150f, 1f - _capT);
             if (_shakerTop != null)
-                PushPropShadow(_lidShadow, _shakerTop, _capRest.y, _capRest.y - _shakerTop.rect.height * 0.5f + 10f, 150f, 0.34f * (1f - _capT));
+                // THE CAP'S RIM STANDS HIGH IN ITS RECT: the cap is drawn in the tin's 232x416 box with its rim 42 over the
+                // box's middle (measured r151), so every foot worked from the box's bottom - this pool's, and the thrown
+                // copy's before it - landed a hundred units under the cap, off the bottom of the screen.
+                PushPropShadow(_lidShadow, _shakerTop, _capRest.y, _capRest.y + CapRimAboveCentre * _shakerTop.rect.height,
+                    170f, 1f - _capT);
             if (_spoonRt != null)
-                PushPropShadow(_spoonShadow, _spoonRt, _spoonRest.y, SpoonFootY, 50f, 1f);
+                PushPropShadow(_spoonShadow, _spoonRt, _spoonRest.y, SpoonFootY, 60f, 1f);
         }
 
         /// <summary>Where each bench prop's base sits when it is standing: the tin's rect is
@@ -1815,13 +1775,14 @@ namespace LastCall.UI
         {
             if (shadow == null || prop == null) return;
             float lift = Mathf.Max(0f, prop.anchoredPosition.y - restY);
-            float k = Mathf.Clamp01(1f - lift / 200f);
+            // how much of the pool is still the contact: all of it on the stone, a quarter of it at arm's length
+            float k = Mathf.Clamp01(1f - lift / 320f);
             shadow.anchoredPosition = new Vector2(prop.anchoredPosition.x, floorY);
-            float w = width * (0.62f + 0.38f * k);
-            shadow.sizeDelta = new Vector2(w, Mathf.Max(10f, w * 0.22f));
+            float w = width * (1f + 0.40f * (1f - k));      // a thing lifted under a lamp throws a wider, softer pool
+            shadow.sizeDelta = new Vector2(w, Mathf.Max(12f, w * 0.24f));
             var img = shadow.GetComponent<Image>();
             if (img != null && img.sprite != null)
-                img.color = new Color(0f, 0f, 0f, 0.55f * k * Mathf.Clamp01(alpha));
+                img.color = new Color(0f, 0f, 0f, ContactShadowAlpha * (0.25f + 0.75f * k) * Mathf.Clamp01(alpha));
         }
 
         /// <summary>
@@ -2388,11 +2349,16 @@ namespace LastCall.UI
             rt.anchoredPosition = at;
             rt.SetAsFirstSibling();
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = BackBarArt.BottleShadow();
+            img.sprite = BackBarArt.ContactShadow();   // a dark contact inside a soft skirt (2026-09-22)
             img.raycastTarget = false;
-            img.color = new Color(0f, 0f, 0f, img.sprite != null ? 0.55f : 0f);
+            img.color = new Color(0f, 0f, 0f, img.sprite != null ? ContactShadowAlpha : 0f);
             return rt;
         }
+
+        /// <summary>How dark a prop's pool is at its core, standing (2026-09-22): it is the prop's only shadow now.</summary>
+        private const float ContactShadowAlpha = 0.72f;
+        /// <summary>Where the cap's drawn rim sits in its box, as a share of the box's height above its middle (r151).</summary>
+        private const float CapRimAboveCentre = 0.10f;
 
         /// <summary>
         /// The bar top the bench's props stand on. THE PAINTED WALL THAT USED TO COME WITH IT
@@ -2698,10 +2664,6 @@ namespace LastCall.UI
             // lid and the spoon follow their props (PushPropShadow), the towel's lies still under it.
             _lidShadow = AddContactShadow(_pourSurface, 150f, new Vector2(-320f, -140f - CapArtOffset * TinH - 60f));
             _spoonShadow = AddContactShadow(_pourSurface, 50f, new Vector2(SpoonX, SpoonFootY));
-            _towelShadow = AddContactShadow(_pourSurface, 150f, new Vector2(SpoonX, SpoonFootY + 2f));
-            _towelShadow.sizeDelta = new Vector2(150f, 26f);
-            var towelImg = _towelShadow.GetComponent<Image>();
-            if (towelImg != null) towelImg.color = new Color(0f, 0f, 0f, 0.42f);
             // LIGHT ON THE WORK, AND THE STONE ANSWERING (2026-09-16, the author: "tezgaha ışıklandırma ve yansıma
             // gerekiyor ... odak şişe ve shakerda olmalı dökerken, şişe dolduktan sonra odak kapağa geçmeli"): a
             // soft bloom behind whatever the hand is on — the bottle while it pours, the tin once the lid is on,
@@ -2709,9 +2671,10 @@ namespace LastCall.UI
             // (StepBenchLight). Built before the props, so they draw over it; the water ring with them.
             // NO LIGHT (2026-09-16, the author's third list: "Built sahnesindeki ışığı kaldır"): the halo that
             // followed the hand is gone; the mirrors stay. _benchLight is null and StepBenchLight skips it.
-            _tinMirror = AddCastShadow("TinCastShadow", TinW, TinH * 0.3f);
-            _bottleMirror = AddCastShadow("BottleCastShadow", 180f, BottleH * 0.3f);
-            _capCast = AddCastShadow("CapCastShadow", TinW, TinH * 0.2f);
+            // (THE THROWN COPIES WENT, 2026-09-22, the author's eighth list: "Şişelerin ve shakerin gölgesinin metodunu
+            //  beğenmedim gerçekçi durmuyor ve grablendiğinde gölge de siliniyor". A black copy of each prop laid over at
+            //  58 degrees said a low sun, under three pendants hung straight over the work, and it was put away the
+            //  moment the prop was picked up. What a lamp overhead makes is the pool under the foot - PushPropShadow.)
             // (The water ring that stood between the tin and the dial came off on 2026-09-22 with the slab's
             //  wear: the same ask, "arkaplandaki lekeleri kaldir".)
             _shakerVessel = NewRect("Shaker", _pourSurface);
@@ -2945,6 +2908,9 @@ namespace LastCall.UI
             // BESIDE THE COLUMN (2026-09-17): the instrument column owns the far left, so the sentence's plaque
             // starts where the column ends — nothing stacks on anything.
             _shakerPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, PlaqueH, PlaqueUnderRail, RightColX);
+            // the contents' plaque hangs under the words' (the eighth list), at no height until the first pour
+            _mixPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, 8f, PlaqueUnderRail + PlaqueH + MixPlaqueGap, RightColX);
+            _mixPlaque.gameObject.SetActive(false);
             _shakerReadout = NewText("Readout", _shakerPlaque, _body, 16, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(_shakerReadout.rectTransform, new Vector2(0f, 0f), new Vector2(PlaqueW - PlaquePad * 2f, PlaqueLineH),
                   new Vector2(PlaquePad, PlaqueLineY));
@@ -3000,27 +2966,8 @@ namespace LastCall.UI
             // spoon is the one prop that lives in the instrument column, standing like a
             // tool on its rack, and its foot is on the bench's own line. y is the foot
             // plus the drawn spoon's full height, because the slot hangs from its grip.
-            // THE NAPKIN GOES DOWN FIRST, so the spoon lies on it rather than through it.
-            // It is parented to the surface and not to the spoon: the spoon gets picked up
-            // and thrown about by the stir, and a napkin that travelled with it would be a
-            // napkin stuck to the tool. It stays on the counter where it was set.
-            var napkin = NewRect("Napkin", _pourSurface);
-            // THE NAPKIN COVERS THE SPOON (2026-09-16, the author: "kaşığın arkasındaki peçetenin boyutu kaşığı
-            // kaplasın"): a folded bar towel the whole spoon lies on, 140x240 about the spoon's own middle — the
-            // spoon's slot is 64x256 — laid a few degrees off square. It stood under the bowl alone before.
-            // The spoon moved to x -340, between the lid at the far left and the tin, and its foot 70 under the
-            // bench line, so the towel's top clears the plaque under the rail and its foot stands clear of the
-            // BACK key's column.
-            Place(napkin, new Vector2(0.5f, 0.5f), new Vector2(140, 240),
-                  new Vector2(SpoonX, SpoonFootY + 128f));
-            var nimg = napkin.gameObject.AddComponent<Image>();
-            nimg.sprite = ChromeArt.Napkin(56, 96);
-            nimg.raycastTarget = false;
-            napkin.localRotation = Quaternion.Euler(0, 0, -4f);   // set down by hand, not laid square
-            // ...AND UNDER THE TIN (2026-09-21, the author: "kaşığın peçetesi shakerin üstüne geliyor"): built after
-            // the shaker, it drew over it where the two met; it goes down in draw order before the vessel.
-            napkin.SetSiblingIndex(Mathf.Max(0, _shakerVessel.GetSiblingIndex()));
-            _napkinRt = napkin;
+            // (NO NAPKIN, 2026-09-22, the author's eighth list: "kaşığın altındaki peçeteyi yok edelim". The spoon
+            //  stands on the counter by itself, with its own shadow.)
 
             _spoonRest = new Vector2(SpoonX, SpoonFootY + 256f);
             _spoonRt = NewRect("BarSpoon", _pourSurface);

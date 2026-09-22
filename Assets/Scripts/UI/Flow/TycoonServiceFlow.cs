@@ -240,12 +240,8 @@ namespace LastCall.UI
         // keys, so the corner controls belong to the same drawing (2026-07-27).
         private const float CornerSize = 64f;
 
-        /// <summary>The bin key. Wide enough to carry a mark AND the word, which is what
-        /// the round button could not do, and tall enough that the cap's six pixels of
-        /// throw read as travel rather than as a flicker.</summary>
-        /// <summary>The bin's key LYING DOWN at the bench's right foot (2026-09-22): wider than tall, so the
-        /// bottom of every bench is one row - the way out, SERVE IT, the bin.</summary>
-        private const float BinKeyW = 168f, BinKeyH = 64f;
+        // (The bin's own plate sizes went on 2026-09-22 with the eighth list: it is a square icon key in the
+        //  bottom-left row now - IconKeyS, KeyRowX.)
 
 
         private void Awake()
@@ -1046,30 +1042,53 @@ namespace LastCall.UI
             // THE PACK'S OWN KEY (2026-09-17, the author: "ESC menüsündeki tarzda butonlar kullanılabilir aynı
             // boyutta yer kaplayacak, renkleri farklı olacak"): the button the pause menu is built from, at the
             // column's width, in grey — the bench's colour is the frame around the key, not the key.
-            var rt = PackKeyFlow(panel, "EdgeBack", (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' '),
-                "back", KeyWay, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
-                new Vector2(16f, KeyRowOn(panel)), () => GoTo(back), out _, out _);
+            // A SQUARE KEY WITH AN ARROW ON IT (2026-09-22, the author's eighth list: "butonları kare yapalım üstündeki
+            // yazıları silelim ... geri ok iconu ile anlatalım yazı yazmasın"): the first of the bottom-left row, the
+            // way back said by its arrow alone. (The caption stays in the signature for the draught bench's call, and
+            // is no longer drawn.)
+            var rt = IconKeyFlow(panel, "EdgeBack", "arrow_back", KeyWay, KeyRowX(0), () => GoTo(back), out _);
             RegisterFixed(panel, rt);    // ...and so is the way out
             return rt;
         }
 
-        private const float BackKeyW = 224f, BackKeyH = 56f;   // the column's width and its foot's height (2026-09-17)
+        /// <summary>
+        /// THE BOTTOM-LEFT ROW (2026-09-22, the author's eighth list: "Geri butonu çöp butonu ve serve butonu yan yana
+        /// bulunsunlar sol altta"): the way back, the bin and SERVE IT, left to right from the screen's corner, one
+        /// height. The two icon keys are square; only SERVE IT carries a word. Everything else on a bench stands clear
+        /// of this row, which is why the panels no longer land on the keys.
+        /// </summary>
+        private const float IconKeyS = 64f, KeyRowGap = 10f, KeyRowLeft = 16f;
+        /// <summary>Where key <paramref name="slot"/> of the bottom-left row starts: 0 the way back, 1 the bin, 2 SERVE IT.</summary>
+        private static float KeyRowX(int slot) => KeyRowLeft + slot * (IconKeyS + KeyRowGap);
+
+        /// <summary>A square pack key with one of <see cref="ChromeArt.Mark"/>'s icons dead centre at 2x and no word:
+        /// bottom-left anchored at <paramref name="x"/> on the bench's key row.</summary>
+        private RectTransform IconKeyFlow(RectTransform panel, string id, string mark, string tone, float x,
+                                          System.Action onClick, out Button button)
+        {
+            var rt = PackKeyFlow(panel, id, null, null, tone, new Vector2(0f, 0f), new Vector2(IconKeyS, IconKeyS),
+                new Vector2(x, KeyRowOn(panel)), onClick, out button, out var pack);
+            var face = rt.Find("Face") as RectTransform;
+            var icon = NewRect("Icon", face);
+            // two units up, the way the pack's words sit: its face runs from the rim to the shadow under it
+            Place(icon, new Vector2(0.5f, 0.5f), new Vector2(32f, 32f), new Vector2(0f, 2f));
+            var img = icon.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.Mark(mark);
+            var ink = MenuPack.WordOn(KeyRamp(tone));
+            img.color = ink;
+            img.raycastTarget = false;
+            pack.Glyph = img; pack.GlyphRest = ink; pack.GlyphLit = Color.Lerp(ink, Color.white, 0.35f);
+            return rt;
+        }
 
         /// <summary>
-        /// The foot of the bottom row of keys - the way out, SERVE IT, the bin - on every bench. 59, not 16
-        /// (2026-09-22, the author: "tum nesneleri yukari cek butonlar dahil"): the column above it rose 43 to meet
-        /// the counter's pink strip, and the row rises with it, which leaves the bottom 59 units of the draught
-        /// bench for the keg shelf that is meant to be half in shot.
-        /// </summary>
-        private const float KeyRowY = 59f;
-        /// <summary>
-        /// THE BUILT BENCHES' KEYS ARE ON THE FLOOR OF THE SCREEN (2026-09-22, the author's seventh list: "Built
-        /// sahnelerinde back to the bar butonu ve bin butonu ekranın altına göre hizalansın"). The row rose to 59 on
-        /// every bench to clear the draught bench's keg rack; the tin and glass benches have no rack, so there the
-        /// row stands 16 off the foot again and the props stand on it. <see cref="KeyRowY"/> is the draught bench's.
+        /// THE KEYS ARE ON THE FLOOR OF THE SCREEN (2026-09-22, the author's seventh list: "Built sahnelerinde back to
+        /// the bar butonu ve bin butonu ekranın altına göre hizalansın"), 16 off the foot on every bench. The row stood
+        /// at 59 for a day to clear the draught bench's keg rack; since the eighth list the kegs stand under the tower
+        /// and the row is one row, bottom-left, on all three benches.
         /// </summary>
         private const float BuiltKeyRowY = 16f;
-        private float KeyRowOn(RectTransform panel) => panel != null && panel == _tapPanel ? KeyRowY : BuiltKeyRowY;
+        private float KeyRowOn(RectTransform panel) => BuiltKeyRowY;
 
         /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
         private void BrassRim(RectTransform plate)
@@ -1273,39 +1292,45 @@ namespace LastCall.UI
             // LYING DOWN (2026-09-22, the author: "çöp butonunun şeklini yatay yap"): the pedal bin drawn small at
             // the key's left end with the word beside it, on a plate wider than it is tall, so the bottom of every
             // bench is one row of keys - the way out at the left, SERVE IT in the middle, the bin at the right.
-            var rt = PackKeyFlow(parent, "Bin", null, null, KeyBin, new Vector2(1, 0),
-                new Vector2(BinKeyW, BinKeyH), new Vector2(-16f, KeyRowOn(parent)), null, out var btn, out _);
-            RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
-            // ONE SIZE, AND CENTRED AS A PAIR (2026-09-22, the author: "font ile cop kutusu iconunun boyutu ayni
-            // olmali ve ikisi beraber butona ortalanmali sadece yazi degil"). The drawing was 40x56 beside a 16 px
-            // word and the word alone was centred in what was left of the plate, so the key read as a picture with
-            // the word pushed off to one side. The mark is the letter's own height now (ChromeArt.BinSmall, drawn
-            // at 16x24) and the two are measured together and laid out about the plate's middle.
-            const float BinGlyphW = 16f, BinGlyphH = 24f, BinPairGap = 10f;
-            var face = rt.Find("Face") as RectTransform;
-            var word = NewText("BinWord", face, _display, 16, TextAnchor.MiddleLeft, MenuPack.WordOn(KeyRamp(KeyBin)));
-            word.rectTransform.pivot = new Vector2(0f, 0.5f);
-            word.horizontalOverflow = HorizontalWrapMode.Overflow;
-            word.text = UIText.T("bench.bin");
-            // BIN and ÇÖP fit at 16; BASURA and PRULLENBAK do not, and the plate is one width in every language
-            FitWord(word, new Vector2(BinKeyW - 28f - BinGlyphW - BinPairGap, BinGlyphH), 16);
-            word.raycastTarget = false;
-            float binWordW = Mathf.Min(word.preferredWidth + 2f, BinKeyW - 20f - BinGlyphW - BinPairGap);
-            float binLeft = Mathf.Max(8f, (BinKeyW - (BinGlyphW + BinPairGap + binWordW)) * 0.5f);
-            var drawn = NewRect("Drawing", face);
-            Place(drawn, new Vector2(0f, 0.5f), new Vector2(BinGlyphW, BinGlyphH), new Vector2(binLeft, 2f));
-            drawn.pivot = new Vector2(0f, 0.5f);
-            var img = drawn.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.BinSmall(false);
-            img.color = Color.white;
-            img.raycastTarget = false;
-            var relay = rt.gameObject.AddComponent<HoverRelay>();
-            relay.Entered = () => img.sprite = ChromeArt.BinSmall(true);
-            relay.Exited = () => img.sprite = ChromeArt.BinSmall(false);
-            Place(word.rectTransform, new Vector2(0f, 0.5f), new Vector2(binWordW, BinGlyphH),
-                  new Vector2(binLeft + BinGlyphW + BinPairGap, 2f));
+            // A SQUARE KEY WITH A CAN ON IT (2026-09-22, the author's eighth list: "çöp kutusu iconu oluşturalım"),
+            // second in the bottom-left row - the drawn pedal bin and its word are gone with the plate they stood on.
+            var rt = IconKeyFlow(parent, "Bin", "trash_can", KeyBin, KeyRowX(1), null, out var btn);
+            RegisterFixed(parent, rt);   // the bin is the same object in the same place on every bench (registered AFTER it is placed: Home is read then)
+            // ...AND IT ASKS FIRST (the eighth list: "Çöp butonuna tıklayınca butonun üstünde emin misin? sorusu
+            // sorsun tekrar basıldığında çöpe atılsın"): the first press hangs the question over the key in the
+            // drinkers' own balloon; only a second press while it stands throws the drink away (ArmedKey).
+            var ask = NewRect("BinAsk", parent);
+            ask.anchorMin = ask.anchorMax = new Vector2(0f, 0f);
+            ask.pivot = new Vector2(0.5f, 0f);
+            var askWord = NewText("Word", ask, _display, 16, TextAnchor.MiddleCenter, UITheme.Night[0]);
+            askWord.horizontalOverflow = HorizontalWrapMode.Overflow;
+            askWord.text = UIText.T("bench.bin.ask");
+            askWord.raycastTarget = false;
+            float askW = Mathf.Max(96f, askWord.preferredWidth + 32f);
+            ask.sizeDelta = new Vector2(askW, 36f);
+            ask.anchoredPosition = new Vector2(KeyRowX(1) + IconKeyS * 0.5f, KeyRowOn(parent) + IconKeyS + 10f);
+            Stretch(askWord.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, 2f), Vector2.zero);
+            var askBg = ask.gameObject.AddComponent<Image>();
+            askBg.sprite = ChromeArt.SpeechBox();
+            askBg.type = Image.Type.Sliced;
+            askBg.raycastTarget = false;
+            askWord.transform.SetAsLastSibling();
+            var askTail = NewRect("Tail", ask);
+            askTail.anchorMin = askTail.anchorMax = new Vector2(0.5f, 0f);
+            askTail.pivot = new Vector2(0.5f, 1f);
+            askTail.sizeDelta = new Vector2(20f, 12f);
+            askTail.anchoredPosition = new Vector2(0f, 2f);
+            var tailImg = askTail.gameObject.AddComponent<Image>();
+            tailImg.sprite = ChromeArt.SpeechTail();
+            tailImg.raycastTarget = false;
+            var askPop = ask.gameObject.AddComponent<PopIn>();
+            askPop.Seconds = 0.36f; askPop.From = 0.14f; askPop.Bubble = true;
+            ask.gameObject.SetActive(false);
+            var armed = rt.gameObject.AddComponent<ArmedKey>();
+            armed.Ask = ask;
 
-            btn.onClick.AddListener(() =>
+            btn.onClick.AddListener(armed.Press);
+            armed.Confirmed = () =>
             {
                 int fee = Run.DiscardGlass();
                 Sfx.Play("bin_drop", 0.85f);   // the drink goes in the bin, and is heard going (2026-09-15)
@@ -1317,7 +1342,7 @@ namespace LastCall.UI
                 GetComponent<TycoonHud>()?.Toast(fee > 0
                     ? UIText.T("bench.binned_fee", ("fee", "$" + fee))
                     : UIText.T("bench.binned"));
-            });
+            };
             return rt;
         }
 

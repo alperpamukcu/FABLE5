@@ -430,6 +430,49 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // THE WAY BACK AS AN ARROW (2026-09-22, the author's eighth list: "geri ok iconu ile anlatalım yazı
+            // yazmasın"): a head and a shaft, drawn to stand alone on a square key at 2x - the chevron below said
+            // "previous" as well as "back", an arrow with a shaft only says "go back".
+            ["arrow_back"] = new[]
+            {
+                "................",
+                "................",
+                "......##........",
+                ".....###........",
+                "....####........",
+                "...#####........",
+                "..############..",
+                ".#############..",
+                ".#############..",
+                "..############..",
+                "...#####........",
+                "....####........",
+                ".....###........",
+                "......##........",
+                "................",
+                "................",
+            },
+            // THE BIN AS A CAN (2026-09-22, the eighth list: "çöp kutusu iconu oluşturalım"): a lid with its handle,
+            // a body that narrows to the floor, two ribs cut down its face - read at a glance on a square key.
+            ["trash_can"] = new[]
+            {
+                "................",
+                "......####......",
+                "......#..#......",
+                "..############..",
+                ".##############.",
+                "................",
+                "...##########...",
+                "...##########...",
+                "...###.##.###...",
+                "...###.##.###...",
+                "....##.##.##....",
+                "....##.##.##....",
+                "....##.##.##....",
+                "....########....",
+                ".....######.....",
+                "................",
+            },
             // THE WAY BACK (2026-09-16): a big chevron for the bench's back key, drawn at 2x on the key.
             ["chevron_left"] = new[]
             {
@@ -3531,6 +3574,34 @@ namespace LastCall.UI
                     px[y * S + x] = ring || bar ? ink : body || cap ? dim : new Color32(0, 0, 0, 0);
                 }
             return Cache[Key] = Make(px, S, S, Vector4.zero);
+        }
+
+        /// <summary>
+        /// A LATTICE FOR THE PANELS' PURPLE (2026-09-22, the author's eighth list: "1-2-3-4 ve döküm şiddet panelinin
+        /// arkasındaki mor arkaplana desen ekle"): a sixteen-texel diamond trellis with a dot in each diamond, white
+        /// for the caller to tint and tiled across a panel's well at 2x - the Deco screen a Miami bar hangs behind
+        /// its shelves, faint enough that the rows over it still read first.
+        /// </summary>
+        public static Sprite PanelLattice()
+        {
+            const string key = "panel:lattice";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 16;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    bool line = (x + y) % S == 0 || (x - y + S) % S == 0;          // the two diagonals, wrapping
+                    bool dot = (x == S / 2 && y == 0) || (x == 0 && y == S / 2);    // the middle of each diamond
+                    byte a = line ? (byte)255 : dot ? (byte)200 : (byte)0;
+                    px[y * S + x] = new Color32(255, 255, 255, a);
+                }
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Repeat };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Cache[key] = Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, Vector4.zero);
         }
 
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)

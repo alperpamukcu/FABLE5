@@ -1540,6 +1540,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.105 · Sekizinci liste (2/…): tezgâhların tuş sırası, çöpün sorusu, sağ sütun, gerçek gölgeler (2026-09-22)
+
+- **Sol altta tek sıra:** geri, çöp ve SERVE IT yan yana, ekranın köşesinden (16, 90, 164; yükseklik 64) —
+  üç tezgâhta aynı sıra. Geri ve çöp kare ikon tuşlar, yazısız (`ChromeArt.Mark`: `arrow_back` ok, `trash_can`
+  kutu); yalnız SERVE IT yazılı. Bira tezgâhının fıçıları kulenin altına geçti (TowerX ±120), tuş sırası diğer
+  tezgâhlar gibi yerde (16).
+- **Çöp önce sorar** (`ArmedKey`): ilk basış tuşun üstüne müşteri balonunda "EMİN MİSİN?" asar, 2,6 sn içinde
+  ikinci basış içkiyi atar; soru kendiliğinden ya da tezgâh kapanınca iner. Ölçüldü (r147): ilk basışta tenekede
+  içki duruyor, 3,6 sn sonra silahsız, iki basışta boş.
+- **Sağ sütun bir sayfa:** 888..1264 (376 geniş): üstte ne yapılacağı (plaka), altında ayrı plakada tenekenin
+  içeriği (satırlar 20 yüksek, çubuk 12, pay 64 ve kırılmıyor; boşken plaka yok), en altta MIX ve teneke
+  göstergeleri çift olarak sütunda ortalı (MeasureAt 458, −240) — çöp sağ köşeden kalktığı için alçaldı.
+- **Teneke göstergesinin koyu içi opak** (Night[0]; %55'ti, tezgâh içinden görünüyordu).
+- **Sol sütun panellerinin moru desenli:** 16 texel'lik Deko kafes (`ChromeArt.PanelLattice`), çerçevenin
+  magentasında %13, çerçevenin içinde 2x döşeli.
+- **Kaşığın altındaki peçete yok.**
+- **Gölgeler:** 58° yatırılmış siyah kopyalar (ve elde silinmeleri) gitti. Her pervazın tek gölgesi ayağının
+  altındaki havuz (`BackBarArt.ContactShadow`: koyu çekirdek + yumuşak etek), %72; kaldırılınca SİLİNMİYOR,
+  tezgâhta kalıyor, yükseldikçe genişleyip soluyor (100'de 0,55, 400'de 0,18). Eski havuz hiç görünmüyordu:
+  Unity'nin `Mathf.SmoothStep(from, to, t)`'si GLSL smoothstep'i değil, kenar terimi her yerde 0,2 veriyordu
+  (r149). Kapağın havuzu ekranın altındaydı (çizimi kutusunun ortasının 42 üstünde, formül kutunun tabanından
+  hesaplıyordu); şişeninki camın arkasında kalıyordu (10 aşağı).
+- **Mahzen gölgeleri:** nedeni şişenin kendi siluetinin sert kenarlı bir kopyasının 3 sağa 2 aşağı itilmesi —
+  arka plakanın arkasında yalnız sağda ve ayak altında koyu bir şerit kalıyordu, bir çıkartmanın gölgesi; ayak
+  elipsi de sert bir diskti. Bölmeleri kendi rafının altındaki şerit ışık aydınlatıyor, gölge dümdüz aşağı
+  düşer: artık ayağın çevresinde yumuşak bir havuz (genişliğin 1,7 katı) ve arka duvarda şişenin alt yarısının
+  arkasında hafif bir kararma, yan kayma yok.
+- Doğrulama: EditMode 624/625, PlayMode 13/13 (tezgâh görünüm testi bakılıp yeniden kutsandı).
+
 ### 9.104 · Sekizinci liste (1/…): oda seçimleri, URP spot sarkıtlar, pencere lekesi, tek çizim şehir (2026-09-22)
 
 - **Yazarın seçimleri oyunda** (`Tools/room7_ship.py`): C3 `ceil7_dusk` (Alacakaranlık Tavanı, 3★, $210),

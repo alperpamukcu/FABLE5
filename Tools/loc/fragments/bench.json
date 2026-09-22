@@ -95,6 +95,7 @@
     { "key": "bench.tap.verdict.short", "text": "SHORT POUR", "note": "Draught station verdict: the pint is under three quarters full. 16 px, one line." },
     { "key": "bench.tap.verdict.good", "text": "GOOD PINT", "note": "Draught station verdict: a full pint with a good head (plays the good chime). Must differ from the other verdicts. 16 px, one line." },
     { "key": "bench.tap.verdict.too_much_head", "text": "TOO MUCH HEAD", "note": "Draught station verdict: too much foam (plays the bad chime). Must differ from the other verdicts. 16 px, one line." },
-    { "key": "bench.tap.verdict.flat", "text": "FLAT — NEEDS A HEAD", "note": "Draught station verdict: too little foam (plays the flat chime). Must differ from the other verdicts. 16 px, one line." }
+    { "key": "bench.tap.verdict.flat", "text": "FLAT — NEEDS A HEAD", "note": "Draught station verdict: too little foam (plays the flat chime). Must differ from the other verdicts. 16 px, one line." },
+    { "key": "bench.bin.ask", "text": "SURE?", "note": "The question the bin key hangs over itself in a small balloon on the first press; a second press while it stands throws the drink away (2026-09-22). One short line, ~10 characters at 16 px." }
   ]
 }

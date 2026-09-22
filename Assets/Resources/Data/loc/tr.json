@@ -58,6 +58,7 @@
     {"key": "advice.type.sweet", "text": "tatlı", "src": "sweet"},
     {"key": "bench.back_to_bar", "text": "◀  BARA DÖN", "src": "◀  BACK TO THE BAR"},
     {"key": "bench.bin", "text": "ÇÖP", "src": "BIN"},
+    {"key": "bench.bin.ask", "text": "EMİN MİSİN?", "src": "SURE?"},
     {"key": "bench.binned", "text": "ÇÖPE GİTTİ", "src": "BINNED"},
     {"key": "bench.binned_fee", "text": "ÇÖPE GİTTİ · -{fee}", "src": "BINNED · -{fee}"},
     {"key": "bench.serve.aim.clean", "text": "TEMİZ DÖKÜM", "src": "CLEAN POUR"},

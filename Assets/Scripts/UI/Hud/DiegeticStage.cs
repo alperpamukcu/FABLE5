@@ -1406,30 +1406,44 @@ namespace LastCall.UI
         }
 
         /// <summary>Slot i, filled shelf by shelf and bay by bay, the way a bar restocks.</summary>
-        /// <summary>The bottle's two shadows, made on first use and moved with it: its silhouette (order 30, a hair
-        /// nearer than the counter, a hair farther than the back plate) and the ellipse under its foot.</summary>
+        /// <summary>
+        /// The bottle's two shadows, made on first use and moved with it (order 30, a hair nearer than the counter, a
+        /// hair farther than the back plate).
+        ///
+        /// WHAT A SHELF LIGHT MAKES (2026-09-22, the author's eighth list: "Mahzen sahnesindeki şişelerin yarattığı
+        /// gölgeler gerçekçi durmuyor nedeni bul ve o gölgelendirmeleri geliştir"). The reason: the shadow was the
+        /// bottle's own silhouette, hard-edged, pushed three units right and two DOWN - behind the glass's back plate
+        /// all that showed was a dark sliver down the bottle's right side and under its foot, which is a sticker's drop
+        /// shadow, and the foot's ellipse was a hard disc. The compartments are lit by a strip under their own board,
+        /// straight down on the stock, so a bottle's shadow falls straight down too: a soft pool on the shelf round the
+        /// foot, darkest where glass meets wood, and a faint darkening of the back wall behind its lower half where the
+        /// bottle keeps the strip's light off it. No side offset, no hard edge.
+        /// </summary>
         private void PlaceCellarShadow(SpriteRenderer sr, int i, float x, float footY)
         {
             while (_cellarShadow.Count <= i)
             {
                 int k = _cellarShadow.Count;
-                var cast = WorldSprite("StockShadow" + k, null, order: 30);
-                cast.color = new Color(0f, 0f, 0f, 0.22f);
-                var foot = WorldSprite("StockFootShadow" + k, GlassArt.SurfaceDisc(), order: 30);
-                foot.color = new Color(0f, 0f, 0f, 0.32f);
+                var cast = WorldSprite("StockShadow" + k, BackBarArt.SoftShadow(), order: 30);
+                cast.color = new Color(0f, 0f, 0f, 0.26f);
+                var foot = WorldSprite("StockFootShadow" + k, BackBarArt.ContactShadow(), order: 30);
+                foot.color = new Color(0f, 0f, 0f, 0.62f);
                 _cellarShadow.Add(cast); _cellarFootShadow.Add(foot);
             }
             var lift = _world != null ? _world.position : Vector3.zero;
+            float w = i < _cellarSlotW.Count ? _cellarSlotW[i] : CellarBottleH * 0.5f;
+            // the back wall behind the bottle's lower half
             var cast2 = _cellarShadow[i];
-            cast2.sprite = sr.sprite;
-            cast2.transform.localScale = sr.transform.localScale;
-            cast2.transform.position = sr.transform.position + new Vector3(3f, -2f, -0.001f);
+            var soft = cast2.sprite != null ? cast2.sprite.bounds.size : Vector3.one;
+            float occH = CellarBottleH * 0.62f;
+            cast2.transform.localScale = new Vector3(w * 1.45f / Mathf.Max(0.001f, soft.x), occH / Mathf.Max(0.001f, soft.y), 1f);
+            cast2.transform.position = new Vector3(x, footY + occH * 0.30f, -0.001f) + lift;
             cast2.enabled = sr.enabled; cast2.gameObject.SetActive(sr.gameObject.activeSelf);
+            // the pool on the board round the foot
             var foot2 = _cellarFootShadow[i];
             var disc = foot2.sprite != null ? foot2.sprite.bounds.size : Vector3.one;
-            float w = i < _cellarSlotW.Count ? _cellarSlotW[i] : CellarBottleH * 0.5f;
-            foot2.transform.localScale = new Vector3(w * 1.25f / Mathf.Max(0.001f, disc.x), 5f / Mathf.Max(0.001f, disc.y), 1f);
-            foot2.transform.position = new Vector3(x, footY + 1f, -0.001f) + lift;
+            foot2.transform.localScale = new Vector3(w * 1.7f / Mathf.Max(0.001f, disc.x), 9f / Mathf.Max(0.001f, disc.y), 1f);
+            foot2.transform.position = new Vector3(x, footY + 2f, -0.001f) + lift;
             foot2.enabled = sr.enabled; foot2.gameObject.SetActive(sr.gameObject.activeSelf);
         }
 

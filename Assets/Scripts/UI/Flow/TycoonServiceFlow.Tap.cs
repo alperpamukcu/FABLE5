@@ -245,7 +245,10 @@ namespace LastCall.UI
         // Out from under SERVE IT (2026-09-22, seventh list: "serve it ile bira fıçıları üst üste geliyor, fıçılar
         // biraz daha yukarı çekilsin"): two bays in the gap between the way out and SERVE IT, one between SERVE IT
         // and the bin. No keg stands under a key now.
-        private static readonly float[] BayX = { -330f, -218f, 300f };
+        // UNDER THE TOWER (2026-09-22, the eighth list): the keys went to the bottom-left corner as one row, so the
+        // kegs stand where the beer comes out - three bays about the tower's own middle, a keg's width and a hand
+        // apart, and the whole left of the shelf is the keys'.
+        private static readonly float[] BayX = { TowerX - 120f, TowerX, TowerX + 120f };
         /// <summary>Where the blank label sits on keg.png, as fractions of the sprite: the pale
         /// band runs from 0.516 to 0.676 of its height, 95% of its width. Measured, so the brand
         /// lands on the label instead of near it.</summary>
@@ -509,8 +512,9 @@ namespace LastCall.UI
             // 240x64 slab of its own in the corner.
             // The glass bench's own word on it: what to do after is the room's to say over the standing pint.
             // AT THE BOTTOM, DEAD CENTRE (2026-09-22): the same place on every bench.
+            // third in the bottom-left row (2026-09-22, the eighth list), after the way out and the bin
             _tapDone = PackKeyFlow(_tapPanel, "Done", UIText.T("bench.serve.serve_key"), null, KeyGo,
-                new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, KeyRowY),
+                new Vector2(0f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(KeyRowX(2), KeyRowOn(_tapPanel)),
                 () => { if (Run != null && !Run.ServingGlass.IsEmpty) GoTo(Stage.Closed); },
                 out _tapDoneBtn, out _tapDonePack, 16);
             RegisterFixed(_tapPanel, _tapDone);

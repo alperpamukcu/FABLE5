@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace LastCall.UI
 {
@@ -32,6 +32,56 @@ namespace LastCall.UI
         private static readonly Color32 LipShine = new Color32(0x6E, 0xE0, 0xD6, 0xFF);
 
         /// <summary>The ellipse a bottle stands in — what pins it to the floor plane.</summary>
+        private static Sprite _contact, _soft;
+
+        /// <summary>
+        /// A SHADOW WITH A CONTACT IN IT (2026-09-22, the author's eighth list: "şişelerin ve shakerin gölgesinin
+        /// metodunu beğenmedim gerçekçi durmuyor"): a tight dark core where the foot meets the stone and a wide soft
+        /// skirt round it, the two lobes a lamp overhead makes - the flat oval had one edge, so a tin stood in a stain.
+        /// Black, for the caller's alpha.
+        /// </summary>
+        public static Sprite ContactShadow()
+        {
+            if (_contact != null) return _contact;
+            const int W = 96, H = 24;
+            var px = new Color32[W * H];
+            float cx = (W - 1) / 2f, cy = (H - 1) / 2f;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = (x - cx) / cx, dy = (y - cy) / cy;
+                    float d = dx * dx + dy * dy;
+                    float core = Mathf.Exp(-d / 0.10f);
+                    float skirt = Mathf.Exp(-d / 0.42f);
+                    // a real smoothstep: Unity's Mathf.SmoothStep(from, to, t) interpolates from..to by t, it is not
+                    // GLSL's edge test - read that way it gave 0.2 everywhere and the shadow never showed (r149)
+                    float e = Mathf.Clamp01((d - 0.80f) / 0.20f);
+                    float edge = 1f - e * e * (3f - 2f * e);
+                    float a = Mathf.Clamp01(0.70f * core + 0.45f * skirt) * edge;
+                    px[y * W + x] = new Color32(0, 0, 0, (byte)Mathf.RoundToInt(255f * a));
+                }
+            return _contact = Make(px, W, H);
+        }
+
+        /// <summary>A round soft falloff, black, for shadows that are only air getting darker - what a bottle does
+        /// to the wall behind it under a shelf's own strip light (2026-09-22).</summary>
+        public static Sprite SoftShadow()
+        {
+            if (_soft != null) return _soft;
+            const int S = 64;
+            var px = new Color32[S * S];
+            float c = (S - 1) / 2f;
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - c) / c, dy = (y - c) / c;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = d >= 1f ? 0f : Mathf.Pow(1f - d, 1.8f);
+                    px[y * S + x] = new Color32(0, 0, 0, (byte)Mathf.RoundToInt(255f * a));
+                }
+            return _soft = Make(px, S, S);
+        }
+
         public static Sprite BottleShadow()
         {
             if (_shadow != null) return _shadow;

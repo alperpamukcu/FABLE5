@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, second slice (2026-09-22):** every bench's keys are one row in the bottom-left corner -
+  a square arrow, a square can and SERVE IT - and the bin asks before it throws anything away; the tin bench's right
+  column is a page of its own (the words, the contents a size down on their own plaque, the gauges under them); the
+  tin gauge is solid, the column panels wear a lattice, the napkin is gone; the props' only shadows are soft pools
+  under their feet that stay when they are lifted, and the cellar's bottles stand in pools of their own instead of
+  wearing a drop shadow. GDD_MEVCUT §9.105.
+
 - **The eighth list, first slice (2026-09-22):** the author's C3, B2, F3 and R2 are the top rungs of their
   ladders, cut clean of the tile's frame and with the strip over the door at the wall's own scale; the pendants are
   URP spots aimed at the bar from the shades' mouths, their shafts drawn once behind the drinkers by a light of their
