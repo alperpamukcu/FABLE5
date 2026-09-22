@@ -34,9 +34,9 @@
       { "t": 0.00, "ambient": "ClubBlue3", "keep": 0.38, "intensity": 0.30, "glow": "Amber3",    "glowKeep": 0.80, "glowIntensity": 1.10 },
       { "t": 0.16, "ambient": "Night4",    "keep": 0.48, "intensity": 0.30, "glow": "ViceRed4",  "glowKeep": 0.85, "glowIntensity": 1.20 },
       { "t": 0.30, "ambient": "ClubBlue2", "keep": 0.50, "intensity": 0.30, "glow": "Magenta3",  "glowKeep": 0.85, "glowIntensity": 0.95 },
-      { "t": 0.44, "ambient": "ClubBlue2", "keep": 0.55, "intensity": 0.28, "glow": "Magenta2",  "glowKeep": 0.70, "glowIntensity": 0.55 },
-      { "t": 0.60, "ambient": "Amber3",    "keep": 0.56, "intensity": 0.34, "glow": "ClubBlue3", "glowKeep": 0.60, "glowIntensity": 0.12 },
-      { "t": 1.00, "ambient": "Amber3",    "keep": 0.56, "intensity": 0.34, "glow": "ClubBlue3", "glowKeep": 0.60, "glowIntensity": 0.12 }
+      { "t": 0.44, "ambient": "ClubBlue2", "keep": 0.55, "intensity": 0.24, "glow": "Magenta2",  "glowKeep": 0.70, "glowIntensity": 0.55 },
+      { "t": 0.60, "ambient": "Amber3",    "keep": 0.56, "intensity": 0.22, "glow": "ClubBlue3", "glowKeep": 0.60, "glowIntensity": 0.12 },
+      { "t": 1.00, "ambient": "Amber3",    "keep": 0.56, "intensity": 0.20, "glow": "ClubBlue3", "glowKeep": 0.60, "glowIntensity": 0.12 }
     ],
     "sunShadowNearX": 6, "sunShadowNearY": -5, "sunShadowFarX": 14, "sunShadowFarY": -2, "sunShadowAlpha": 0.38, "skyShadowAlpha": 0.18,
     "lampShadowX": 3, "lampShadowY": -4, "lampShadowAlpha": 0.34, "shadowFloor": 0.18,

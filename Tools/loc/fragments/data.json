@@ -127,6 +127,8 @@
     { "key": "data.fixture.ceil_palm.name", "text": "Palm Ceiling", "note": "Upgrade name on the market / decor tile (slot: Ceiling). Short title line; shown in capitals." },
     { "key": "data.fixture.ceil_stucco.blurb", "text": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it.", "note": "Body text of the upgrade tile for \"Stucco Ceiling\" (TycoonHud.Decor.cs, TycoonHud.DayEnd.cs). Wraps over a few lines." },
     { "key": "data.fixture.ceil_stucco.name", "text": "Stucco Ceiling", "note": "Upgrade name on the market / decor tile (slot: Ceiling). Short title line; shown in capitals." },
+    { "key": "data.fixture.sink_old.blurb", "text": "The sink the last owner left: the same basin, the same tap, twenty years of grey on it. It works.", "note": "Body text of the upgrade card for the sink the bar opens with (sellable). 8 px, two or three short lines." },
+    { "key": "data.fixture.sink_old.name", "text": "Old Steel Sink", "note": "Upgrade name on the market / decor tile (slot: Sink). Short title line; shown in capitals." },
     { "key": "data.fixture.counter_sink.blurb", "text": "Cold water, a chipped drain, and a landlord who counts what goes down it.", "note": "Body text of the upgrade tile for \"Steel Sink\" (TycoonHud.Decor.cs, TycoonHud.DayEnd.cs). Wraps over a few lines." },
     { "key": "data.fixture.counter_sink.name", "text": "Steel Sink", "note": "Upgrade name on the market / decor tile (slot: Sink). Short title line; shown in capitals." },
     { "key": "data.fixture.flamingo_triptych.blurb", "text": "The coast in three frames. The flamingo stays past closing.", "note": "Body text of the upgrade tile for \"Flamingo Triptych\" (TycoonHud.Decor.cs, TycoonHud.DayEnd.cs). Wraps over a few lines." },

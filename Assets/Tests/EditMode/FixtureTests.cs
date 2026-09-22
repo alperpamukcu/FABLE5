@@ -153,13 +153,14 @@ namespace LastCall.Tests
             string path = UnityEngine.Application.dataPath + "/Data/fixtures/fixtures.json";
             var loaded = DataLoader.ParseFixtures(System.IO.File.ReadAllText(path));
             var given = loaded.Fixtures.Where(f => f.StartsInTheRoom).Select(f => f.Id).OrderBy(s => s).ToArray();
-            Assert.AreEqual(new[] { "beer_mat", "counter_lamps", "counter_sink", "prep_mat", "shaker_steel",
+            Assert.AreEqual(new[] { "beer_mat", "counter_lamps", "prep_mat", "shaker_steel", "sink_old",
                                     "table5_bistro_L", "table5_bistro_R", "taps_one",
                                     "walls_1", "walls_right_1" }, given,
                 "the room opens as the author's 'Oyun açılış v2' (2026-09-13): the cracked back wall, "
                 + "the peeling right wall, the two bistro tables, the steel sink and both mats — and "
                 + "the tools, one tap and the steel tin, which are only ever upgraded — and, since "
-                + "2026-09-22, the pendants over the counter (the author: 'tam tezgahın üstüne yerleştir')");
+                + "2026-09-22, the pendants over the counter and the OLD sink the last owner left - the steel "
+                + "one is bought now (the author: 'bu başlangıç sinki olacak, satarım')");
             foreach (var id in given)
                 Assert.AreEqual(0, loaded.Fixtures.First(f => f.Id == id).Comfort, id + " is the FreeBase");
             foreach (var id in new[] { "flamingo_triptych", "wall_lamps_one", "floor_rug", "wall_tv" })

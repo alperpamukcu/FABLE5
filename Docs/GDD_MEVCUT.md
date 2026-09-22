@@ -1540,6 +1540,38 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.100 · Altıncı liste (1/3): kapının üst yüzü ve ışığı, tavan konileri, daha loş akşam, küçülen pencere lekesi, sertifika v7, eski lavabo (2026-09-22)
+
+- **Kapağın üst yüzü** (`Resources/Scene/counter_door.png`): çizim dört satır aşağı kaydı, açılan yer kapının
+  KALINLIĞI oldu — Cyan[4] aydınlık üst yüz, altında Cyan[3] ön kenar ve Cyan[0] dikiş. Kapalıyken tezgâhın
+  dudağında kesilmiş bir resim değil, kapaklı bir kütle okunuyor (yazar: "3 boyutlu bir cisim olduğundan incede
+  olsa bir üst yüzeyi olmalı").
+- **Çatlağın ışığı** (`LayOutShutterLight`): beyaz parıltı yerine kilerin kendi tungsteni (`LightLanguage.Key`),
+  kapıdan 96 birim geniş, 1,35 kat güçlü ve 3,4 Hz'de hafif nefes alıyor; aralık 0,18'i geçene kadar sızmıyor.
+- **Tavan konileri**: sarkıtların ışığı artık ÇEREZLİ SPRITE (`PendantConeCookie`, 150×168; ağızda 22 geniş,
+  tezgâhta 146, düşerken sönüyor, kenarları iki adımda taranıyor). Nokta ışığın iç/dış AÇISI bu URP'de hiçbir
+  şeyi aydınlatmıyor — üç turda ölçüldü (r105–r108: aynı lamba yuvarlakken tezgâhı 50→58 yapıyor, 46/84 koniyle
+  tek piksel değiştirmiyor). Sarkıtlar yalnız TEZGÂH ve MÜŞTERİLER katmanını aydınlatır (yazar: "tavandaki ışık
+  sadece tezgahı ve müşterileri aydınlatacak"); ışık gölgenin 113 birim altında asılı, ölçüldü (r109: konilerin
+  altında +6..+8 luma, aralarında değişmiyor).
+- **Akşam daha loş**: barın kendi tepe ışıkları gecede 0,52 → 0,34, ev lambaları 1,0 → 0,82, göğün oda anahtarları
+  0,34 → 0,22 (t 0,60) ve 0,20 (t 1,00), 0,28 → 0,24 (t 0,44). Duvar artık lambaların işi.
+- **Pencere lekesi küçüldü** (yazar: "camdan yansıyan ışığın boyutunu küçült"): duvar 212×160 → 156×118, zemin
+  300×72 → 216×54, tavan 260×64 → 190×48. Dördü de dört paralel paralelkenar, köşeleri kırpık.
+- **Sertifika v7**: puan RAKAMI yok — KONFOR ve SERVİS sözcüklerinin ALTINDA beş madalya/kalp, kaçı kazanıldıysa
+  o kadarı dolu (yazar: "5.0 veya 0.0 olarak gösterilmesin"). Açılanların bandı DÜZ çerçeveli, sıradakilerin
+  bandı KESİK ÇİZGİLİ (`DashedFrame`; döndürülmüş kenar rect'ini koruduğu için dikey çizgi ayrı dokuyla çizilir).
+  Yazı BELGE tipografisi: en ağır yüz (Silkscreen Bold, `CertFace`), BÜYÜK HARF ve HARF ARASI (`Tracked`, ince
+  boşluk; yalnız Latin) — arcade yüzü arcade'de kalır. Kurdeleler maskenin dışına taşındı (`_ladderSealHost`
+  grubun altında), ikisi farklı boyda ve farklı açıda eğik, uçları çatal; artık kesilmiyorlar. Konfeti: altı
+  mürekkep, dört kesim (flama, kare, çubuk, yuvarlak), iki kat boyut, 30 → 90 parça.
+- **Eski çelik lavabo** (`fx_sink_old`, `fx_sink`ten türetildi: aynı hatlar, Graphite rampası): barın BAŞLANGIÇ
+  lavabosu ve satılabilir; çelik lavabo artık satın alınan ilk basamak (konfor 0,15, daha hızlı yıkar),
+  pirinç üçüncü. Odanın gideri artık `sink_old` (PlayMode testi hangisi duruyorsa onu bulur).
+- **Lamba adayları**: `Docs/reports/lamps/index.html` — üç make × dört çekim (kafes, küre, çan), yazarın seçimi
+  bekleniyor.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda: r109 koniler, r112/r113 sertifika.
+
 ### 9.99 · Beşinci liste: kapının kendi rengi ve yavaş aralanışı, tavandan üç sarkıt, üç yüzeyde ışık hüzmesi, gölgelerin erişimi, 2x kule, yatay çöp, ortada SERVE IT, sertifika kademeleri, palet menüsü (2026-09-22)
 
 - **Kapak kendi rengi** (`DiegeticStage.DoorArt`, `Resources/Scene/counter_door.png`): raflarla aynı olmayan SABİT

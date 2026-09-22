@@ -29,8 +29,10 @@ namespace LastCall.UI
     {
         private RectTransform _ladderPanel, _ladderGroup, _ladderReveal, _ladderPaper, _ladderBand, _ladderNextBand, _ladderFx, _ladderNewFlag;
         private RectTransform _ladderSeal, _ladderRibbonL, _ladderRibbonR;
-        private Text _ladderHeading, _ladderTo, _ladderToShadow, _ladderToBold, _ladderMeta, _ladderBandHead, _ladderNextHead, _ladderComfortValue, _ladderServiceValue;
+        private Text _ladderHeading, _ladderTo, _ladderToShadow, _ladderToBold, _ladderMeta, _ladderBandHead, _ladderNextHead;
         private RectTransform _ladderRuleOuter, _ladderRuleInner, _ladderGilt, _ladderUnderline;
+        private RectTransform _ladderBandBox, _ladderNextBox, _ladderSealHost;
+        private Image[] _ladderBandBoxEdges, _ladderNextBoxEdges;
         private Image[] _ladderRuleOuterEdges, _ladderRuleInnerEdges, _ladderGiltEdges;
         private List<Image> _ladderBrackets;
         private Image _ladderPaperImg, _ladderPatternImg, _ladderUnderlineImg;
@@ -64,7 +66,9 @@ namespace LastCall.UI
         private const int TilesPerRow = 12;
         /// <summary>Where this rung's tiles begin under the sheet's top, the gap before the next rung's band (its
         /// head included), and what the sheet keeps under its last row.</summary>
-        private const float TilesTop = 232f, NextBandGap = 30f, PaperFoot = 28f;
+        // 272 down to the first row, and 64 between the bands: the band's box carries a head above it and a
+        // hand of air under its tiles, and the two boxes may not touch (measured, r112).
+        private const float TilesTop = 272f, NextBandGap = 64f, PaperFoot = 28f;
         /// <summary>The seal's size on the sheet: PixelLab's drawing at its own 128, or the disc drawn at it.</summary>
         private const float SealPx = 128f;
         /// <summary>The key under the sheet: the gap above it.</summary>
@@ -132,6 +136,27 @@ namespace LastCall.UI
                 // 4 and 5 stars: gilt, a heavy rule, the deepest stock the palette has.
                 default: return new CertLook(UITheme.Cream[4], UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.34f, true, true, 1.2f);
             }
+        }
+
+        /// <summary>The sheet's face: the heaviest the game ships, which is the shop's.</summary>
+        private Font CertFace => _shop != null ? _shop : _display;
+
+        /// <summary>
+        /// WIDE-TRACKED CAPS (2026-09-22). A certificate's name is set with air between the letters; uGUI's Text
+        /// has no tracking, so the air is put in as thin spaces. Latin only - a Chinese or Japanese line is already
+        /// spaced by its own square grid, and pulling it apart would read as broken rather than as engraved.
+        /// </summary>
+        private static string Tracked(string line)
+        {
+            if (string.IsNullOrEmpty(line)) return line;
+            foreach (var ch in line) if (ch > '\u024F') return line;
+            var sb = new System.Text.StringBuilder(line.Length * 2);
+            for (int i = 0; i < line.Length; i++)
+            {
+                sb.Append(line[i]);
+                if (i < line.Length - 1 && line[i] != ' ') sb.Append('\u2009');
+            }
+            return sb.ToString();
         }
 
         private void BuildLadderWindow(RectTransform root)
@@ -229,21 +254,29 @@ namespace LastCall.UI
             // eyebrow in the small face, muted; the TITLE at 32 in the display face, doubled a step to the right for
             // weight, over its shadow, on an amber rule; the meta line quiet; the scores' words in the accent and their
             // figures at 24; the bands' heads in the accent too. Four sizes, two faces, three inks - nothing else.
+            // THE TYPE OF A DOCUMENT, NOT OF AN ARCADE (2026-09-22, the author: "sertifikada kullanılan font
+            // seçimini iyi araştır, oyunlarda bu tarz belge gibi gözüken sahnelerde nasıl fontlar kullanılıyor").
+            // What a certificate is set in, everywhere it is set: a HEAVY roman for the name, wide-tracked CAPS for
+            // the line above it, a light roman for the small print, and rules that the type sits on. A pixel game
+            // has no blackletter to reach for, so the three levers that survive the grid are used instead - the
+            // heaviest face the game ships (Silkscreen Bold, the shop's), CAPITALS, and TRACKING, which is the one
+            // thing that makes a pixel line read as engraved rather than as a label. The arcade face (MalibuArcade)
+            // stays on the arcade: it is a game's voice, and this sheet is the bar's.
             _ladderHeading = NewText("Heading", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[3]);
             Place(_ladderHeading.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -24f));
             _ladderHeading.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // The title the bar is hereby known as: the display face's large size, its shadow two units under
             // and right so it stands off the paper, and the accent's rule under it.
-            _ladderToShadow = NewText("ToShadow", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[3]);
+            _ladderToShadow = NewText("ToShadow", _ladderPaper, CertFace, 32, TextAnchor.UpperCenter, UITheme.Night[3]);
             Place(_ladderToShadow.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(3f, -47f));
             _ladderToShadow.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderToShadow.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _ladderToBold = NewText("ToBold", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
+            _ladderToBold = NewText("ToBold", _ladderPaper, CertFace, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
             Place(_ladderToBold.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(2f, -44f));
             _ladderToBold.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderToBold.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _ladderTo = NewText("To", _ladderPaper, _display, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
+            _ladderTo = NewText("To", _ladderPaper, CertFace, 32, TextAnchor.UpperCenter, UITheme.Night[0]);
             Place(_ladderTo.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(0f, -44f));
             _ladderTo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderTo.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -259,30 +292,48 @@ namespace LastCall.UI
             _ladderMeta.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // COMFORT in the house's medals and SERVICE in its hearts, the way the top bar wears them.
-            _ladderMedals = ScoreGroup("Comfort", -240f, -176f, "rank.cert.comfort", ItemArt.Medal, out _ladderComfortValue);
-            _ladderHearts = ScoreGroup("Service", 240f, -176f, "rank.cert.service", ItemArt.Heart, out _ladderServiceValue);
+            _ladderMedals = ScoreGroup("Comfort", -240f, -170f, "rank.cert.comfort", ItemArt.Medal);
+            _ladderHearts = ScoreGroup("Service", 240f, -170f, "rank.cert.service", ItemArt.Heart);
 
             var cut = NewRect("Cut", _ladderPaper);
-            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -200f));
+            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -240f));
             var ci = cut.gameObject.AddComponent<Image>();
             ci.color = UITheme.Night[3]; ci.raycastTarget = false;
 
-            _ladderBandHead = BandHead("BandHead", -212f);
+            _ladderBandHead = BandHead("BandHead", -232f);
+            // TWO BANDS, TWO FRAMES (2026-09-22, the author: "sıradaki ürünlerin bulunduğu bölümün etrafında
+            // çizgili çerçeve olsun, açılanların ise etrafında çizgisiz çerçeve olsun"): what the bar HAS is ruled
+            // in a solid line, what is still to come is ruled in a dashed one - the oldest way a document says
+            // "issued" and "pending" without a word.
+            _ladderBandBox = NewRect("BandBox", _ladderPaper);
+            _ladderBandBox.pivot = new Vector2(0.5f, 1f);
+            _ladderBandBoxEdges = FrameEdges(_ladderBandBox, 1f, UITheme.Night[3]);
             _ladderBand = NewRect("Tiles", _ladderPaper);
             Place(_ladderBand, new Vector2(0.5f, 1f), new Vector2(PaperW, TileRowH), new Vector2(0f, -TilesTop));
             _ladderBand.pivot = new Vector2(0.5f, 1f);
             _ladderNextHead = BandHead("NextHead", -400f);
+            _ladderNextBox = NewRect("NextBox", _ladderPaper);
+            _ladderNextBox.pivot = new Vector2(0.5f, 1f);
+            _ladderNextBoxEdges = DashedFrame(_ladderNextBox, UITheme.Night[3]);
             _ladderNextBand = NewRect("NextTiles", _ladderPaper);
             Place(_ladderNextBand, new Vector2(0.5f, 1f), new Vector2(PaperW, TileRowH), new Vector2(0f, -420f));
             _ladderNextBand.pivot = new Vector2(0.5f, 1f);
 
             // THE SEAL, in the sheet's bottom-right corner: two ribbon tails first (they hang from behind it,
             // out past the sheet's edge), then the disc with the cocktail glass in it. All in the one accent.
-            _ladderRibbonL = Ribbon("RibbonL", -12f, UITheme.Amber[1]);
-            _ladderRibbonR = Ribbon("RibbonR", 12f, UITheme.Amber[2]);
+            // OUTSIDE THE ROLL (2026-09-22, the author: "kurdeleler ... sertifikanın dışına taşabilir, şu an
+            // uçları kesilmiş gibi duruyor"): the seal and its tails hang off a host under the GROUP, not under the
+            // paper - the paper lives inside the reveal's mask, which was cutting the tails off square at the
+            // sheet's bottom edge. ShowLadder hangs this host at the paper's foot.
+            _ladderSealHost = NewRect("SealHost", _ladderGroup);
+            _ladderSealHost.anchorMin = _ladderSealHost.anchorMax = new Vector2(0.5f, 1f);
+            _ladderSealHost.pivot = new Vector2(0.5f, 1f);
+            _ladderSealHost.sizeDelta = new Vector2(PaperW, 1f);
+            _ladderRibbonL = Ribbon("RibbonL", -14f, UITheme.Amber[1], -9f, RibbonLen);
+            _ladderRibbonR = Ribbon("RibbonR", 12f, UITheme.Amber[2], 7f, RibbonLen * 1.18f);
             // THE SEAL, DRAWN (2026-09-21, the author: "Mühürü daha büyük ve pixellabden üret"): Items/cert_seal is
             // PixelLab's amber wax with the martini pressed into it, at 128; without it the disc and the glass stand in.
-            _ladderSeal = NewRect("Seal", _ladderPaper);
+            _ladderSeal = NewRect("Seal", _ladderSealHost);
             _ladderSeal.anchorMin = _ladderSeal.anchorMax = new Vector2(1f, 0f);
             _ladderSeal.pivot = new Vector2(0.5f, 0.5f);
             _ladderSeal.sizeDelta = new Vector2(SealPx, SealPx);
@@ -302,7 +353,7 @@ namespace LastCall.UI
         /// <summary>A band's head: sixteen-pixel writing, left-aligned at the sheet's side.</summary>
         private Text BandHead(string id, float y)
         {
-            var t = NewText(id, _ladderPaper, _display, 16, TextAnchor.MiddleLeft, UITheme.Amber[2]);
+            var t = NewText(id, _ladderPaper, CertFace, 16, TextAnchor.MiddleLeft, UITheme.Amber[2]);
             Place(t.rectTransform, new Vector2(0f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(PaperSide, y));
             t.rectTransform.pivot = new Vector2(0f, 0.5f);
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -329,19 +380,21 @@ namespace LastCall.UI
         }
 
         /// <summary>A score on the sheet: its label, five of the house's icons filled to the value, the number.</summary>
-        private Image[] ScoreGroup(string id, float x, float y, string labelKey, Func<bool, float, Sprite> art, out Text value)
+        private Image[] ScoreGroup(string id, float x, float y, string labelKey, Func<bool, float, Sprite> art)
         {
-            const float px = 16f, gap = 2f, labelW = 110f, valueW = 64f;
+            // THE ROW SITS UNDER ITS WORD, AND THERE IS NO FIGURE (2026-09-22, the author: "comfort yazısı ve service
+            // yazısının altında puanlarını gösteren barı oraya taşı ... puan ibresi 5.0 veya 0.0 olarak gösterilmesin
+            // hiçbir zaman, kaç yıldız ise o kadar yıldız görseli ile"). A certificate does not print a score out of
+            // five; it shows five marks and fills as many as were earned. The word, and the marks under it.
+            const float px = 24f, gap = 4f, labelW = 220f;
             float rowW = BarRating.MaxStars * (px + gap) - gap;
-            float total = labelW + 10f + rowW + 10f + valueW;
-            float left = x - total * 0.5f;
-            var label = NewText(id + "Label", _ladderPaper, _display, 16, TextAnchor.MiddleRight, UITheme.Amber[2]);
+            var label = NewText(id + "Label", _ladderPaper, CertFace, 16, TextAnchor.MiddleCenter, UITheme.Amber[2]);
             if (id == "Comfort") _ladderComfortLabel = label; else _ladderServiceLabel = label;
-            Place(label.rectTransform, new Vector2(0.5f, 1f), new Vector2(labelW, 20f), new Vector2(left + labelW * 0.5f, y));
+            Place(label.rectTransform, new Vector2(0.5f, 1f), new Vector2(labelW, 20f), new Vector2(x, y));
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
-            label.text = UIText.T(labelKey);
+            label.text = Tracked(UIText.T(labelKey));
             var row = NewRect(id + "Row", _ladderPaper);
-            Place(row, new Vector2(0.5f, 1f), new Vector2(rowW, px), new Vector2(left + labelW + 10f + rowW * 0.5f, y));
+            Place(row, new Vector2(0.5f, 1f), new Vector2(rowW, px), new Vector2(x, y - 26f));
             var fills = new Image[BarRating.MaxStars];
             for (int i = 0; i < BarRating.MaxStars; i++)
             {
@@ -357,9 +410,6 @@ namespace LastCall.UI
                 oi.type = Image.Type.Filled; oi.fillMethod = Image.FillMethod.Horizontal; oi.fillAmount = 0f;
                 fills[i] = oi;
             }
-            value = NewText(id + "Value", _ladderPaper, _display, 24, TextAnchor.MiddleLeft, UITheme.Night[0]);
-            Place(value.rectTransform, new Vector2(0.5f, 1f), new Vector2(valueW, 28f), new Vector2(left + total - valueW * 0.5f, y));
-            value.horizontalOverflow = HorizontalWrapMode.Overflow;
             return fills;
         }
 
@@ -371,27 +421,77 @@ namespace LastCall.UI
         }
 
         /// <summary>A ribbon tail: hangs from the seal's centre, pivot at its top, offset <paramref name="dx"/>.</summary>
-        private RectTransform Ribbon(string id, float dx, Color ink)
+        private RectTransform Ribbon(string id, float dx, Color ink, float lean, float len)
         {
-            var rt = NewRect(id, _ladderPaper);
+            var rt = NewRect(id, _ladderSealHost);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
             rt.pivot = new Vector2(0.5f, 1f);
             // LONGER, AND CUT TO A POINT (2026-09-22, the author: "kurdelenin ipleri uzamalı ve > şeklinde olmalı"):
             // the two tails fall a hundred and eighty units off the seal and each ends in the swallowtail a ribbon
             // is actually cut to - a notch taken out of the end, which is the ">" read the right way up.
-            rt.sizeDelta = new Vector2(24f, RibbonLen);
+            rt.sizeDelta = new Vector2(24f, len);
             rt.anchoredPosition = new Vector2(-PaperSide - 52f + dx, 84f);
+            // A RIBBON DOES NOT HANG PLUMB (2026-09-22): each tail leans its own way off the wax, and the two are
+            // different lengths, which is what stops them reading as two drawn rectangles.
+            rt.localRotation = Quaternion.Euler(0f, 0f, lean);
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = RibbonArt(12, (int)(RibbonLen * 0.5f));
+            img.sprite = RibbonArt(12, 90);
             img.type = Image.Type.Simple;
             img.color = ink; img.raycastTarget = false;
             return rt;
         }
 
         /// <summary>How far the seal's tails fall.</summary>
-        private const float RibbonLen = 180f;
+        private const float RibbonLen = 128f;
 
-        private static Sprite s_sealDisc, s_paperGrain, s_paperPattern, s_ribbon;
+        private static Sprite s_sealDisc, s_paperGrain, s_paperPattern, s_ribbon, s_dash, s_dashV;
+
+        /// <summary>The dash a pending band is ruled in: four on, three off, drawn at half and tiled at the house's
+        /// 2x. Two cuts, one lying down and one standing - a rotated Image keeps its RECT, so the upright edges of a
+        /// frame have to be drawn upright rather than turned (measured: a turned edge threw its dashes clear across
+        /// the screen, r102).</summary>
+        private static Sprite DashArt(bool upright)
+        {
+            if (upright && s_dashV != null) return s_dashV;
+            if (!upright && s_dash != null) return s_dash;
+            int w = upright ? 1 : 7, h = upright ? 7 : 1;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "cert_dash", wrapMode = TextureWrapMode.Repeat };
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int along = upright ? y : x;
+                    tex.SetPixel(x, y, along < 4 ? Color.white : new Color(0f, 0f, 0f, 0f));
+                }
+            tex.Apply(false, false);
+            var sp = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+            sp.name = upright ? "cert_dash_v" : "cert_dash";
+            if (upright) s_dashV = sp; else s_dash = sp;
+            return sp;
+        }
+
+        /// <summary>Four dashed edges round a rect, handed back so the grade can retint them.</summary>
+        private Image[] DashedFrame(RectTransform parent, Color c)
+        {
+            var edges = new Image[4];
+            for (int i = 0; i < 4; i++)
+            {
+                var rt = NewRect("Dash", parent);
+                bool horizontal = i < 2;
+                rt.anchorMin = horizontal ? new Vector2(0, i) : new Vector2(i - 2, 0);
+                rt.anchorMax = horizontal ? new Vector2(1, i) : new Vector2(i - 2, 1);
+                rt.pivot = new Vector2(horizontal ? 0.5f : i - 2, horizontal ? i : 0.5f);
+                rt.sizeDelta = horizontal ? new Vector2(0, 2f) : new Vector2(2f, 0);
+                rt.anchoredPosition = Vector2.zero;
+                var img = rt.gameObject.AddComponent<Image>();
+                img.sprite = DashArt(!horizontal);
+                img.type = Image.Type.Tiled;
+                img.pixelsPerUnitMultiplier = 0.5f;
+                img.color = c;
+                img.raycastTarget = false;
+                edges[i] = img;
+            }
+            return edges;
+        }
 
         /// <summary>A ribbon tail: a straight band with a V notched out of its end, drawn white and worn in the
         /// colour the caller gives it. Drawn at half and shown at the house's 2x, like every other code sprite here.</summary>
@@ -557,8 +657,8 @@ namespace LastCall.UI
             var was = BarRank.Of(from);
             var now = BarRank.Of(to);
             bool moving = climb && !Motion.Reduced;
-            _ladderHeading.text = UIText.T(climb ? "rank.window.title" : "rank.window.title_again");
-            _ladderTo.text = _ladderToShadow.text = _ladderToBold.text = UIText.T(now.Title);
+            _ladderHeading.text = Tracked(UIText.T(climb ? "rank.window.title" : "rank.window.title_again"));
+            _ladderTo.text = _ladderToShadow.text = _ladderToBold.text = Tracked(UIText.T(now.Title));
             _ladderMeta.text = climb
                 ? UIText.T("rank.cert.meta_climb", ("title", UIText.T(was.Title)), ("night", run.Day.ToString()))
                 : UIText.T("rank.cert.foot_again", ("night", run.Day.ToString()));
@@ -576,8 +676,7 @@ namespace LastCall.UI
             double service = run.ServiceTonight;
             SetRowFill(_ladderMedals, comfort);
             SetRowFill(_ladderHearts, service);
-            _ladderComfortValue.text = comfort.ToString("0.0");
-            _ladderServiceValue.text = service.ToString("0.0");
+
 
             // This rung's band, then the next rung's, dimmed, so every certificate says what comes next — the
             // author: "her sertifikada sıradaki açılacaklar gözükmeli, tarifler dahil".
@@ -599,12 +698,17 @@ namespace LastCall.UI
                 foreach (Transform old in _ladderNextBand) Destroy(old.gameObject);
                 nextRows = 0;
             }
-            _ladderNextHead.rectTransform.anchoredPosition = new Vector2(PaperSide, -(nextTop - 22f));
+            _ladderNextHead.rectTransform.anchoredPosition = new Vector2(PaperSide, -(nextTop - 40f));
             _ladderNextBand.anchoredPosition = new Vector2(0f, -nextTop);
+            // the two boxes: each one drawn round its band's tiles, a hand's width out
+            BoxBand(_ladderBandBox, TilesTop, rows);
+            BoxBand(_ladderNextBox, nextTop, nextRows);
+            _ladderNextBox.gameObject.SetActive(next != null && nextRows > 0);
 
             // The sheet is as tall as its bands, and never shorter than 16:9; the group holds it and the key.
             _ladderPaperH = Mathf.Max(PaperMinH, nextTop + nextRows * TileRowH + (nextRows == 0 ? 8f : 0f) + PaperFoot);
             _ladderPaper.sizeDelta = new Vector2(PaperW, _ladderPaperH);
+            if (_ladderSealHost != null) _ladderSealHost.anchoredPosition = new Vector2(0f, -_ladderPaperH);
             _ladderReveal.sizeDelta = new Vector2(PaperW, moving ? 0f : _ladderPaperH);
             _ladderGroup.sizeDelta = new Vector2(PaperW, _ladderPaperH + KeyGap + PauseKeyH);
             _ladderGroup.anchoredPosition = Vector2.zero;
@@ -657,6 +761,10 @@ namespace LastCall.UI
                     if (b != null) { b.gameObject.SetActive(look.Brackets); b.color = look.Trim; }
             if (_ladderUnderlineImg != null) _ladderUnderlineImg.color = look.Trim;
             if (_ladderBandHead != null) _ladderBandHead.color = look.Trim;
+            if (_ladderBandBoxEdges != null)
+                foreach (var e2 in _ladderBandBoxEdges) if (e2 != null) e2.color = look.Rule;
+            if (_ladderNextBoxEdges != null)
+                foreach (var e2 in _ladderNextBoxEdges) if (e2 != null) e2.color = new Color(look.Rule.r, look.Rule.g, look.Rule.b, 0.75f);
             if (_ladderNextHead != null) _ladderNextHead.color = look.Trim;
             if (_ladderComfortLabel != null) _ladderComfortLabel.color = look.Trim;
             if (_ladderServiceLabel != null) _ladderServiceLabel.color = look.Trim;
@@ -667,6 +775,18 @@ namespace LastCall.UI
 
         /// <summary>The seal's size at this rung, the scale the climb's pop multiplies.</summary>
         private float _ladderSealGrade = 1f;
+
+        /// <summary>Draws a band's frame round the rows it holds: the tiles start at <paramref name="top"/> and
+        /// each row is TileRowH deep, with the class captions standing above the first one.</summary>
+        private void BoxBand(RectTransform box, float top, int rows)
+        {
+            if (box == null) return;
+            const float padX = 12f, padTop = 26f, padBottom = 8f;
+            float h = rows * TileRowH + padTop + padBottom;
+            box.sizeDelta = new Vector2(PaperW - 2f * PaperSide + padX * 2f, h);
+            box.anchorMin = box.anchorMax = new Vector2(0.5f, 1f);
+            box.anchoredPosition = new Vector2(0f, -(top - padTop));
+        }
 
         private sealed class CertTile
         {
@@ -912,7 +1032,7 @@ namespace LastCall.UI
                 {
                     _ladderCheered = true;
                     Sfx.Play("cheer_sfx", 0.6f);
-                    Confetti(30);
+                    Confetti(90);
                 }
                 float sealT = landed - 0.1f;
                 if (sealT >= 0f)
@@ -961,24 +1081,32 @@ namespace LastCall.UI
         private void Confetti(int count)
         {
             if (_ladderFx == null) return;
-            var inks = new[] { UITheme.Amber[3], UITheme.Cream[4], UITheme.Cyan[4], UITheme.Amber[4] };
+            // BIGGER, AND IN MORE SHAPES (2026-09-22, the author: "konfetilerin boyutunu ve çeşitini arttıralım,
+            // daha coşkulu olmalı"): six inks off the palette instead of four, and four cuts - the long streamer,
+            // the square, the little bar and the round dot - at twice the size they were, which is what turns a
+            // sprinkle into a shower.
+            var inks = new[] { UITheme.Amber[3], UITheme.Amber[4], UITheme.Cream[4], UITheme.Cyan[4],
+                               UITheme.Magenta[4], UITheme.Lime[3] };
+            var cuts = new[] { new Vector2(16f, 6f), new Vector2(10f, 10f), new Vector2(7f, 14f), new Vector2(8f, 8f) };
             var r = _ladderFx.rect;
             for (int i = 0; i < count; i++)
             {
                 var rt = NewRect("P", _ladderFx);
                 rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
-                rt.sizeDelta = new Vector2(7f, 4f);
-                rt.anchoredPosition = new Vector2(r.xMin + Scatter01() * r.width, r.yMax + 20f + Scatter01() * 220f);
+                int cut = (int)(Scatter() % (uint)cuts.Length);
+                rt.sizeDelta = cuts[cut] * (0.8f + Scatter01() * 0.7f);
+                rt.anchoredPosition = new Vector2(r.xMin + Scatter01() * r.width, r.yMax + 20f + Scatter01() * 260f);
                 var img = rt.gameObject.AddComponent<Image>();
+                if (cut == 3) img.sprite = ChromeArt.Bulb(4);     // the round one: the pack's own dot
                 img.color = inks[(int)(Scatter() % (uint)inks.Length)]; img.raycastTarget = false;
                 _ladderParticles.Add(new LadderParticle
                 {
                     Rt = rt, Img = img,
-                    Vel = new Vector2(0f, -(120f + Scatter01() * 130f)),
-                    Sway = 20f + Scatter01() * 40f,
-                    Spin = (Scatter01() - 0.5f) * 520f,
-                    Life = 6f,
+                    Vel = new Vector2((Scatter01() - 0.5f) * 90f, -(110f + Scatter01() * 170f)),
+                    Sway = 26f + Scatter01() * 60f,
+                    Spin = (Scatter01() - 0.5f) * 640f,
+                    Life = 7f,
                 });
             }
         }

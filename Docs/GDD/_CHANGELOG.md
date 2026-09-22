@@ -2,6 +2,13 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The sixth list, first slice (2026-09-22):** the door has a top face and its crack spills the cellar's own
+  warm light; the pendants throw drawn CONES onto the counter and the people and nothing else (a 2D point light's
+  angle lights nothing here - measured three ways); the evening is dimmer and the window's patch smaller; the
+  certificate loses its figures for rows of marks under their words, boxes what is open in a plain rule and what
+  is next in a dashed one, sets its name in the heaviest face with tracking, and lets its ribbons fall past the
+  sheet; and the bar opens with an OLD steel sink it can sell. GDD_MEVCUT §9.100.
+
 - **The fifth list (2026-09-22):** the door in its own fixed teal - the palette's split-complement of the shelves
   it stands among - easing open a crack under the pointer with the light a beat behind it; three pendants hung
   from under the top bar, dividing the room in four; the window's patch with clipped corners and its own shape on

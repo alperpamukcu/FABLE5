@@ -475,7 +475,9 @@ namespace LastCall.PlayTests
             Assert.That(tin, Is.Not.Null, "the counter has no tin to carry");
             Assert.That(tin.gameObject.activeInHierarchy, Is.True,
                 "a drink is waiting in the shaker and the tin is not standing on the counter");
-            var drain = Find("PropDoor_counter_sink");
+            // The sink the bar OPENS with (2026-09-22: the old steel one the last owner left; the bar's own
+            // steel sink is bought after it), by whichever id is standing in the slot.
+            var drain = Find("PropDoor_sink_old") ?? Find("PropDoor_counter_sink");
             Assert.That(drain, Is.Not.Null, "the room has no drain to carry it to");
 
             var from = ScreenPointOf(tin);

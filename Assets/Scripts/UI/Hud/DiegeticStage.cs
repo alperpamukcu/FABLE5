@@ -1051,6 +1051,9 @@ namespace LastCall.UI
             _shutterLight = rt.gameObject.AddComponent<Image>();
             _shutterLight.sprite = art;
             _shutterLight.raycastTarget = false;
+            // WIDER THAN THE DOOR (2026-09-22, the author: "daha göz alıcı olmalı"): light out of a crack does not
+            // stop at the jamb, it washes the counter either side of it.
+            rt.sizeDelta = new Vector2(_shutterNative.x + 96f, art.rect.height * 1.6f);
             _shutterLight.gameObject.SetActive(false);
             UiAuditExempt.Mark(rt, "the light out of the cellar's crack is a lit sliver of "
                 + "room, drawn at the shutter's own width");
@@ -1070,7 +1073,12 @@ namespace LastCall.UI
             rt.anchoredPosition = new Vector2(
                 Reference.x * 0.5f,
                 CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx + DrawerTravel * _drawerT);
-            _shutterLight.color = new Color(1f, 1f, 1f, alpha);
+            // THE CELLAR'S OWN LIGHT, BREATHING (2026-09-22): the spill is warm - it is the cellar's tungsten
+            // coming through, not a white glow - and it swells a little while the crack is held, which is what
+            // makes a door being tried read as a door being tried rather than as a sprite fading in.
+            float breathe = 0.86f + 0.14f * Mathf.Sin(Time.unscaledTime * 3.4f);
+            var warm = LightLanguage.Key;
+            _shutterLight.color = new Color(warm.r, warm.g, warm.b, Mathf.Clamp01(alpha * 1.35f * breathe));
         }
 
         /// <summary>
@@ -1763,7 +1771,8 @@ namespace LastCall.UI
         // there on the evening's clock:
         /// <summary>The house lights against the sky: dim while the window owns the room
         /// (the json intensity is the NIGHT value), up as the sky dies.</summary>
-        private const float HouseDay = 0.30f, HouseNight = 1.0f;
+        // 0.82 at night, not 1.0: the wall lamps are the BACKGROUND's dim light now, not the room's main one.
+        private const float HouseDay = 0.26f, HouseNight = 0.82f;
         private static readonly Color GlobalTint = new Color(0.86f, 0.85f, 0.95f);
         private const float GlobalIntensity = 0.45f;
         /// <summary>The house tungsten: the closing beat's lamp, and the colour a plate with
@@ -1827,6 +1836,55 @@ namespace LastCall.UI
         private static readonly Vector2 ShaftFar = new Vector2(430f, 318f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
         private const float PatronFillDay = 0.22f, PatronFillNight = 0.32f;
+        /// <summary>The pendants' cone, in room art px: as wide at the counter as the three lamps' spacing, so the
+        /// pools meet without flooding, and as deep as the drop from the shade to the stone.</summary>
+        private const int PendantConeW = 150, PendantConeH = 168;
+        private static Sprite s_pendantCone;
+
+        /// <summary>
+        /// THE LIGHT UNDER A SHADE: narrow at the mouth, spreading to the counter, dying at its edges and at its
+        /// foot. Dithered off in two steps rather than faded, like every other light this room draws (16 §6.10),
+        /// so a cone of light is made of pixels rather than of gradient.
+        /// </summary>
+        private static Sprite PendantConeCookie()
+        {
+            if (s_pendantCone != null) return s_pendantCone;
+            const int W = PendantConeW, H = PendantConeH;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "PendantCone",
+            };
+            var px = new Color32[W * H];
+            const float MouthHalf = 11f;                 // the shade's own mouth, at the top
+            float floorHalf = W * 0.5f - 2f;             // what it has spread to by the counter
+            for (int y = 0; y < H; y++)
+            {
+                float down = 1f - y / (float)(H - 1);    // 0 at the top row of the texture... y grows up
+                float t = 1f - down;                     // 0 at the mouth, 1 at the foot
+                float half = Mathf.Lerp(MouthHalf, floorHalf, t);
+                float fade = (1f - t * t) * 0.92f;       // it dies as it falls
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = Mathf.Abs(x + 0.5f - W * 0.5f);
+                    byte a = 0;
+                    if (dx <= half)
+                    {
+                        float edge = 1f - dx / Mathf.Max(1f, half);
+                        float v = fade * Mathf.Clamp01(edge * 2.2f);
+                        a = v > 0.62f ? (byte)255
+                          : v > 0.34f ? (byte)(((x + y) & 1) == 0 ? 255 : 96)
+                          : v > 0.12f ? (byte)(((x + y) & 1) == 0 ? 128 : 0)
+                          : (byte)0;
+                    }
+                    px[y * W + x] = new Color32(255, 255, 255, a);
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            s_pendantCone = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+            s_pendantCone.name = "PendantCone";
+            return s_pendantCone;
+        }
         private static readonly Color PatronFillTint = LightLanguage.PatronLift;   // the key, most of the way to white
 
         // ── A WINDOW IS AN AREA, NOT A BULB (2026-08-19) ────────────────────────
@@ -1923,7 +1981,10 @@ namespace LastCall.UI
         /// <summary>The lamps against the sky, like every other light the house owns: dim
         /// while the window carries the room, up as the evening dies. Lower per lamp than the
         /// single BarLight's 0.55/1.30 was, because there are three and they overlap.</summary>
-        private const float BarLightDay = 0.18f, BarLightNight = 0.52f;
+        // 0.34 at night, not 0.52 (2026-09-22, the author: "şu an biraz aydınlık kalıyor"): the counter is lit by
+        // the three pendants over it now, and the bar's own row underneath only has to keep the stone from going
+        // black. Measured against the pendants' 1.1: the pools read, the flat wash does not.
+        private const float BarLightDay = 0.14f, BarLightNight = 0.34f;
         private readonly List<Light2D> _barLights = new List<Light2D>();
 
         /// <summary>The tube's line, in stage units from the bottom. ART-BOUND and MEASURED
@@ -3234,10 +3295,22 @@ namespace LastCall.UI
                         glow = PointLight(glowName,
                             LightLanguage.Snap(new Color(def.LightR, def.LightG, def.LightB), def.IsScreen),
                             def.LightIntensity, def.LightRadius);
-                        // A LIGHT HUNG UNDER ITS DRAWING LANDS ON THE COUNTER (2026-09-22, the pendants): it reaches
-                        // the room, the counter and the people at it; measured first without the counter layer, the
-                        // pool never touched the slab (r91: 29.9 to 31.4 luma under the shades).
-                        if (def.LightDy != 0f) LightLayers(glow, LayerBackground, LayerCounter, LayerPatrons);
+                        // A LIGHT HUNG UNDER ITS DRAWING IS A PENDANT (2026-09-22, the author: "tavandaki ışık
+                        // sadece tezgahı ve müşterileri aydınlatacak"): it throws a CONE straight down onto the
+                        // counter and the people standing at it, and leaves the room's walls to the house's own
+                        // lamps. Measured first without the counter layer and the pool never touched the slab
+                        // (r91: 29.9 to 31.4 luma under the shades); with it, 42.6.
+                        if (def.LightDy != 0f)
+                        {
+                            // A CONE, DRAWN (2026-09-22, the author: "3 adet yukarıdan aşağı koni şeklinde inen loş
+                            // bir ışık"). A Point light with inner/outer ANGLES was the obvious way and it lights
+                            // nothing here - measured three times (r105-r108): the same lamp round raises the
+                            // counter 50 to 58, and with a 46/84 cone it changes not one pixel. So the cone is a
+                            // COOKIE, which is the one shape this project already trusts (the window's panes).
+                            LightLayers(glow, LayerCounter, LayerPatrons);
+                            glow.lightType = Light2D.LightType.Sprite;
+                            glow.lightCookieSprite = PendantConeCookie();
+                        }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
                         if (house)
@@ -3640,10 +3713,11 @@ namespace LastCall.UI
         /// </summary>
         private static Sprite SunShaftCookie()
         {
-            // 212 by 160, up from 132 by 100 (2026-09-21, the author: "boyutunu büyütmeliyiz")
-            const int W = 212, H = 160;
+            // 156 by 118 (2026-09-22, the author: "camdan yansıyan ışığın boyutunu küçült"): grown from 132x100
+            // on the 21st, cut back here - four panes that read as four, not a wash across the wall.
+            const int W = 156, H = 118;
             const float Shear = 0.5f;               // x per row: the lean of the panes on the wall
-            const int Bar = 32, Gap = 13, Bars = 4;
+            const int Bar = 24, Gap = 10, Bars = 4;
             int run = Bars * Bar + (Bars - 1) * Gap;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {
@@ -3690,9 +3764,9 @@ namespace LastCall.UI
         /// </summary>
         private static Sprite SunCeilingCookie()
         {
-            const int W = 260, H = 64;
+            const int W = 190, H = 48;
             const float Shear = -1.1f;
-            const int Bar = 30, Gap = 11, Bars = 4;
+            const int Bar = 22, Gap = 8, Bars = 4;
             int run = Bars * Bar + (Bars - 1) * Gap;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {
@@ -3727,9 +3801,9 @@ namespace LastCall.UI
         /// </summary>
         private static Sprite SunFloorCookie()
         {
-            const int W = 300, H = 72;
+            const int W = 216, H = 54;
             const float Shear = 1.4f;
-            const int Bar = 34, Gap = 12, Bars = 4;
+            const int Bar = 24, Gap = 9, Bars = 4;
             int run = Bars * Bar + (Bars - 1) * Gap;
             var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
             {

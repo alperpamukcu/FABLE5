@@ -544,6 +544,8 @@
     {"key": "data.fixture.shaker_steel.name", "text": "Çelik Shaker", "src": "Steel Shaker"},
     {"key": "data.fixture.sink_brass.blurb", "text": "Neonu yakalayıp saklayan bir hazne ve kimsenin sana fatura kesmediği bir gider.", "src": "A basin that catches the neon and keeps it — and a drain nobody bills you for."},
     {"key": "data.fixture.sink_brass.name", "text": "Pirinç Lavabo", "src": "Brass Sink"},
+    {"key": "data.fixture.sink_old.blurb", "text": "Önceki sahibin bıraktığı lavabo: aynı tekne, aynı musluk, üstünde yirmi yıllık gri. Çalışıyor.", "src": "The sink the last owner left: the same basin, the same tap, twenty years of grey on it. It works."},
+    {"key": "data.fixture.sink_old.name", "text": "Eski Çelik Lavabo", "src": "Old Steel Sink"},
     {"key": "data.fixture.table5_bistro_L.blurb", "text": "Kira sözleşmesiyle gelen kare bir tabla ve iki Viyana sandalye. Orada kimse uzun oturmaz.", "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."},
     {"key": "data.fixture.table5_bistro_L.name", "text": "Bistro Masa", "src": "Bistro Table"},
     {"key": "data.fixture.table5_bistro_R.blurb", "text": "Kira sözleşmesiyle gelen kare bir tabla ve iki Viyana sandalye. Orada kimse uzun oturmaz.", "src": "A square top and two bentwood chairs that came with the lease. Nobody sits there long."},
