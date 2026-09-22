@@ -69,11 +69,29 @@ namespace LastCall.UI
         // group is fenced off from the next by a rule standing in a wider gap.
         private const float TileSize = 64f, TilePitch = 72f, TileGroupGap = 28f, TileRowH = 112f;
         private const int TilesPerRow = 12;
+        /// <summary>
+        /// ONE MARGIN AND ONE GRID (2026-09-22, the author: "Sertifika ekranının sayfa düzenini tekrardan ele al,
+        /// kenarlar, boşluklar, ortalamalar her şeyi dikkate al ve baştan tasarla"). Every block on the sheet - the
+        /// eyebrow, the title, the standing card, both band boxes and their heads - starts at PaperSide and ends at
+        /// PaperSide from the other edge. What is INSIDE a box is inset by BoxPad from the box, so the tiles have
+        /// air and the box's own rule is the margin's line. Before this the page had four left edges (36 for a box,
+        /// 48 for a head, 68 for the standing card) and the eye had nothing to line up on.
+        /// </summary>
+        private const float BoxPad = 16f;
+        /// <summary>The column the wax seal stands in, kept clear of tiles on the band it sits beside: the seal is
+        /// 128 across and hangs at the sheet's bottom-right, and it used to be laid over the last row's tiles.</summary>
+        private const float SealColumn = 132f;
         /// <summary>Where this rung's tiles begin under the sheet's top, the gap before the next rung's band (its
         /// head included), and what the sheet keeps under its last row.</summary>
         // 272 down to the first row, and 64 between the bands: the band's box carries a head above it and a
         // hand of air under its tiles, and the two boxes may not touch (measured, r112).
-        private const float TilesTop = 272f, NextBandGap = 64f, PaperFoot = 28f;
+        private const float TilesTop = 308f, NextBandGap = 64f, PaperFoot = 28f;
+        /// <summary>The header's own grid, from the sheet's top: the standing card, the stars in it, the night line
+        /// under them, and the two scores' blocks - all measured off the card so the three read as one row.</summary>
+        private const float HeadCardTop = 116f, HeadCardH = 120f;
+        private const float HeadStars = HeadCardTop + 44f;     // the star row's middle
+        private const float HeadMeta = HeadCardTop + 82f;      // the night line under the stars
+        private const float HeadScore = HeadCardTop + 34f;     // the two words; their marks sit 26 under them
         /// <summary>The seal's size on the sheet: PixelLab's drawing at its own 128, or the disc drawn at it.</summary>
         private const float SealPx = 128f;
         /// <summary>The key under the sheet: the gap above it.</summary>
@@ -312,13 +330,13 @@ namespace LastCall.UI
             _ladderUnderlineImg = _ladderUnderline.gameObject.AddComponent<Image>();
             _ladderUnderlineImg.color = UITheme.Amber[3]; _ladderUnderlineImg.raycastTarget = false;
 
-            _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -112f), LadderStar, 4f,
+            _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -HeadStars), LadderStar, 4f,
                 UITheme.Amber[3], UITheme.Night[3]);
             // THE HEADLINE ON A DARK CARD (seventh list: "comfort service ve yıldızımızın arkasında karartılmış kart
             // olmalı onun üstünde yazanlar daha çok dikkat çekecektir"): the stars, the line under them and the two
             // scores stand on one card of the night ink, so the gold and the marks come off the paper at the eye.
             _ladderHeadCard = NewRect("HeadCard", _ladderPaper);
-            Place(_ladderHeadCard, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide - 40f, 120f), new Vector2(0f, -100f));
+            Place(_ladderHeadCard, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, HeadCardH), new Vector2(0f, -HeadCardTop));
             _ladderHeadCard.pivot = new Vector2(0.5f, 1f);
             var hcImg = _ladderHeadCard.gameObject.AddComponent<Image>();
             hcImg.sprite = ChromeArt.Card();
@@ -328,19 +346,22 @@ namespace LastCall.UI
             var starsRow = _ladderPaper.Find("LiveStars");   // built before it: the card goes UNDER the stars
             if (starsRow != null) _ladderHeadCard.SetSiblingIndex(starsRow.GetSiblingIndex());
             _ladderMeta = NewText("Meta", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[3]);
-            Place(_ladderMeta.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -148f));
+            Place(_ladderMeta.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -HeadMeta));
             _ladderMeta.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // COMFORT in the house's medals and SERVICE in its hearts, the way the top bar wears them.
-            _ladderMedals = ScoreGroup("Comfort", -240f, -170f, "rank.cert.comfort", ItemArt.Medal);
-            _ladderHearts = ScoreGroup("Service", 240f, -170f, "rank.cert.service", ItemArt.Heart);
+            // COMFORT in the house's medals and SERVICE in its hearts, the way the top bar wears them - one in each
+            // outer third of the card, the stars and the night line in the middle third, all three blocks centred on
+            // the card's own middle line so the row reads as one instrument.
+            float col = (PaperW - 2f * PaperSide) / 3f;
+            _ladderMedals = ScoreGroup("Comfort", -col, -HeadScore, "rank.cert.comfort", ItemArt.Medal);
+            _ladderHearts = ScoreGroup("Service", col, -HeadScore, "rank.cert.service", ItemArt.Heart);
 
             var cut = NewRect("Cut", _ladderPaper);
-            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -240f));
+            Place(cut, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 1f), new Vector2(0f, -(HeadCardTop + HeadCardH + 16f)));
             var ci = cut.gameObject.AddComponent<Image>();
             ci.color = UITheme.Night[3]; ci.raycastTarget = false;
 
-            _ladderBandHead = BandHead("BandHead", -232f);
+            _ladderBandHead = BandHead("BandHead", -(TilesTop - 40f));
             // TWO BANDS, TWO FRAMES (2026-09-22, the author: "sıradaki ürünlerin bulunduğu bölümün etrafında
             // çizgili çerçeve olsun, açılanların ise etrafında çizgisiz çerçeve olsun"): what the bar HAS is ruled
             // in a solid line, what is still to come is ruled in a dashed one - the oldest way a document says
@@ -768,8 +789,12 @@ namespace LastCall.UI
                         if (px[(y0 + y) * tex.width + x0 + x].a > 8)
                         { if (x < minX) minX = x; if (y < minY) minY = y; if (x > maxX) maxX = x; if (y > maxY) maxY = y; }
                 if (maxX >= minX && (minX > 0 || minY > 0 || maxX < w - 1 || maxY < h - 1))
+                    // FULL RECT, ALWAYS (2026-09-22): Sprite.Create defaults to a TIGHT mesh, and a tight sprite in
+                    // a uGUI Image draws as a white quad - which is exactly what the certificate's lemon dish and
+                    // its tables were (measured in play, r189: every tile whose art needed trimming came back
+                    // white, every tile that did not need it drew fine).
                     result = Sprite.Create(tex, new Rect(x0 + minX, y0 + minY, maxX - minX + 1, maxY - minY + 1),
-                                           new Vector2(0.5f, 0.5f), s.pixelsPerUnit);
+                                           new Vector2(0.5f, 0.5f), s.pixelsPerUnit, 0, SpriteMeshType.FullRect);
             }
             s_trimmed[s] = result;
             return result;
@@ -891,7 +916,9 @@ namespace LastCall.UI
             // counts the rest - so the sheet, the key under it and the screen all agree (2026-09-22).
             int openMax = Mathf.Clamp(Mathf.FloorToInt(
                 (PaperMaxH - TilesTop - PaperFoot - (next != null ? NextBandGap + TileRowH : 0f)) / TileRowH), 1, 2);
-            int rows = LayTiles(_ladderBand, run, TilesFor(run, was, now, climb), moving, rowsMax: openMax, dim: false);
+            // the seal hangs at the sheet's bottom-right: whichever band is the LAST one keeps its column clear
+            int rows = LayTiles(_ladderBand, run, TilesFor(run, was, now, climb), moving, rowsMax: openMax, dim: false,
+                                reserveSeal: next == null);
             float nextTop = TilesTop + rows * TileRowH + NextBandGap;
             int nextRows;
             if (next != null)
@@ -905,7 +932,8 @@ namespace LastCall.UI
                 // whatever rows are left under PaperMaxH, and its own cut slot says how many it stood for.
                 int nextMax = Mathf.Clamp(
                     Mathf.FloorToInt((PaperMaxH - nextTop - PaperFoot) / TileRowH), 1, 2);
-                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: nextMax, dim: true);
+                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: nextMax, dim: true,
+                                    reserveSeal: true);
             }
             else
             {
@@ -1007,9 +1035,9 @@ namespace LastCall.UI
         private void BoxBand(RectTransform box, float top, int rows)
         {
             if (box == null) return;
-            const float padX = 12f, padTop = 26f, padBottom = 8f;
+            const float padTop = 26f, padBottom = 8f;
             float h = rows * TileRowH + padTop + padBottom;
-            box.sizeDelta = new Vector2(PaperW - 2f * PaperSide + padX * 2f, h);
+            box.sizeDelta = new Vector2(PaperW - 2f * PaperSide, h);
             box.anchorMin = box.anchorMax = new Vector2(0.5f, 1f);
             box.anchoredPosition = new Vector2(0f, -(top - padTop));
         }
@@ -1060,20 +1088,24 @@ namespace LastCall.UI
         /// <summary>Lays <paramref name="tiles"/> in <paramref name="band"/>: the slots first, dry, under the wrap
         /// rule; then the cut at <paramref name="rowsMax"/> rows, the last slot standing for the rest. Returns
         /// the rows taken (at least one, which a band with nothing in it uses for its one line).</summary>
-        private int LayTiles(RectTransform band, TycoonRun run, List<CertTile> tiles, bool moving, int rowsMax, bool dim)
+        private int LayTiles(RectTransform band, TycoonRun run, List<CertTile> tiles, bool moving, int rowsMax, bool dim,
+                             bool reserveSeal = false)
         {
             foreach (Transform old in band) Destroy(old.gameObject);
             if (tiles.Count == 0)
             {
                 var none = NewText("None", band, _body, 16, TextAnchor.MiddleLeft, UITheme.Night[2]);
-                Place(none.rectTransform, new Vector2(0f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(PaperSide, -34f));
+                Place(none.rectTransform, new Vector2(0f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f),
+                      new Vector2(PaperSide + BoxPad, -34f));
                 none.rectTransform.pivot = new Vector2(0f, 0.5f);
                 none.horizontalOverflow = HorizontalWrapMode.Overflow;
                 none.text = UIText.T("rank.window.nothing_new");
                 return 1;
             }
-            float rowW = TilesPerRow * TilePitch - (TilePitch - TileSize);
-            float left = PaperSide;
+            // the tiles live INSIDE the box, which is on the margin: one inset, both sides, and the seal's column
+            // kept clear on the band it stands beside
+            float left = PaperSide + BoxPad;
+            float rowW = PaperW - 2f * (PaperSide + BoxPad) - (reserveSeal ? SealColumn : 0f) - (TilePitch - TileSize);
             var slots = new List<(float x, float y, int row, bool head)>(tiles.Count);
             {
                 float x = 0f, y = 0f;
@@ -1203,15 +1235,33 @@ namespace LastCall.UI
                 }
             }
             var cap = NewText("Name", rt, _body, 8, TextAnchor.UpperCenter, UITheme.Night[1]);
-            Place(cap.rectTransform, new Vector2(0.5f, 0f), new Vector2(TilePitch, 22f), new Vector2(0f, -3f));
+            // A NAME IS TWO LINES AT MOST, AND NEVER ITS NEIGHBOUR'S (2026-09-22): the box is the tile's pitch less
+            // the air between two tiles, and a third line is cut with an ellipsis rather than run into the row under
+            // it (COCKTAIL HIGH-TOP, seen in play).
+            Place(cap.rectTransform, new Vector2(0.5f, 0f), new Vector2(TilePitch - 6f, 22f), new Vector2(0f, -3f));
             cap.rectTransform.pivot = new Vector2(0.5f, 1f);
             cap.horizontalOverflow = HorizontalWrapMode.Wrap;
-            cap.text = spec.Art == null && spec.Bottle == null ? "" : spec.Name;
+            cap.verticalOverflow = VerticalWrapMode.Truncate;
+            cap.text = TwoLines(cap, spec.Art == null && spec.Bottle == null ? "" : spec.Name);
             var group = rt.gameObject.AddComponent<CanvasGroup>();
             group.alpha = moving ? 0f : dim ? 0.55f : 1f;
             group.blocksRaycasts = false; group.interactable = false;
             _ladderTiles.Add(group);
             return rt;
+        }
+
+        /// <summary>A tile's name, cut to the two lines its box holds: the last word that fits keeps an ellipsis.</summary>
+        private static string TwoLines(Text t, string name)
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+            t.text = name;
+            if (t.preferredHeight <= t.rectTransform.sizeDelta.y) return name;
+            for (int cut = name.Length - 2; cut > 3; cut--)
+            {
+                t.text = name.Substring(0, cut).TrimEnd() + "…";
+                if (t.preferredHeight <= t.rectTransform.sizeDelta.y) return t.text;
+            }
+            return name;
         }
 
         /// <summary>A feature's tiles: the pictures the room itself draws these things with.</summary>

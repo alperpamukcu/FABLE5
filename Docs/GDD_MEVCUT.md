@@ -1603,6 +1603,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   pip (yapılanlar yanık, bitince yeşil). Üstüne gelince ödül ve kalan gece: "ÖDÜL +$120 · 1 GECE KALDI".
 - Doğrulama: EditMode 625/626, PlayMode 13/13.
 
+### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
+
+- **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,
+  hover, sürükleme hepsi aynı), resimleri sahne sprite'ı olarak çiziliyor ve odanın ışıklarını alıyor. Neden HUD'daydı:
+  her biri önce bir FİİL (kap bardağa taşınır, kitap menüyü açar, bez tezgâhı siler) ve işaretçi işi uGUI'de yazılı.
+  Bedeli: overlay canvas her Light2D'nin dışında — sarkıtlar tezgâhın kenarında duruyordu, kaplar elle "aydınlatılmış"
+  gibi çarpılıyordu. Elle çarpma kalktı. Garniş kartı bir kabın üstünde dururken o kap kısa süreliğine canvas'a
+  dönüyor (2026-09-08'deki "üstüne gelinen asset kartın üstüne çıksın" isteği; dünyadaki bir sprite overlay'in üstüne
+  çizilemez).
+- **Barın açıldığı kepenk** (`Tools/worn_door.py`, `Resources/Scene/counter_door_worn.png`): turkuaz aynı, üstündeki
+  çizimler yok (kulp duruyor — o kapının kendisi), boya ayakta, kenarlarda, çıta aralarında ve kulbun bandında
+  aşınmış, altından ahşap görünüyor. Kapı dikey desen olduğu için "çizim" tam olarak kendi sütunundan farklı olan
+  piksel; hiçbir şey yeniden çizilmedi. **Cila Seti** alınınca çizimli kapı geliyor.
+- **Işık ampulden çıkıyor:** URP 2D spot'u açılı bir NOKTA olduğu için hüzme sıfırdan başlıyordu. Koninin tepesi,
+  koninin ampul genişliğine ulaştığı mesafe kadar (r / tan(dış açının yarısı)) yukarı alındı; menzil aynı kadar
+  uzatıldı — ışık camdan camın genişliğinde çıkıyor, tezgâhtaki havuz yerinde. Yarıçap çizimden ölçülüyor: lambanın
+  en geniş satırı şapkanın ağzı, onun altındaki en geniş satır ampul.
+- **Tek bildirim işareti** (`ChromeArt.Notice`, yazarın kendi çizimi): köşeleri kesilmiş bir levha, içinden oyulmuş
+  ünlem, aşağıyı gösteren kuyruk. Üst bardaki "YENİ" bayrağı ve marketteki eğik "NEW!" şeridi artık bu işaret,
+  durduğu yerin moru ile.
+- **Sertifika tek ızgarada:** her blok aynı kenar boşluğundan başlıyor (başlık, durum kartı, iki bant kutusu ve
+  başlıkları); durum kartı üç sütun (konfor · yıldızlar+gece · servis); kutular kenar çizgisinin üstünde, karolar
+  kutunun içinde 16 birim içeride; mührün sütunu son bantta boş bırakılıyor (eskiden karoların üstüne biniyordu);
+  karo adları en fazla iki satır (üçüncü satır "…" ile kesiliyor). **Beyaz karo hatası:** kırpılan sprite
+  `Sprite.Create` varsayılanıyla TIGHT mesh alıyordu ve uGUI böyle bir sprite'ı beyaz kare olarak çiziyor — FullRect
+  yapıldı (limon kâsesi ve masalar beyaz kutu olarak duruyordu).
+- Doğrulama: EditMode 634/635 (bilinen plaka kırmızısı), PlayMode 13/13; sertifika üç kademede, oda gece lambalarla,
+  kepenk hem yeni hem cilalı barda ölçüldü.
+
 ### 9.109 · Sekizinci liste (6/…): kimlik baştan — dönerek açılan kart, dört yalan, sabitlenen hover (2026-09-22)
 
 - **Kart baştan çizildi** (`TycoonHud.IdCard.cs`, eski düzen `TycoonHud.Id.cs`'ten çıktı): 188×96 sanat pikseli, kağıdın

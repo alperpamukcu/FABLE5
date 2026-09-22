@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The ninth list (2026-09-22):** the counter's props stand IN the room - the six dishes, the menu and the cloth
+  keep their rects (hit target, hover, drag) and their pictures are stage sprites the lamps reach, so the hand-made
+  "lit" tints are gone; the bar opens with a shutter nobody has painted since the last owner (the author's turquoise
+  door stripped of its pictures and worn through to the boards, Tools/worn_door.py), and the painted one arrives with
+  the refinish kit; the pendants' light leaves a BULB rather than a point (the apex lifted by r / tan(half the outer
+  angle), the radius measured off the drawing); one notification mark, the author's own, replaces the word NEW on the
+  beam and the NEW! ribbon in the market; and the certificate is laid out on one grid - one margin for every block,
+  the standing card in three columns, the tiles inset inside their boxes, the seal's column kept clear, names cut to
+  two lines, and the white tiles fixed (a trimmed sprite must be FullRect or uGUI draws a white quad).
+  GDD_MEVCUT §9.110.
+
 - **The eighth list, sixth slice (2026-09-22):** the licence is drawn from scratch - a 188×96 card at the stock's own
   three units a pixel with the house band and the flag in a frame cut to its shape, the drinker's own 64×64 face at 2x
   over a panel of visits and stars, and NAME | SURNAME, AGE | NATIONALITY, the order's glass beside its name and the
