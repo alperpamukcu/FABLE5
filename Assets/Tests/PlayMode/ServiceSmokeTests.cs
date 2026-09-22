@@ -187,6 +187,109 @@ namespace LastCall.PlayTests
             Assert.That(visit.Order.Wanted, Is.Not.Null, "the card came out with no drink named on it");
         }
 
+        /// <summary>
+        /// THE LICENCE ITSELF (2026-09-23). The card was rebuilt from scratch for the eighth list and
+        /// is now ~700 lines of drawing with exactly one test over it - the one above, which proves
+        /// the ORDER came out from behind it and never looks at the card at all. Everything the author
+        /// asked for in that rebuild fails SILENTLY: a card that stops half-turned still reads the
+        /// licence, a card whose fields never get filled is a blank rectangle with a correct order
+        /// behind it, and a hover that never pins is just a tip that flickers. None of it is a
+        /// compile error and none of it moves a number, so nothing else in this suite would notice.
+        ///
+        /// So this walks the card the way a player does: click the drinker, watch it turn over out of
+        /// the stool, read what is printed on it, then REST the pointer on the order and watch the
+        /// recipe card follow, stop, and stay - which is the whole of the author's "hoverin üzerinde
+        /// birkaç saniye durunca hover sabit kalmalı ... mouseu kaldırınca hover yok olmalı".
+        ///
+        /// Every wait here is REALTIME on purpose: a test frame is about a millisecond, so a wait
+        /// counted in frames would let none of these animations run (the suite has paid for this
+        /// lesson twice).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_licence_turns_over_and_a_rested_pointer_pins_its_card()
+        {
+            yield return OpenTheBar();
+            yield return SeatSomebody();
+
+            var visit = FirstSeated();
+            Assert.That(visit, Is.Not.Null, "nobody ever sat down");
+            yield return WaitUntilTheyDecide(visit);
+            var seat = FirstOccupiedStool();
+            Assert.That(seat, Is.Not.Null, "the drinker who sat down was given no stool");
+            yield return WaitUntilTheyReachTheStool(seat);
+            yield return ClickOn(seat, new Vector2(0f, seat.rect.height * 0.27f));
+
+            // it turns out of the stool and grows into place; the turn is 0.46s and the hovers are
+            // refused until it has finished (IdHoverUnder: no reading a card that is still edge-on).
+            yield return new WaitForSecondsRealtime(0.9f);
+
+            var card = Find("IdCard");
+            Assert.That(card, Is.Not.Null, "the licence was read and no card was ever built");
+            Assert.That(card.gameObject.activeInHierarchy, Is.True,
+                "the card exists and was never shown");
+
+            var sheet = Find("Card", card);
+            Assert.That(sheet, Is.Not.Null, "the card has no sheet to turn");
+            Assert.That(sheet.localScale.x, Is.GreaterThan(0.9f),
+                "the card stopped mid-turn - it is still edge-on at scaleX " + sheet.localScale.x.ToString("0.00"));
+            var front = Find("Front", card);
+            var back = Find("Back", card);
+            Assert.That(front, Is.Not.Null, "the card has no face");
+            Assert.That(front.gameObject.activeSelf, Is.True, "the card finished its turn face DOWN");
+            Assert.That(back == null || !back.gameObject.activeSelf, Is.True,
+                "both faces of the card are showing at once");
+
+            // ...AND SOMETHING IS PRINTED ON IT. Not what - the name on a borrowed card is the
+            // lender's and the order's word is localised - but a card with empty rows is the
+            // failure this catches, and it is the one that looks like nothing is wrong.
+            var first = Find("V_First", card);
+            var order = Find("V_Order", card);
+            Assert.That(first != null && !string.IsNullOrWhiteSpace(first.GetComponent<Text>()?.text), Is.True,
+                "the card came out with no name on it");
+            Assert.That(order != null && !string.IsNullOrWhiteSpace(order.GetComponent<Text>()?.text), Is.True,
+                "the card came out with no drink written on it");
+
+            // THE HOVER. The order's row opens the recipe at once and the card FOLLOWS the pointer;
+            // after IdPinAfter (1.5s) of resting it pins and stops following. Both halves are tested,
+            // because a tip that never follows and a tip that never stops look the same in a
+            // screenshot and both of them are wrong.
+            var row = Find("OrderHit", card);
+            Assert.That(row, Is.Not.Null, "the card has no order row to rest on");
+            var at = ScreenPointOf(row);
+            Set(_mouse.position, at);
+            yield return WaitFrames(2);
+            Set(_mouse.position, at);                     // the card may still be settling: look again
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            var tip = Find("CardTip", card);
+            Assert.That(tip != null && tip.gameObject.activeInHierarchy, Is.True,
+                "the pointer went onto the order and no recipe card opened");
+            var followed = tip.position;
+            Set(_mouse.position, at + new Vector2(14f, 0f));
+            yield return WaitFrames(3);
+            Assert.That(tip.position, Is.Not.EqualTo(followed),
+                "the recipe card did not follow the pointer before it was pinned");
+
+            // rest, without moving, until it pins
+            yield return new WaitForSecondsRealtime(1.8f);
+            var pin = Find("Pin", tip);
+            Assert.That(pin != null && (pin.GetComponent<Image>()?.enabled ?? false), Is.True,
+                "the pointer rested on the order for nearly two seconds and the card never pinned");
+            var pinned = tip.position;
+            Set(_mouse.position, at + new Vector2(26f, 0f));
+            yield return WaitFrames(3);
+            Assert.That(tip.position, Is.EqualTo(pinned),
+                "the card says it is pinned and is still following the pointer");
+
+            // ...and it goes when the pointer leaves (IdTipGrace 0.28 + IdTipClose 0.10)
+            Set(_mouse.position, new Vector2(12f, 12f));
+            yield return WaitFrames(2);
+            yield return new WaitForSecondsRealtime(0.8f);
+            tip = Find("CardTip", card);
+            Assert.That(tip == null || !tip.gameObject.activeInHierarchy, Is.True,
+                "the pointer left the card and the recipe stayed up");
+        }
+
         [UnityTest]
         public IEnumerator The_menu_opens_and_a_bottle_takes_the_bench()
         {
