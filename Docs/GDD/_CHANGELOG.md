@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The fifth list (2026-09-22):** the door in its own fixed teal - the palette's split-complement of the shelves
+  it stands among - easing open a crack under the pointer with the light a beat behind it; three pendants hung
+  from under the top bar, dividing the room in four; the window's patch with clipped corners and its own shape on
+  the floor, the wall and the ceiling, sized off the sun's elevation and never on the counter; a wall piece's
+  shadow shortened and every shadow swung off its own lamp once the house is lit; the draught tower at twice the
+  size with the station laid out again; the bench's far edge taking the counter's finish; the bin lying down and
+  SERVE IT at the bottom's centre; the certificate opening at zero stars and its paper climbing with the rung,
+  with longer swallowtailed ribbons; and every menu key cut from the palette, answering the pointer in blue.
+  GDD_MEVCUT §9.99; GDD 14 §4c.
+
 - **The door and the pendants (2026-09-22):** D1a stands where the roller stood on the roller's own travel, painted
   by every finish; L3 hangs over the counter as a fixture that starts in the room, its light hung under the
   drawing onto the counter (a light with lightDy reaches the counter layer). GDD_MEVCUT §9.98.

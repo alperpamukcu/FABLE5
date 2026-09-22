@@ -221,7 +221,7 @@ namespace LastCall.UI
             drop.pivot = new Vector2(1, 0.5f);
             drop.localRotation = Quaternion.Euler(0, 0, 90f);   // the bench's left chevron, turned to point down
             var di = drop.gameObject.AddComponent<Image>();
-            di.sprite = ChromeArt.Mark("chevron_left"); di.color = MenuPack.Word(MenuPack.Tone.Grey); di.raycastTarget = false;
+            di.sprite = ChromeArt.Mark("chevron_left"); di.color = MenuPack.PalettedInk(MenuPack.Tone.Grey, false); di.raycastTarget = false;
             _settingsNowPlace = NewText("Place", now, _body, 8, TextAnchor.MiddleRight, UITheme.Magenta[3]);
             Place(_settingsNowPlace.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 12), new Vector2(-4f, -21f));
             _settingsNowPlace.rectTransform.pivot = new Vector2(1, 0.5f);
@@ -596,7 +596,7 @@ namespace LastCall.UI
                 key.sizeDelta = new Vector2(CellW, CellH);
                 key.anchoredPosition = new Vector2(left + c * (CellW + GapX), -24f - r * (CellH + GapY));
                 var plateImg = key.gameObject.AddComponent<Image>();
-                plateImg.sprite = MenuPack.Blank(MenuPack.Tone.Grey, false);
+                plateImg.sprite = MenuPack.Paletted(MenuPack.Tone.Grey, false);
                 plateImg.type = Image.Type.Sliced;
                 plateImg.pixelsPerUnitMultiplier = 0.5f;
                 plateImg.color = Color.white;
@@ -608,7 +608,7 @@ namespace LastCall.UI
                 var face = NewRect("Face", key);
                 Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var sink = key.gameObject.AddComponent<PressSink>();
-                sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+                sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.03f;
                 var flag = NewRect("Flag", face);
                 Place(flag, new Vector2(0.5f, 0.5f), new Vector2(48, 33), new Vector2(0, 2f));   // on the face's middle, two up (PackWordKey)
                 var fi = flag.gameObject.AddComponent<Image>();
@@ -616,7 +616,7 @@ namespace LastCall.UI
                 fi.color = Color.white; fi.raycastTarget = false;
                 var pk = key.gameObject.AddComponent<PackKey>();
                 pk.Plate = plateImg;
-                pk.Rest = plateImg.sprite; pk.Lit = plateImg.sprite; pk.Pressed = MenuPack.Blank(MenuPack.Tone.Grey, true);
+                pk.Rest = plateImg.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(MenuPack.Tone.Grey, true);
                 HoverTip(key, fi.sprite, info.Name, code.ToUpperInvariant());
                 _flagKeys[code] = key;
             }

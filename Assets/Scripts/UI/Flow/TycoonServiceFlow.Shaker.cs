@@ -2418,8 +2418,13 @@ namespace LastCall.UI
         /// ridge, and the magenta neon rail that runs the counter's far edge — so the bench
         /// is the same object the room draws, four times closer. Bands, not a texture:
         /// chrome is procedural (14 §3), and a zoomed pixel surface IS flat runs of colour.</summary>
-        private static readonly Color BenchSlab = Hex(0x1F1924);
-        private static readonly Color BenchRidge = Hex(0x312E3A);
+        // THE BENCH IS THE ROOM'S COUNTER, FOUR TIMES CLOSER (2026-09-22, the author: "bu sahnelerde koyulan
+        // arkaplan sanki ana sahnedeki tezgaha yakından bakıyormuş hissi yaratmalı ... ana sahnedeki tezgahın rengi
+        // değişince değişmeli"). The slab already took the finish; its FAR EDGE did not - the ridge, the seam and
+        // the six rail rows were the neon bar's own magenta, typed in, so a walnut room had a magenta bench. Every
+        // one of them is cut from the finish's own ramps now, at the same steps the room's counter is drawn at.
+        private static Color BenchSlab => CounterFinish.Ramp(CounterFinish.Current.Slab, 0.20f);
+        private static Color BenchRidge => CounterFinish.Ramp(CounterFinish.Current.Slab, 0.62f);
 
         /// <summary>Which grain the bench tops wear. One line, because "quieter" and
         /// "busier" is a taste call made by eye — see ChromeArt.CounterGrain.</summary>
@@ -2433,9 +2438,19 @@ namespace LastCall.UI
         /// props are placed against this rather than by eye, because "nothing overlaps"
         /// is a thing you can check and taste is not.</summary>
         private const float BenchClear = 26f;
-        private static readonly Color BenchSeam = Hex(0x17141C);
-        private static readonly Color[] BenchRail =
-            { Hex(0xD77BBA), Hex(0xB7699F), Hex(0x975885), Hex(0x77476B), Hex(0x573650), Hex(0x372536) };
+        private static Color BenchSeam => CounterFinish.Ramp(CounterFinish.Current.Slab, 0.0f);
+        /// <summary>The far edge's six rows, off the finish's FRAME ramp from lit to dark - the same fall the room's
+        /// own counter draws, in whatever the bar has been refinished in.</summary>
+        private static Color[] BenchRail
+        {
+            get
+            {
+                var rows = new Color[6];
+                for (int i = 0; i < rows.Length; i++)
+                    rows[i] = CounterFinish.Ramp(CounterFinish.Current.Frame, Mathf.Lerp(0.72f, 0f, i / 5f));
+                return rows;
+            }
+        }
 
         private static Color Hex(int v) =>
             new Color(((v >> 16) & 255) / 255f, ((v >> 8) & 255) / 255f, (v & 255) / 255f);

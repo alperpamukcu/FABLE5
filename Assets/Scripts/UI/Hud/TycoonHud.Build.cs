@@ -1809,8 +1809,13 @@ namespace LastCall.UI
         /// <summary>A border on all four sides, t units thick. `Hairline` cannot do it —
         /// it hardcodes a 1-unit height — and a picked tile needs to be visible from six
         /// columns away, which one thin rule at the top was not.</summary>
-        private void Frame(RectTransform parent, float t, Color c)
+        private void Frame(RectTransform parent, float t, Color c) => FrameEdges(parent, t, c);
+
+        /// <summary>The same four edges, handed back - for a frame whose colour or weight changes later (the
+        /// certificate's rules climb with the rung, 2026-09-22).</summary>
+        private Image[] FrameEdges(RectTransform parent, float t, Color c)
         {
+            var edges = new Image[4];
             for (int i = 0; i < 4; i++)
             {
                 var rt = NewRect("Edge", parent);
@@ -1823,7 +1828,9 @@ namespace LastCall.UI
                 var img = rt.gameObject.AddComponent<Image>();
                 img.color = c;
                 img.raycastTarget = false;
+                edges[i] = img;
             }
+            return edges;
         }
 
         private static void PlaceProduct(RectTransform rt, Sprite s, float boxH)

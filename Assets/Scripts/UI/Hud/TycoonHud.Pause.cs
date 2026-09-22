@@ -203,7 +203,7 @@ namespace LastCall.UI
             rt.sizeDelta = size;
             rt.anchoredPosition = pos;
             var plate = rt.gameObject.AddComponent<Image>();
-            plate.sprite = MenuPack.Blank(tone, false);
+            plate.sprite = MenuPack.Paletted(tone, false);
             plate.type = Image.Type.Sliced;
             plate.pixelsPerUnitMultiplier = 0.5f;          // the pack at exactly 2x
             plate.color = Color.white;
@@ -215,7 +215,10 @@ namespace LastCall.UI
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            // A KEY GROWS UNDER THE POINTER (2026-09-22, the author: "tüm hoverlara açılma ve kapanma animasyonu
+            // ekle, mousun olduğu yerden büyüsünler ve küçülsünler"): three hundredths on the pack's own hover
+            // clock, so the plate breathes rather than jumps.
+            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.03f;
             Image glyphImg = null;
             if (glyph != null)
             {
@@ -224,19 +227,22 @@ namespace LastCall.UI
                 g.pivot = new Vector2(0, 0.5f);
                 glyphImg = g.gameObject.AddComponent<Image>();
                 glyphImg.sprite = MenuPack.Glyph(glyph);
-                glyphImg.color = MenuPack.Ink(tone, false);
+                glyphImg.color = MenuPack.PalettedInk(tone, false);
                 glyphImg.raycastTarget = false;
             }
             var pk = rt.gameObject.AddComponent<PackKey>();
             pk.Plate = plate;
-            pk.Rest = plate.sprite; pk.Lit = plate.sprite; pk.Pressed = MenuPack.Blank(tone, true);
-            pk.Glyph = glyphImg; pk.GlyphRest = MenuPack.Ink(tone, false); pk.GlyphLit = MenuPack.Ink(tone, true);
+            // THE HOVER IS THE BLUE ONE (2026-09-22, the author: "menünün hover UI'ı eski kalmış, mavi olanla
+            // değiştir"): the pack's own lit sheet was its factory blue-grey; a key goes to the game's club blue
+            // under the pointer, which is the answer the back bar already gives.
+            pk.Rest = plate.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(tone, true);
+            pk.Glyph = glyphImg; pk.GlyphRest = MenuPack.PalettedInk(tone, false); pk.GlyphLit = MenuPack.PalettedInk(tone, true);
             // THE WORD SITS DEAD CENTRE ON THE FACE (2026-09-16, the author: "butonların üstündeki yazılar butonların
             // tam ortasında olsun"; measured off a capture): centred across the WHOLE key, not the part right of the
             // glyph — which put it twenty units off — and two units up, because the pack's face runs from the rim
             // under the outline to the shadow, whose middle is two units above the rect's. The pad below keeps a
             // key wide enough that a centred word never reaches the glyph.
-            var text = NewText("Label", face, _body, size.y >= 32f ? 16 : 8, TextAnchor.MiddleCenter, MenuPack.Word(tone));
+            var text = NewText("Label", face, _body, size.y >= 32f ? 16 : 8, TextAnchor.MiddleCenter, MenuPack.PalettedInk(tone, false));
             // (9 and -7: the face's glyphs land one unit left of the box's middle — their bearing — measured too.)
             Stretch(text.rectTransform, Vector2.zero, Vector2.one, new Vector2(9f, 4f), new Vector2(-7f, 0f));
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -250,10 +256,10 @@ namespace LastCall.UI
         {
             var pk = key.GetComponent<PackKey>();
             if (pk == null) return;
-            pk.Refit(MenuPack.Blank(tone, false), MenuPack.Blank(tone, false), MenuPack.Blank(tone, true),
-                MenuPack.Ink(tone, false), MenuPack.Ink(tone, true));
+            pk.Refit(MenuPack.Paletted(tone, false), MenuPack.Hovered(), MenuPack.Paletted(tone, true),
+                MenuPack.PalettedInk(tone, false), MenuPack.PalettedInk(tone, true));
             var label = key.Find("Face/Label");
-            if (label != null) label.GetComponent<Text>().color = MenuPack.Word(tone);
+            if (label != null) label.GetComponent<Text>().color = MenuPack.PalettedInk(tone, false);
         }
 
         /// <summary>An ICON KEY from the pack: one cell at 2x (32x32) — the blank cell for the plate and the glyph
@@ -267,7 +273,7 @@ namespace LastCall.UI
             rt.sizeDelta = new Vector2(32f, 32f);
             rt.anchoredPosition = pos;
             var img = rt.gameObject.AddComponent<Image>();
-            img.sprite = MenuPack.Blank(tone, false);
+            img.sprite = MenuPack.Paletted(tone, false);
             img.type = Image.Type.Simple;
             img.color = Color.white;
             img.raycastTarget = true;
@@ -278,17 +284,17 @@ namespace LastCall.UI
             var face = NewRect("Face", rt);
             Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var sink = rt.gameObject.AddComponent<PressSink>();
-            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0f;
+            sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.05f;
             var g = NewRect("Glyph", face);
             Stretch(g, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var gi = g.gameObject.AddComponent<Image>();
             gi.sprite = MenuPack.Glyph(icon);
-            gi.color = MenuPack.Ink(tone, false);
+            gi.color = MenuPack.PalettedInk(tone, false);
             gi.raycastTarget = false;
             var pk = rt.gameObject.AddComponent<PackKey>();
             pk.Plate = img;
-            pk.Rest = img.sprite; pk.Lit = img.sprite; pk.Pressed = MenuPack.Blank(tone, true);
-            pk.Glyph = gi; pk.GlyphRest = MenuPack.Ink(tone, false); pk.GlyphLit = MenuPack.Ink(tone, true);
+            pk.Rest = img.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(tone, true);
+            pk.Glyph = gi; pk.GlyphRest = MenuPack.PalettedInk(tone, false); pk.GlyphLit = MenuPack.PalettedInk(tone, true);
             return rt;
         }
 
@@ -298,8 +304,8 @@ namespace LastCall.UI
             var pk = key.GetComponent<PackKey>();
             if (pk == null) return;
             if (pk.Glyph != null) pk.Glyph.sprite = MenuPack.Glyph(icon);
-            pk.Refit(MenuPack.Blank(tone, false), MenuPack.Blank(tone, false), MenuPack.Blank(tone, true),
-                MenuPack.Ink(tone, false), MenuPack.Ink(tone, true));
+            pk.Refit(MenuPack.Paletted(tone, false), MenuPack.Hovered(), MenuPack.Paletted(tone, true),
+                MenuPack.PalettedInk(tone, false), MenuPack.PalettedInk(tone, true));
         }
 
         /// <summary>The direction's scanlines over a surface: a 1x4 tile at 2x, tinted dark at <paramref name="alpha"/>.</summary>

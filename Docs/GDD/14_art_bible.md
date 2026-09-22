@@ -151,6 +151,24 @@ so nothing bought can bring a sixth tint in. The grade is one filter on the game
 club's blue, gain toward the amber, a little contrast, a Night[0] vignette — and never a tonemapper, because the
 palette is tokened (§3) and a tonemapper is a regrade. The HUD is an overlay and takes none of it.
 
+### 4c. The door's colour, and why it is the only fixed surface (2026-09-22)
+
+The bar's fittings are ONE warm family: the shelf frames are Magenta[3] (#E84DA6, hue 327), the brass is Amber
+(38), the slab is Night. Everything in that family takes the counter's finish, so a room refinished in walnut or
+pine changes as a whole. The cellar's DOOR does not: it is the one plane the player is asked to notice.
+
+Its colour is chosen against the family, not inside it. The split-complement of the frames' magenta is Cyan
+(#26918F, 178) and Lime (105); Cyan is already the room's second neon, so the door is cut from the CYAN ramp —
+one cool surface in a warm room, readable against the shelves at every finish, and the hot pink flamingo painted
+on it falls on its own complement, which is the teal-and-pink pairing the whole bar is built from. The mural's
+own colours (the flamingo, the sun's amber, the palms' near-black, the steel pull) stay as drawn.
+
+| | |
+|---|---|
+| Planks, ledge | Cyan[0]..Cyan[4] by brightness |
+| Mural | its own paint, on the palette |
+| Follows the finish | **no** — fixed in all five |
+
 ## 5. The room is a SHELL; everything standing in it is a PROP (2026-08-17)
 
 The venue is built in layers, on the author's call: the room master is **EMPTY** — walls,

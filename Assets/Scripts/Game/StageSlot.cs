@@ -31,6 +31,10 @@ namespace LastCall.Game
         /// One fixture, two mountings: whatever stands here is drawn twice, spread this far,
         /// so a matched pair is one purchase and one catalogue entry. 0 = a single hook.</summary>
         public float PairSpreadPx { get; }
+        /// <summary>How many copies of one piece the hook carries, evenly spread by <see cref="PairSpreadPx"/>
+        /// (2026-09-22, the pendants: "1 adet üretip 3 kere sahneye koyarak kullanabiliriz"). Zero means the old
+        /// reading: two where there is a spread, one where there is not.</summary>
+        public int Copies { get; }
 
         /// <summary>The room's HOUSE LIGHTS hang here: whatever shines in this slot is run
         /// on the evening's clock — dim while the window owns the room, up as the sky dies,
@@ -90,7 +94,7 @@ namespace LastCall.Game
                          float pairSpreadPx = 0f, bool houseLight = false, bool hangs = false,
                          bool flat = false, bool backdrop = false, bool carried = false,
                          bool overlay = false, string place = null, string title = null,
-                         int order = 0)
+                         int order = 0, int copies = 0)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Slot needs an id.", nameof(id));
             if (pairSpreadPx < 0) throw new ArgumentException($"Slot '{id}' has a negative pair spread.");
@@ -99,6 +103,9 @@ namespace LastCall.Game
             Y = y;
             OnCounter = onCounter;
             PairSpreadPx = pairSpreadPx;
+            if (copies < 0 || copies > 6) throw new ArgumentException($"Slot '{id}' asks for {copies} copies.");
+            if (copies > 1 && pairSpreadPx <= 0f) throw new ArgumentException($"Slot '{id}' carries {copies} copies with no spread between them.");
+            Copies = copies;
             HouseLight = houseLight;
             Hangs = hangs;
             Flat = flat;

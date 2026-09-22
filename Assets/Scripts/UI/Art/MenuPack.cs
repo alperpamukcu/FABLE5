@@ -171,6 +171,48 @@ namespace LastCall.UI
         /// <summary>The word's ink on a repainted plate: the palette's own answer for reading on that fill.</summary>
         public static Color WordOn(Color[] ramp) => UITheme.InkOn(Step(ramp, 0.62f));
 
+        // ── THE PACK IN THE GAME'S OWN COLOURS (2026-09-22, the author: "ESC, Menu, butonların hepsi oyunun sanat
+        // tasarımındaki renk paletlerine uygun seçilmeli; seçerken UI renklerini kullanılan paleti göz önünde
+        // bulundur") ────────────────────────────────────────────────────────────────────────────────────────────
+        //
+        // The pack ships in its own factory colours - a poster orange, a leaf green, a blue-grey - and they were the
+        // only things on the ESC menu that came from outside GDD 14's 55. The bench keys have been repainted onto
+        // the palette's ramps since 2026-09-17 (KeyRamp); this is the same repaint, offered to every key the pack
+        // draws, so one rule covers the menu, the settings and the bench alike:
+        //
+        //   GREY   -> NIGHT, the chrome ramp: what a key is when it is not asking for anything.
+        //   ORANGE -> AMBER, the one accent (GDD 16 §3: PrimaryAction, one to a screen).
+        //   GREEN  -> LIME, the yes: a thing that is on, a setting that is taken.
+        //   HOVER  -> CLUB BLUE, the same blue the back bar answers a pointer with. Nothing else in the game
+        //            is blue, so a blue plate means exactly one thing: the pointer is on this.
+        public static Color[] Ramp(Tone tone) =>
+            tone == Tone.Orange ? UITheme.Amber
+          : tone == Tone.Green ? UITheme.Lime
+          : NightKeys;
+
+        /// <summary>Night from its second step up: the whole ramp put a key's face on Night[2] and it read as a hole
+        /// cut in the page (the bench measured this on 2026-09-17).</summary>
+        private static readonly Color[] NightKeys =
+            { UITheme.Night[1], UITheme.Night[2], UITheme.Night[3], UITheme.Night[4] };
+
+        /// <summary>The blue a key wears under the pointer.</summary>
+        private static readonly Color[] HoverKeys =
+            { UITheme.ClubBlue[1], UITheme.ClubBlue[2], UITheme.ClubBlue[3], UITheme.ClubBlue[4] };
+
+        /// <summary>The pack's plate for this tone, cut from the palette: resting, or pressed.</summary>
+        public static Sprite Paletted(Tone tone, bool pressed) =>
+            Plate(tone.ToString().ToLowerInvariant(), Ramp(tone), pressed);
+
+        /// <summary>...and the one it wears under the pointer, in the game's blue.</summary>
+        public static Sprite Hovered() => Plate("hover_blue", HoverKeys, false);
+
+        /// <summary>The ink on a paletted key: the ramp's own reading, a step brighter while the pointer is on it.</summary>
+        public static Color PalettedInk(Tone tone, bool lit)
+        {
+            var ink = WordOn(Ramp(tone));
+            return lit ? Color.Lerp(ink, Color.white, 0.35f) : ink;
+        }
+
         /// <summary>The face colour a tone's cells are filled with (Tools/menu_pack.py measured them).</summary>
         public static Color Face(Tone tone) =>
             tone == Tone.Orange ? new Color32(230, 69, 57, 255)

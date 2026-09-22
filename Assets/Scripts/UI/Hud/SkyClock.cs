@@ -54,6 +54,9 @@ namespace LastCall.UI
             /// <summary>Where a cast shadow falls, in stage units, and how dark it is.</summary>
             public Vector2 ShadowOffset;
             public float ShadowAlpha;
+            /// <summary>How much of that shadow the HOUSE LAMPS own, 0..1 (2026-09-22): at dusk they take the room
+            /// from the window, and every caster starts throwing away from its own lamp rather than off the glass.</summary>
+            public float ShadowLampShare;
         }
 
         // ── the json's shape (JsonUtility: public fields, no nullables) ────────
@@ -293,6 +296,7 @@ namespace LastCall.UI
             d.ShadowOffset = wsum > 0.0001f
                 ? (sunOff * sunW + sunFar * skyW + lampOff * lampW) / wsum : lampOff;
             d.ShadowAlpha = Mathf.Clamp(wsum, room.shadowFloor, 1f);
+            d.ShadowLampShare = wsum > 0.0001f ? Mathf.Clamp01(lampW / wsum) : 1f;
             return d;
         }
     }

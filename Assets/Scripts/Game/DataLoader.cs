@@ -250,7 +250,7 @@ namespace LastCall.Game
                 try { slots.Add(new StageSlot(sl.id, sl.x, sl.y, sl.onCounter,
                                               sl.pairSpreadPx, sl.houseLight, sl.hangs,
                                               sl.flat, sl.backdrop, sl.carried,
-                                              sl.overlay, sl.place, sl.title, sl.order)); }
+                                              sl.overlay, sl.place, sl.title, sl.order, sl.copies)); }
                 catch (ArgumentException e) { throw new FormatException($"Slot '{sl.id}': {e.Message}"); }
             }
 
@@ -840,6 +840,7 @@ namespace LastCall.Game
             // hook. And whether what shines here is the room's HOUSE LIGHT, run on the
             // evening's clock. Defaults keep every old entry unchanged (JsonUtility).
             public float pairSpreadPx;
+            public int copies;          // 0: the old reading (two with a spread, else one)
             public bool houseLight;
             // Whatever stands here IS the room's back wall: its sprite replaces the plate
             // (2026-09-06, the wall ladder). Absent is false.

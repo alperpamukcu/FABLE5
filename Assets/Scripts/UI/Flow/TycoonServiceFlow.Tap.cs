@@ -48,10 +48,17 @@ namespace LastCall.UI
         private PackKey _tapDonePack;
         private bool _tapDoneReady = true;
         private Image _pintMirrorImg, _pintColFill, _headColFill;
-        private const float TapColW = 24f, TapColH = 200f;
+        // The two readings stand BETWEEN the kegs and the tower now (2026-09-22), short enough to clear the
+        // plaque's band above them: 20 wide, 140 tall, on the plinth's line.
+        private const float TapColW = 20f, TapColH = 140f;
         /// <summary>The plate the tower is bolted to (2026-09-22): a recess-finished slab 24 tall under the tower, so
         /// the spouts stand a pint's height and a hand over the counter; the pint waits on it, under the faucet.</summary>
-        private const float TowerPlinth = 24f, TowerPlinthW = 340f;
+        private const float TowerPlinth = 24f, TowerPlinthW = 660f;
+        /// <summary>The plaque's width on THIS bench: shorter than the other two's, because the tower beside it is
+        /// twice the size (2026-09-22). Its words wrap inside it as before.</summary>
+        // 396 wide and 96 tall (2026-09-22): the tower took the bench's right, so the words stand in a narrower,
+        // deeper recess - the beer's name, the verdict, and the standing hint wrapping over two rows under them.
+        private const float TapPlaqueW = 396f, TapPlaqueH = 96f;
         private const double HeadColumnFull = 0.40;   // the HEAD column's top: twice the good band's ceiling
         private IngredientCard _tapKegCard;
         private bool _glassHeld;
@@ -73,7 +80,8 @@ namespace LastCall.UI
         /// </summary>
         // The pint at its own size (49 by 96, 2026-09-22): under a tower drawn at 296 by 196 a glass half the tower's
         // height is the true proportion, and the old 124 by 200 stood taller than the faucets.
-        private const float PintW = 49f, PintH = 96f;
+        // The pint at the tower's own scale (2026-09-22): 49 by 96 of art drawn at 2x, like everything else here.
+        private const float PintW = 98f, PintH = 192f;
         /// <summary>
         /// ONE FONT PER RUNG (2026-08-26, the author: "bira koyma sahnesinde kullanılan
         /// büyük boy fıçı hem yanlış hem de bozuk gözüküyor, 3 seviyeye uygun büyütülmüş
@@ -135,10 +143,17 @@ namespace LastCall.UI
         /// tower: half behind a brass leg, which is a glass nobody would think to pick up.
         /// It is measured off the font's own half-width instead, plus a hand's width of bar.
         /// </summary>
-        private static FontRig RigFor(int tapLevel) => new FontRig("bench_tap_tower", new Vector2(296f, 196f),
-            new[] { new Vector2(-43.5f, 8f), new Vector2(-0.5f, 8f), new Vector2(42.5f, 8f) },
-            new[] { new Vector2(-43.5f, 67f), new Vector2(-0.5f, 67f), new Vector2(42.5f, 67f) },
-            new Vector2(12f, 38f), tapLevel);
+        /// <summary>The tower is drawn at TWICE its art size on this bench (2026-09-22, the author: "çok küçük
+        /// kalmış, boyutu 2x daha büyümeli"), and every measure taken off the drawing doubles with it - the three
+        /// spouts, the three valves and the lever. 592 by 392 leaves the plaque its words on the left and the pint
+        /// a hand of counter under each faucet.</summary>
+        private const float TowerScale = 2f;
+
+        private static FontRig RigFor(int tapLevel) => new FontRig("bench_tap_tower",
+            new Vector2(296f, 196f) * TowerScale,
+            new[] { new Vector2(-43.5f, 8f) * TowerScale, new Vector2(-0.5f, 8f) * TowerScale, new Vector2(42.5f, 8f) * TowerScale },
+            new[] { new Vector2(-43.5f, 67f) * TowerScale, new Vector2(-0.5f, 67f) * TowerScale, new Vector2(42.5f, 67f) * TowerScale },
+            new Vector2(12f, 38f) * TowerScale, tapLevel);
 
         /// <summary>The font standing on the bench this visit. Set by <see cref="StandTheFont"/>,
         /// which is the only writer; everything that needs a faucet reads it.</summary>
@@ -170,7 +185,9 @@ namespace LastCall.UI
         // what is left here is the one number a font does not carry, which is where along
         // the counter it is bolted. The counter dropped 30 for the big drawing and the kegs
         // dropped with it (see KegBaseY) so none of them pokes up through the counter line.
-        private const float TowerX = 260f;   // 150 until 2026-09-21: the kegs stand on the left now, the tower right of centre   // -50 until 2026-09-17: the pint at rest stood on the plaque's words
+        // 290: the tower is 592 wide now, so it stands right of centre with its left leg clear of the plaque's
+        // words (which end at panel x 656) and its right leg inside the bench's working area (2026-09-22).
+        private const float TowerX = 314f;   // -50 until 2026-09-17: the pint at rest stood on the plaque's words
         /// <summary>The open recess under the bar, where the kegs live in a real one. Putting the
         /// keg BEHIND the counter hid its label under the counter line, and putting it beside the
         /// counter left it standing in the room; under the bar it is both in its right place and
@@ -190,7 +207,9 @@ namespace LastCall.UI
         /// clicked with — the bays are a shortcut, not the only door.</summary>
         /// <summary>The three bays the kegs stand in, left to right, clear of the column and the tower's left leg
         /// (2026-09-22): a keg keeps its bay whether it is coupled or parked, and its bay picks its faucet.</summary>
-        private static readonly float[] BayX = { -350f, -255f, -160f };
+        // Clear of the instrument column (which ends at panel x 240) and clear of the tower's left leg: the
+        // three kegs stand at panel 290/395/500 with their edges at 242 and 548 (2026-09-22).
+        private static readonly float[] BayX = { -350f, -245f, -140f };
         /// <summary>Where the blank label sits on keg.png, as fractions of the sprite: the pale
         /// band runs from 0.516 to 0.676 of its height, 95% of its width. Measured, so the brand
         /// lands on the label instead of near it.</summary>
@@ -201,7 +220,7 @@ namespace LastCall.UI
         private RectTransform _tapKegRow;
         /// <summary>How far under the faucet the rim is carried — close enough to catch, far
         /// enough that the stream is visibly falling into the glass.</summary>
-        private const float MouthBelowSpout = 20f;   // 34 until 2026-09-22: a shorter pint sits closer under the lip
+        private const float MouthBelowSpout = 40f;   // the 2x pint hangs twice as far under the lip
         private Vector2 _tapTowerPos;
         private RectTransform _tapTower, _tapTray;
         private Image _tapTowerImg;
@@ -230,7 +249,7 @@ namespace LastCall.UI
                 _tapTowerImg.color = _tapTowerImg.sprite == null ? UITheme.Amber[2] : Color.white;
             }
             if (_tapTray != null)
-                _tapTray.anchoredPosition = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f);
+                _tapTray.anchoredPosition = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f * TowerScale);
             LayLevers();
             _tapGlassRest = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + PintH * GlassPivotY);
             // +6 with the tin bench's: a shadow falls to one side of the thing casting it, a reflection does not
@@ -268,21 +287,22 @@ namespace LastCall.UI
             // Three lines on it (2026-09-16): the beer's name, the VERDICT (it stood on a strip at the foot of the
             // screen), and a small line that is the hint until the glass is taken and the numbers after.
             // BESIDE THE COLUMN (2026-09-21), where the other two benches hang theirs: the column owns the far left.
-            var tapPlaque = AddCounterPlaque(_tapPanel, 560f, 70f, PlaqueUnderRail, ColX + ColW + 16f);   // 480 until 2026-09-17: the hint line ran past it
+            var tapPlaque = AddCounterPlaque(_tapPanel, TapPlaqueW, TapPlaqueH, PlaqueUnderRail, ColX + ColW + 16f);   // 480 until 2026-09-17: the hint line ran past it
             _tapTitle = NewText("Title", tapPlaque, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(_tapTitle.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 20f),
-                  new Vector2(PlaquePad, 46f));
-            _tapTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Place(_tapTitle.rectTransform, new Vector2(0f, 0f), new Vector2(TapPlaqueW - PlaquePad * 2f, 20f),
+                  new Vector2(PlaquePad, 70f));
+            _tapTitle.horizontalOverflow = HorizontalWrapMode.Wrap;
             Engraved(_tapTitle);
             _tapVerdict = NewText("Verdict", tapPlaque, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-            Place(_tapVerdict.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 20f),
-                  new Vector2(PlaquePad, 24f));
-            _tapVerdict.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Place(_tapVerdict.rectTransform, new Vector2(0f, 0f), new Vector2(TapPlaqueW - PlaquePad * 2f, 20f),
+                  new Vector2(PlaquePad, 46f));
+            _tapVerdict.horizontalOverflow = HorizontalWrapMode.Wrap;
             Engraved(_tapVerdict);
             _tapReadout = NewText("Readout", tapPlaque, _body, 8, TextAnchor.MiddleLeft, UITheme.TextSecondary);
-            Place(_tapReadout.rectTransform, new Vector2(0f, 0f), new Vector2(560f - PlaquePad * 2f, 14f),
+            Place(_tapReadout.rectTransform, new Vector2(0f, 0f), new Vector2(TapPlaqueW - PlaquePad * 2f, 36f),
                   new Vector2(PlaquePad, 4f));
-            _tapReadout.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _tapReadout.alignment = TextAnchor.UpperLeft;
+            _tapReadout.horizontalOverflow = HorizontalWrapMode.Wrap;
             _tapReadout.text = UIText.T("bench.tap.hint");
             Engraved(_tapReadout);
 
@@ -310,7 +330,7 @@ namespace LastCall.UI
             // the way the tin and the bottle do. The hatch cut into the timber went with the timber - the kegs stand in
             // a row at the bench's left, in the open, the coupled one bright and the spares parked in the shade.
             AddNeonWash(_tapSurface, over: 0);
-            _tapFontShadow = AddContactShadow(_tapSurface, 320f, new Vector2(TowerX, CounterY + 4f));
+            _tapFontShadow = AddContactShadow(_tapSurface, 520f, new Vector2(TowerX, CounterY + 4f));
             _tapFontShadow.SetSiblingIndex(1);
             _tapPintShadow = AddContactShadow(_tapSurface, PintW * 0.8f, new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 4f));
             _tapPintShadow.SetSiblingIndex(2);
@@ -347,8 +367,8 @@ namespace LastCall.UI
             plLipImg.color = UITheme.Amber[2]; plLipImg.raycastTarget = false;
 
             var tray = _tapTray = NewRect("DripTray", _tapSurface);
-            var trayPos = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f);
-            Place(tray, new Vector2(0.5f, 0.5f), new Vector2(132, 33), trayPos);
+            var trayPos = new Vector2(TowerX + _rig.Spouts[_tapFaucet].x, CounterY + TowerPlinth + 17f * TowerScale);
+            Place(tray, new Vector2(0.5f, 0.5f), new Vector2(132f * TowerScale, 33f * TowerScale), trayPos);
             var trayImg = tray.gameObject.AddComponent<Image>();
             trayImg.sprite = ItemArt.Load("drip_tray");
             trayImg.preserveAspect = true; trayImg.raycastTarget = false;
@@ -456,17 +476,17 @@ namespace LastCall.UI
             // place - the one accent on the bench, hung from the rail beside the plaque, the word alone. It was a
             // 240x64 slab of its own in the corner.
             // The glass bench's own word on it: what to do after is the room's to say over the standing pint.
+            // AT THE BOTTOM, DEAD CENTRE (2026-09-22): the same place on every bench.
             _tapDone = PackKeyFlow(_tapPanel, "Done", UIText.T("bench.serve.serve_key"), null, KeyGo,
-                new Vector2(0f, 0f), new Vector2(ServeKeyW, PlaqueH), new Vector2(ColX + ColW + 16f + PlaqueW + 16f, 0f),
+                new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, 16f),
                 () => { if (Run != null && !Run.ServingGlass.IsEmpty) GoTo(Stage.Closed); },
                 out _tapDoneBtn, out _tapDonePack, 16);
-            _railHung.Add((_tapDone, RailBandH + PlaqueUnderRail + PlaqueH));
-            _benchCounterTop = -1f;
+            RegisterFixed(_tapPanel, _tapDone);
             _tapDoneGroup = _tapDone.gameObject.AddComponent<CanvasGroup>();
             var doneLabel = _tapDone.Find("Face/Label").GetComponent<Text>();
             doneLabel.font = _display;
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(20f, 4f), new Vector2(-20f, 0f));
-            FitWord(doneLabel, new Vector2(ServeKeyW - 40f, PlaqueH - 8f), 16, 8);
+            FitWord(doneLabel, new Vector2(ServeKeyW - 40f, ServeKeyH - 8f), 24, 16);
         }
 
         /// <summary>
@@ -522,8 +542,8 @@ namespace LastCall.UI
             LightTiltLadder(0f);
 
             // right of the tower, clear of its drawing at 296 wide (2026-09-21)
-            _pintColFill = BuildTapColumn("PintColumn", TowerX + 190f, UIText.T("bench.tap.col.pint"), new[] { 0.75f });
-            _headColFill = BuildTapColumn("HeadColumn", TowerX + 190f + TapColW + 14f, UIText.T("bench.tap.col.head"),
+            _pintColFill = BuildTapColumn("PintColumn", -70f, UIText.T("bench.tap.col.pint"), new[] { 0.75f });
+            _headColFill = BuildTapColumn("HeadColumn", -70f + TapColW + 14f, UIText.T("bench.tap.col.head"),
                 new[] { (float)(TapPour.GoodHeadMin / HeadColumnFull), (float)(TapPour.GoodHeadMax / HeadColumnFull) });
             StepTapInstruments(Run);
         }
@@ -531,7 +551,7 @@ namespace LastCall.UI
         private Image BuildTapColumn(string name, float x, string head, float[] marks)
         {
             var rig = NewRect(name, _tapSurface);
-            Place(rig, new Vector2(0.5f, 0.5f), new Vector2(TapColW, TapColH), new Vector2(x, CounterY + 12f + TapColH * 0.5f));
+            Place(rig, new Vector2(0.5f, 0.5f), new Vector2(TapColW, TapColH), new Vector2(x, CounterY + TowerPlinth + 8f + TapColH * 0.5f));
             var tube = rig.gameObject.AddComponent<Image>();
             tube.sprite = ChromeArt.GaugeTube((int)TapColW, (int)TapColH);
             tube.color = UITheme.Night[2];
@@ -1020,10 +1040,10 @@ namespace LastCall.UI
             float kegX = BayX[Mathf.Clamp(_tapKegBay, 0, BayX.Length - 1)];
             // ...into the tower's LEFT LEG rather than the faucet's own x (r87): the leg hides the drop, and a hose
             // dropping through the arch's open middle read as a cable over the pint.
-            float tapX = TowerX - 105.5f;   // the left leg's centre in the drawing (art x 17..68 of 296)
+            float tapX = TowerX - 105.5f * TowerScale;   // the left leg's centre in the drawing (art x 17..68 of 296)
             var coupler = new Vector2(kegX, KegBaseY + KegH - 6f);
-            var rise = new Vector2(kegX, KegBaseY + KegH + 14f);
-            var run = new Vector2(tapX, KegBaseY + KegH + 14f);
+            var rise = new Vector2(kegX, KegBaseY + KegH + 26f);
+            var run = new Vector2(tapX, KegBaseY + KegH + 26f);
             LineSegment(coupler, rise);
             LineSegment(rise, run);
             LineSegment(run, new Vector2(tapX, CounterY + TowerPlinth * 0.5f));

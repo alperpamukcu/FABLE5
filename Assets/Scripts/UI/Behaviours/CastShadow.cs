@@ -28,6 +28,40 @@ namespace LastCall.UI
         public static Vector2 Offset = new Vector2(4f, -3f);
         /// <summary>How dark, 0..1, before each caster's own <see cref="Strength"/>.</summary>
         public static float Alpha = 0.26f;
+        /// <summary>How much of the room's shadow the HOUSE LAMPS own right now, 0..1 (the rest is the sun and the
+        /// sky). The stage writes it from the hour (2026-09-22, the author: "ışıkların gölgesi güneş varken güneşe
+        /// göre, lambalar açıldığında lambalara göre olmalı, hepsinde"): at this share every caster swings its
+        /// shadow off ITS OWN lamp instead of the window, which is what a room full of pendants actually does.</summary>
+        public static float LampShare;
+        /// <summary>How far the lamp-lit shadow is thrown, in the stage's own units.</summary>
+        public static float LampReach = 5f;
+        /// <summary>WHERE THE HOUSE'S LAMPS HANG, in world units - the stage writes the list when it dresses the
+        /// room. Every caster takes the nearest of them and throws away from it, so the pendants over the counter
+        /// push the shadows of what stands under them outwards and the sconces push theirs along the wall.</summary>
+        public static Vector3[] Lamps = System.Array.Empty<Vector3>();
+        /// <summary>Which way THIS caster's shadow falls while the lamps own the room: away from the nearest lamp,
+        /// found each frame off <see cref="Lamps"/>. Zero - no lamp in the room - falls back to the window's.</summary>
+        private Vector2 LampAway()
+        {
+            var lamps = Lamps;
+            if (lamps == null || lamps.Length == 0) return Vector2.zero;
+            var me = Source.transform.position;
+            int best = 0; float bestD = float.MaxValue;
+            for (int i = 0; i < lamps.Length; i++)
+            {
+                float d = (lamps[i] - me).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = i; }
+            }
+            var away = (Vector2)(me - lamps[best]);
+            // Straight under a lamp there is no direction to fall in, and a shadow that flips as the caster crosses
+            // the axis reads as a glitch: under it the throw goes DOWN, which is what a lamp overhead makes.
+            if (away.sqrMagnitude < 4f) return new Vector2(away.x * 0.5f, -1f);
+            return away;
+        }
+        /// <summary>This caster's share of the room's throw: 1 for a figure on the floor, less for a thing SCREWED
+        /// TO THE WALL (2026-09-22, the author: "duvara sabit eşyaların gölgeleri kendilerine daha yakın olmalı,
+        /// tablo televizyon ışık vs") - a picture hangs a finger off the plaster and its shadow says so.</summary>
+        public float Reach = 1f;
 
         public SpriteRenderer Source;
         /// <summary>This caster's share of the room's shadow: 1 for a figure or a piece on
@@ -83,7 +117,15 @@ namespace LastCall.UI
             if (transform.parent != t.parent) transform.SetParent(t.parent, false);
             transform.localScale = t.localScale;
             transform.localRotation = t.localRotation;
-            transform.localPosition = t.localPosition + new Vector3(Offset.x, Offset.y, ZNudge);
+            var throwBy = Offset;
+            if (LampShare > 0.001f)
+            {
+                var away = LampAway();
+                if (away.sqrMagnitude > 0.0001f)
+                    throwBy = Vector2.Lerp(Offset, away.normalized * LampReach, LampShare);
+            }
+            throwBy *= Reach;
+            transform.localPosition = t.localPosition + new Vector3(throwBy.x, throwBy.y, ZNudge);
             _sr.color = new Color(0f, 0f, 0f, Alpha * Strength * Source.color.a);
         }
     }

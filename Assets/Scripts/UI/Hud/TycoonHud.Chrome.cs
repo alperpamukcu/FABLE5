@@ -885,6 +885,12 @@ namespace LastCall.UI
             float want = up ? 1f : 0f;
             _propTipGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _propTipGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
+            // IT GROWS OUT OF THE POINTER AND SHRINKS BACK INTO IT (2026-09-22, the author: "tüm hoverlara açılma ve
+            // kapanma animasyonu ekle, mousun olduğu yerden büyüsünler ve küçülsünler"). The plate's pivot is
+            // already the edge that touches the thing under the pointer - its foot when it hangs below, its head
+            // when it hangs above - so scaling about that pivot IS scaling out of the pointer, with no second sum.
+            float pop = Motion.Reduced ? 1f : Mathf.Lerp(0.74f, 1f, Mathf.SmoothStep(0f, 1f, _propTipGroup.alpha));
+            _propTip.localScale = new Vector3(pop, pop, 1f);
             if (!up || _propTipGroup.alpha <= 0f) return;
             if (_propTipDetailFn != null && _propTipDetail != null)
             {

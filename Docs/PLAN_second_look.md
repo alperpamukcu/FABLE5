@@ -94,6 +94,29 @@ threshold — every enclosed transparent pixel is filled from its opaque neighbo
 (`OnPostprocessTexture`, Resources/Patron only); the census over all 4,384 imported frames finds none left, and
 the three seated drinkers' waists were looked at in play (r75).
 
+## 6. The fifth look (2026-09-22) — the door's colour, the room's light, the benches, the certificate, the menu
+
+All of it is built (GDD_MEVCUT 9.99). The one rule it added is written into GDD 14 §4c: the cellar's DOOR is the
+room's one fixed surface, chosen AGAINST the fittings' warm family rather than inside it.
+
+| # | Item | Where |
+|---|---|---|
+| 15 | The door's own colour (Cyan, the frames' split-complement), fixed against every finish | `DiegeticStage.DoorArt`, `Resources/Scene/counter_door.png` |
+| 16 | The crack eases open and shut, the light a beat behind | `ShutterPeek`, `PeekOpenSeconds/PeekShutSeconds` |
+| 17 | Three pendants under the top bar, dividing the room in four (one drawing, three copies) | `StageSlot.Copies`, `counter_lamps`, `fx_counter_lamps` |
+| 18 | The window's patch: floor / wall / ceiling shapes, clipped corners, sized off the sun's elevation, never on the counter | `SunFloorCookie`, `SunShaftCookie`, `SunCeilingCookie`, `Chamfered` |
+| 19 | A wall piece's shadow is short; every shadow falls off its own lamp once the house is lit | `CastShadow.Reach`, `CastShadow.Lamps`, `SkyClock.ShadowLampShare` |
+| 20 | The room's tap four px higher | `fixtures.json` |
+| 21 | The draught tower at 2x, the station laid out again | `TycoonServiceFlow.Tap` (`TowerScale`) |
+| 22 | The bench's far edge takes the counter's finish | `TycoonServiceFlow.Shaker` (`BenchRail`, `BenchRidge`, `BenchSeam`) |
+| 23 | The bin lying down; SERVE IT at the bottom's centre on every bench | `AddBinButton`, `Serve` / `Tap` |
+| 24 | The certificate at zero stars, its paper graded by the rung, longer swallowtailed ribbons | `TycoonHud.Ladder` (`CertLook`, `RibbonArt`) |
+| 25 | Every menu key from the palette, the hover in blue, hovers that grow out of the pointer | `MenuPack.Paletted/Hovered`, `StepPropTip`, `PressSink.Bloom` |
+
+Two things the list did not ask for but the measurements forced: the paper's grain is one sheet rather than a
+tile (tiled, it painted hard-edged blotches over the certificate), and the catching vessel rose eighty units so
+the bottom row of keys has the bench's foot to itself.
+
 ## 5. The third look (2026-09-21) — the author's asks and picks
 
 Shipped in the same commit as the hole fill:

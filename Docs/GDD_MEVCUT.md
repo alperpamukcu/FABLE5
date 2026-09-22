@@ -1540,6 +1540,59 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.99 · Beşinci liste: kapının kendi rengi ve yavaş aralanışı, tavandan üç sarkıt, üç yüzeyde ışık hüzmesi, gölgelerin erişimi, 2x kule, yatay çöp, ortada SERVE IT, sertifika kademeleri, palet menüsü (2026-09-22)
+
+- **Kapak kendi rengi** (`DiegeticStage.DoorArt`, `Resources/Scene/counter_door.png`): raflarla aynı olmayan SABİT
+  renk — RENK TEORİSİ: barın demirbaşları tek sıcak aile (çerçeveler Magenta #E84DA6 ton 327, pirinç Amber 38,
+  tabla Night); bu aileden boyanan kapak rafın devamı gibi okunuyordu. Paletin çerçevelere göre bölünmüş
+  tümleyeni Cyan (#26918F, 178) ve Lime (105); Cyan zaten odanın ikinci neonu, o yüzden kapak CYAN rampasında:
+  sıcak odanın tek soğuk düzlemi, üstündeki pembe flamingo da kendi tümleyenine düşüyor (teal–pembe, bu barın
+  kurulduğu eşleşme). Cila değişince ARTIK BOYANMIYOR (`_doorIsDrawn`), beş cilada da aynı okunur.
+- **Yavaş aralanma** (`ShutterPeek` 12, `PeekOpenSeconds` 0.55 / `PeekShutSeconds` 0.75, `PeekEase` smoothstep):
+  imleç gelince kapı yarım saniyede aralanır, bırakınca dörtte üç saniyede kapanır — kapı elden yavaş düşer —
+  ve ışık çatlağı bir tempo geriden takip eder (`InverseLerp(0.18,1)` + smoothstep).
+- **Üç sarkıt** (`fx_counter_lamps` tek sarkıt 56×72, PixelLab; `counter_lamps` yuvası `copies: 3`,
+  `pairSpreadPx: 160`, x 320, y 261): üst barın hemen altından sarkar (odanın görünen tepesi 333 art px = 360 −
+  54/2), ekranı dörde böler (160/320/480). Yuva artık üç kopya taşıyabilir (`StageSlot.Copies`, veri `copies`).
+  Işık gölgenin altında (`lightDy` −40), 1,1 × 190, KEY tonunda, ev saatinde.
+- **Işık hüzmesi üç yüzeyde** (`DiegeticStage`): duvar (212×160, eğim 0,5), ZEMİN (300×72, eğim 1,4), TAVAN
+  (260×64, eğim −1,1, `SunCeilingCookie`). Hangi yüzeydeyse o çerez yanar (zemin < 136 < duvar < 296 < tavan,
+  ±10/24 çapraz geçiş). AÇILAR HESAPLANDI: güneşin yüksekliği açılışta 36°, batışta 2° (`SunOpenDeg/SetDeg`;
+  cam eşiği 130, başlığı 300, karşı duvar 470 px geride); zemin lekesi cot(a) ile uzar (1→1,9), duvar lekesi
+  1/sin(a) ile büyür (0,85→1,35), tavan lekesi en sonda en geniş. Köşeler KIRPIK (`Chamfered`, dx+dy > 1,62 →
+  sekizgen). Tezgâhın önüne GELMEZ: üç ışık da yalnız `LayerBackground` (Counter ve Patrons yok).
+- **Gölgeler** (`CastShadow`): duvara sabit parçaların erişimi üçte bir (`Reach` 0,34; zemin çizgisinin üstünde
+  ve tezgâhta olmayan her şey duvardadır), gerisi tam. Lambalar odayı devraldıkça (`LampShare`, SkyClock'un
+  lamp ağırlığı) her gölge KENDİ en yakın lambasından kaçar (`Lamps` listesi oda dizildiğinde yayımlanır;
+  lambanın tam altında yön aşağı). Güneş varken güneşe, lambalar açıkken lambalara — yazarın istediği.
+- **Oda musluğu** 4 px yukarı (`taps` yuvası y 71,5 → 75,5).
+- **Bira tezgâhı 2x** (`Tap.cs`): kule 592×392 (`TowerScale` 2; ağızlar, vanalar, kol ve tepsi onunla ikiye
+  katlandı), pint kendi 2x'inde 98×192, ağız payı 40, kule plakası 660 geniş, kule x 314 (sağ bacağı çalışma
+  alanının içinde, sol bacağı sözcüklerin sağında); fıçılar solda üç yuvada −350/−245/−140 (sütun panelinin
+  bitişi 240, fıçıların kenarı 242 — ölçüldü); PINT/HEAD sütunları fıçılarla kule arasında (20×140, x −70/−36);
+  sözcük plakası 396×96 ve satırları SARIYOR (taşma kuleye giriyordu): isim, hüküm, altında iki satır yönerge.
+- **Tezgâh arkaplanı odanın tezgâhı**: bench'in UZAK KENARI de cilayı alır — `BenchRidge/BenchSeam` Slab
+  rampasından, altı sıralı `BenchRail` Frame rampasından (0,72→0) türetiliyor; eskiden neon barın magentası
+  koda yazılıydı, ceviz bir barın tezgâhı bile pembe kalıyordu.
+- **Çöp tuşu yatay** (168×64; çizim solda 40×56, sözcük yanında) ve **SERVE IT sahnenin en altında ortada**
+  (288×64, `(0.5,0)` çapa, y 16) — cam ve bira tezgâhında; alt sıra artık: çıkış solda, SERVE IT ortada, çöp sağda.
+- **Sertifika**: 0 yıldızda da açılır (sıradaki basamağın kutuları tek okunacak yer). Kalite basamakla artar
+  (`CertLook`/`LookFor`, yedi basamak — BarRank'in 0/0,5/1/2/3/4/5'i): 0★ düz kâğıt tek ince çizgi, 0,5★ köşebentler + amber altçizgi, 1★ ikinci
+  çizgi + daha iyi kâğıt + kurdele, 2★ vurgu parlar, 3★ yaldız bant, 4–5★ ağır çizgi + yaldız + en parlak vurgu.
+  Yeni renk YOK: Cream kâğıt, Night mürekkep, Amber tek vurgu. Kurdeleler 180 uzunlukta ve ucu çatal
+  (`RibbonArt`, V kertik).
+- **Menü paletten**: `MenuPack.Paletted/PalettedInk/Hovered` — GREY→Night, ORANGE→Amber, GREEN→Lime, HOVER→
+  ClubBlue; ESC, ayarlar ve bayrak tuşlarının hepsi buradan (paketin fabrika turuncusu/yeşili/mavi-grisi kalktı).
+  Hover artık MAVİ. Tüm hoverlara açılış/kapanış: ipucu plakası imlecin durduğu kenardan 0,74→1 büyüyüp küçülür
+  (`StepPropTip`), tuşlar imleç altında %3 şişer (`PressSink.Bloom`).
+- **Kâğıdın tanesi tek sayfa**: 64'lük tane KAROLANINCA kâğıda sert kenarlı lekeler basıyordu (ölçüldü: tane
+  açıkken alanın yarısından fazlası bir ton koyu, kapalıyken düz) — tane artık desen gibi tek 492×300 çizim,
+  2x gösteriliyor; `Image.Type.Tiled` + kodla üretilen kenarlıksız sprite bu dosyada bir daha kullanılmaz.
+- **Yakalayan kap 80 yukarı** (`CatchFootY` −340 → −260): alt sıra artık tuşların (çıkış / SERVE IT / çöp),
+  bardağın ayağı tuşun arkasında kalıyordu.
+- Doğrulama: EditMode 622/623, PlayMode 13/13. Oyunda (r95): oda dört saatte, sertifika üç
+  kademede, ESC menüsü, üç tezgâh.
+
 ### 9.98 · Dolap kapağı D1a kepenkin yerinde, tezgâh sarkıtları L3 odada (2026-09-22)
 
 Yazar: "D1a", "L3".

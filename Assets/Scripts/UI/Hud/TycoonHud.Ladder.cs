@@ -30,6 +30,11 @@ namespace LastCall.UI
         private RectTransform _ladderPanel, _ladderGroup, _ladderReveal, _ladderPaper, _ladderBand, _ladderNextBand, _ladderFx, _ladderNewFlag;
         private RectTransform _ladderSeal, _ladderRibbonL, _ladderRibbonR;
         private Text _ladderHeading, _ladderTo, _ladderToShadow, _ladderToBold, _ladderMeta, _ladderBandHead, _ladderNextHead, _ladderComfortValue, _ladderServiceValue;
+        private RectTransform _ladderRuleOuter, _ladderRuleInner, _ladderGilt, _ladderUnderline;
+        private Image[] _ladderRuleOuterEdges, _ladderRuleInnerEdges, _ladderGiltEdges;
+        private List<Image> _ladderBrackets;
+        private Image _ladderPaperImg, _ladderPatternImg, _ladderUnderlineImg;
+        private Text _ladderComfortLabel, _ladderServiceLabel;
         /// <summary>Whether this sheet stopped the clock when it opened (2026-09-21, the author: "bu ekran açıkken menüde
         /// olduğu gibi zaman durmalı"); let go when it closes. Only during the night - at the day's end nothing runs.</summary>
         private bool _ladderHeldClock;
@@ -74,6 +79,60 @@ namespace LastCall.UI
         }
 
         // ── build ─────────────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// HOW GOOD THE PAPER IS (2026-09-22, the author: "sertifika kalitesi yıldız seviyesi yükseldikçe artmalı;
+        /// şu anki temel sertifika olmalı, ilerleyen sertifikalar renkleri ve tasarımları bakımından giderek
+        /// gelişmeli"). One sheet, six grades, and the grade is the rung - a bar that has climbed is handed better
+        /// stationery, which is the oldest way a certificate says what it is worth.
+        ///
+        /// The design rule holds at every grade (GDD 16 and the memory rule): three colour roles, ONE accent, no
+        /// ornament for its own sake. What climbs is the PRINTING - a second rule, cut corners, a gilt edge, a
+        /// deeper stock - never a second accent.
+        /// </summary>
+        private readonly struct CertLook
+        {
+            public readonly Color Paper;        // the stock
+            public readonly Color Rule;         // the outer rule
+            public readonly float RuleW;
+            public readonly bool InnerRule;     // a second, finer rule inside it
+            public readonly bool Brackets;      // cut corners
+            public readonly Color Trim;         // brackets, the title's underline, the band heads: the accent
+            public readonly float Pattern;      // how far up the glasses printed on the stock come
+            public readonly bool Gilt;          // a gold band just inside the edge
+            public readonly bool Ribbons;       // the seal's tails
+            public readonly float Seal;         // the seal's scale
+
+            public CertLook(Color paper, Color rule, float ruleW, bool innerRule, bool brackets, Color trim,
+                            float pattern, bool gilt, bool ribbons, float seal)
+            {
+                Paper = paper; Rule = rule; RuleW = ruleW; InnerRule = innerRule; Brackets = brackets;
+                Trim = trim; Pattern = pattern; Gilt = gilt; Ribbons = ribbons; Seal = seal;
+            }
+        }
+
+        /// <summary>The six grades, by rung. Nothing here is a new colour: Cream is the stock, Night is the ink,
+        /// Amber is the one accent, and the climb spends them a step at a time.</summary>
+        private static CertLook LookFor(int rung)
+        {
+            // Seven rungs (BarRank.Rungs: 0, 0.5, 1, 2, 3, 4, 5 stars), so seven grades - the last two share the
+            // best stock, because there is nothing left to add to a sheet that is already gilt.
+            switch (Mathf.Clamp(rung, 0, 6))
+            {
+                // 0 stars: a docket. Plain stock, one thin rule, no trim, no seal tails.
+                case 0: return new CertLook(UITheme.Cream[3], UITheme.Night[3], 1f, false, false, UITheme.Night[2], 0.14f, false, false, 0.75f);
+                // 0.5: the corners are cut and the title gets its line.
+                case 1: return new CertLook(UITheme.Cream[3], UITheme.Night[3], 2f, false, true, UITheme.Amber[1], 0.18f, false, false, 0.85f);
+                // 1: a second rule inside the first, the stock a shade better.
+                case 2: return new CertLook(UITheme.Cream[4], UITheme.Night[3], 2f, true, true, UITheme.Amber[2], 0.22f, false, true, 1f);
+                // 2: the trim brightens to the accent proper.
+                case 3: return new CertLook(UITheme.Cream[4], UITheme.Night[3], 2f, true, true, UITheme.Amber[3], 0.26f, false, true, 1f);
+                // 3 stars: a gilt band just inside the edge.
+                case 4: return new CertLook(UITheme.Cream[4], UITheme.Night[2], 3f, true, true, UITheme.Amber[3], 0.30f, true, true, 1.1f);
+                // 4 and 5 stars: gilt, a heavy rule, the deepest stock the palette has.
+                default: return new CertLook(UITheme.Cream[4], UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.34f, true, true, 1.2f);
+            }
+        }
 
         private void BuildLadderWindow(RectTransform root)
         {
@@ -120,14 +179,20 @@ namespace LastCall.UI
             _ladderPaper = NewRect("Paper", _ladderReveal);
             Place(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(PaperW, PaperMinH), Vector2.zero);
             _ladderPaper.pivot = new Vector2(0.5f, 1f);
-            var paperImg = _ladderPaper.gameObject.AddComponent<Image>();
-            paperImg.color = UITheme.Cream[4];
-            paperImg.raycastTarget = false;
+            _ladderPaperImg = _ladderPaper.gameObject.AddComponent<Image>();
+            _ladderPaperImg.color = UITheme.Cream[4];
+            _ladderPaperImg.raycastTarget = false;
             // the grain: a speckle tile laid over the cream, faint
             var grain = NewRect("Grain", _ladderPaper);
-            Stretch(grain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Place(grain, new Vector2(0.5f, 1f), new Vector2(PaperW - 40f, 640f - 40f), new Vector2(0f, -20f));
+            grain.pivot = new Vector2(0.5f, 1f);
             var gi = grain.gameObject.AddComponent<Image>();
-            gi.sprite = PaperGrain(64); gi.type = Image.Type.Tiled; gi.pixelsPerUnitMultiplier = 0.5f;
+            // ONE SHEET, NOT A TILE (2026-09-22). Tiled over the paper this painted BLOTCHES - measured on three
+            // captures: with the grain on, more than half the sheet came back a shade darker in hard-edged blocks
+            // a couple of hundred units wide; with it off the paper was flat. A code-made sprite with no border,
+            // tiled across a thousand units, is not a road this file needs to walk: the flecks are scattered over
+            // one sheet-sized drawing instead, exactly as the lattice of glasses is, and shown at the house's 2x.
+            gi.sprite = PaperGrain(PatternW, PatternH); gi.type = Image.Type.Simple;
             gi.color = new Color(1f, 1f, 1f, 0.10f); gi.raycastTarget = false;
             UiAuditExempt.Mark(grain, "paper grain, a speckle tile at 2x under a tenth of alpha");
             // the watermark: the house's star, large and almost not there, behind the writing
@@ -141,16 +206,22 @@ namespace LastCall.UI
             Place(pattern, new Vector2(0.5f, 1f), new Vector2(PaperW - 40f, 640f - 40f), new Vector2(0f, -20f));
             pattern.pivot = new Vector2(0.5f, 1f);
             var pi = pattern.gameObject.AddComponent<Image>();
-            pi.sprite = PaperPattern(492, 300); pi.type = Image.Type.Simple;
+            pi.sprite = PaperPattern(PatternW, PatternH); pi.type = Image.Type.Simple;
             pi.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.22f); pi.raycastTarget = false;
+            _ladderPatternImg = pi;
             UiAuditExempt.Mark(pattern, "the paper's pattern: cocktail glasses at 2x, near the paper's own colour");
             // the rules: two deep outside, one inside, and a bracket at each corner between them
-            var outer = NewRect("RuleOuter", _ladderPaper);
-            Stretch(outer, Vector2.zero, Vector2.one, new Vector2(12f, 12f), new Vector2(-12f, -12f));
-            Frame(outer, 2f, UITheme.Night[3]);
-            var inner = NewRect("RuleInner", _ladderPaper);
-            Stretch(inner, Vector2.zero, Vector2.one, new Vector2(18f, 18f), new Vector2(-18f, -18f));
-            Frame(inner, 1f, new Color(UITheme.Night[3].r, UITheme.Night[3].g, UITheme.Night[3].b, 0.55f));
+            // The rules, the gilt band and the corner brackets are all built once and RESTYLED by the rung (Regrade).
+            _ladderRuleOuter = NewRect("RuleOuter", _ladderPaper);
+            Stretch(_ladderRuleOuter, Vector2.zero, Vector2.one, new Vector2(12f, 12f), new Vector2(-12f, -12f));
+            _ladderRuleOuterEdges = FrameEdges(_ladderRuleOuter, 2f, UITheme.Night[3]);
+            _ladderGilt = NewRect("Gilt", _ladderPaper);
+            Stretch(_ladderGilt, Vector2.zero, Vector2.one, new Vector2(15f, 15f), new Vector2(-15f, -15f));
+            _ladderGiltEdges = FrameEdges(_ladderGilt, 1f, UITheme.Amber[3]);
+            _ladderRuleInner = NewRect("RuleInner", _ladderPaper);
+            Stretch(_ladderRuleInner, Vector2.zero, Vector2.one, new Vector2(18f, 18f), new Vector2(-18f, -18f));
+            _ladderRuleInnerEdges = FrameEdges(_ladderRuleInner, 1f, new Color(UITheme.Night[3].r, UITheme.Night[3].g, UITheme.Night[3].b, 0.55f));
+            _ladderBrackets = new List<Image>();
             foreach (var corner in new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) })
                 Bracket(_ladderPaper, corner);
 
@@ -176,10 +247,10 @@ namespace LastCall.UI
             Place(_ladderTo.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 40f), new Vector2(0f, -44f));
             _ladderTo.rectTransform.pivot = new Vector2(0.5f, 1f);
             _ladderTo.horizontalOverflow = HorizontalWrapMode.Overflow;
-            var under = NewRect("Underline", _ladderPaper);
-            Place(under, new Vector2(0.5f, 1f), new Vector2(320f, 3f), new Vector2(0f, -92f));
-            var ui = under.gameObject.AddComponent<Image>();
-            ui.color = UITheme.Amber[3]; ui.raycastTarget = false;
+            _ladderUnderline = NewRect("Underline", _ladderPaper);
+            Place(_ladderUnderline, new Vector2(0.5f, 1f), new Vector2(320f, 3f), new Vector2(0f, -92f));
+            _ladderUnderlineImg = _ladderUnderline.gameObject.AddComponent<Image>();
+            _ladderUnderlineImg.color = UITheme.Amber[3]; _ladderUnderlineImg.raycastTarget = false;
 
             _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -112f), LadderStar, 4f,
                 UITheme.Amber[3], UITheme.Night[3]);
@@ -248,11 +319,13 @@ namespace LastCall.UI
             h.sizeDelta = new Vector2(arm, stroke);
             h.anchoredPosition = new Vector2(sx * inset, sy * inset);
             var hi = h.gameObject.AddComponent<Image>(); hi.color = UITheme.Night[2]; hi.raycastTarget = false;
+            _ladderBrackets.Add(hi);
             var v = NewRect("BracketV", paper);
             v.anchorMin = v.anchorMax = corner; v.pivot = corner;
             v.sizeDelta = new Vector2(stroke, arm);
             v.anchoredPosition = new Vector2(sx * inset, sy * inset);
             var vi = v.gameObject.AddComponent<Image>(); vi.color = UITheme.Night[2]; vi.raycastTarget = false;
+            _ladderBrackets.Add(vi);
         }
 
         /// <summary>A score on the sheet: its label, five of the house's icons filled to the value, the number.</summary>
@@ -263,6 +336,7 @@ namespace LastCall.UI
             float total = labelW + 10f + rowW + 10f + valueW;
             float left = x - total * 0.5f;
             var label = NewText(id + "Label", _ladderPaper, _display, 16, TextAnchor.MiddleRight, UITheme.Amber[2]);
+            if (id == "Comfort") _ladderComfortLabel = label; else _ladderServiceLabel = label;
             Place(label.rectTransform, new Vector2(0.5f, 1f), new Vector2(labelW, 20f), new Vector2(left + labelW * 0.5f, y));
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = UIText.T(labelKey);
@@ -302,14 +376,46 @@ namespace LastCall.UI
             var rt = NewRect(id, _ladderPaper);
             rt.anchorMin = rt.anchorMax = new Vector2(1f, 0f);
             rt.pivot = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(20f, 120f);
+            // LONGER, AND CUT TO A POINT (2026-09-22, the author: "kurdelenin ipleri uzamalı ve > şeklinde olmalı"):
+            // the two tails fall a hundred and eighty units off the seal and each ends in the swallowtail a ribbon
+            // is actually cut to - a notch taken out of the end, which is the ">" read the right way up.
+            rt.sizeDelta = new Vector2(24f, RibbonLen);
             rt.anchoredPosition = new Vector2(-PaperSide - 52f + dx, 84f);
             var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = RibbonArt(12, (int)(RibbonLen * 0.5f));
+            img.type = Image.Type.Simple;
             img.color = ink; img.raycastTarget = false;
             return rt;
         }
 
-        private static Sprite s_sealDisc, s_paperGrain, s_paperPattern;
+        /// <summary>How far the seal's tails fall.</summary>
+        private const float RibbonLen = 180f;
+
+        private static Sprite s_sealDisc, s_paperGrain, s_paperPattern, s_ribbon;
+
+        /// <summary>A ribbon tail: a straight band with a V notched out of its end, drawn white and worn in the
+        /// colour the caller gives it. Drawn at half and shown at the house's 2x, like every other code sprite here.</summary>
+        private static Sprite RibbonArt(int w, int h)
+        {
+            if (s_ribbon != null) return s_ribbon;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "cert_ribbon" };
+            int notch = Mathf.Max(3, w / 2);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    // the notch is cut out of the BOTTOM rows, deepest in the middle
+                    // texture y grows up, so row 0 is the tail's end: the notch is deepest in the middle and
+                    // nothing at the two corners, which is the V a ribbon is cut to.
+                    float half = Mathf.Max(0.001f, (w - 1) * 0.5f);
+                    int cut = Mathf.RoundToInt(notch * (1f - Mathf.Abs(x - half) / half));
+                    bool inside = y >= cut;
+                    tex.SetPixel(x, y, inside ? Color.white : new Color(0f, 0f, 0f, 0f));
+                }
+            tex.Apply(false, false);
+            s_ribbon = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 1f), 1f, 0, SpriteMeshType.FullRect);
+            s_ribbon.name = "cert_ribbon";
+            return s_ribbon;
+        }
 
         /// <summary>A lattice of martini glasses, two to a tile on the diagonal, drawn in one-pixel lines; white,
         /// coloured by the Image that wears it. Tiled at 2x it reads as the paper's own printing.</summary>
@@ -364,13 +470,16 @@ namespace LastCall.UI
 
         /// <summary>The paper's grain: a tile of light and dark specks, most of it clear, drawn once. Laid at 2x
         /// under a tenth of alpha it reads as fibre, not noise.</summary>
-        private static Sprite PaperGrain(int px)
+        /// <summary>The paper's own drawings are one sheet at half the sheet's size, shown at 2x.</summary>
+        private const int PatternW = 492, PatternH = 300;
+
+        private static Sprite PaperGrain(int w, int h)
         {
             if (s_paperGrain != null) return s_paperGrain;
-            var tex = new Texture2D(px, px, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "paper_grain", wrapMode = TextureWrapMode.Repeat };
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "paper_grain", wrapMode = TextureWrapMode.Clamp };
             uint seed = 0x2545F491u;
-            for (int y = 0; y < px; y++)
-                for (int x = 0; x < px; x++)
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
                 {
                     seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5;
                     uint r = seed & 0xFF;
@@ -380,7 +489,7 @@ namespace LastCall.UI
                     tex.SetPixel(x, y, p);
                 }
             tex.Apply(false, false);
-            s_paperGrain = Sprite.Create(tex, new Rect(0, 0, px, px), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+            s_paperGrain = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
             s_paperGrain.name = "paper_grain";
             return s_paperGrain;
         }
@@ -472,6 +581,7 @@ namespace LastCall.UI
 
             // This rung's band, then the next rung's, dimmed, so every certificate says what comes next — the
             // author: "her sertifikada sıradaki açılacaklar gözükmeli, tarifler dahil".
+            Regrade(now.Index);
             _ladderTiles.Clear();
             _ladderBandHead.text = UIText.T("rank.window.new");
             int rows = LayTiles(_ladderBand, run, TilesFor(run, was, now, climb), moving, rowsMax: 2, dim: false);
@@ -500,7 +610,7 @@ namespace LastCall.UI
             _ladderGroup.anchoredPosition = Vector2.zero;
             _ladderGroup.localScale = moving ? new Vector3(0.94f, 0.94f, 1f) : Vector3.one;
 
-            float sealScale = moving ? 0f : 1f;
+            float sealScale = moving ? 0f : _ladderSealGrade;
             _ladderSeal.localScale = new Vector3(sealScale, sealScale, 1f);
             _ladderRibbonL.localScale = new Vector3(1f, sealScale, 1f);
             _ladderRibbonR.localScale = new Vector3(1f, sealScale, 1f);
@@ -521,6 +631,42 @@ namespace LastCall.UI
             _ladderPanel.gameObject.SetActive(true);
             Sfx.Play(climb ? "level_up" : "menu_open", climb ? 0.9f : 0.7f);
         }
+
+        /// <summary>Dresses the sheet to the rung's own grade (see <see cref="CertLook"/>).</summary>
+        private void Regrade(int rung)
+        {
+            var look = LookFor(rung);
+            if (_ladderPaperImg != null) _ladderPaperImg.color = look.Paper;
+            if (_ladderPatternImg != null)
+                _ladderPatternImg.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, look.Pattern);
+            foreach (var e in _ladderRuleOuterEdges)
+                if (e != null)
+                {
+                    e.color = look.Rule;
+                    // A Frame edge stretches along one axis (sizeDelta 0 there) and carries the rule's weight on
+                    // the other; the weight is the one to write.
+                    var r = (RectTransform)e.transform;
+                    var size = r.sizeDelta;
+                    if (Mathf.Approximately(size.x, 0f)) r.sizeDelta = new Vector2(0f, look.RuleW);
+                    else if (Mathf.Approximately(size.y, 0f)) r.sizeDelta = new Vector2(look.RuleW, 0f);
+                }
+            if (_ladderRuleInner != null) _ladderRuleInner.gameObject.SetActive(look.InnerRule);
+            if (_ladderGilt != null) _ladderGilt.gameObject.SetActive(look.Gilt);
+            if (_ladderBrackets != null)
+                foreach (var b in _ladderBrackets)
+                    if (b != null) { b.gameObject.SetActive(look.Brackets); b.color = look.Trim; }
+            if (_ladderUnderlineImg != null) _ladderUnderlineImg.color = look.Trim;
+            if (_ladderBandHead != null) _ladderBandHead.color = look.Trim;
+            if (_ladderNextHead != null) _ladderNextHead.color = look.Trim;
+            if (_ladderComfortLabel != null) _ladderComfortLabel.color = look.Trim;
+            if (_ladderServiceLabel != null) _ladderServiceLabel.color = look.Trim;
+            if (_ladderSeal != null) _ladderSealGrade = look.Seal;
+            if (_ladderRibbonL != null) _ladderRibbonL.gameObject.SetActive(look.Ribbons);
+            if (_ladderRibbonR != null) _ladderRibbonR.gameObject.SetActive(look.Ribbons);
+        }
+
+        /// <summary>The seal's size at this rung, the scale the climb's pop multiplies.</summary>
+        private float _ladderSealGrade = 1f;
 
         private sealed class CertTile
         {
@@ -773,7 +919,9 @@ namespace LastCall.UI
                 {
                     if (sealT - dt < 0f) Sfx.Play("stamp", 0.8f);
                     float q = Mathf.Clamp01(sealT / 0.22f);
-                    float sc = Mathf.Lerp(1.8f, 1f, 1f - (1f - q) * (1f - q) * (1f - q));
+                    // ...and it lands at the RUNG'S OWN size (2026-09-22): the grade sets how big the seal is,
+                    // the stamp only overshoots it.
+                    float sc = _ladderSealGrade * Mathf.Lerp(1.8f, 1f, 1f - (1f - q) * (1f - q) * (1f - q));
                     _ladderSeal.localScale = new Vector3(sc, sc, 1f);
                     float rq = Mathf.Clamp01((sealT - 0.15f) / 0.3f);
                     float ry = 1f - (1f - rq) * (1f - rq);
@@ -883,11 +1031,9 @@ namespace LastCall.UI
             if (run == null || _ladderPanel == null) return;
             if (_ladderPanel.gameObject.activeSelf) { CloseLadder(); return; }
             if (!ReferenceEquals(run, _ladderSeenRun)) { _ladderSeen = -1; _ladderSeenRun = run; }
-            if (run.Rank.Index == 0)
-            {
-                Toast(UIText.T("rank.window.no_certificate", ("stars", BarRank.Rungs[1].Stars.ToString("0.0"))));
-                return;
-            }
+            // IT OPENS AT ZERO TOO (2026-09-22, the author: "0 yıldızda da sertifika görünmeli, böylece 0.5 yıldız
+            // olduğunda ne alınacağı görünür"): a bar that has climbed nothing is handed the plain docket, whose
+            // NEXT band is the whole point - it is the only place the first rung's unlocks can be read.
             double stars = run.Rating.BestStanding;
             ShowLadder(run, stars, stars, climb: false);
         }

@@ -118,8 +118,8 @@ namespace LastCall.UI
         private PackKey _serveDonePack;
         private PressSink _serveDoneSink;
         private MarqueeBulbs _serveSign;   // null since 2026-09-21: the lamps came off the key
-        /// <summary>The key's width: wider than tall, at the plaque's height, at the plaque's right end.</summary>
-        private const float ServeKeyW = 288f;
+        /// <summary>The key at the bottom's centre: wider than tall, big enough to be the last thing pressed.</summary>
+        private const float ServeKeyW = 288f, ServeKeyH = 64f;
         private bool _serveDoneReady = true;
 
         // ── the serve stage ──────────────────────────────────────────────────────
@@ -978,12 +978,13 @@ namespace LastCall.UI
             // AT THE ROW'S RIGHT, BESIDE THE BIN (2026-09-14): centred on the strip at 26..72 it sat under the
             // aim line once the bench's text came down for the props (measured: the line 439..841 x 32..55 over
             // the key 635..885 x 26..72). 880..1168 now, sixteen units short of the bin at 1184.
-            // AT THE PLAQUE'S RIGHT END, HUNG FROM THE RAIL (2026-09-21, the author's "Uygula" on the second look's
-            // proposal: "Serve it butonu en baştan tasarlanmalı"): the one accent on the bench, on the plate family,
-            // wider than tall at the plaque's own height, the word alone and large - the lamps are gone. 832..1120,
-            // sixteen past the plaque's end and sixty-four short of the bin's column.
+            // AT THE BOTTOM, DEAD CENTRE (2026-09-22, the author: "Serve it butonları hep sahnenin en altında en
+            // ortada olmalı"): the one accent on the bench stands in the middle of the bottom row - the way out at
+            // the left foot, the bin at the right - where the eye already is when the drink is finished. It hung
+            // from the rail at the plaque's end for a day; a key you press last belongs at the bottom, not up in
+            // the words.
             _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
-                KeyGo, new Vector2(0f, 0f), new Vector2(ServeKeyW, PlaqueH), new Vector2(ColX + ColW + 16f + PlaqueW + 16f, 0f),
+                KeyGo, new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, 16f),
                 () =>
                 {
                     // Ready to hand over: close the flow, then click a seat to deliver - and
@@ -1001,10 +1002,7 @@ namespace LastCall.UI
                     GetComponent<TycoonHud>()?.Room?.SetDrawerOpen(false);
                     Sfx.Play("serve_it", 1f);
                 }, out _serveDoneBtn, out _serveDonePack, 16);
-            // Not registered as fixed chrome: the benches cross-fade now and nothing moves, and the settle would
-            // have put a registered key back at the panel's foot. It hangs from the rail like the plaque beside it.
-            _railHung.Add((_serveDone, RailBandH + PlaqueUnderRail + PlaqueH));
-            _benchCounterTop = -1f;
+            RegisterFixed(_servePanel, _serveDone);   // the bottom row is the same row on every bench
             _serveDoneSink = _serveDone.GetComponent<PressSink>();
             _serveDoneGroup = _serveDone.gameObject.AddComponent<CanvasGroup>();
             // ONE LOUD LINE (2026-08-26, the author's screenshot: the old caption was
@@ -1016,7 +1014,7 @@ namespace LastCall.UI
             doneLabel.font = _display;   // the display face on the one key that ends the drink, as it always had
             Stretch(doneLabel.rectTransform, Vector2.zero, Vector2.one, new Vector2(26f, 4f), new Vector2(-26f, 0f));
             // The word at 24 where it fits and 16 where it does not (SERVE IT does; a long translation may not).
-            FitWord(doneLabel, new Vector2(ServeKeyW - 52f, PlaqueH - 8f), 24, 16);
+            FitWord(doneLabel, new Vector2(ServeKeyW - 52f, ServeKeyH - 8f), 24, 16);
             doneLabel.transform.SetAsLastSibling();
         }
 

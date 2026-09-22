@@ -185,9 +185,16 @@ namespace LastCall.UI
         // cellar again, so the hint it gives has to be the start of that movement and not
         // the start of the opposite one. One number, two directions, because it is one
         // gesture — the roller always leans the way the click would take it.
-        private const float ShutterPeek = 7f;
-        private const float PeekSeconds = 0.14f;
+        // TWELVE, AND SLOWLY (2026-09-22, the author: "kapağın üstüne gelindiğinde daha yavaş aralanmalı ve
+        // aralanan yerden yavaşça ışık gelmeli ve aynı şekilde yavaşça kapanmalı"): the crack is wide enough to
+        // read as a door being tried, it opens over half a second and shuts over three quarters of one - a door
+        // falls back slower than a hand lifts it - and both ends are eased, so nothing snaps.
+        private const float ShutterPeek = 12f;
+        private const float PeekOpenSeconds = 0.55f, PeekShutSeconds = 0.75f;
         private const float DrawerSeconds = 0.42f;
+
+        /// <summary>The crack's own curve: it starts and stops slowly, which is what a hand on a door looks like.</summary>
+        private static float PeekEase(float t) => t * t * (3f - 2f * t);
         private Transform _shutterTr;
         private SpriteRenderer _counterSr, _shutterSr;   // to repaint (SetCounterFinish)
 
@@ -199,7 +206,12 @@ namespace LastCall.UI
         public void SetCounterFinish(string id)
         {
             if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
-            if (_shutterSr != null && DoorArt != null) _shutterSr.sprite = CounterFinish.Recolour(DoorArt, id);
+            // THE DOOR IS NOT REFINISHED (2026-09-22, the author: "kapağın rengi raflarla aynı olmamalı, sabit bir
+            // renk seçilmeli"): it is the one FIXED surface in the room - teal planks against the magenta shelves,
+            // the palette's split-complement of the frames, with the pink flamingo on it landing on its own
+            // complement. Only the roller, if the drawing is missing, still takes the finish.
+            if (_shutterSr != null && _doorIsDrawn) { }
+            else if (_shutterSr != null && DoorArt != null) _shutterSr.sprite = CounterFinish.Recolour(DoorArt, id);
         }
         private Vector2 _shutterNative;
         private float _shutterRestLocalY;
@@ -1048,7 +1060,9 @@ namespace LastCall.UI
         private void LayOutShutterLight()
         {
             if (_shutterLight == null) return;
-            float alpha = _shutterPeek * (1f - _drawerT);
+            // THE LIGHT FOLLOWS THE CRACK, A BEAT BEHIND IT (2026-09-22): nothing spills until the door has
+            // actually parted, and then it comes up the rest of the way with it.
+            float alpha = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.18f, 1f, PeekEase(_shutterPeek))) * (1f - _drawerT);
             bool on = alpha > 0.002f;
             if (_shutterLight.gameObject.activeSelf != on) _shutterLight.gameObject.SetActive(on);
             if (!on) return;
@@ -1189,10 +1203,10 @@ namespace LastCall.UI
             // fields: down while the cellar is shut, up while it is open.
             if (_cellarOpenSign != null)
                 _cellarOpenSign.anchoredPosition =
-                    new Vector2(0f, -ShutterPeek * _shutterPeek * (1f - _drawerT));
+                    new Vector2(0f, -ShutterPeek * PeekEase(_shutterPeek) * (1f - _drawerT));
             if (_cellarShutSign != null)
                 _cellarShutSign.anchoredPosition =
-                    new Vector2(0f, ShutterPeek * _shutterPeek * _drawerT);
+                    new Vector2(0f, ShutterPeek * PeekEase(_shutterPeek) * _drawerT);
             LayOutShutterRail();
         }
 
@@ -1331,6 +1345,26 @@ namespace LastCall.UI
             // shelf, outside them is cabinet, and the cabinet is not the cellar.
             _shelfGuard.anchoredPosition = new Vector2(left + 7f, foot);
             _shelfGuard.sizeDelta = new Vector2(623f, top - foot);
+        }
+
+        /// <summary>
+        /// WHERE THE HOUSE'S LAMPS HANG, for the shadows (2026-09-22). Every lit fixture the house owns - the
+        /// pendants over the counter, the sconces on the wall - and the bar's own downlights; the neons are not in
+        /// it, because a tube that size throws no shadow anyone would look for. Re-published whenever the room is
+        /// laid out, which is every resize and every re-dressing.
+        /// </summary>
+        private readonly List<Vector3> _lampPlaces = new List<Vector3>();
+
+        private void PublishLampPlaces()
+        {
+            _lampPlaces.Clear();
+            for (int i = 0; i < _houseLights.Count; i++)
+                if (_houseLights[i].Light != null) _lampPlaces.Add(_houseLights[i].Light.transform.position);
+            for (int i = 0; i < _barLights.Count; i++)
+                if (_barLights[i] != null) _lampPlaces.Add(_barLights[i].transform.position);
+            if (_lampPlaces.Count == 0) { CastShadow.Lamps = System.Array.Empty<Vector3>(); return; }
+            if (CastShadow.Lamps.Length != _lampPlaces.Count) CastShadow.Lamps = new Vector3[_lampPlaces.Count];
+            for (int i = 0; i < _lampPlaces.Count; i++) CastShadow.Lamps[i] = _lampPlaces[i];
         }
 
         /// <summary>Slot i's foot, in the counter art's own pixels. One reading, so the
@@ -1524,8 +1558,9 @@ namespace LastCall.UI
                 // the movement that would shut it again). Halfway through the travel both
                 // are half spent and cancel, which is right — a roller already moving has
                 // nothing to hint at.
-                float peek = ShutterPeek * _shutterPeek * (1f - _drawerT);
-                float lean = ShutterPeek * _shutterPeek * _drawerT;
+                float eased = PeekEase(_shutterPeek);
+                float peek = ShutterPeek * eased * (1f - _drawerT);
+                float lean = ShutterPeek * eased * _drawerT;
                 _shutterTr.localPosition = new Vector3(
                     lp.x, _shutterRestLocalY - ShutterTravel * _drawerT - peek + lean, lp.z);
             }
@@ -1548,7 +1583,8 @@ namespace LastCall.UI
             if (!Mathf.Approximately(_shutterPeek, wantPeek))
             {
                 _shutterPeek = Motion.Reduced ? wantPeek : Mathf.MoveTowards(
-                    _shutterPeek, wantPeek, Time.unscaledDeltaTime / PeekSeconds);
+                    _shutterPeek, wantPeek,
+                    Time.unscaledDeltaTime / (_shutterHovered ? PeekOpenSeconds : PeekShutSeconds));
                 ApplyDrawer();
             }
             if (Mathf.Approximately(_drawerT, _drawerTarget)) return;
@@ -1783,8 +1819,12 @@ namespace LastCall.UI
         private const float ShaftDay = 1.5f, ShaftStretch = 1.5f;
         // (200, 122), not (215, 150) (2026-09-22): the patch STARTS ON THE FLOOR by the glass - the boards run to
         // about 135 in the room's art, and 150 was already the wall's foot, so the floor's shape never showed.
+        // THE PATH THE PATCH WALKS (2026-09-22): it starts on the BOARDS by the glass while the sun is high,
+        // climbs the back WALL as the sun drops, and finishes on the CEILING once the sun is under the window's
+        // head - the same three stops the three cookies are drawn for.
         private static readonly Vector2 ShaftNear = new Vector2(200f, 122f);
-        private static readonly Vector2 ShaftFar = new Vector2(400f, 235f);
+        private static readonly Vector2 ShaftWall = new Vector2(330f, 210f);
+        private static readonly Vector2 ShaftFar = new Vector2(430f, 318f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
         private const float PatronFillDay = 0.22f, PatronFillNight = 0.32f;
         private static readonly Color PatronFillTint = LightLanguage.PatronLift;   // the key, most of the way to white
@@ -1972,9 +2012,23 @@ namespace LastCall.UI
         /// <summary>The same patch while it lies on the FLOOR (2026-09-21): a second sprite light with the floor's
         /// cookie, crossed over with the wall's as the patch climbs past the skirting (<see cref="FloorTopPx"/>).</summary>
         private Light2D _sunFloor;
-        /// <summary>Where the floor meets the wall, in room art px: the patch below it is on the floor and lies
-        /// flat, above it on the wall and stands up. Measured off the room's slots (tables at 126, the signs at 178).</summary>
-        private const float FloorTopPx = 136f;
+        /// <summary>...and on the CEILING (2026-09-22): at the end of the shift the sun is under the window's head
+        /// and what comes through lands on the boards overhead, leaning the other way.</summary>
+        private Light2D _sunCeiling;
+        /// <summary>Where the floor meets the wall, and where the wall meets the ceiling, in room art px. Measured
+        /// off the room's own slots: the tables stand at 126, the signs hang at 178, the beams start near 300.</summary>
+        private const float FloorTopPx = 136f, CeilingPx = 296f;
+        /// <summary>
+        /// THE SUN'S ELEVATION OVER THE SHIFT, in degrees: the number every one of the three patches is shaped from.
+        /// It is not a free hand - the room's own geometry fixes it. The glass runs from the sill at art y 130 to
+        /// the head at 300 and the far wall stands 470 px back, so a beam that lands on the FLOOR 78 px in from the
+        /// glass at opening leaves the head at atan(170/78) = 65 degrees off the horizon... which is the beam, not
+        /// the sun; the sun's own angle, the one the patch's lean is drawn from, is its complement, 25 degrees at
+        /// the sill. Rounded to the room's scale: 36 degrees at opening, 2 at the set. Everything below is that
+        /// angle: the floor patch stretches as cot(a) (long and flat when the light comes in low), the wall patch
+        /// climbs and grows as 1/sin(a), and the ceiling patch only exists once the sun has dropped under the head.
+        /// </summary>
+        private const float SunOpenDeg = 36f, SunSetDeg = 2f;
         private Light2D _patronFill;
         /// <summary>The unlit material the outside wears: the view, the palms, the pane.</summary>
         private Material _viewMaterial;
@@ -2041,7 +2095,20 @@ namespace LastCall.UI
         /// moved - down into the counter to open, a crack under the pointer, the rail at the sill - because the
         /// author asked for a door that opens downward; the roller is the fallback when the drawing is missing.</summary>
         private Sprite _doorArt;
-        private Sprite DoorArt => _doorArt != null ? _doorArt : (_doorArt = Resources.Load<Sprite>("Scene/counter_door") ?? shutterSprite);
+        private bool _doorIsDrawn;
+        private Sprite DoorArt
+        {
+            get
+            {
+                if (_doorArt == null)
+                {
+                    _doorArt = Resources.Load<Sprite>("Scene/counter_door");
+                    _doorIsDrawn = _doorArt != null;
+                    if (_doorArt == null) _doorArt = shutterSprite;
+                }
+                return _doorArt;
+            }
+        }
 
 
         // ── the world ───────────────────────────────────────────────────────────
@@ -2429,16 +2496,24 @@ namespace LastCall.UI
                 _sunShaft.lightCookieSprite = SunShaftCookie();
                 _sunShaft.color = LampTint;
                 _sunShaft.intensity = 0f;
-                // NOT THE DRINKERS (2026-09-21, the author: "müşterilerin üstünde olmamalı"): the patch lands on the
-                // room and the counter; the people standing in it take the window's cone and the fill, not the panes.
-                LightLayers(_sunShaft, LayerBackground, LayerCounter);
+                // NOT THE DRINKERS, AND NOT THE COUNTER (2026-09-21 and 2026-09-22, the author: "müşterilerin
+                // üstünde olmamalı", "yansıtan ışık hüzmesi tezgahın önüne gelmemeli"): the patch is the ROOM's -
+                // its plaster, its boards, its ceiling. The bar in front of it is lit by the house's own lamps.
+                LightLayers(_sunShaft, LayerBackground);
                 _sunFloor = new GameObject("SunFloor").AddComponent<Light2D>();
                 _sunFloor.transform.SetParent(_world, false);
                 _sunFloor.lightType = Light2D.LightType.Sprite;
                 _sunFloor.lightCookieSprite = SunFloorCookie();
                 _sunFloor.color = LampTint;
                 _sunFloor.intensity = 0f;
-                LightLayers(_sunFloor, LayerBackground, LayerCounter);
+                LightLayers(_sunFloor, LayerBackground);
+                _sunCeiling = new GameObject("SunCeiling").AddComponent<Light2D>();
+                _sunCeiling.transform.SetParent(_world, false);
+                _sunCeiling.lightType = Light2D.LightType.Sprite;
+                _sunCeiling.lightCookieSprite = SunCeilingCookie();
+                _sunCeiling.color = LampTint;
+                _sunCeiling.intensity = 0f;
+                LightLayers(_sunCeiling, LayerBackground);
             }
             else
             {
@@ -3101,12 +3176,11 @@ namespace LastCall.UI
                 // (2026-08-24, the wall lamps: "simetrik bir şekilde 2 adet"). One fixture,
                 // one purchase, two mountings — the spread is the slot's, not the piece's,
                 // because the two brackets are on the wall whichever lamp is screwed to them.
-                int copies = slot.PairSpreadPx > 0f ? 2 : 1;
+                int copies = slot.Copies > 0 ? slot.Copies : slot.PairSpreadPx > 0f ? 2 : 1;
                 for (int m = 0; m < copies; m++)
                 {
-                    float off = copies == 2
-                        ? (m == 0 ? -0.5f : 0.5f) * slot.PairSpreadPx : 0f;
-                    string suffix = copies == 2 ? (m == 0 ? "_L" : "_R") : "";
+                    float off = copies > 1 ? (m - (copies - 1) * 0.5f) * slot.PairSpreadPx : 0f;
+                    string suffix = copies == 2 ? (m == 0 ? "_L" : "_R") : copies > 1 ? "_" + m : "";
                     // A PIECE MAY WANT ITS OWN ORDER (2026-09-09, the author: the agave is
                     // counter dressing — "tezgahın önünde bira musluklarının arkasında" —
                     // which is neither its slot's hook nor its slot's band).
@@ -3188,7 +3262,17 @@ namespace LastCall.UI
                     // mat lies flat and cannot; a piece on the bar top throws a shorter one,
                     // since the lamps over the bar stand almost straight above it. Destroyed
                     // with its source: the copy watches for it and takes itself down.
-                    if (!flat) CastShadow.Attach(sr, onCounter ? 0.7f : 1f);
+                    if (!flat)
+                    {
+                        // A PICTURE HANGS A FINGER OFF THE PLASTER (2026-09-22, the author: "duvara sabit eşyaların
+                        // gölgeleri kendilerine daha yakın olmalı, tablo televizyon ışık vs"). Anything hung over the
+                        // floor line and not standing on the bar is screwed to the wall, and its shadow falls a third
+                        // of the room's throw - the distance between the frame and the wall, not between a body and it.
+                        float slotY = float.IsNaN(def.Y) ? slot.Y : def.Y;
+                        bool onWall = !onCounter && slotY >= FloorTopPx;
+                        var cast = CastShadow.Attach(sr, onCounter ? 0.7f : 1f);
+                        cast.Reach = onWall ? 0.34f : 1f;
+                    }
 
                     // WHAT SELLS "STANDING ON" RATHER THAN "FLOATING NEAR": only pieces that
                     // touch a surface get one. A sconce on the wall and a lantern on a cord
@@ -3412,6 +3496,8 @@ namespace LastCall.UI
                     sh.Width * k / art.x, sh.Width * k * 0.28f / art.y, 1f);
                 sh.Blob.transform.position = new Vector3(sh.Under.position.x, footY + 1f * k, 0f);
             }
+            // ...and the shadows are told where the lamps ended up, now that every one of them has been hung.
+            PublishLampPlaces();
         }
 
         /// <summary>
@@ -3473,29 +3559,47 @@ namespace LastCall.UI
             }
             if (_sunShaft != null)
             {
-                _sunShaft.color = d.Shaft;
                 float shaftBase = ShaftDay * d.SunStrength * Mathf.Lerp(1f, ClosingWash, closing);
-                // Where the patch lands: low and near the glass while the sun is high, far and high on the wall as
-                // it sinks - the sun's own line, in the room's art px, under the world root so the drawer's lift
-                // carries it with the room. THE SURFACE PICKS THE SHAPE (2026-09-21): below the skirting the patch
-                // is the floor's - long, flat, leaning hard the way light through a side window lies on boards -
-                // and above it the wall's, upright; the two cross over across a hand's width of the skirting.
                 float sink = _skyClock != null ? SkyClock.SmoothStep(0f, _skyClock.Spec.sun.setBy, d.Tau) : 0f;
-                var at = Vector2.Lerp(ShaftNear, ShaftFar, sink);
+                // WHERE IT IS: two legs of one walk, the floor to the wall and the wall to the ceiling.
+                var at = sink < 0.5f ? Vector2.Lerp(ShaftNear, ShaftWall, sink / 0.5f)
+                                     : Vector2.Lerp(ShaftWall, ShaftFar, (sink - 0.5f) / 0.5f);
+                // WHICH SURFACE IT IS ON: the room's own two seams, crossed over a hand's width so nothing snaps.
+                float onCeiling = SkyClock.SmoothStep(CeilingPx - 24f, CeilingPx + 8f, at.y);
+                float onFloor = 1f - SkyClock.SmoothStep(FloorTopPx - 10f, FloorTopPx + 10f, at.y);
+                float onWall = Mathf.Max(0f, 1f - onFloor - onCeiling);
+                // HOW BIG: off the sun's elevation. A grazing beam draws a long patch on a floor (cot a) and a tall
+                // one up a wall (1/sin a); both are clamped, because a sun at two degrees would otherwise paint the
+                // room. The ceiling patch is widest at the very end, when the light comes in almost level.
+                float aDeg = Mathf.Lerp(SunOpenDeg, SunSetDeg, sink);
+                float a = Mathf.Max(0.12f, aDeg * Mathf.Deg2Rad);
                 float k = _backgroundSr != null ? _backgroundScale : 1f;
-                float onWall = SkyClock.SmoothStep(FloorTopPx - 10f, FloorTopPx + 10f, at.y);
+                float cot = Mathf.Clamp(Mathf.Cos(a) / Mathf.Sin(a), 1f, 3.2f);
+                float csc = Mathf.Clamp(1f / Mathf.Sin(a), 1f, 2.6f);
+                var world = StageArtPointToWorld(at);
+
+                _sunShaft.color = d.Shaft;
                 _sunShaft.intensity = shaftBase * onWall;
-                _sunShaft.transform.localPosition = StageArtPointToWorld(at);
-                _sunShaft.transform.localScale = new Vector3(k * Mathf.Lerp(1f, ShaftStretch, sink), k, 1f);
+                _sunShaft.transform.localPosition = world;
+                _sunShaft.transform.localScale = new Vector3(k * Mathf.Lerp(1f, ShaftStretch, sink), k * Mathf.Lerp(0.85f, 1.35f, Mathf.InverseLerp(1f, 2.6f, csc)), 1f);
                 bool shaftOn = d.SunStrength > 0.01f;
                 if (_sunShaft.enabled != shaftOn) _sunShaft.enabled = shaftOn;
                 if (_sunFloor != null)
                 {
                     _sunFloor.color = d.Shaft;
-                    _sunFloor.intensity = shaftBase * (1f - onWall);
-                    _sunFloor.transform.localPosition = StageArtPointToWorld(at);
-                    _sunFloor.transform.localScale = new Vector3(k, k, 1f);
+                    _sunFloor.intensity = shaftBase * onFloor;
+                    _sunFloor.transform.localPosition = world;
+                    _sunFloor.transform.localScale = new Vector3(k * Mathf.Lerp(1f, 1.9f, Mathf.InverseLerp(1f, 3.2f, cot)), k, 1f);
                     if (_sunFloor.enabled != shaftOn) _sunFloor.enabled = shaftOn;
+                }
+                if (_sunCeiling != null)
+                {
+                    _sunCeiling.color = d.Shaft;
+                    _sunCeiling.intensity = shaftBase * onCeiling;
+                    _sunCeiling.transform.localPosition = world;
+                    _sunCeiling.transform.localScale = new Vector3(k * Mathf.Lerp(1.1f, 1.8f, sink), k, 1f);
+                    bool ceilOn = shaftOn && onCeiling > 0.01f;
+                    if (_sunCeiling.enabled != ceilOn) _sunCeiling.enabled = ceilOn;
                 }
             }
             _washBase = d.AmbientIntensity;
@@ -3525,6 +3629,7 @@ namespace LastCall.UI
             // Every shadow in the room swings on the same light.
             CastShadow.Offset = d.ShadowOffset;
             CastShadow.Alpha = d.ShadowAlpha;
+            CastShadow.LampShare = d.ShadowLampShare;
         }
 
         /// <summary>
@@ -3554,9 +3659,58 @@ namespace LastCall.UI
                     float u = x - lean - (W - run) * 0.5f;
                     bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
                     byte a = 0;
-                    if (inBar)
+                    if (inBar && !Chamfered(x, y, W, H))
                         a = edge < 3 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
                           : edge < 7 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
+                          : (byte)255;
+                    px[y * W + x] = new Color32(255, 255, 255, a);
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+        }
+
+        /// <summary>
+        /// THE CORNERS ARE CUT (2026-09-22, the author: "ışık hüzmesinin köşeleri kırpılmış"): a patch of sun
+        /// through a window is bounded by the frame AND by the reveal it passes, so its corners come back clipped
+        /// rather than square. One diamond test chamfers all four at once.
+        /// </summary>
+        private static bool Chamfered(int x, int y, int w, int h)
+        {
+            float dx = Mathf.Abs(x + 0.5f - w * 0.5f) / (w * 0.5f);
+            float dy = Mathf.Abs(y + 0.5f - h * 0.5f) / (h * 0.5f);
+            return dx + dy > 1.62f;
+        }
+
+        /// <summary>
+        /// The panes on the CEILING (2026-09-22): at the end of the shift the sun is under the window's head, so
+        /// what comes through strikes the boards overhead - a wide, shallow patch leaning the OTHER way, because
+        /// the beam is climbing rather than falling. Shorter than the wall's and wider than the floor's.
+        /// </summary>
+        private static Sprite SunCeilingCookie()
+        {
+            const int W = 260, H = 64;
+            const float Shear = -1.1f;
+            const int Bar = 30, Gap = 11, Bars = 4;
+            int run = Bars * Bar + (Bars - 1) * Gap;
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "SunCeilingCookie",
+            };
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                float lean = (y - H * 0.5f) * Shear;
+                int edge = Mathf.Min(y, H - 1 - y);
+                for (int x = 0; x < W; x++)
+                {
+                    float u = x - lean - (W - run) * 0.5f;
+                    bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
+                    byte a = 0;
+                    if (inBar && !Chamfered(x, y, W, H))
+                        a = edge < 2 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
+                          : edge < 5 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
                           : (byte)255;
                     px[y * W + x] = new Color32(255, 255, 255, a);
                 }
@@ -3591,7 +3745,7 @@ namespace LastCall.UI
                     float u = x - lean - (W - run) * 0.5f;
                     bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
                     byte a = 0;
-                    if (inBar)
+                    if (inBar && !Chamfered(x, y, W, H))
                         a = edge < 2 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
                           : edge < 5 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
                           : (byte)255;
