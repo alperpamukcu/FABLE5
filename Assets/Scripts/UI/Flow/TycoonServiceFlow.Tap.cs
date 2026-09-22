@@ -61,7 +61,10 @@ namespace LastCall.UI
         private Image[] _pintCells, _headCells;
         private float _tapBarsSeenAt = -99f, _lastPintFill = 0f, _lastHeadFrac = 0f;
         /// <summary>The meter: eight cells in a fat ink shell, and how far off the glass's side the pair stands.</summary>
-        private const float ToonBarW = 26f, ToonBarH = 104f, ToonBarGap = 8f, ToonBarOffX = 86f;
+        // 34 wide and a head of 16 (2026-09-22, seventh list: "barın altında pint ve head yazısı arkaplanda çok yok
+        // oluyor onları o bara dahil et"): the word was a caption under each meter, grey on the dark slab, and it
+        // went. It is the meter's own head now, cut into the same ink shell over the cells.
+        private const float ToonBarW = 34f, ToonBarH = 120f, ToonBarGap = 8f, ToonBarOffX = 92f, ToonHeadH = 16f;
         private const int ToonCells = 8;
         /// <summary>The plate the tower is bolted to (2026-09-22): a recess-finished slab 24 tall under the tower, so
         /// the spouts stand a pint's height and a hand over the counter; the pint waits on it, under the faucet.</summary>
@@ -167,7 +170,7 @@ namespace LastCall.UI
             new Vector2(296f, 196f) * TowerScale,
             new[] { new Vector2(-43.5f, 8f) * TowerScale, new Vector2(-0.5f, 8f) * TowerScale, new Vector2(42.5f, 8f) * TowerScale },
             new[] { new Vector2(-43.5f, 67f) * TowerScale, new Vector2(-0.5f, 67f) * TowerScale, new Vector2(42.5f, 67f) * TowerScale },
-            new Vector2(12f, 38f) * TowerScale, tapLevel);
+            new Vector2(20f, 30f) * TowerScale, tapLevel);   // the tower's OWN drawn handle, 20x30 (2026-09-22)
 
         /// <summary>The font standing on the bench this visit. Set by <see cref="StandTheFont"/>,
         /// which is the only writer; everything that needs a faucet reads it.</summary>
@@ -221,7 +224,7 @@ namespace LastCall.UI
         private const float KegW = 96f, KegH = 165f;
         /// <summary>The shelf: its board's top, its board's depth, and where the kegs' feet stand in it. The keg's
         /// centre is ON the frame's foot, so exactly half of it is in shot.</summary>
-        private const float ShelfBoardTop = 30f, ShelfBoardH = 56f, ShelfKegFootY = -82f;
+        private const float ShelfBoardTop = 30f, ShelfBoardH = 56f, ShelfKegFootY = -58f;   // 24 up (seventh list)
         /// <summary>The plumbed bay: the keg standing here is the one on tap, and the beer
         /// line runs from ITS coupler. A swap moves the keg to the line, not the line to
         /// the keg — one line, as in a one-font bar.</summary>
@@ -239,7 +242,10 @@ namespace LastCall.UI
         // column, under SERVE IT, and under the tower's left leg.
         // Evenly across the rack (2026-09-22): three bays at panel 340, 640 and 940. Only the middle one
         // stands behind a key, and a key in front of a keg reads as a key on the shelf's front.
-        private static readonly float[] BayX = { -300f, 0f, 300f };
+        // Out from under SERVE IT (2026-09-22, seventh list: "serve it ile bira fıçıları üst üste geliyor, fıçılar
+        // biraz daha yukarı çekilsin"): two bays in the gap between the way out and SERVE IT, one between SERVE IT
+        // and the bin. No keg stands under a key now.
+        private static readonly float[] BayX = { -330f, -218f, 300f };
         /// <summary>Where the blank label sits on keg.png, as fractions of the sprite: the pale
         /// band runs from 0.516 to 0.676 of its height, 95% of its width. Measured, so the brand
         /// lands on the label instead of near it.</summary>
@@ -471,10 +477,15 @@ namespace LastCall.UI
             for (int i = 0; i < 3; i++)
             {
                 var lever = NewRect("Lever" + i, _tapSurface);
-                lever.pivot = new Vector2(0.5f, 0.06f);
+                // THE TOWER'S OWN HANDLE (2026-09-22, the author's seventh list: "tap_beer'in musluk kolları doğru
+                // durmuyor görselden bağımsız, gerçek görselin kollarını kullan"). The lever was the old generic
+                // tap_handle, a different drawing hung on this tower, so it read as a stick parked on the bar. It is
+                // the middle handle cut out of the T4 drawing itself (Items/tap_handle_t4, palette-snapped), pivoted
+                // on its two collar rows so it turns where the drawing had it bolted.
+                lever.pivot = new Vector2(0.5f, 2f / 30f);
                 lever.anchorMin = lever.anchorMax = new Vector2(0.5f, 0.5f);
                 var li = lever.gameObject.AddComponent<Image>();
-                li.sprite = ItemArt.Load("tap_handle");
+                li.sprite = ItemArt.Load("tap_handle_t4") ?? ItemArt.Load("tap_handle");
                 li.preserveAspect = true; li.raycastTarget = false;
                 if (li.sprite == null) li.color = UITheme.Amber[1];
                 _tapLevers[i] = lever; _tapLeverImgs[i] = li;
@@ -564,7 +575,7 @@ namespace LastCall.UI
 
             // The pair rides the glass (LayTheBars), so it is built in a group of its own with nothing under it.
             _tapBars = NewRect("Meters", _tapSurface);
-            Place(_tapBars, new Vector2(0.5f, 0.5f), new Vector2(ToonBarW * 2f + ToonBarGap, ToonBarH + 18f), Vector2.zero);
+            Place(_tapBars, new Vector2(0.5f, 0.5f), new Vector2(ToonBarW * 2f + ToonBarGap, ToonBarH), Vector2.zero);
             _tapBarsGroup = _tapBars.gameObject.AddComponent<CanvasGroup>();
             _tapBarsGroup.alpha = 0f;
             _tapBarsGroup.blocksRaycasts = false;
@@ -596,7 +607,7 @@ namespace LastCall.UI
             wimg.color = UITheme.Night[2];
             wimg.raycastTarget = false;
 
-            float inner = ToonBarH - 6f;
+            float inner = ToonBarH - 6f - ToonHeadH;
             float cellH = (inner - (ToonCells - 1) * 2f) / ToonCells;
             var cells = new Image[ToonCells];
             for (int i = 0; i < ToonCells; i++)
@@ -623,13 +634,20 @@ namespace LastCall.UI
                 timg.raycastTarget = false;
                 cells[i] = limg;
             }
-            var word = NewText("Head", rig, _body, 8, TextAnchor.UpperCenter, UITheme.Cream[4]);
-            word.rectTransform.anchorMin = new Vector2(0f, 0f); word.rectTransform.anchorMax = new Vector2(1f, 0f);
-            word.rectTransform.pivot = new Vector2(0.5f, 1f);
-            word.rectTransform.offsetMin = new Vector2(-16f, -16f); word.rectTransform.offsetMax = new Vector2(16f, -4f);
+            // The head: a plate at the top of the well, the word on it in the light ink, inside the shell.
+            var headPlate = NewRect("HeadPlate", well);
+            headPlate.anchorMin = new Vector2(0f, 1f); headPlate.anchorMax = Vector2.one;
+            headPlate.pivot = new Vector2(0.5f, 1f);
+            headPlate.offsetMin = new Vector2(0f, -ToonHeadH); headPlate.offsetMax = Vector2.zero;
+            var hp = headPlate.gameObject.AddComponent<Image>();
+            hp.sprite = ChromeArt.Solid();
+            hp.color = UITheme.Night[0];
+            hp.raycastTarget = false;
+            var word = NewText("Head", headPlate, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(word.rectTransform, Vector2.zero, Vector2.one, new Vector2(-2f, 0f), new Vector2(2f, 0f));
+            word.horizontalOverflow = HorizontalWrapMode.Overflow;
             word.text = head;
             word.raycastTarget = false;
-            Engraved(word);
             return cells;
         }
 
@@ -1073,8 +1091,19 @@ namespace LastCall.UI
 
             // The SERVE key answers only a glass with beer in it — dim until then.
             bool ready = !run.ServingGlass.IsEmpty;
-            if (_tapDoneGroup != null) _tapDoneGroup.alpha = ready ? 1f : 0.8f;
-            if (_tapDoneBtn != null) _tapDoneBtn.interactable = ready;
+            // OUT OF THE WAY WHILE THE GLASS IS IN THE HAND (2026-09-22, the author's seventh list: "serve it butonu
+            // bardak doldurulurken gözükmeyecek, oyuncu doldurmayı bırakınca gözükecek"). A key over the rack in the
+            // middle of a pour is a thing to catch the pint on; it fades away as the glass is picked up and comes
+            // back the moment it is let go.
+            bool inHand = _glassHeld || pouring;
+            if (_tapDoneGroup != null)
+            {
+                float doneWant = inHand ? 0f : ready ? 1f : 0.8f;
+                _tapDoneGroup.alpha = Motion.Reduced ? doneWant
+                    : Mathf.MoveTowards(_tapDoneGroup.alpha, doneWant, Time.unscaledDeltaTime / 0.18f);
+                _tapDoneGroup.blocksRaycasts = !inHand;
+            }
+            if (_tapDoneBtn != null) _tapDoneBtn.interactable = ready && !inHand;
             if (ready != _tapDoneReady)   // the glass bench's rule: the key goes to chrome while there is nothing to serve
             {
                 _tapDoneReady = ready;

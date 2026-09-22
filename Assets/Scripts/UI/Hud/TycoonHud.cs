@@ -1535,6 +1535,12 @@ namespace LastCall.UI
             bool grabbing = _glassCarrying || _tinCarrying || _clothHeld
                             || (_prepCarry != null && _prepCarry.gameObject.activeSelf)
                             || (_flow != null && _flow.IsHolding);
+            // NOTHING IS CARRIED OUTSIDE THE NIGHT (2026-09-22, the author's seventh list: "Market sekmesinde mouse
+            // grab cursorunda kalıyor"). A carry that was in the hand when the doors shut never saw its own release -
+            // the verbs that end it only run while the bar is open - so its flag stood, and the hand stayed closed
+            // over the market and the books. Off the open night the hand is idle or pressed, whatever a flag says.
+            var phaseNow = Run != null ? Run.Phase : TycoonPhase.Closed;
+            if (phaseNow != TycoonPhase.DayOpen) grabbing = false;
             var mouse = Mouse.current;
             // A VIRTUAL mouse leaves the pointer alone (2026-09-08): the PlayMode suite drives
             // one, and swapping the hardware cursor under its presses cost it clicks — a

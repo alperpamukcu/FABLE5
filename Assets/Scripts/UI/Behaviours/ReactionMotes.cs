@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace LastCall.UI
 {
@@ -37,8 +37,10 @@ namespace LastCall.UI
         /// the one storming off.</summary>
         private const int MoteOrder = 24;
 
-        private const float Stagger = 0.05f;     // between one mote leaving and the next
-        private const float LifeMin = 0.95f, LifeMax = 1.5f;
+        // Slower (2026-09-22, the author's seventh list: "emojilerin hızı biraz yavaşlatılabilir"): half as long
+        // again in the air and further apart leaving, over the same climb - a sign you can read, not a spray.
+        private const float Stagger = 0.09f;     // between one mote leaving and the next
+        private const float LifeMin = 1.45f, LifeMax = 2.2f;
         private const float RiseMin = 58f, RiseMax = 104f;   // stage units climbed
         private const float SpreadX = 30f;       // how wide they leave the shoulders
         private const float SwayMin = 4f, SwayMax = 11f;

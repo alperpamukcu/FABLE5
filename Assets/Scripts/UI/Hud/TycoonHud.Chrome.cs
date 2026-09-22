@@ -1337,9 +1337,29 @@ namespace LastCall.UI
             _cellarCardOver = plate;
         }
 
-        // ── the shelf captions (2026-09-07) ───────────────────────────────────────
+        // ── the shelf captions (2026-09-07; regrouped 2026-09-22) ─────────────────
+        // THE BACK BAR'S SECTIONS, NOT TWELVE FAMILIES (2026-09-22, the author's seventh list: "raf alkol
+        // gruplandırması ve alkol gruplandırma isimleri değiştirilmeli sahneye uygun olmalı"). The shelf wore a plate
+        // under every family - GIN, VODKA, RUM, WHISKY, TEQUILA, SOUR, SODA & TONIC... - which is a warehouse's
+        // labelling. A bar sorts its back bar the way the bartender reaches for it: the white spirits, the dark
+        // spirits, the liqueurs, the sweet things, and what they are topped with. Five plates; the families still
+        // stand together inside each, in the old order.
         private static readonly string[] CellarGroupRank =
-            { "gin", "vodka", "rum", "whiskey", "tequila", "liqueur", "bitters", "syrup", "juice", "soda", "mixer" };
+            { "gin", "vodka", "tequila", "rum", "whiskey", "liqueur", "syrup", "bitters", "juice", "sour", "soda", "mixer" };
+        private static readonly string[] CellarStationRank = { "white", "dark", "liqueur", "sweet", "mix" };
+
+        /// <summary>The back-bar section a family stands in.</summary>
+        private static string CellarStation(string family)
+        {
+            switch (family)
+            {
+                case "gin": case "vodka": case "tequila": return "white";
+                case "rum": case "whiskey": return "dark";
+                case "syrup": case "bitters": return "sweet";
+                case "juice": case "sour": case "soda": case "mixer": return "mix";
+                default: return "liqueur";   // liqueurs, amari, vermouths and anything the data adds later
+            }
+        }
 
         /// <summary>The family a bottle stands with: the category for the spirits, the
         /// type's plain word for the rest.</summary>
@@ -1361,14 +1381,19 @@ namespace LastCall.UI
         private static int CellarGroupOrder(IngredientCard card)
         {
             string g = CellarGroup(card);
+            int st = System.Array.IndexOf(CellarStationRank, CellarStation(g));
             int i = System.Array.IndexOf(CellarGroupRank, g);
-            return i < 0 ? CellarGroupRank.Length : i;
+            return st * 100 + (i < 0 ? CellarGroupRank.Length : i);   // by section, then by family inside it
         }
 
         private static string CellarGroupWord(string group)
         {
             switch (group)
             {
+                case "white": return UIText.T("chrome.cellar.station.white");
+                case "dark": return UIText.T("chrome.cellar.station.dark");
+                case "sweet": return UIText.T("chrome.cellar.station.sweet");
+                case "mix": return UIText.T("chrome.cellar.station.mix");
                 case "whiskey": return UIText.T("chrome.cellar.group.whiskey");
                 case "soda": return UIText.T("chrome.cellar.group.soda");
                 case "syrup": return UIText.T("chrome.cellar.group.syrup");
@@ -1398,7 +1423,7 @@ namespace LastCall.UI
             var runs = new List<(string group, int first, int last)>();
             for (int i = 0; i < _cellarCards.Count && i < stage.CellarSlotCount; i++)
             {
-                string g = CellarGroup(_cellarCards[i]);
+                string g = CellarStation(CellarGroup(_cellarCards[i]));   // one plate a SECTION
                 stage.CellarSlotStage(i, out var here);
                 if (runs.Count > 0 && runs[runs.Count - 1].group == g)
                 {

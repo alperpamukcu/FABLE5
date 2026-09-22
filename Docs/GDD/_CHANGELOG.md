@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The seventh list (2026-09-22):** the bar is the MALIBU CLUB; the slip counts itself up top to bottom with the
+  money in green and deep red and the stars last, a click skipping the count but never the paper coming in; the
+  boards beside it are divided by the frame's own magenta and carry dark cards; the certificate is the slip's own
+  paper, worn at the bottom of the ladder and ornamented at the top, its groups told apart and its pictures
+  centred; the pendants draw their beams and light the counter they hang over (B4 in chrome and G4 as new rungs);
+  the built benches' keys are back on the floor and the words and gauges stand in a right-hand column; the kegs
+  clear SERVE IT, which stands down while the glass is in hand; the crowd throws the game's own signs instead of
+  faces; the balloons burst open; the sink's water plays out before the books come; the shelf is five back-bar
+  sections; and the window's sky is smooth. GDD_MEVCUT §9.103.
+
 - **The sixth list, third slice (2026-09-22):** the pink hover card opens instead of appearing - its panel
   unrolls from its own middle as the card fades up - and the speech balloons and order tickets grow out of
   their tails. The crowd's emojis are one family again: a yellow square face, which throws out the pile of

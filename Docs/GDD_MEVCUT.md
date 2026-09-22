@@ -1540,6 +1540,49 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.103 · Yedinci liste: Malibu Club, sayan fatura, premium sertifika, görünür ışık hüzmeleri, işaret emojileri, sağ sütun, düzgün gökyüzü (2026-09-22)
+
+- **Barın adı MALIBU CLUB.** Fişin başlığı ve gün sonunun iki başlığı (`build.bill.head`, `build.dayend.title`,
+  `dayend.market.title`) 29 dilde; özel isim her dilde aynı. "Last call" ifadesi (kapanış saati) olduğu gibi kaldı.
+- **Tezgâh lambaları B4 ve G4** (yazarın seçimi): `counter_lamps_bell` (1,5★) krom çan, yeşil emaye palet dışı olduğu
+  için Graphite/Cream rampasına boyandı; `counter_lamps_globe` (3★) opal küre. Başlangıç pirinç koni kaldı.
+- **Görünür hüzme:** koninin dokusu TERS çizilmişti (ağız alt satırdaydı), bu yüzden tezgâhtaki havuz zayıftı; ağız
+  artık üstte ve ucu sönmüyor. Her koni kendi çizimini de taşıyor (`LightBeam`: aynı koni, unlit, ışığın rengi ve şu
+  anki yoğunluğu kadar). Ölçüldü (r139): lamba altında tezgâh 92, arada 12. Garnish kâseleri tezgâhın ışığında
+  KARARMIYOR, sarkıtların sıcak rengine dönüyor (`CounterLight`).
+- **Built sahneleri:** tuşlar yeniden ekranın dibinde (`BuiltKeyRowY = 16`), şişe ve bardakların ayakları tuşların
+  hemen üstünde. Yazı plakası tenekenin arkasından çıkıp SAĞ SÜTUNA geçti (848..1264): üstte yazılar ve karışım
+  satırları (en çok 3), altında mix ve teneke göstergeleri; şişenin dinlenme yeri sola kaydı.
+- **Bira sahnesi:** fıçılar tuşların altından çıktı (x −330/−218/+300) ve 24 birim yükseldi; SERVE IT bardak eldeyken
+  ya da dolarken görünmüyor; PINT ve HEAD yazıları ölçerin kendi kabuğuna girdi; musluk kolları kulenin KENDİ çizili
+  kolu (`tap_handle_t4`, T4 çiziminden kesildi).
+- **Gün sonu:** lavabonun suyu döngüsünü bitirmeden kapanmıyor, gün sonu onu bekliyor ve 3 saniye sonra geliyor;
+  lavabo bekleme saati ekrandan kalktı.
+- **Fatura:** rakamlar 0'dan yukarıdan aşağı SAYIYOR (müşteri puanları dahil), yıldızlar en son düşüyor; tık saymayı ve
+  yıldızları geçer, fişin girişini geçmez. Para ve $ işareti gelirde yeşil (Lime[1]), giderde koyu kırmızı
+  (ViceRed[1]); TOOK IN / PAID OUT kalın, aralıklı ve kendi renginde; etiket rakama TAŞMIYOR (ölçülüyor, küçülüyor,
+  gerekirse satır büyüyor). Damga çift çerçeveli, kalın ve canlı. GO TO THE ORDER tuş paketinin amber plakası.
+- **Yan panolar:** zemin bir ton koyulaştı, düz çizgiler çerçevenin kendi magentasıyla bölücü oldu, öne çıkanlar koyu
+  kartın üstünde.
+- **Sertifika:** yıldızlar ve iki puan koyu kartın üstünde; görseller boş kenarları kırpılarak kutunun tam ortasında;
+  grup başlıkları kalın, aralıklı, 16 px ve altı çizgili, gruplar arasında çit var ve bir grup başlığı kadar geniş;
+  kâğıt fişin kâğıdı: 0 ve 0,5★ sararmış ve yıpranmış (lekeler, bardak halkası, katlar), yükseldikçe temiz, beyaz,
+  fildişi; 2★'den itibaren kenar boyunca elmas zinciri, 4★'de köşe rozetleri. Sayfa 612'de kapanıyor, CONTINUE ile
+  birlikte ekrana sığıyor.
+- **Emojiler yerine işaretler** (`Tools/reaction_signs.py` → `Emotes/sign_*`): kalp, yıldız, damla, ünlem, soru, nota,
+  öfke işareti, kırık kalp, fırtına bulutu, kızgın ve memnun yüz; tek kuralla çizildi. Kovulan müşteri kızgın yüz ve
+  öfke işareti atıyor; gülmekten ağlayan yüz hiçbir yerde yok. Uçuş yarı yarıya yavaş.
+- **Baloncuklar** baloncuk gibi patlayarak açılıyor (`PopIn.Bubble`: iki eksen faz farkıyla esneyip oturuyor).
+- **İmleç:** gece açık değilken el kapalı kalmıyor (market).
+- **Raf:** on iki aile levhası yerine beş arka bar bölümü: WHITE SPIRITS, DARK SPIRITS, LIQUEURS, SYRUPS & BITTERS,
+  JUICE & SODA.
+- **Pencere:** gökyüzü paletle dither'lanmıyor, sürekli renkte; kuleler dither lekesi olmadan düz bir gökyüzüne karşı;
+  şehir kareleri birbirine yumuşakça geçiyor.
+- **Üretilenler (oyunda değil, seçim bekliyor):** `Docs/reports/room7/index.html` — dört tavan, dört arka duvar, dört
+  zemin, dört yan duvar, odaya yerleştirilmiş. TV reklamları (`Tools/tv_ads2_gen.py`, sekiz aday) PixelLab kredisi
+  bittiği için ÜRETİLEMEDİ; kredi gelince aynı komut kaldığı yerden devam eder.
+- Doğrulama: EditMode 624/625, PlayMode 13/13.
+
 ### 9.102 · Altıncı liste (3/3): açılan hover, açılan baloncuk, tek aileye inen emojiler, duvar basamakları, sertifikada ODA, tezgâhın ışığı (2026-09-22)
 
 - **Pembe hover AÇILIYOR** (yazar: "şişeler ve garnishlerdeki pembe hoverin açılması için bir animasyon ekle"):

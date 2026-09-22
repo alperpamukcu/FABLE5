@@ -26,6 +26,13 @@ namespace LastCall.UI
         /// <summary>How far past full size it swings on the way, as a fraction.</summary>
         public float Overshoot = 0.08f;
         public bool Horizontal = true, Vertical = true;
+        /// <summary>
+        /// A BUBBLE, not a card (2026-09-22, the author's seventh list: "müşterilerin kafasının üstündeki balonlar
+        /// baloncuk şeklinde patlayarak açılmalı"): it bursts past its size and wobbles back, and the two axes swing
+        /// out of step - wide while it is short, tall while it is narrow - which is what a soap bubble does when it
+        /// forms and what a card never does.
+        /// </summary>
+        public bool Bubble;
 
         private float _t = -1f;
 
@@ -55,6 +62,14 @@ namespace LastCall.UI
             _t += Time.unscaledDeltaTime;
             float k = Mathf.Clamp01(_t / Mathf.Max(0.0001f, Seconds));
             if (k >= 1f) { _t = -1f; Apply(1f); return; }
+            if (Bubble)
+            {
+                float decay = Mathf.Exp(-6.5f * k) * (1f - From);
+                float sy = 1f - decay * Mathf.Cos(k * Mathf.PI * 3.2f);
+                float sx = 1f - decay * Mathf.Cos(k * Mathf.PI * 3.2f + 1.1f);
+                transform.localScale = new Vector3(Horizontal ? sx : 1f, Vertical ? sy : 1f, 1f);
+                return;
+            }
             float ease = 1f - Mathf.Pow(1f - k, 3f);                       // out-cubic: quick, then settling
             Apply(Mathf.LerpUnclamped(From, 1f, ease) + Overshoot * Mathf.Sin(k * Mathf.PI) * (1f - k));
         }

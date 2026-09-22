@@ -60,12 +60,14 @@ namespace LastCall.UI
         private const float PaperW = 1024f, PaperMinH = 576f, PaperSide = 48f;
         /// <summary>The tallest the sheet may stand: the 720 field less a hand of room at each end, so the title
         /// and the seal are both in shot however many tiles a rung brings (2026-09-22).</summary>
-        private const float PaperMaxH = 700f;
+        private const float PaperMaxH = 612f;   // 720 less the key under the sheet and its gap, and a hand at each end
         /// <summary>The tiles: 80 square on an 88 pitch, ten to a row, a name of two lines under each, a class
         /// caption over the first of each group. This rung's band takes two rows at most, the next rung's one.</summary>
         // 64 on a 72 pitch, twelve to a row (2026-09-21, the author: "kutular daha kalın çerçeveli ve biraz daha küçük
         // olsun böylece daha çok yer açılabilir"): a row of new things takes 104 instead of 122.
-        private const float TileSize = 64f, TilePitch = 72f, TileGroupGap = 16f, TileRowH = 104f;
+        // 112 and 28 (2026-09-22): a group's head is set at 16 now and needs its own line over the tiles, and a
+        // group is fenced off from the next by a rule standing in a wider gap.
+        private const float TileSize = 64f, TilePitch = 72f, TileGroupGap = 28f, TileRowH = 112f;
         private const int TilesPerRow = 12;
         /// <summary>Where this rung's tiles begin under the sheet's top, the gap before the next rung's band (its
         /// head included), and what the sheet keeps under its last row.</summary>
@@ -109,12 +111,15 @@ namespace LastCall.UI
             public readonly bool Gilt;          // a gold band just inside the edge
             public readonly bool Ribbons;       // the seal's tails
             public readonly float Seal;         // the seal's scale
+            public readonly float Wear;         // how used the stock is: foxing, a ring, the folds (1 = a docket in a drawer)
+            public readonly int Ornament;       // 0 plain, 1 a chain of diamonds along the gilt, 2 the chain with rosettes
 
             public CertLook(Color paper, Color rule, float ruleW, bool innerRule, bool brackets, Color trim,
-                            float pattern, bool gilt, bool ribbons, float seal)
+                            float pattern, bool gilt, bool ribbons, float seal, float wear = 0f, int ornament = 0)
             {
                 Paper = paper; Rule = rule; RuleW = ruleW; InnerRule = innerRule; Brackets = brackets;
                 Trim = trim; Pattern = pattern; Gilt = gilt; Ribbons = ribbons; Seal = seal;
+                Wear = wear; Ornament = ornament;
             }
         }
 
@@ -124,20 +129,28 @@ namespace LastCall.UI
         {
             // Seven rungs (BarRank.Rungs: 0, 0.5, 1, 2, 3, 4, 5 stars), so seven grades - the last two share the
             // best stock, because there is nothing left to add to a sheet that is already gilt.
+            // THE RECEIPT'S STOCK, AND IT IMPROVES (2026-09-22, the author's seventh list: "sertifikaların arkaplanını
+            // aynı fatura görselinde olduğu gibi üret, 0.5 yıldız sertifikasının kağıdı biraz yıpranmış olmalı giderek
+            // düzelecek ve daha premium bir sertifikaya dönüşecek"). The grey Cream ramp is gone from the sheet: it is the
+            // slip's own warm white now (TycoonHud.BillPaper), yellowed and handled at the bottom of the ladder and
+            // cleaner, then ivory, then ornamented as the bar climbs.
+            var slip = BillPaper;
+            var yellowed = new Color(slip.r * 0.93f, slip.g * 0.90f, slip.b * 0.80f, 1f);
+            var ivory = new Color(0.985f, 0.965f, 0.9f, 1f);
             switch (Mathf.Clamp(rung, 0, 6))
             {
-                // 0 stars: a docket. Plain stock, one thin rule, no trim, no seal tails.
-                case 0: return new CertLook(UITheme.Cream[3], UITheme.Night[3], 1f, false, false, UITheme.Night[2], 0.14f, false, false, 0.75f);
-                // 0.5: the corners are cut and the title gets its line.
-                case 1: return new CertLook(UITheme.Cream[3], UITheme.Night[3], 2f, false, true, UITheme.Amber[1], 0.18f, false, false, 0.85f);
-                // 1: a second rule inside the first, the stock a shade better.
-                case 2: return new CertLook(UITheme.Cream[4], UITheme.Night[3], 2f, true, true, UITheme.Amber[2], 0.22f, false, true, 1f);
-                // 2: the trim brightens to the accent proper.
-                case 3: return new CertLook(UITheme.Cream[4], UITheme.Night[3], 2f, true, true, UITheme.Amber[3], 0.26f, false, true, 1f);
-                // 3 stars: a gilt band just inside the edge.
-                case 4: return new CertLook(UITheme.Cream[4], UITheme.Night[2], 3f, true, true, UITheme.Amber[3], 0.30f, true, true, 1.1f);
-                // 4 and 5 stars: gilt, a heavy rule, the deepest stock the palette has.
-                default: return new CertLook(UITheme.Cream[4], UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.34f, true, true, 1.2f);
+                // 0 stars: a docket out of a drawer. Yellowed, handled, one thin rule, no trim, no seal tails.
+                case 0: return new CertLook(yellowed, UITheme.Night[3], 1f, false, false, UITheme.Night[2], 0.10f, false, false, 0.75f, 1f, 0);
+                // 0.5: still worn, but the corners are cut and the title gets its line.
+                case 1: return new CertLook(Color.Lerp(yellowed, slip, 0.35f), UITheme.Night[3], 2f, false, true, UITheme.Amber[1], 0.14f, false, false, 0.85f, 0.75f, 0);
+                // 1: a second rule inside the first, and the stock is nearly clean.
+                case 2: return new CertLook(Color.Lerp(yellowed, slip, 0.75f), UITheme.Night[3], 2f, true, true, UITheme.Amber[2], 0.18f, false, true, 1f, 0.35f, 0);
+                // 2: the slip's own clean white; the trim brightens to the accent proper.
+                case 3: return new CertLook(slip, UITheme.Night[3], 2f, true, true, UITheme.Amber[3], 0.22f, false, true, 1f, 0.1f, 1);
+                // 3 stars: a gilt band just inside the edge, a chain of diamonds along it.
+                case 4: return new CertLook(Color.Lerp(slip, ivory, 0.5f), UITheme.Night[2], 3f, true, true, UITheme.Amber[3], 0.26f, true, true, 1.1f, 0f, 1);
+                // 4 and 5 stars: ivory, gilt, a heavy rule, the chain with rosettes at its corners.
+                default: return new CertLook(ivory, UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.30f, true, true, 1.2f, 0f, 2);
             }
         }
 
@@ -238,6 +251,17 @@ namespace LastCall.UI
             pi.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.22f); pi.raycastTarget = false;
             _ladderPatternImg = pi;
             UiAuditExempt.Mark(pattern, "the paper's pattern: cocktail glasses at 2x, near the paper's own colour");
+            // THE WEAR (seventh list): foxing, a glass ring, two folds and a browned edge, one sheet-sized drawing at
+            // the house's 2x, shown as strong as the grade says the stock is handled (CertLook.Wear).
+            var wear = NewRect("Wear", _ladderPaper);
+            Stretch(wear, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _ladderWearImg = wear.gameObject.AddComponent<Image>();
+            _ladderWearImg.sprite = CertWear(PatternW, PatternH);
+            _ladderWearImg.type = Image.Type.Simple;
+            _ladderWearImg.raycastTarget = false;
+            UiAuditExempt.Mark(wear, "the certificate's wear: foxing and folds drawn once at 2x, faded by the grade");
+            _ladderOrnament = NewRect("Ornament", _ladderPaper);
+            Stretch(_ladderOrnament, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             // the rules: two deep outside, one inside, and a bracket at each corner between them
             // The rules, the gilt band and the corner brackets are all built once and RESTYLED by the rung (Regrade).
             _ladderRuleOuter = NewRect("RuleOuter", _ladderPaper);
@@ -290,7 +314,20 @@ namespace LastCall.UI
 
             _ladderToStars = LiveStarRow(_ladderPaper, new Vector2(0.5f, 1f), new Vector2(0f, -112f), LadderStar, 4f,
                 UITheme.Amber[3], UITheme.Night[3]);
-            _ladderMeta = NewText("Meta", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Night[2]);
+            // THE HEADLINE ON A DARK CARD (seventh list: "comfort service ve yıldızımızın arkasında karartılmış kart
+            // olmalı onun üstünde yazanlar daha çok dikkat çekecektir"): the stars, the line under them and the two
+            // scores stand on one card of the night ink, so the gold and the marks come off the paper at the eye.
+            _ladderHeadCard = NewRect("HeadCard", _ladderPaper);
+            Place(_ladderHeadCard, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide - 40f, 120f), new Vector2(0f, -100f));
+            _ladderHeadCard.pivot = new Vector2(0.5f, 1f);
+            var hcImg = _ladderHeadCard.gameObject.AddComponent<Image>();
+            hcImg.sprite = ChromeArt.Card();
+            hcImg.type = Image.Type.Sliced;
+            hcImg.color = UITheme.Night[0];   // the night ink itself: grey-plum at 94% read as mud over the cream
+            hcImg.raycastTarget = false;
+            var starsRow = _ladderPaper.Find("LiveStars");   // built before it: the card goes UNDER the stars
+            if (starsRow != null) _ladderHeadCard.SetSiblingIndex(starsRow.GetSiblingIndex());
+            _ladderMeta = NewText("Meta", _ladderPaper, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[3]);
             Place(_ladderMeta.rectTransform, new Vector2(0.5f, 1f), new Vector2(PaperW - 2f * PaperSide, 20f), new Vector2(0f, -148f));
             _ladderMeta.horizontalOverflow = HorizontalWrapMode.Overflow;
 
@@ -576,6 +613,169 @@ namespace LastCall.UI
         /// <summary>The paper's own drawings are one sheet at half the sheet's size, shown at 2x.</summary>
         private const int PatternW = 492, PatternH = 300;
 
+        private Image _ladderWearImg;
+        private RectTransform _ladderOrnament;
+        private RectTransform _ladderHeadCard;
+        private Color _ladderTrim = UITheme.Amber[3], _ladderGiltTrim = UITheme.Amber[3];
+        private int _ladderOrnamentKind = -1;
+        private float _ladderOrnamentH = -1f;
+
+        /// <summary>
+        /// A HANDLED SHEET (2026-09-22): what a certificate that has lived in a drawer carries - brown foxing
+        /// specks gathered toward the edges, the dry ring a glass left on it, two soft fold lines, and the edge
+        /// itself browned a few texels in. Transparent everywhere else; one drawing, never tiled (a tiled code
+        /// sprite painted blotches on this very sheet once).
+        /// </summary>
+        private static Sprite CertWear(int w, int h)
+        {
+            const string Key = "cert:wear";
+            if (s_certWear != null) return s_certWear;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = Key };
+            var px = new Color32[w * h];
+            var brown = new Color32(120, 82, 38, 0);
+            void Put(int x, int y, byte a)
+            {
+                if (x < 0 || y < 0 || x >= w || y >= h) return;
+                var c = px[y * w + x];
+                if (c.a >= a) return;
+                px[y * w + x] = new Color32(brown.r, brown.g, brown.b, a);
+            }
+            // A HASHED SEQUENCE, not a random stream: the sheet is one fixed drawing (and System.Random stays out of
+            // this codebase by rule, even where nothing is decided by it).
+            int seq = 0;
+            float R() { seq++; float v = Mathf.Sin(seq * 12.9898f + 78.233f) * 43758.5453f; return v - Mathf.Floor(v); }
+            // the browned edge: strongest at the very edge, gone four texels in, broken so it is not a frame
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int d = Mathf.Min(Mathf.Min(x, w - 1 - x), Mathf.Min(y, h - 1 - y));
+                    if (d > 4) continue;
+                    if (R() < 0.35) continue;
+                    Put(x, y, (byte)(70 - d * 14));
+                }
+            // foxing: specks, thicker toward the edges
+            for (int i = 0; i < 420; i++)
+            {
+                float fx = (float)R(), fy = (float)R();
+                float edge = Mathf.Min(Mathf.Min(fx, 1f - fx), Mathf.Min(fy, 1f - fy));
+                if (R() < edge * 3.2f) continue;
+                int x = (int)(fx * w), y = (int)(fy * h);
+                byte a = (byte)(40 + (int)(R() * 50f));
+                Put(x, y, a);
+                if (R() < 0.4) Put(x + 1, y, (byte)(a * 0.6f));
+                if (R() < 0.3) Put(x, y + 1, (byte)(a * 0.5f));
+            }
+            // a dry glass ring, low on the right, broken
+            float rcx = w * 0.78f, rcy = h * 0.22f, rr = w * 0.07f;
+            for (float t = 0f; t < 6.2832f; t += 0.01f)
+            {
+                if (R() < 0.25) continue;
+                int x = Mathf.RoundToInt(rcx + Mathf.Cos(t) * rr), y = Mathf.RoundToInt(rcy + Mathf.Sin(t) * rr * 0.92f);
+                Put(x, y, (byte)(45 + (int)(R() * 25f)));
+                if (Mathf.Sin(t) < -0.3f) Put(x, y - 1, 30);
+            }
+            // two folds: a soft darker line with a lit one beside it, across the middle each way
+            for (int x = 0; x < w; x++) { if (R() < 0.1) continue; Put(x, h / 2, 34); }
+            for (int y = 0; y < h; y++) { if (R() < 0.1) continue; Put(w / 3, y, 26); }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            s_certWear = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f);
+            return s_certWear;
+        }
+        private static Sprite s_certWear;
+
+        /// <summary>
+        /// THE WORKED BORDER (seventh list: "kenarlıklar biraz daha işlemeli olsun düz köşe işlemesi olmasın"): a chain
+        /// of diamonds with a dot between each pair laid along the gilt line, and at the top grades a rosette at each
+        /// corner - small drawn pieces placed along the sheet's real edge, so the chain keeps its pitch at any height.
+        /// Rebuilt only when the grade or the sheet's height changes.
+        /// </summary>
+        private void LayOrnament(int kind, Color trim)
+        {
+            if (_ladderOrnament == null) return;
+            if (kind == _ladderOrnamentKind && Mathf.Approximately(_ladderOrnamentH, _ladderPaperH))
+            {
+                foreach (var img in _ladderOrnament.GetComponentsInChildren<Image>(true)) img.color = new Color(trim.r, trim.g, trim.b, img.color.a);
+                return;
+            }
+            _ladderOrnamentKind = kind; _ladderOrnamentH = _ladderPaperH;
+            foreach (Transform old in _ladderOrnament) Destroy(old.gameObject);
+            if (kind <= 0) return;
+            const float Inset = 22f, Pitch = 18f;
+            float w = PaperW - Inset * 2f, h = _ladderPaperH - Inset * 2f;
+            void Piece(float x, float y, float size, float rot, float alpha)
+            {
+                var p = NewRect("O", _ladderOrnament);
+                p.anchorMin = p.anchorMax = new Vector2(0f, 0f);
+                p.pivot = new Vector2(0.5f, 0.5f);
+                p.sizeDelta = new Vector2(size, size);
+                p.anchoredPosition = new Vector2(Inset + x, Inset + y);
+                p.localRotation = Quaternion.Euler(0f, 0f, rot);
+                var im = p.gameObject.AddComponent<Image>();
+                im.sprite = ChromeArt.Solid();
+                im.color = new Color(trim.r, trim.g, trim.b, alpha);
+                im.raycastTarget = false;
+            }
+            void Chain(Vector2 a, Vector2 b)
+            {
+                float len = Vector2.Distance(a, b);
+                int n = Mathf.Max(1, Mathf.FloorToInt(len / Pitch));
+                for (int i = 1; i < n; i++)
+                {
+                    var at = Vector2.Lerp(a, b, i / (float)n);
+                    if ((i & 1) == 0) Piece(at.x, at.y, 5f, 45f, 0.9f);   // a diamond
+                    else Piece(at.x, at.y, 2f, 0f, 0.75f);                 // the dot between
+                }
+            }
+            Chain(new Vector2(0f, 0f), new Vector2(w, 0f));
+            Chain(new Vector2(0f, h), new Vector2(w, h));
+            Chain(new Vector2(0f, 0f), new Vector2(0f, h));
+            Chain(new Vector2(w, 0f), new Vector2(w, h));
+            foreach (var c in new[] { new Vector2(0f, 0f), new Vector2(w, 0f), new Vector2(0f, h), new Vector2(w, h) })
+            {
+                Piece(c.x, c.y, 9f, 45f, 1f);
+                if (kind >= 2)
+                {
+                    // the rosette: a ring of four small diamonds round a larger one, and a dot at its heart
+                    for (int k = 0; k < 4; k++)
+                    {
+                        float ang = k * Mathf.PI * 0.5f + Mathf.PI * 0.25f;
+                        Piece(c.x + Mathf.Cos(ang) * 10f, c.y + Mathf.Sin(ang) * 10f, 5f, 45f, 0.95f);
+                    }
+                    Piece(c.x, c.y, 13f, 45f, 0.35f);
+                    Piece(c.x, c.y, 3f, 0f, 1f);
+                }
+            }
+        }
+
+        /// <summary>A sprite with its transparent margin cut away, so a picture centred in a tile is centred by
+        /// what is DRAWN, not by the box the artist left round it (seventh list: "görselleri kutuların tam ortasına
+        /// denk getirilsin"). Only readable textures can be measured; anything else is returned as it came.</summary>
+        private static Sprite Trimmed(Sprite s)
+        {
+            if (s == null) return null;
+            if (s_trimmed.TryGetValue(s, out var got)) return got;
+            var tex = s.texture;
+            Sprite result = s;
+            if (tex != null && tex.isReadable)
+            {
+                var r = s.rect;
+                int x0 = (int)r.x, y0 = (int)r.y, w = (int)r.width, h = (int)r.height;
+                var px = tex.GetPixels32();
+                int minX = w, minY = h, maxX = -1, maxY = -1;
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        if (px[(y0 + y) * tex.width + x0 + x].a > 8)
+                        { if (x < minX) minX = x; if (y < minY) minY = y; if (x > maxX) maxX = x; if (y > maxY) maxY = y; }
+                if (maxX >= minX && (minX > 0 || minY > 0 || maxX < w - 1 || maxY < h - 1))
+                    result = Sprite.Create(tex, new Rect(x0 + minX, y0 + minY, maxX - minX + 1, maxY - minY + 1),
+                                           new Vector2(0.5f, 0.5f), s.pixelsPerUnit);
+            }
+            s_trimmed[s] = result;
+            return result;
+        }
+        private static readonly Dictionary<Sprite, Sprite> s_trimmed = new Dictionary<Sprite, Sprite>();
+
         private static Sprite PaperGrain(int w, int h)
         {
             if (s_paperGrain != null) return s_paperGrain;
@@ -686,9 +886,13 @@ namespace LastCall.UI
             Regrade(now.Index);
             _ladderTiles.Clear();
             _ladderBandHead.text = UIText.T("rank.window.new");
-            int rows = LayTiles(_ladderBand, run, TilesFor(run, was, now, climb), moving, rowsMax: 2, dim: false);
-            float nextTop = TilesTop + rows * TileRowH + NextBandGap;
             var next = BarRank.Above(now);
+            // The earned band takes the rows the sheet can spare after keeping one for what comes next - a cut slot
+            // counts the rest - so the sheet, the key under it and the screen all agree (2026-09-22).
+            int openMax = Mathf.Clamp(Mathf.FloorToInt(
+                (PaperMaxH - TilesTop - PaperFoot - (next != null ? NextBandGap + TileRowH : 0f)) / TileRowH), 1, 2);
+            int rows = LayTiles(_ladderBand, run, TilesFor(run, was, now, climb), moving, rowsMax: openMax, dim: false);
+            float nextTop = TilesTop + rows * TileRowH + NextBandGap;
             int nextRows;
             if (next != null)
             {
@@ -719,6 +923,7 @@ namespace LastCall.UI
             // The sheet is as tall as its bands, and never shorter than 16:9; the group holds it and the key.
             _ladderPaperH = Mathf.Max(PaperMinH, nextTop + nextRows * TileRowH + (nextRows == 0 ? 8f : 0f) + PaperFoot);
             _ladderPaper.sizeDelta = new Vector2(PaperW, _ladderPaperH);
+            LayOrnament(_ladderOrnamentGrade, _ladderGiltTrim);
             if (_ladderSealHost != null) _ladderSealHost.anchoredPosition = new Vector2(0f, -_ladderPaperH);
             _ladderReveal.sizeDelta = new Vector2(PaperW, moving ? 0f : _ladderPaperH);
             _ladderGroup.sizeDelta = new Vector2(PaperW, _ladderPaperH + KeyGap + PauseKeyH);
@@ -771,18 +976,28 @@ namespace LastCall.UI
                 foreach (var b in _ladderBrackets)
                     if (b != null) { b.gameObject.SetActive(look.Brackets); b.color = look.Trim; }
             if (_ladderUnderlineImg != null) _ladderUnderlineImg.color = look.Trim;
-            if (_ladderBandHead != null) _ladderBandHead.color = look.Trim;
+            // TYPE IN THE TRIM, BUT NEVER PALER THAN THE PAPER CAN CARRY (2026-09-22): the top grades' accent is the
+            // lightest amber, which is right for gilt and a line, and all but invisible as words on ivory.
+            var inkTrim = look.Trim == UITheme.Amber[4] || look.Trim == UITheme.Amber[3] ? UITheme.Amber[1] : look.Trim;
+            if (_ladderBandHead != null) _ladderBandHead.color = inkTrim;
             if (_ladderBandBoxEdges != null)
                 foreach (var e2 in _ladderBandBoxEdges) if (e2 != null) e2.color = look.Rule;
             if (_ladderNextBoxEdges != null)
                 foreach (var e2 in _ladderNextBoxEdges) if (e2 != null) e2.color = new Color(look.Rule.r, look.Rule.g, look.Rule.b, 0.75f);
-            if (_ladderNextHead != null) _ladderNextHead.color = look.Trim;
-            if (_ladderComfortLabel != null) _ladderComfortLabel.color = look.Trim;
-            if (_ladderServiceLabel != null) _ladderServiceLabel.color = look.Trim;
+            if (_ladderNextHead != null) _ladderNextHead.color = inkTrim;
+            // On the dark card, so in the LIGHT accent at every grade: the grade's trim is a dark amber low down.
+            if (_ladderComfortLabel != null) _ladderComfortLabel.color = UITheme.Amber[4];
+            if (_ladderServiceLabel != null) _ladderServiceLabel.color = UITheme.Amber[4];
             if (_ladderSeal != null) _ladderSealGrade = look.Seal;
+            if (_ladderWearImg != null) _ladderWearImg.color = new Color(1f, 1f, 1f, look.Wear);
+            _ladderTrim = inkTrim;   // the group heads are words too
+            _ladderGiltTrim = look.Trim;   // ...and the worked border is gilt, so it keeps the light accent
+            _ladderOrnamentGrade = look.Ornament;
             if (_ladderRibbonL != null) _ladderRibbonL.gameObject.SetActive(look.Ribbons);
             if (_ladderRibbonR != null) _ladderRibbonR.gameObject.SetActive(look.Ribbons);
         }
+
+        private int _ladderOrnamentGrade;
 
         /// <summary>The seal's size at this rung, the scale the climb's pop multiplies.</summary>
         private float _ladderSealGrade = 1f;
@@ -864,11 +1079,16 @@ namespace LastCall.UI
                 float x = 0f, y = 0f;
                 int row = 0;
                 string lastClass = null;
+                float groupEnds = 0f;   // where the current group's HEAD ends: the next group may not start inside it
                 foreach (var t in tiles)
                 {
                     bool groupHead = t.Cls != lastClass;
-                    if (groupHead && x > 0f) x += TileGroupGap;
+                    // A GROUP IS AS WIDE AS ITS HEAD (2026-09-22): a one-tile group under a 16 px tracked head ran its
+                    // words into the next group's (THE COUNTER / THE DOOR / THE ROOM, seen in play). The next group
+                    // starts after whichever is wider, the tiles or the words over them.
+                    if (groupHead && x > 0f) x = Mathf.Max(x, groupEnds) + TileGroupGap;
                     if (x + TileSize > rowW + 0.5f) { x = 0f; row++; y -= TileRowH; groupHead = true; }
+                    if (groupHead) groupEnds = x + ClassHeadWidth(t.Cls) - (TilePitch - TileSize);
                     slots.Add((left + x, y, row, groupHead));
                     lastClass = t.Cls;
                     x += TilePitch;
@@ -884,11 +1104,31 @@ namespace LastCall.UI
                 var tile = Tile(band, x, y, tiles[i], moving, dim);
                 if (isHead)
                 {
-                    var cap = NewText("Class", tile, _body, 8, TextAnchor.MiddleLeft, UITheme.Night[1]);
-                    Place(cap.rectTransform, new Vector2(0f, 1f), new Vector2(200f, 12f), new Vector2(0f, 12f));
+                    // A GROUP'S HEAD IS NOT A TILE'S NAME (2026-09-22, seventh list: "The Room, The Taps, The Market
+                    // yazısının boyutu ve stili ürünlerin ismiyle aynı, böyle olmamalı, her grubun içerisinde net
+                    // ayrılması gerekiyor"): the heavy face at twice the size, tracked, in the grade's accent, with its
+                    // own rule under it - and a rule stood in the gap before it, so each group is fenced off.
+                    var cap = NewText("Class", tile, CertFace, 16, TextAnchor.LowerLeft, _ladderTrim);
+                    Place(cap.rectTransform, new Vector2(0f, 1f), new Vector2(260f, 18f), new Vector2(0f, 20f));
                     cap.rectTransform.pivot = new Vector2(0f, 1f);
                     cap.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    cap.text = UIText.T(tiles[i].Cls);
+                    cap.text = Tracked(UIText.T(tiles[i].Cls));
+                    var capRule = NewRect("ClassRule", tile);
+                    Place(capRule, new Vector2(0f, 1f), new Vector2(Mathf.Min(cap.preferredWidth, 240f), 2f), new Vector2(0f, 3f));
+                    capRule.pivot = new Vector2(0f, 1f);
+                    var cri = capRule.gameObject.AddComponent<Image>();
+                    cri.color = new Color(_ladderTrim.r, _ladderTrim.g, _ladderTrim.b, 0.7f);
+                    cri.raycastTarget = false;
+                    if (x > left + 0.5f)
+                    {
+                        var fence = NewRect("GroupFence", band);
+                        Place(fence, new Vector2(0f, 1f), new Vector2(2f, TileSize + 26f),
+                              new Vector2(x - (TileGroupGap + (TilePitch - TileSize)) * 0.5f - 1f, y - 2f));
+                        fence.pivot = new Vector2(0f, 1f);
+                        var fi = fence.gameObject.AddComponent<Image>();
+                        fi.color = new Color(_ladderTrim.r, _ladderTrim.g, _ladderTrim.b, 0.45f);
+                        fi.raycastTarget = false;
+                    }
                 }
                 rows = Math.Max(rows, row + 1);
             }
@@ -900,6 +1140,25 @@ namespace LastCall.UI
             }
             return Math.Max(1, rows);
         }
+
+        /// <summary>How wide a group's head prints, measured once per class on a hidden line.</summary>
+        private float ClassHeadWidth(string cls)
+        {
+            if (string.IsNullOrEmpty(cls)) return 0f;
+            if (_classHeadW.TryGetValue(cls, out var w)) return w;
+            if (_classMeasure == null)
+            {
+                _classMeasure = NewText("Measure", _ladderPaper, CertFace, 16, TextAnchor.MiddleLeft, Color.clear);
+                _classMeasure.horizontalOverflow = HorizontalWrapMode.Overflow;
+                _classMeasure.gameObject.SetActive(false);
+            }
+            _classMeasure.text = Tracked(UIText.T(cls));
+            w = _classMeasure.preferredWidth + 8f;
+            _classHeadW[cls] = w;
+            return w;
+        }
+        private Text _classMeasure;
+        private readonly Dictionary<string, float> _classHeadW = new Dictionary<string, float>();
 
         /// <summary>The classes in the order the band lays them, which is the order the room reads them.</summary>
         private static readonly string[] TileClasses =
@@ -934,7 +1193,7 @@ namespace LastCall.UI
                 var picRt = NewRect("Pic", rt);
                 Place(picRt, new Vector2(0.5f, 0.5f), new Vector2(TileSize - 16f, TileSize - 16f), Vector2.zero);
                 var pic = picRt.gameObject.AddComponent<Image>();
-                pic.sprite = spec.Art; pic.preserveAspect = true; pic.raycastTarget = false;
+                pic.sprite = Trimmed(spec.Art); pic.preserveAspect = true; pic.raycastTarget = false;
                 pic.enabled = spec.Art != null;
                 if (spec.Art == null)
                 {

@@ -35,6 +35,8 @@ namespace LastCall.UI
     public sealed class WindowSky
     {
         public const int SrcW = 71, SrcH = 137, Zoom = 2;
+        /// <summary>The sky drawn in continuous colour rather than dithered onto the palette (see Render).</summary>
+        public static bool SmoothSky = true;
         public const int CellW = 141, CellH = 274;
 
         /// <summary>The plate the window shows. Its texture is redrawn in place.</summary>
@@ -284,9 +286,15 @@ namespace LastCall.UI
             int drift = motion ? (int)((clock * city.cloudDrift) % (2 * SrcW)) : 0;
             // The city's frame: the hour, a little behind the sun, over the frames there are.
             float lag = Mathf.Clamp(city.frameLag, 0f, 0.5f);
-            int frame = Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(0f, tau - lag) / (1f - lag) * (_cityFrames.Length - 1)),
-                                    0, _cityFrames.Length - 1);
+            // ...AND IT CROSSES BETWEEN FRAMES rather than jumping to the nearest (2026-09-22, seventh list: the
+            // weather changing "pixel pixel"): two neighbouring frames of the author's sheet, blended by how far the
+            // hour is between them, so a window lights by fading up instead of popping on.
+            float fpos = Mathf.Clamp(Mathf.Max(0f, tau - lag) / (1f - lag) * (_cityFrames.Length - 1), 0f, _cityFrames.Length - 1);
+            int frame = Mathf.Clamp(Mathf.FloorToInt(fpos), 0, _cityFrames.Length - 1);
+            int frameNext = Mathf.Min(frame + 1, _cityFrames.Length - 1);
+            float fmix = SmoothSky ? fpos - frame : (fpos - frame >= 0.5f ? 1f : 0f);
             var cityNow = _cityFrames[frame];
+            var cityNext = _cityFrames[frameNext];
 
             for (int y = 0; y < SrcH; y++)
             {
@@ -294,7 +302,12 @@ namespace LastCall.UI
                 {
                     int i = y * SrcW + x;
                     float thr = Bayer[(y & 3) * 4 + (x & 3)];
-                    if (_mask[i] != 0) { _src[i] = cityNow[_cityAt[i]]; continue; }
+                    if (_mask[i] != 0)
+                    {
+                        var ca = cityNow[_cityAt[i]];
+                        _src[i] = fmix <= 0f ? ca : fmix >= 1f ? cityNext[_cityAt[i]] : (Color32)Color.Lerp(ca, cityNext[_cityAt[i]], fmix);
+                        continue;
+                    }
 
                     float r = _rowR[y], g = _rowG[y], b = _rowB[y];
                     // The sun's halo warms the sky before the quantiser sees it: that is what
@@ -321,9 +334,23 @@ namespace LastCall.UI
                     if (cloud) { r *= 0.80f; g *= 0.80f; b *= 0.80f; }
 
                     float luma = (r * 0.299f + g * 0.587f + b * 0.114f) / 255f;
-                    float nudge = (thr - 0.5f) * spread;
-                    int best = Nearest(r + nudge, g + nudge, b + nudge);
-                    Color32 outc = _palette[best];
+                    // THE SKY IS SMOOTH (2026-09-22, the author's seventh list: "güneş batması daha smooth olmalı şu an
+                    // pixel pixel gün batımı ve hava değişimi ... şehir silüeti bozuk gözüküyor"). The sky was snapped
+                    // to the palette through a 4x4 ordered dither, which is two faults at once: as the hour turned, the
+                    // colour moved by the dither CRAWLING pixel by pixel rather than by the sky changing, and behind the
+                    // towers the dither threw purple specks of the towers' own value, so the skyline crumbled into the
+                    // sky and the author's crisp frames read as a broken city. The sky is the continuous colour now -
+                    // the sun's disc, the stars and the city stay the palette's pixels, so the silhouette is a clean
+                    // line of drawn towers against a smooth sky, which is how the author's sheet was painted.
+                    Color32 outc = SmoothSky
+                        ? new Color32((byte)Mathf.Clamp(Mathf.RoundToInt(r), 0, 255), (byte)Mathf.Clamp(Mathf.RoundToInt(g), 0, 255),
+                                      (byte)Mathf.Clamp(Mathf.RoundToInt(b), 0, 255), 255)
+                        : _palette[Nearest(r + (thr - 0.5f) * spread, g + (thr - 0.5f) * spread, b + (thr - 0.5f) * spread)];
+                    if (SmoothSky && d <= rad)
+                    {
+                        var sc = d > rad - 1.6f ? rimC : coreC;   // the disc keeps its drawn rim and core exactly
+                        outc = sc;
+                    }
 
                     int si = _starAt[i];
                     if (si >= 0 && tau >= _starBirth[si] && luma <= st.lumaMax && !cloud)

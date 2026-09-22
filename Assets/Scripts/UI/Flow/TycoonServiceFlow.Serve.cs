@@ -740,7 +740,7 @@ namespace LastCall.UI
             // that still listed them here would be directions to a station that left.
             // Cut into the counter like the tin bench's (2026-09-13) — on the same plaque under the rail (2026-09-16),
             // with the aim line on its lower row.
-            _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH, PlaqueUnderRail, ColX + ColW + 16f);
+            _servePlaque = AddCounterPlaque(_servePanel, PlaqueW, PlaqueH, PlaqueUnderRail, RightColX);   // the right column (seventh list)
             // the same column as the tin's bench, two rows deep (2026-09-17)
             var serveSteps = ColumnPanel(_servePanel, "StepPanel", ColStepsTop - StepPanelH(2), StepPanelH(2));
             BuildStepList(serveSteps,
@@ -984,7 +984,7 @@ namespace LastCall.UI
             // from the rail at the plaque's end for a day; a key you press last belongs at the bottom, not up in
             // the words.
             _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
-                KeyGo, new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, KeyRowY),
+                KeyGo, new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, BuiltKeyRowY),
                 () =>
                 {
                     // Ready to hand over: close the flow, then click a seat to deliver - and

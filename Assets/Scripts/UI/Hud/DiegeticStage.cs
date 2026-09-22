@@ -832,12 +832,28 @@ namespace LastCall.UI
         /// first frame as a still rather than flickering.</summary>
         public void SetTapRunning(bool on) => _waterOn = on;
 
+        /// <summary>Whether the basin's water is still on screen - running, or playing out its last loop.</summary>
+        public bool WaterPlaying => _waterSr != null && _waterSr.enabled;
+
         private void StepWater()
         {
             if (_waterSr == null || _waterFrames == null || _waterFrames.Length == 0) return;
             if (!_waterOn)
             {
-                if (_waterSr.enabled) _waterSr.enabled = false;
+                // THE LOOP PLAYS OUT (2026-09-22, the author's seventh list: "gün sonu ekranının gelmesi için sink
+                // animasyonu bitmeli"). The water was switched off on the frame Core said the wash was done, cut in
+                // the middle of its loop; it runs on to the loop's last frame now and goes then, and the night's
+                // books wait for it (TycoonHud.StepDayEndDue reads WaterPlaying).
+                if (!_waterSr.enabled) return;
+                if (Motion.Reduced) { _waterSr.enabled = false; return; }
+                _waterClock += Time.unscaledDeltaTime * AmbientScale;
+                while (_waterClock >= WaterFrameStep)
+                {
+                    _waterClock -= WaterFrameStep;
+                    _waterFrame++;
+                    if (_waterFrame >= _waterFrames.Length) { _waterSr.enabled = false; return; }
+                }
+                _waterSr.sprite = _waterFrames[_waterFrame];
                 return;
             }
             if (!_waterSr.enabled)
@@ -1859,10 +1875,15 @@ namespace LastCall.UI
             float floorHalf = W * 0.5f - 2f;             // what it has spread to by the counter
             for (int y = 0; y < H; y++)
             {
-                float down = 1f - y / (float)(H - 1);    // 0 at the top row of the texture... y grows up
-                float t = 1f - down;                     // 0 at the mouth, 1 at the foot
+                // THE MOUTH IS THE TOP ROW (2026-09-22). Texture rows count UP, and this had the mouth on row 0 -
+                // the bottom - so the cone stood on its point: wide under the ceiling, a narrow spot on the bar.
+                // Seen the moment the cone was drawn as a visible beam (r131); it is also why the pool on the
+                // counter measured so small.
+                float t = 1f - y / (float)(H - 1);       // 0 at the mouth (top), 1 at the foot
                 float half = Mathf.Lerp(MouthHalf, floorHalf, t);
-                float fade = (1f - t * t) * 0.92f;       // it dies as it falls
+                // It fades as it falls, but keeps most of itself for the bar top (2026-09-22): with the cone the right
+                // way up, a fade to nothing at the foot left the drinkers lit and the counter dark (r138: 16 against 12).
+                float fade = (1f - 0.5f * t * t) * 0.92f;
                 for (int x = 0; x < W; x++)
                 {
                     float dx = Mathf.Abs(x + 0.5f - W * 0.5f);
@@ -3314,6 +3335,18 @@ namespace LastCall.UI
                             LightLayers(glow, LayerCounter, LayerPatrons);
                             glow.lightType = Light2D.LightType.Sprite;
                             glow.lightCookieSprite = PendantConeCookie();
+                            // ...AND THE SHAFT ITSELF IS DRAWN (seventh list: "net bir ışık hüzmesi"): the cone,
+                            // unlit, over the drinkers and the bar top, as bright as the light is (LightBeam).
+                            var beamGo = new GameObject("PendantBeam");
+                            beamGo.transform.SetParent(glow.transform, false);
+                            var beamSr = beamGo.AddComponent<SpriteRenderer>();
+                            beamSr.sprite = PendantConeCookie();
+                            if (_viewMaterial != null) beamSr.sharedMaterial = _viewMaterial;
+                            beamSr.sortingLayerName = LayerCounter;
+                            beamSr.sortingOrder = 900;
+                            beamSr.color = new Color(1f, 1f, 1f, 0f);
+                            var beam = beamGo.AddComponent<LightBeam>();
+                            beam.Light = glow; beam.Beam = beamSr;
                         }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3714,9 +3747,13 @@ namespace LastCall.UI
             // window is doing the lighting, and highest at night, when it is all there is - so a counter light
             // read off the ambient alone comes out darkest at noon, which is what the first cut did (r126:
             // 0.77 at opening against 0.87 in the evening).
-            float onTheSlab = Mathf.Clamp01(_washBase * 1.1f + _barDownBase * 0.8f + d.SunStrength * 0.55f);
-            CounterLight = Color.Lerp(d.Ambient, Color.white, Mathf.Clamp01(onTheSlab * 1.15f))
-                         * Mathf.Lerp(0.62f, 1f, onTheSlab);
+            // UNDER THE PENDANTS, NOT UNDER THE DUSK (2026-09-22, the author's seventh list: "Garnishler çok
+            // karanlıkta kalıyor aydınlatma onlara etki etmiyor"). The first cut darkened the dishes with the
+            // room, which is the opposite of what the counter does: the counter is the one surface the lamps are
+            // hung for, so as the evening comes on its props go WARM under the cones, they do not go dim. The
+            // light is the pendants' own colour, taken on as the room darkens, at full value.
+            var lamp = new Color(1f, 0.86f, 0.62f);
+            CounterLight = Color.Lerp(Color.white, lamp, Mathf.Clamp01(d.Dusk) * 0.55f);
             // Every shadow in the room swings on the same light.
             CastShadow.Offset = d.ShadowOffset;
             CastShadow.Alpha = d.ShadowAlpha;

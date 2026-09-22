@@ -502,7 +502,9 @@ namespace LastCall.UI
 
         private RectTransform _mixRowsHost;
         private const float MixRowH = 24f, MixRowsPad = 8f, MixBarH = 16f, MixNameW = 168f, MixShareW = 56f;
-        private const int MixRowsMax = 5;
+        // Three, not five (2026-09-22): the rows grow the plaque DOWN the right column, and the gauges stand under
+        // it. The tin gauge carries every pour's band, so the fourth and fifth line were its double anyway.
+        private const int MixRowsMax = 3;
 
         private void LayMixRows(TycoonRun run)
         {
@@ -995,7 +997,13 @@ namespace LastCall.UI
 
         /// <summary>The plaque's place and size on a bench: from the panel's left edge, under the rail's foot. 464
         /// wide: the tin's rect starts at 464 but its steel at ~500, and the capped tin stands at the centre.</summary>
-        private const float PlaqueX = 16f, PlaqueW = 560f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
+        // THE WORDS STAND ON THE RIGHT, OVER THE GAUGES (2026-09-22, the author's seventh list: "Built sahnesinde
+        // arkadaki panel tam oturtulmamış ve shaker onun üstüne geliyor, o yazıları sağa taşıyalım, shaker dolum barı ile
+        // beraber düzenli bir sayfa düzeni oluşturulsun sağ tarafta"). The plaque ran 256..816 beside the column and
+        // the tin stood in the middle of it. It is the head of a RIGHT column now, 848..1264, mirroring the left one:
+        // the words on top, hung from the rail, and the mix and tin gauges standing under them.
+        private const float RightColX = 848f;
+        private const float PlaqueX = 16f, PlaqueW = 416f, PlaqueH = 64f, PlaquePad = 8f, PlaqueUnderRail = 6f;   // 464 until 2026-09-17: the readout wrapped mid-phrase
         /// <summary>The strip's and the readout's bottoms, from the plaque's own; the readout has two lines' room.</summary>
         private const float PlaqueLineY = 8f, PlaqueLineH = 48f;   // the steps left the plaque on 2026-09-17
         /// <summary>The counter's far edge: ridge, seam, six rails and a seam (AddBenchCounter's bands).</summary>
@@ -1240,10 +1248,13 @@ namespace LastCall.UI
         // -105 and 50 shorter (2026-09-22): the key row rose 43 and landed on the gauge's foot, and the gauge
         // could not simply rise with it - at 300 tall its head already reached the counter's rail. It stands
         // between the two now: its foot on 130, seven over the keys, its head on 380, five under the rail.
-        private static readonly Vector2 MeasureAt = new Vector2(473f, -105f);   // -87 until the props came down;
+        // UNDER THE WORDS, IN THE RIGHT COLUMN (2026-09-22): the tin gauge and the mix column stand as a pair
+        // centred in 848..1264, from a hand over the floor-row keys (88) to a hand under the plaque at its tallest
+        // (three mix rows, 235). Drawn with its aspect kept, so it stays a tin, only smaller.
+        private static readonly Vector2 MeasureAt = new Vector2(438f, -202f);   // -87 until the props came down;
                                                                                // 485 ran the tin's wall under the bin
         /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
-        private static readonly Vector2 MeasureSize = new Vector2(136f, 250f);
+        private static readonly Vector2 MeasureSize = new Vector2(136f, 136f);
 
         /// <summary>
         /// The standing measure: the shaker in outline with the drink cut to its silhouette.
@@ -2678,7 +2689,7 @@ namespace LastCall.UI
             _shakerHome = new Vector2(-60, CatchFootY + TinH * 0.5f);   // at the bottom: the tin catches (2026-09-14)
             // 300, not 150 (2026-09-14): the strip and the readout moved up under the rail, and at 150 the bottle stood
             // in their band; right of them it stands clear, and the tin travels under it when the bottle is in hand.
-            _bottleRest = new Vector2(300, -90);
+            _bottleRest = new Vector2(140, -90);   // left of the right column now (2026-09-22): 300 stood it in the words
             // The two contact shadows, built BEFORE the props so they draw under them.
             // Each is placed on its own prop's foot line every frame (PushPropShadow).
             _tinShadow = AddContactShadow(_pourSurface, 158f * (TinW / 200f), new Vector2(_shakerHome.x, TinFootY));
@@ -2933,7 +2944,7 @@ namespace LastCall.UI
             // grid (CLAUDE.md), like every other size in the rebuild. Engraved, the way the strip's words are.
             // BESIDE THE COLUMN (2026-09-17): the instrument column owns the far left, so the sentence's plaque
             // starts where the column ends — nothing stacks on anything.
-            _shakerPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, PlaqueH, PlaqueUnderRail, ColX + ColW + 16f);
+            _shakerPlaque = AddCounterPlaque(_shakerPanel, PlaqueW, PlaqueH, PlaqueUnderRail, RightColX);
             _shakerReadout = NewText("Readout", _shakerPlaque, _body, 16, TextAnchor.UpperLeft, UITheme.TextSecondary);
             Place(_shakerReadout.rectTransform, new Vector2(0f, 0f), new Vector2(PlaqueW - PlaquePad * 2f, PlaqueLineH),
                   new Vector2(PlaquePad, PlaqueLineY));

@@ -567,7 +567,7 @@ namespace LastCall.UI
                 // the head, so an opening scaled about the pivot swells up out of the drinker rather than
                 // materialising over them. Both axes, quick, with a little overshoot.
                 var tagPop = seat.Tag.gameObject.AddComponent<PopIn>();
-                tagPop.Seconds = 0.18f; tagPop.From = 0.42f; tagPop.Overshoot = 0.10f;
+                tagPop.Seconds = 0.42f; tagPop.From = 0.12f; tagPop.Bubble = true;
 
                 // ── THE SPEECH BALLOON (2026-09-04, the author: "konuşmalar normalde
                 // kafalarının üstlerinde bulunan kartlardan ayrı olarak klasik diyalog
@@ -610,7 +610,7 @@ namespace LastCall.UI
                 seat.SayTail.sprite = ChromeArt.SpeechTail(ChromeArt.BubbleTone.Drink);
                 seat.SayTail.raycastTarget = false;
                 var sayPop = seat.Say.gameObject.AddComponent<PopIn>();
-                sayPop.Seconds = 0.2f; sayPop.From = 0.38f; sayPop.Overshoot = 0.12f;
+                sayPop.Seconds = 0.42f; sayPop.From = 0.12f; sayPop.Bubble = true;
 
                 // THE BOLD FACE, AT ITS OWN SIZE (2026-09-06, the author: "kullanılan font
                 // ince ve okunaklı değil ... okunaklılığı ile ön plana çıkan ... bizim
@@ -982,24 +982,14 @@ namespace LastCall.UI
             // ON THE SLIP'S FOOT, not at a fixed 530 down the panel: the bill is centred
             // and its length is the night's, so a fixed key sat on top of a short slip and
             // under a long one. RebuildDayEnd puts it where the paper actually ends.
-            _billNext = NewRect("BillNext", _dayEndPanel);
-            Place(_billNext, new Vector2(0.5f, 0.5f), new Vector2(BillW, 44), Vector2.zero);
-            var billNextImg = _billNext.gameObject.AddComponent<Image>();
-            billNextImg.color = UITheme.PrimaryAction;
-            var billNextBtn = _billNext.gameObject.AddComponent<Button>();
-            billNextBtn.targetGraphic = billNextImg;
-            billNextBtn.onClick.AddListener(OnDayEndAdvance);
-            // The one key on the slip, and it answered nothing until now — a full-width amber
-            // slab that only changed when it was already pressed.
-            var nextGlow = _billNext.gameObject.AddComponent<HoverGlow>();
-            nextGlow.Graphics = new UnityEngine.UI.Graphic[] { billNextImg };
-            nextGlow.Gain = 1.12f;     // amber at 1.22 goes to paper-white
-            _billNextLabel = NewText("Label", _billNext, _display, 16, TextAnchor.MiddleCenter,
-                UITheme.TextOnAmber);
-            Stretch(_billNextLabel.rectTransform, Vector2.zero, Vector2.one,
-                new Vector2(10, 0), new Vector2(-10, 0));
-            _billNextLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _billNextLabel.text = UIText.T("build.bill.continue");
+            // THE HOUSE'S OWN KEY (2026-09-22, the author's seventh list: "Go To The Order butonunu değiştir oyunun
+            // konseptine renk paletine UI tarzına uygun bir şekilde değiştir"). It was a flat amber slab the width of
+            // the paper - the one control on the day-end screen that did not come out of the game's key pack. It is
+            // the pack's plate now, repainted on the amber ramp like every primary key, with the pack's own NEXT
+            // chevron, pressing and lighting blue the way the menu's keys do. Still named BillNext: the suite finds it.
+            _billNext = PackWordKey(_dayEndPanel, "BillNext", UIText.T("build.bill.continue"), "next", MenuPack.Tone.Orange,
+                new Vector2(0.5f, 0.5f), new Vector2(300f, 56f), Vector2.zero, OnDayEndAdvance, 300f, 60f);
+            _billNextLabel = _billNext.Find("Face/Label").GetComponent<Text>();
 
             // The slip is the night's money; these two are the night's PLACE — where it sits
             // in the week, and what it did to the bar. See the block above RebuildDayEnd.

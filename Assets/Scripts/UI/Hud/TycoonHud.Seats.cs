@@ -2238,7 +2238,9 @@ namespace LastCall.UI
                 stage.SetDrainAnswers(!busy);
             }
             // The clock over the basin, while it is busy.
-            if (_sinkClock == null && busy) BuildSinkClock();
+            // NO CLOCK OVER THE BASIN (2026-09-22, the author's seventh list: "ekrandan sink bekleme süresi kalkmalı").
+            // The running water says the sink is busy; a pie and a seconds count under it said it twice. It is no
+            // longer built; BuildSinkClock stays for a screen that wants it back.
             if (_sinkClock != null)
             {
                 // Only over the ROOM: a bench over the counter draws its own scene and the
@@ -3578,18 +3580,26 @@ namespace LastCall.UI
         // three that had no beat before (12 a single tear, 18 drooling, 37 dizzy) are on the table now.
         private enum EmoteBeat { Perfect, Flawless, Another, Close, Wrong, Awful, Patience, Storm, Kicked, Bond }
 
-        private static readonly Dictionary<EmoteBeat, int[]> EmoteTable = new Dictionary<EmoteBeat, int[]>
+        // SIGNS, NOT FACES (2026-09-22, the author's seventh list: "gülen ağlamaklı emoji iyi bir emoji kötü
+        // sonuçlarda çıkmamalı, müşteri kicklendiğinde kızgın surat çıkmalı ... emojileri sen oluştur ve sen ona göre
+        // kullan ... emoji yerine kalp gibi ünlem gibi işaretler de kullanılabilir"). The yesterday's one-family table
+        // still threw the laughing-until-crying face at a customer being thrown out. The crowd throws the game's own
+        // SIGNS now (Tools/reaction_signs.py -> Resources/Emotes/sign_<id>): drawn by one rule on the palette, a heart
+        // and a star when it went right, a question mark and a bead of sweat when it did not, a broken heart and a
+        // storm cloud when it was awful, and the red face and the anger mark when they are shown the door. The two
+        // faces in the set are the only faces: glad, and angry.
+        private static readonly Dictionary<EmoteBeat, string[]> EmoteTable = new Dictionary<EmoteBeat, string[]>
         {
-            [EmoteBeat.Perfect]  = new[] { 85, 6, 50, 51 },
-            [EmoteBeat.Flawless] = new[] { 85, 21, 50 },
-            [EmoteBeat.Another]  = new[] { 49, 53, 42, 115 },
-            [EmoteBeat.Close]    = new[] { 27, 67, 51 },
-            [EmoteBeat.Wrong]    = new[] { 35, 1, 10 },
-            [EmoteBeat.Awful]    = new[] { 15, 12, 37 },
-            [EmoteBeat.Patience] = new[] { 17, 81, 9 },
-            [EmoteBeat.Storm]    = new[] { 1, 9, 23 },
-            [EmoteBeat.Kicked]   = new[] { 23, 3, 33 },
-            [EmoteBeat.Bond]     = new[] { 118, 86 },
+            [EmoteBeat.Perfect]  = new[] { "star", "heart", "glad" },
+            [EmoteBeat.Flawless] = new[] { "star", "heart", "note" },
+            [EmoteBeat.Another]  = new[] { "heart", "note", "glad" },
+            [EmoteBeat.Close]    = new[] { "glad", "note" },
+            [EmoteBeat.Wrong]    = new[] { "question", "drop" },
+            [EmoteBeat.Awful]    = new[] { "broken", "storm" },
+            [EmoteBeat.Patience] = new[] { "drop", "exclaim" },
+            [EmoteBeat.Storm]    = new[] { "anger", "storm", "angry" },
+            [EmoteBeat.Kicked]   = new[] { "angry", "anger" },
+            [EmoteBeat.Bond]     = new[] { "heart", "star" },
         };
 
         /// <summary>Up to <paramref name="want"/> DIFFERENT faces for the beat, the first
@@ -3604,7 +3614,7 @@ namespace LastCall.UI
             var faces = new List<Sprite>();
             for (int k = 0; k < pool.Length && faces.Count < want; k++)
             {
-                var s = Resources.Load<Sprite>("Emotes/em_" + pool[(first + k) % pool.Length]);
+                var s = Resources.Load<Sprite>("Emotes/sign_" + pool[(first + k) % pool.Length]);
                 if (s != null) faces.Add(s);
             }
             return faces.Count > 0 ? faces.ToArray() : null;
@@ -3666,8 +3676,14 @@ namespace LastCall.UI
             if (stage == null || view == null || view.Body == null) return;
             if (!view.Body.gameObject.activeSelf) return;
             var (faceName, tint, count) = ReactionFor(satisfaction, perfect);
-            var face = ChromeArt.Face(faceName);
+            // THE SAME SIGNS AS THE BEATS (2026-09-22): the tinted procedural faces were a second family of
+            // "emoji" flying out of the same drinker. The grade is still the COUNT; the sign is the mood - a star
+            // for a perfect pour, a heart for a good one, a note for a fair one, a broken heart for a bad one - in
+            // its own colours, untinted.
+            string sign = perfect ? "star" : faceName == "good" ? "heart" : faceName == "fair" ? "note" : "broken";
+            var face = Resources.Load<Sprite>("Emotes/sign_" + sign) ?? ChromeArt.Face(faceName);
             if (face == null) return;
+            tint = Color.white;
             // The body's own position is the middle of the rig canvas; the crown sits
             // HeadTop above the stool, which is CharSize/2 - CharFootDrop above that middle.
             float headHud = view.Look != null ? view.Look.HeadTop : CharSize * 0.5f;
@@ -3680,7 +3696,7 @@ namespace LastCall.UI
             // TOGETHER rather than a thing that happens to a customer. It is pinned to the
             // stool and never follows anybody: the player does not walk out.
             ReactionMotes.Burst(stage, at + new Vector3(0f, -MotesBelowCrown / StageToHud, 0f),
-                view.Body, false, face, UITheme.Magenta[3], PerfectBackMotes);
+                view.Body, false, Resources.Load<Sprite>("Emotes/sign_heart") ?? face, Color.white, PerfectBackMotes);   // the bar answers in hearts
         }
 
         /// <summary>

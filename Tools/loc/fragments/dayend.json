@@ -57,7 +57,7 @@
     { "key": "dayend.aisle.garnishes", "text": "GARNISHES", "note": "Aisle heading on the market's restock page. Shop sign band, one line, ~24 characters." },
     { "key": "dayend.aisle.rest", "text": "THE REST", "note": "Aisle heading on the market's restock page for anything that fits no other aisle. Shop sign band, one line, ~24 characters." },
 
-    { "key": "dayend.market.title", "text": "LAST CALL — TIME TO ORDER", "note": "Title line over the market tablet after the day-end slip. One line." },
+    { "key": "dayend.market.title", "text": "MALIBU CLUB — TIME TO ORDER", "note": "Title line over the market tablet after the day-end slip. One line." },
     { "key": "dayend.bill.next", "text": "GO TO THE ORDER", "note": "Key under the day-end slip that moves on to the market. One line on the key." },
 
     { "key": "dayend.bill.took_in", "text": "TOOK IN", "note": "Block heading on the day-end slip over the income lines. Body face 16 px, quiet ink." },

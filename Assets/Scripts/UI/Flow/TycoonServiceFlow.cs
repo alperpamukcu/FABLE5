@@ -943,7 +943,9 @@ namespace LastCall.UI
         // aşağı alabiliriz"); the strip, the readout and the bottle's and lid's rests came down with it.
         // -198, not -245 (2026-09-22, the author: "tum nesneleri yukari cek butonlar dahil"): the key row's top
         // is on 123 now and a prop standing on -245 had its foot at screen 81, behind the keys.
-        private const float BenchFootY = -198f;
+        // -245 again (2026-09-22, seventh list: "şişeler ve bardaklarda ekranın altındaki butonlara göre yüksekliği
+        // hizalanmalı"): with the built benches' keys back on the floor, the props' foot is one hand over their heads.
+        private const float BenchFootY = -245f;
         /// <summary>How far over the surface's top the hand may lift a vessel, and how far over a target's
         /// drawn top its mouth must be before it leans (PourHand.Press, 2026-09-14).</summary>
         private const float HandAbove = 20f, ClearOverRim = 6f;
@@ -959,7 +961,7 @@ namespace LastCall.UI
         // off the vessel.
         // -196, not -260 (2026-09-22): the key row rose 43, so the catching vessel rises with it - its foot at
         // screen 130 stands seven clear of the keys' heads.
-        private const float CatchFootY = -196f;
+        private const float CatchFootY = -260f;   // over the floor-row keys again (seventh list)
         /// <summary>The glass stands a little higher than the tin: its sheet has fewer empty rows under its foot.</summary>
         private const float GlassFootLift = 16f;
         /// <summary>A vessel is pouring from this lean on (level, less the lean's own spring).</summary>
@@ -1046,7 +1048,7 @@ namespace LastCall.UI
             // column's width, in grey — the bench's colour is the frame around the key, not the key.
             var rt = PackKeyFlow(panel, "EdgeBack", (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' '),
                 "back", KeyWay, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
-                new Vector2(16f, KeyRowY), () => GoTo(back), out _, out _);
+                new Vector2(16f, KeyRowOn(panel)), () => GoTo(back), out _, out _);
             RegisterFixed(panel, rt);    // ...and so is the way out
             return rt;
         }
@@ -1060,6 +1062,14 @@ namespace LastCall.UI
         /// bench for the keg shelf that is meant to be half in shot.
         /// </summary>
         private const float KeyRowY = 59f;
+        /// <summary>
+        /// THE BUILT BENCHES' KEYS ARE ON THE FLOOR OF THE SCREEN (2026-09-22, the author's seventh list: "Built
+        /// sahnelerinde back to the bar butonu ve bin butonu ekranın altına göre hizalansın"). The row rose to 59 on
+        /// every bench to clear the draught bench's keg rack; the tin and glass benches have no rack, so there the
+        /// row stands 16 off the foot again and the props stand on it. <see cref="KeyRowY"/> is the draught bench's.
+        /// </summary>
+        private const float BuiltKeyRowY = 16f;
+        private float KeyRowOn(RectTransform panel) => panel != null && panel == _tapPanel ? KeyRowY : BuiltKeyRowY;
 
         /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
         private void BrassRim(RectTransform plate)
@@ -1264,7 +1274,7 @@ namespace LastCall.UI
             // the key's left end with the word beside it, on a plate wider than it is tall, so the bottom of every
             // bench is one row of keys - the way out at the left, SERVE IT in the middle, the bin at the right.
             var rt = PackKeyFlow(parent, "Bin", null, null, KeyBin, new Vector2(1, 0),
-                new Vector2(BinKeyW, BinKeyH), new Vector2(-16f, KeyRowY), null, out var btn, out _);
+                new Vector2(BinKeyW, BinKeyH), new Vector2(-16f, KeyRowOn(parent)), null, out var btn, out _);
             RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
             // ONE SIZE, AND CENTRED AS A PAIR (2026-09-22, the author: "font ile cop kutusu iconunun boyutu ayni
             // olmali ve ikisi beraber butona ortalanmali sadece yazi degil"). The drawing was 40x56 beside a 16 px

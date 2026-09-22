@@ -21,6 +21,27 @@ namespace LastCall.UI
     // nothing about construction order or serialisation can have changed.
     public sealed partial class TycoonHud
     {
+        /// <summary>
+        /// THE SLIP COUNTS ITSELF UP (2026-09-22, the author's seventh list: "sayılar 0dan x'e doğru artarak
+        /// yükselsin sırayla yukarıdan aşağı ... en sonunda yıldızlar gelecek"). Every figure the slip prints is
+        /// registered here as it is built - top to bottom, which is print order - as a closure that draws it at a
+        /// share of its value. The beats run them one after another once the paper has landed, and the stars drop
+        /// after the last. A click finishes whatever is counting; nothing skips the paper coming in.
+        /// </summary>
+        private readonly List<System.Action<float>> _billCounts = new List<System.Action<float>>();
+        private int _billCountTicked;
+        /// <summary>How long one figure takes to count up, and how soon the next one starts after it.</summary>
+        private const float CountEach = 0.34f, CountStep = 0.22f;
+        /// <summary>A figure's colour: what came in is green, what went out is the deep red (the money only).</summary>
+        private static readonly Color BillGain = UITheme.Lime[1], BillLoss = UITheme.ViceRed[1];
+
+        /// <summary>The player asked to see the end of whatever is animating: one press of the mouse.</summary>
+        private static bool ClickedToSkip()
+        {
+            var m = UnityEngine.InputSystem.Mouse.current;
+            return m != null && m.leftButton.wasPressedThisFrame;
+        }
+
         private void StepDayEndDue()
         {
             if (!_dayEndDue) return;
@@ -31,7 +52,8 @@ namespace LastCall.UI
             // finishes, so the last thing the night does is finish, and then the books come.
             var run = Run;
             bool washing = run != null && (run.SinkBusy || run.GlassesWashing > 0
-                                           || run.GlassesInHand > 0);
+                                           || run.GlassesInHand > 0)
+                           || (stage != null && stage.WaterPlaying);   // and the basin's last loop has played out
             bool clear = FloorIsClear() && !washing;
             if (!clear)
             {
@@ -136,8 +158,24 @@ namespace LastCall.UI
                 if (_slideRt != null && !Motion.Reduced) return;
                 SetBoardsIn(1f);
                 _dayEndBill.anchoredPosition = _billHome;
-                _endBeat = 3;
                 Sfx.HoldLoop(null);
+                // THE FIGURES COUNT, THEN THE STARS (seventh list). Beat 5 is the counting.
+                _endBeat = 5; _endT = 0f; _billCountTicked = 0;
+                return;
+            }
+
+            if (_endBeat == 5)
+            {
+                float total = _billCounts.Count == 0 ? 0f : (_billCounts.Count - 1) * CountStep + CountEach;
+                if (Motion.Reduced || ClickedToSkip()) _endT = total;
+                for (int i = 0; i < _billCounts.Count; i++)
+                {
+                    float k = Mathf.Clamp01((_endT - i * CountStep) / CountEach);
+                    if (k > 0f && i >= _billCountTicked) { _billCountTicked = i + 1; if (_endT < total) Sfx.Play("hover", 0.18f); }
+                    _billCounts[i](1f - (1f - k) * (1f - k));
+                }
+                if (_endT < total) return;
+                _endBeat = 3;
                 StartStarDrop(_endStarFrac);
                 if (Run != null && Run.Money < 0) Sfx.Play("debt_alarm", 0.8f);
                 return;
@@ -148,6 +186,7 @@ namespace LastCall.UI
             // the step it took printed beside it (2026-08-25).
             if (_endBeat == 4)
             {
+                if (_standT >= 0f && !Motion.Reduced && ClickedToSkip()) _standT = StandClimb;
                 StepStandingClimb();
                 if (_standT >= 0f) return;
                 _endBeat = 0;
@@ -155,6 +194,8 @@ namespace LastCall.UI
                 return;
             }
 
+            // Beat 3: a click drops every star that has not landed yet (seventh list).
+            if (_starT >= 0f && ClickedToSkip()) _starT = 99f;
             // Beat 3: the shake lives here, so the paper is only ever moved by one thing.
             if (_billShake > 0f)
             {
@@ -338,7 +379,12 @@ namespace LastCall.UI
             var stampPlate = _billStamp.gameObject.AddComponent<Image>();
             stampPlate.color = new Color(BillRed.r, BillRed.g, BillRed.b, 0.10f);
             stampPlate.raycastTarget = false;
-            Frame(_billStamp, 3f, new Color(BillRed.r, BillRed.g, BillRed.b, 0.85f));
+            // THICKER (seventh list: "damga görselleri daha kalın ve daha canlı renkler olmalı"): a five-unit rubber
+            // edge with a hairline inner ring, the way a real stamp's border prints double.
+            Frame(_billStamp, 5f, new Color(BillRed.r, BillRed.g, BillRed.b, 0.95f));
+            var innerRing = NewRect("Inner", _billStamp);
+            Stretch(innerRing, Vector2.zero, Vector2.one, new Vector2(8f, 8f), new Vector2(-8f, -8f));
+            Frame(innerRing, 2f, new Color(BillRed.r, BillRed.g, BillRed.b, 0.95f));
             _billStampInk = NewText("W", _billStamp, _display, 24, TextAnchor.MiddleCenter,
                 new Color(BillRed.r, BillRed.g, BillRed.b, 0.92f));
             Stretch(_billStampInk.rectTransform, Vector2.zero, Vector2.one,
@@ -358,14 +404,16 @@ namespace LastCall.UI
             _stampKind = kind;
             if (_billStamp == null || kind == StampKind.None) return;
             bool good = kind == StampKind.Record;
-            var ink = good ? new Color(0.16f, 0.44f, 0.20f) : BillRed;
-            _billStamp.GetComponent<Image>().color = new Color(ink.r, ink.g, ink.b, 0.10f);
+            // The truer inks (seventh list): the ramps' own saturated steps, not a faded brown-green.
+            var ink = good ? UITheme.Lime[2] : UITheme.ViceRed[2];
+            _billStamp.GetComponent<Image>().color = new Color(ink.r, ink.g, ink.b, 0.16f);
             foreach (var edge in _billStamp.GetComponentsInChildren<Image>(true))
-                if (edge.transform != _billStamp)
-                    edge.color = new Color(ink.r, ink.g, ink.b, 0.85f);
-            _billStampInk.color = new Color(ink.r, ink.g, ink.b, 0.92f);
+                if (edge.transform != _billStamp && edge.GetComponent<Text>() == null)
+                    edge.color = new Color(ink.r, ink.g, ink.b, 0.95f);
+            _billStampInk.color = new Color(ink.r, ink.g, ink.b, 1f);
+            if (_shop != null) _billStampInk.font = _shop;   // the heaviest face the game ships
             _billStampInk.text = UIText.T(good ? "dayend.stamp.record" : "dayend.stamp.disgrace");
-            _billStamp.sizeDelta = new Vector2(good ? 268f : 236f, 42f);
+            _billStamp.sizeDelta = new Vector2(good ? 288f : 256f, 54f);
         }
 
         /// <summary>
@@ -409,7 +457,7 @@ namespace LastCall.UI
             _billStamp.localRotation = Quaternion.Euler(0, 0,
                 Mathf.Lerp(-26f, -9f, e) + Mathf.Sin(k * Mathf.PI * 4f) * 3f * (1f - k));
             var c = _billStampInk.color;
-            _billStampInk.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(k * 2.2f) * 0.92f);
+            _billStampInk.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(k * 2.2f));
             if (k < 1f) return;
             _billStamp.localScale = Vector3.one;
             _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
@@ -533,7 +581,9 @@ namespace LastCall.UI
             score.rectTransform.pivot = new Vector2(1, 0.5f);
             score.horizontalOverflow = HorizontalWrapMode.Overflow;
             score.verticalOverflow = VerticalWrapMode.Overflow;
-            score.text = BarRating.ExactStarsFor(v.Satisfaction).ToString("0.0");
+            double critic = BarRating.ExactStarsFor(v.Satisfaction);
+            score.text = critic.ToString("0.0");
+            _billCounts.Add(t => score.text = (critic * t).ToString("0.0"));
 
             return y + rowH;
         }
@@ -570,10 +620,13 @@ namespace LastCall.UI
         /// wide for the small ones or too narrow for the big one. `preferredWidth` answers
         /// for the face and size actually set, which is the only width that can be right.
         /// </summary>
-        private void BillFigure(RectTransform row, int amount, string sign, Color ink,
+        private float BillFigure(RectTransform row, int amount, string sign, Color ink,
             Font font, int size)
         {
             const float Mark = 16f, Gap = 3f;
+            // THE MONEY IN ITS OWN COLOUR (seventh list): the digits, the dollar and the sign are green when the
+            // line brought money in and the deep red when it took money out, whatever ink the label is in.
+            ink = sign == "-" ? BillLoss : BillGain;
             // The digits, hard right — the column every figure on the slip lands in.
             var digits = NewText("V", row, font, size, TextAnchor.MiddleRight, ink);
             Place(digits.rectTransform, new Vector2(1, 0.5f), new Vector2(150, BillRowH),
@@ -583,6 +636,15 @@ namespace LastCall.UI
             digits.verticalOverflow = VerticalWrapMode.Overflow;
             digits.text = Mathf.Abs(amount).ToString();
             float digitsW = digits.preferredWidth;
+            int target = Mathf.Abs(amount);
+            RectTransform cashRt = null, signRt = null;   // the mark and the sign ride the digits while they count
+            _billCounts.Add(t =>
+            {
+                digits.text = Mathf.RoundToInt(target * t).ToString();
+                float w = digits.preferredWidth;
+                if (cashRt != null) cashRt.anchoredPosition = new Vector2(-(w + Gap), 0);
+                if (signRt != null) signRt.anchoredPosition = new Vector2(-(w + Gap + Mark + Gap), 0);
+            });
 
             var cash = NewRect("$", row);
             Place(cash, new Vector2(1, 0.5f), new Vector2(Mark, Mark),
@@ -591,8 +653,9 @@ namespace LastCall.UI
             var ci = cash.gameObject.AddComponent<Image>();
             ci.sprite = ChromeArt.Mark("cash");
             ci.color = ink; ci.preserveAspect = true; ci.raycastTarget = false;
+            cashRt = cash;
 
-            if (string.IsNullOrEmpty(sign)) return;
+            if (string.IsNullOrEmpty(sign)) return digitsW + Gap + Mark;
             // The sign keeps the type: it belongs to the arithmetic, not to the mark, and a
             // drawn minus beside a drawn dollar would be two symbols with one meaning.
             var s = NewText("S", row, font, size, TextAnchor.MiddleRight, ink);
@@ -602,6 +665,8 @@ namespace LastCall.UI
             s.horizontalOverflow = HorizontalWrapMode.Overflow;
             s.verticalOverflow = VerticalWrapMode.Overflow;
             s.text = sign;
+            signRt = s.rectTransform;
+            return digitsW + Gap + Mark + Gap + s.preferredWidth;
         }
 
         /// <summary>A block's subtotal: a short rule over the figures it adds up, and the
@@ -712,9 +777,10 @@ namespace LastCall.UI
             // gap INSIDE the cell, which is why it can be set solid at any size, and it is
             // already the game's display type. It is wider, so the heavy rows drop to 16 —
             // still the biggest thing on the slip, because nothing else is set in it.
+            // THE LABEL IS IN THE INK; THE MONEY CARRIES THE COLOUR (seventh list).
             var l = NewText("L", row, heavy ? _display : _body, heavy ? 16 : 24,
-                            TextAnchor.MiddleLeft, ink);
-            l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(0.62f, 1);
+                            TextAnchor.MiddleLeft, heavy ? ink : BillInk);
+            l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(1f, 1);
             l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
             // Overflow on both axes: the labels are one short word each, and Truncate at
             // this size drops the WHOLE line the moment the face's line height clears the
@@ -728,8 +794,23 @@ namespace LastCall.UI
             // a SALES of $4 whose 4 is a smear, and RENT's -$14 with it. PressStart2P is not
             // the escape either, at a full 24 units a character "-$1240" would be 144 of the
             // 146 this column has. The regular face is narrow, legible and correct.
-            BillFigure(row, amount, sign, ink, heavy ? _display : _body, heavy ? 16 : 24);
-            return y + BillRowH;
+            float figW = BillFigure(row, amount, sign, ink, heavy ? _display : _body, heavy ? 16 : 24);
+            // NO LABEL RUNS INTO ITS FIGURE (2026-09-22, seventh list: "yazılar sayılara taşabiliyor" - THANKS ·
+            // 2 SHOWN OUT printed straight through its $10). The label stops a hand short of the figure; a label
+            // too long for that drops to the small face, and one too long even then wraps and the row grows.
+            float rowW = BillW - BillInset * 2f;
+            float room = rowW - gutter - figW - 14f;
+            l.rectTransform.offsetMax = new Vector2(-(figW + 14f), 0f);
+            float h = BillRowH;
+            if (l.preferredWidth > room && l.fontSize > 16) l.fontSize = 16;
+            if (l.preferredWidth > room)
+            {
+                l.horizontalOverflow = HorizontalWrapMode.Wrap;
+                int lines = Mathf.CeilToInt(l.preferredWidth / Mathf.Max(1f, room));
+                h = Mathf.Max(BillRowH, lines * 18f + 6f);
+                row.sizeDelta = new Vector2(0, h);
+            }
+            return y + h;
         }
 
         private float BillRule(float y)
@@ -798,6 +879,12 @@ namespace LastCall.UI
             score.rectTransform.anchoredPosition = new Vector2(left + Star + Gap, 0);
             tail.rectTransform.anchoredPosition =
                 new Vector2(left + Star + Gap + scoreW + Gap * 2f, 0);
+            _billCounts.Add(t =>
+            {
+                score.text = (stars * t).ToString("0.0");
+                tail.text = UIText.T("dayend.score.counts", ("served", Mathf.RoundToInt(served * t)),
+                                     ("walked", Mathf.RoundToInt(stormed * t)));
+            });
             return y + H + 2f;
         }
 
@@ -843,10 +930,41 @@ namespace LastCall.UI
             mi.sprite = ItemArt.Medal(true, Icon); mi.preserveAspect = true; mi.raycastTarget = false;
             x += Icon + Gap;
             cmf.rectTransform.anchoredPosition = new Vector2(x, 0);
+            _billCounts.Add(t =>
+            {
+                svc.text = UIText.T("dayend.house.service", ("rating", (service * t).ToString("0.0")));
+                cmf.text = UIText.T("dayend.house.comfort", ("rating", (comfort * t).ToString("0.0")));
+            });
             return y + H + 2f;
         }
 
         private float BillNote(float y, string text) => BillNote(y, text, BillQuiet);
+
+        /// <summary>A block's head (seventh list: "başlıkları kalın ... farklı renkte"): the heavy face, wide-
+        /// tracked caps, in the colour of the money under it, with a short rule of the same ink under the word.</summary>
+        private float BillHead(float y, string text, Color ink)
+        {
+            var head = NewText("H", _invoiceRows, _shop != null ? _shop : _display, 16, TextAnchor.MiddleLeft, ink);
+            head.rectTransform.anchorMin = new Vector2(0, 1);
+            head.rectTransform.anchorMax = new Vector2(1, 1);
+            head.rectTransform.pivot = new Vector2(0.5f, 1);
+            head.rectTransform.sizeDelta = new Vector2(0, 20f);
+            head.rectTransform.anchoredPosition = new Vector2(0, -y);
+            head.horizontalOverflow = HorizontalWrapMode.Overflow;
+            head.verticalOverflow = VerticalWrapMode.Overflow;
+            var sb = new System.Text.StringBuilder();
+            foreach (var ch in text ?? "") { sb.Append(ch); if (ch != ' ' && ch <= '\u024F') sb.Append('\u2009'); }
+            head.text = sb.ToString().TrimEnd('\u2009');
+            var rule = NewRect("U", head.rectTransform);
+            rule.anchorMin = rule.anchorMax = new Vector2(0f, 0f);
+            rule.pivot = new Vector2(0f, 1f);
+            rule.sizeDelta = new Vector2(Mathf.Min(head.preferredWidth, 200f), 2f);
+            rule.anchoredPosition = new Vector2(0f, 1f);
+            var ri = rule.gameObject.AddComponent<Image>();
+            ri.color = new Color(ink.r, ink.g, ink.b, 0.8f);
+            ri.raycastTarget = false;
+            return y + 25f;
+        }
 
         private float BillNote(float y, string text, Color ink, bool centred = false)
         {
@@ -921,6 +1039,11 @@ namespace LastCall.UI
             plate.type = Image.Type.Sliced;
             plate.pixelsPerUnitMultiplier = 0.5f;
             plate.raycastTarget = false;
+            // DOWN A REGISTER (2026-09-22, seventh list: "kullanılan arkaplana uygun bir renk seçimi"): the card's
+            // plum field at full strength was the brightest thing on a screen whose room is scrimmed to night, so
+            // the boards shouted over the slip they stand beside. Multiplied down, the field is the night the room
+            // is in and the magenta rule around it stays lit.
+            plate.color = new Color(0.56f, 0.5f, 0.64f, 1f);
             board.Group = board.Root.gameObject.AddComponent<CanvasGroup>();
             board.Group.blocksRaycasts = false;
 
@@ -953,6 +1076,58 @@ namespace LastCall.UI
             // number this file made up: the head is the top 30 rows of the drawing at 2×.
             board.Body.anchoredPosition = new Vector2(0, -68f);
             return board;
+        }
+
+        /// <summary>
+        /// A PARAGRAPH BREAK IN THE FRAME'S OWN MAGENTA (seventh list: "paragrafı bölmek için kullanılan düz
+        /// çizgilerin yerini pembe UI'ın çerçevesinden yapabilirsin"): a five-unit bar - highlight, body, shade,
+        /// the steps the plate's rule is drawn in - run out to the frame on both sides, so the board reads as one
+        /// frame divided into rooms rather than a panel with hairlines laid on it.
+        /// </summary>
+        private void BoardDivider(RectTransform body, ref float y)
+        {
+            y += 3f;
+            var bar = NewRect("Divider", body);
+            bar.anchorMin = new Vector2(0, 1); bar.anchorMax = new Vector2(1, 1);
+            bar.pivot = new Vector2(0.5f, 1);
+            bar.offsetMin = new Vector2(-(BoardPad - 6f), 0f); bar.offsetMax = new Vector2(BoardPad - 6f, 0f);
+            bar.sizeDelta = new Vector2(bar.sizeDelta.x, 5f);
+            bar.anchoredPosition = new Vector2(0, -y);
+            foreach (var (row, h, c) in new[] { (0f, 1f, UITheme.Magenta[4]), (1f, 3f, UITheme.Magenta[3]), (4f, 1f, UITheme.Magenta[1]) })
+            {
+                var strip = NewRect("S", bar);
+                strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
+                strip.pivot = new Vector2(0.5f, 1);
+                strip.sizeDelta = new Vector2(0, h);
+                strip.anchoredPosition = new Vector2(0, -row);
+                var si = strip.gameObject.AddComponent<Image>();
+                si.color = c; si.raycastTarget = false;
+            }
+            y += 5f + 7f;   // 15 in all, the hairline's own budget: the boards' height is fixed
+        }
+
+        /// <summary>A DARK CARD behind what the board wants read first (seventh list: "öne çıkmasını istediğin
+        /// şeylerin arkasını karartacak kart"). Made at the block's top and sized by <see cref="CloseCard"/> once
+        /// the block knows how tall it came out; it goes to the back of the body so the block draws over it.</summary>
+        private RectTransform OpenCard(RectTransform body, float y)
+        {
+            var card = NewRect("Card", body);
+            card.anchorMin = new Vector2(0, 1); card.anchorMax = new Vector2(1, 1);
+            card.pivot = new Vector2(0.5f, 1);
+            card.anchoredPosition = new Vector2(0, -(y - 4f));
+            var ci = card.gameObject.AddComponent<Image>();
+            ci.sprite = ChromeArt.Card();
+            ci.type = Image.Type.Sliced;
+            ci.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.72f);
+            ci.raycastTarget = false;
+            card.SetAsFirstSibling();
+            return card;
+        }
+
+        private static void CloseCard(RectTransform card, float yTop, float yBottom)
+        {
+            if (card == null) return;
+            card.sizeDelta = new Vector2(8f, Mathf.Max(8f, yBottom - yTop + 8f));
         }
 
         /// <summary>Five stars whose lit halves can be re-scored every frame — the star gate's
@@ -1128,21 +1303,11 @@ namespace LastCall.UI
                     net >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
             }
 
-            // The week's own subtotal, which is the one number a week of receipts is for.
-            y += 6f;
-            var foot = NewRect("Foot", body);
-            foot.anchorMin = new Vector2(0, 1); foot.anchorMax = new Vector2(1, 1);
-            foot.pivot = new Vector2(0.5f, 1);
-            foot.sizeDelta = new Vector2(0, 1);
-            foot.anchoredPosition = new Vector2(0, -y);
-            var fi = foot.gameObject.AddComponent<Image>();
-            // 0.45, not 0.28 (2026-09-07, measured in the shot). A rule is what tells the
-            // reader that the nights above it and the totals below it are different KINDS of
-            // number; at 28% over this plate's navy it was invisible, so the board read as
-            // eleven rows in a heap. Cream[2] carries further than Cream[1] at the same alpha.
-            fi.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.45f);
-            fi.raycastTarget = false;
-            y += 8f;
+            // The week's own subtotal, which is the one number a week of receipts is for. The nights above
+            // and the totals below are different KINDS of number; the frame's divider says so (seventh list).
+            BoardDivider(body, ref y);
+            float billsTop = y;
+            var billsCard = OpenCard(body, y);
 
             // TWO LINES, AND THEY NAME THE COLUMN ABOVE THEM. The foot used to be "THE WEEK
             // SO FAR" against a single net; it totals both figures now, and the labels are
@@ -1160,20 +1325,15 @@ namespace LastCall.UI
             WeekFoot(body, ref y, UIText.T("dayend.week.fines"), run.DayFines, run.DayFines > 0 ? "-" : "",
                 run.DayFines > 0 ? UITheme.ViceRed[4] : UITheme.Cream[1]);
 
-            y += 6f;
-            var foot2 = NewRect("Foot2", body);
-            foot2.anchorMin = new Vector2(0, 1); foot2.anchorMax = new Vector2(1, 1);
-            foot2.pivot = new Vector2(0.5f, 1);
-            foot2.sizeDelta = new Vector2(0, 1);
-            foot2.anchoredPosition = new Vector2(0, -y);
-            var f2i = foot2.gameObject.AddComponent<Image>();
-            f2i.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, 0.45f);
-            f2i.raycastTarget = false;
-            y += 8f;
+            CloseCard(billsCard, billsTop, y);
+            BoardDivider(body, ref y);
+            float weekTop = y;
+            var weekCard = OpenCard(body, y);
 
             WeekFoot(body, ref y, UIText.T("dayend.week.taken"), weekTake, "", UITheme.Cream[3]);
             WeekFoot(body, ref y, UIText.T("dayend.week.net"), weekNet, weekNet >= 0 ? "+" : "-",
                 weekNet >= 0 ? UITheme.Lime[4] : UITheme.ViceRed[4]);
+            CloseCard(weekCard, weekTop, y);
         }
 
         /// <summary>One night's figure in the week's right-hand column: the sign kept out of
@@ -1246,6 +1406,7 @@ namespace LastCall.UI
             _standBoard.Reading.text = UIText.T("dayend.stand.night", ("day", run.Day));
 
             float y = 4f;
+            var headCard = OpenCard(body, y);   // the standing itself, on its own card (seventh list)
             // THE STANDING, AS BIG AS IT IS IMPORTANT. Five 40px stars is the largest star
             // row in the game, which is correct: this is the number the whole loop is about.
             _standStars = LiveStarRow(body, new Vector2(0.5f, 1), new Vector2(0, -y), 40f, 8f,
@@ -1360,15 +1521,10 @@ namespace LastCall.UI
             _standDeltaChip.gameObject.SetActive(false);   // it lands when the climb does
             y += 34f;
 
-            var rule = NewRect("Rule2", body);
-            rule.anchorMin = new Vector2(0, 1); rule.anchorMax = new Vector2(1, 1);
-            rule.pivot = new Vector2(0.5f, 1);
-            rule.sizeDelta = new Vector2(0, 1);
-            rule.anchoredPosition = new Vector2(0, -y);
-            var rui = rule.gameObject.AddComponent<Image>();
-            rui.color = new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.28f);
-            rui.raycastTarget = false;
-            y += 12f;
+            CloseCard(headCard, 4f, y - 4f);
+            BoardDivider(body, ref y);
+            float readTop = y;
+            var readCard = OpenCard(body, y);
 
             // The readings that explain the step: the two the night was made of (GDD 27 —
             // the night files the LOWER, which is why the board shows both), what tonight
@@ -1386,8 +1542,8 @@ namespace LastCall.UI
             y = StandRow(y, "CEILING", UIText.T("dayend.stand.ceiling"), ceiling.ToString("0.0"),
                 capped ? UITheme.ViceRed[4] : UITheme.Cream[3], true);
             y = StandRow(y, "TOMORROW", UIText.T("dayend.stand.tomorrow"), CrowdName(run.CrowdTomorrow), UITheme.Cyan[3], false);
-
-            y += 6f;
+            CloseCard(readCard, readTop, y);
+            y += 2f;
             string note = capped
                 ? UIText.T("dayend.stand.capped")
                 : !double.IsNaN(rung) && rung <= BarRating.MaxStars
@@ -1886,6 +2042,7 @@ namespace LastCall.UI
             // The lines are taken from what was POURED (`visit.Served`) and priced at
             // `PaidBase`, so a night where the player misread somebody still adds up.
             foreach (Transform old in _invoiceRows) Destroy(old.gameObject);
+            _billCounts.Clear();
             if (_billWhen != null)
                 _billWhen.text = CalendarFor(run.Day) + "  ·  " + CrowdName(run.CrowdToday);
             float y = 0f;
@@ -1941,7 +2098,7 @@ namespace LastCall.UI
             int paidOut = run.DayExpenses;   // rent, stock, shop — and the law's fines
 
             y = BillRule(y);
-            y = BillNote(y, UIText.T("dayend.bill.took_in"), BillQuiet);
+            y = BillHead(y, UIText.T("dayend.bill.took_in"), BillGain);
             y = BillRow(y, UIText.T("dayend.bill.sales"), run.DaySales, "", BillInk, false, "sales");
             y = BillRow(y, UIText.T("dayend.bill.tips"), run.DayTips, "", BillInk, false, "tips");
             // The door's two lines print only when they happened (GDD 28 §7 — routine zeros
@@ -1953,7 +2110,7 @@ namespace LastCall.UI
             y = BillSub(y, tookIn, "", BillInk);
 
             y += 4f;
-            y = BillNote(y, UIText.T("dayend.bill.paid_out"), BillQuiet);
+            y = BillHead(y, UIText.T("dayend.bill.paid_out"), BillLoss);
             y = BillRow(y, UIText.T("dayend.bill.rent"), run.DayRent, "-", BillRed, false, "rent");
             y = BillRow(y, UIText.T("dayend.bill.stock"), run.DayStock, "-", BillRed, false, "stock");
             y = BillRow(y, UIText.T("dayend.bill.shop"), run.DayUpgrades, "-", BillRed, false, "shop");
@@ -1977,11 +2134,14 @@ namespace LastCall.UI
             }
 
             FitBillToPaper(y);
+            // Printed at nothing, until the counting beat reaches each figure - unless that beat has run already.
+            if (_endBeat >= 1 && _endBeat <= 2 && !Motion.Reduced)
+                foreach (var count in _billCounts) count(0f);
 
             // The sheet is the ROLL's size; the print is the night's. What varies is how
             // much blank stock is left above the foot tear — which is how receipts work.
             if (_billNext != null)
-                _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 34f));
+                _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 30f));   // the pack key is 56 tall: its foot two over the frame's
 
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);
