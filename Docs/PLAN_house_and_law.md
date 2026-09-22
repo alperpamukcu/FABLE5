@@ -312,12 +312,15 @@ enter the game (the house rule), so those three rows stay out of `fixtures.json`
 
 - Painting rungs 2–3 and the marble sink: generated, reported in HTML, shipped through the
   fixture tools; the `comfort` numbers of GDD 27 §3.1 already wait for them in the design.
-  **The sink is drawn and reported (2026-09-23)** — `Tools/sink_marble.py` cuts the author's own
-  basin in the room's own two marbles (the rose and the pink of their floors), keeping the drawing's
-  shading, its ink and its fittings; four candidates stand in `Docs/reports/sink_marble/`, each
-  photographed IN THE ROOM by hanging it on the real fixture at runtime. It enters `fixtures.json`
-  when the author picks one — $140 · +0.8 · 3.0★, with its water strip derived by
-  `Tools/sink_water_gen.py`. The picture rungs still need art the credits cannot buy until 7 October.
+  **The marble sink was drawn, reported and REFUSED (2026-09-23)** — `Tools/sink_marble.py` cut the
+  author's own basin in the room's own two marbles (the rose and the pink of their floors), keeping
+  the drawing's shading, its ink and its fittings; four candidates were photographed IN THE ROOM by
+  hanging each on the real fixture at runtime, and the author turned all four down (*“sinklerin
+  hiçbirini beğenmedim eklenmesin”*). Nothing shipped and `fixtures.json` is untouched: the sink
+  ladder still ends at brass, and GDD 27 §3.1's third rung still waits on a drawing. The candidates
+  stay in `Docs/reports/sink_marble/` as the record of what was tried — **not** as a shelf to ship
+  from. A new direction is tried only if the author asks for one. The picture rungs still need art
+  the credits cannot buy until 7 October.
 - The altered card (flag tell): `Forgery.Altered`, the HUD's mismatched flag, a second sim row.
 - Balance pass two on the 200-run report with everything on; GDD_MEVCUT as-built.
 

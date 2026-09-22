@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 """THE MARBLE SINK — rung 3 of the `sink` ladder (GDD 27 §3.1: marble $140 · +0.8 · 3.0★).
 
+REFUSED, 2026-09-23. The author saw all four candidates in the room and turned them all down
+("sinklerin hiçbirini beğenmedim eklenmesin"). Nothing from here is in the game and nothing from
+here may be shipped: this script and `Docs/reports/sink_marble/` are the RECORD of an attempt.
+Run it again only if the author asks for a new direction — the stone, the fittings and the grain
+are separate inputs, so a different stone is a small change and not a new tool.
+
   py -3 -X utf8 Tools/sink_marble.py            # writes the candidates next to a report page
   py -3 -X utf8 Tools/sink_marble.py --out DIR  # ...somewhere else
 

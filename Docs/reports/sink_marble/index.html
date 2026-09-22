@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr"><head><meta charset="utf-8"><title>Mermer lavabo — dört aday</title>
+<html lang="tr"><head><meta charset="utf-8"><title>Mermer lavabo — reddedilen dört aday</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
 :root { --bg:#0D0813; --panel:#1A1023; --ink:#F2E8D5; --ink2:#C9BCA8; --accent:#E8A33D; }
@@ -19,7 +19,12 @@ th, td { border-bottom:1px solid #2A1E38; padding:6px 14px 6px 0; text-align:lef
 th { color:var(--ink); font-weight:normal; }
 </style></head><body><main>
 
-<h1>Mermer lavabo — dört aday</h1>
+<h1>Mermer lavabo — dört aday <em>(REDDEDİLDİ)</em></h1>
+<div class="ask"><strong>2026-09-23, yazar: “sinklerin hiçbirini beğenmedim eklenmesin”.</strong>
+Dördü de düştü; oyuna hiçbiri girmedi, <code>fixtures.json</code> değişmedi. Bu sayfa yalnızca
+<strong>neyin denendiğinin kaydı</strong> — buradan bir aday sevk EDİLMEZ. Lavabo merdiveni bugün olduğu gibi
+pirinçte (2. basamak) bitiyor; 3. basamağın tasarımdaki satırı (GDD 27 §3.1) çizimini beklemeye devam ediyor.
+Yeni bir yön (başka taş, başka malzeme, başka silüet) ancak yazar söylerse denenir.</div>
 <p>2026-09-23. Lavabo merdiveninin <strong>3. basamağı</strong> (GDD 27 §3.1: mermer $140 · konfor +0,8 · 3,0★)
 tasarımda yazılı ama çizimi olmadığı için <code>fixtures.json</code>'a giremiyordu — H6'nın açık üç satırından biri.
 Hiçbir şey üretilmedi: <strong>silüet senin lavabon, mermer de odanın kendi mermeri</strong>.</p>
@@ -52,20 +57,21 @@ burada verilmeli, paletin üstünde değil.</p>
 <figure><img src="room_M4_rose_steel.png" alt="M4 gül mermer, çelik armatür"><figcaption><strong>M4</strong> — gül mermer, çelik armatür.</figcaption></figure>
 </div>
 
-<h2>3 · Girerse ne olur</h2>
+<h2>3 · Girseydi ne olacaktı</h2>
 <table>
 <tr><th>Basamak</th><th>Fiyat</th><th>Konfor</th><th>Yıldız kapısı</th><th>Not</th></tr>
 <tr><td>çelik (<code>counter_sink</code>)</td><td>$40</td><td>+0,15</td><td>0★</td><td>bugün</td></tr>
 <tr><td>pirinç (<code>sink_brass</code>)</td><td>$85</td><td>+0,40</td><td>1,5★</td><td>bugün</td></tr>
 <tr><td><strong>mermer</strong> (<code>sink_marble</code>)</td><td><strong>$140</strong></td><td><strong>+0,80</strong></td><td><strong>3,0★</strong></td><td>GDD 27 §3.1'de yazılı, çizimi bekliyordu</td></tr>
 </table>
-<p>Seçtiğin aday <code>Assets/Resources/Fixtures/fx_sink_marble.png</code> olarak iner, akan su şeridi kendi
-zincirinden türetilir (<code>Tools/sink_water_gen.py</code> — musluğun ağzını ve teknenin su çizgisini çizimden
-okuyor), <code>fixtures.json</code>'a üçüncü basamak eklenir ve merdiven testi (her basamak daha pahalı, daha çok
-konfor, daha az yıldız istemez) onu da tutar.</p>
+<p>Seçilen aday <code>Assets/Resources/Fixtures/fx_sink_marble.png</code> olarak inecek, akan su şeridi kendi
+zincirinden türetilecekti (<code>Tools/sink_water_gen.py</code> — musluğun ağzını ve teknenin su çizgisini
+çizimden okur), <code>fixtures.json</code>'a üçüncü basamak eklenecek ve merdiven testi (her basamak daha pahalı,
+daha çok konfor, daha az yıldız istemez) onu da tutacaktı. <strong>Hiçbiri olmadı:</strong> merdiven pirinçte
+bitiyor, bu satır tasarımda açık kaldı.</p>
 
-<div class="ask"><strong>Karar:</strong> M1 · M2 · M3 · M4 — ya da “hiçbiri”. Taş ile armatürü ayrı da
-söyleyebilirsin (“pembe taş ama çelik musluk” gibi); ikisi bağımsız üretiliyor. Damar sayısı/yeri de
-söylenebilir — şu an üç damar var, teknenin perspektifini izliyorlar.</div>
+<div class="ask"><strong>Karar verildi: hiçbiri.</strong> (2026-09-23) Ne sevk edildi ne de bir daha
+denenecek; yeni bir yön gelirse <code>Tools/sink_marble.py</code> duruyor — taş, armatür ve damar ayrı ayrı
+verilebiliyor.</div>
 
 </main></body></html>
