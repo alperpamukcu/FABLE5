@@ -36,6 +36,7 @@
     { "key": "rank.cert.class.door", "text": "THE DOOR", "note": "Caption over the unlock tile for the door (ID papers, the kick). 8 px, ~12 characters." },
     { "key": "rank.cert.class.bench", "text": "THE BENCH", "note": "Caption over the unlock tile for the bar spoon. 8 px, ~12 characters." },
     { "key": "rank.cert.class.draught", "text": "THE TAPS", "note": "Caption over the unlock tiles for a new draught line. 8 px, ~12 characters." },
+        { "key": "rank.cert.class.room", "text": "THE ROOM", "note": "Caption over the unlock tiles for the fittings the market sells for the room (walls, lamps, tables) at this rank. 8 px, ~12 characters." },
     { "key": "rank.cert.class.market", "text": "THE MARKET", "note": "Caption over the unlock tiles for bottles and jars that appear in the market at this rank. 8 px, ~12 characters." },
     { "key": "rank.cert.class.book", "text": "THE BOOK", "note": "Caption over the unlock tiles for recipes that can be bought at this rank. 8 px, ~12 characters." },
     { "key": "rank.tile.ice", "text": "ICE", "note": "Name under an unlock tile on the certificate. 8 px, up to two lines of ~10 characters." },

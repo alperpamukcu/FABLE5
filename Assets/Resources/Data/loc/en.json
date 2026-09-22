@@ -1798,6 +1798,7 @@
     { "key": "rank.cert.class.door", "text": "THE DOOR", "note": "Caption over the unlock tile for the door (ID papers, the kick). 8 px, ~12 characters." },
     { "key": "rank.cert.class.draught", "text": "THE TAPS", "note": "Caption over the unlock tiles for a new draught line. 8 px, ~12 characters." },
     { "key": "rank.cert.class.market", "text": "THE MARKET", "note": "Caption over the unlock tiles for bottles and jars that appear in the market at this rank. 8 px, ~12 characters." },
+    { "key": "rank.cert.class.room", "text": "THE ROOM", "note": "Caption over the unlock tiles for the fittings the market sells for the room (walls, lamps, tables) at this rank. 8 px, ~12 characters." },
     { "key": "rank.cert.comfort", "text": "COMFORT", "note": "Label before the five hearts on the rank certificate. 8 px, ~8 characters." },
     { "key": "rank.cert.foot", "text": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE", "note": "Foot line of the certificate on the night the rank is reached. {night} is the night number. 8 px, ~56 characters." },
     { "key": "rank.cert.foot_again", "text": "STANDING AS OF NIGHT {night}", "note": "Foot line of the certificate when it is reopened from the top bar's star row on a later night. {night} is the night number. 8 px, ~30 characters." },

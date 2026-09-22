@@ -563,6 +563,11 @@ namespace LastCall.UI
                 seat.Tail = tailRt.gameObject.AddComponent<Image>();
                 seat.Tail.sprite = ChromeArt.SpeechTail();
                 seat.Tail.raycastTarget = false;
+                // IT GROWS OUT OF ITS TAIL (2026-09-22): the ticket's pivot is its foot, where the spout meets
+                // the head, so an opening scaled about the pivot swells up out of the drinker rather than
+                // materialising over them. Both axes, quick, with a little overshoot.
+                var tagPop = seat.Tag.gameObject.AddComponent<PopIn>();
+                tagPop.Seconds = 0.18f; tagPop.From = 0.42f; tagPop.Overshoot = 0.10f;
 
                 // ── THE SPEECH BALLOON (2026-09-04, the author: "konuşmalar normalde
                 // kafalarının üstlerinde bulunan kartlardan ayrı olarak klasik diyalog
@@ -604,6 +609,8 @@ namespace LastCall.UI
                 seat.SayTail = sayTail.gameObject.AddComponent<Image>();
                 seat.SayTail.sprite = ChromeArt.SpeechTail(ChromeArt.BubbleTone.Drink);
                 seat.SayTail.raycastTarget = false;
+                var sayPop = seat.Say.gameObject.AddComponent<PopIn>();
+                sayPop.Seconds = 0.2f; sayPop.From = 0.38f; sayPop.Overshoot = 0.12f;
 
                 // THE BOLD FACE, AT ITS OWN SIZE (2026-09-06, the author: "kullanılan font
                 // ince ve okunaklı değil ... okunaklılığı ile ön plana çıkan ... bizim

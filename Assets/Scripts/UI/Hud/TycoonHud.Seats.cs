@@ -241,7 +241,7 @@ namespace LastCall.UI
             // up here that is allowed to shout.
             view.SayText.text = line;
             view.SayUntil = Time.unscaledTime + SaySeconds;
-            view.Say.gameObject.SetActive(true);
+            RaiseBubble(view.Say);
             LayOutSay(view);
         }
 
@@ -348,7 +348,7 @@ namespace LastCall.UI
                 view.SayTypeFrom = now;
                 view.SayNextAt = now + SipEvery;
                 Sfx.Play("hover", 0.12f);          // the glass going down again
-                view.Say.gameObject.SetActive(true);
+                RaiseBubble(view.Say);
             }
             if (view.SaidLines == 0) return;
 
@@ -371,6 +371,20 @@ namespace LastCall.UI
                 LayOutSay(view);
             }
             view.SayUntil = now + SaySeconds;      // never times out mid-drink
+        }
+
+        /// <summary>Puts a balloon up, and OPENS it if it was down (2026-09-22): a bubble that is already
+        /// standing while its line grows a word does not pop again on every letter.</summary>
+        private static void RaiseBubble(RectTransform rt)
+        {
+            if (rt == null) return;
+            bool wasUp = rt.gameObject.activeSelf;
+            rt.gameObject.SetActive(true);
+            if (!wasUp)
+            {
+                var pop = rt.GetComponent<PopIn>();
+                if (pop != null) pop.Play();
+            }
         }
 
         /// <summary>Takes a balloon down and forgets what was in it.</summary>
@@ -2715,7 +2729,11 @@ namespace LastCall.UI
                 // counter never shows through it.
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
                 float dim = !glass ? 0.6f : done || wrong ? 0.45f : 1f;
-                prop.Img.color = new Color(baseCol.r * dim, baseCol.g * dim, baseCol.b * dim, 1f);
+                // ...UNDER THE ROOM'S OWN LIGHT (2026-09-22): the dish is a canvas image standing on a lit slab,
+                // so the slab's light is multiplied into it. The dim above still says what the rail is saying.
+                var lit = stage != null ? stage.CounterLight : Color.white;
+                prop.Img.color = new Color(baseCol.r * dim * lit.r, baseCol.g * dim * lit.g,
+                                           baseCol.b * dim * lit.b, 1f);
                 prop.Img.raycastTarget = reachable;
             }
             // THE MAT IS AS LONG AS THE RAIL IS (2026-09-06, the author: "yeni garnish
@@ -3538,23 +3556,38 @@ namespace LastCall.UI
         private const int PerfectMotes = 32, PerfectBackMotes = 20;
 
         /// <summary>The face, its ink and how many of them one serve is worth.</summary>
-        // ── THE CROWD'S EMOJIS (2026-09-08) ───────────────────────────────────
-        // The author's thirty faces, read one by one and sorted by what each says; the
-        // game's beats get the faces that fit them. Numbers are the author's file numbers
-        // (Resources/Emotes/em_<n>). A face with no beat is worse than none, so the ones
-        // not listed here (12 single tear, 18 drooling, 37 dizzy) wait for their beat.
+        // ── THE CROWD'S EMOJIS (2026-09-08, narrowed to ONE FAMILY 2026-09-22) ───────────────────────
+        //
+        // The author's thirty faces, read one by one and sorted by what each says; the game's beats get the
+        // faces that fit them. Numbers are the author's file numbers (Resources/Emotes/em_<n>).
+        //
+        // ONE FAMILY, AND THE RULE IS THE DRAWING (2026-09-22, the author: "musterilerin arkasindan cikan
+        // emojileri duzenle farkli tipte emojiler kullaniliyor kullanilabilecek emojileri sen sec"). The table
+        // used to reach outside the set for the loud beats and it showed: a PILE OF POO for a bad drink, a RED
+        // HORNED DEVIL for a customer storming off, a GREEN sick face, a white burst on top of a yellow one for
+        // a perfect pour. Four different things flying out from behind one drinker, and the crowd stopped having
+        // a single voice. What counts as usable here is one shape and one colour:
+        //
+        //     A YELLOW SQUARE FACE with black features. Marks ON the face are fine - a tear, a heart, spirals
+        //     for eyes, a blush - because they are still that face doing something. Another body colour, another
+        //     object, or anything that changes the silhouette is not.
+        //
+        // Nothing new had to be drawn: twenty-six of the thirty pass, which is more than the ten beats can use.
+        // The four that do not (19 white burst, 65 green sick, 71 poo, 73 red devil) stay on disk - they are the
+        // author's drawings and another screen may want them - they are simply not what the crowd throws. The
+        // three that had no beat before (12 a single tear, 18 drooling, 37 dizzy) are on the table now.
         private enum EmoteBeat { Perfect, Flawless, Another, Close, Wrong, Awful, Patience, Storm, Kicked, Bond }
 
         private static readonly Dictionary<EmoteBeat, int[]> EmoteTable = new Dictionary<EmoteBeat, int[]>
         {
-            [EmoteBeat.Perfect]  = new[] { 85, 6, 50, 51, 19 },
-            [EmoteBeat.Flawless] = new[] { 19, 85, 21 },
+            [EmoteBeat.Perfect]  = new[] { 85, 6, 50, 51 },
+            [EmoteBeat.Flawless] = new[] { 85, 21, 50 },
             [EmoteBeat.Another]  = new[] { 49, 53, 42, 115 },
             [EmoteBeat.Close]    = new[] { 27, 67, 51 },
             [EmoteBeat.Wrong]    = new[] { 35, 1, 10 },
-            [EmoteBeat.Awful]    = new[] { 65, 71, 15 },
+            [EmoteBeat.Awful]    = new[] { 15, 12, 37 },
             [EmoteBeat.Patience] = new[] { 17, 81, 9 },
-            [EmoteBeat.Storm]    = new[] { 73, 9, 23 },
+            [EmoteBeat.Storm]    = new[] { 1, 9, 23 },
             [EmoteBeat.Kicked]   = new[] { 23, 3, 33 },
             [EmoteBeat.Bond]     = new[] { 118, 86 },
         };
@@ -4133,7 +4166,10 @@ namespace LastCall.UI
                 // on it — which is the author's "ikinci siparişte tekrardan görüntüleyebilmeliyiz".
                 bool showBubble = atTheStool && !CellarOpen && !saying && !drinking;
                 if (view.Tag.gameObject.activeSelf != showBubble)
-                    view.Tag.gameObject.SetActive(showBubble);
+                {
+                    if (showBubble) RaiseBubble(view.Tag);
+                    else view.Tag.gameObject.SetActive(false);
+                }
 
                 if (showBubble)
                 {

@@ -1739,6 +1739,7 @@
     {"key": "rank.cert.class.door", "text": "KAPI", "src": "THE DOOR"},
     {"key": "rank.cert.class.draught", "text": "MUSLUKLAR", "src": "THE TAPS"},
     {"key": "rank.cert.class.market", "text": "MARKET", "src": "THE MARKET"},
+    {"key": "rank.cert.class.room", "text": "ODA", "src": "THE ROOM"},
     {"key": "rank.cert.comfort", "text": "KONFOR", "src": "COMFORT"},
     {"key": "rank.cert.foot", "text": "{night}. GECE, BURADA İÇENLERCE VERİLDİ", "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"},
     {"key": "rank.cert.foot_again", "text": "{night}. GECE İTİBARİYLE", "src": "STANDING AS OF NIGHT {night}"},

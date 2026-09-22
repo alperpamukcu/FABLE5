@@ -1540,6 +1540,46 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.102 · Altıncı liste (3/3): açılan hover, açılan baloncuk, tek aileye inen emojiler, duvar basamakları, sertifikada ODA, tezgâhın ışığı (2026-09-22)
+
+- **Pembe hover AÇILIYOR** (yazar: "şişeler ve garnishlerdeki pembe hoverin açılması için bir animasyon ekle"):
+  kartın GÖVDESİ — yuvası değil — kendi ortasından jaluzi gibi açılıyor (`CardOpenFrom` 0,12 → 1,
+  solma süresinin %80'inde tam açık). Yuva şişenin üzerine serilen kopyayı taşıdığı için ölçeklenemez:
+  şişenin kendisi büyüyormuş gibi olurdu. Açılış kartın KENDİ solmasından sürülüyor (ilk deneme ayrı bir
+  bileşenden sürülüyordu ve oyunda kart tam açık geldi, r125).
+- **Konuşma baloncukları ve sipariş fişi AÇILIYOR** (`PopIn`, yeni bileşen): rect kendi pivotu etrafında
+  küçükten tam boya, sonunda hafif bir taşmayla büyüyor. İkisinin de pivotu kuyruğunun ucunda, yani
+  müşterinin başının üstü — baloncuk oradan kabarıyor. Zaten duran bir baloncuğa harf eklenmesi yeniden
+  açmaz (`RaiseBubble` yalnız kapalıyken oynatır).
+- **Emojiler tek aile** (yazar: "farklı tipte emojiler kullanılıyor kullanılabilecek emojileri sen seç"):
+  kural çizimin kendisi — SARI KARE YÜZ, siyah hatlar. Yüzün ÜZERİNDEKİ işaretler (yaş, kalp, sarmal göz)
+  serbest; başka gövde rengi, başka nesne ya da siluet değiştiren bir şey değil. Tablodan çıkanlar: 71 (kaka),
+  73 (kırmızı boynuzlu), 65 (yeşil hasta), 19 (beyaz patlama). Yeni çizim gerekmedi — otuzun yirmi altısı kurala
+  uyuyor; boşta kalan üçü (12 tek damla, 18 salya, 37 sersem) artık bir vuruşa bağlı. Dördü diskte duruyor.
+- **Duvar basamakları 3 yıldızda bitiyor** (yazar: "en üst seviye duvar örneğin 3 yıldız olmalı 5e göre
+  hizalanmamalı"): arka duvar 0 / 0,5 / 1 / 2 / 3, sağ duvar 0 / 0,5 / 1 / 1,5 / 2 / 2,5 / 3. Önceden arka
+  duvarın sonu 2, sağ duvarın sonu 3,5'ti — biri yolun yarısında bitiyor, diğeri hiç görülmeyen bir basamakta.
+- **Sertifikada ODA** (yazar: "duvar ve diğer geliştirmeleri de sertifikaya eklemelisin"):
+  `TycoonRun.FixturesOpeningAt` — o basamağın açtığı, henüz odada olmayan demirbaşlar; sertifikada
+  `rank.cert.class.room` sınıfında, pazarın kendi SWATCH çiziminden (duvarın kendi resmi 640×360 oda,
+  64 pikselik kutuda barın küçücük fotoğrafı gibi duruyordu). **Kağıt 700'de kapandı** (`PaperMaxH`):
+  demirbaşlar eklenince iki bant da iki sıraya çıktı ve kağıt 780 oldu — 720'lik ekranda başlık üstten,
+  mühür alttan taşıyordu (r125). Açılanların bandı iki sırasını korur, SIRADAKİ bant kalanı alır ve
+  kendi kesim kutusu kaç tane olduğunu söyler.
+- **Tezgâhın ışığı HUD'a da düşüyor** (yazar: "tezgahta menü, garnish bunlarda ana sahnedeki
+  ışıklandırmalardan etkilenmeli"): `DiegeticStage.CounterLight` — odanın ortam rengi, barın kendi sırası ve
+  sarkıtların taşın üzerine koyduğu kadar beyaza çekilmiş, altında bir taban (tezgâh odadaki her zaman
+  aydınlık olan yüzeydir). Rayın kaşıkları bununla çarpılıyor; menü YARISI kadar — 2026-09-06'da yazar
+  "menü ışıklandırmalardan etkilenmesin O KADAR, daha ön planda dursun" demişti, iki not birden ancak
+  yarıda doğru.
+- **Açıkta kalan tek madde**: dökülen sıvının bardağın ÖNÜNDE çizilmesi. Ölçüldü (r125): sıvı tek bir
+  metaball alanı ve bardağın ARKASINDA duruyor (`TapSurface`: ... Tower, MetaballFluid, Pint ...), bu da
+  bardağın içindeki içki için DOĞRU. Düzgün çözüm havadaki damlaları (stream + splash yuvaları) kendi
+  ikinci yüzeyine ayırıp onu bardağın önüne, `_Front` şeridinin arkasına koymak — `MetaballFluid`'in
+  render yolunu bölmek demek. Yazar şu anda `GlassArt`/`GlassDecor` üzerinde çalışıyor (limon
+  katmanı), çakışmamak için bu madde o iş inince yapılacak.
+- Doğrulama: EditMode 624/625, PlayMode 13/13. Oyunda: r125 ilk bakış, r126 ölçüm.
+
 ### 9.101 · Altıncı liste (2/3): tezgahın üç sahnesi, fıçı rafı, pixel-toon ölçerler, biranın garnisi, takılan bardak, damlalar (2026-09-22)
 
 - **Sütun pembe şeride hizalandı** (`ColStepsY` 216→259, `ColDialY` 84→127): ölçüldü (r114) — tezgâhın

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -187,6 +187,10 @@ namespace LastCall.UI
         /// every hint in this room answers at the same speed.</summary>
         private const float BookLabelFade = 0.14f;
 
+        /// <summary>How much of the counter's light the menu takes: half, which is both of the author's notes
+        /// about it at once (see DressBookProp).</summary>
+        private const float BookLightShare = 0.5f;
+
         /// <summary>
         /// The book, lit by the room and answering the pointer. Called every frame from
         /// <see cref="PlaceBookProp"/>, which already runs there.
@@ -204,14 +208,16 @@ namespace LastCall.UI
         private void DressBookProp()
         {
             if (stage == null) return;
-            // THE MENU STANDS OUT OF THE EVENING (2026-09-06, the author: "menü
-            // ışıklandırmalardan etkilenmesin o kadar, daha ön planda dursun"). It was tinted
-            // by the room from 2026-08-25, so that it belonged to the bar rather than sitting
-            // on top of it; the author has decided the other way — the one prop that opens a
-            // whole screen keeps its own daylight and reads as the nearest thing on the bar.
-            // The hover glow still works, off a rest colour that no longer moves.
-            if (_bookGlow != null) _bookGlow.Retint(Color.white);
-            else if (_bookImg != null) _bookImg.color = Color.white;
+            // THE MENU TAKES THE ROOM'S LIGHT AGAIN, BUT ONLY HALF OF IT (2026-09-22). It was tinted by the
+            // room from 2026-08-25; on 2026-09-06 the author took the tint off ("menü ışıklandırmalardan
+            // etkilenmesin O KADAR, daha ön planda dursun") and it has stood at noon ever since; and on
+            // 2026-09-22 they asked for the other half back ("tezgahta menü, garnish bunlarda ana sahnedeki
+            // ışıklandırmalardan etkilenmeli"). Both notes are true at once at HALF: the book moves with the
+            // evening, so it belongs to the bar, and it stays the brightest thing on the counter, so it still
+            // reads as the nearest. The hover glow works off whatever rest colour this leaves it.
+            var lit = Color.Lerp(Color.white, stage.CounterLight, BookLightShare);
+            if (_bookGlow != null) _bookGlow.Retint(lit);
+            else if (_bookImg != null) _bookImg.color = lit;
 
             if (_bookLabelGroup != null)
             {

@@ -275,6 +275,23 @@ namespace LastCall.Core
             return list;
         }
 
+        /// <summary>
+        /// The room's fittings, not yet standing in it, whose star gate is exactly <paramref name="stars"/>
+        /// (2026-09-22, the author: "duvar ve diger gelistirmeleri de sertifikaya eklemelisin"). The walls, the
+        /// lamps, the tables and everything else the market sells for the room are gated by stars the same way
+        /// the bottles and the pages are; nothing but the certificate was reading that gate.
+        /// </summary>
+        public List<FixtureDefinition> FixturesOpeningAt(double stars)
+        {
+            var list = new List<FixtureDefinition>();
+            foreach (var f in _fixtureCatalogue)
+            {
+                if (f == null || f.StartsInTheRoom || _fixtures.Contains(f.Id)) continue;
+                if (Math.Abs(f.Stars - stars) < BarRank.Epsilon) list.Add(f);
+            }
+            return list;
+        }
+
         /// <summary>The book's locked pages, not yet bought, whose star gate is exactly <paramref name="stars"/>.</summary>
         public List<RecipeDefinition> RecipesOpeningAt(double stars)
         {

@@ -58,6 +58,9 @@ namespace LastCall.UI
         /// <summary>The sheet: 1024 wide, always; 16:9 (576) at the least, taller only when the tiles need it —
         /// the author's rule: never wider, only taller.</summary>
         private const float PaperW = 1024f, PaperMinH = 576f, PaperSide = 48f;
+        /// <summary>The tallest the sheet may stand: the 720 field less a hand of room at each end, so the title
+        /// and the seal are both in shot however many tiles a rung brings (2026-09-22).</summary>
+        private const float PaperMaxH = 700f;
         /// <summary>The tiles: 80 square on an 88 pitch, ten to a row, a name of two lines under each, a class
         /// caption over the first of each group. This rung's band takes two rows at most, the next rung's one.</summary>
         // 64 on a 72 pitch, twelve to a row (2026-09-21, the author: "kutular daha kalın çerçeveli ve biraz daha küçük
@@ -690,7 +693,15 @@ namespace LastCall.UI
             if (next != null)
             {
                 _ladderNextHead.text = UIText.T("rank.window.next", ("stars", next.Stars.ToString("0.0")));
-                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: 2, dim: true);
+                // THE SHEET MAY GROW DOWN, BUT NOT OFF THE SCREEN (2026-09-22). The author's rule is that the
+                // certificate keeps its width and takes its height from what is on it - and once the room's
+                // fittings joined the tiles, both bands ran to two rows and the paper reached 780 on a 720
+                // screen: the title was above the top edge and the seal below the bottom one. The open band
+                // keeps its two rows, because what was just earned is the point of the page; the NEXT band takes
+                // whatever rows are left under PaperMaxH, and its own cut slot says how many it stood for.
+                int nextMax = Mathf.Clamp(
+                    Mathf.FloorToInt((PaperMaxH - nextTop - PaperFoot) / TileRowH), 1, 2);
+                nextRows = LayTiles(_ladderNextBand, run, TilesFor(run, now, next, true), moving, rowsMax: nextMax, dim: true);
             }
             else
             {
@@ -812,6 +823,13 @@ namespace LastCall.UI
                 foreach (var card in run.BottlesOpeningAt(rung.Stars))
                     tiles.Add(new CertTile { Cls = "rank.cert.class.market", Name = UIText.Caps(UIText.Data("bottle", card.Id, "name", card.Name)),
                         Art = ItemArt.Bottle(card) ?? ItemArt.StyleBottle(run.CatalogueBottles, card.Info?.Style), Bottle = card });
+                foreach (var f in run.FixturesOpeningAt(rung.Stars))
+                    tiles.Add(new CertTile { Cls = "rank.cert.class.room",
+                        Name = UIText.Caps(UIText.Data("fixture", f.Id, "name", f.Name)),
+                        // THE SWATCH, when the fitting has one (2026-09-22): a wall's own drawing is the whole
+                        // 640x360 room, and shrunk into a 64 px tile it reads as a tiny photograph of a bar.
+                        // The market already solved this - it shows the swatch - so the sheet shows the same.
+                        Art = FixtureArt(f.Swatch ?? f.Sprite) });
                 foreach (var r in run.RecipesOpeningAt(rung.Stars))
                     tiles.Add(new CertTile { Cls = "rank.cert.class.book", Name = UIText.Caps(UIText.Data("recipe", r.Id, "name", r.Name)),
                         Art = _bootstrap != null ? DrinkIcon.For(r, _bootstrap.Glassware) : null });
@@ -887,7 +905,8 @@ namespace LastCall.UI
         private static readonly string[] TileClasses =
         {
             "rank.cert.class.counter", "rank.cert.class.door", "rank.cert.class.bench",
-            "rank.cert.class.draught", "rank.cert.class.market", "rank.cert.class.book",
+            "rank.cert.class.draught", "rank.cert.class.room", "rank.cert.class.market",
+            "rank.cert.class.book",
         };
 
         /// <summary>One tile: a dark plate on the paper so the picture stands off it, the picture centred — a

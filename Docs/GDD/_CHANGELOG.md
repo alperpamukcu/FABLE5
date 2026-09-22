@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The sixth list, third slice (2026-09-22):** the pink hover card opens instead of appearing - its panel
+  unrolls from its own middle as the card fades up - and the speech balloons and order tickets grow out of
+  their tails. The crowd's emojis are one family again: a yellow square face, which throws out the pile of
+  poo, the red devil, the green sick face and the white burst that used to fly at the loud moments. Both wall
+  ladders now finish at three stars instead of one finishing at two and the other at three and a half. The
+  room's fittings are on the certificate in a class of their own, drawn from the market's swatches, and the
+  sheet is capped so a rung with a lot on it still fits the screen. And the counter's own HUD props take the
+  room's light: the rail's dishes in full, the menu at half, which is both of the author's notes about it at
+  once. GDD_MEVCUT §9.102.
+
 - **The sixth list, second slice (2026-09-22):** the three work benches are re-laid on the counter's pink
   strip - the step column, the pour gauge and the whole key row rise to meet it - the drip tray and the strip
   under the tower are deleted, the kegs go down to a rack at the foot of the frame with their names on its

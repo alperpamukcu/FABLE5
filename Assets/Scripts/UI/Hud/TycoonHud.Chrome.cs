@@ -671,6 +671,9 @@ namespace LastCall.UI
             _cellarCardStockFill.offsetMax = new Vector2(-1f, -1f);
         }
 
+        /// <summary>How shut the card's panel starts, and how far through the fade it is fully open.</summary>
+        private const float CardOpenFrom = 0.12f, CardOpenBy = 0.8f;
+
         private void StepCellarCard()
         {
             if (_cellarCard == null) return;
@@ -679,6 +682,17 @@ namespace LastCall.UI
             float want = up ? 1f : 0f;
             _cellarCardGroup.alpha = Motion.Reduced ? want : Mathf.MoveTowards(
                 _cellarCardGroup.alpha, want, Time.unscaledDeltaTime / PropTipFade);
+            // AND IT OPENS AS IT ARRIVES (2026-09-22, the author: "sisseler ve garnishlerdeki pembe hoverin
+            // acilmasi icin bir animasyon ekle"). The BODY alone, and on the vertical alone: the card's slot
+            // holds a copy of the bottle laid exactly over the real one, and anything that scales the slot makes
+            // the bottle itself appear to grow. The panel beside it unrolls like a blind from its own middle,
+            // driven off the fade the card already runs - one clock, and the one that is certainly stepped.
+            if (_cellarCardBody != null)
+            {
+                float o = Motion.Reduced ? 1f : Mathf.Clamp01(_cellarCardGroup.alpha / CardOpenBy);
+                float sy = Mathf.Lerp(CardOpenFrom, 1f, 1f - (1f - o) * (1f - o));
+                _cellarCardBody.localScale = new Vector3(1f, sy, 1f);
+            }
             if (!up && _cellarCardGroup.alpha <= 0f) LowerCellarBottle();
             if (!up || _cellarCardGroup.alpha <= 0f) return;
             // BEHIND THE BOTTLE (2026-09-08, the author: "mevcut sahnedeki gin görselinin

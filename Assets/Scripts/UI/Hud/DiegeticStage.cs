@@ -2096,6 +2096,10 @@ namespace LastCall.UI
         /// <summary>The hour, as the HUD last told it, and everything the model made of it.</summary>
         private float _tau;
         private SkyClock.Daylight _now = DefaultDaylight();
+
+        /// <summary>The light lying on the counter this frame, as a multiplier for a HUD prop standing on it.
+        /// White until the first daylight is applied, so a bench built before the clock runs is not black.</summary>
+        public Color CounterLight { get; private set; } = Color.white;
         /// <summary>The sun's key before the closing beat touches it, so the beat falls FROM
         /// the hour rather than from a constant.</summary>
         private float _sunKeyBase = SunKeyDay;
@@ -3699,6 +3703,20 @@ namespace LastCall.UI
                     if (_houseLights[i].Light != null)
                         _houseLights[i].Light.intensity = _houseLights[i].Base * _houseBase;
             }
+            // ...AND THE COUNTER'S OWN PROPS SWING ON IT TOO (2026-09-22, the author: "tezgahta menu, garnish
+            // bunlarda ana sahnedeki isiklandirmalardan etkilenmeli"). The dishes on the rail, the menu standing
+            // beside them and the towel are HUD images: they are drawn by the canvas, over the room, and no
+            // Light2D has ever reached them - so the slab darkened under a bowl of ice that stayed noon-bright.
+            // This is the light lying on that slab, as a TINT the HUD multiplies its props by: the room's own
+            // ambient colour, carried toward white by what the bar's row and the pendants put back on the stone,
+            // with a floor under it because the counter is the one surface in the room that is always lit.
+            // THE SUN IS PART OF THE SUM. The room's ambient is a FILL - it is lowest at opening, when the
+            // window is doing the lighting, and highest at night, when it is all there is - so a counter light
+            // read off the ambient alone comes out darkest at noon, which is what the first cut did (r126:
+            // 0.77 at opening against 0.87 in the evening).
+            float onTheSlab = Mathf.Clamp01(_washBase * 1.1f + _barDownBase * 0.8f + d.SunStrength * 0.55f);
+            CounterLight = Color.Lerp(d.Ambient, Color.white, Mathf.Clamp01(onTheSlab * 1.15f))
+                         * Mathf.Lerp(0.62f, 1f, onTheSlab);
             // Every shadow in the room swings on the same light.
             CastShadow.Offset = d.ShadowOffset;
             CastShadow.Alpha = d.ShadowAlpha;
