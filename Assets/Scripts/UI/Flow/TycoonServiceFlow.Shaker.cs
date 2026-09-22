@@ -746,7 +746,14 @@ namespace LastCall.UI
         // all the way round, on both panels. The row gives up two units to pay for it, so the column keeps its
         // height and the props above it do not move.
         private const float ColX = 16f, ColW = 224f, ColRowH = 22f, ColPad = 16f;
-        private const float ColBackY = 16f, ColBackH = 56f, ColDialY = 84f, ColDialH = 120f, ColStepsY = 216f;
+        // ON THE PINK STRIP (2026-09-22, the author: "soldaki 1-2-3-4 tablosu ve dolum siddet barini arkaplandaki
+        // ustlerinde kalan pembe serite gore hizala, tum nesneleri yukari cek butonlar dahil"). The column stood
+        // with 49 units of bare counter between its head and the neon rail's foot, which read as a panel that had
+        // slipped down the screen. Measured in play (r114): the rail's band runs 385..433 and every plaque on every
+        // bench is hung with its top on 379, so the column's head goes on 379 too and the whole stack - steps, dial,
+        // way out - rises 43 with it. The key row at the foot rises the same 43 (KeyRowY), which is what clears the
+        // bottom of the draught bench for its keg shelf.
+        private const float ColBackY = 59f, ColBackH = 56f, ColDialY = 127f, ColDialH = 120f, ColStepsY = 259f;
         /// <summary>The line the step panel's head sits on, whatever its row count (the glass bench lists two).</summary>
         private const float ColStepsTop = ColStepsY + ColPad * 2f + 4f * ColRowH;
         private static float StepPanelH(int rows) => ColPad * 2f + rows * ColRowH;
@@ -1230,10 +1237,13 @@ namespace LastCall.UI
         // it with its bottle's picture, and the growing outlined figure on the surface.
 
         /// <summary>Where the measure stands on both benches (panel-centred), right of the work.</summary>
-        private static readonly Vector2 MeasureAt = new Vector2(473f, -109f);   // -87 until the props came down;
+        // -105 and 50 shorter (2026-09-22): the key row rose 43 and landed on the gauge's foot, and the gauge
+        // could not simply rise with it - at 300 tall its head already reached the counter's rail. It stands
+        // between the two now: its foot on 130, seven over the keys, its head on 380, five under the rail.
+        private static readonly Vector2 MeasureAt = new Vector2(473f, -105f);   // -87 until the props came down;
                                                                                // 485 ran the tin's wall under the bin
         /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
-        private static readonly Vector2 MeasureSize = new Vector2(136f, 300f);
+        private static readonly Vector2 MeasureSize = new Vector2(136f, 250f);
 
         /// <summary>
         /// The standing measure: the shaker in outline with the drink cut to its silhouette.
@@ -2553,12 +2563,11 @@ namespace LastCall.UI
             fimg.color = new Color(0f, 0f, 0f, 0.34f);      // lit under the rail, falling away toward the player
             fimg.raycastTarget = false;
 
-            var wear = NewRect("Wear", top);
-            Stretch(wear, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var wimg = wear.gameObject.AddComponent<Image>();
-            wimg.sprite = CounterFinish.CounterWear(320, 122);
-            wimg.type = Image.Type.Simple;
-            wimg.raycastTarget = false;
+            // NO MARKS ON THE SLAB (2026-09-22, the author: "Built sahnesindeki arkaplandaki lekeleri kaldir").
+            // The wear layer - three dried rings, five drag lines and a scuffed patch (ChromeArt.CounterWear) - was
+            // laid over the whole band on 2026-09-17 to stop the slab reading as a fill. It reads as dirt at this
+            // zoom instead, and the counter's own mess is a RULE the game plays (the wipe verb, GDD 27), so the
+            // background must not carry a second, permanent one. The drawing stays in ChromeArt, unused.
             if (own != null) return;   // the drawing carries its own edge and sheen
 
             // The counter's FAR EDGE, zoomed: the ridge that catches the room, the seam,
@@ -2692,13 +2701,8 @@ namespace LastCall.UI
             _tinMirror = AddCastShadow("TinCastShadow", TinW, TinH * 0.3f);
             _bottleMirror = AddCastShadow("BottleCastShadow", 180f, BottleH * 0.3f);
             _capCast = AddCastShadow("CapCastShadow", TinW, TinH * 0.2f);
-            var ring = NewRect("WaterRing", _pourSurface);
-            Place(ring, new Vector2(0.5f, 0.5f), new Vector2(96f, 36f), new Vector2(130f, -292f));   // between the tin and the dial, on the counter
-            var ringImg = ring.gameObject.AddComponent<Image>();
-            ringImg.sprite = ChromeArt.Smudge(11);
-            ringImg.color = new Color(1f, 1f, 1f, 0.38f);
-            ringImg.raycastTarget = false;
-            ring.SetSiblingIndex(1);
+            // (The water ring that stood between the tin and the dial came off on 2026-09-22 with the slab's
+            //  wear: the same ask, "arkaplandaki lekeleri kaldir".)
             _shakerVessel = NewRect("Shaker", _pourSurface);
             Place(_shakerVessel, new Vector2(0.5f, 0.5f), new Vector2(TinW, TinH), _shakerHome);
             var shakerImg = _shakerVessel.gameObject.AddComponent<Image>();

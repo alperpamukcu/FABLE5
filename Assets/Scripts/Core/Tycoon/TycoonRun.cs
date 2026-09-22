@@ -317,6 +317,38 @@ namespace LastCall.Core
 
         private bool JarStocked(PreparationDefinition p) => Market.FindByStyle(_shelf, JarFor(p)) != null;
 
+        /// <summary>
+        /// WHAT A PINT TAKES (2026-09-22, the author: "biranin icine mint koyulamaz biranin icerisine sadece limon
+        /// ve tuz seriti yapilabilir"). A beer is not a cocktail (GDD 21 §10) and it is not a cocktail's glass
+        /// either: a lemon on the rim and a rim of salt are the two things a bar puts on one, and a sprig of mint,
+        /// a spear of olives, a sugar rim or a handful of ice in a pint are all somebody's idea of a joke. Draught
+        /// is here because it is the mark the pour itself leaves on the glass, not a garnish anyone drops.
+        /// </summary>
+        public static bool BeerTakes(PreparationDefinition preparation) =>
+            preparation == Preparations.LemonTwist || preparation == Preparations.SaltRim
+            || preparation == Preparations.Draught;
+
+        /// <summary>Whether the serving glass is holding beer — anything in it poured off a keg, or the mark the
+        /// draught pour leaves. Read by <see cref="PreparationSuitsGlass"/> and by the rail, which dims what it
+        /// would refuse rather than letting the player find out by being told no.</summary>
+        public bool ServingIsBeer
+        {
+            get
+            {
+                if (ServingGlass.HasPreparation(Preparations.Draught.Id)) return true;
+                foreach (var id in ServingGlass.Ingredients)
+                {
+                    var bottle = _shelf.Find(id);
+                    if (bottle != null && bottle.Ingredient.Type == IngredientType.Beer) return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>Whether <paramref name="preparation"/> may go on the serving glass as it stands.</summary>
+        public bool PreparationSuitsGlass(PreparationDefinition preparation) =>
+            !ServingIsBeer || BeerTakes(preparation);
+
         /// <summary>Whether <paramref name="preparation"/> can go on a glass: the ladder has opened it, and for a
         /// jar's garnish the jar is on the shelf.</summary>
         public bool PreparationOpen(PreparationDefinition preparation)
@@ -1985,6 +2017,10 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayOpen);
             EnsurePreparationOpen(preparation);   // the ladder (2026-09-21): no ice before the first rung, no rim before the second
+            // ...and the glass itself (2026-09-22): a pint takes a lemon and a rim of salt and nothing else.
+            if (!PreparationSuitsGlass(preparation))
+                throw Said.With(new InvalidOperationException($"'{preparation.Name}' does not go in beer."),
+                                Line.Of("rule.beer_garnish"));
             // No fullness test: a rim of salt and a twist of lemon displace nothing, so a
             // glass poured to the brim can still be finished (2026-08-10).
             ServingGlass.AddPreparation(preparation);

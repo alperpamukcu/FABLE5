@@ -539,5 +539,70 @@ namespace LastCall.Tests
         {
             Assert.AreEqual(3.0, new ShelfBottle(Keg(), capacity: 3.0).Capacity, 1e-9);
         }
+
+        // ── what a pint takes (2026-09-22) ──────────────────────────────────────
+
+        [Test]
+        public void APintTakesALemonAndARimOfSaltAndNothingElse()
+        {
+            // The author (2026-09-22): "biranin icine mint koyulamaz biranin icerisine sadece limon ve tuz seriti
+            // yapilabilir." The rule is Core's, so the rail cannot route round it. The bar is at full stars with a
+            // jar of mint on the shelf, so nothing below is refused by the LADDER by accident.
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Keg()),
+                new ShelfBottle(new IngredientCard("mint_jar", "Mint", IngredientType.Garnish, 1,
+                    new IngredientInfo("mint", 1, 3, "somewhere", 40, "test")), capacity: 40),
+                new ShelfBottle(new IngredientCard("olive_jar", "Olives", IngredientType.Garnish, 1,
+                    new IngredientInfo("olive", 1, 3, "somewhere", 40, "test")), capacity: 40),
+            });
+            var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("beer-garnish"),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0));
+            run.Rating.DevSet(5.0);
+            foreach (var p in new[] { Preparations.Ice, Preparations.SaltRim, Preparations.SugarRim,
+                                      Preparations.Mint, Preparations.Olive, Preparations.LemonTwist })
+                Assert.IsTrue(run.PreparationOpen(p), p.Id + " should be open at five stars with the jars in");
+
+            Assert.IsFalse(run.ServingIsBeer, "an empty glass is not a pint");
+            run.BeginPull("beer_test");
+            run.PourTilted(2.0, TapPour.IdealTilt);
+            run.EndPull();
+            Assert.IsTrue(run.ServingIsBeer, "there is beer in the glass now");
+
+            run.AddPreparationAtGlass(Preparations.LemonTwist);
+            run.AddPreparationAtGlass(Preparations.SaltRim);
+            Assert.IsTrue(run.ServingGlass.HasPreparation("lemon_twist"));
+            Assert.IsTrue(run.ServingGlass.HasPreparation("salt_rim"));
+
+            foreach (var wrong in new[] { Preparations.Mint, Preparations.Olive,
+                                          Preparations.Ice, Preparations.SugarRim })
+            {
+                Assert.IsFalse(run.PreparationSuitsGlass(wrong), wrong.Id + " does not go in beer");
+                Assert.Throws<System.InvalidOperationException>(
+                    () => run.AddPreparationAtGlass(wrong), "the rules layer refuses " + wrong.Id + " on a pint");
+                Assert.IsFalse(run.ServingGlass.HasPreparation(wrong.Id), wrong.Id + " must not land anyway");
+            }
+        }
+
+        [Test]
+        public void ACocktailGlassStillTakesEverythingTheLadderOpened()
+        {
+            // ...and the rule is about BEER, not about the glass: the same run with a spirit in the glass takes
+            // the lot, or the pint's rule would have quietly closed the rail for every drink in the game.
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Keg()),
+                new ShelfBottle(new IngredientCard("spirit_a", "Spirit A", IngredientType.Spirit, 5)),
+            });
+            var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("cocktail-garnish"),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0));
+            run.Rating.DevSet(5.0);
+            run.PourAtGlass("spirit_a", 30);
+            Assert.IsFalse(run.ServingIsBeer);
+            run.AddPreparationAtGlass(Preparations.Ice);
+            run.AddPreparationAtGlass(Preparations.SugarRim);
+            Assert.IsTrue(run.ServingGlass.HasPreparation("ice"));
+            Assert.IsTrue(run.ServingGlass.HasPreparation("sugar_rim"));
+        }
     }
 }

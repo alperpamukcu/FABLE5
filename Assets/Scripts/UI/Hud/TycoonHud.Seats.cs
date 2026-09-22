@@ -719,10 +719,39 @@ namespace LastCall.UI
         // is cleared: the player's click does it now, the bar's slow clock does it in seven
         // seconds. The prop appears where the customer sat; clicking it is the bussing.
 
+        /// <summary>
+        /// Whether Housekeeping still owns this mess. Core drops one the instant it is clean and CLEARS the whole
+        /// list at closing (<c>SweepForClosing</c>), and a view holding the dropped object has a glass that cannot
+        /// be collected, wiped or carried: every verb goes through <c>Own</c>, which refuses a mess off the list.
+        /// </summary>
+        private static bool OnTheCounter(TycoonRun run, CounterMess mess)
+        {
+            var messes = run?.Floor?.Messes;
+            if (mess == null || messes == null) return false;
+            for (int i = 0; i < messes.Count; i++) if (ReferenceEquals(messes[i], mess)) return true;
+            return false;
+        }
+
         private void RefreshDirtyGlasses(TycoonRun run)
         {
             foreach (var v in _seats)
             {
+                // THE GLASS NOBODY COULD MOVE (2026-09-22, the author: "sahnenin ortasinda surukleyip yok
+                // edemedigim bardak var oluyor bir sekilde"). The night's sweep empties the counter in Core, and
+                // this view went on drawing the empty it had claimed, because the test for "is it still there"
+                // was the mess's OWN state - and a swept mess still says it has a glass. So the picture stood on
+                // the counter into the next night, refused the cloth, refused the carry, and answered every click
+                // with "That is not on this counter." The view asks the counter now, not the mess.
+                if (v.Dirty != null && !OnTheCounter(run, v.Dirty))
+                {
+                    v.Dirty = null;
+                    if (_carriedEmpty == v)
+                    {
+                        _carriedEmpty = null;
+                        _glassCarrying = false;
+                        if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
+                    }
+                }
                 // IN THE HAND MEANS OFF THE COUNTER (2026-09-08, the author: "bardaklar
                 // lavaboya sürüklenirken bir silüet tezgahta kalmaya devam ediyor"). The
                 // prop is drawn from the mess every frame, and Core keeps the glass IN the
@@ -823,7 +852,7 @@ namespace LastCall.UI
                 for (int m = v.Marks.Count - 1; m >= 0; m--)
                 {
                     var mk = v.Marks[m];
-                    if (mk.Mess != null && !mk.Mess.IsClean)
+                    if (mk.Mess != null && !mk.Mess.IsClean && OnTheCounter(run, mk.Mess))
                     {
                         if (mk.Prop == null) BuildMark(v, mk);
                         continue;
@@ -1335,7 +1364,8 @@ namespace LastCall.UI
             // as the button is down, each one falling into the drink on its own.
             if (_prepHeld.Id == "ice" && _prepHeld.Prep != null)
             {
-                if (!overTheGlass) _icePoured = -1f;
+                // No ice in a pint (2026-09-22): Core refuses it, so the tipping hand simply never starts.
+                if (!overTheGlass || !run.PreparationSuitsGlass(_prepHeld.Prep)) _icePoured = -1f;
                 else
                 {
                     float now = Time.unscaledTime;
@@ -1759,6 +1789,11 @@ namespace LastCall.UI
                         Sfx.Play("cloth_wipe", 0.6f);   // the rag's own sound, three takes in turn (2026-09-15)
                         if (held)
                             for (int i = 0; i < 4; i++) ShedDrop(at + new Vector2((i - 1.5f) * 7f, -16f));
+                        // ...AND THE SPOT SAYS WHEN IT IS DONE (2026-09-22, the author: "tezgahtaki o koltugun onu
+                        // silinince 4 koseli yildiz parlama iconlari belirmeli bu oyuncu tamamen silindigini
+                        // anlamasi icin"). Not per mark - per STOOL: the twinkle is the answer to "is this bit
+                        // finished?", and a stool with a second drop still on it is not finished.
+                        if (SpotIsClean(run, v)) Sparkle(v);
                     }
                     catch (System.InvalidOperationException e)
                     {
@@ -2245,6 +2280,79 @@ namespace LastCall.UI
             _handStrip.rectTransform.anchoredPosition = new Vector2(280f, 137f + 70f + 6f + CounterLift);
         }
 
+        /// <summary>Whether this stool's stretch of counter has nothing left on it: no empty, no mark.</summary>
+        private bool SpotIsClean(TycoonRun run, SeatView v)
+        {
+            if (v.Dirty != null && OnTheCounter(run, v.Dirty)) return false;
+            foreach (var mk in v.Marks)
+                if (mk.Mess != null && !mk.Mess.IsClean && OnTheCounter(run, mk.Mess)) return false;
+            return true;
+        }
+
+        /// <summary>Five twinkles over the stretch of counter that has just come clean, popping in turn.</summary>
+        private void Sparkle(SeatView v)
+        {
+            // REDUCED MOTION KEEPS THE ANSWER (2026-09-22): this is the game telling the player the spot is
+            // finished, not a flourish, so it still appears - it simply stands still and fades instead of popping.
+            float x = v.SeatX + HeadX(v);
+            for (int i = 0; i < 5; i++)
+            {
+                float size = 15f + ((i * 5) % 3) * 7f;
+                var rt = NewRect("Sparkle", _hudRoot);
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.sizeDelta = new Vector2(size, size);
+                rt.anchoredPosition = new Vector2(ClearOfTheBoard(x + ((i * 29) % 53) - 26f, size),
+                                                  CounterLineY - 30f + CounterLift + ((i * 17) % 19) - 9f);
+                rt.localScale = Motion.Reduced ? Vector3.one : Vector3.zero;
+                var img = rt.gameObject.AddComponent<Image>();
+                img.sprite = ChromeArt.Sparkle4(17);
+                img.color = i % 2 == 0 ? UITheme.Cream[4] : UITheme.Cyan[4];
+                img.raycastTarget = false;
+                _sparks.Add((rt, img, Time.unscaledTime + (Motion.Reduced ? 0f : i * 0.06f)));
+            }
+        }
+
+        private readonly List<(RectTransform Rt, Image Img, float Born)> _sparks
+            = new List<(RectTransform, Image, float)>();
+        /// <summary>How long one twinkle lasts, and how much of that it spends growing. A FIELD, not a const,
+        /// so a probe can stretch it: one execute_code round trip is about a second, which is longer than the
+        /// whole animation, and a twinkle nobody can photograph is a twinkle nobody can check (2026-09-22).</summary>
+        private static float SparkLife = 0.62f;
+        private const float SparkRise = 0.32f;
+
+        private void StepSparks()
+        {
+            if (_sparks.Count == 0) return;
+            float now = Time.unscaledTime;
+            for (int i = _sparks.Count - 1; i >= 0; i--)
+            {
+                var (rt, img, born) = _sparks[i];
+                float k = (now - born) / SparkLife;
+                if (rt == null || k >= 1f)
+                {
+                    if (rt != null) Destroy(rt.gameObject);
+                    _sparks.RemoveAt(i);
+                    continue;
+                }
+                if (k < 0f) continue;                       // its turn has not come round yet
+                if (Motion.Reduced)
+                {
+                    var flat = img.color;
+                    img.color = new Color(flat.r, flat.g, flat.b, 1f - k);
+                    continue;
+                }
+                // A pop and a fade: out fast to full size, then away, turning a little as it goes.
+                float s = k < SparkRise ? Mathf.SmoothStep(0f, 1f, k / SparkRise)
+                                        : Mathf.Lerp(1f, 0.34f, (k - SparkRise) / (1f - SparkRise));
+                rt.localScale = new Vector3(s, s, 1f);
+                rt.localRotation = Quaternion.Euler(0f, 0f, k * 34f);
+                var c = img.color;
+                img.color = new Color(c.r, c.g, c.b,
+                    k < SparkRise ? 1f : 1f - (k - SparkRise) / (1f - SparkRise));
+            }
+        }
+
         private void StepGrains()
         {
             if (_grains.Count == 0) return;
@@ -2340,6 +2448,14 @@ namespace LastCall.UI
                 Toast(UIText.T("seats.garnish.already_on"));
                 return;
             }
+            // A PINT TAKES A LEMON AND A RIM OF SALT (2026-09-22): Core refuses the rest, so the rail says why
+            // rather than letting the drop throw.
+            if (!run.PreparationSuitsGlass(prop.Prep))
+            {
+                Toast(UIText.T("seats.garnish.not_in_beer"));
+                Sfx.Play("deny", 0.8f);
+                return;
+            }
             run.AddPreparationAtGlass(prop.Prep);
             Sfx.Play(prop.Id == "ice" ? "ice_drop" : "garnish");
             Toast(prop.Id == "ice"
@@ -2397,6 +2513,15 @@ namespace LastCall.UI
                     _rimSwept[prop.Id] = swept;
                     if (swept >= RimLap)
                     {
+                        // Salt on a pint, never sugar (2026-09-22): the lap is done, the rim is refused.
+                        if (!run.PreparationSuitsGlass(prop.Prep))
+                        {
+                            _rimSwept.Remove(prop.Id);
+                            _rimAngleKnown = false;
+                            Toast(UIText.T("seats.garnish.not_in_beer"));
+                            Sfx.Play("deny", 0.8f);
+                            return true;
+                        }
                         run.AddPreparationAtGlass(prop.Prep);
                         Sfx.Play("rim_done", 0.9f);
                         _rimSwept.Remove(prop.Id);
@@ -2582,11 +2707,14 @@ namespace LastCall.UI
                 // counted, not applied — which is the one exception the glass already makes.
                 bool done = glass && prop.Prep != null && prop.Id != "ice"
                             && run.ServingGlass.HasPreparation(prop.Id);
+                // ...and a dish a PINT will not take darkens the same way (2026-09-22), so the player sees what
+                // beer is finished with rather than learning it from a refusal.
+                bool wrong = glass && prop.Prep != null && !run.PreparationSuitsGlass(prop.Prep);
                 // DIMMED, NOT SEE-THROUGH (2026-09-21, the author: "garnishlerde şeffaflık var ... katı olması
                 // gerekiyor"): a dish that cannot be used yet, or has been, darkens instead of fading, so the
                 // counter never shows through it.
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
-                float dim = !glass ? 0.6f : done ? 0.45f : 1f;
+                float dim = !glass ? 0.6f : done || wrong ? 0.45f : 1f;
                 prop.Img.color = new Color(baseCol.r * dim, baseCol.g * dim, baseCol.b * dim, 1f);
                 prop.Img.raycastTarget = reachable;
             }
@@ -2610,6 +2738,7 @@ namespace LastCall.UI
             StepSinkFade();
             StepPrepCarry(run);
             StepGrains();
+            StepSparks();
             StepCloth(run);
             StepEmptyPress(run);
             StepGlassCarry(run);
@@ -3195,7 +3324,12 @@ namespace LastCall.UI
                         _glassServeFrom = GlassHome;
                         _glassServeTo = GlassHome;
                         _drinkGlass.anchoredPosition = GlassHome;
-                        _flow.OpenServe();
+                        // ...AND A PINT GOES BACK TO THE TAP (2026-09-22, the author: "Bira koyduktan sonra ana
+                        // sahnede gozuken bira bardagina tiklandiginda bira koyma sahnesine tekrardan atmali,
+                        // built sahnesine degil bira da istisna var"). Beer is not a cocktail and its glass was
+                        // never filled at the glass bench, so the door it opens is the one it came out of.
+                        if (Run != null && Run.ServingIsBeer) _flow.OpenTap();
+                        else _flow.OpenServe();
                         return;
                     }
                     // THE SINK IS A PLACE YOU CARRY IT TO (2026-08-26, the author: "bardağı

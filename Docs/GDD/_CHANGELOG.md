@@ -2,6 +2,16 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The sixth list, second slice (2026-09-22):** the three work benches are re-laid on the counter's pink
+  strip - the step column, the pour gauge and the whole key row rise to meet it - the drip tray and the strip
+  under the tower are deleted, the kegs go down to a rack at the foot of the frame with their names on its
+  board, PINT and HEAD become two blocky meters that ride the glass and show themselves only while a number is
+  moving, the bin key's mark is cut to the size of its word, and the slab loses its painted-on dirt. Beer now
+  takes a lemon and a rim of salt and nothing else, as a rule in Core; mint is no longer drawn in the glass at
+  all; a poured pint in the room re-opens the TAP; the empty that could not be dragged or destroyed is gone
+  (the view was holding a mess the counter had swept); and what a drinker leaves is drops and a glass ring,
+  with four-pointed twinkles when a stool's stretch comes clean. GDD_MEVCUT §9.101.
+
 - **The sixth list, first slice (2026-09-22):** the door has a top face and its crack spills the cellar's own
   warm light; the pendants throw drawn CONES onto the counter and the people and nothing else (a 2D point light's
   angle lights nothing here - measured three ways); the evening is dimmer and the window's patch smaller; the

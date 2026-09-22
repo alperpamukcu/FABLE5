@@ -297,7 +297,10 @@ namespace LastCall.UI
             // Both re-cut on 2026-08-26 with the ice and the wedge: the old sprig and the
             // old spear were drawn for a tray, at a tray's size, with a keyline a garnish
             // floating in a drink has no business wearing.
-            if (mint) _mint = Float("Mint", "glass_mint", new Vector2(26f, 27f), -14f, -8f);
+            // NO SPRIG IN THE DRINK (2026-09-22, the author: "Mint koyuldugunda bardakta gozukmemeli"). The mint
+            // is still a preparation and still graded; what it is not is a thing floating in the glass, which at
+            // this size read as a leaf dropped in a drink rather than as the sprig a julep is finished with. The
+            // olive stays: a spear IS in the glass.
             if (olive) _olive = Float("Olive", "glass_olive", new Vector2(22f, 40f), 10f, 20f);
         }
 

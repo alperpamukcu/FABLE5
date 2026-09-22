@@ -26,6 +26,7 @@
     {"key": "rule.snack_not_at_bar", "text": "They are not at the bar.", "note": "Toast when a snack is put down for someone no longer at the bar. No slots."},
     {"key": "rule.snack_needs_order", "text": "Snacks ride a drink order — they have not ordered one yet.", "note": "Toast when a snack is served to a customer who has not ordered a drink. No slots."},
     {"key": "rule.no_last_call", "text": "Nobody is waiting on the last call.", "note": "Refusal when the last-call plate's keys are used with no story guest tonight. No slots."},
+    {"key": "rule.beer_garnish", "text": "Beer takes a lemon or a rim of salt — nothing else.", "note": "Refusal when a garnish that is not lemon or a salt rim is put on a glass of beer. No slots."},
     {"key": "rule.pull_cocktail_in_tin", "text": "Finish or bin the cocktail before you pull a pint.", "note": "Refusal when the tap is pulled while the shaker holds a drink. No slots."},
     {"key": "rule.pull_glass_taken", "text": "There is already a drink in that glass — serve it or bin it before pulling a pint.", "note": "Refusal when the tap is pulled into a glass holding another drink. No slots."},
     {"key": "rule.pull_glass_full", "text": "The glass is full. Serve it or bin it.", "note": "Refusal when the tap is pulled into a full glass. No slots."},

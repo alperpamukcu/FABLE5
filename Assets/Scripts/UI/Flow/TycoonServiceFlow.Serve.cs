@@ -984,7 +984,7 @@ namespace LastCall.UI
             // from the rail at the plaque's end for a day; a key you press last belongs at the bottom, not up in
             // the words.
             _serveDone = PackKeyFlow(_servePanel, "Done", UIText.T("bench.serve.serve_key"), null,
-                KeyGo, new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, 16f),
+                KeyGo, new Vector2(0.5f, 0f), new Vector2(ServeKeyW, ServeKeyH), new Vector2(0f, KeyRowY),
                 () =>
                 {
                     // Ready to hand over: close the flow, then click a seat to deliver - and

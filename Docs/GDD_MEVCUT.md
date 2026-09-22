@@ -1540,6 +1540,50 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.101 · Altıncı liste (2/3): tezgahın üç sahnesi, fıçı rafı, pixel-toon ölçerler, biranın garnisi, takılan bardak, damlalar (2026-09-22)
+
+- **Sütun pembe şeride hizalandı** (`ColStepsY` 216→259, `ColDialY` 84→127): ölçüldü (r114) — tezgâhın
+  üst kenarı (neon şerit) panelde 385..433, her tezgâhın plakası 379'a asılı. Sütunun başı da 379'da artık;
+  1-2-3-4 tablosu, dolum şiddetı barı ve çıkış tuşu 43 birim yükseldi (yazar: "arkaplandaki üstlerinde
+  kalan pembe şerite göre hizala").
+- **Her şey yukarı çekildi, tuşlar dahil**: `KeyRowY = 59` (16'ydı) — BARA DÖN, SERVE IT ve ÇÖP tek sırada
+  59..123'te; `BenchFootY` −245→−198, `CatchFootY` −260→−196, tezgâh ölçeği 300→250 boyunda ve −105'te
+  (tuşların üstünden 7, rayın altından 5 birim açık).
+- **Damlalık ve şerit gitti**: yazar 2. görselde damlalığı gösterip "oyundan sil" dedi — `DripTray` ve
+  `Items/drip_tray.png` silindi; "Tap beer'in altındaki şeriti kaldır" ise kulenin kaidesiydi (`TowerPlinth`
+  0 oldu, `CounterY` −250→−182 ile kule aynı yükseklikte durdu).
+- **Fıçılar rafın üzerinde, yarısı kadrajda**: tezgâhın ortasındaki fıçı sırası ekranın dibine bir rafa taşındı
+  (`ShelfKegFootY = -82`, `KegH = 165` — tam yarısı görünür), önlerinde recess dokulu, pirinç dudaklı bir
+  tahta (`LayTheShelf`) ve her bölmenin birası o tahtaya yazılı — fıçının kendi etiket bandı artık kadrajın
+  altında kalıyor. Raf sırası PANELE asılı (yüzey 84 birim yukarıda biter). Hortum çizilmiyor artık
+  (`DrawBeerLine = false`): düz çizilince boş tezgâhı çapraz kesiyordu (r115).
+- **PINT ve HEAD bardağın yanında**: iki uzun cam tüp gitti; yerine sekiz hücreli, kalın mürekkep çerçeveli
+  iki küçük ölçer (`BuildToonBar`) bardağın sağında duruyor ve bardakla birlikte geziyor. Değer
+  değiştiğinde ya da bira akıyorken fade ile gelir, 5 saniye değişmezse gider (`BarsLinger = 5`,
+  `BarsFade = 0.3`). Ölçüldü (r117): dolum sırasında alpha 1,00, 5,6 saniye sonra 0,00.
+- **Lekeler kalktı**: slab'ın `CounterWear` katmanı (üç kuru halka, beş sürünme çizgisi, bir aşınma) ve
+  shaker tezgâhının su halkası çizilmiyor artık (yazar: "Built sahnesindeki arkaplandaki lekeleri kaldır").
+  Çizim `ChromeArt`'ta duruyor, kullanılmıyor.
+- **Çöp tuşu**: 40×56'lık çizim yerine harfin kendi boyunda bir çöp kutusu (`ChromeArt.BinSmall`, 16×24,
+  büyüğünün ölçeklenmişi değil, yeniden çizilmişi) ve ikisi birlikte plakaya ortalanıyor.
+- **Biranın garnisi bir KURAL**: `TycoonRun.BeerTakes` — biraya yalnız limon ve tuz şeridi girer; `ServingIsBeer`
+  bardakta keg'den gelen bir şey var mı diye bakar, `AddPreparationAtGlass` reddeder (`rule.beer_garnish`).
+  Ray körlemesine denemez: uymayan kaşık kararır, bırakılınca "BİRAYA GİRMEZ" der, buz dökülmez, şeker
+  şeridi tur tamamlansa bile geçmez. Mint artık bardakta ÇİZİLMİYOR (`GlassDecor`): hazırlık olarak duruyor,
+  içkide yüzen bir yaprak olarak durmuyor.
+- **Biranın kapısı**: odada duran dolu bira bardağına tıklanınca `OpenTap()` açılır, `OpenServe()` değil
+  (yazar: "built sahnesine değil bira da istisna var").
+- **Takılan bardak düzeldi**: gecenin süpürülüşü (`Housekeeping.SweepForClosing`) tezgâhı Core'da boşaltır,
+  koltuk görünümü ise kendi `CounterMess` nesnesine baktığı için bardağı çizmeye devam ediyordu — sürüklenmez,
+  silinmez, her tıkta "That is not on this counter." derdi. Görünüm artık TEZGÂHA soruyor (`OnTheCounter`).
+- **Kir damla oldu**: `SmudgePixels` yeniden çizildi — renkli bir gölet, limon/peçete ve iki yığın kırıntı
+  yerine bardağın bastığı halka, tabanından düşen damlalar ve bir döküntünün serpintisi; su soğuk ve
+  renksiz, içki ise şişenin renginden bir tondur. Kontrastı artık etrafındaki 2 piksel siyah değil, damlanın
+  kendi meniskusu veriyor. Bir koltuğun önü TAMAMEN temizlenince beş adet 4 köşeli yıldız (`ChromeArt.Sparkle4`)
+  sırayla parlayıp sönüyor (yazar: "oyuncu tamamen silindiğini anlaması için").
+- Doğrulama: EditMode 624/625, PlayMode 13/13. Oyunda: r114 ölçüm, r115/r116 yerleşim, r117 ölçerler
+  ve bira kuralı, r118 damlalar.
+
 ### 9.100 · Altıncı liste (1/3): kapının üst yüzü ve ışığı, tavan konileri, daha loş akşam, küçülen pencere lekesi, sertifika v7, eski lavabo (2026-09-22)
 
 - **Kapağın üst yüzü** (`Resources/Scene/counter_door.png`): çizim dört satır aşağı kaydı, açılan yer kapının

@@ -55,6 +55,7 @@
     { "key": "seats.garnish.none_left", "text": "NONE LEFT", "note": "Toast when a garnish jar (olive, mint) is dropped into a drink but the bar's stock of it has run out. Toast line, ~12 characters." },
     { "key": "seats.garnish.glass_full", "text": "THE GLASS IS FULL", "note": "Toast when a garnish from a jar is dropped into a glass that is already full. Toast line, ~18 characters." },
     { "key": "seats.garnish.in_drink", "text": "{bottle} IN THE DRINK", "note": "Toast when an olive or mint garnish lands in the glass. {bottle} = the garnish product's name in capitals. Toast line, one line, ~30 characters." },
+    { "key": "seats.garnish.not_in_beer", "text": "NOT IN A BEER", "note": "Toast when the player tries to finish a pint with anything but a lemon or a rim of salt. Toast line, ~14 characters." },
     { "key": "seats.garnish.already_on", "text": "ALREADY ON THAT DRINK", "note": "Toast when a garnish the drink already has is dropped on it again. Toast line, ~22 characters." },
     { "key": "seats.garnish.ice_in", "text": "ICE IN THE GLASS x{cubes}", "note": "Toast when an ice cube is dropped into the glass. {cubes} = cubes now in it (whole number); 'x' is a multiplier sign, keep it next to the number. Toast line, ~22 characters." },
     { "key": "seats.garnish.on_drink", "text": "{garnish} ON THE DRINK", "note": "Toast when a garnish (lemon twist...) is put on the drink. {garnish} = the garnish's name in capitals. Toast line, one line, ~26 characters." },

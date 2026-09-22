@@ -941,7 +941,9 @@ namespace LastCall.UI
         /// (screen y 585 — low in the band, clear of the bottom text stack).</summary>
         // -245, not -225 (2026-09-14, the author: "sahnedeki shaker şişe kaşık vs. gibi nesneleri biraz daha
         // aşağı alabiliriz"); the strip, the readout and the bottle's and lid's rests came down with it.
-        private const float BenchFootY = -245f;
+        // -198, not -245 (2026-09-22, the author: "tum nesneleri yukari cek butonlar dahil"): the key row's top
+        // is on 123 now and a prop standing on -245 had its foot at screen 81, behind the keys.
+        private const float BenchFootY = -198f;
         /// <summary>How far over the surface's top the hand may lift a vessel, and how far over a target's
         /// drawn top its mouth must be before it leans (PourHand.Press, 2026-09-14).</summary>
         private const float HandAbove = 20f, ClearOverRim = 6f;
@@ -955,7 +957,9 @@ namespace LastCall.UI
         // the bin - and the catching vessel stood in it, the glass's foot behind the key. Eighty units up clears
         // the row and costs the lift nothing that matters: the hand's ceiling is measured off the surface, not
         // off the vessel.
-        private const float CatchFootY = -260f;
+        // -196, not -260 (2026-09-22): the key row rose 43, so the catching vessel rises with it - its foot at
+        // screen 130 stands seven clear of the keys' heads.
+        private const float CatchFootY = -196f;
         /// <summary>The glass stands a little higher than the tin: its sheet has fewer empty rows under its foot.</summary>
         private const float GlassFootLift = 16f;
         /// <summary>A vessel is pouring from this lean on (level, less the lean's own spring).</summary>
@@ -1042,12 +1046,20 @@ namespace LastCall.UI
             // column's width, in grey — the bench's colour is the frame around the key, not the key.
             var rt = PackKeyFlow(panel, "EdgeBack", (caption ?? UIText.T("bench.back_to_bar")).TrimStart('◀', ' '),
                 "back", KeyWay, new Vector2(0f, 0f), new Vector2(BackKeyW, BackKeyH),
-                new Vector2(16f, 16f), () => GoTo(back), out _, out _);
+                new Vector2(16f, KeyRowY), () => GoTo(back), out _, out _);
             RegisterFixed(panel, rt);    // ...and so is the way out
             return rt;
         }
 
         private const float BackKeyW = 224f, BackKeyH = 56f;   // the column's width and its foot's height (2026-09-17)
+
+        /// <summary>
+        /// The foot of the bottom row of keys - the way out, SERVE IT, the bin - on every bench. 59, not 16
+        /// (2026-09-22, the author: "tum nesneleri yukari cek butonlar dahil"): the column above it rose 43 to meet
+        /// the counter's pink strip, and the row rises with it, which leaves the bottom 59 units of the draught
+        /// bench for the keg shelf that is meant to be half in shot.
+        /// </summary>
+        private const float KeyRowY = 59f;
 
         /// <summary>The brass line the bench's instruments wear two units inside their edge.</summary>
         private void BrassRim(RectTransform plate)
@@ -1252,26 +1264,36 @@ namespace LastCall.UI
             // the key's left end with the word beside it, on a plate wider than it is tall, so the bottom of every
             // bench is one row of keys - the way out at the left, SERVE IT in the middle, the bin at the right.
             var rt = PackKeyFlow(parent, "Bin", null, null, KeyBin, new Vector2(1, 0),
-                new Vector2(BinKeyW, BinKeyH), new Vector2(-16f, 16f), null, out var btn, out _);
+                new Vector2(BinKeyW, BinKeyH), new Vector2(-16f, KeyRowY), null, out var btn, out _);
             RegisterFixed(parent, rt);   // the bin is the same object in the same place on both benches (registered AFTER it is placed: Home is read then)
+            // ONE SIZE, AND CENTRED AS A PAIR (2026-09-22, the author: "font ile cop kutusu iconunun boyutu ayni
+            // olmali ve ikisi beraber butona ortalanmali sadece yazi degil"). The drawing was 40x56 beside a 16 px
+            // word and the word alone was centred in what was left of the plate, so the key read as a picture with
+            // the word pushed off to one side. The mark is the letter's own height now (ChromeArt.BinSmall, drawn
+            // at 16x24) and the two are measured together and laid out about the plate's middle.
+            const float BinGlyphW = 16f, BinGlyphH = 24f, BinPairGap = 10f;
             var face = rt.Find("Face") as RectTransform;
+            var word = NewText("BinWord", face, _display, 16, TextAnchor.MiddleLeft, MenuPack.WordOn(KeyRamp(KeyBin)));
+            word.rectTransform.pivot = new Vector2(0f, 0.5f);
+            word.horizontalOverflow = HorizontalWrapMode.Overflow;
+            word.text = UIText.T("bench.bin");
+            // BIN and ÇÖP fit at 16; BASURA and PRULLENBAK do not, and the plate is one width in every language
+            FitWord(word, new Vector2(BinKeyW - 28f - BinGlyphW - BinPairGap, BinGlyphH), 16);
+            word.raycastTarget = false;
+            float binWordW = Mathf.Min(word.preferredWidth + 2f, BinKeyW - 20f - BinGlyphW - BinPairGap);
+            float binLeft = Mathf.Max(8f, (BinKeyW - (BinGlyphW + BinPairGap + binWordW)) * 0.5f);
             var drawn = NewRect("Drawing", face);
-            Place(drawn, new Vector2(0f, 0.5f), new Vector2(40, 56), new Vector2(14f, 2f));
+            Place(drawn, new Vector2(0f, 0.5f), new Vector2(BinGlyphW, BinGlyphH), new Vector2(binLeft, 2f));
             drawn.pivot = new Vector2(0f, 0.5f);
             var img = drawn.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.Bin(false);
+            img.sprite = ChromeArt.BinSmall(false);
             img.color = Color.white;
             img.raycastTarget = false;
             var relay = rt.gameObject.AddComponent<HoverRelay>();
-            relay.Entered = () => img.sprite = ChromeArt.Bin(true);
-            relay.Exited = () => img.sprite = ChromeArt.Bin(false);
-            var word = NewText("BinWord", face, _display, 16, TextAnchor.MiddleLeft, MenuPack.WordOn(KeyRamp(KeyBin)));
-            Place(word.rectTransform, new Vector2(0f, 0.5f), new Vector2(BinKeyW - 70f, 22f), new Vector2(60f, 2f));
-            word.rectTransform.pivot = new Vector2(0f, 0.5f);
-            word.text = UIText.T("bench.bin");
-            // BIN and ÇÖP fit at 16; BASURA and PRULLENBAK do not, and the plate is one width in every language
-            FitWord(word, new Vector2(BinKeyW - 74f, 22f), 16);
-            word.raycastTarget = false;
+            relay.Entered = () => img.sprite = ChromeArt.BinSmall(true);
+            relay.Exited = () => img.sprite = ChromeArt.BinSmall(false);
+            Place(word.rectTransform, new Vector2(0f, 0.5f), new Vector2(binWordW, BinGlyphH),
+                  new Vector2(binLeft + BinGlyphW + BinPairGap, 2f));
 
             btn.onClick.AddListener(() =>
             {
