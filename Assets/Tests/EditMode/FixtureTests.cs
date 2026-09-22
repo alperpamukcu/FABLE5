@@ -219,9 +219,11 @@ namespace LastCall.Tests
             var walls = loaded.Slots.First(s => s.Id == "walls");
             Assert.IsTrue(walls.Backdrop);
             var rungs = loaded.Fixtures.Where(f => f.Slot == "walls").OrderBy(f => f.Level).ToList();
-            // FIVE since the tree shipped (2026-09-13): the chevron went in under the harlequin.
-            Assert.AreEqual(new[] { 1, 2, 3, 4, 5 }, rungs.Select(r => r.Level).ToArray());
+            // FIVE since the tree shipped (2026-09-13): the chevron went in under the harlequin. SIX since the
+            // eighth list (2026-09-22): round seven's wave mural between the chevron and the harlequin.
+            Assert.AreEqual(new[] { 1, 2, 3, 4, 5, 6 }, rungs.Select(r => r.Level).ToArray());
             Assert.AreEqual("back6_chevron", rungs[3].Id, "the author's tier order");
+            Assert.AreEqual("back7_wave", rungs[4].Id, "the author's pick B2, under the harlequin");
             Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens in the cracked room");
             Assert.AreEqual(0, rungs[0].Comfort, "and what it opens with is the FreeBase");
             for (int i = 1; i < rungs.Count; i++)
@@ -252,8 +254,9 @@ namespace LastCall.Tests
             Assert.IsTrue(slot.Backdrop && slot.Overlay, "a layer of the room's picture, laid over it");
             Assert.AreEqual("The right wall", slot.Place, "the market says where the rung goes");
             var rungs = loaded.Fixtures.Where(f => f.Slot == "walls_right").OrderBy(f => f.Level).ToList();
-            // SEVEN since the tree shipped (2026-09-13): the author's four and round six's three.
-            Assert.AreEqual(new[] { 1, 2, 3, 4, 5, 6, 7 }, rungs.Select(r => r.Level).ToArray());
+            // SEVEN since the tree shipped (2026-09-13): the author's four and round six's three. EIGHT since the
+            // eighth list (2026-09-22): round seven's deco fans at the top.
+            Assert.AreEqual(new[] { 1, 2, 3, 4, 5, 6, 7, 8 }, rungs.Select(r => r.Level).ToArray());
             Assert.IsTrue(rungs[0].StartsInTheRoom, "the bar opens with the wall it has");
             Assert.AreEqual(0, rungs[0].Comfort, "and the wall it has is worth nothing");
             for (int i = 1; i < rungs.Count; i++)

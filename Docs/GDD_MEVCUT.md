@@ -1540,6 +1540,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 - **Kimlik dosyası rehbere eşitlendi:** eski rig'den kalan 23 kayıt silindi (kimse çizmiyor), Ece ve boş yedek satır kaldı;
   `patron_roster.py check` artık sıfır uyuşmazlık veriyor.
 
+### 9.104 · Sekizinci liste (1/…): oda seçimleri, URP spot sarkıtlar, pencere lekesi, tek çizim şehir (2026-09-22)
+
+- **Yazarın seçimleri oyunda** (`Tools/room7_ship.py`): C3 `ceil7_dusk` (Alacakaranlık Tavanı, 3★, $210),
+  B2 `back7_wave` (Dalga Duvar Resmi, 2,5★, $185 — şevron ile harlequin arasına girdi, harlequin 6. basamak oldu),
+  F3 `floor7_marble` (Pembe Mermer, 3★, $215), R2 `rwall7_deco` (Deko Yelpazeler, 3★, $205). İki kusur burada
+  düzeldi: PixelLab dokusu 6–8 px gri çerçeveyle geliyordu, ortak warp 5 kesiyordu → tavanın aynalı ortasında gri
+  çizgi (tam ölçülüp kesiliyor); yan duvar sütun sütun warp'lanırken kapının üstündeki sütunlar lento'da bitip
+  bütün deseni dar şeride sıkıştırıyordu (artık duvarın taban çizgisi kapının altından devam ettiriliyor, desen
+  tek ölçekte) ve kapı eşiğinin koyu grisi duvar sayılıp desen alıyordu (nötr gri artık duvar değil).
+- **Sarkıtlar gerçek URP spotu:** koni çerezi ve çizili LightBeam gitti. Her lamba kendi ağzında (`lightDy`
+  −40/−36/−28) 180° döndürülmüş bir Point ışığı (iç 24°, dış 56°, falloff 0,55) — URP 2D açıyı ışığın YUKARISINDAN
+  ölçer, 2026-09-22'deki 46/84 denemesi tavana baktığı için "hiçbir pikseli değiştirmemişti". Işık müşterileri ve
+  tezgâhı aydınlatır; havadaki ışık huzmesi ayrı bir çocuk ışık (`PendantAir`): yalnız arka duvar katmanında,
+  lambanın %4'ü kadar ışık, hacmi bunun 5 katı. URP hacmi ışığın ulaştığı HER katman grubundan sonra çizdiği için
+  müşteri+tezgâh ışığındaki hacim iki kez ve yüzlerin üstüne çiziliyordu (r140); şimdi bir kez, müşterilerin
+  arkasında.
+- **Pencere lekesi:** dört şerit artık dördü de ortadaki şerit (bütün lekenin köşelerini kesen elmas pah iki dış
+  şeridi kısaltıyordu). Zemin/duvar/tavan lekeleri dikiş yerinde karışmıyor: her yüzeyin çizimi kendi dikişinde
+  satır satır kesilip tam güçte gösteriliyor (`SunPatch`), yani lekenin zemindeki kısmı o an zeminin, duvara
+  çıkan kısmı duvarın şeklinde.
+- **Şehir tek çizim** (`Tools/window_sky.py derive`): 31 kare PixelLab'ın ayrı ayrı çizdiği kareler, kuleleri aynı
+  yerde değil; maske 0. kareden alınıp bütün karelere uygulanınca mavi saatten itibaren kuleler o karenin gökyüzü
+  lekeleriyle doluyordu (yazarın "karman çorman pikseller"i). Artık şehir gece karesinin çizimi: gövdeler altın
+  karenin morlarından (bölge bölge ortalama kaydırma, kontrast korunuyor) gecenin laciverdine yürüyor, 144 pencere
+  (630 piksel) kendi saatinde tek tek yanıyor, beşte biri gece yarısından sonra sönüyor. Dosya düzeni aynı (LCS2),
+  sahnenin kareler arası geçişi artık aynı kulelerin solması. Gökteki glif gibi bulut maskesi yerine ince uzun
+  bulut şeritleri.
+- Doğrulama: EditMode 624/625, PlayMode 13/13.
+
 ### 9.103 · Yedinci liste: Malibu Club, sayan fatura, premium sertifika, görünür ışık hüzmeleri, işaret emojileri, sağ sütun, düzgün gökyüzü (2026-09-22)
 
 - **Barın adı MALIBU CLUB.** Fişin başlığı ve gün sonunun iki başlığı (`build.bill.head`, `build.dayend.title`,

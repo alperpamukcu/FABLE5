@@ -9,9 +9,10 @@ sun and the city - and could only step between whole pictures, so the sun faded 
 it stood and the sky changed in 31 clunks. From here on the view is COMPOSED: the SKY is
 drawn by the stage every frame from a small model (palette bands, ordered dither, a sun
 disc that sinks, stars that come out, clouds that drift) and the CITY is the author's own
-skyline, cut from the frames by this tool into three layers the stage flips between pixel
-by pixel on a schedule keyed to the sun. Nothing in the city is redrawn; nothing in the sky
-is a bitmap.
+skyline: since 2026-09-22 ONE drawing (the sheet's night frame) that this tool walks through
+the evening - the golden frame's purples at opening, the night's navy by the small hours, its
+windows coming on one by one - as thirty-one frames the stage steps and blends between.
+Nothing in the sky is a bitmap.
 
 This file is the tool AND the twin: `derive` cuts the city layers, and `preview` renders
 the very same model the stage renders (WindowSky.cs is a port of `render_sky` below) so the
@@ -119,81 +120,177 @@ def inpaint(img, holes):
     return out
 
 
-def derive():
-    day, night = frame(0), frame(30)
-    R, G, B = day[:, :, 0], day[:, :, 1], day[:, :, 2]
+def lum(a):
+    return (a[..., 0] * 299 + a[..., 1] * 587 + a[..., 2] * 114) // 1000
+
+
+def silhouette(night):
+    """The towers off the NIGHT frame: the darkest thing in the view, below the upper sky. Every
+    column is city from its first tower pixel down, and a one-pixel spike of sky between two
+    towers is a mullion's worth of nothing."""
     rows = np.arange(SRC_H)[:, None]
-    # The silhouette in the golden-hour frame is purple against an orange sky, which is the
-    # one moment the two are trivially apart. Below the tallest spire everything under the
-    # first purple pixel of a column is city, lit windows and all.
+    tower = (lum(night) < 20) & (rows >= 40)
+    skyline = np.full(SRC_W, SRC_H, int)
+    for x in range(SRC_W):
+        hit = np.where(tower[:, x])[0]
+        if len(hit):
+            skyline[x] = int(hit.min())
+    for x in range(1, SRC_W - 1):
+        skyline[x] = min(skyline[x], max(skyline[x - 1], skyline[x + 1]) + 6)
+    city = np.zeros((SRC_H, SRC_W), bool)
+    for x in range(SRC_W):
+        city[skyline[x]:, x] = True
+    return city, skyline
+
+
+def dusk_silhouette(day):
+    """The golden frame's own city, for its colours only (the old cut)."""
+    R, B = day[:, :, 0], day[:, :, 2]
+    rows = np.arange(SRC_H)[:, None]
     purple = (B > R + 10) & (R < 170) & (rows >= 40)
     city = np.zeros((SRC_H, SRC_W), bool)
-    skyline = np.full(SRC_W, SRC_H, int)
     for x in range(SRC_W):
         hit = np.where(purple[:, x])[0]
         if len(hit):
-            skyline[x] = int(hit.min())
-            city[skyline[x]:, x] = True
-    # A one-pixel spike of sky between two towers is a mullion's worth of nothing.
-    for x in range(1, SRC_W - 1):
-        skyline[x] = min(skyline[x], max(skyline[x - 1], skyline[x + 1]) + 6)
-        city[skyline[x]:, x] = True
+            city[int(hit.min()):, x] = True
+    return city
 
-    # THE CITY IS THE FRAMES' OWN (2026-09-17, the author: "şehirdeki değişimi sevmedim, onu
-    # önceki gibi kullanabilir miyiz?"). The first cut flipped the city pixel by pixel between
-    # three plates on a schedule of its own; the author preferred the thirty-one frames' own
-    # progression - the towers walking from purple to navy and the windows coming on the way
-    # PixelLab drew them. So every frame's city pixels ship, in mask order, and the stage
-    # shows the frame the hour is nearest to. Only the SKY is drawn.
-    mask = city.astype(np.uint8)
-    # Clouds: what stands off its row's own colour in the upper sky of the golden frame,
-    # kept only where it is a shape and not a band edge (two rows tall at least).
+
+def by_rank(src, src_mask, ref, ref_mask):
+    """Each src pixel takes the ref colour at its own luminance rank: the dusk frame's palette laid
+    over the night frame's drawing, dark for dark and light for light, whole colours only."""
+    out = src.copy()
+    ys, xs = np.where(src_mask)
+    if not len(ys):
+        return out
+    ref_px = ref[ref_mask]
+    ref_px = ref_px[np.argsort(lum(ref_px), kind='stable')]
+    order = np.argsort(lum(src[ys, xs]), kind='stable')
+    n, m = len(order), len(ref_px)
+    for rank, k in enumerate(order):
+        out[ys[k], xs[k]] = ref_px[min(m - 1, int(rank * m / n))]
+    return out
+
+
+def clusters(lit):
+    """4-connected runs of lit pixels: a window is one light, so it comes on as one."""
+    label = np.full(lit.shape, -1, int)
+    n = 0
+    for y, x in zip(*np.where(lit)):
+        if label[y, x] >= 0:
+            continue
+        stack = [(y, x)]
+        label[y, x] = n
+        while stack:
+            cy, cx = stack.pop()
+            for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                ny, nx = cy + dy, cx + dx
+                if 0 <= ny < SRC_H and 0 <= nx < SRC_W and lit[ny, nx] and label[ny, nx] < 0:
+                    label[ny, nx] = n
+                    stack.append((ny, nx))
+        n += 1
+    return label, n
+
+
+def streaks():
+    """Thin clouds for the upper sky: long, one or two rows, tapered - the flat stratus a Miami
+    sunset lays over the sea. The golden frame's own cloud pixels, cut out and drifted, read as
+    dark glyphs once the sky under them went smooth (2026-09-22, eighth list)."""
     cloud = np.zeros((SRC_H, SRC_W), bool)
-    for y in range(0, 52):
-        row = day[y]
-        vals, counts = np.unique(row, axis=0, return_counts=True)
-        mode = vals[counts.argmax()]
-        cloud[y] = np.abs(row - mode).sum(axis=1) > 28
-    cloud &= ~city
-    grown = cloud.copy()
-    for y in range(1, 51):
-        grown[y] = cloud[y] & (cloud[y - 1] | cloud[y + 1])
-    cloud = grown
-    # ...and a cloud that is its own island of one or two pixels is noise.
-    keep = np.zeros_like(cloud)
-    for y in range(SRC_H):
-        for x in range(SRC_W):
-            if not cloud[y, x]:
-                continue
-            n = cloud[max(0, y - 1):y + 2, max(0, x - 1):x + 2].sum() - 1
-            keep[y, x] = n >= 2
-    cloud = keep
+    for i, (row, x0, length, thick) in enumerate(((9, 4, 26, 2), (17, 38, 22, 1), (24, 12, 30, 2),
+                                                  (31, 44, 18, 1), (38, 0, 20, 1), (44, 30, 24, 1))):
+        for dx in range(length):
+            x = (x0 + dx) % SRC_W
+            end = min(dx, length - 1 - dx)
+            t = thick if end >= 3 else 1
+            for dy in range(t):
+                if end >= 1 or hash01(x, row, 71 + i) > 0.5:
+                    cloud[row + dy, x] = True
+    return cloud
 
-    frames = [frame(i) for i in range(FRAME_COUNT)]
+
+def derive():
+    """ONE CITY, ALL NIGHT (2026-09-22, the author's eighth list: "Şehir silüetini geliştirelim şu an
+    karman çorman pixellere benziyor önceki gibi bir şehir görüntüsü olmalı").
+
+    The thirty-one frames were each drawn by PixelLab on its own, so their towers do not stand in the
+    same places: frame 20's skyline is not frame 0's. The first cut kept one mask (the golden frame's)
+    and showed every frame's pixels through it, so from the blue hour on the towers were full of that
+    frame's sky and the sky of that frame's towers - the jumble the author saw, and worse once the
+    frames were cross-faded. Now the city is ONE drawing, the night frame's (the one with the most in
+    it: the towers' lit grids and the town's lamps), and the evening is done TO it:
+
+      the bodies  walk from the golden frame's purples (laid on by luminance rank, zone by zone, so a
+                  tower stays a tower and a roof a roof) to the night frame's own navy over the dusk;
+      the lights  come on window by window, each 4-connected run of lit pixels as one light at its own
+                  hour through the blue hour, and a fifth of them go dark again in the small hours.
+
+    Thirty-one frames of that one drawing ship in the old LCS2 layout, so the stage is unchanged and its
+    cross-fade between neighbours is now a fade of the same towers rather than a ghost of two skylines.
+    """
+    day, night = frame(0), frame(30)
+    city, skyline = silhouette(night)
+    town_top = int(np.median(skyline[skyline < SRC_H])) + 14      # below the towers' feet: the town
+    rows = np.arange(SRC_H)[:, None]
+
+    lit = city & (lum(night) >= 26)
+    unlit = inpaint(night, lit)
+    day_city = dusk_silhouette(day) & ~bright(day)
+    # THE DUSK IS THE NIGHT DRAWING IN THE GOLDEN FRAME'S LIGHT: zone by zone, the unlit night city is
+    # moved to the golden frame's own mean colour there and its contrast kept (a little more for the
+    # towers, which the sun behind them outlines), so every edge of the drawing survives the evening.
+    # (Laying the golden palette on by luminance rank was tried first: the towers went flat and the town
+    # came out in blotches, because the two frames' tones are not spread the same way.)
+    looks = []
+    for zone, gain in ((rows < town_top, 1.25), (rows >= town_top, 1.0)):
+        here = city & np.broadcast_to(zone, city.shape)
+        mine = unlit[here & ~lit].mean(axis=0)
+        theirs = day[day_city & np.broadcast_to(zone, city.shape)].mean(axis=0)
+        looks.append((unlit.astype(float) - mine) * gain + theirs)
+    # the towers' feet run into the town over eight rows rather than along a ruled line
+    wt = np.clip((rows - (town_top - 4)) / 8.0, 0.0, 1.0)[:, :, None]
+    dusk = np.clip(looks[0] * (1.0 - wt) + looks[1] * wt, 0, 255)
+
+    label, n = clusters(lit)
+    on_at = np.array([0.10 + 0.52 * hash01(k, 3, 17) for k in range(n)])
+    off_at = np.array([0.80 + 0.18 * hash01(k, 5, 23) if hash01(k, 7, 29) < 0.2 else 9.0 for k in range(n)])
+
+    frames = []
+    for i in range(FRAME_COUNT):
+        h = i / float(FRAME_COUNT - 1)
+        w = smoothstep(0.08, 0.56, h)
+        body = dusk * (1.0 - w) + unlit * w
+        img = body.copy()
+        ys, xs = np.where(lit)
+        for y, x in zip(ys, xs):
+            k = label[y, x]
+            on = min(1.0, max(0.0, (h - on_at[k]) / 0.05)) * (1.0 - min(1.0, max(0.0, (h - off_at[k]) / 0.05)))
+            img[y, x] = body[y, x] * (1.0 - on) + night[y, x] * on
+        frames.append(np.clip(np.round(img), 0, 255).astype(np.uint8))
+
+    mask = city.astype(np.uint8)
+    cloud = streaks() & ~city
     with open(CITY_OUT, 'wb') as f:
         f.write(b'LCS2')
         f.write(struct.pack('<HHH', SRC_W, SRC_H, FRAME_COUNT))
         f.write(mask.tobytes())
         f.write(cloud.astype(np.uint8).tobytes())
-        f.write(skyline.astype(np.uint8).tobytes())
+        f.write(np.minimum(skyline, 255).astype(np.uint8).tobytes())
         for fr in frames:
             f.write(fr[city].astype(np.uint8).tobytes())      # mask order: row-major over city px
-    print('wrote %s: %d frames x %d city px, %d cloud px, skyline rows %d..%d'
-          % (os.path.relpath(CITY_OUT, ROOT), FRAME_COUNT, int(city.sum()),
+    print('wrote %s: %d frames x %d city px, %d lights in %d windows, %d cloud px, skyline rows %d..%d'
+          % (os.path.relpath(CITY_OUT, ROOT), FRAME_COUNT, int(city.sum()), int(lit.sum()), n,
              int(cloud.sum()), int(skyline.min()), int(skyline[skyline < SRC_H].max())))
 
-    # A contact sheet of what was cut: the city at frames 0, 10, 20, 30, and the masks.
+    # A contact sheet of what was made: the city at six hours over a flat sky of its hour.
     tiles = []
-    for i in (0, 10, 20, 30):
+    for i in (0, 6, 12, 18, 24, 30):
         t = np.zeros((SRC_H, SRC_W, 4), np.uint8)
-        t[:, :, :3] = frames[i]
-        t[:, :, 3] = np.where(city, 255, 0)
+        t[:, :, :3] = np.array([60, 30, 70]) if i < 12 else np.array([30, 24, 60])
+        t[:, :, 3] = 255
+        t[city, :3] = frames[i][city]
+        t[cloud, :3] = (t[cloud, :3] * 0.8).astype(np.uint8)
         tiles.append(t)
-    m = np.zeros((SRC_H, SRC_W, 4), np.uint8)
-    m[:, :, 3] = 255
-    m[mask == 1] = (60, 60, 90, 255)
-    m[cloud] = (200, 200, 255, 255)
-    tiles.append(m)
     sheet = Image.new('RGBA', (SRC_W * 4 * len(tiles) + 8 * (len(tiles) - 1), SRC_H * 4), (20, 20, 20, 255))
     for i, t in enumerate(tiles):
         sheet.paste(Image.fromarray(t).resize((SRC_W * 4, SRC_H * 4), Image.NEAREST), (i * (SRC_W * 4 + 8), 0))

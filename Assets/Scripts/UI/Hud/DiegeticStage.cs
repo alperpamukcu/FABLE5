@@ -1852,59 +1852,61 @@ namespace LastCall.UI
         private static readonly Vector2 ShaftFar = new Vector2(430f, 318f);
         /// <summary>The lift on the drinkers alone, in the sun and under the lamps.</summary>
         private const float PatronFillDay = 0.22f, PatronFillNight = 0.32f;
-        /// <summary>The pendants' cone, in room art px: as wide at the counter as the three lamps' spacing, so the
-        /// pools meet without flooding, and as deep as the drop from the shade to the stone.</summary>
-        private const int PendantConeW = 150, PendantConeH = 168;
-        private static Sprite s_pendantCone;
+        /// <summary>
+        /// THE PENDANT'S SPOT (2026-09-22, the author's eighth list: "Yeni eklenen tavan lambasının ışık etkisi kötü,
+        /// Unity üzerinden profesyonel ışıklandırma yapmalıyız"). The cone is the full angle of the pool it throws:
+        /// inside the inner angle the counter takes the whole lamp, between the two it softens to nothing - wide
+        /// enough at the bar top (a 28 degree half-angle over a 180px drop is ~95px each side) for three pools to
+        /// meet under the three shades. The volume is the shaft of lit air the renderer draws over what the light
+        /// reaches, as a share of the light itself, so it dims with the house at closing without being told.
+        /// </summary>
+        private const float PendantInnerAngle = 24f, PendantOuterAngle = 56f;
+        private const float PendantFalloff = 0.55f;
+        /// <summary>
+        /// THE AIR IS BEHIND THE PEOPLE (2026-09-22). URP draws a light's volume after every layer batch the light
+        /// reaches, so a spot on the drinkers and the counter drew its shaft twice and last - over the faces the game
+        /// is about reading (r140). The shaft is its own light instead, on the back wall's layer only: drawn once,
+        /// after the wall and before the people, who stand in front of it lit by the spot. It lights the wall by
+        /// <see cref="PendantAirLight"/> of the lamp - a warm wash, no more - and shows its air at
+        /// <see cref="PendantAirVolume"/> times that, so the shaft is a sixth of the lamp.
+        /// </summary>
+        private const float PendantAirLight = 0.04f, PendantAirVolume = 5f;
 
         /// <summary>
-        /// THE LIGHT UNDER A SHADE: narrow at the mouth, spreading to the counter, dying at its edges and at its
-        /// foot. Dithered off in two steps rather than faded, like every other light this room draws (16 §6.10),
-        /// so a cone of light is made of pixels rather than of gradient.
+        /// Makes a hung light a spot looking at the floor. URP 2D measures a point light's angles from the light's
+        /// own UP, so an unturned cone looks at the ceiling - which is why the 46/84 cone tried on 2026-09-22
+        /// "changed not one pixel" (r105-r108) and the cone was painted as a cookie instead. Turned half a circle,
+        /// the same light pools on the bar top and shows its shaft.
         /// </summary>
-        private static Sprite PendantConeCookie()
+        private static void PendantSpot(Light2D l, float radius)
         {
-            if (s_pendantCone != null) return s_pendantCone;
-            const int W = PendantConeW, H = PendantConeH;
-            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "PendantCone",
-            };
-            var px = new Color32[W * H];
-            const float MouthHalf = 11f;                 // the shade's own mouth, at the top
-            float floorHalf = W * 0.5f - 2f;             // what it has spread to by the counter
-            for (int y = 0; y < H; y++)
-            {
-                // THE MOUTH IS THE TOP ROW (2026-09-22). Texture rows count UP, and this had the mouth on row 0 -
-                // the bottom - so the cone stood on its point: wide under the ceiling, a narrow spot on the bar.
-                // Seen the moment the cone was drawn as a visible beam (r131); it is also why the pool on the
-                // counter measured so small.
-                float t = 1f - y / (float)(H - 1);       // 0 at the mouth (top), 1 at the foot
-                float half = Mathf.Lerp(MouthHalf, floorHalf, t);
-                // It fades as it falls, but keeps most of itself for the bar top (2026-09-22): with the cone the right
-                // way up, a fade to nothing at the foot left the drinkers lit and the counter dark (r138: 16 against 12).
-                float fade = (1f - 0.5f * t * t) * 0.92f;
-                for (int x = 0; x < W; x++)
-                {
-                    float dx = Mathf.Abs(x + 0.5f - W * 0.5f);
-                    byte a = 0;
-                    if (dx <= half)
-                    {
-                        float edge = 1f - dx / Mathf.Max(1f, half);
-                        float v = fade * Mathf.Clamp01(edge * 2.2f);
-                        a = v > 0.62f ? (byte)255
-                          : v > 0.34f ? (byte)(((x + y) & 1) == 0 ? 255 : 96)
-                          : v > 0.12f ? (byte)(((x + y) & 1) == 0 ? 128 : 0)
-                          : (byte)0;
-                    }
-                    px[y * W + x] = new Color32(255, 255, 255, a);
-                }
-            }
-            tex.SetPixels32(px);
-            tex.Apply(false, false);
-            s_pendantCone = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
-            s_pendantCone.name = "PendantCone";
-            return s_pendantCone;
+            l.lightType = Light2D.LightType.Point;
+            l.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
+            ShapeCone(l, radius);
+        }
+
+        private static void ShapeCone(Light2D l, float radius)
+        {
+            l.pointLightInnerAngle = PendantInnerAngle;
+            l.pointLightOuterAngle = PendantOuterAngle;
+            l.pointLightInnerRadius = radius * 0.12f;
+            l.pointLightOuterRadius = radius;
+            l.falloffIntensity = PendantFalloff;
+        }
+
+        /// <summary>The pendant's shaft of lit air, a child of its spot on the back wall's layer (see
+        /// <see cref="PendantAirLight"/>); it follows the spot's colour and brightness every frame.</summary>
+        private static void HangPendantAir(Light2D spot, float radius)
+        {
+            var air = new GameObject("PendantAir").AddComponent<Light2D>();
+            air.transform.SetParent(spot.transform, false);          // already turned to the floor
+            air.lightType = Light2D.LightType.Point;
+            ShapeCone(air, radius);
+            air.volumetricEnabled = true;
+            air.volumeIntensity = PendantAirVolume;
+            LightLayers(air, LayerBackground);
+            var follow = air.gameObject.AddComponent<PendantAir>();
+            follow.Source = spot; follow.Air = air; follow.Share = PendantAirLight;
         }
         private static readonly Color PatronFillTint = LightLanguage.PatronLift;   // the key, most of the way to white
 
@@ -2090,13 +2092,10 @@ namespace LastCall.UI
         private WindowSky.Flock _flock;
         private Light2D _windowLight;
         private Light2D _skyGlow, _counterGlow;
-        private Light2D _sunShaft;
-        /// <summary>The same patch while it lies on the FLOOR (2026-09-21): a second sprite light with the floor's
-        /// cookie, crossed over with the wall's as the patch climbs past the skirting (<see cref="FloorTopPx"/>).</summary>
-        private Light2D _sunFloor;
-        /// <summary>...and on the CEILING (2026-09-22): at the end of the shift the sun is under the window's head
-        /// and what comes through lands on the boards overhead, leaning the other way.</summary>
-        private Light2D _sunCeiling;
+        /// <summary>The window's patch of sun on the back WALL, and the same patch on the FLOOR (2026-09-21) and on the
+        /// CEILING (2026-09-22): three drawings of the four panes, each cut at its own seam and shown whole wherever it
+        /// lies (<see cref="SunPatch"/>).</summary>
+        private SunPatch _sunShaft, _sunFloor, _sunCeiling;
         /// <summary>Where the floor meets the wall, and where the wall meets the ceiling, in room art px. Measured
         /// off the room's own slots: the tables stand at 126, the signs hang at 178, the beams start near 300.</summary>
         private const float FloorTopPx = 136f, CeilingPx = 296f;
@@ -2576,30 +2575,18 @@ namespace LastCall.UI
                 // opening, sliding right and climbing the wall as the sun drops, going from
                 // cream to amber to red, and gone when the disc is. A sprite light wearing
                 // that shape; ApplyDaylight moves and colours it.
-                _sunShaft = new GameObject("SunShaft").AddComponent<Light2D>();
-                _sunShaft.transform.SetParent(_world, false);
-                _sunShaft.lightType = Light2D.LightType.Sprite;
-                _sunShaft.lightCookieSprite = SunShaftCookie();
-                _sunShaft.color = LampTint;
-                _sunShaft.intensity = 0f;
                 // NOT THE DRINKERS, AND NOT THE COUNTER (2026-09-21 and 2026-09-22, the author: "müşterilerin
                 // üstünde olmamalı", "yansıtan ışık hüzmesi tezgahın önüne gelmemeli"): the patch is the ROOM's -
                 // its plaster, its boards, its ceiling. The bar in front of it is lit by the house's own lamps.
-                LightLayers(_sunShaft, LayerBackground);
-                _sunFloor = new GameObject("SunFloor").AddComponent<Light2D>();
-                _sunFloor.transform.SetParent(_world, false);
-                _sunFloor.lightType = Light2D.LightType.Sprite;
-                _sunFloor.lightCookieSprite = SunFloorCookie();
-                _sunFloor.color = LampTint;
-                _sunFloor.intensity = 0f;
-                LightLayers(_sunFloor, LayerBackground);
-                _sunCeiling = new GameObject("SunCeiling").AddComponent<Light2D>();
-                _sunCeiling.transform.SetParent(_world, false);
-                _sunCeiling.lightType = Light2D.LightType.Sprite;
-                _sunCeiling.lightCookieSprite = SunCeilingCookie();
-                _sunCeiling.color = LampTint;
-                _sunCeiling.intensity = 0f;
-                LightLayers(_sunCeiling, LayerBackground);
+                int pw, ph;
+                _sunShaft = new SunPatch("SunShaft", _world, SunShaftCookie(out pw, out ph), pw, ph);
+                _sunFloor = new SunPatch("SunFloor", _world, SunFloorCookie(out pw, out ph), pw, ph);
+                _sunCeiling = new SunPatch("SunCeiling", _world, SunCeilingCookie(out pw, out ph), pw, ph);
+                foreach (var patch in new[] { _sunShaft, _sunFloor, _sunCeiling })
+                {
+                    patch.Light.color = LampTint;
+                    LightLayers(patch.Light, LayerBackground);
+                }
             }
             else
             {
@@ -3327,26 +3314,14 @@ namespace LastCall.UI
                         // (r91: 29.9 to 31.4 luma under the shades); with it, 42.6.
                         if (def.LightDy != 0f)
                         {
-                            // A CONE, DRAWN (2026-09-22, the author: "3 adet yukarıdan aşağı koni şeklinde inen loş
-                            // bir ışık"). A Point light with inner/outer ANGLES was the obvious way and it lights
-                            // nothing here - measured three times (r105-r108): the same lamp round raises the
-                            // counter 50 to 58, and with a 46/84 cone it changes not one pixel. So the cone is a
-                            // COOKIE, which is the one shape this project already trusts (the window's panes).
+                            // A SPOT FROM THE SHADE'S MOUTH (2026-09-22, the eighth list): the light hangs where the
+                            // shade opens (the data's lightDy), aims at the bar top and the people at it, and the
+                            // renderer draws the lit air under it (PendantSpot). It replaced a dithered cookie and a
+                            // drawn sprite of the same cone, which the author called bad lighting - a shape laid
+                            // over the room rather than light falling through it.
                             LightLayers(glow, LayerCounter, LayerPatrons);
-                            glow.lightType = Light2D.LightType.Sprite;
-                            glow.lightCookieSprite = PendantConeCookie();
-                            // ...AND THE SHAFT ITSELF IS DRAWN (seventh list: "net bir ışık hüzmesi"): the cone,
-                            // unlit, over the drinkers and the bar top, as bright as the light is (LightBeam).
-                            var beamGo = new GameObject("PendantBeam");
-                            beamGo.transform.SetParent(glow.transform, false);
-                            var beamSr = beamGo.AddComponent<SpriteRenderer>();
-                            beamSr.sprite = PendantConeCookie();
-                            if (_viewMaterial != null) beamSr.sharedMaterial = _viewMaterial;
-                            beamSr.sortingLayerName = LayerCounter;
-                            beamSr.sortingOrder = 900;
-                            beamSr.color = new Color(1f, 1f, 1f, 0f);
-                            var beam = beamGo.AddComponent<LightBeam>();
-                            beam.Light = glow; beam.Beam = beamSr;
+                            PendantSpot(glow, def.LightRadius);
+                            HangPendantAir(glow, def.LightRadius);
                         }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3674,10 +3649,8 @@ namespace LastCall.UI
                 // WHERE IT IS: two legs of one walk, the floor to the wall and the wall to the ceiling.
                 var at = sink < 0.5f ? Vector2.Lerp(ShaftNear, ShaftWall, sink / 0.5f)
                                      : Vector2.Lerp(ShaftWall, ShaftFar, (sink - 0.5f) / 0.5f);
-                // WHICH SURFACE IT IS ON: the room's own two seams, crossed over a hand's width so nothing snaps.
-                float onCeiling = SkyClock.SmoothStep(CeilingPx - 24f, CeilingPx + 8f, at.y);
-                float onFloor = 1f - SkyClock.SmoothStep(FloorTopPx - 10f, FloorTopPx + 10f, at.y);
-                float onWall = Mathf.Max(0f, 1f - onFloor - onCeiling);
+                // WHICH SURFACE IT IS ON is no longer a blend (2026-09-22, the eighth list): each surface's drawing is
+                // cut at the room's seams below, so every part of the light is the shape of what it lands on.
                 // HOW BIG: off the sun's elevation. A grazing beam draws a long patch on a floor (cot a) and a tall
                 // one up a wall (1/sin a); both are clamped, because a sun at two degrees would otherwise paint the
                 // room. The ceiling patch is widest at the very end, when the light comes in almost level.
@@ -3688,29 +3661,20 @@ namespace LastCall.UI
                 float csc = Mathf.Clamp(1f / Mathf.Sin(a), 1f, 2.6f);
                 var world = StageArtPointToWorld(at);
 
-                _sunShaft.color = d.Shaft;
-                _sunShaft.intensity = shaftBase * onWall;
-                _sunShaft.transform.localPosition = world;
-                _sunShaft.transform.localScale = new Vector3(k * Mathf.Lerp(1f, ShaftStretch, sink), k * Mathf.Lerp(0.85f, 1.35f, Mathf.InverseLerp(1f, 2.6f, csc)), 1f);
                 bool shaftOn = d.SunStrength > 0.01f;
-                if (_sunShaft.enabled != shaftOn) _sunShaft.enabled = shaftOn;
-                if (_sunFloor != null)
-                {
-                    _sunFloor.color = d.Shaft;
-                    _sunFloor.intensity = shaftBase * onFloor;
-                    _sunFloor.transform.localPosition = world;
-                    _sunFloor.transform.localScale = new Vector3(k * Mathf.Lerp(1f, 1.9f, Mathf.InverseLerp(1f, 3.2f, cot)), k, 1f);
-                    if (_sunFloor.enabled != shaftOn) _sunFloor.enabled = shaftOn;
-                }
-                if (_sunCeiling != null)
-                {
-                    _sunCeiling.color = d.Shaft;
-                    _sunCeiling.intensity = shaftBase * onCeiling;
-                    _sunCeiling.transform.localPosition = world;
-                    _sunCeiling.transform.localScale = new Vector3(k * Mathf.Lerp(1.1f, 1.8f, sink), k, 1f);
-                    bool ceilOn = shaftOn && onCeiling > 0.01f;
-                    if (_sunCeiling.enabled != ceilOn) _sunCeiling.enabled = ceilOn;
-                }
+                float wallRow = Mathf.Lerp(0.85f, 1.35f, Mathf.InverseLerp(1f, 2.6f, csc));
+                // the wall's own patch keeps what lies between the skirting and the cornice...
+                StepSunPatch(_sunShaft, d.Shaft, shaftBase, shaftOn, world,
+                    new Vector3(k * Mathf.Lerp(1f, ShaftStretch, sink), k * wallRow, 1f),
+                    _sunShaft.RowAt(FloorTopPx, at.y, wallRow), _sunShaft.RowAt(CeilingPx, at.y, wallRow));
+                // ...the floor's, what is still below the skirting...
+                StepSunPatch(_sunFloor, d.Shaft, shaftBase, shaftOn, world,
+                    new Vector3(k * Mathf.Lerp(1f, 1.9f, Mathf.InverseLerp(1f, 3.2f, cot)), k, 1f),
+                    0, _sunFloor.RowAt(FloorTopPx, at.y, 1f));
+                // ...and the ceiling's, whatever has climbed past the cornice.
+                StepSunPatch(_sunCeiling, d.Shaft, shaftBase, shaftOn, world,
+                    new Vector3(k * Mathf.Lerp(1.1f, 1.8f, sink), k, 1f),
+                    _sunCeiling.RowAt(CeilingPx, at.y, 1f), _sunCeiling.Rows);
             }
             _washBase = d.AmbientIntensity;
             _houseBase = Mathf.Lerp(HouseDay, HouseNight, d.Dusk);
@@ -3760,56 +3724,63 @@ namespace LastCall.UI
             CastShadow.LampShare = d.ShadowLampShare;
         }
 
+        /// <summary>One surface's patch this frame: placed, sized, cut to the rows that lie on its surface, and at the
+        /// hour's full strength wherever any of it shows.</summary>
+        private static void StepSunPatch(SunPatch patch, Color tint, float strength, bool sunUp, Vector3 at,
+                                         Vector3 scale, int lo, int hi)
+        {
+            if (patch == null) return;
+            bool shows = patch.Show(lo, hi);
+            var l = patch.Light;
+            l.color = tint;
+            l.intensity = shows ? strength : 0f;
+            l.transform.localPosition = at;
+            l.transform.localScale = scale;
+            bool on = sunUp && shows;
+            if (l.enabled != on) l.enabled = on;
+        }
+
+        /// <summary>
+        /// FOUR OF THE MIDDLE PANE (2026-09-22, the author's eighth list: "en ortadaki hüzmeyi 4 adet yan yana koyarak
+        /// kullan"). The patch had its four corners chamfered off as a whole, which cut the two outer panes short and
+        /// left only the middle two whole; the corners are no longer cut, so all four are the same pane, leaned, with
+        /// the head and the sill dithered off in two steps.
+        /// </summary>
+        private static Color32[] PaintPanes(int W, int H, float shear, int bar, int gap, int bars, int soft, int softer)
+        {
+            int run = bars * bar + (bars - 1) * gap;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                float lean = (y - H * 0.5f) * shear;
+                int edge = Mathf.Min(y, H - 1 - y);
+                for (int x = 0; x < W; x++)
+                {
+                    float u = x - lean - (W - run) * 0.5f;
+                    bool inBar = u >= 0f && u < run && (u % (bar + gap)) < bar;
+                    byte a = 0;
+                    if (inBar)
+                        a = edge < soft ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
+                          : edge < softer ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
+                          : (byte)255;
+                    px[y * W + x] = new Color32(255, 255, 255, a);
+                }
+            }
+            return px;
+        }
+
         /// <summary>
         /// The window's four panes as a LIGHT: bars leaning the way sun through a side window
         /// lands on a wall, the head and sill dithered off in two steps rather than faded,
         /// so the patch is drawn and not blurred (16 §6.10). Built once, white; the light
         /// wears it in the sun's colour at the room's own scale.
         /// </summary>
-        private static Sprite SunShaftCookie()
+        private static Color32[] SunShaftCookie(out int W, out int H)
         {
             // 156 by 118 (2026-09-22, the author: "camdan yansıyan ışığın boyutunu küçült"): grown from 132x100
             // on the 21st, cut back here - four panes that read as four, not a wash across the wall.
-            const int W = 156, H = 118;
-            const float Shear = 0.5f;               // x per row: the lean of the panes on the wall
-            const int Bar = 24, Gap = 10, Bars = 4;
-            int run = Bars * Bar + (Bars - 1) * Gap;
-            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "SunShaftCookie",
-            };
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)
-            {
-                float lean = (y - H * 0.5f) * Shear;
-                int edge = Mathf.Min(y, H - 1 - y);
-                for (int x = 0; x < W; x++)
-                {
-                    float u = x - lean - (W - run) * 0.5f;
-                    bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
-                    byte a = 0;
-                    if (inBar && !Chamfered(x, y, W, H))
-                        a = edge < 3 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
-                          : edge < 7 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
-                          : (byte)255;
-                    px[y * W + x] = new Color32(255, 255, 255, a);
-                }
-            }
-            tex.SetPixels32(px);
-            tex.Apply(false, false);
-            return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
-        }
-
-        /// <summary>
-        /// THE CORNERS ARE CUT (2026-09-22, the author: "ışık hüzmesinin köşeleri kırpılmış"): a patch of sun
-        /// through a window is bounded by the frame AND by the reveal it passes, so its corners come back clipped
-        /// rather than square. One diamond test chamfers all four at once.
-        /// </summary>
-        private static bool Chamfered(int x, int y, int w, int h)
-        {
-            float dx = Mathf.Abs(x + 0.5f - w * 0.5f) / (w * 0.5f);
-            float dy = Mathf.Abs(y + 0.5f - h * 0.5f) / (h * 0.5f);
-            return dx + dy > 1.62f;
+            W = 156; H = 118;
+            return PaintPanes(W, H, 0.5f, 24, 10, 4, 3, 7);   // leaning 0.5 x per row: sun through a side window on a wall
         }
 
         /// <summary>
@@ -3817,36 +3788,10 @@ namespace LastCall.UI
         /// what comes through strikes the boards overhead - a wide, shallow patch leaning the OTHER way, because
         /// the beam is climbing rather than falling. Shorter than the wall's and wider than the floor's.
         /// </summary>
-        private static Sprite SunCeilingCookie()
+        private static Color32[] SunCeilingCookie(out int W, out int H)
         {
-            const int W = 190, H = 48;
-            const float Shear = -1.1f;
-            const int Bar = 22, Gap = 8, Bars = 4;
-            int run = Bars * Bar + (Bars - 1) * Gap;
-            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "SunCeilingCookie",
-            };
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)
-            {
-                float lean = (y - H * 0.5f) * Shear;
-                int edge = Mathf.Min(y, H - 1 - y);
-                for (int x = 0; x < W; x++)
-                {
-                    float u = x - lean - (W - run) * 0.5f;
-                    bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
-                    byte a = 0;
-                    if (inBar && !Chamfered(x, y, W, H))
-                        a = edge < 2 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
-                          : edge < 5 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
-                          : (byte)255;
-                    px[y * W + x] = new Color32(255, 255, 255, a);
-                }
-            }
-            tex.SetPixels32(px);
-            tex.Apply(false, false);
-            return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+            W = 190; H = 48;
+            return PaintPanes(W, H, -1.1f, 22, 8, 4, 2, 5);
         }
 
         /// <summary>
@@ -3854,36 +3799,10 @@ namespace LastCall.UI
         /// leaning almost three times as hard, because light through a side window lies along the boards in a long
         /// low sweep. Dithered off at the head and the sill the same way, so the two patches are one family.
         /// </summary>
-        private static Sprite SunFloorCookie()
+        private static Color32[] SunFloorCookie(out int W, out int H)
         {
-            const int W = 216, H = 54;
-            const float Shear = 1.4f;
-            const int Bar = 24, Gap = 9, Bars = 4;
-            int run = Bars * Bar + (Bars - 1) * Gap;
-            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
-            {
-                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "SunFloorCookie",
-            };
-            var px = new Color32[W * H];
-            for (int y = 0; y < H; y++)
-            {
-                float lean = (y - H * 0.5f) * Shear;
-                int edge = Mathf.Min(y, H - 1 - y);
-                for (int x = 0; x < W; x++)
-                {
-                    float u = x - lean - (W - run) * 0.5f;
-                    bool inBar = u >= 0f && u < run && (u % (Bar + Gap)) < Bar;
-                    byte a = 0;
-                    if (inBar && !Chamfered(x, y, W, H))
-                        a = edge < 2 ? (byte)(((x + y) & 1) == 0 ? 255 : 0)
-                          : edge < 5 ? (byte)(((x + y) & 1) == 0 ? 255 : 128)
-                          : (byte)255;
-                    px[y * W + x] = new Color32(255, 255, 255, a);
-                }
-            }
-            tex.SetPixels32(px);
-            tex.Apply(false, false);
-            return Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f);
+            W = 216; H = 54;
+            return PaintPanes(W, H, 1.4f, 24, 9, 4, 2, 5);
         }
 
 

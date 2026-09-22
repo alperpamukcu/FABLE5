@@ -287,8 +287,10 @@ namespace LastCall.UI
             // The city's frame: the hour, a little behind the sun, over the frames there are.
             float lag = Mathf.Clamp(city.frameLag, 0f, 0.5f);
             // ...AND IT CROSSES BETWEEN FRAMES rather than jumping to the nearest (2026-09-22, seventh list: the
-            // weather changing "pixel pixel"): two neighbouring frames of the author's sheet, blended by how far the
-            // hour is between them, so a window lights by fading up instead of popping on.
+            // weather changing "pixel pixel"), blended by how far the hour is between them, so a window lights by
+            // fading up instead of popping on. Since the eighth list the frames are ONE drawing through the evening
+            // (Tools/window_sky.py derive: the night frame's towers, lit window by window); blending two of the
+            // sheet's own frames, each drawn with its towers somewhere else, is what made the skyline a jumble.
             float fpos = Mathf.Clamp(Mathf.Max(0f, tau - lag) / (1f - lag) * (_cityFrames.Length - 1), 0f, _cityFrames.Length - 1);
             int frame = Mathf.Clamp(Mathf.FloorToInt(fpos), 0, _cityFrames.Length - 1);
             int frameNext = Mathf.Min(frame + 1, _cityFrames.Length - 1);

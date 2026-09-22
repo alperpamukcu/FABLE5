@@ -2,6 +2,12 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, first slice (2026-09-22):** the author's C3, B2, F3 and R2 are the top rungs of their
+  ladders, cut clean of the tile's frame and with the strip over the door at the wall's own scale; the pendants are
+  URP spots aimed at the bar from the shades' mouths, their shafts drawn once behind the drinkers by a light of their
+  own; the window's four panes are four of the middle one, and each surface shows its own part of the patch; the city
+  is one drawing walked through the evening. GDD_MEVCUT §9.104.
+
 - **The seventh list (2026-09-22):** the bar is the MALIBU CLUB; the slip counts itself up top to bottom with the
   money in green and deep red and the stars last, a click skipping the count but never the paper coming in; the
   boards beside it are divided by the frame's own magenta and carry dark cards; the certificate is the slip's own

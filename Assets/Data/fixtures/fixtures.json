@@ -247,6 +247,19 @@
       "group": "walls"
     },
     {
+      "id": "back7_wave",
+      "name": "Wave Mural",
+      "slot": "walls",
+      "price": 185,
+      "comfort": 3.0,
+      "stars": 2.5,
+      "flavor": "One great wave curling across the whole wall under a sunset. Every seat at the bar faces the surf.",
+      "sprite": "fx_back7_wave",
+      "swatch": "fx_back7_wave_swatch",
+      "level": 5,
+      "group": "walls"
+    },
+    {
       "id": "walls_4",
       "name": "Harlequin Paper",
       "slot": "walls",
@@ -256,7 +269,7 @@
       "flavor": "Pink and lilac diamonds over the panelling. The wall the postcards are of.",
       "sprite": "fx_walls_4",
       "swatch": "fx_walls_swatch_4",
-      "level": 5,
+      "level": 6,
       "group": "walls"
     },
     {
@@ -351,6 +364,19 @@
       "group": "walls"
     },
     {
+      "id": "rwall7_deco",
+      "name": "Deco Fans",
+      "slot": "walls_right",
+      "price": 205,
+      "comfort": 2.5,
+      "stars": 3.0,
+      "flavor": "Stacked fans in coral, mint and cream from the corner to the door. The side wall of a hotel on Ocean Drive.",
+      "sprite": "fx_rwall7_deco",
+      "swatch": "fx_rwall7_deco_swatch",
+      "level": 8,
+      "group": "walls"
+    },
+    {
       "id": "ceil_beams",
       "name": "Beamed Ceiling",
       "slot": "ceiling",
@@ -439,6 +465,19 @@
       "sprite": "fx_ceil6_stars",
       "swatch": "fx_ceil6_stars_swatch",
       "level": 7,
+      "group": "walls"
+    },
+    {
+      "id": "ceil7_dusk",
+      "name": "Dusk Ceiling",
+      "slot": "ceiling",
+      "price": 210,
+      "comfort": 1.4,
+      "stars": 3.0,
+      "flavor": "A painted evening overhead, pink and lilac clouds on peach. The sun never quite goes down in here.",
+      "sprite": "fx_ceil7_dusk",
+      "swatch": "fx_ceil7_dusk_swatch",
+      "level": 8,
       "group": "walls"
     },
     {
@@ -738,7 +777,7 @@
       "lightB": 0.55,
       "lightIntensity": 2.2,
       "lightRadius": 260,
-      "lightDy": -113,
+      "lightDy": -40,
       "startsInTheRoom": true,
       "level": 1,
       "group": "light",
@@ -754,10 +793,10 @@
       "sprite": "fx_counter_lamps_bell",
       "lightR": 1.0,
       "lightG": 0.93,
-      "lightB": 0.80,
+      "lightB": 0.8,
       "lightIntensity": 2.5,
       "lightRadius": 260,
-      "lightDy": -113,
+      "lightDy": -36,
       "level": 2,
       "group": "light",
       "comfort": 0.3
@@ -775,7 +814,7 @@
       "lightB": 0.68,
       "lightIntensity": 2.7,
       "lightRadius": 280,
-      "lightDy": -113,
+      "lightDy": -28,
       "level": 3,
       "group": "light",
       "comfort": 0.6
@@ -1056,6 +1095,19 @@
       "sprite": "fx_floor6_wave",
       "swatch": "fx_floor6_wave_swatch",
       "level": 7,
+      "group": "furniture"
+    },
+    {
+      "id": "floor7_marble",
+      "name": "Pink Marble",
+      "slot": "floor",
+      "price": 215,
+      "comfort": 1.45,
+      "stars": 3.0,
+      "flavor": "Big pink slabs with white veins, polished matte. A floor that makes the drinks look cheaper than they are.",
+      "sprite": "fx_floor7_marble",
+      "swatch": "fx_floor7_marble_swatch",
+      "level": 8,
       "group": "furniture"
     },
     {
