@@ -1033,6 +1033,7 @@ namespace LastCall.UI
                 if (_beamTillCard.gameObject.activeSelf != room)
                     _beamTillCard.gameObject.SetActive(room);
             }
+            ShowTillFigure(shown);   // the beam's register readout (eighth list)
             if (_beamTillText != null)
             {
                 string money = (shown < 0 ? "-" : "") + Mathf.Abs(shown);
@@ -1837,6 +1838,8 @@ namespace LastCall.UI
             _crowdText.color = last ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
                 : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];
+            // the hour's well is as wide as tonight's words: re-laid when they change (TopBar)
+            LayTopBar();
 
             // The standing, as a row of stars and NOTHING ELSE (2026-08-19, the author:
             // "0.0 neden gösteriliyor, daha çok görsel bir şerit olmalı"). The number that
@@ -1845,7 +1848,7 @@ namespace LastCall.UI
             // so nothing legible was lost; the decimal lives on in the ledger and the shop,
             // where a number is being compared to another number.
             double stars = run.Rating.Average;
-            _starsFill.sizeDelta = new Vector2((float)(stars / 5.0) * _ratingStars.Length * StarGap, 0);
+            _starsFill.sizeDelta = new Vector2(TopStarsReach(stars), 0);   // the beam's smaller stars (eighth list)
             // The house's two strips (H5): the drinks so far tonight, and the room right now
             // — the one reading that moves while a glass stands on the counter.
             if (_serviceFill != null)
@@ -1927,14 +1930,27 @@ namespace LastCall.UI
             _jobStrip.text = job.IsDone
                 ? "<color=#6FCC4B>" + UIText.T("chrome.job.done", ("who", job.Who), ("target", job.Target),
                                                ("reward", job.Reward)) + "</color>"
-                : $"<color=#E84DA6>{job.Who}</color> · <color=#F2E8D5>{job.Served}/{job.Target}</color> · {what}";
+                : $"<color=#E84DA6>{job.Who}</color> · {what}";
+            // HER FACE (the eighth list): the host who hands the week's job over, off the story's own cast
+            if (_jobFace != null)
+            {
+                var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
+                var face = LookForStory(host)?.Face;   // her own face, or the one she borrows until it is drawn
+                _jobFace.sprite = face;
+                _jobFace.enabled = face != null;
+                _jobFace.transform.parent.gameObject.SetActive(face != null);
+            }
+            LayJobPips(job);
             if (_jobPlate != null)
             {
-                _jobStripRow.sizeDelta = new Vector2(28f + _jobStrip.preferredWidth + 14f, 26f);
+                float textW = Mathf.Max(_jobStrip.preferredWidth + 22f, job.Target * (JobPipW + JobPipGap));
+                _jobStripRow.sizeDelta = new Vector2(JobTextX + textW + 12f, JobTabH);
                 _jobPlate.color = job.IsDone
                     ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.96f)
                     : new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
             }
+            // the lip wears the beam's tube, whatever colour the hour has it in
+            if (_jobLip != null && _neonTube != null) _jobLip.color = _neonTube.color;
         }
 
         /// <summary>
@@ -1978,41 +1994,77 @@ namespace LastCall.UI
             // the screen it was.
             // One row, so the icon and the line fade together and can be asked whether the
             // pointer is on THEM rather than on the text's own overflowing rect.
+            // A TAB HUNG UNDER THE BEAM (2026-09-22, the author's eighth list: "Görseldeki görev bildirimi geliştirilsin
+            // ve üst barın en altındaki şeffaf pembe pixel şerite göre hizalansın. Tasarımı ve görsel kullanımı
+            // arttırılsın, üstüne gelindiğinde ödülü ve ne kadar süresi kaldığı gösterilsin"). It hangs from the beam's
+            // own foot under the hour's well, the beam's tube carried down across its head so it reads as a tab of the
+            // bar and not a card floating over the room; the one who asked is on it (her face), what she asked for is
+            // on it in words, and how far it has come is drawn - a pip a night's worth, lit as they are earned. The
+            // pointer on it asks what it pays and how long is left (the tip).
             _jobStripRow = NewRect("WeekJobRow", root);
-            Place(_jobStripRow, new Vector2(0, 1), new Vector2(320, 26), new Vector2(60, -66));
-            _jobStripRow.pivot = new Vector2(0, 0.5f);
+            _jobStripRow.anchorMin = _jobStripRow.anchorMax = new Vector2(0, 1);
+            _jobStripRow.pivot = new Vector2(0, 1);
+            _jobStripRow.sizeDelta = new Vector2(260f, JobTabH);
+            _jobStripRow.anchoredPosition = new Vector2(TopEdge, -TopBarH);
             _jobStripGroup = _jobStripRow.gameObject.AddComponent<CanvasGroup>();
-            _jobStripGroup.blocksRaycasts = false;
-            // The plate (2026-09-06): the house card, cut to the line by RefreshJobStrip, with
-            // the aisle sign's pip at its head so it reads as a notice and not as a caption.
+            _jobStripGroup.blocksRaycasts = true;           // the tip reads the pointer on it
             _jobPlate = _jobStripRow.gameObject.AddComponent<Image>();
             _jobPlate.sprite = ChromeArt.Card();
             _jobPlate.type = Image.Type.Sliced;
             _jobPlate.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
-            _jobPlate.raycastTarget = false;
-            var jobPip = NewRect("Pip", _jobStripRow);
-            Place(jobPip, new Vector2(0, 0.5f), new Vector2(3, 16), new Vector2(0, 0));
-            jobPip.pivot = new Vector2(0, 0.5f);
-            var pipImg = jobPip.gameObject.AddComponent<Image>();
-            pipImg.color = UITheme.Magenta[3];
-            pipImg.raycastTarget = false;
+            _jobPlate.raycastTarget = true;
+            var lip = NewRect("Lip", _jobStripRow);
+            lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);
+            lip.pivot = new Vector2(0.5f, 1);
+            lip.sizeDelta = new Vector2(-4f, 2f);
+            lip.anchoredPosition = Vector2.zero;
+            _jobLip = lip.gameObject.AddComponent<Image>();
+            _jobLip.color = UITheme.Magenta[3];
+            _jobLip.raycastTarget = false;
+
+            // her face, in a frame
+            var frame = NewRect("Face", _jobStripRow);
+            Place(frame, new Vector2(0, 0.5f), new Vector2(JobFace + 4f, JobFace + 4f), new Vector2(8f, -1f));
+            frame.pivot = new Vector2(0, 0.5f);
+            var fi = frame.gameObject.AddComponent<Image>();
+            fi.color = UITheme.Cream[1];
+            fi.raycastTarget = false;
+            var photo = NewRect("Photo", frame);
+            Stretch(photo, Vector2.zero, Vector2.one, new Vector2(2f, 2f), new Vector2(-2f, -2f));
+            _jobFace = photo.gameObject.AddComponent<Image>();
+            _jobFace.preserveAspect = true;
+            _jobFace.raycastTarget = false;
+
+            // what she asked for, and the drink/star/cloth that says it before the words do
             var iconRt = NewRect("Icon", _jobStripRow);
-            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(9, 0));
+            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(JobTextX, 6f));
+            iconRt.pivot = new Vector2(0, 0.5f);
             _jobIcon = iconRt.gameObject.AddComponent<Image>();
             _jobIcon.preserveAspect = true;
             _jobIcon.raycastTarget = false;
             iconRt.gameObject.SetActive(false);
-
-            _jobStrip = NewText("WeekJob", _jobStripRow, _display, 8, TextAnchor.MiddleLeft,
-                UITheme.Cream[3]);
-            Place(_jobStrip.rectTransform, new Vector2(0, 0.5f), new Vector2(292, 20),
-                new Vector2(30, 0));
+            _jobStrip = NewText("WeekJob", _jobStripRow, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
+            Place(_jobStrip.rectTransform, new Vector2(0, 0.5f), new Vector2(292, 18), new Vector2(JobTextX + 22f, 6f));
             _jobStrip.rectTransform.pivot = new Vector2(0, 0.5f);
             _jobStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _jobStrip.verticalOverflow = VerticalWrapMode.Truncate;
+            _jobStrip.verticalOverflow = VerticalWrapMode.Overflow;
             _jobStrip.supportRichText = true;
             _jobStrip.raycastTarget = false;
             _jobStrip.text = "";
+            // how far it has come: the pips, laid by RefreshJobStrip for the job's own count
+            _jobPips = NewRect("Pips", _jobStripRow);
+            Place(_jobPips, new Vector2(0, 0.5f), new Vector2(200, JobPipH), new Vector2(JobTextX, -9f));
+            _jobPips.pivot = new Vector2(0, 0.5f);
+
+            HoverTip(_jobStripRow, ItemArt.Coin(16f), UIText.T("chrome.job.tip_title"), () =>
+            {
+                var r = Run;
+                var j = r?.Job;
+                if (j == null) return "";
+                if (j.IsDone) return UIText.T("chrome.job.tip_paid", ("reward", j.Reward));
+                int nights = Mathf.Max(0, BarCalendar.OpenNights - (int)BarCalendar.NightOf(r.Day));
+                return UIText.T("chrome.job.tip_reward", ("reward", j.Reward)) + "  ·  " + UIText.N("chrome.job.tip_left", nights);
+            });
 
             var panel = _serviceLogPanel = NewRect("ServiceLog", root);
             Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -90));

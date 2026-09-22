@@ -1588,6 +1588,21 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   bölücü değil boşluk. Son kart artık panelin dibine değmiyor (458/460 → 431), not 425'te bitiyor.
 - Doğrulama: EditMode 625/626, PlayMode 13/13.
 
+### 9.107 · Sekizinci liste (4/…): üst bar yeniden, haftanın işi sekme, yeni ayar ikonu (2026-09-22)
+
+- **Üst bar kendi sözlerinin genişliğinde** (`TycoonHud.TopBar`): soldan saat + gecenin sayısı + gecenin adı ve
+  kalabalığı tek kuyuda (saat ve tarih birlikte); ortada kompakt müzikçalar (22'lik tuşlar, 300 en çok, kalan yere
+  sığar, uzun şarkı adı kelimede kesilir); sağdan ayar tuşu, puanlar kuyusu (KONFOR/SERVİS şeritleri + beş küçük
+  yıldız: 14×12'lik küçük yıldız tam 2x, 36'lık büyük yıldız başlık gibiydi) ve KASA. Her kuyu konuşulan dilin
+  sözleri ölçülerek genişliyor/daralıyor (TR/EN/DE'de bakıldı), `LayTopBar` onları bir boşlukla dizer.
+- **Para barın içinde, kasa ekranı gibi:** saatin yedi çubuklu makinesi (`SegmentFigure`, hiç asılmamıştı) paranın
+  yeşilinde, eksi olunca kırmızı; odanın üstüne sarkan erik rengi kart kalktı. Üstüne gelince "KASA".
+- **Ayar tuşunun görseli:** altın 3D dişli yerine evin düz dişli işareti (16 px, tam 2x, altın).
+- **Haftanın işi bir sekme:** barın alt çizgisinden, saat kuyusunun altından sarkıyor, başında barın tüpünün rengi;
+  işi veren Ece'nin yüzü çerçevede, işin ikonu (içki/yıldız/bez), "ECE · KUSURSUZ DÖKÜM", altında her iş için bir
+  pip (yapılanlar yanık, bitince yeşil). Üstüne gelince ödül ve kalan gece: "ÖDÜL +$120 · 1 GECE KALDI".
+- Doğrulama: EditMode 625/626, PlayMode 13/13.
+
 ### 9.104 · Sekizinci liste (1/…): oda seçimleri, URP spot sarkıtlar, pencere lekesi, tek çizim şehir (2026-09-22)
 
 - **Yazarın seçimleri oyunda** (`Tools/room7_ship.py`): C3 `ceil7_dusk` (Alacakaranlık Tavanı, 3★, $210),

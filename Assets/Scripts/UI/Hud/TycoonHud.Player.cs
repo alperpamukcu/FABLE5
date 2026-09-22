@@ -18,7 +18,12 @@ namespace LastCall.UI
         private Image _playerHoldMark;
         private string _playerShown;   // the song the words are for; rewritten only when it changes
 
-        private const float PlayerW = 376f, PlayerH = 42f, PlayerX = -44f, PlayerKeySize = 26f;
+        // COMPACT (2026-09-22, the author's eighth list: "müzik çalar daha da kompakt hale getirilebilir"): 22 keys four
+        // apart, the song and its place in one short column, the meter close behind - 300 at most, and narrower when
+        // the beam's other wells need the room (TycoonHud.TopBar's LayTopBar calls FitMusicPlayer).
+        private const float PlayerW = 300f, PlayerH = 42f, PlayerX = -44f, PlayerKeySize = 22f, PlayerKeyGap = 4f;
+        private const float PlayerMeterW = 30f;
+        private float _playerTextX;
 
         private void BuildMusicPlayer(RectTransform top)
         {
@@ -31,18 +36,19 @@ namespace LastCall.UI
             well.raycastTarget = true;
 
             float kx = 8f;
-            PlayerKey("PREV", "prev", kx, () => { Sfx.SkipTrack(-1); Sfx.Play("click"); }); kx += PlayerKeySize +8f;
+            PlayerKey("PREV", "prev", kx, () => { Sfx.SkipTrack(-1); Sfx.Play("click"); }); kx += PlayerKeySize + PlayerKeyGap;
             var hold = PlayerKey("HOLD", "pause", kx, () => { Sfx.MusicPaused = !Sfx.MusicPaused; Sfx.Play("click"); RefreshMusicPlayer(true); });
             _playerHoldMark = hold.Find("Face/Mark").GetComponent<Image>();
-            kx += PlayerKeySize +8f;
-            PlayerKey("NEXT", "next", kx, () => { Sfx.SkipTrack(+1); Sfx.Play("click"); }); kx += PlayerKeySize +14f;
+            kx += PlayerKeySize + PlayerKeyGap;
+            PlayerKey("NEXT", "next", kx, () => { Sfx.SkipTrack(+1); Sfx.Play("click"); }); kx += PlayerKeySize + 10f;
 
             var note = NewRect("Note", _playerWell);
             Place(note, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(kx, 0));
             note.pivot = new Vector2(0, 0.5f);
             var ni = note.gameObject.AddComponent<Image>();
             ni.sprite = NightArt.Mark("note"); ni.color = UITheme.Magenta[3]; ni.raycastTarget = false;
-            kx += 24f;
+            kx += 22f;
+            _playerTextX = kx;
 
             _playerTitle = NewText("Title", _playerWell, _body, 8, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
             Place(_playerTitle.rectTransform, new Vector2(0, 0.5f), new Vector2(PlayerW - kx - 56f, 12), new Vector2(kx, 8f));
@@ -54,11 +60,11 @@ namespace LastCall.UI
             _playerPlace.horizontalOverflow = HorizontalWrapMode.Overflow;
 
             // four level bars, still: a picture of music, not a meter of it
-            int[] bars = { 10, 18, 6, 14 };
+            int[] bars = { 8, 14, 5, 11 };
             for (int i = 0; i < bars.Length; i++)
             {
                 var bar = NewRect("Bar" + i, _playerWell);
-                Place(bar, new Vector2(1, 0), new Vector2(6, bars[i]), new Vector2(-14f - (bars.Length - 1 - i) * 8f, 9f));
+                Place(bar, new Vector2(1, 0), new Vector2(4, bars[i]), new Vector2(-10f - (bars.Length - 1 - i) * 6f, 11f));
                 bar.pivot = new Vector2(1, 0);
                 var bi = bar.gameObject.AddComponent<Image>();
                 bi.color = UITheme.Magenta[3]; bi.raycastTarget = false;
@@ -73,6 +79,23 @@ namespace LastCall.UI
         }
 
         /// <summary>One of the player's three keys: 26 on the 42 well, so its mark is drawn at exactly 1x.</summary>
+        /// <summary>The player at <paramref name="w"/> wide: the keys and the note keep their places, the song and its
+        /// place take what is left before the meter, and a title longer than that is cut at a word rather than run
+        /// under the bars.</summary>
+        private void FitMusicPlayer(float w)
+        {
+            if (_playerWell == null) return;
+            _playerWell.sizeDelta = new Vector2(w, PlayerH);
+            float textW = Mathf.Max(40f, w - _playerTextX - PlayerMeterW - 10f);
+            foreach (var t in new[] { _playerTitle, _playerPlace })
+            {
+                if (t == null) continue;
+                t.rectTransform.sizeDelta = new Vector2(textW, t.rectTransform.sizeDelta.y);
+                t.horizontalOverflow = HorizontalWrapMode.Wrap;
+                t.verticalOverflow = VerticalWrapMode.Truncate;
+            }
+        }
+
         private RectTransform PlayerKey(string id, string mark, float x, System.Action onClick)
         {
             var key = NewButton(_playerWell, id, new Vector2(0, 0.5f), new Vector2(PlayerKeySize, PlayerKeySize),

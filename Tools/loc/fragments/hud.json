@@ -38,6 +38,8 @@
     { "key": "build.tablet.carrier", "text": "TRADE NET", "note": "Market tablet: the phone-carrier name in the device's grey status bar, centred between the clock and the wifi/battery icons. A made-up network name; 8px body face, one line in a 200-unit box, ~16 characters." },
     { "key": "build.tablet.account", "text": "ACCOUNT", "note": "Market tablet title bar, right: small label over the money readout (the till's balance) in the dark sunken box. 8px body face, 80-unit box, ~10 characters." },
     { "key": "build.basket.total", "text": "TOTAL", "note": "Market basket head band (dark strip at the page foot): small label left of what the basket's order costs. 8px shop face, right-aligned in a 60-unit box, ~7 characters. Look test compares this band pixel for pixel in English." },
-    { "key": "build.basket.left", "text": "LEFT IN THE TILL", "note": "Market basket head band: small label left of the money the till will have after the order. 8px shop face, right-aligned in a 130-unit box, ~16 characters. Look test compares this band pixel for pixel in English." }
+    { "key": "build.basket.left", "text": "LEFT IN THE TILL", "note": "Market basket head band: small label left of the money the till will have after the order. 8px shop face, right-aligned in a 130-unit box, ~16 characters. Look test compares this band pixel for pixel in English." },
+    { "key": "build.till.tip", "text": "{money} to spend at the market and on the room.", "note": "Hover line under THE TILL. {money} is the till's money with its sign, e.g. \"$2520\". One line of ~40 characters." },
+    { "key": "build.till.tip_title", "text": "THE TILL", "note": "Hover title over the till's green readout on the top bar (2026-09-22). One short line." }
   ]
 }

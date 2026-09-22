@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, fourth slice (2026-09-22):** the top bar is laid out by its words - the hour and the night in one
+  well, a compact player in what is left, the standing a size down, the till on the beam as the clock's own green
+  readout, a flat cog on the settings key - and the week's job is a tab hung from the beam's foot with the giver's
+  face, pips for its count and a hover that says what it pays and how many nights are left. GDD_MEVCUT §9.107.
+
 - **The eighth list, third slice (2026-09-22):** where the house face is handed on, the slip's words are a step
   down and in sentence case (Satış, Nina) with its small lines in Galmuri9 at 10 and its figures in the house face;
   the two night boards share one grid - the body under the title by a hand, cards the body's width, every word and

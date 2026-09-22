@@ -2768,55 +2768,8 @@ namespace LastCall.UI
         private Text _dayLabel, _nightLabel;
         private const float DayWellW = 200f;
 
-        /// <summary>
-        /// THE NIGHT, NOT THE WEEK (2026-09-07, the author: "haftayı görmeye artık gerek yok
-        /// sadece günü görsek yeter"). The seven-slot week instrument leaves the beam — the
-        /// day card still mounts it — and in its place, beside the hour, a well the same
-        /// height that says which night this is: the count on the left, the night's name and
-        /// tonight's crowd on the right. The week survives in the well's hover line.
-        /// </summary>
-        private void BuildDayWell(RectTransform top)
-        {
-            var well = NewRect("DayWell", top);
-            Place(well, new Vector2(0, 0.5f), new Vector2(DayWellW, 40f), new Vector2(166f, 0f));
-            var img = well.gameObject.AddComponent<Image>();
-            img.sprite = ChromeArt.Well();
-            img.type = Image.Type.Sliced;
-            img.raycastTarget = true;
-
-            var cap = NewText("Cap", well, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
-            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12), new Vector2(WeekHeadCx, 7f));
-            cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cap.text = UIText.T("hud.day_well.caption");
-            _dayLabel = NewText("Day", well, _figures, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
-            Place(_dayLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18), new Vector2(WeekHeadCx, -7f));
-            _dayLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            _dayLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-            var rule = NewRect("Divide", well);
-            Place(rule, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(WeekRuleX, 0));
-            var ruleImg = rule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
-            ruleImg.raycastTarget = false;
-
-            float textW = DayWellW - WeekDaysX - 10f;
-            _nightLabel = NewText("Night", well, _body, 16, TextAnchor.MiddleLeft, UITheme.Amber[4]);
-            Place(_nightLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, 18), new Vector2(WeekDaysX + 4f, 6f));
-            _nightLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-            // Tonight's crowd rides under the night's name: it is a fact about the night.
-            _crowdText = NewText("Crowd", well, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
-            Place(_crowdText.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, 12), new Vector2(WeekDaysX + 4f, -8f));
-            _crowdText.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-            HoverTip(well, ItemArt.Star(true, 16f), UIText.T("hud.day_well.tip_title"), () =>
-            {
-                var r = Run;
-                if (r == null) return "";
-                return UIText.T("hud.day_well.tip", ("day", r.Day), ("week", BarCalendar.WeekOf(r.Day)),
-                    ("night", UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(r.Day))))));
-            });
-        }
+        // (THE BEAM'S DAY WELL moved into the hour's well on 2026-09-22 - the clock, the night's number and its name in
+        //  one well, as wide as its words: TycoonHud.TopBar, BuildHourWell.)
 
         private void BuildWeekStrip(RectTransform top)
         {
