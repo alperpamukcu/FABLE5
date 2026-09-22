@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, third slice (2026-09-22):** where the house face is handed on, the slip's words are a step
+  down and in sentence case (Satış, Nina) with its small lines in Galmuri9 at 10 and its figures in the house face;
+  the two night boards share one grid - the body under the title by a hand, cards the body's width, every word and
+  figure on one left and one right edge. GDD_MEVCUT §9.106.
+
 - **The eighth list, second slice (2026-09-22):** every bench's keys are one row in the bottom-left corner -
   a square arrow, a square can and SERVE IT - and the bin asks before it throws anything away; the tin bench's right
   column is a page of its own (the words, the contents a size down on their own plaque, the gauges under them); the

@@ -61,6 +61,9 @@ namespace LastCall.Core
         /// <summary>Capitals in this language (<see cref="TextCase"/>).</summary>
         public string Upper(string s) => TextCase.Upper(Code, s);
 
+        /// <summary>Sentence case in this language (<see cref="TextCase.Sentence"/>).</summary>
+        public string Sentence(string s) => TextCase.Sentence(Code, s);
+
         private string Lookup(string key, long? count)
         {
             foreach (var t in _chain)

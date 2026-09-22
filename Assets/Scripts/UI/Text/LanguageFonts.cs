@@ -52,6 +52,23 @@ namespace LastCall.UI
             return cells * grid;
         }
 
+        /// <summary>
+        /// THE SMALL LINE ON A PRINTED SLIP (2026-09-22, the author's eighth list: the Turkish receipt "çok büyük
+        /// duruyor ... biraz küçült"). A 7 px face has two clean sizes, 8 and 16, and neither is the house face's 16:
+        /// its 16 stands taller than Silkscreen's and its 8 reads as specks beside it. So a language on the 7 px face
+        /// takes its sibling Galmuri9 at that face's own 10 for the slip's small lines - the same family and letters,
+        /// the height the English slip prints. Every other face gives its one-cell size.
+        /// </summary>
+        public static (Font font, int size) SmallLine(Font body)
+        {
+            if (body != null && Grids.TryGetValue(body, out int grid) && grid <= 8)
+            {
+                var nine = Face("Galmuri9");
+                if (nine != null) return (nine, 10);
+            }
+            return (body, Size(body, 8));
+        }
+
         private static (string body, string display) Faces(string code)
         {
             switch (code)

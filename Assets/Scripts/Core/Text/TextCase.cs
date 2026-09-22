@@ -40,6 +40,53 @@ namespace LastCall.Core
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Small letters the way each language writes them (2026-09-22): Turkish "KIRA" is "kıra" and "İ" is "i" -
+        /// the mirror of <see cref="Upper"/>'s rule - so a label kept in capitals in the tables can be set in
+        /// sentence case without the invariant table turning DONANIM into "donanim".
+        /// </summary>
+        public static string Lower(string code, string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            if (code == "tr") s = s.Replace('I', 'ı').Replace('İ', 'i');
+            return s.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// SENTENCE CASE (2026-09-22, the author's eighth list: "küçük harflerde kullan (ALPER değil Alper)"): the
+        /// first letter a capital and the rest small, in this language - "SATIŞ" is "Satış", "NİNA" is "Nina".
+        /// Rich-text tags are left as written, and the first LETTER is the one raised, whatever comes before it.
+        /// </summary>
+        public static string Sentence(string code, string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            var sb = new StringBuilder(s.Length);
+            bool raised = false;
+            int i = 0;
+            while (i < s.Length)
+            {
+                if (s[i] == '<')
+                {
+                    int close = s.IndexOf('>', i);
+                    if (close > i)
+                    {
+                        sb.Append(s, i, close - i + 1);
+                        i = close + 1;
+                        continue;
+                    }
+                }
+                string one = s[i].ToString();
+                if (!raised && char.IsLetter(s[i]))
+                {
+                    sb.Append(UpperPlain(code, Lower(code, one)));
+                    raised = true;
+                }
+                else sb.Append(Lower(code, one));
+                i++;
+            }
+            return sb.ToString();
+        }
+
         private static string UpperPlain(string code, string s)
         {
             if (code == "tr")

@@ -31,6 +31,9 @@ namespace LastCall.UI
 
         public static string Caps(string s) => L.Upper(s);
 
+        /// <summary>Sentence case in this language: "SATIŞ" → "Satış" (<see cref="TextCase.Sentence"/>).</summary>
+        public static string Sentence(string s) => L.Sentence(s);
+
         public static string CapsT(string key) => Caps(T(key));
 
         public static string CapsT(string key, params (string name, object value)[] args) => Caps(T(key, args));

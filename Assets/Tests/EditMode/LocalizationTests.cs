@@ -136,6 +136,18 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void SentenceCaseFollowsTheLanguage()
+        {
+            // the receipt's labels and guests in the eighth list's lower case (2026-09-22)
+            Assert.AreEqual("Satış", TextCase.Sentence("tr", "SATIŞ"));
+            Assert.AreEqual("Donanım", TextCase.Sentence("tr", "DONANIM"));
+            Assert.AreEqual("Nina", TextCase.Sentence("tr", "NİNA"));
+            Assert.AreEqual("İstanbul", TextCase.Sentence("tr", "İSTANBUL"));
+            Assert.AreEqual("Rent", TextCase.Sentence("en", "RENT"));
+            Assert.AreEqual("<b>Kira</b>", TextCase.Sentence("tr", "<b>KİRA</b>"));
+        }
+
+        [Test]
         public void CapitalsLeaveRichTextTagsAlone()
         {
             Assert.AreEqual("<color=#ff7dc6>LAST</color> CALL", TextCase.Upper("en", "<color=#ff7dc6>last</color> call"));

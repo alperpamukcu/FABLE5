@@ -1569,6 +1569,25 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   arkasında hafif bir kararma, yan kayma yok.
 - Doğrulama: EditMode 624/625, PlayMode 13/13 (tezgâh görünüm testi bakılıp yeniden kutsandı).
 
+### 9.106 · Sekizinci liste (3/…): Türkçe fiş, yan panoların ızgarası (2026-09-22)
+
+- **Fiş, evin yüzünün devredildiği dillerde** (tr pl cs hu ro ru uk bg el vi ko — `LanguageFonts`): Silkscreen
+  kısa başlı bir büyük harf yüzü; Türkçeyi çizen Galmuri7 tam boylu ve küçük harfli, fişin 24'ünde büyük harfleri
+  bir buçuk kat uzun duruyor, İ'nin noktası ve Ş'nin çengeli üst satıra değiyordu. Artık orada fişin KELİMELERİ
+  bir basamak aşağıda (24 → 16) ve cümle düzeninde — "Satış", "Kira", "Donanım", misafir "Nina" (ALPER değil
+  Alper); küçük satırlar (başlık altı, sayım, servis/konfor, misafir satırı, notlar) Galmuri9'un kendi 10'unda
+  (Galmuri7'nin 8'i benek gibiydi, 16'sı fazla uzundu — `LanguageFonts.SmallLine`); cümle düzeni "·" ile ayrılan
+  her yan cümlede ayrı ("Hafta 2 · Cumartesi · Müdavimler"). RAKAMLAR ve $ her dilde evin yüzünde, İngilizce
+  fişin boyunda. İngilizce fiş değişmedi.
+- **Dile göre küçük harf** (`TextCase.Lower/Sentence`, Core): Türkçede I→ı, İ→i; zengin metin etiketlerine
+  dokunmuyor. Test: `SentenceCaseFollowsTheLanguage`.
+- **Yan panolar tek ızgara:** gövde başlığın 14 altında başlıyor (68'di — eski levhanın çizili başının payı, kart
+  panelin başı yok, haftanın ilk gecesi başlığın 38 altındaydı); kartlar gövdenin tam genişliği (4 taşıyorlardı,
+  çerçeveye yaklaşıyorlardı); her yazı ve rakam kartta da dışında da gövdenin 12 içinde — gece adları ve ayak
+  yazıları bir sol kenarda, bütün rakamlar bir sağ kenarda (4, 12 ve 2 idiler); haftanın iki toplam kartı arasında
+  bölücü değil boşluk. Son kart artık panelin dibine değmiyor (458/460 → 431), not 425'te bitiyor.
+- Doğrulama: EditMode 625/626, PlayMode 13/13.
+
 ### 9.104 · Sekizinci liste (1/…): oda seçimleri, URP spot sarkıtlar, pencere lekesi, tek çizim şehir (2026-09-22)
 
 - **Yazarın seçimleri oyunda** (`Tools/room7_ship.py`): C3 `ceil7_dusk` (Alacakaranlık Tavanı, 3★, $210),

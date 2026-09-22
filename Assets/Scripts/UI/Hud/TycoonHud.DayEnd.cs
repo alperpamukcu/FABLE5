@@ -472,6 +472,34 @@ namespace LastCall.UI
         /// reading customers is the game, so the night's verdicts wear the faces that gave
         /// them.
         /// </summary>
+        /// <summary>
+        /// THE SLIP IN A LANGUAGE THE HOUSE FACE CANNOT DRAW (2026-09-22, the author's eighth list: "fatura üstündeki
+        /// türkçe fontu beğenmedim çok büyük duruyor ve üst satırdaki metinlerle çakışıyor biraz küçült ve küçük harflerde
+        /// kullan (ALPER değil Alper)"). Silkscreen is a capitals face with a short cap; the face that draws Turkish, and
+        /// the other languages <see cref="LanguageFonts"/> hands on, is a full-height face with a lower case, so at the
+        /// slip's 24 its capitals stood half as tall again and İ's dot and Ş's cedilla reached the row above. Where the
+        /// body face has been handed on, the slip's WORDS go a step down (24 to 16, 16 to 8) and into sentence case -
+        /// "Satış", "Nina" - and its FIGURES stay in the house face at the size the English slip prints them: digits
+        /// and the dollar are the same in every language, and so is the column they line up in.
+        /// </summary>
+        private bool BillHandedOn => bodyFont != null && _body != bodyFont;
+        /// <summary>The slip's big words, a step down where the face is handed on (24 to 16).</summary>
+        private int BillWordSize(int size) => BillHandedOn && size >= 24 ? 16 : size;
+        /// <summary>The slip's small lines: the house face at 16, or the handed-on face's small line
+        /// (<see cref="LanguageFonts.SmallLine"/>) - Galmuri7's 8 read as specks, its 16 too tall (r153).</summary>
+        private Font BillSmallFont => BillHandedOn ? LanguageFonts.SmallLine(_body).font : _body;
+        private int BillSmallSize => BillHandedOn ? LanguageFonts.SmallLine(_body).size : 16;
+        /// <summary>Sentence case where the face is handed on, one clause at a time: a slip line runs clauses
+        /// together with a middle dot, and each of them starts like a sentence ("Hafta 2 · Cumartesi").</summary>
+        private string BillWords(string s)
+        {
+            if (!BillHandedOn || string.IsNullOrEmpty(s)) return s;
+            var parts = s.Split('·');
+            for (int i = 0; i < parts.Length; i++) parts[i] = UIText.Sentence(parts[i]);
+            return string.Join("·", parts);
+        }
+        private Font BillDigits(Font font) => BillHandedOn && font == _body ? bodyFont : font;
+
         private float BillCritic(float y, CustomerVisit v, Color ink)
         {
             // ONE LINE, IN COLUMNS (2026-08-11, the author: not two stacked lines, a bit
@@ -538,13 +566,14 @@ namespace LastCall.UI
             // characters and the column holds 23, so the row wrapped and became the two
             // lines this was built to stop being. A receipt says a first name anyway.
             int space = full.IndexOf(' ');
-            string name = UIText.Caps(space > 0 ? full.Substring(0, space) : full);
+            string first = space > 0 ? full.Substring(0, space) : full;
+            string name = BillHandedOn ? UIText.Sentence(first) : UIText.Caps(first);
 
             // Smaller and lighter: the regular face at 16, where it used to be the heavy one
             // at 24. A name on a receipt is a line item, not a headline.
             float textX = cardW + 8f + Glyph + 8f;
             float textW = BillW - BillInset * 2f - textX - 72f;   // the star and score keep the right
-            var line = NewText("L", row, _body, 16, TextAnchor.MiddleLeft, ink);
+            var line = NewText("L", row, BillSmallFont, BillSmallSize, TextAnchor.MiddleLeft, ink);
             Place(line.rectTransform, new Vector2(0, 0.5f), new Vector2(textW, rowH),
                 new Vector2(textX, 0));
             line.rectTransform.pivot = new Vector2(0, 0.5f);
@@ -575,7 +604,7 @@ namespace LastCall.UI
             ui.sprite = ItemArt.Star(true, 22f);
             ui.preserveAspect = true; ui.raycastTarget = false;
 
-            var score = NewText("N", row, _body, 24, TextAnchor.MiddleRight, ink);
+            var score = NewText("N", row, BillDigits(_body), 24, TextAnchor.MiddleRight, ink);
             Place(score.rectTransform, new Vector2(1, 0.5f), new Vector2(52f, rowH),
                 new Vector2(0, 0));
             score.rectTransform.pivot = new Vector2(1, 0.5f);
@@ -627,6 +656,7 @@ namespace LastCall.UI
             // THE MONEY IN ITS OWN COLOUR (seventh list): the digits, the dollar and the sign are green when the
             // line brought money in and the deep red when it took money out, whatever ink the label is in.
             ink = sign == "-" ? BillLoss : BillGain;
+            font = BillDigits(font);   // the house face's digits, in every language (eighth list)
             // The digits, hard right — the column every figure on the slip lands in.
             var digits = NewText("V", row, font, size, TextAnchor.MiddleRight, ink);
             Place(digits.rectTransform, new Vector2(1, 0.5f), new Vector2(150, BillRowH),
@@ -778,7 +808,7 @@ namespace LastCall.UI
             // already the game's display type. It is wider, so the heavy rows drop to 16 —
             // still the biggest thing on the slip, because nothing else is set in it.
             // THE LABEL IS IN THE INK; THE MONEY CARRIES THE COLOUR (seventh list).
-            var l = NewText("L", row, heavy ? _display : _body, heavy ? 16 : 24,
+            var l = NewText("L", row, heavy ? _display : _body, heavy ? 16 : BillWordSize(24),
                             TextAnchor.MiddleLeft, heavy ? ink : BillInk);
             l.rectTransform.anchorMin = new Vector2(0, 0); l.rectTransform.anchorMax = new Vector2(1f, 1);
             l.rectTransform.offsetMin = new Vector2(gutter, 0); l.rectTransform.offsetMax = Vector2.zero;
@@ -787,7 +817,7 @@ namespace LastCall.UI
             // row — which is exactly how the critics' names went missing.
             l.horizontalOverflow = HorizontalWrapMode.Overflow;
             l.verticalOverflow = VerticalWrapMode.Overflow;
-            l.text = label;
+            l.text = heavy ? label : BillWords(label);
 
             // The figure follows the label's weight, and for a reason beyond the rule above:
             // SilkscreenBold's digits do not survive this size — the author's screenshot has
@@ -802,7 +832,11 @@ namespace LastCall.UI
             float room = rowW - gutter - figW - 14f;
             l.rectTransform.offsetMax = new Vector2(-(figW + 14f), 0f);
             float h = BillRowH;
-            if (l.preferredWidth > room && l.fontSize > 16) l.fontSize = 16;
+            if (l.preferredWidth > room && l.fontSize > BillSmallSize)
+            {
+                l.font = BillSmallFont;
+                l.fontSize = BillSmallSize;
+            }
             if (l.preferredWidth > room)
             {
                 l.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -857,12 +891,12 @@ namespace LastCall.UI
             score.verticalOverflow = VerticalWrapMode.Overflow;
             score.text = stars.ToString("0.0");
 
-            var tail = NewText("T", row, _body, 16, TextAnchor.MiddleLeft, BillQuiet);
+            var tail = NewText("T", row, BillSmallFont, BillSmallSize, TextAnchor.MiddleLeft, BillQuiet);
             Place(tail.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(240, H), Vector2.zero);
             tail.rectTransform.pivot = new Vector2(0, 0.5f);
             tail.horizontalOverflow = HorizontalWrapMode.Overflow;
             tail.verticalOverflow = VerticalWrapMode.Overflow;
-            tail.text = UIText.T("dayend.score.counts", ("served", served), ("walked", stormed));
+            tail.text = BillWords(UIText.T("dayend.score.counts", ("served", served), ("walked", stormed)));
 
             float scoreW = score.preferredWidth, tailW = tail.preferredWidth;
             float left = -(Star + Gap + scoreW + Gap * 2f + tailW) * 0.5f;
@@ -882,8 +916,8 @@ namespace LastCall.UI
             _billCounts.Add(t =>
             {
                 score.text = (stars * t).ToString("0.0");
-                tail.text = UIText.T("dayend.score.counts", ("served", Mathf.RoundToInt(served * t)),
-                                     ("walked", Mathf.RoundToInt(stormed * t)));
+                tail.text = BillWords(UIText.T("dayend.score.counts", ("served", Mathf.RoundToInt(served * t)),
+                                     ("walked", Mathf.RoundToInt(stormed * t))));
             });
             return y + H + 2f;
         }
@@ -901,16 +935,16 @@ namespace LastCall.UI
             row.anchoredPosition = new Vector2(0, -y);
 
             bool roomBound = comfort < service - 1e-9;
-            var svc = NewText("S", row, _body, 16, TextAnchor.MiddleLeft, roomBound ? BillQuiet : BillInk);
+            var svc = NewText("S", row, BillSmallFont, BillSmallSize, TextAnchor.MiddleLeft, roomBound ? BillQuiet : BillInk);
             Place(svc.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
             svc.rectTransform.pivot = new Vector2(0, 0.5f);
             svc.horizontalOverflow = HorizontalWrapMode.Overflow;
-            svc.text = UIText.T("dayend.house.service", ("rating", service.ToString("0.0")));
-            var cmf = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, roomBound ? BillInk : BillQuiet);
+            svc.text = BillWords(UIText.T("dayend.house.service", ("rating", service.ToString("0.0"))));
+            var cmf = NewText("C", row, BillSmallFont, BillSmallSize, TextAnchor.MiddleLeft, roomBound ? BillInk : BillQuiet);
             Place(cmf.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
             cmf.rectTransform.pivot = new Vector2(0, 0.5f);
             cmf.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cmf.text = UIText.T("dayend.house.comfort", ("rating", comfort.ToString("0.0")));
+            cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", comfort.ToString("0.0"))));
 
             float svcW = svc.preferredWidth, cmfW = cmf.preferredWidth;
             float total = Icon + Gap + svcW + Between + Icon + Gap + cmfW;
@@ -932,8 +966,8 @@ namespace LastCall.UI
             cmf.rectTransform.anchoredPosition = new Vector2(x, 0);
             _billCounts.Add(t =>
             {
-                svc.text = UIText.T("dayend.house.service", ("rating", (service * t).ToString("0.0")));
-                cmf.text = UIText.T("dayend.house.comfort", ("rating", (comfort * t).ToString("0.0")));
+                svc.text = BillWords(UIText.T("dayend.house.service", ("rating", (service * t).ToString("0.0"))));
+                cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", (comfort * t).ToString("0.0"))));
             });
             return y + H + 2f;
         }
@@ -968,7 +1002,7 @@ namespace LastCall.UI
 
         private float BillNote(float y, string text, Color ink, bool centred = false)
         {
-            var note = NewText("N", _invoiceRows, _body, 16,
+            var note = NewText("N", _invoiceRows, BillSmallFont, BillSmallSize,
                 centred ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft, ink);
             note.rectTransform.anchorMin = new Vector2(0, 1);
             note.rectTransform.anchorMax = new Vector2(1, 1);
@@ -977,7 +1011,7 @@ namespace LastCall.UI
             note.rectTransform.anchoredPosition = new Vector2(0, -y);
             note.horizontalOverflow = HorizontalWrapMode.Wrap;
             note.verticalOverflow = VerticalWrapMode.Overflow;
-            note.text = text;
+            note.text = BillWords(text);
             return y + 21f;
         }
 
@@ -1072,9 +1106,11 @@ namespace LastCall.UI
             board.Body.anchorMin = new Vector2(0, 1); board.Body.anchorMax = new Vector2(1, 1);
             board.Body.pivot = new Vector2(0.5f, 1);
             board.Body.sizeDelta = new Vector2(-BoardPad * 2f, 0);
-            // Below the plate's whole drawn head — cap, hairline, top rivets — not below a
-            // number this file made up: the head is the top 30 rows of the drawing at 2×.
-            board.Body.anchoredPosition = new Vector2(0, -68f);
+            // A HAND UNDER THE TITLE (2026-09-22, the author's eighth list: "gereksiz boşluklar ve kenarlara düzensiz
+            // yakınlık uzaklıklar"): 68 was the old instrument plate's drawn head - cap, hairline, rivets - and the card
+            // the board stands on now has no head, so the week's first night stood 38 under its title while every other
+            // gap on the board was 8 to 15. The body starts 14 under the title's foot.
+            board.Body.anchoredPosition = new Vector2(0, -BoardBodyTop);
             return board;
         }
 
@@ -1084,6 +1120,17 @@ namespace LastCall.UI
         /// the steps the plate's rule is drawn in - run out to the frame on both sides, so the board reads as one
         /// frame divided into rooms rather than a panel with hairlines laid on it.
         /// </summary>
+        /// <summary>
+        /// ONE GRID FOR BOTH BOARDS (2026-09-22, the eighth list): the body runs <see cref="BoardPad"/> in from the
+        /// plate's edge, a card is exactly the body's width, and every word and figure on the board - on a card or off it
+        /// - stands <see cref="BoardTextInset"/> inside the body: the nights' names and the foot's captions on one left
+        /// edge, every figure on one right edge. They were 4, 12 and 2 in from three different lines, and the cards hung
+        /// 4 past the body towards the frame.
+        /// </summary>
+        private const float BoardTextInset = 12f;
+        /// <summary>Where the body starts under the plate's top: the title's foot (30) and a hand.</summary>
+        private const float BoardBodyTop = 44f;
+
         private void BoardDivider(RectTransform body, ref float y)
         {
             y += 3f;
@@ -1114,7 +1161,7 @@ namespace LastCall.UI
             var card = NewRect("Card", body);
             card.anchorMin = new Vector2(0, 1); card.anchorMax = new Vector2(1, 1);
             card.pivot = new Vector2(0.5f, 1);
-            card.anchoredPosition = new Vector2(0, -(y - 4f));
+            card.anchoredPosition = new Vector2(0, -(y - 4f));   // its width is the body's: CloseCard gives no overhang
             var ci = card.gameObject.AddComponent<Image>();
             ci.sprite = ChromeArt.Card();
             ci.type = Image.Type.Sliced;
@@ -1127,7 +1174,7 @@ namespace LastCall.UI
         private static void CloseCard(RectTransform card, float yTop, float yBottom)
         {
             if (card == null) return;
-            card.sizeDelta = new Vector2(8f, Mathf.Max(8f, yBottom - yTop + 8f));
+            card.sizeDelta = new Vector2(0f, Mathf.Max(8f, yBottom - yTop + 8f));
         }
 
         /// <summary>Five stars whose lit halves can be re-scored every frame — the star gate's
@@ -1235,7 +1282,7 @@ namespace LastCall.UI
                     : tonight ? UITheme.Amber[4]
                     : past ? UITheme.Cream[3] : UITheme.Cream[1]);
                 Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(58, 20),
-                    new Vector2(4, 0));
+                    new Vector2(BoardTextInset, 0));
                 name.rectTransform.pivot = new Vector2(0, 0.5f);
                 name.horizontalOverflow = HorizontalWrapMode.Overflow;
                 name.text = UIText.T(BarCalendar.WeekColumnLines[i]);
@@ -1246,7 +1293,7 @@ namespace LastCall.UI
                 if (!closed && (BarNight)i == BarCalendar.VipNight)
                 {
                     var vip = NewRect("Vip", row);
-                    Place(vip, new Vector2(0, 0.5f), new Vector2(13, 13), new Vector2(62, 0));
+                    Place(vip, new Vector2(0, 0.5f), new Vector2(13, 13), new Vector2(BoardTextInset + 58f, 0));
                     vip.pivot = new Vector2(0, 0.5f);
                     var vi = vip.gameObject.AddComponent<Image>();
                     vi.sprite = ItemArt.Star(true, 13f);
@@ -1271,7 +1318,7 @@ namespace LastCall.UI
                     var shut = NewText("Off", row, _body, 16, TextAnchor.MiddleRight,
                         UITheme.Night[4]);
                     Place(shut.rectTransform, new Vector2(1, 0.5f), new Vector2(120, 20),
-                        new Vector2(-4, 0));
+                        new Vector2(-BoardTextInset, 0));
                     shut.rectTransform.pivot = new Vector2(1, 0.5f);
                     shut.horizontalOverflow = HorizontalWrapMode.Overflow;
                     shut.text = UIText.T("dayend.week.closed");
@@ -1326,7 +1373,8 @@ namespace LastCall.UI
                 run.DayFines > 0 ? UITheme.ViceRed[4] : UITheme.Cream[1]);
 
             CloseCard(billsCard, billsTop, y);
-            BoardDivider(body, ref y);
+            // two cards of totals are one paragraph: a gap between them, not another divider (eighth list)
+            y += 12f;
             float weekTop = y;
             var weekCard = OpenCard(body, y);
 
@@ -1355,7 +1403,7 @@ namespace LastCall.UI
             // they were always doing.
             var money = NewText("M", row, _display, 16, TextAnchor.MiddleRight, ink);
             Place(money.rectTransform, new Vector2(1, 0.5f), new Vector2(108, 18),
-                new Vector2(-4, dy));
+                new Vector2(-BoardTextInset, dy));
             money.rectTransform.pivot = new Vector2(1, 0.5f);
             money.horizontalOverflow = HorizontalWrapMode.Overflow;
             money.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1371,13 +1419,13 @@ namespace LastCall.UI
             // those fixings are, and at x4 the labels ran into the left one.
             var label = NewText("WeekLabel", body, _body, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[2]);
-            Place(label.rectTransform, new Vector2(0, 1), new Vector2(200, 21), new Vector2(12, -y));
+            Place(label.rectTransform, new Vector2(0, 1), new Vector2(200, 21), new Vector2(BoardTextInset, -y));
             label.rectTransform.pivot = new Vector2(0, 1);
             label.horizontalOverflow = HorizontalWrapMode.Overflow;
             label.text = caption;
 
             var total = NewText("WeekTotal", body, _display, 16, TextAnchor.MiddleRight, ink);
-            Place(total.rectTransform, new Vector2(1, 1), new Vector2(160, 21), new Vector2(-12, -y));
+            Place(total.rectTransform, new Vector2(1, 1), new Vector2(160, 21), new Vector2(-BoardTextInset, -y));
             total.rectTransform.pivot = new Vector2(1, 1);
             total.horizontalOverflow = HorizontalWrapMode.Overflow;
             total.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1480,7 +1528,7 @@ namespace LastCall.UI
             var wasLine = NewText("WasLine", body, _body, 16, TextAnchor.MiddleLeft,
                 UITheme.Cream[2]);
             Place(wasLine.rectTransform, new Vector2(0, 1), new Vector2(160, 22),
-                new Vector2(4, -y));
+                new Vector2(BoardTextInset, -y));
             wasLine.rectTransform.pivot = new Vector2(0, 1);
             wasLine.horizontalOverflow = HorizontalWrapMode.Overflow;
             wasLine.text = UIText.T("dayend.stand.was", ("stars", was.ToString("0.00")));
@@ -1489,7 +1537,8 @@ namespace LastCall.UI
             var chipInk = Math.Abs(step) < 0.005 ? UITheme.Cream[2]
                 : step > 0 ? UITheme.Lime[4] : UITheme.ViceRed[4];
             _standDeltaChip = NewRect("Step", body);
-            Place(_standDeltaChip, new Vector2(1, 1), new Vector2(132, 26), new Vector2(-2, -y + 2f));
+            // the chip's figure lands on the board's one right edge: its text stands 8 inside the chip
+            Place(_standDeltaChip, new Vector2(1, 1), new Vector2(132, 26), new Vector2(-(BoardTextInset - 8f), -y + 2f));
             _standDeltaChip.pivot = new Vector2(1, 1);
             var chip = _standDeltaChip.gameObject.AddComponent<Image>();
             chip.sprite = ChromeArt.Card();
@@ -1557,7 +1606,7 @@ namespace LastCall.UI
             // CLEAR OF THE RIVETS (2026-09-07). The plate is drawn with fixings down both
             // side rails; a note stretched to the body's full width ran its second line
             // straight through the left one. It is inset and given three lines of room.
-            foot.rectTransform.sizeDelta = new Vector2(-24, 54);
+            foot.rectTransform.sizeDelta = new Vector2(-BoardTextInset * 2f, 54);
             foot.rectTransform.anchoredPosition = new Vector2(0, -(y + 4f));
             foot.horizontalOverflow = HorizontalWrapMode.Wrap;
             foot.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1596,7 +1645,7 @@ namespace LastCall.UI
             row.anchoredPosition = new Vector2(0, -y);
 
             var cap = NewText("C", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(160, 22), new Vector2(4, 0));
+            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(160, 22), new Vector2(BoardTextInset, 0));
             cap.rectTransform.pivot = new Vector2(0, 0.5f);
             cap.horizontalOverflow = HorizontalWrapMode.Overflow;
             cap.text = label;
@@ -1609,8 +1658,8 @@ namespace LastCall.UI
             // something to walk along, which is what leader dots have been for since ledgers
             // were ruled by hand. It starts where THIS word actually ends (preferredWidth,
             // not the box) so no row's dots collide with its own caption.
-            float capEnd = 4f + cap.preferredWidth + 8f;
-            float figLeft = row.rect.width - StandFigW - (inStars ? StandUnitW : 0f) - 4f - 6f;
+            float capEnd = BoardTextInset + cap.preferredWidth + 8f;
+            float figLeft = row.rect.width - StandFigW - (inStars ? StandUnitW : 0f) - BoardTextInset - 6f;
             if (figLeft - capEnd >= 24f)
             {
                 var lead = NewText("Lead", row, _body, 16, TextAnchor.MiddleLeft,
@@ -1629,7 +1678,7 @@ namespace LastCall.UI
             {
                 var unit = NewRect("U", row);
                 Place(unit, new Vector2(1, 0.5f), new Vector2(13, 13),
-                    new Vector2(-(StandFigW + 4f), 0));
+                    new Vector2(-(StandFigW + BoardTextInset), 0));
                 unit.pivot = new Vector2(1, 0.5f);
                 var ui = unit.gameObject.AddComponent<Image>();
                 ui.sprite = unitArt ?? ItemArt.Star(true, 13f);   // the house's own symbol, else the star
@@ -1641,7 +1690,7 @@ namespace LastCall.UI
             // figures is only readable if it IS a column.
             var val = NewText("V", row, _display, 16, TextAnchor.MiddleRight, ink);
             Place(val.rectTransform, new Vector2(1, 0.5f),
-                new Vector2(inStars ? StandFigW : 200, 22), new Vector2(-4, 0));
+                new Vector2(inStars ? StandFigW : 200, 22), new Vector2(-BoardTextInset, 0));
             val.rectTransform.pivot = new Vector2(1, 0.5f);
             val.horizontalOverflow = HorizontalWrapMode.Overflow;
             val.verticalOverflow = VerticalWrapMode.Overflow;
@@ -2044,7 +2093,12 @@ namespace LastCall.UI
             foreach (Transform old in _invoiceRows) Destroy(old.gameObject);
             _billCounts.Clear();
             if (_billWhen != null)
-                _billWhen.text = CalendarFor(run.Day) + "  ·  " + CrowdName(run.CrowdToday);
+            {
+                // the line under the title, a step down where the house face is handed on (eighth list)
+                _billWhen.font = BillSmallFont;
+                _billWhen.fontSize = LanguageFonts.Size(BillSmallFont, BillSmallSize);
+                _billWhen.text = BillWords(CalendarFor(run.Day) + "  ·  " + CrowdName(run.CrowdToday));
+            }
             float y = 0f;
 
             // THE NIGHT IN ONE LOOK (2026-08-10, the author: "az ama öz" — less type, only
