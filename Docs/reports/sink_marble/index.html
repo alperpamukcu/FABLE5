@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Mermer lavabo — dört aday</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0D0813; --panel:#1A1023; --ink:#F2E8D5; --ink2:#C9BCA8; --accent:#E8A33D; }
+body { margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--ink); font:16px/1.5 Georgia,"Times New Roman",serif; }
+main { max-width:1100px; margin:0 auto; }
+h1 { font-size:28px; margin:0 0 4px; font-weight:normal; }
+h2 { font-size:20px; margin:32px 0 8px; font-weight:normal; color:var(--accent); }
+p { max-width:70ch; color:var(--ink2); }
+figure { margin:12px 0; background:var(--panel); padding:10px; }
+figure img { display:block; width:100%; height:auto; image-rendering:pixelated; }
+figcaption { font-size:13px; color:var(--ink2); margin-top:6px; }
+.row { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+.ask { border-left:3px solid var(--accent); padding:8px 12px; margin:24px 0; }
+code { color:var(--accent); font-family:Consolas,monospace; font-size:14px; }
+table { border-collapse:collapse; margin:12px 0; color:var(--ink2); font-size:15px; }
+th, td { border-bottom:1px solid #2A1E38; padding:6px 14px 6px 0; text-align:left; }
+th { color:var(--ink); font-weight:normal; }
+</style></head><body><main>
+
+<h1>Mermer lavabo — dört aday</h1>
+<p>2026-09-23. Lavabo merdiveninin <strong>3. basamağı</strong> (GDD 27 §3.1: mermer $140 · konfor +0,8 · 3,0★)
+tasarımda yazılı ama çizimi olmadığı için <code>fixtures.json</code>'a giremiyordu — H6'nın açık üç satırından biri.
+Hiçbir şey üretilmedi: <strong>silüet senin lavabon, mermer de odanın kendi mermeri</strong>.</p>
+
+<h2>1 · Neden türetildi</h2>
+<p><strong>Silüet:</strong> var olan üç basamak (<code>fx_sink_old</code>, <code>fx_sink</code>,
+<code>fx_sink_gold</code>) tek çizimin üç malzemesi — piksel piksel aynı. Ölçüldü: musluk 0–13. satırlarda,
+vanalar 14–15'te, tekne 16–34'te ve her satır perspektifle bir piksel sola kayıyor. Dördüncü basamak da dördüncü
+<em>malzeme</em>: kontur, süzgeç ve armatürler üçüncüden olduğu gibi alındı.</p>
+<p><strong>Mermer:</strong> oyunda zaten iki mermer var, ikisi de senin — <code>fx_floor_marble</code> (gül) ve
+<code>fx_floor7_marble</code> (7. basamağın pembesi). Lavaboya beyaz İtalyan mermeri uydurmak odada başka hiçbir
+yerde olmayan bir taş koymak olurdu; tekne bu iki paletle, başka renk kullanılmadan kesildi. Damarların rengi de
+zeminlerin kendi damar rengi (gülde magenta, pembede beyaza yakın) — onlar taşın basamağı değil, damarı.</p>
+<p>Gölgeleme senin çizimindeki gölgeleme: teknenin tonları parlaklık sırasına dizilip mermer rampasına o sırayla
+oturtuluyor, yani ışığı nereye koyduysan orada kalıyor.</p>
+
+<figure><img src="ladder.png" width="650" height="45" alt="Yedi lavabo yan yana: eski, çelik, pirinç ve dört mermer aday">
+<figcaption>6× — soldan: eski (basamak 0), çelik ($40), pirinç ($85), sonra dört aday:
+<strong>M1 pembe+pirinç · M2 pembe+çelik · M3 gül+pirinç · M4 gül+çelik</strong>.</figcaption></figure>
+
+<h2>2 · Odada, barın ışığında</h2>
+<p>Montaj değil: dördü de oyunda, gerçek fikstürün sprite'ı çalışma anında değiştirilerek çekildi (aynı pivot, aynı
+piksel/birim), veri hiç değişmedi. Arkadaki neon şerit ve tezgâhın karanlığı renkleri epey değiştiriyor — karar
+burada verilmeli, paletin üstünde değil.</p>
+<div class="row">
+<figure><img src="room_brass.png" alt="Pirinç lavabo odada"><figcaption>Bugünkü 2. basamak: pirinç.</figcaption></figure>
+<figure><img src="room_M1_pink_brass.png" alt="M1 pembe mermer, pirinç armatür"><figcaption><strong>M1</strong> — pembe mermer, pirinç armatür.</figcaption></figure>
+<figure><img src="room_M2_pink_steel.png" alt="M2 pembe mermer, çelik armatür"><figcaption><strong>M2</strong> — pembe mermer, çelik armatür.</figcaption></figure>
+<figure><img src="room_M3_rose_brass.png" alt="M3 gül mermer, pirinç armatür"><figcaption><strong>M3</strong> — gül mermer, pirinç armatür.</figcaption></figure>
+<figure><img src="room_M4_rose_steel.png" alt="M4 gül mermer, çelik armatür"><figcaption><strong>M4</strong> — gül mermer, çelik armatür.</figcaption></figure>
+</div>
+
+<h2>3 · Girerse ne olur</h2>
+<table>
+<tr><th>Basamak</th><th>Fiyat</th><th>Konfor</th><th>Yıldız kapısı</th><th>Not</th></tr>
+<tr><td>çelik (<code>counter_sink</code>)</td><td>$40</td><td>+0,15</td><td>0★</td><td>bugün</td></tr>
+<tr><td>pirinç (<code>sink_brass</code>)</td><td>$85</td><td>+0,40</td><td>1,5★</td><td>bugün</td></tr>
+<tr><td><strong>mermer</strong> (<code>sink_marble</code>)</td><td><strong>$140</strong></td><td><strong>+0,80</strong></td><td><strong>3,0★</strong></td><td>GDD 27 §3.1'de yazılı, çizimi bekliyordu</td></tr>
+</table>
+<p>Seçtiğin aday <code>Assets/Resources/Fixtures/fx_sink_marble.png</code> olarak iner, akan su şeridi kendi
+zincirinden türetilir (<code>Tools/sink_water_gen.py</code> — musluğun ağzını ve teknenin su çizgisini çizimden
+okuyor), <code>fixtures.json</code>'a üçüncü basamak eklenir ve merdiven testi (her basamak daha pahalı, daha çok
+konfor, daha az yıldız istemez) onu da tutar.</p>
+
+<div class="ask"><strong>Karar:</strong> M1 · M2 · M3 · M4 — ya da “hiçbiri”. Taş ile armatürü ayrı da
+söyleyebilirsin (“pembe taş ama çelik musluk” gibi); ikisi bağımsız üretiliyor. Damar sayısı/yeri de
+söylenebilir — şu an üç damar var, teknenin perspektifini izliyorlar.</div>
+
+</main></body></html>
