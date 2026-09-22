@@ -1629,6 +1629,18 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   karo adları en fazla iki satır (üçüncü satır "…" ile kesiliyor). **Beyaz karo hatası:** kırpılan sprite
   `Sprite.Create` varsayılanıyla TIGHT mesh alıyordu ve uGUI böyle bir sprite'ı beyaz kare olarak çiziyor — FullRect
   yapıldı (limon kâsesi ve masalar beyaz kutu olarak duruyordu).
+- **Hüzme abajurun ALTINDAN başlıyor** (2026-09-23 düzeltmesi, yazar: “tavan ışıkları abajurun üstünden
+  başlıyor, abajurun üstünde kalan kısmı kes”): tepesi yukarı alınan koni ışığın kendisi için doğru, ama GÖRÜNEN
+  hava (`PendantAir`) abajurun üstüne bir kama çiziyordu — abajúrın işi tam olarak onu kesmek. Spot tepesini
+  koruyor; hava, kaldırılan kadar (`PendantAir.DropBelowSpot`, oda ölçeğiyle) aşağı asılıyor ve iç çekirdeği ampul
+  yarıçapı kadar açılıyor — aynı “camdan camın genişliğinde çıkma”, üstte hiçbir şey olmadan. ÖLÇÜLDÜ (r191, oyunda):
+  drop 38,56 = localY, dünya Y 88,5 (spot 127,1 — yani altında), iç yarıçap 35,83 / dış 298,55.
+- **Zeytin kabı 2.5D'ye çevrildi** (2026-09-23, yazar: “zeytin kabı diğerleri gibi 2.5d olmalı, perspektife dikkat
+  et”) — henüz OYUNDA DEĞİL, `Docs/reports/counter_props/` sayfasında seçim bekliyor. Üç şey yazarın kendi
+  kaplarından ölçüldü: kenar bandı 16–18. satırlar ve içerik 19–27 arasında duruyor; içerik camla karıştırılmıyor,
+  düz tonla kabı dolduruyor; palet dar (kabın içeriği 2–3 renk). Zeytinler kavanozun kendi dört tonu
+  (26,16,35 / 54,36,71 / 110,100,89 / 156,143,128) ve iki kırmızısıyla çizildi, her biri küre olarak gölgelendi,
+  yığın arkadan öne dizildi (`Tools/olive_bowl.py`).
 - Doğrulama: EditMode 634/635 (bilinen plaka kırmızısı), PlayMode 13/13; sertifika üç kademede, oda gece lambalarla,
   kepenk hem yeni hem cilalı barda ölçüldü.
 

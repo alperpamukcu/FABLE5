@@ -1207,8 +1207,8 @@ namespace LastCall.UI
                 }
             }
 
-            // THE NEW! BAND (2026-09-08): a listing whose star gate the rating crossed last
-            // night wears it across the window's top-left corner.
+            // THE NEW MARK (2026-09-08, redrawn 2026-09-22): a listing whose star gate the rating crossed last
+            // night wears the house's notification mark in the window's top-right corner.
             if (!sealedTile && run != null && run.OpenedLastNight(spec.RungStars))
             {
                 var band = NewRect("New", win);

@@ -1955,19 +1955,31 @@ namespace LastCall.UI
             l.falloffIntensity = PendantFalloff;
         }
 
-        /// <summary>The pendant's shaft of lit air, a child of its spot on the back wall's layer (see
-        /// <see cref="PendantAirLight"/>); it follows the spot's colour and brightness every frame.</summary>
-        private static void HangPendantAir(Light2D spot, float radius)
+        /// <summary>
+        /// The pendant's shaft of lit air, a child of its spot on the back wall's layer (see
+        /// <see cref="PendantAirLight"/>); it follows the spot's colour and brightness every frame.
+        ///
+        /// NOTHING ABOVE THE SHADE (2026-09-23, the author: "tavan ışıkları abajurun üstünden başlıyor,
+        /// abajurun üstünde kalan kısmı kes"). The SPOT keeps its lifted apex — that is what makes its
+        /// cone the bulb's width at the glass rather than a point — but the shaft is the part you can
+        /// see, and a lifted apex drew a wedge of lit air OVER the lamp, which is the one thing a shade
+        /// is for. So the air hangs back down at the shade's mouth and is given the bulb's own radius as
+        /// its inner core, which is the same "leaves the glass at the glass's width" by the other road:
+        /// a disc of full light the width of the bulb, and the cone opening below it.
+        /// </summary>
+        private static PendantAir HangPendantAir(Light2D spot, float radius, float bulbRadius)
         {
             var air = new GameObject("PendantAir").AddComponent<Light2D>();
             air.transform.SetParent(spot.transform, false);          // already turned to the floor
             air.lightType = Light2D.LightType.Point;
             ShapeCone(air, radius);
+            if (bulbRadius > 0f) air.pointLightInnerRadius = Mathf.Max(air.pointLightInnerRadius, bulbRadius);
             air.volumetricEnabled = true;
             air.volumeIntensity = PendantAirVolume;
             LightLayers(air, LayerBackground);
             var follow = air.gameObject.AddComponent<PendantAir>();
             follow.Source = spot; follow.Air = air; follow.Share = PendantAirLight;
+            return follow;
         }
         private static readonly Color PatronFillTint = LightLanguage.PatronLift;   // the key, most of the way to white
 
@@ -3416,9 +3428,10 @@ namespace LastCall.UI
                             LightLayers(glow, LayerCounter, LayerPatrons);
                             // the apex sits inside the shade, a bulb's width above the glass (ApexLift), and the
                             // throw grows by the same so the pool on the bar is unmoved
-                            float lift = ApexLift(BulbRadiusOf(sr.sprite));
+                            float bulbR = BulbRadiusOf(sr.sprite);
+                            float lift = ApexLift(bulbR);
                             PendantSpot(glow, def.LightRadius + lift);
-                            HangPendantAir(glow, def.LightRadius + lift);
+                            HangPendantAir(glow, def.LightRadius + lift, bulbR);
                         }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3669,6 +3682,11 @@ namespace LastCall.UI
                         ? ApexLift(BulbRadiusOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite)) : 0f;
                     placed.Glow.transform.position = basePos
                         + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
+                    // ...and the SHAFT hangs back down at the shade's mouth, the whole of the lift,
+                    // in the room's own scale (2026-09-23): the lamp is what light comes out of, not
+                    // something light is drawn over. See PendantAir.DropBelowSpot.
+                    var air = placed.Glow.GetComponentInChildren<PendantAir>();
+                    if (air != null) air.DropBelowSpot = lift * k;
                 }
             }
 
