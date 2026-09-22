@@ -1588,6 +1588,9 @@ namespace LastCall.UI
         private void StepCounterFinish()
         {
             var run = Run;
+            // THE SHUTTER'S PAINT (2026-09-22): the bar opens with the worn door and gets its mural with the
+            // refinish kit - the same purchase that lets the counter be repainted at all.
+            if (run != null && stage != null) stage.SetDoorPainted(run.CanRepaintCounter);
             string want = run != null ? run.CounterFinish : null;
             if (want == null || want == _appliedFinish) return;
             if (_flow != null && _flow.IsOpen) return;
@@ -1703,6 +1706,7 @@ namespace LastCall.UI
             // while you were pouring stood wherever the last solve had left it.
             SeparateSays();
             StepMiniPreps(run);
+            StepLitProps();       // the dishes, the menu and the cloth, drawn where the room's lights are
             StepIdOpen();
             StepPropTip();
             // StepCellarCard runs in LateUpdate: the copy in the card's slot is laid on the

@@ -1887,6 +1887,53 @@ namespace LastCall.UI
         private const float PendantAirLight = 0.04f, PendantAirVolume = 5f;
 
         /// <summary>
+        /// THE LIGHT LEAVES A BULB, NOT A POINT (2026-09-22, the author: "Yeni eklenen tavan lambalarının yaydığı
+        /// ışık hüzmesi görseldeki ampulün boyutuna göre çıkışı genişletilmeli dairesel bir kaynaktan çıkıyor ışık
+        /// noktasal değil"). A URP 2D spot IS a point with an angle, so its shaft starts at nothing and opens as it
+        /// falls; a lamp's glass is a disc a finger across and its light leaves the whole of it.
+        ///
+        /// The fix is geometry, not a second light: the apex is lifted UP the lamp by the distance at which the cone
+        /// is already the bulb's width - r / tan(half the outer angle) - and the throw is lengthened by the same, so
+        /// the shaft leaves the glass AT the glass's width and the pool on the counter is exactly where it was. The
+        /// radius is measured off the drawing rather than typed: the widest row of the lamp is its shade's mouth,
+        /// and the widest row below that is the bulb hanging out of it.
+        /// </summary>
+        private readonly Dictionary<string, float> _bulbRadius = new Dictionary<string, float>();
+
+        private float BulbRadiusOf(Sprite s)
+        {
+            if (s == null || s.texture == null) return 0f;
+            string key = s.name + ":" + s.rect;
+            if (_bulbRadius.TryGetValue(key, out var had)) return had;
+            float r = 0f;
+            try
+            {
+                var px = s.texture.GetPixels32();
+                int tw = s.texture.width;
+                int x0 = (int)s.rect.x, y0 = (int)s.rect.y, w = (int)s.rect.width, h = (int)s.rect.height;
+                var wide = new int[h];
+                for (int y = 0; y < h; y++)
+                {
+                    int n = 0;
+                    for (int x = 0; x < w; x++)
+                        if (px[(y0 + y) * tw + x0 + x].a > 128) n++;
+                    wide[y] = n;
+                }
+                int mouth = 0;
+                for (int y = 0; y < h; y++) if (wide[y] > wide[mouth]) mouth = y;
+                int bulb = 0;                                   // the widest row BELOW the shade's mouth
+                for (int y = 0; y < mouth; y++) if (wide[y] > bulb) bulb = wide[y];
+                r = bulb * 0.5f;
+            }
+            catch (UnityException) { r = 0f; }                  // a sprite nobody made readable: back to a point
+            return _bulbRadius[key] = r;
+        }
+
+        /// <summary>How far above the bulb a cone of <see cref="PendantOuterAngle"/> is exactly the bulb's width.</summary>
+        private static float ApexLift(float bulbRadius) =>
+            bulbRadius <= 0f ? 0f : bulbRadius / Mathf.Tan(PendantOuterAngle * 0.5f * Mathf.Deg2Rad);
+
+        /// <summary>
         /// Makes a hung light a spot looking at the floor. URP 2D measures a point light's angles from the light's
         /// own UP, so an unturned cone looks at the ceiling - which is why the 46/84 cone tried on 2026-09-22
         /// "changed not one pixel" (r105-r108) and the cone was painted as a cookie instead. Turned half a circle,
@@ -2207,6 +2254,35 @@ namespace LastCall.UI
                 }
                 return _doorArt;
             }
+        }
+
+        /// <summary>
+        /// THE SHUTTER THE BAR OPENS WITH (2026-09-22, the author: "Tezgah kepenginden kastım yeni kepenk olan
+        /// turkuaz kepenkin rengi yine turkuaz olacak, üstündeki görseller kaldırılacak, turkuazlığı aşınmış
+        /// altındaki ahşap gözükecek eskidiği için"). The same door, same size and same pull, with its pictures
+        /// never painted on and its turquoise worn through to the boards (Tools/worn_door.py derives it from the
+        /// drawing; nothing here is a second drawing). The painted one arrives with the refinish kit - the first
+        /// dollar this bar spends on how it looks is the one that gives it its mural.
+        /// </summary>
+        private Sprite _doorWorn;
+        private bool _doorPainted;
+
+        private Sprite WornDoorArt
+        {
+            get
+            {
+                if (_doorWorn == null) _doorWorn = Resources.Load<Sprite>("Scene/counter_door_worn");
+                return _doorWorn != null ? _doorWorn : DoorArt;
+            }
+        }
+
+        /// <summary>Whether the shutter shows its mural (the kit is owned) or the paint it opened with.</summary>
+        public void SetDoorPainted(bool painted)
+        {
+            var drawn = DoorArt;                                   // sets _doorIsDrawn before it is read
+            if (_doorPainted == painted && _shutterSr != null && _shutterSr.sprite != null) return;
+            _doorPainted = painted;
+            if (_shutterSr != null && _doorIsDrawn) _shutterSr.sprite = painted ? drawn : WornDoorArt;
         }
 
 
@@ -2658,7 +2734,11 @@ namespace LastCall.UI
             // bottles or it is not shutting anything.
             if (shutterSprite != null)
             {
-                var sh = WorldSprite("Shutter", DoorArt, order: 33);   // the door, or the roller without it
+                // the worn one until the kit is bought (SetDoorPainted); both drawings are the same 592 x 186.
+                // DoorArt is read FIRST: it is what sets _doorIsDrawn, and asking the flag before the getter has run
+                // hung the painted door on an unpainted bar (measured in play, r178).
+                var drawn = DoorArt;
+                var sh = WorldSprite("Shutter", _doorIsDrawn && !_doorPainted ? WornDoorArt : drawn, order: 33);
                 _shutterTr = sh.transform;
                 _shutterSr = sh;
                 _shutterNative = DoorArt.rect.size;
@@ -3334,8 +3414,11 @@ namespace LastCall.UI
                             // drawn sprite of the same cone, which the author called bad lighting - a shape laid
                             // over the room rather than light falling through it.
                             LightLayers(glow, LayerCounter, LayerPatrons);
-                            PendantSpot(glow, def.LightRadius);
-                            HangPendantAir(glow, def.LightRadius);
+                            // the apex sits inside the shade, a bulb's width above the glass (ApexLift), and the
+                            // throw grows by the same so the pool on the bar is unmoved
+                            float lift = ApexLift(BulbRadiusOf(sr.sprite));
+                            PendantSpot(glow, def.LightRadius + lift);
+                            HangPendantAir(glow, def.LightRadius + lift);
                         }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3579,7 +3662,14 @@ namespace LastCall.UI
                 // The glow hangs at the piece's own light line — the flame, the belly of
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)
-                    placed.Glow.transform.position = basePos + new Vector3(0f, h * 0.66f + placed.Def.LightDy * k, 0f);
+                {
+                    // a pendant's light hangs a bulb's lift above its glass, so its cone is the glass's width where
+                    // it leaves the lamp (ApexLift); everything else hangs at its own light line
+                    float lift = placed.Def.LightDy != 0f
+                        ? ApexLift(BulbRadiusOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite)) : 0f;
+                    placed.Glow.transform.position = basePos
+                        + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
+                }
             }
 
             // The blobs ride their own pieces, so a re-fitted window moves the shadow with

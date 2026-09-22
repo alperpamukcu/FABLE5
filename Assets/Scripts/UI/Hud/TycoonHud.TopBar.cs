@@ -189,13 +189,14 @@ namespace LastCall.UI
             var starsBtn = starsRow.gameObject.AddComponent<Button>();
             starsBtn.transition = Selectable.Transition.None;
             starsBtn.onClick.AddListener(OpenLadderFromTheBeam);
+            // A RUNG NOBODY HAS LOOKED AT (2026-09-22, the eighth... ninth list): the word NEW was a word in one
+            // language on a beam that speaks twenty-nine; it is the house's notification mark now, in the beam's own
+            // magenta, hung off the star row's corner and pointing at it.
             _ladderNewFlag = NewRect("New", starsRow);
-            Place(_ladderNewFlag, new Vector2(1f, 1f), new Vector2(28f, 12f), new Vector2(6f, 10f));
+            Place(_ladderNewFlag, new Vector2(1f, 1f), new Vector2(16f, 16f), new Vector2(8f, 12f));
             var flagImg = _ladderNewFlag.gameObject.AddComponent<Image>();
-            flagImg.color = UITheme.Magenta[2]; flagImg.raycastTarget = false;
-            var flagText = NewText("L", _ladderNewFlag, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(flagText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            flagText.text = UIText.T("rank.strip.new");
+            flagImg.sprite = ChromeArt.Notice();
+            flagImg.color = UITheme.Magenta[3]; flagImg.raycastTarget = false;
             _ladderNewFlag.gameObject.SetActive(false);
             for (int i = 0; i < _ratingStars.Length; i++)
             {

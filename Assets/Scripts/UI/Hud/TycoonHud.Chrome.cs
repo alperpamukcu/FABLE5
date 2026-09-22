@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -630,8 +630,11 @@ namespace LastCall.UI
 
         /// <summary>Sorts a HUD prop over the card (27) or lets it inherit again: the prop
         /// carries a dormant Canvas for this (see the rail's dishes in Seats).</summary>
-        private static void LiftProp(RectTransform prop, bool up)
+        private void LiftProp(RectTransform prop, bool up)
         {
+            // ...and a prop whose picture lives in the room comes back to the canvas while the card is up, because
+            // nothing in the world can be drawn over an overlay (2026-09-22, TycoonHud.LitProps).
+            PropOnCanvas(prop, up);
             if (prop == null) return;
             var cv = prop.GetComponent<Canvas>();
             if (cv == null) return;

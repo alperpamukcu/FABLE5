@@ -1260,6 +1260,10 @@ namespace LastCall.UI
                 // The dish's caption is the bottle's card now (2026-09-08).
                 relay.Entered = () => ShowGarnishCard(theRt, prop, theWord, theIcon, theWhy);
                 relay.Exited = () => HideGarnishCard(theRt);
+                // ...AND THE DISH ITSELF STANDS IN THE ROOM (2026-09-22, the author: "Garnishler ve menü ve bez
+                // stage world'ün içinde olmadığından sahnede kullandığımız ışıklandırmalardan etkilenmiyor"): the
+                // rect keeps the grab, the hover and the card; the picture is a stage sprite the lamps can reach.
+                IntoTheRoom("Prep_" + id, rt, img);
                 _prepProps.Add(prop);
             }
 
@@ -1536,6 +1540,9 @@ namespace LastCall.UI
             _clothImg.sprite = ItemArt.Load("towel_on_bar") ?? ChromeArt.Cloth();
             _clothImg.preserveAspect = true;
             FitCloth(_clothImg.sprite, TowelRestSize);
+            // IN FRONT OF THE COUNTER, IN THE ROOM (2026-09-22): order 36, over the bar (30) and its shutter (33),
+            // so the towel hangs on the rail and is lit by whatever is lighting the rail.
+            IntoTheRoom("Cloth", _clothRt, _clothImg, 36);
             // HIT BY ITS OWN PICTURE (2026-09-07, the author: "cloth çok büyük bir bölgeye
             // sahip, hitbox'ını görselin boyutuyla orantıla").
             //
@@ -2731,11 +2738,10 @@ namespace LastCall.UI
                 // counter never shows through it.
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
                 float dim = !glass ? 0.6f : done || wrong ? 0.45f : 1f;
-                // ...UNDER THE ROOM'S OWN LIGHT (2026-09-22): the dish is a canvas image standing on a lit slab,
-                // so the slab's light is multiplied into it. The dim above still says what the rail is saying.
-                var lit = stage != null ? stage.CounterLight : Color.white;
-                prop.Img.color = new Color(baseCol.r * dim * lit.r, baseCol.g * dim * lit.g,
-                                           baseCol.b * dim * lit.b, 1f);
+                // NO HAND-MADE LIGHT ANY MORE (2026-09-22): the dish is a stage sprite now (IntoTheRoom), so the
+                // room's own lamps fall on it. What is left here is what the RAIL is saying - a dish that cannot
+                // be used, or has been, darkens - and the room does the rest.
+                prop.Img.color = new Color(baseCol.r * dim, baseCol.g * dim, baseCol.b * dim, 1f);
                 prop.Img.raycastTarget = reachable;
             }
             // THE MAT IS AS LONG AS THE RAIL IS (2026-09-06, the author: "yeni garnish

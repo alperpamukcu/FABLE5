@@ -3582,6 +3582,47 @@ namespace LastCall.UI
         /// for the caller to tint and tiled across a panel's well at 2x - the Deco screen a Miami bar hangs behind
         /// its shelves, faint enough that the rows over it still read first.
         /// </summary>
+        /// <summary>
+        /// THE NOTIFICATION MARK (2026-09-22, the author: "Bildirim gibi iconlarda bu tarz bir bildirim iconu kullan
+        /// rengi bulunduğu yere uygun olsun", with the shape drawn out): a speech plate with its corners cut, an
+        /// exclamation knocked out of it, and a tail that comes to a point at whatever it is about. Sixteen pixels,
+        /// as the author drew it, WHITE for the caller to tint - the colour belongs to the place it stands in, which
+        /// is the other half of the ask: magenta on the beam's star row, the tile's own accent in the market.
+        ///
+        /// Drawn as the author's own mask rather than re-imagined, so every notification in the game is the same
+        /// mark (GDD 16: one thing, one drawing). Show it at 16 or 32 - whole multiples only, like every glyph here.
+        /// </summary>
+        public static Sprite Notice()
+        {
+            const string key = "mark:notice";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            string[] rows =
+            {
+                ".##############.",
+                "################",
+                "######....######",
+                "######....######",
+                "######....######",
+                "######....######",
+                "#######..#######",
+                "#######..#######",
+                "################",
+                "#######..#######",
+                "######....######",
+                "######....######",
+                ".######..######.",
+                ".....######.....",
+                "......####......",
+                ".......##.......",
+            };
+            const int S = 16;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                    if (rows[S - 1 - y][x] == '#') px[y * S + x] = new Color32(255, 255, 255, 255);
+            return Cache[key] = Make(px, S, S, Vector4.zero);
+        }
+
         public static Sprite PanelLattice()
         {
             const string key = "panel:lattice";

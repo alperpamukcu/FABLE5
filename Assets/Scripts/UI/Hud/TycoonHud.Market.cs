@@ -1212,22 +1212,16 @@ namespace LastCall.UI
             if (!sealedTile && run != null && run.OpenedLastNight(spec.RungStars))
             {
                 var band = NewRect("New", win);
-                Place(band, new Vector2(0, 1), new Vector2(64f, 16f), new Vector2(-8f, -8f));
-                band.pivot = new Vector2(0.5f, 0.5f);
-                band.anchoredPosition = new Vector2(22f, -14f);
-                band.localRotation = Quaternion.Euler(0, 0, 18f);
+                // THE HOUSE'S NOTIFICATION MARK (2026-09-22, the author: "Bildirim gibi iconlarda bu tarz bir
+                // bildirim iconu kullan"): the slanted NEW! ribbon was a word in one language turned eighteen
+                // degrees; this is the same mark the beam wears, at twice its pixels, in the tile's own magenta,
+                // standing in the corner and pointing at the thing that is new.
+                Place(band, new Vector2(1, 1), new Vector2(32f, 32f), new Vector2(-6f, -4f));
+                band.pivot = new Vector2(1f, 1f);
                 var bandImg = band.gameObject.AddComponent<Image>();
+                bandImg.sprite = ChromeArt.Notice();
                 bandImg.color = UITheme.Magenta[3];
                 bandImg.raycastTarget = false;
-                var bandText = NewText("T", band, _shop, 8, TextAnchor.MiddleCenter, Color.white);
-                Stretch(bandText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                bandText.raycastTarget = false;
-                bandText.text = UIText.T("market.tile.new");
-                var glow = NewRect("Glow", band);
-                Stretch(glow, Vector2.zero, Vector2.one, new Vector2(0, 0), new Vector2(0, -14f));
-                var gi = glow.gameObject.AddComponent<Image>();
-                gi.color = new Color(1f, 1f, 1f, 0.35f);
-                gi.raycastTarget = false;
             }
 
             // ── THE FOOT: the name, the stock, the dollar and the key ─────────────────

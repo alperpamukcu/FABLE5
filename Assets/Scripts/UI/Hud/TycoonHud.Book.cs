@@ -172,6 +172,9 @@ namespace LastCall.UI
             relay.Entered = () => _bookHovered = true;
             relay.Exited = () => _bookHovered = false;
 
+            // THE MENU STANDS ON THE BAR, IN THE ROOM (2026-09-22): the rect keeps the click, the reach and the
+            // hover glow; the picture is a stage sprite among the bottles and the dishes, lit with them.
+            IntoTheRoom("BookProp", prop, img);
             _bookProp = prop;
             PlaceBookProp();
             return prop;
@@ -215,9 +218,11 @@ namespace LastCall.UI
             // ışıklandırmalardan etkilenmeli"). Both notes are true at once at HALF: the book moves with the
             // evening, so it belongs to the bar, and it stays the brightest thing on the counter, so it still
             // reads as the nearest. The hover glow works off whatever rest colour this leaves it.
-            var lit = Color.Lerp(Color.white, stage.CounterLight, BookLightShare);
-            if (_bookGlow != null) _bookGlow.Retint(lit);
-            else if (_bookImg != null) _bookImg.color = lit;
+            // THE ROOM LIGHTS IT FOR REAL NOW (2026-09-22): the book is a stage sprite (IntoTheRoom), so the
+            // lamps reach it like they reach the counter. What is kept here is the glow's rest colour - white,
+            // the picture as drawn - and the hover's lift over it.
+            if (_bookGlow != null) _bookGlow.Retint(Color.white);
+            else if (_bookImg != null) _bookImg.color = Color.white;
 
             if (_bookLabelGroup != null)
             {
