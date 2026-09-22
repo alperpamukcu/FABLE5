@@ -3,6 +3,11 @@
 
 Run:  py -3 Tools/olive_bowl.py [--out DIR]
 
+SHIPPED 2026-09-23 (the author: "kap girsin"). The dish now IS `Items/counter_olive.png` - the name every
+caller already asks for (`ItemArt.Load("counter_" + style + "")`), so nothing in code changed and the file
+keeps its GUID. The jar it was made from would have been overwritten by its own output, so the source moved
+to `Tools/olive_bowl_src/counter_olive_jar.png`: that copy is what the fruit ramp is read off from now.
+
 WHY (the author's eighth list: "Ana sahnede gözüken buz, limon, tuz, şeker, nane kaplarına benzer şekilde zeytini de
 aynı tarzda bir kaba koyalım"). Five garnishes stand in one glass bowl, 35x33, drawn by the author; the olives stand
 in a tall jar with cocktail picks in it, 25x44 - a different object from a different set.
@@ -27,6 +32,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..'))
 ITEMS = os.path.join(ROOT, 'Assets', 'Resources', 'Items')
+JAR = os.path.join(HERE, 'olive_bowl_src', 'counter_olive_jar.png')     # the author's jar, kept as the source
 
 # The bowl's own grid, measured across all five dishes (2026-09-23): the rim band is rows 16-18 - its top face, its
 # grey middle and its lower edge - and whatever a dish holds starts at row 19 below it and stops at row 27, where the
@@ -125,11 +131,12 @@ def interior(dish):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=ITEMS)
+    ap.add_argument('--name', default='counter_olive')
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
     salt = load('counter_salt')
-    jar = load('counter_olive')
+    jar = Image.open(JAR).convert('RGBA')
     check_palette(jar)
 
     # the glass: the author's dish with everything above the rim cleared
@@ -169,8 +176,14 @@ def main():
         draw_olive(px, cx, cy, rx, ry, pit=pit)
     # the rim band goes back on top of the front row, so the olives sit IN the bowl
     dish.alpha_composite(salt.crop((0, BAND_TOP, 35, BAND_END)), (0, BAND_TOP))
+    # ...AND TWO HANG OVER IT (2026-09-23, seen in the room): with every olive tucked behind the band, the band was
+    # the brightest thing in the dish and the heap looked laid on top of a lid. The mint's leaves and the ice's cubes
+    # both break their band at the ENDS and leave its middle showing - so two olives are drawn last, at the ends,
+    # over the band.
+    for (cx, cy, rx, ry, pit) in [(6.8, 16.8, 3.7, 3.0, False), (28.2, 16.8, 3.7, 3.0, True)]:
+        draw_olive(px, cx, cy, rx, ry, pit=pit)
 
-    dst = os.path.join(args.out, 'counter_olive_bowl.png')
+    dst = os.path.join(args.out, args.name + '.png')
     dish.save(dst)
     print('wrote', dst)
 

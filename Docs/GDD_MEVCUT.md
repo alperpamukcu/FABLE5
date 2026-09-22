@@ -1635,8 +1635,13 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   koruyor; hava, kaldırılan kadar (`PendantAir.DropBelowSpot`, oda ölçeğiyle) aşağı asılıyor ve iç çekirdeği ampul
   yarıçapı kadar açılıyor — aynı “camdan camın genişliğinde çıkma”, üstte hiçbir şey olmadan. ÖLÇÜLDÜ (r191, oyunda):
   drop 38,56 = localY, dünya Y 88,5 (spot 127,1 — yani altında), iç yarıçap 35,83 / dış 298,55.
-- **Zeytin kabı 2.5D'ye çevrildi** (2026-09-23, yazar: “zeytin kabı diğerleri gibi 2.5d olmalı, perspektife dikkat
-  et”) — henüz OYUNDA DEĞİL, `Docs/reports/counter_props/` sayfasında seçim bekliyor. Üç şey yazarın kendi
+- **Zeytin kabı 2.5D'ye çevrildi ve OYUNA GİRDİ** (2026-09-23, yazar: “zeytin kabı diğerleri gibi 2.5d olmalı,
+  perspektife dikkat et” → “kap girsin”). Kâse `Items/counter_olive.png` oldu — adı ve GUID'i aynı kaldığı için
+  kodda tek satır değişmedi (`ItemArt.Load("counter_" + style)`); kürdanlı kavanoz türetmenin kaynağı olarak
+  `Tools/olive_bowl_src/counter_olive_jar.png`'a taşındı. Odada ölçüldü (r192): rayın altı kabı da 35×33, aynı
+  74 px adım, zeytin x=−14'te ve tuzla aynı taban çizgisinde (y=−193,49). Son ekleme: bütün meyve bandın arkasında
+  kalınca bant kabın en parlak şeyi oluyordu; nane ve buz bandı UÇLARDAN kırdığı için iki zeytin en son, uçlara,
+  bandın üstüne çiziliyor. Üç şey yazarın kendi
   kaplarından ölçüldü: kenar bandı 16–18. satırlar ve içerik 19–27 arasında duruyor; içerik camla karıştırılmıyor,
   düz tonla kabı dolduruyor; palet dar (kabın içeriği 2–3 renk). Zeytinler kavanozun kendi dört tonu
   (26,16,35 / 54,36,71 / 110,100,89 / 156,143,128) ve iki kırmızısıyla çizildi, her biri küre olarak gölgelendi,
