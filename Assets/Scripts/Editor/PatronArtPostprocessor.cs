@@ -81,8 +81,10 @@ namespace LastCall.EditorTools
                       || p.Contains("Art/Backgrounds/");
             // Resources/Menu and Resources/Keys (2026-09-15): the author's button pack and key caps, sliced at run
             // time (MenuPack, KeyCaps) — UI sprites at PPU 100 like the items, point-filtered or the 16px cells blur.
+            // Resources/Strangers (2026-09-22): the borrowed licence's photographs, 64x64 faces like the cast's own.
             if (!p.Contains("Resources/Patron/") && !p.Contains("Resources/Items/") && !p.Contains("Resources/Emotes/")
-                && !p.Contains("Resources/Menu/") && !p.Contains("Resources/Keys/") && !world) return;
+                && !p.Contains("Resources/Menu/") && !p.Contains("Resources/Keys/") && !p.Contains("Resources/Strangers/")
+                && !world) return;
 
             var ti = (TextureImporter)assetImporter;
             ti.textureType = TextureImporterType.Sprite;

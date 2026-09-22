@@ -13,6 +13,16 @@ namespace LastCall.Game
     /// </summary>
     public sealed class Papers
     {
+        /// <summary>
+        /// THE LICENCE'S LIMITS (2026-09-22, the author's eighth list: "Kimlikte yazan isimler yazılar çok uzun
+        /// olmamalı sayfa düzeni için bir karakter sınırı koymalıyız ve o karakter sınırına göre ülke isimleri veya
+        /// müşteri isimleri seçmeliyiz"). The card prints the first name and the surname in two boxes side by side
+        /// and the nationality in a half-width one, each at the heading face's sixteen units a letter; these are
+        /// the letters those boxes hold. A name over them is refused at load rather than clipped on the card, and
+        /// the nationality words are held to theirs by the string-table test (LicenceTextTests).
+        /// </summary>
+        public const int FirstNameMax = 10, SurnameMax = 11, NationalityMax = 12;
+
         /// <summary>The LOOK these papers belong to — the sprite folder's name, which is the
         /// key the licence, the receipt and the guide all agree on. Empty is the fallback
         /// for a face with no papers of its own.</summary>
@@ -29,12 +39,33 @@ namespace LastCall.Game
         /// read as young draws from these — every minor, and the adults who look it.</summary>
         public bool Young { get; }
 
+        /// <summary>The first word of the name: the card's NAME box.</summary>
+        public string First
+        {
+            get { int at = Name.IndexOf(' '); return at < 0 ? Name : Name.Substring(0, at); }
+        }
+
+        /// <summary>Everything after the first word: the card's SURNAME box (empty for a one-word name).</summary>
+        public string Surname
+        {
+            get { int at = Name.IndexOf(' '); return at < 0 ? string.Empty : Name.Substring(at + 1); }
+        }
+
         public Papers(string slug, string name, int age, string country, string iso, bool young = false)
         {
             Young = young;
             Slug = slug ?? string.Empty;
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException($"Papers for '{Slug}' have no name.", nameof(name));
+            int space = name.IndexOf(' ');
+            string first = space < 0 ? name : name.Substring(0, space);
+            string surname = space < 0 ? string.Empty : name.Substring(space + 1);
+            if (first.Length > FirstNameMax)
+                throw new ArgumentException(
+                    $"'{name}': the first name is {first.Length} letters and the licence prints {FirstNameMax}.", nameof(name));
+            if (surname.Length > SurnameMax)
+                throw new ArgumentException(
+                    $"'{name}': the surname is {surname.Length} letters and the licence prints {SurnameMax}.", nameof(name));
             if (age <= 0)
                 throw new ArgumentOutOfRangeException(nameof(age), $"'{name}' has no age on their licence.");
             Name = name;

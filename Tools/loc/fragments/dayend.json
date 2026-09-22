@@ -12,6 +12,8 @@
     { "key": "dayend.critic.fair_pour", "text": "a fair pour", "note": "Critic reason on the day-end slip: the drink was decent. Lower case, ~16 characters." },
     { "key": "dayend.critic.rough_pour", "text": "a rough pour", "note": "Critic reason on the day-end slip: the drink was poorly made. Lower case, ~16 characters." },
 
+    { "key": "dayend.fine.copied", "text": "COPIED CARD", "note": "Reason for a fine in dayend.bill.fines: the customer was served on a cheap reprinted ID. Capitals, ~14 characters." },
+    { "key": "dayend.fine.drawn", "text": "HAND-DRAWN CARD", "note": "Reason for a fine in dayend.bill.fines: the customer was served on an ID drawn by hand. Capitals, ~16 characters." },
     { "key": "dayend.fine.under_age", "text": "UNDER AGE", "note": "Reason for a fine, filling {reason} in dayend.bill.fines: an under-age customer was served. Several reasons may be listed joined by \", \". Capitals, ~14 characters." },
     { "key": "dayend.fine.borrowed", "text": "BORROWED CARD", "note": "Reason for a fine in dayend.bill.fines: the customer was served on someone else's ID card. Capitals, ~14 characters." },
     { "key": "dayend.fine.altered", "text": "ALTERED CARD", "note": "Reason for a fine in dayend.bill.fines: the customer was served on a doctored ID card. Capitals, ~14 characters." },

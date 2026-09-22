@@ -39,6 +39,27 @@ namespace LastCall.UI
         /// <summary>The heading face for the language being spoken, or <paramref name="house"/>.</summary>
         public static Font Display(Font house) => Face(Faces(Localization.Current.Code).display) ?? house;
 
+        /// <summary>
+        /// THE HAND (2026-09-22, the author's eighth list: the fake licence "her şeyi el ile kalemle çizmiş şekilde
+        /// fontlar el yazısı gibi"). Indie Flower (OFL, Assets/Fonts/OFL-IndieFlower.txt), imported as a hinted raster
+        /// so its strokes land on whole pixels like everything else the card prints, for every language it draws -
+        /// measured with fontTools against every table: all the Latin ones, Vietnamese and Turkish included. Cyrillic,
+        /// Greek and the CJK tables are not in it, and those write in their own body face, which the card jitters.
+        /// </summary>
+        public static Font Hand(Font fallback)
+        {
+            switch (Localization.Current.Code)
+            {
+                case "bg": case "el": case "ja": case "ko": case "ru": case "uk": case "zh-CN": case "zh-TW":
+                    return fallback;
+                default:
+                    return Face("IndieFlower-Regular") ?? fallback;
+            }
+        }
+
+        /// <summary>Whether <paramref name="font"/> is the hand itself (and so needs no jitter to look written).</summary>
+        public static bool IsHand(Font font) => font != null && Loaded.TryGetValue("IndieFlower-Regular", out var hand) && hand == font;
+
         /// <summary>The size to draw <paramref name="font"/> at for a UI size of 8, 16 or 24. The
         /// house faces, and any face on an 8 px grid, keep the size they were given.</summary>
         public static int Size(Font font, int size)

@@ -731,20 +731,25 @@ namespace LastCall.UI
         /// which is the honest word for it.</summary>
         private static string FineReason(TycoonRun run)
         {
-            int under = 0, borrowed = 0, altered = 0, unread = 0;
+            int under = 0, borrowed = 0, altered = 0, copied = 0, drawn = 0, unread = 0;
             foreach (var v in run.Floor.Finished)
             {
                 if (!v.Fined) continue;
                 if (!v.IdInspected) { unread++; continue; }
                 var truth = v.Papers;
-                if (truth != null && truth.Forgery == Forgery.Altered) altered++;
-                else if (truth != null && truth.IsForged) borrowed++;
+                var kind = truth != null ? truth.Forgery : Forgery.None;
+                if (kind == Forgery.Altered) altered++;
+                else if (kind == Forgery.Copied) copied++;       // the cheap reprint (the eighth list)
+                else if (kind == Forgery.Drawn) drawn++;         // the card drawn by hand
+                else if (kind == Forgery.Borrowed) borrowed++;
                 else under++;
             }
             var parts = new List<string>();
             if (under > 0) parts.Add(UIText.T("dayend.fine.under_age"));
             if (borrowed > 0) parts.Add(UIText.T("dayend.fine.borrowed"));
             if (altered > 0) parts.Add(UIText.T("dayend.fine.altered"));
+            if (copied > 0) parts.Add(UIText.T("dayend.fine.copied"));
+            if (drawn > 0) parts.Add(UIText.T("dayend.fine.drawn"));
             if (unread > 0) parts.Add(UIText.T("dayend.fine.unread"));
             return parts.Count == 0 ? UIText.T("dayend.fine.the_law") : string.Join(", ", parts);
         }

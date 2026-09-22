@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "_comment": "THE STRANGERS: men the bar never draws, whose licences a minor borrows (2026-09-22, the author's eighth list: 'Kimlikteki fotoğrafta mevcut karakterin görseli yerine başka oyunumuzda dahil olmayan adamların görselleri'). A borrowed card used to wear another drinker's face, so catching it was a memory test; it wears one of these now, and the tell is that the person on the stool is plainly not the man on the card. Same rows as papers.json, read by the same parser, held to the same limits (a first name of ten letters at most, a surname of eleven). The slug is the photograph: Assets/Resources/Strangers/<slug>.png, 64x64, cut by Tools/stranger_faces.py from faces that were once in the cast and were retired with their frames. None of them may appear in papers.json - a stranger in the cast is a face the bar can seat, and then the card is not a stranger's. Ages are read off the drawings and are all of age: the card has to pass for somebody who can drink.",
+  "papers": [
+    { "slug": "busdriver", "name": "Earl Whitaker", "age": 58, "country": "United States", "iso": "us" },
+    { "slug": "fisherman", "name": "Kwame Asante", "age": 41, "country": "Ghana", "iso": "gh" },
+    { "slug": "guayabera", "name": "Rafael Montoya", "age": 63, "country": "Mexico", "iso": "mx" },
+    { "slug": "linecook", "name": "Ravi Menon", "age": 44, "country": "India", "iso": "in" },
+    { "slug": "mechanic", "name": "Arturo Salas", "age": 49, "country": "Spain", "iso": "es" },
+    { "slug": "retiree", "name": "Walter Brooks", "age": 72, "country": "United States", "iso": "us" },
+    { "slug": "spanishsuit", "name": "Javier Ortiz", "age": 36, "country": "Spain", "iso": "es" },
+    { "slug": "racerboy", "name": "Kenji Mori", "age": 27, "country": "Japan", "iso": "jp" },
+    { "slug": "rider", "name": "Omar Haddad", "age": 30, "country": "Lebanon", "iso": "lb" },
+    { "slug": "roma", "name": "Marco Bellini", "age": 38, "country": "Italy", "iso": "it" },
+    { "slug": "shanghai", "name": "Wei Zhang", "age": 33, "country": "China", "iso": "cn" },
+    { "slug": "tokyodj", "name": "Ren Takeda", "age": 29, "country": "Japan", "iso": "jp" }
+  ]
+}

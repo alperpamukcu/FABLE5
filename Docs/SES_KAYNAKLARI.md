@@ -1,11 +1,11 @@
-# LAST CALL — Ses kaynakları (kayıtlar ve müzik)
+# LAST CALL — Ses kaynakları (kayıtlar ve ortam)
 
 *`Tools/sfx_ingest.py --ledger` yazar; elle düzenleme. Buradaki her dosya CC0 / kamu malı; atıf gerekmiyor,
-ama sahiplerinin adı teşekkür için burada duruyor. Sentetik klipler (`Tools/sfx_bank.py`) burada yok.*
+ama sahiplerinin adı teşekkür için burada duruyor. Sentetik klipler (`Tools/sfx_bank.py`), şarkılar ve müzikal
+işaretler (oyunun kendi bestesi, `Tools/music_synth.py`) burada yok.*
 
 | Oyundaki dosya | Kaynak | Sahibi | Lisans | Lisansın yazdığı sayfa |
 |---|---|---|---|---|
-| `ambience_rain` | [Light Rain Recorded from Inside a Shut Window](https://freesound.org/people/timothyd4y/sounds/473554/) | timothyd4y | CC0 1.0 (Creative Commons 0) | https://freesound.org/people/timothyd4y/sounds/473554/ |
 | `bar_closed` | [Heavy_wooden_door_close_mansion.wav: Closing of a heavy hardwood door ](https://freesound.org/people/elliott.klein/sounds/367221/) | elliott.klein | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/elliott.klein/sounds/367221/ |
 | `bill_slip` | [SFX_STICKERRIPPER_docket_30.wav: One of a series of foley recordings I](https://freesound.org/people/MrFossy/sounds/590304/) | MrFossy | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/MrFossy/sounds/590304/ |
 | `bin_drop` | [trash_fall.wav: 750 ml glass bottle dropped into a 30 gal plastic tras](https://freesound.org/people/philberts/sounds/71512/) | philberts | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/philberts/sounds/71512/ |
@@ -41,8 +41,8 @@ ama sahiplerinin adı teşekkür için burada duruyor. Sentetik klipler (`Tools/
 | `head_settle` | [beer foam - old record.wav: I recorded the subtle crackling sound beer](https://freesound.org/people/paualm/sounds/329627/) | paualm | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/paualm/sounds/329627/ |
 | `hover` | [UI Audio pack, file rollover2 (mean -25 dB, 0.06 s)](https://kenney.nl/assets/ui-audio) | Kenney (kenney.nl) | CC0 1.0 (Creative Commons Zero) | https://kenney.nl/assets/ui-audio |
 | `ice_drop` | [Ice Cubes Dropped in a Glass.aif: Dropping ice cubes in a glass.](https://freesound.org/people/ftpalad/sounds/119917/) | ftpalad | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/ftpalad/sounds/119917/ |
-| `id_card` | [slideCard05: Plastic card sliding off of another one. Recorded with a ](https://freesound.org/people/SilverDubloons/sounds/817580/) | SilverDubloons | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/SilverDubloons/sounds/817580/ |
-| `id_card_away` | [Casino Audio pack, file card-place-1 (a card laid down, mean -27 dB, 0](https://kenney.nl/assets/casino-audio) | Kenney (kenney.nl) | CC0 1.0 (Creative Commons Zero) | https://kenney.nl/assets/casino-audio |
+| `id_card` | [Casino Audio pack, file card-slide-8 (a card drawn out of the deck: th](https://kenney.nl/assets/casino-audio) | Kenney (kenney.nl) | CC0 1.0 (Creative Commons Zero) | https://kenney.nl/assets/casino-audio |
+| `id_card_away` | [Casino Audio pack, file card-slide-3 (a card slid back: it hits at 0.0](https://kenney.nl/assets/casino-audio) | Kenney (kenney.nl) | CC0 1.0 (Creative Commons Zero) | https://kenney.nl/assets/casino-audio |
 | `key_press` | [typewriter.wav: Single keypress extracted from a lengthy sound by tams](https://freesound.org/people/BMacZero/sounds/160678/) | BMacZero | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/BMacZero/sounds/160678/ |
 | `kick_out` | [InteriorDoorSlam.wav: ](https://freesound.org/people/jmdh/sounds/136537/) | jmdh | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/jmdh/sounds/136537/ |
 | `last_call_bell` | [Ship Bell Single Ring: One chime of a small bell used on ships, (can a](https://freesound.org/people/Sojan/sounds/353233/) | Sojan | CC0 1.0 (Creative Commons Zero) | https://freesound.org/people/Sojan/sounds/353233/ |

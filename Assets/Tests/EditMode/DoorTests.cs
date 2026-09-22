@@ -92,7 +92,8 @@ namespace LastCall.Tests
         public void TheRoll_LandsNearItsOdds_AndSplitsTheForgeries()
         {
             var rng = new RunRng("odds").GetStream("papers");
-            int minors = 0, forged = 0, altered = 0, youngAdults = 0, adults = 0;
+            int minors = 0, forged = 0, youngAdults = 0, adults = 0;
+            var kinds = new System.Collections.Generic.Dictionary<Forgery, int>();
             const int draws = 4000;
             for (int i = 0; i < draws; i++)
             {
@@ -111,12 +112,9 @@ namespace LastCall.Tests
                 {
                     forged++;
                     Assert.GreaterOrEqual(p.PrintedAge, IdPapers.DrinkingAge + 1, "a forged card prints of age");
-                    if (p.Forgery == Forgery.Altered)
-                    {
-                        altered++;
+                    kinds[p.Forgery] = kinds.TryGetValue(p.Forgery, out var had) ? had + 1 : 1;
+                    if (p.Forgery != Forgery.Borrowed)
                         Assert.LessOrEqual(p.PrintedAge, IdPapers.DrinkingAge + 4, "the year is bumped, not invented");
-                    }
-                    else Assert.AreEqual(Forgery.Borrowed, p.Forgery);
                 }
                 else Assert.AreEqual(p.TrueAge, p.PrintedAge);
             }
@@ -124,8 +122,12 @@ namespace LastCall.Tests
             Assert.That(share, Is.InRange(0.09, 0.15), $"minors {share:P1} of {draws} at 12% odds");
             double split = forged / (double)Math.Max(1, minors);
             Assert.That(split, Is.InRange(0.38, 0.62), $"forged {split:P0} of the minors at a 50% share");
-            double kinds = altered / (double)Math.Max(1, forged);
-            Assert.That(kinds, Is.InRange(0.38, 0.62), $"altered {kinds:P0} of the forged at a 50% share (H6)");
+            // FOUR LIES, EACH A QUARTER (the eighth list): borrowed, altered, copied, drawn
+            foreach (var kind in new[] { Forgery.Borrowed, Forgery.Altered, Forgery.Copied, Forgery.Drawn })
+            {
+                double kindShare = (kinds.TryGetValue(kind, out var n) ? n : 0) / (double)Math.Max(1, forged);
+                Assert.That(kindShare, Is.InRange(0.15, 0.35), $"{kind} {kindShare:P0} of the forged at a 25% share");
+            }
             double young = youngAdults / (double)Math.Max(1, adults);
             Assert.That(young, Is.InRange(0.18, 0.32), $"young adults {young:P0} at a 25% share — the face is not the tell");
         }

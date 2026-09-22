@@ -1603,6 +1603,43 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   pip (yapılanlar yanık, bitince yeşil). Üstüne gelince ödül ve kalan gece: "ÖDÜL +$120 · 1 GECE KALDI".
 - Doğrulama: EditMode 625/626, PlayMode 13/13.
 
+### 9.109 · Sekizinci liste (6/…): kimlik baştan — dönerek açılan kart, dört yalan, sabitlenen hover (2026-09-22)
+
+- **Kart baştan çizildi** (`TycoonHud.IdCard.cs`, eski düzen `TycoonHud.Id.cs`'ten çıktı): 188×96 sanat pikseli, kağıdın
+  kendi üç biriminde (564×288) — iki'ye bir, ehliyet oranı. Üstte bant (MALIBU CLUB, sınıf satırı ve belge numarası,
+  KOV tuşu) ve **sağ üstte bayrak, şekline göre kesilmiş çerçevede** (48×33 çizim 1:1, bir piksel mürekkep + bir piksel
+  krem, bandın tam boyunda). Solda **vesikalık** — müşterinin kendi `Patron/<slug>/face.png`'i 64×64, tam 2x, açık mavi
+  fon ve ince çerçeve — ve **tam altında, vesikalık genişliğinde** ziyaret sayısı ile ortalama puan paneli (kapı işareti
+  ve yıldız, altlarında kelimeleri). Sağda ızgara: **AD | SOYAD**, altında **YAŞ | UYRUK**, altında **siparişin görseli
+  ve yanında adı**, en altta **sunumda istedikleri** (buz, limon, tuz, şeker, zeytin, nane) piktogram olarak.
+- **Karakter sınırı** (`Papers.FirstNameMax` 10, `SurnameMax` 11, `NationalityMax` 12): kutular başlık fontunun 16
+  biriminde bu kadar harf alıyor; yükleyici sınırı aşan satırı **reddediyor** (kartta taşmasın diye), `LicenceTextTests`
+  hem kadro hem yabancılar dosyasını ve her dilin milliyet kelimelerini tutuyor. Ülke adı yerine **milliyet** yazılıyor
+  (`id.nationality.<iso>`, EN+TR): "Birleşik Krallık" kutuya sığmıyordu, "İngiliz" sığıyor — ve oynanmış kartta bayrakla
+  uyuşmazlığı okumak kolaylaşıyor. Aynı anda iki yüzün adı olan "Emre Kayhan" ayrıldı (kadikoy → Kerem Aydin).
+- **Açılış çevirerek** (`ApplyIdFlip`): kart tıklanan müşterinin göğsünden, boyunun yedide biri kadar ve **arkası
+  dönük** çıkıyor; ortaya gelirken büyüyüp kendi ekseninde dönüyor (yarıda kenarına geliyor, sonra yüzü görünüyor),
+  arkasında sunset mührü ve barkod şeridi var. Geri verirken tam tersi. Her iki uçta **kart çekme sesi** (Kenney CC0
+  `card-slide-8` / `card-slide-3`, `id_card` / `id_card_away` kayıtlarının yerine geçti).
+- **Dört yalan, dördü de dörtte bir** (`IdPapers.ForgedKinds` = 4): ödünç, oynanmış, **kopya** ("pvs makinesinde
+  bastırılmış kötü bir kopya": yıpranmış plastik, **köşeli** köşeler, kaba tram, baskı plakaları kaymış, fotoğraf yarı
+  çözünürlükte kopyalanmış) ve **elle çizilmiş** (makasla kesilmiş defter kağıdı, tükenmez kalem el yazısı — Indie
+  Flower, OFL —, vesikalık yerine **çöp adam**, boya kalemiyle boyanmış bayrak, elle çizilmiş kutular, kalemle taslak
+  ikonlar). Hepsi `IdArt`'ta kodla çiziliyor ve **kişiye göre deterministik**: aynı müşteri her gece aynı çizikleri,
+  aynı çöp adamı gösteriyor.
+- **Ödünç kart artık yabancının** (`Assets/Resources/Data/strangers.json` + `Resources/Strangers/*.png`,
+  `Tools/stranger_faces.py`): oyunda olmayan on iki erkek yüzü (kadrodan çıkarılmış, git geçmişinden ölçeklenmeden
+  alındı). Eskiden kart başka bir *müşterinin* yüzünü taşıyordu, yani ipucu hafıza testiydi.
+- **Hover sabitleniyor** ("birkaç saniye durunca hover sabit kalmalı"): kartın üstündeki dört hover — sipariş (tarif
+  sayfası), garnitür (tezgâhtaki kabı ve ne işe yaradığı), ziyaret/puan paneli, bayrak (ülkenin adı) — imleçte açılıyor,
+  imleç kaynağının üstünde dinlendikçe ayağındaki çubuk doluyor, 1,5 saniyede **sabitleniyor** (raptiye işareti belirir,
+  artık imleci takip etmez), üstüne gidilip okunabiliyor ve imleç ikisinden de ayrılınca bir nefes sonra kapanıyor.
+  Açılma/kapanma imleçten büyüyüp küçülerek.
+- Zeytin ve nane piktogramları yoktu (2026-09-21'de garnitür havuzuna girmişlerdi): kartta boş kutu çıkıyordu,
+  `PrefArt.Olive/Mint` çizildi.
+- Doğrulama: EditMode 634/635 (bilinen plaka kırmızısı), PlayMode 13/13; kart beş halinde ve üç dilde (en/ru/ja)
+  ölçüldü — hiçbir alan kutusunu taşırmıyor.
+
 ### 9.108 · Sekizinci liste (5/…): market — dolu satırlar, tam adımlı resimler, konfor bandı, hareket (2026-09-22)
 
 - **Kartlar sayfayı dolduruyor:** sütunlar koridorun kendi genişliğine yayılıyor (5×176 1004'ün içinde satır sonunda 76

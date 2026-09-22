@@ -34,6 +34,10 @@ namespace LastCall.UI
         /// <summary>Sentence case in this language: "SATIŞ" → "Satış" (<see cref="TextCase.Sentence"/>).</summary>
         public static string Sentence(string s) => L.Sentence(s);
 
+        /// <summary>A line, or <paramref name="fallback"/> where no table in the chain has it (a nationality word for a
+        /// country the tables have not met yet reads as the country's name).</summary>
+        public static string TOr(string key, string fallback) => L.GetOr(key, fallback);
+
         public static string CapsT(string key) => Caps(T(key));
 
         public static string CapsT(string key, params (string name, object value)[] args) => Caps(T(key, args));

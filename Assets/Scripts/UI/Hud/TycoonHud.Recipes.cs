@@ -555,25 +555,6 @@ namespace LastCall.UI
             return y + rowsH;
         }
 
-        /// <summary>The spec for the ordered drink, shown AT THE POINTER (hover) — the
-        /// book's own page since 2026-09-09.</summary>
-        private void ShowOrderRecipeTip()
-        {
-            var visit = _idVisit;
-            if (visit == null || _idRecipeTip == null || _idRecipeTipBody == null) return;
-            float h = DrawRecipeCard(_idRecipeTipBody, visit.Order.Wanted, TipW - 20f);
-            _idRecipeTip.sizeDelta = new Vector2(TipW, h + 20f);
-            _idRecipeTip.gameObject.SetActive(true);
-            _idRecipeTip.SetAsLastSibling();
-            // NOTHING IN IT MAY TAKE THE POINTER. Only the background used to say so, which
-            // was survivable while the panel was parked out in the margin; under the cursor
-            // a single raycasting hairline or line of spec text brings the flicker back, and
-            // the contents are rebuilt on every hover, so it is enforced on every hover.
-            foreach (var g in _idRecipeTip.GetComponentsInChildren<Graphic>(true))
-                g.raycastTarget = false;
-            FollowPointerWithRecipeTip();     // place it before its first frame is drawn
-        }
-
         /// <summary>
         /// The recipe panel rides the pointer (the author, 2026-08-10). It used to be
         /// parked in the scrim's margin beside the card, which was itself a retreat: over
@@ -588,6 +569,9 @@ namespace LastCall.UI
         private void FollowPointerWithRecipeTip()
         {
             if (_idRecipeTip == null || !_idRecipeTip.gameObject.activeSelf) return;
+            // ...until it is PINNED (2026-09-22, the eighth list): a tip that has stopped following is where the
+            // pointer is going, and one that ran after it could never be reached.
+            if (_idTipPinned) return;
             var mouse = UnityEngine.InputSystem.Mouse.current;
             if (mouse == null || _idRoot == null) return;
             Vector2 local;

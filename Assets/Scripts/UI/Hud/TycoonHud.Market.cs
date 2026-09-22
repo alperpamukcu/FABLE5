@@ -955,7 +955,7 @@ namespace LastCall.UI
                              Sprite picture = null, string detail = null)
         {
             const float CellH = 38f, IconBox = 26f;
-            var chip = NewRect("Pref", host ?? _idPrefRow);
+            var chip = NewRect("Pref", host);          // the ticket's tip; the licence draws its own (IdCard)
             var plate = chip.gameObject.AddComponent<Image>();
             plate.color = new Color(0.98f, 0.97f, 0.93f, 1f);
             plate.raycastTarget = true;      // it has something to say now

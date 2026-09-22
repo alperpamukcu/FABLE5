@@ -254,7 +254,7 @@
     { "slug": "munich", "name": "Felix Bauer", "age": 26, "country": "Germany", "iso": "de" },
     { "slug": "milano", "name": "Giulia Conti", "age": 26, "country": "Italy", "iso": "it" },
     { "slug": "istanbul", "name": "Deniz Arslan", "age": 27, "country": "Turkey", "iso": "tr" },
-    { "slug": "kadikoy", "name": "Emre Kayhan", "age": 29, "country": "Turkey", "iso": "tr" },
+    { "slug": "kadikoy", "name": "Kerem Aydin", "age": 29, "country": "Turkey", "iso": "tr" },
     { "slug": "izmir", "name": "Selin Yilmaz", "age": 24, "country": "Turkey", "iso": "tr" },
     { "slug": "ankara", "name": "Baris Demir", "age": 26, "country": "Turkey", "iso": "tr" },
     { "slug": "madrid", "name": "Lucia Ferrer", "age": 25, "country": "Spain", "iso": "es" },

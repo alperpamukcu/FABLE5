@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 
@@ -57,6 +57,11 @@ namespace LastCall.Game
         /// <summary>Who the bar can draw, by face (2026-08-12). Presentation data, like the
         /// stage slots: the licence prints it and Core never sees it.</summary>
         public PatronRoster Cast { get; private set; }
+
+        /// <summary>The strangers (2026-09-22): men the bar never draws, whose licences a minor borrows —
+        /// <c>Resources/Data/strangers.json</c>, read like the voices, so the scene needs no new wire. Null when
+        /// the file is missing: a borrowed card then wears another drinker's face, as it did before.</summary>
+        public PatronRoster Strangers { get; private set; }
 
         /// <summary>The crowd's voices (2026-09-06) — <c>Resources/Data/voices.json</c>, read
         /// the way the menu's lore is, so the scene needs no new wire for it. Null when the
@@ -173,6 +178,8 @@ namespace LastCall.Game
                                      System.Array.Empty<StageSlot>());
             StageSlots = dressing.Slots;
             Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
+            var strangersJson = Resources.Load<TextAsset>("Data/strangers");
+            Strangers = strangersJson != null ? DataLoader.ParsePapers(strangersJson.text) : null;
             var voicesJson = Resources.Load<TextAsset>("Data/voices");
             Voices = voicesJson != null ? DataLoader.ParseVoices(voicesJson.text) : null;
             // The arc needs the cast and the book in hand — a story character IS a face plus

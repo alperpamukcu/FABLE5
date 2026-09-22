@@ -8,11 +8,20 @@ namespace LastCall.Core
         /// <summary>The card is theirs and says what it says.</summary>
         None,
         /// <summary>Somebody else's licence: another face's photo, name, age and country.
-        /// The tell is the photo — the person on the stool is not the person on the card.</summary>
+        /// The tell is the photo — the person on the stool is not the person on the card. Since the
+        /// eighth list (2026-09-22) the lender is somebody the bar has never seen: a stranger's face.</summary>
         Borrowed,
         /// <summary>Their own card with the age bumped; the print gives it away (the flag
         /// does not match the country). Built 2026-09-05 (H6), the second tell.</summary>
         Altered,
+        /// <summary>A CHEAP COPY (2026-09-22, the author's eighth list: "kimliğin arkaplanı yıpranmış ve köşeli ise
+        /// sanki pvs makinesinde bastırılmış kötü bir kopya"): their own details reprinted on the wrong stock - worn,
+        /// square-cornered, the colours off register. The tell is the card itself.</summary>
+        Copied,
+        /// <summary>DRAWN BY HAND (the eighth list: "her şeyi el ile kalemle çizmiş şekilde fontlar el yazısı gibi
+        /// görsel insan çizimi çöp adam gibi kalitesiz"): lettered in pen, the portrait a stick figure. The tell is
+        /// that it is a drawing.</summary>
+        Drawn,
     }
 
     /// <summary>
@@ -42,10 +51,10 @@ namespace LastCall.Core
         /// <summary>Of the minors who come in, how many carry a card that lies.</summary>
         public const double ForgedShare = 0.5;
 
-        /// <summary>Of the lying cards, how many are ALTERED (their own, the year bumped, a
-        /// wrong flag) rather than BORROWED (somebody else's face). Half and half, so the
-        /// second tell arrives as often as the first once both are in play.</summary>
-        public const double AlteredShare = 0.5;
+        /// <summary>The lying cards come in <see cref="ForgedKinds"/> kinds, each as often as the others: BORROWED
+        /// (a stranger's face), ALTERED (their own, the year bumped, a wrong flag), COPIED (a cheap reprint) and DRAWN
+        /// (by hand). Four since the eighth list (2026-09-22); it was altered against borrowed, half and half.</summary>
+        public const int ForgedKinds = 4;
 
         /// <summary>Of the honest adults, how many could pass for nineteen on the stool. Not a
         /// balance number so much as the rule that keeps the face from being the tell.</summary>
@@ -139,11 +148,12 @@ namespace LastCall.Core
             // margin, 21..27 — and an altered card is their own with the year bumped, 21..24,
             // the flag giving it away. One more draw, on this stream only, for a forged
             // minor only, so no seed's crowd moves.
-            bool altered = rng.NextDouble() < AlteredShare;
-            int printed = altered ? rng.NextInt(DrinkingAge + 1, DrinkingAge + 5)    // 21..24
-                                  : rng.NextInt(DrinkingAge + 1, DrinkingAge + 8);   // 21..27, the lender
-            return new IdPapers(trueAge, printed, altered ? Forgery.Altered : Forgery.Borrowed,
-                                looksYoung: true);
+            // which lie, each as likely as the others
+            var kind = (Forgery)(1 + rng.NextInt(0, ForgedKinds));        // Borrowed, Altered, Copied, Drawn
+            int printed = kind == Forgery.Borrowed
+                ? rng.NextInt(DrinkingAge + 1, DrinkingAge + 8)                  // 21..27, the lender
+                : rng.NextInt(DrinkingAge + 1, DrinkingAge + 5);                 // 21..24, a year or four bumped
+            return new IdPapers(trueAge, printed, kind, looksYoung: true);
         }
 
         /// <summary>The fine for serving a minor at this standing.</summary>

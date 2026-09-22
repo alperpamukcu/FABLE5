@@ -28,6 +28,10 @@ namespace LastCall.UI
                 case "lemon_twist": return Lemon();
                 case "salt_rim": return SaltRim();
                 case "sugar_rim": return SugarRim();
+                // THE OLIVE AND THE MINT (2026-09-22): both joined the garnish pool on 2026-09-21 and the licence
+                // drew an empty cell for them - a card asking for something it could not show.
+                case "olive": return Olive();
+                case "mint": return Mint();
                 default: return null;
             }
         }
@@ -62,6 +66,53 @@ namespace LastCall.UI
                 Px(p, 11 + i, 11, pith); Px(p, 12 + i, 12, pith);
                 if (Math.Abs(i) <= 4) { Px(p, 11 + i, 11 + i, pith); Px(p, 12 + i, 11 - i, pith); }
             }
+        });
+
+        /// <summary>An olive on a cocktail pick: a green oval with its red heart showing, speared corner to corner.</summary>
+        public static Sprite Olive() => Cached("olive", p =>
+        {
+            var pick = new Color(0.78f, 0.58f, 0.32f);
+            var green = new Color(0.48f, 0.60f, 0.20f);
+            var shade = new Color(0.34f, 0.45f, 0.13f);
+            var shine = new Color(0.74f, 0.84f, 0.46f);
+            var pimento = new Color(0.86f, 0.22f, 0.18f);
+            for (int i = 0; i <= 17; i++) Px(p, 3 + i, 20 - i, pick);          // the pick, bottom-left to top-right
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float dx = (x - 11.5f) / 6.2f, dy = (y - 11.5f) / 5.0f;
+                    float d = dx * dx + dy * dy;
+                    if (d > 1f) continue;
+                    Px(p, x, y, dy < -0.35f || dx > 0.55f ? shade : green);
+                }
+            Px(p, 8, 14, shine); Px(p, 9, 14, shine); Px(p, 8, 13, shine);
+            // the pimento, at the end the pick comes out of
+            Px(p, 15, 13, pimento); Px(p, 16, 13, pimento); Px(p, 15, 12, pimento); Px(p, 16, 12, pimento);
+        });
+
+        /// <summary>A sprig of mint: a stem with three pairs of leaves, each leaf with its vein.</summary>
+        public static Sprite Mint() => Cached("mint", p =>
+        {
+            var leaf = new Color(0.36f, 0.72f, 0.34f);
+            var dark = new Color(0.20f, 0.50f, 0.22f);
+            var light = new Color(0.60f, 0.86f, 0.52f);
+            for (int y = 3; y <= 19; y++) Px(p, 12, y, dark);                   // the stem
+            void Leaf(float cx, float cy, float rx, float ry, int side)
+            {
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        float dx = (x - cx) / rx, dy = (y - cy) / ry;
+                        if (dx * dx + dy * dy > 1f) continue;
+                        Px(p, x, y, dy > 0.35f ? light : leaf);
+                    }
+                // the vein, from the stem out to the tip
+                for (int i = 0; i <= (int)rx; i++) Px(p, Mathf.RoundToInt(cx - side * rx + side * i * 1.6f), Mathf.RoundToInt(cy), dark);
+            }
+            Leaf(7.5f, 8f, 4.2f, 2.6f, -1); Leaf(16.5f, 8f, 4.2f, 2.6f, 1);
+            Leaf(8f, 13f, 3.8f, 2.4f, -1); Leaf(16f, 13f, 3.8f, 2.4f, 1);
+            Leaf(9f, 17.5f, 3.2f, 2.2f, -1); Leaf(15f, 17.5f, 3.2f, 2.2f, 1);
+            Px(p, 12, 20, leaf); Px(p, 11, 20, leaf); Px(p, 13, 20, leaf); Px(p, 12, 21, light);   // the bud at the top
         });
 
         // TOLD APART BY THEIR CRUST, not by a tint (2026-09-08, the author: "sugar rim ile

@@ -2,6 +2,17 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, sixth slice (2026-09-22):** the licence is drawn from scratch - a 188×96 card at the stock's own
+  three units a pixel with the house band and the flag in a frame cut to its shape, the drinker's own 64×64 face at 2x
+  over a panel of visits and stars, and NAME | SURNAME, AGE | NATIONALITY, the order's glass beside its name and the
+  row of what goes on it. It comes up from the stool it was taken from, turning over as it grows, and goes back the
+  same way with a card's slide at each end. Two more lies: a COPIED card (worn stock, square corners, a coarse screen,
+  the plates out of register, the photograph copied at half its resolution) and a DRAWN one (notebook paper cut by
+  hand, a ballpoint's lettering, a stick figure for the photo, the flag coloured in); a borrowed one now wears a
+  stranger's face, twelve men the bar never draws. The card's hovers open at the pointer, fill while it rests and then
+  STAY, so they can be walked onto and read. Names and nationality words have limits the loader enforces.
+  GDD_MEVCUT §9.109, GDD 28 §2.1/§3.1.
+
 - **The eighth list, fifth slice (2026-09-22):** the market's rows fill the aisle, every picture in it stands on a whole
   step (products, lock, chain, basket, stars; a wifi drawn for its slot), the upgrade screen shows the room's comfort, and
   the market moves - picks fly into the basket, put-backs drop away, orders fly into the account, tabs fade up, the hover

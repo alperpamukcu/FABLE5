@@ -859,28 +859,13 @@ namespace LastCall.UI
 
         // ID card (GDD 24 §5): the licence you read a customer by. Emotion→recipe pivot
         // (2026-07-22): it now shows the drink's RECIPE and the garnishes they want, not moods.
+        // The card's own parts live with it, in TycoonHud.IdCard.cs (2026-09-22, the eighth list's redesign).
         private RectTransform _idRoot;
 
-        private Image _idPhoto;
-
-        private Text _idName, _idAgeFrom, _idRel, _idIntent, _idOrder, _idOrderParts, _idRates, _idRatesLabel;
-
-        private Image _idFlag;
-
-        private Text _idRelLabel, _idIntentLabel;
-
-        private Text _idCitizen, _idNumber, _idVisitCount;
-        private Image[] _idPunches;         // the visits, as punches in the stamp strip (v4)
-        private Text _idVisitMore;          // "+N" past the fifth punch
-
-        private Image[] _idStars;       // the grey five, always drawn
-        private Image[] _idBond;        // how well they know you, in hearts
-        private Image[] _idStarFills;   // the amber over them, filled to the fraction
+        /// <summary>The card's hover: the recipe, a garnish, the visits, the flag (IdCard: it pins after a rest).</summary>
         private RectTransform _idRecipeTip;
 
         private RectTransform _idRecipeTipBody;
-
-        private RectTransform _idPrefRow;
 
         /// <summary>One line of a recipe's spec card: an ingredient with its exact share,
         /// or a plain note (the prep, the fill, the glass).</summary>
@@ -916,11 +901,6 @@ namespace LastCall.UI
         private const float GaugeW = 72f, GaugeH = 12f;
 
         /// <summary>How tall one line of a spec card is — the bottle icons are square to it.</summary>
-        /// <summary>The licence's inline recipe icons: the spec panel's bottles at the size
-        /// the card's own order line has (2026-09-08). 16 because the line is 19 units tall
-        /// and the art is drawn to be shown at whole sizes.</summary>
-        private const float OrderPartPx = 16f, OrderPartGap = 4f;
-
         private const float SpecRowH = 20f;
 
         /// <summary>A footnote row — the line that spells out a word like SPIRIT.</summary>
@@ -932,8 +912,6 @@ namespace LastCall.UI
 
         /// <summary>How wide the hover spec is, beside the card.</summary>
         private const float TipW = 252f;
-
-        private Image _idOrderIcon;
 
         // The shop tablet (v5 P13). Two errands, not one wall of cards: what goes behind the
         // bar, and what the room itself is made of.
@@ -2562,165 +2540,6 @@ namespace LastCall.UI
 
         /// <summary>The stage's reference frame, the one both halves agree on.</summary>
         private static readonly Vector2 StageRef = new Vector2(640f, 360f);
-
-        // ── the licence, v3 (P15 / C3) ──────────────────────────────────────────
-        // A landscape US-licence, not a dossier: the v2 portrait card was explicitly disliked.
-        // The shell is generated art (the first UI piece since the author lifted the no-AI-UI
-        // rule, 2026-07-31) drawn at exactly 2× its 400×250 pixels — an integer scale, because
-        // the prep table taught what a fractional upscale next to native-size text looks like.
-        // Every field is lettered in engine over the blank shell: the generator cannot spell.
-        // Sized down to 2.5× on the author's note ("kimlik boyutunu biraz küçült"), and the
-        // lettering SITS ON THE SHELL'S OWN RULE LINES now — the art carries six faint field
-        // rules at y 58/76/94/113/132/150 (measured), and every value's baseline lands on one,
-        // so the text belongs to the printed card instead of floating over it.
-        // The v4 shell (2026-08-02): a denser generated card — five rules, tight bottom —
-        // measured off licence_shell2.png (510×315: navy band rows 23–51, portrait x 26–168
-        // y 81–286, rules y 96/127/159/190/219) and drawn at 1.4×. The old shell ran long
-        // and its lettering was hard to read; the values sit on the display face now.
-        // A CARD CUT TO OUR OWN ZONES (2026-08-10). The old shell was 510x315 with its
-        // furniture wherever the drawing had put it, and the layout bent around it; worse,
-        // its scale was the PHOTO's hostage, because pixel art magnifies only in whole
-        // steps and a 96px face at 2x demanded a 192-wide window.
-        //
-        // licence_shell3 is authored the other way round: the zones came first and the art
-        // was cut to them. 256x160 drawn at a WHOLE 3x — every art pixel lands on three
-        // screen pixels, nothing resamples — which is a 768x480 card, larger than the 714
-        // it replaces. PixelLab drew the paper (stock, wear, a guilloche tint); the band,
-        // the portrait well and the five rules are printed onto it at exact coordinates,
-        // because furniture that has to line up with a text field is a specification and
-        // the generator has never hit one.
-        private const float LicScale = 3f;
-
-        // ONE GRID, AND THE FURNITURE IS DRAWN ON IT (2026-09-06, the author: "kimlik
-        // tasarımını geliştiriyoruz ... daha kompakt daha bilgilerin hizalı ve uygun bir
-        // tasarımla birleştirilmiş ... butonların yazı sütunlarının görsel bloklarının
-        // profesyonelce yerleştirildiği"). The card used to be a generated picture with its
-        // band, wells and rules baked in, and every field placed by hand to land on printed
-        // furniture it could not see — two sources of truth for every alignment, and 768x480
-        // of card for a page of facts. These numbers are the ONLY ones now: the paper is a
-        // drawn 9-slice, and the band, the wells, the boxes and the rules are laid out by the
-        // same code that places the type.
-        //
-        // 196x148 art pixels at 3x — a whole multiple. NARROWER AGAIN (v3, 2026-09-06, the
-        // author: "metinlerin nesnelerin kutu bloklarının bayrağın vesikalığın kaplayacağı
-        // alanları hesaba katarak daha dar bir kimlik oluştur"): the grid is sized to what
-        // is printed in it — a twenty-letter drink at the display face's 16 is 320 units,
-        // the widest thing on the card, and the grid is 348 — instead of to the paper.
-        // A CARD'S OWN PROPORTION (v4, 2026-09-06, the author: "kimlik normal oranında olmalı
-        // örneğin 2:1 ise o ölçülerde olmalı. Metinler ve görseller iyi hesaplanmalı, verdiği
-        // yıldız ziyaret miktarı farklı bir sunum ile gösterilmeli"). 200x100 art pixels at
-        // 3x — two to one, a licence's shape — with the photo and a stamp strip in a 48-wide
-        // rail, the four fields in a 134-wide grid at a 19-pixel pitch, and the band carrying
-        // the authority, the number, the kick and the seal.
-        // 176, NOT 200 (2026-09-07, the author: "kimlikler sag taraftan daha fazla
-        // kisalabilirmis"). The grid was drawn when the document number sat in the right-hand
-        // column; the number moved into the band with the v4 header and the column has been
-        // carrying air ever since. Twenty-four art pixels come off the right - the fields are
-        // laid out from the left and the seal and the key hang off the right edge, so both
-        // ends follow the number without a second measurement.
-        private const float LicW = 176f * LicScale, LicH = 100f * LicScale;
-
-        /// <summary>The margin from the paper's edge to anything printed on it.</summary>
-        private const float LicPad = 6f * LicScale;
-
-        /// <summary>The left rail's column: the photograph and the two data cells.</summary>
-        private const float LicRailW = 48f * LicScale;
-
-        /// <summary>The right column: the numbered field grid.</summary>
-        private const float LicGridX = LicPad + LicRailW + 6f * LicScale;
-        private const float LicGridW = LicW - LicGridX - LicPad;
-
-        /// <summary>Row pitch in the field grid — four rows, each a caption over a value on
-        /// a rule.</summary>
-        private const float LicRowH = 19f * LicScale;
-
-        //
-        // A DRIVING-LICENCE STRUCTURE (2026-08-10, the author: "sürücü belgelerine benzer
-        // bir yapı"). What makes a document read as a licence is not its outline — it is
-        // the numbered field grid, the boxed data cells under the photograph and the
-        // pictogram endorsements at the foot. So the card is built that way now: the band
-        // carries the jurisdiction and the licence number, the name is field 1 where a
-        // licence puts it, and the rail under the photo carries two data cells.
-        //
-        // The well is CUT TO THE PHOTO. It used to be 222 units around a 144 photo, which
-        // was both the author's "too much room for the portrait" and the reason a caption
-        // printed across every face: 78 units of the well were letterbox.
-        // EVERY ZONE IS MEASURED OFF THE CREAM, NOT OFF THE CANVAS (2026-08-10). The
-        // generator did not draw the card on transparency, it drew it on an opaque
-        // near-white ground, so the 256x160 sprite carries a 228x138 card at x 14..241,
-        // y 11..148. Laying the fields out to the canvas put the rules off the right edge
-        // of the paper and dropped the endorsement cells clean off the bottom of it —
-        // which every rect measurement passed, because they were all still inside the
-        // CARD RECT. Only a screenshot could show it, and did.
-        // CLEAR OF THE BAND (2026-09-07, the author: "vesikalik boxu seritin ustune geliyor,
-        // aralarinda ufak bir mesafe olmali"). The band now starts at LicPad/2 = 3 art px and
-        // is 16 tall, so it ends at 19; a portrait beginning at 18 overlapped it by a pixel
-        // and the two read as one welded block. 24 leaves five clear art pixels - a margin at
-        // the size the card is actually printed.
-        private static readonly Rect LicPortrait = new Rect(LicPad, -(24f * LicScale),
-            LicRailW, LicRailW);
-
-        /// <summary>The stamp strip under the photograph (v4): visits as punches, the rating
-        /// as stars — top edge and height, from the paper's top.</summary>
-        // The stamp strip follows the photo down and grows for type at 16 rather than 8
-        // (2026-09-07). TWO rows and no more: the card is LicH = 100 art px and the strip
-        // starts at 76, so 24 is every pixel there is. A four-row version (a caption over
-        // each row of marks) was built, measured and cut the same day - it ran 22 px off the
-        // bottom edge of its own card. The two captions instead go side by side over two
-        // half-width COLUMNS, punches left and stars right, which is the one arrangement
-        // that fits readable type in the space the card has.
-        // AND IT KEEPS THE CARD'S BOTTOM MARGIN (2026-09-08, measured: the well ran to B=0,
-        // flush with the paper's edge, while every other box on the card keeps LicPad — which
-        // is the "kutuların kenarlara olan uzaklıkları da sabit olmalı" of the same list). The
-        // card is 100 art px and the margin is 6, so a well starting at 76 may be 18 tall —
-        // which is 54 units, which is exactly two rows at the pitch below. The strip's layout
-        // is not a taste; it is what fits, worked out before a pixel was moved.
-        private const float LicStampY = 76f * LicScale, LicStampH = 18f * LicScale;
-        /// <summary>The pitch of the stamp strip's two rows, in HUD units: a 16-unit caption,
-        /// then its marks under it.</summary>
-        private const float LicStampRow = 20f;
-        /// <summary>Where the strip's second column starts, measured from the rail's left.</summary>
-        /// <summary>How wide the stamp strip's well is, and where its MARKS begin — the
-        /// caption sits to their left on the same row (2026-09-08).
-        ///
-        /// Neither number is inherited any more. The well was LicRailW, the PHOTOGRAPH's
-        /// width, for no reason beyond sitting under it; measured on the live card that left
-        /// the hearts half outside their own box and over the order field, and the stars two
-        /// units past the well's edge. The card gives the strip x18..x180 — the margin to the
-        /// field column — so the well is cut to 156 and clears that column by 6.</summary>
-        private const float LicStripW = 156f, LicStampCol = 66f;
-
-        // SIXTEEN (2026-09-07): the band wears the author's beach — Items/licence_band.png,
-        // 200x16 art pixels, one to one at the card's own three — and reaches the portrait's
-        // top edge exactly (2 + 16 = 18).
-        private const float LicHeaderH = 16f * LicScale;
-
-        private const float LicHeaderY = -(2f * LicScale);
-
-        private const float LicFieldsX = LicGridX;
-
-        private const float LicFieldsW = LicGridW;
-
-        /// <summary>The four rules of the field grid, measured from the paper's top: the
-        /// header, then a row apiece. Drawn AND written to from here.</summary>
-        private static readonly float[] LicLines =
-        {
-            18f * LicScale + LicRowH,
-            18f * LicScale + LicRowH * 2f,
-            18f * LicScale + LicRowH * 3f,
-            18f * LicScale + LicRowH * 4f,
-        };
-
-        // The rail's two data cells and the rule the licence number is printed on, at the
-        // art's own coordinates — the boxes are drawn on the stock, not by the UI.
-        private const float LicCellX = LicPad, LicCellW = LicRailW;
-
-        private const float LicCellH = 24f * LicScale;
-
-        /// <summary>The two data cells under the photograph, top edges, from the paper's top.</summary>
-        private static readonly float[] LicCells = { 88f * LicScale, 113f * LicScale };
-
-        private const float LicNumRule = 140f * LicScale;
 
         // ── the week, as an instrument (2026-08-19, the author: "Haftalık takvim
         // göstergesi daha profesyonelce olmalı") ────────────────────────────────

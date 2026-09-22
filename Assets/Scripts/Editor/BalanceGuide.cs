@@ -381,9 +381,10 @@ namespace LastCall.EditorTools
             sb.AppendLine("## The door (GDD 28)");
             sb.AppendLine();
             sb.AppendLine($"- the drinking age is **{IdPapers.DrinkingAge}**; a minor's card is a forgery");
-            sb.AppendLine($"  **{P(IdPapers.ForgedShare)}** of the time, and of those **{P(IdPapers.AlteredShare)}**");
-            sb.AppendLine("  are the minor's own card altered (the year bumped, a flag that is not their");
-            sb.AppendLine("  country's) rather than borrowed");
+            sb.AppendLine($"  **{P(IdPapers.ForgedShare)}** of the time, and the lie is one of {IdPapers.ForgedKinds}, each");
+            sb.AppendLine($"  **{P(1.0 / IdPapers.ForgedKinds)}** of them: a stranger's card (borrowed), their own with the year");
+            sb.AppendLine("  bumped and a flag that is not their country's (altered), a cheap reprint (copied) or a");
+            sb.AppendLine("  hand-drawn card (drawn)");
             sb.AppendLine($"- **{P(IdPapers.YoungAdultShare)}** of adults look young enough to be asked");
             sb.AppendLine($"- serving a minor is fined when they leave: **${IdPapers.FineBase} + ${IdPapers.FinePerStar}**");
             sb.AppendLine("  per whole star of the bar's standing at that moment");

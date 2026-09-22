@@ -83,7 +83,7 @@ a page of facts. It is drawn now:
 - The guest of the house (GDD 26 §3) is never a minor and cannot be kicked — outside the books,
   outside the law.
 
-### 2.1 Three kinds of paper
+### 2.1 Five kinds of paper
 
 | Kind | What the card shows | The tell | Serve them → | Kick them → |
 |---|---|---|---|---|
@@ -91,11 +91,16 @@ a page of facts. It is drawn now:
 | **Honest minor** | their own papers, age **18 or 19** | the number | fine | RIGHT kick: thanks |
 | **Borrowed card** | somebody else's papers: another face's photo, name, age (21+), country, flag | **the photo is not the person on the stool** | fine | RIGHT kick: thanks |
 | **Altered card** *(shipped 2026-09-05, H6)* | their own photo and name, age bumped to 21–24 | **the flag does not match the country** | fine | RIGHT kick: thanks |
+| **Copied card** *(shipped 2026-09-22)* | their own details, age bumped, reprinted on the wrong stock | **the card itself**: worn plastic, square corners, a coarse screen, the colours out of register | fine | RIGHT kick: thanks |
+| **Drawn card** *(shipped 2026-09-22)* | their own details, age bumped, lettered by hand | **it is a drawing**: notebook paper cut with scissors, a ballpoint's hand, a stick figure where the photo goes | fine | RIGHT kick: thanks |
 
-The borrowed card is the first forgery to ship: its tell is the strongest thing on the card (the
-portrait is 144 px and the person is sitting right there), it needs no new art, and it is the
-forgery a bar actually sees. The altered card is specified so the second forgery does not have to
-be designed twice; it ships when the first one has been played.
+The borrowed card was the first forgery to ship: its tell is the strongest thing on the card (the
+portrait is 128 px and the person is sitting right there), it needs no new art, and it is the
+forgery a bar actually sees. The altered card followed on 2026-09-05. The author's eighth list
+(2026-09-22) asked for the other two, and they are the same idea one step further out: the first
+two lie in what the card SAYS and these two lie in what the card IS, so a player who has learned to
+read the fields has to look at the object as well. Their tells are drawn, never written
+(`IdArt`): nothing on a fake card announces itself.
 
 ## 3. Papers are hidden information
 
@@ -123,7 +128,11 @@ be designed twice; it ships when the first one has been played.
   min(0.12, 0.03 + 0.01 × day)` — nobody on opening night, one in twenty on the second, one in
   eight from the ninth. Returns run at 55% from the second night and a bounced minor never
   returns, so the share of SEATS that are minors is roughly half of that. Of minors, `ForgedShare
-  = 0.5` carry a borrowed card; the rest print their own age. Starting stakes (§9).
+  = 0.5` carry a FORGED card and the rest print their own age; of the forged, the lie is one of
+  `ForgedKinds` = 4 and each is as likely as the others (borrowed, altered, copied, drawn — one
+  draw on the same `"papers"` stream, 2026-09-22). A borrowed card prints 21–27; the other three
+  bump the year to 21–24, because they are the person's own card with a number changed.
+  Starting stakes (§9).
 
 ### 3.1 Faces and papers agree (the HUD's side of the contract)
 
@@ -134,10 +143,15 @@ when the customer sits, before any card is read. So:
   `LooksYoung` is true draws its face from that pool (the same longest-unseen, no-doubling rules);
   adults who look young draw from it too, which is the point.
 - An **honest minor** prints their face's papers with the AGE replaced by `PrintedAge` (18–19).
-- A **borrowed card** prints ANOTHER look's papers — photo, name, age, country, flag. The lender is
-  booked PER PERSON, once, when the person's own face is booked (`_lenderOfPerson` beside
-  `_faceOfPerson`), hashed from the person's id the way the licence number already is — no stream
-  is touched, and a returning minor shows the same stranger's card. Excluded: the person's own
+- A **borrowed card** prints A STRANGER's papers — photo, name, age, country, flag. Since the eighth
+  list (2026-09-22) the lender is somebody the bar never draws: `Assets/Resources/Data/strangers.json`,
+  twelve men with a 64×64 photograph each in `Assets/Resources/Strangers/` (`Tools/stranger_faces.py`
+  cuts them from faces that were in the cast and were retired with their frames). A stranger may
+  never appear in `papers.json` — a lender the bar can seat turns the tell into a memory test — and
+  `LicenceTextTests` holds that. The lender is booked PER PERSON, once, hashed from the person's id
+  the way the licence number is: no stream is touched, and a returning minor shows the same card.
+  Where there is no strangers file the old fallback stands: ANOTHER look's papers, and then the
+  excluded are the person's own
   look, looks with no papers, and looks seated on another stool at that moment.
 - **The ticket over the head and the log print the CARD's name once it is read** — for a borrowed
   card, the lender's — so the name is not a second, free tell (the card/ticket disagreement of

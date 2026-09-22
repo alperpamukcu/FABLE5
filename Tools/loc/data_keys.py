@@ -110,6 +110,8 @@ PAIRS = [
     ("fixture", "blurb", "Assets/Data/fixtures/fixtures.json", "fixtures", "id", "flavor", _notes_fixture_blurb, False),
     ("glass", "name", "Assets/Data/glassware/glassware.json", "glasses", "id", "name", _notes_glass_name, False),
     ("country", "name", "Assets/Data/customers/papers.json", "papers", "iso", "country", _notes_country_name, False),
+    # the strangers a borrowed licence wears (2026-09-22): their flags carry a country's name on the card's tip too
+    ("country", "name", "Assets/Resources/Data/strangers.json", "papers", "iso", "country", _notes_country_name, False),
     ("archetype", "name", "Assets/Data/customers/archetypes.json", "archetypes", "id", "name", _notes_archetype_name, False),
 ]
 
@@ -126,6 +128,7 @@ COVERED = {
     ("Assets/Data/fixtures/fixtures.json", ".fixtures[].flavor"): "fixture/blurb",
     ("Assets/Data/glassware/glassware.json", ".glasses[].name"): "glass/name",
     ("Assets/Data/customers/papers.json", ".papers[].country"): "country/name",
+    ("Assets/Resources/Data/strangers.json", ".papers[].country"): "country/name",
     ("Assets/Data/customers/archetypes.json", ".archetypes[].name"): "archetype/name",
 }
 
