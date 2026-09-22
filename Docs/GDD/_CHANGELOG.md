@@ -2,6 +2,11 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The eighth list, fifth slice (2026-09-22):** the market's rows fill the aisle, every picture in it stands on a whole
+  step (products, lock, chain, basket, stars; a wifi drawn for its slot), the upgrade screen shows the room's comfort, and
+  the market moves - picks fly into the basket, put-backs drop away, orders fly into the account, tabs fade up, the hover
+  card opens. GDD_MEVCUT §9.108.
+
 - **The eighth list, fourth slice (2026-09-22):** the top bar is laid out by its words - the hour and the night in one
   well, a compact player in what is left, the standing a size down, the till on the beam as the clock's own green
   readout, a flat cog on the settings key - and the week's job is a tab hung from the beam's foot with the giver's

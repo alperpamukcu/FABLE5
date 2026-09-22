@@ -1606,6 +1606,8 @@
     { "key": "decor.card.worn", "text": "In the room now", "note": "Reading card effect line on the piece currently standing in the room. One line." },
     { "key": "decor.card.worn_stays", "text": "In the room now · the room stays worth mark {mark}", "note": "Reading card effect line on a lower rung the player is wearing while owning a higher one. {mark} is the highest rung bought. One line." },
     { "key": "decor.comfort", "text": "+{comfort} comfort", "note": "What a room piece adds to the COMFORT rating: card fact line (shown in capitals), reading card effect line, ladder heading status (capitals). {comfort} is a number like 0.25. Short." },
+    { "key": "decor.comfort.note", "text": "EVERY RUNG ADDS TO IT · THE COUNTER'S MESS TAKES IT AWAY", "note": "The small line at the right end of the comfort band on the upgrade screen. 8 px, one line of ~300 units." },
+    { "key": "decor.comfort.now", "text": "THE ROOM'S COMFORT", "note": "The caption on the band over the upgrade screen's fittings (2026-09-22): the room's comfort as it stands, followed by the reading like 3.6 / 5 and a strip of five medallions. 16 px, one line." },
     { "key": "decor.finish.copper", "text": "NIGHT BLUE & COPPER", "note": "Counter finish name: night-blue back, copper frames. 8 px, short." },
     { "key": "decor.finish.cream", "text": "CREAM & BURGUNDY", "note": "Counter finish name: burgundy back, cream frames. 8 px, short." },
     { "key": "decor.finish.head", "text": "COUNTER FINISH · PICK ONE — THE ROOM AND THE BENCHES FOLLOW", "note": "Heading over the five counter-finish swatches in the market, shown once the refinish kit is owned. 8 px, one line." },

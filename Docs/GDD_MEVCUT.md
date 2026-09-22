@@ -1603,6 +1603,26 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   pip (yapılanlar yanık, bitince yeşil). Üstüne gelince ödül ve kalan gece: "ÖDÜL +$120 · 1 GECE KALDI".
 - Doğrulama: EditMode 625/626, PlayMode 13/13.
 
+### 9.108 · Sekizinci liste (5/…): market — dolu satırlar, tam adımlı resimler, konfor bandı, hareket (2026-09-22)
+
+- **Kartlar sayfayı dolduruyor:** sütunlar koridorun kendi genişliğine yayılıyor (5×176 1004'ün içinde satır sonunda 76
+  birim boş sayfa bırakıyordu; aralık 12 → 30, maskenin 4 birim içinde).
+- **Resimler kullanıldıkları yerin boyunda** ("market iconlarını ... boyutuna göre"): ölçüldü, markette kesirli ölçekte
+  çizilen her şey tam adıma alındı — düz ürünler (kutu, kutu içecek) 2,2–2,7x yerine 2x, kilit 1,5x yerine 2x (56×84),
+  zincir 168×148'e basılmış (1,05 × 0,71) yerine kendi pikselleriyle pencereye kesilmiş, sepet ikonu 0,87x yerine
+  kendi 23×20'si, kasadaki yıldızlar 12'ye çizilen 14×12 yerine kendi boyunda; tabletin wifi'ı 14×10'luk yuvası için
+  yeniden çizildi (`ChromeArt.Wifi`, 28×20'lik dosya 0,7'ye küçülüp çizgilerinin yarısını kaybediyordu).
+- **Yükseltme ekranında odanın konforu:** fikstürlerin üstünde bir bant — madalya, "ODANIN KONFORU 5.0 / 5", beş madalyalık
+  şerit ve "HER BASAMAK ARTIRIR · TEZGÂHIN DAĞINIKLIĞI AZALTIR".
+- **Hareket** (`TycoonHud.MarketFx`, `UiFlight/UiFadeIn/UiPunch`): market her değişiklikte baştan kurulduğu için hareket
+  kurulumun üstündeki bir efekt katmanında — seçilen ürün imleçten çipine uçuyor ve çip o varınca baloncuk gibi
+  açılıyor; geri konan çipin resmi olduğu yerde düşüp soluyor; sipariş verilince her çip sırayla hesaba uçuyor ve hesap
+  her birinde şişiyor; sekme değişince koridor yerine doğru soluklanarak geliyor; üzerine gelinen kart açılarak
+  beliriyor. Tabletin geliş ve gidişi (günün sonunun kaydırması) olduğu gibi.
+- Editörde `GetComponent<T>() ?? AddComponent<T>()` çalışmıyor (editör eksik bileşen için sahte null döndürüyor, `??`
+  onu dolu sanıyor): uçuşlar ilk denemede CanvasGroup'suz kaldı ve konmadı; açık `== null` ile düzeldi.
+- Doğrulama: EditMode 625/626, PlayMode 13/13 (sepet ayağı görünüm testi bakılıp yeniden kutsandı).
+
 ### 9.104 · Sekizinci liste (1/…): oda seçimleri, URP spot sarkıtlar, pencere lekesi, tek çizim şehir (2026-09-22)
 
 - **Yazarın seçimleri oyunda** (`Tools/room7_ship.py`): C3 `ceil7_dusk` (Alacakaranlık Tavanı, 3★, $210),

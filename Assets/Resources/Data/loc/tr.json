@@ -1563,6 +1563,8 @@
     {"key": "decor.card.worn", "text": "Şu an salonda", "src": "In the room now"},
     {"key": "decor.card.worn_stays", "text": "Şu an salonda · salon seviye {mark} değerinde kalır", "src": "In the room now · the room stays worth mark {mark}"},
     {"key": "decor.comfort", "text": "+{comfort} konfor", "src": "+{comfort} comfort"},
+    {"key": "decor.comfort.note", "text": "HER BASAMAK ARTIRIR · TEZGÂHIN DAĞINIKLIĞI AZALTIR", "src": "EVERY RUNG ADDS TO IT · THE COUNTER'S MESS TAKES IT AWAY"},
+    {"key": "decor.comfort.now", "text": "ODANIN KONFORU", "src": "THE ROOM'S COMFORT"},
     {"key": "decor.fit.all_fitted", "text": "BAR TAM DONANIMLI — YÜKSELTECEK BİR ŞEY KALMADI", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
     {"key": "decor.fit.bar.body", "text": "Daha iyi bir bar tezgâhı her müşteriyi mutlu eder. İçkisini yanlış yaptıklarını bile.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
     {"key": "decor.fit.bar.gain", "text": "Servis edilen her ziyarete +0,03, en fazla +0,06", "src": "+0.03 on every served visit, up to +0.06"},

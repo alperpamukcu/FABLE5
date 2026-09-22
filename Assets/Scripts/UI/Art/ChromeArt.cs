@@ -3604,6 +3604,31 @@ namespace LastCall.UI
                 SpriteMeshType.FullRect, Vector4.zero);
         }
 
+        /// <summary>
+        /// THE TABLET'S WIFI AT ITS OWN SIZE (2026-09-22, the author's eighth list: market icons "kullanılacağı
+        /// konumlardaki boyutuna göre özel olarak üret"): three arcs and a dot, 14x10, drawn for the status bar's 14x10
+        /// slot - the 28x20 file was shrunk to 0.7 there and lost half its strokes. White, for the caller to tint.
+        /// </summary>
+        public static Sprite Wifi()
+        {
+            const string key = "tablet:wifi";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 14, H = 10;
+            var px = new Color32[W * H];
+            float cx = 6.5f, cy = 0.5f;                     // the fan's point, at the foot (texture rows count up)
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    float dx = x + 0.5f - (cx + 0.5f), dy = y + 0.5f - (cy + 0.5f);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+                    float ang = Mathf.Abs(Mathf.Atan2(dx, Mathf.Max(0.01f, dy))) * Mathf.Rad2Deg;
+                    bool arc = ang <= 52f && ((r >= 3.1f && r < 4.4f) || (r >= 5.9f && r < 7.2f) || (r >= 8.6f && r < 9.9f));
+                    bool dot = r < 1.6f;
+                    px[y * W + x] = arc || dot ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+                }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)

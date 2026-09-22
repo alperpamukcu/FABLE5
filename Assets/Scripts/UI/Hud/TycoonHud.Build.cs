@@ -763,11 +763,11 @@ namespace LastCall.UI
             Place(osCarrier.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(200, 12), Vector2.zero);
             osCarrier.text = UIText.T("build.tablet.carrier");
             var osWifi = NewRect("OsWifi", osBar);
-            Place(osWifi, new Vector2(1, 0.5f), new Vector2(20, 14), new Vector2(-52, 0));
+            Place(osWifi, new Vector2(1, 0.5f), new Vector2(14, 10), new Vector2(-52, 0));
             var wifiImg = osWifi.gameObject.AddComponent<Image>();
-            wifiImg.sprite = ItemArt.Load("sh_wifi"); wifiImg.preserveAspect = true;
+            wifiImg.sprite = ChromeArt.Wifi();                 // drawn at the slot's own 14x10 (eighth list)
             wifiImg.raycastTarget = false;
-            if (wifiImg.sprite == null) wifiImg.color = ShopInkSoft;
+            wifiImg.color = ShopInk;
             var osBatt = NewRect("OsBatt", osBar);
             Place(osBatt, new Vector2(1, 0.5f), new Vector2(23, 9), new Vector2(-14, 0));
             var battImg = osBatt.gameObject.AddComponent<Image>();
@@ -948,8 +948,10 @@ namespace LastCall.UI
                         _justOrdered.Clear(); _shopScrollAt = 1f; _shopScrollPx = -1f;
                         Sfx.Play("key_press", 0.55f);
                     }
+                    bool moved = _shopTab != tab;
                     _shopTab = tab;
                     RebuildDayEnd();
+                    if (moved) FadeInAisle();           // the aisle comes up into its place (MarketFx)
                 });
                 // AT ITS OWN SIZE. The icons are cut on a 24 canvas and were drawn into a
                 // 20 box: 0.833x, a fractional shrink of pixel art, which rounds some rows
@@ -1063,6 +1065,9 @@ namespace LastCall.UI
             _shopCard = NewRect("ShopCard", _dayEndPanel);
             Place(_shopCard, new Vector2(0.5f, 0.5f), new Vector2(ShopCardW, 132), Vector2.zero);
             _shopCard.pivot = new Vector2(0, 1);
+            // IT OPENS (2026-09-22, the eighth list: "pop-up açılmaları"): out of its corner by the pointer, quick
+            var cardPop = _shopCard.gameObject.AddComponent<PopIn>();
+            cardPop.Seconds = 0.18f; cardPop.From = 0.7f; cardPop.Overshoot = 0.05f;
             var cardBg = _shopCard.gameObject.AddComponent<Image>();
             cardBg.color = InspectorBack;
             var cardEdge = new Color(ShopViceLit.r, ShopViceLit.g, ShopViceLit.b, 0.85f);
@@ -1171,7 +1176,7 @@ namespace LastCall.UI
             Place(orderHead, new Vector2(0, 1), new Vector2(BasketW, 30), Vector2.zero);
             orderHead.gameObject.AddComponent<Image>().color = ShopViceDeep;
             var orderIcon = NewRect("BasketI", orderHead);
-            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(20, 20), new Vector2(10, 0));
+            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(23, 20), new Vector2(10, 0));   // the cart's own 23x20, not 0.87 of it
             var orderIconImg = orderIcon.gameObject.AddComponent<Image>();
             orderIconImg.sprite = ItemArt.Load("sh_i_cart");
             orderIconImg.preserveAspect = true; orderIconImg.raycastTarget = false;

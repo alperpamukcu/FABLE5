@@ -85,6 +85,7 @@ namespace LastCall.UI
             // THE WALLS ARE WHERE A BARE BAR IS SENT (2026-09-06): until the second rung of the
             // back wall is up, the walls' sign says so, and so does their key on the rail.
             bool sendHere = _decorSection == "walls" && run.LadderLevel("walls") < 2;
+            ComfortBand(run);                   // where the room stands, over what would raise it (eighth list)
             ShopSign(sendHere ? UIText.T("decor.sign.start_here")
                               : GroupTitle(_decorSection), sendHere);
 

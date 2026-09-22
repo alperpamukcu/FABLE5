@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -346,6 +346,8 @@ namespace LastCall.UI
 
             var sink = chip.gameObject.AddComponent<PressSink>();
             sink.Face = art; sink.Depth = 3f; sink.Lift = 3f; sink.Squash = 0.02f;
+            var chipPop = chip.gameObject.AddComponent<PopIn>();   // bursts in when its product lands (FlyToBasket)
+            chipPop.Seconds = 0.36f; chipPop.From = 0.2f; chipPop.Bubble = true;
 
             // A chip is a picture and a price; WHICH bottle it is goes on the pointer, in the
             // same card the aisle uses, so the basket needs no small print at all.
@@ -412,6 +414,7 @@ namespace LastCall.UI
             for (int i = 0; i < _cart.Count; i++)
                 if (_cart[i].Key == key)
                 {
+                    GhostChip(key, _cart[i].Art);   // the chip's picture drops away where it stood (MarketFx)
                     _cart.RemoveAt(i);
                     Sfx.Play("click", 0.5f);
                     RebuildDayEnd();
@@ -429,7 +432,10 @@ namespace LastCall.UI
             _cart.Add(new CartEntry { Key = key, Label = label, Price = price,
                                       IsFitting = isFitting, Buy = buy, Art = art });
             Sfx.Play("click", 0.7f);
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            Vector2 from = mouse != null ? mouse.position.ReadValue() : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
             RebuildDayEnd();
+            FlyToBasket(key, art, from);        // the product flies into its chip (MarketFx)
         }
 
         /// <summary>Places the order: every picked line bought in the order it was picked.
@@ -439,6 +445,7 @@ namespace LastCall.UI
             if (_cart.Count == 0) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.basket_empty")); return; }
             RememberScroll();
             _justOrdered.Clear();
+            FlyCartToTill();                    // every chip up into the account before the basket empties (MarketFx)
             int bought = 0;
             var paid = new List<int>();
             foreach (var e in _cart)
@@ -637,7 +644,12 @@ namespace LastCall.UI
             if (_cardBuffA.text.Length > 0) y += BuffAt(_cardBuffA, _cardBuffAIcon, y);
             if (_cardBuffB.text.Length > 0) y += BuffAt(_cardBuffB, _cardBuffBIcon, y);
             _shopCard.sizeDelta = new Vector2(ShopCardW, y + 10f);
-            _shopCard.gameObject.SetActive(true);
+            if (!_shopCard.gameObject.activeSelf)
+            {
+                _shopCard.gameObject.SetActive(true);
+                var cardPop = _shopCard.GetComponent<PopIn>();
+                if (cardPop != null) cardPop.Play();         // it opens, rather than being there (eighth list)
+            }
             _shopCard.SetAsLastSibling();
             foreach (var g in _shopCard.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
             FollowPointerWithShopCard();
@@ -889,7 +901,12 @@ namespace LastCall.UI
             // the 1004 viewport, the slack on the right as before. FOUR beside the upgrade
             // screen's rail (2026-09-13): 4*176 + 3*12 = 740 in its 796.
             g.cellSize = new Vector2(TileW, TileH);
-            g.spacing = new Vector2(12, 12);
+            // THE ROW FILLS THE AISLE (2026-09-22, the author's eighth list: "Ürün kartları sahneye tam sığmıyor sağda
+            // boşluk kalıyor"): the columns are spread across the aisle's own width - 5*176 in the 1004 left 76 units of
+            // empty page at every row's end - four units short of the mask, as the arithmetic above always kept.
+            float aisleW = _offerRow != null && _offerRow.rect.width > 100f ? _offerRow.rect.width : (columns >= 5 ? 1004f : 796f);
+            float colGap = columns > 1 ? Mathf.Floor((aisleW - 4f - columns * TileW) / (columns - 1)) : 12f;
+            g.spacing = new Vector2(Mathf.Clamp(colGap, 12f, 40f), 12);
             g.padding = new RectOffset(0, 0, 0, 0);
             g.childAlignment = TextAnchor.UpperLeft;
             g.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -1132,13 +1149,15 @@ namespace LastCall.UI
             else if (sealedTile)
             {
                 var chain = NewRect("Chain", win);
-                Place(chain, new Vector2(0.5f, 0.5f), new Vector2(TileW - 8f, TileArtH), Vector2.zero);
+                var chainArt = ChainAtWindow();
+                Place(chain, new Vector2(0.5f, 0.5f),
+                    chainArt != null ? chainArt.rect.size : new Vector2(TileW - 8f, TileArtH), Vector2.zero);
                 var chainImg = chain.gameObject.AddComponent<Image>();
-                chainImg.sprite = ItemArt.Load("sh_chain_x") ?? ItemArt.Load("sh_chain");
+                chainImg.sprite = chainArt ?? ItemArt.Load("sh_chain");
                 chainImg.raycastTarget = false;
                 chainImg.color = new Color(1f, 1f, 1f, 0.95f);
                 var padlock = NewRect("Lock", win);
-                Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(42, 63), new Vector2(0, 0));
+                Place(padlock, new Vector2(0.5f, 0.5f), new Vector2(56, 84), new Vector2(0, 0));   // 28x42 at exactly 2x (it was 1.5x)
                 var lockImg = padlock.gameObject.AddComponent<Image>();
                 lockImg.sprite = ItemArt.Load("sh_lock");
                 lockImg.preserveAspect = true;
@@ -1147,7 +1166,7 @@ namespace LastCall.UI
 
             // the rung's stars, in the window's bottom-left corner
             if (!sealedTile && !double.IsNaN(spec.RungStars))
-                StarRow(win, new Vector2(0, 0), new Vector2(6f, 6f), 12f,
+                StarRow(win, new Vector2(0, 0), new Vector2(6f, 6f), 14f,
                     spec.RungStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
 
             // THE STATE IS A STAMP (2026-09-08): the mark and its word in the window's
@@ -1326,6 +1345,23 @@ namespace LastCall.UI
         /// <summary>A bottle standing FULL in the tile's window (2026-09-08): the cellar
         /// plates at 2x in a BottleArt sandwich with the level at the brim. False when the
         /// card has no v4 plates, and the flat art takes the window instead.</summary>
+        private static Sprite s_chainAtWindow;
+
+        /// <summary>The chains over a sealed tile at their own pixels: the middle of the 160x208 drawing cut to the
+        /// window's 148 rows, where it used to be squashed to 168x148 - 1.05 across and 0.71 down.</summary>
+        private static Sprite ChainAtWindow()
+        {
+            if (s_chainAtWindow != null) return s_chainAtWindow;
+            var src = ItemArt.Load("sh_chain_x");
+            if (src == null || src.texture == null) return null;
+            var r = src.rect;
+            float h = Mathf.Min(r.height, TileArtH);
+            var cut = new Rect(r.x, r.y + Mathf.Floor((r.height - h) * 0.5f), r.width, h);
+            s_chainAtWindow = Sprite.Create(src.texture, cut, new Vector2(0.5f, 0.5f), src.pixelsPerUnit);
+            s_chainAtWindow.name = "sh_chain_x(window)";
+            return s_chainAtWindow;
+        }
+
         private bool TileBottle(RectTransform win, IngredientCard card, bool dim)
         {
             var plates = ItemArt.Plates(card, cellar: true);
@@ -1352,7 +1388,10 @@ namespace LastCall.UI
             float w = s.rect.width, h = s.rect.height;
             float room = Mathf.Min(boxH, TileArtH - 20f);
             float k = Mathf.Min(ContentW / m.Drawing.width, room / m.Drawing.height);
-            if (k >= 3f) k = Mathf.Floor(k);
+            // ON A WHOLE STEP, ALWAYS (2026-09-22, the eighth list: "kullanılacağı konumlardaki boyutuna göre"): a carton
+            // or a can at 2.31x lost rows of its pixel art the way any fractional scale does; from 3x it was already
+            // floored, now from 1x.
+            k = Mathf.Max(1f, Mathf.Floor(k));
             Place(rt, new Vector2(0.5f, 0f), new Vector2(w * k, h * k),
                 new Vector2((w * 0.5f - m.Drawing.center.x) * k, 10f - m.Drawing.y * k));
         }

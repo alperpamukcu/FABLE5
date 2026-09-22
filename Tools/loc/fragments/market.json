@@ -142,6 +142,8 @@
     { "key": "decor.finish.pine", "text": "PINE LACQUER", "note": "Counter finish name: navy back, green lacquer frames. 8 px, short." },
     { "key": "decor.finish.cream", "text": "CREAM & BURGUNDY", "note": "Counter finish name: burgundy back, cream frames. 8 px, short." },
     { "key": "decor.finish.copper", "text": "NIGHT BLUE & COPPER", "note": "Counter finish name: night-blue back, copper frames. 8 px, short." },
-    { "key": "decor.foot.mark_first", "text": "MARK {mark} FIRST", "note": "Upgrade card foot beside a lock: buy rung {mark} of this ladder before this one. Capitals, 8 px, ~110 px." }
+    { "key": "decor.foot.mark_first", "text": "MARK {mark} FIRST", "note": "Upgrade card foot beside a lock: buy rung {mark} of this ladder before this one. Capitals, 8 px, ~110 px." },
+    { "key": "decor.comfort.note", "text": "EVERY RUNG ADDS TO IT · THE COUNTER'S MESS TAKES IT AWAY", "note": "The small line at the right end of the comfort band on the upgrade screen. 8 px, one line of ~300 units." },
+    { "key": "decor.comfort.now", "text": "THE ROOM'S COMFORT", "note": "The caption on the band over the upgrade screen's fittings (2026-09-22): the room's comfort as it stands, followed by the reading like 3.6 / 5 and a strip of five medallions. 16 px, one line." }
   ]
 }
