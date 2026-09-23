@@ -2007,13 +2007,20 @@ namespace LastCall.UI
             _jobStripRow.anchorMin = _jobStripRow.anchorMax = new Vector2(0, 1);
             _jobStripRow.pivot = new Vector2(0, 1);
             _jobStripRow.sizeDelta = new Vector2(260f, JobTabH);
-            _jobStripRow.anchoredPosition = new Vector2(TopEdge, -TopBarH);
+            // HUNG ON THE BEAM'S OWN LINE (2026-09-23, the author's tenth list: "Görev bildirimini üst bara
+            // ve oyun ekranının soluna göre hizala"). It stood at the same x as the hour's case and did not
+            // LOOK it: the instruments on the beam are drawn on ChromeArt.Well, whose bevel sits a few pixels
+            // outside its rect, while the tab was a plain Card - so two things at x = 16 read as four pixels
+            // apart (measured in play, r200: the case's ink starts at 12, the tab's at 16). It wears the
+            // beam's own case now, which makes the two edges the same edge, and it hangs two pixels INTO the
+            // tube so it reads as part of the beam rather than as a card floating under it.
+            _jobStripRow.anchoredPosition = new Vector2(TopEdge, -(TopBarH - 2f));
             _jobStripGroup = _jobStripRow.gameObject.AddComponent<CanvasGroup>();
             _jobStripGroup.blocksRaycasts = true;           // the tip reads the pointer on it
             _jobPlate = _jobStripRow.gameObject.AddComponent<Image>();
-            _jobPlate.sprite = ChromeArt.Card();
+            _jobPlate.sprite = ChromeArt.Well();
             _jobPlate.type = Image.Type.Sliced;
-            _jobPlate.color = new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
+            _jobPlate.color = Color.white;
             _jobPlate.raycastTarget = true;
             var lip = NewRect("Lip", _jobStripRow);
             lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);

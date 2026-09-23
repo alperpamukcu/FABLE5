@@ -634,8 +634,9 @@ namespace LastCall.UI
             // Every row is stacked on the one above it, and the card is cut to the last of
             // them — measured off the text itself, so a long name pushes the description
             // down instead of printing through it.
-            float y = 8f;
-            y += Mathf.Max(20f, _cardIdentity.preferredHeight);
+            // The head bar is the card's first row and it is a fixed height: the name sits IN it now
+            // (2026-09-23), so the stack under it starts at its foot rather than under a wrapped title.
+            float y = ShopCardHead + 4f;
             if (_cardMeta.text.Length > 0) y += RowAt(_cardMeta, y, 4f);
             else y += 2f;
             _shopCardRule.anchoredPosition = new Vector2(10f, -(y + 4f));
@@ -720,9 +721,14 @@ namespace LastCall.UI
                 return;
             }
             line.text = buff.Text;
-            line.color = buff.Kind == BuffKind.Gain ? BuffGood
-                : buff.Kind == BuffKind.Cost ? BuffCost
-                : buff.Kind == BuffKind.Bad ? BuffBad : InspectorInk;
+            // ON PAPER NOW (2026-09-23): the three buff colours were mixed to carry on the card's old dark
+            // slate, and the amber one in particular is unreadable on the site's grey - measured against the
+            // new card, which is a page element. Each keeps its meaning and goes down the palette's own ramp
+            // until it holds its ink: the gain to the deep lime, the cost to the deep amber, the bad to the
+            // vice red, and anything else to the ink the rest of the site is set in.
+            line.color = buff.Kind == BuffKind.Gain ? UITheme.Lime[1]
+                : buff.Kind == BuffKind.Cost ? UITheme.Amber[1]
+                : buff.Kind == BuffKind.Bad ? UITheme.ViceRed[2] : ShopInk;
             icon.enabled = true;
             icon.color = line.color;
             icon.sprite = ItemArt.Load(

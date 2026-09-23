@@ -1135,6 +1135,9 @@ namespace LastCall.UI
         /// <summary>The reading card that rides the pointer — narrow, because it stands over
         /// the aisle it is describing and must not cover the neighbours.</summary>
         private const float ShopCardW = 320f;
+        /// <summary>The reading card's own grid, in the site's language (2026-09-23): the navy head bar it
+        /// wears, the gutter its paper keeps, and where the text column starts past the icon gutter.</summary>
+        private const float ShopCardHead = 26f, ShopCardGutter = 10f, ShopCardText = 30f;
 
         /// <summary>How far the foot stands off the device's own bottom edge.</summary>
         private const float FootY = 8f;

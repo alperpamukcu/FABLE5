@@ -1062,6 +1062,14 @@ namespace LastCall.UI
             // it. Nothing in it may take a raycast — the panel sits under the cursor, and a
             // graphic that answers the pointer reads as leaving the tile underneath, which
             // hides the panel, which hands the pointer back, many times a second.
+            // THE SITE'S OWN PANEL (2026-09-23, the author's tenth list: "Market Hover'larını güncelle.
+            // İnternet sitesi görüntüsüne uygun hover çıksın"). It was the BAR's card - a dark slate with
+            // a pink hairline and small dim type, the same object the cellar hands you over a bottle -
+            // hanging over a screen that is a TABLET showing a shop. Measured off the page it sits on:
+            // the site draws its chrome in navy (ShopInk), its panels in grey paper (ShopPaper), its
+            // actions in magenta, and its type dark on the paper. So the card is a page element now: a
+            // paper panel with a square navy edge, a navy head bar carrying the product's mark and its
+            // name in white, and the specifications set dark on the paper under it.
             _shopCard = NewRect("ShopCard", _dayEndPanel);
             Place(_shopCard, new Vector2(0.5f, 0.5f), new Vector2(ShopCardW, 132), Vector2.zero);
             _shopCard.pivot = new Vector2(0, 1);
@@ -1069,54 +1077,57 @@ namespace LastCall.UI
             var cardPop = _shopCard.gameObject.AddComponent<PopIn>();
             cardPop.Seconds = 0.18f; cardPop.From = 0.7f; cardPop.Overshoot = 0.05f;
             var cardBg = _shopCard.gameObject.AddComponent<Image>();
-            cardBg.color = InspectorBack;
-            var cardEdge = new Color(ShopViceLit.r, ShopViceLit.g, ShopViceLit.b, 0.85f);
-            Hairline(_shopCard, new Vector2(0, 0), new Vector2(1, 0), cardEdge);
-            Hairline(_shopCard, new Vector2(0, 1), new Vector2(1, 1), cardEdge);
-            HairlineV(_shopCard, 0f, cardEdge);
-            HairlineV(_shopCard, 1f, cardEdge);
+            cardBg.color = ShopPaper;
+            Hairline(_shopCard, new Vector2(0, 0), new Vector2(1, 0), ShopInk);
+            Hairline(_shopCard, new Vector2(0, 1), new Vector2(1, 1), ShopInk);
+            HairlineV(_shopCard, 0f, ShopInk);
+            HairlineV(_shopCard, 1f, ShopInk);
 
-            // ONE TEXT COLUMN AND ONE ICON GUTTER (the author: align it, and use the
-            // space). The icons keep a gutter of their own and EVERY text starts beside it.
-            const float CardGutter = 10f, CardText = 34f;
-            const float CardCol = ShopCardW - CardText - 10f;
+            // THE HEAD BAR, the same one the aisles and the basket wear on this site.
+            var cardHead = NewRect("Head", _shopCard);
+            cardHead.anchorMin = new Vector2(0, 1); cardHead.anchorMax = new Vector2(1, 1);
+            cardHead.pivot = new Vector2(0.5f, 1);
+            cardHead.sizeDelta = new Vector2(0, ShopCardHead);
+            cardHead.anchoredPosition = Vector2.zero;
+            var headImg = cardHead.gameObject.AddComponent<Image>();
+            headImg.color = ShopInk;
+            headImg.raycastTarget = false;
 
-            // The heaviest ink on the card: white, in the shop's bold face. Everything
-            // else here is specification; this is the product.
-            _cardIdentity = NewText("Identity", _shopCard, _shop, 16, TextAnchor.UpperLeft, Color.white);
-            Place(_cardIdentity.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 20),
-                new Vector2(CardText, -8));
-            _cardIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _cardIdentity.verticalOverflow = VerticalWrapMode.Overflow;
-
-            // Sizes UP from 8 (the author: the market's small print was unreadable). The
-            // card is narrower than the slab was, so every line wraps sooner — and the card
-            // grows down to fit rather than truncating, which is what the fixed slab did.
-            _cardMeta = NewText("CardMeta", _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorDim);
-            Place(_cardMeta.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 14),
-                new Vector2(CardText, -30));
-            _cardMeta.horizontalOverflow = HorizontalWrapMode.Wrap;
-            _cardMeta.verticalOverflow = VerticalWrapMode.Overflow;
-
-            // A rule under the head, so the identity block and the description read as two
-            // things rather than five loose lines on a slate.
-            _shopCardRule = NewRect("Rule", _shopCard);
-            Place(_shopCardRule, new Vector2(0, 1), new Vector2(ShopCardW - 20f, 1),
-                new Vector2(CardGutter, -48));
-            var ruleImg = _shopCardRule.gameObject.AddComponent<Image>();
-            ruleImg.color = UITheme.ClubBlue[1];
-            ruleImg.raycastTarget = false;
-
-            // The product's own mark, in the gutter beside the identity.
-            var cardMark = NewRect("Mark", _shopCard);
-            Place(cardMark, new Vector2(0, 1), new Vector2(20, 20), new Vector2(CardGutter, -8));
+            // The product's own mark, in the bar, and its name beside it in the shop's face.
+            var cardMark = NewRect("Mark", cardHead);
+            Place(cardMark, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(8, 0));
+            cardMark.pivot = new Vector2(0, 0.5f);
             _cardMarkImg = cardMark.gameObject.AddComponent<Image>();
             _cardMarkImg.preserveAspect = true;
             _cardMarkImg.raycastTarget = false;
 
-            _cardBody = NewText("CardBody", _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorInk);
+            _cardIdentity = NewText("Identity", cardHead, _shop, 16, TextAnchor.MiddleLeft, ShopPage);
+            Place(_cardIdentity.rectTransform, new Vector2(0, 0.5f),
+                new Vector2(ShopCardW - ShopCardText - 12f, ShopCardHead), new Vector2(ShopCardText, 0));
+            _cardIdentity.rectTransform.pivot = new Vector2(0, 0.5f);
+            _cardIdentity.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cardIdentity.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // Under the bar: the line of specification, then a rule, then what it is for.
+            // Dark on the paper, because that is how every other word on this site is set.
+            const float CardCol = ShopCardW - ShopCardText - 10f;
+
+            _cardMeta = NewText("CardMeta", _shopCard, _body, 10, TextAnchor.UpperLeft, ShopInkSoft);
+            Place(_cardMeta.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 14),
+                new Vector2(ShopCardGutter, -(ShopCardHead + 6f)));
+            _cardMeta.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _cardMeta.verticalOverflow = VerticalWrapMode.Overflow;
+
+            _shopCardRule = NewRect("Rule", _shopCard);
+            Place(_shopCardRule, new Vector2(0, 1), new Vector2(ShopCardW - 20f, 1),
+                new Vector2(ShopCardGutter, -(ShopCardHead + 24f)));
+            var ruleImg = _shopCardRule.gameObject.AddComponent<Image>();
+            ruleImg.color = ShopAisle;
+            ruleImg.raycastTarget = false;
+
+            _cardBody = NewText("CardBody", _shopCard, _body, 10, TextAnchor.UpperLeft, ShopInk);
             Place(_cardBody.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 40),
-                new Vector2(CardText, -54));
+                new Vector2(ShopCardGutter, -(ShopCardHead + 30f)));
             _cardBody.supportRichText = true;
             _cardBody.horizontalOverflow = HorizontalWrapMode.Wrap;
             _cardBody.verticalOverflow = VerticalWrapMode.Overflow;
@@ -1124,12 +1135,12 @@ namespace LastCall.UI
             for (int i = 0; i < 2; i++)
             {
                 var icon = NewRect("BuffI" + i, _shopCard);
-                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(CardGutter, -100f));
+                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(ShopCardGutter, -100f));
                 var ii = icon.gameObject.AddComponent<Image>();
                 ii.preserveAspect = true; ii.raycastTarget = false;
-                var line = NewText("Buff" + i, _shopCard, _body, 10, TextAnchor.UpperLeft, InspectorInk);
+                var line = NewText("Buff" + i, _shopCard, _body, 10, TextAnchor.UpperLeft, ShopInk);
                 Place(line.rectTransform, new Vector2(0, 1), new Vector2(CardCol, 14),
-                    new Vector2(CardText, -100f));
+                    new Vector2(ShopCardText, -100f));
                 line.horizontalOverflow = HorizontalWrapMode.Wrap;
                 line.verticalOverflow = VerticalWrapMode.Overflow;
                 if (i == 0) { _cardBuffAIcon = ii; _cardBuffA = line; }
@@ -1145,14 +1156,23 @@ namespace LastCall.UI
             _shopSpec = NewRect("ShopSpec", _dayEndPanel);
             Place(_shopSpec, new Vector2(0.5f, 0.5f), new Vector2(ShopSpecW, 120), Vector2.zero);
             _shopSpec.pivot = new Vector2(0, 1);
+            // THE SAME FAMILY AS THE CARD (2026-09-23): the pour is a table and a table wants a dark
+            // ground, so this one keeps the site's navy - but it is edged and capped like a panel on the
+            // page rather than hairlined in pink like something off the bar's own shelf.
             var specBg = _shopSpec.gameObject.AddComponent<Image>();
-            specBg.color = new Color(InspectorBack.r, InspectorBack.g, InspectorBack.b, 0.97f);
+            specBg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.97f);
             specBg.raycastTarget = false;
-            var specEdge = new Color(ShopViceLit.r, ShopViceLit.g, ShopViceLit.b, 0.85f);
-            Hairline(_shopSpec, new Vector2(0, 0), new Vector2(1, 0), specEdge);
-            Hairline(_shopSpec, new Vector2(0, 1), new Vector2(1, 1), specEdge);
-            HairlineV(_shopSpec, 0f, specEdge);
-            HairlineV(_shopSpec, 1f, specEdge);
+            Hairline(_shopSpec, new Vector2(0, 0), new Vector2(1, 0), ShopInk);
+            HairlineV(_shopSpec, 0f, ShopInk);
+            HairlineV(_shopSpec, 1f, ShopInk);
+            var specCap = NewRect("Cap", _shopSpec);
+            specCap.anchorMin = new Vector2(0, 1); specCap.anchorMax = new Vector2(1, 1);
+            specCap.pivot = new Vector2(0.5f, 1);
+            specCap.sizeDelta = new Vector2(0, 3f);
+            specCap.anchoredPosition = Vector2.zero;
+            var capImg = specCap.gameObject.AddComponent<Image>();
+            capImg.color = ShopTabLit;
+            capImg.raycastTarget = false;
             _shopSpecBody = NewRect("Body", _shopSpec);
             Stretch(_shopSpecBody, Vector2.zero, Vector2.one, new Vector2(10, 6), new Vector2(-10, -6));
             _shopSpec.gameObject.SetActive(false);

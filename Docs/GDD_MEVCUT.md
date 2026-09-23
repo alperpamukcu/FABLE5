@@ -1640,6 +1640,27 @@ hoverlarında garnishi sürüklerken gözüken asset gözükmeli”.
   vice pembesine dönüyor. Şiddeti düşürülmedi; istenen renkti.
 - Doğrulama: oyunda ölçüldü (r194–r198); LookTests 3/3 (kutlanan kareler odayı almıyor).
 
+### 9.112 · Onuncu liste (2/2): sitenin kendi hover'ı, hizalanan görev sekmesi (2026-09-23)
+
+Yazar: “Market Hover'larını güncelle. İnternet sitesi görüntüsüne uygun hover çıksın… Görev bildirimini üst
+bara ve oyun ekranının soluna göre hizala”.
+
+- **Market hover'ı artık sayfanın bir parçası** (`TycoonHud.Build`/`Market`): BAR'ın kartıydı — koyu arduvaz,
+  pembe saç teli kenar, küçük soluk yazı; mahzenin şişe üstünde verdiği kartın aynısı — ve bir TABLET'te açık
+  duran alışveriş sitesinin üstünde duruyordu. Sitenin kendi paleti ölçüldü: kroma lacivert (`ShopInk`),
+  paneller gri kâğıt (`ShopPaper`), aksiyon magenta, yazı kâğıdın üstünde koyu. Kart artık: kâğıt gövde, kare
+  lacivert kenar, ürünün işaretini ve adını beyazla taşıyan **lacivert başlık bandı** (26 px), altında koyu
+  yazıyla künye/açıklama. Buff satırlarının renkleri de kâğıda indi (kazanç Lime[1], maliyet Amber[1], kötü
+  ViceRed[2]) — eskiler koyu zemin için karılmıştı, gri kâğıtta amber okunmuyordu.
+- **Tarif paneli** (`_shopSpec`) aynı aileye alındı: gövde sitenin laciverti, kare kenar, tepesinde 3 px
+  magenta şerit; içeriği hâlâ koyu zeminde (tabloyu çizen `DrawRecipeSpec` diğer oturumun dosyasında, ona
+  dokunulmadı).
+- **Görev sekmesi kirişe asıldı:** x zaten 16'ydı ama ÖYLE GÖRÜNMÜYORDU — kirişin üstündeki aletler
+  `ChromeArt.Well` ile çiziliyor ve onun pahı dikdörtgeninin birkaç piksel dışına taşıyor; sekme ise düz
+  `Card`'dı. Ölçüldü (r200): saatin mürekkebi x=12'den, sekmeninki x=16'dan başlıyordu. Sekme artık kirişin
+  kendi kasasını giyiyor (iki kenar aynı kenar, ölçüldü: ikisi de 16) ve tüpün **iki piksel içine** asılıyor.
+- Doğrulama: LookTests 3/3; market ve sekme oyunda ölçüldü (r199–r200).
+
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,
