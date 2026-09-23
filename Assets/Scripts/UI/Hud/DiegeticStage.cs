@@ -2294,6 +2294,14 @@ namespace LastCall.UI
         // The sky-driven bases the closing beat dims FROM. A beat that lerped from a
         // constant would have snapped the room back to noon-of-nowhere the moment the last
         // call began.
+        /// <summary>
+        /// A FIFTH OFF THE HOUSE'S LAMPS (2026-09-23, the author, having been shown four strengths in the
+        /// room and picked the third: "L3 - amber + %20 kısık"). The tint lost its white the same day
+        /// (LightLanguage.Key); this is the other half, and it is here rather than in fixtures.json because
+        /// it is a decision about the ROOM, not about any one fitting - every lamp the house hangs comes
+        /// down by it, and a fixture bought later comes down by it too.
+        /// </summary>
+        public const float HouseLampStop = 0.80f;
         private float _washBase = GlobalIntensity, _houseBase = HouseDay;
 
         /// <summary>What the room is lit by before the first hour arrives: opening light.</summary>
@@ -3558,7 +3566,7 @@ namespace LastCall.UI
                         if (house)
                         {
                             _houseLights.Add((glow, def.LightIntensity));
-                            glow.intensity = def.LightIntensity * _houseBase;
+                            glow.intensity = def.LightIntensity * _houseBase * HouseLampStop;
                         }
                         // The set's own spill is driven by the picture, not by the hour:
                         // it dies when the tube dies and comes back with the warm-up.
@@ -3946,7 +3954,7 @@ namespace LastCall.UI
                     if (_barLights[i] != null) _barLights[i].intensity = _barDownBase;
                 for (int i = 0; i < _houseLights.Count; i++)
                     if (_houseLights[i].Light != null)
-                        _houseLights[i].Light.intensity = _houseLights[i].Base * _houseBase;
+                        _houseLights[i].Light.intensity = _houseLights[i].Base * _houseBase * HouseLampStop;
             }
             // ...AND THE COUNTER'S OWN PROPS SWING ON IT TOO (2026-09-22, the author: "tezgahta menu, garnish
             // bunlarda ana sahnedeki isiklandirmalardan etkilenmeli"). The dishes on the rail, the menu standing

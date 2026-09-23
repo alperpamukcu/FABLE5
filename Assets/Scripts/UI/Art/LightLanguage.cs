@@ -27,8 +27,16 @@ namespace LastCall.UI
     /// </summary>
     public static class LightLanguage
     {
-        /// <summary>Tungsten: the house's every lamp.</summary>
-        public static readonly Color Key = Color.Lerp(UITheme.Amber[4], Color.white, 0.30f);
+        /// <summary>
+        /// Tungsten: the house's every lamp. It was the amber a third of the way to WHITE until 2026-09-23,
+        /// when the author looked at the room and said the ceiling was giving white light ("tavan
+        /// aydınlatmaları çok beyaz ışık veriyor biraz renksizleştir", "aydınlatmanın beyazlığını kaldıralım")
+        /// - measured, the wall under a globe read (255,253,210), which is not a colour, it is a clipped
+        /// channel. It is the palette's own amber now, with no white mixed into it at all, and the lamps
+        /// carry a fifth less punch (<see cref="DiegeticStage.HouseLampStop"/>), which is the pair of changes
+        /// the author picked out of four in the room (L3, 2026-09-23).
+        /// </summary>
+        public static readonly Color Key = UITheme.Amber[4];
         /// <summary>The lift the drinkers take over the room: the key most of the way to white, so a face reads
         /// as lit rather than tinted.</summary>
         public static readonly Color PatronLift = Color.Lerp(Key, Color.white, 0.60f);

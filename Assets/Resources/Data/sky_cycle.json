@@ -21,7 +21,7 @@
     "col": 40, "radius": 7,
     "rowStart": 34, "rowEnd": 98, "setBy": 0.36, "horizonRow": 84,
     "coreHigh": "Cream4", "coreLow": "Amber3", "rimHigh": "Amber4", "rimLow": "ViceRed3", "halo": "Amber4",
-    "shaftHigh": "Amber4", "shaftLow": "ViceRed4",
+    "shaftHigh": "Amber4", "shaftLow": "Magenta4",
     "haloRadius": 26, "haloHigh": 0.62, "haloLow": 0.50
   },
   "stars": { "count": 34, "rowMax": 50, "from": 0.34, "to": 0.66, "lumaMax": 0.22 },

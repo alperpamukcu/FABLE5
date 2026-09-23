@@ -1630,7 +1630,15 @@ hoverlarında garnishi sürüklerken gözüken asset gözükmeli”.
 - **Garniş hover'ı elde taşınanı gösteriyor** (`TycoonHud.Chrome`): kart tabağı gösteriyordu — işaretçinin zaten
   üstünde durduğu şeyi. Artık her rayın kendi `PrepProp.Carry` sanatını çiziyor (limon kabuğu, üç küpten biri,
   zeytin şişi, nane dalı, tuz/şeker tutamı), kendi pikselinin tam katında ve ortalanmış.
-- Doğrulama: oyunda ölçüldü (r194–r197); LookTests 3/3 (kutlanan kareler odayı almıyor).
+- **Işığın beyazlığı kalktı (L3):** yazara odada dört şiddet gösterildi (şimdiki / amber / amber+%20 kısık /
+  %30 kısık), üçüncüsünü seçti. `LightLanguage.Key` artık **beyaz karışımı olmayan** `Amber[4]`
+  (2026-09-23'e kadar beyaza %30 çekilmiş amberdi) ve evin lambaları `DiegeticStage.HouseLampStop = 0,80` ile
+  bir beşte karışmış iniyor — fikstür verisinde değil kodda, çünkü karar odanın, tek bir armatürün değil.
+  ÖLÇÜLDÜ: kürenin altındaki duvar (255,253,210) → (202,170,148), yani kanal artık kırpılmıyor.
+- **Güneş altından pembeye:** yazar “güneşin verdiği renk golden sun ve vice pembesi şeklinde” dedi;
+  `sky_cycle.json` içinde `shaftLow` **ViceRed4 → Magenta4** — hüzme yüksekte Amber4 (golden sun), batarken
+  vice pembesine dönüyor. Şiddeti düşürülmedi; istenen renkti.
+- Doğrulama: oyunda ölçüldü (r194–r198); LookTests 3/3 (kutlanan kareler odayı almıyor).
 
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
