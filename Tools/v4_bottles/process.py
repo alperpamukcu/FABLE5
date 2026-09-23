@@ -513,8 +513,22 @@ def open_carton(im):
     # blobs are tried top-down; a gable glint that sits higher still has no face to open and is
     # passed over (the lemon's does - measured, and why "topmost" alone was not enough). The five
     # cartons already in the game come out of this byte for byte as they did.
+    # ...AND A CAP IS SMALL. A carton printed with a white top (a brand's own trade dress, round two) has a gable
+    # that is itself the first pale thing from the top and has a face to open - so a blob wider than a good part of
+    # the carton is the carton, not its cap. The five shipped caps are a fifth of their carton's width.
+    widest = max((s[1] - s[0] + 1) for s in sp if s) if rows else w
+    lefts = [s[0] for s in sp if s]
+    rights = [s[1] for s in sp if s]
+    mid_x = (min(lefts) + max(rights)) * 0.5 if lefts else w * 0.5
     best = inner = None
     for blob in sorted(blobs, key=lambda b: min(q[1] for q in b)):
+        bw = max(q[0] for q in blob) - min(q[0] for q in blob) + 1
+        if bw > widest * 0.45:
+            continue
+        # and it sits on the gable's middle: a pale patch at the carton's edge is a highlight, not a cap
+        cx = (max(q[0] for q in blob) + min(q[0] for q in blob)) * 0.5
+        if abs(cx - mid_x) > widest * 0.20:
+            continue
         inner = face_of(blob)
         if inner:
             best = blob

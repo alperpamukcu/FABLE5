@@ -1,0 +1,197 @@
+{
+ "orange_grove": {
+  "notes": {
+   "A31": {
+    "spout": [
+     37,
+     43,
+     52,
+     56
+    ]
+   },
+   "A37": {
+    "spout": [
+     36,
+     57,
+     50,
+     70
+    ]
+   },
+   "B31": {
+    "spout": [
+     47,
+     45,
+     61,
+     53
+    ]
+   },
+   "B37": {
+    "spout": [
+     36,
+     32,
+     52,
+     46
+    ]
+   }
+  },
+  "hand": "orange_grove_hand.png",
+  "shelf": "orange_grove_shelf.png",
+  "native": "orange_grove_native.png"
+ },
+ "lemon_fresh": {
+  "notes": {
+   "A31": {
+    "spout": [
+     47,
+     69,
+     61,
+     78
+    ]
+   },
+   "A37": {
+    "spout": [
+     46,
+     46,
+     64,
+     61
+    ]
+   },
+   "B31": {
+    "spout": [
+     48,
+     49,
+     63,
+     62
+    ]
+   },
+   "B37": {
+    "spout": [
+     45,
+     71,
+     60,
+     85
+    ]
+   }
+  },
+  "hand": "lemon_fresh_hand.png",
+  "shelf": "lemon_fresh_shelf.png",
+  "native": "lemon_fresh_native.png"
+ },
+ "lime_fresh": {
+  "notes": {
+   "A31": {
+    "spout": [
+     45,
+     32,
+     61,
+     48
+    ]
+   },
+   "A37": {
+    "spout": [
+     46,
+     40,
+     64,
+     55
+    ]
+   },
+   "B31": {
+    "spout": [
+     35,
+     36,
+     52,
+     50
+    ]
+   },
+   "B37": {
+    "spout": [
+     35,
+     34,
+     51,
+     47
+    ]
+   }
+  },
+  "hand": "lime_fresh_hand.png",
+  "shelf": "lime_fresh_shelf.png",
+  "native": "lime_fresh_native.png"
+ },
+ "cranberry_north": {
+  "notes": {
+   "A31": {
+    "spout": [
+     41,
+     68,
+     54,
+     78
+    ]
+   },
+   "A37": {
+    "spout": [
+     41,
+     53,
+     54,
+     64
+    ]
+   },
+   "B31": {
+    "spout": [
+     41,
+     59,
+     55,
+     70
+    ]
+   },
+   "B37": {
+    "spout": [
+     41,
+     60,
+     54,
+     71
+    ]
+   }
+  },
+  "hand": "cranberry_north_hand.png",
+  "shelf": "cranberry_north_shelf.png",
+  "native": "cranberry_north_native.png"
+ },
+ "pineapple_isla": {
+  "notes": {
+   "A31": {
+    "spout": [
+     46,
+     62,
+     62,
+     76
+    ]
+   },
+   "A37": {
+    "spout": [
+     45,
+     49,
+     60,
+     63
+    ]
+   },
+   "B31": {
+    "spout": [
+     34,
+     38,
+     51,
+     53
+    ]
+   },
+   "B37": {
+    "spout": [
+     40,
+     49,
+     55,
+     62
+    ]
+   }
+  },
+  "hand": "pineapple_isla_hand.png",
+  "shelf": "pineapple_isla_shelf.png",
+  "native": "pineapple_isla_native.png"
+ }
+}
