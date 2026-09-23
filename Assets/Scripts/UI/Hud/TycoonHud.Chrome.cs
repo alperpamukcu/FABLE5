@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -575,36 +575,35 @@ namespace LastCall.UI
             picRt.sizeDelta = new Vector2(Box, Box);
             picRt.anchoredPosition = Vector2.zero;
 
-            string tell;
-            if (prop.IsRim)
+            // WHAT YOU WILL BE HOLDING (2026-09-23, the author: "garnishlerin hoverlarında garnishi
+            // sürüklerken gözüken asset gözükmeli açıklama hoverinin altında"). The rim's half of this
+            // has been right since 2026-09-14 — it shows the pinch of salt that leaves the dish — and
+            // everything else showed the DISH, which is the thing the pointer is already resting on:
+            // a picture of what you are looking at, under a line explaining what it does. Every prop
+            // on the rail already names the art it puts in your hand when you drag it (PrepProp.Carry:
+            // the curl of peel, one of the author's three cubes, the spear, the sprig, the pinch), so
+            // that is what the card draws — the same picture, a moment early.
+            //
+            // At a WHOLE multiple of its own pixels and centred, because these are 16-to-46-pixel
+            // drawings and a fractional scale is what makes a pixel drawing look wet.
+            var held = string.IsNullOrEmpty(prop.Carry) ? null : ItemArt.Load(prop.Carry);
+            var shown = held ?? (prop.IsRim
+                ? ItemArt.Load(prop.Id == "sugar_rim" ? "carry_sugar" : "carry_salt")
+                : GarnishCounterArt(prop.Id) ?? (card != null ? ItemArt.Bottle(card) : null));
+            var img = picRt.gameObject.AddComponent<Image>();
+            img.sprite = shown;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.enabled = shown != null;
+            if (shown != null)
             {
-                // THE SALT, NOT A GLASS (2026-09-14, the author: "tuz ve şeker garnishi hoverinde
-                // küçük tuz ve şeker görselleri kullanılsın"). The card drew a tumbler wearing the
-                // crust — what the rim becomes; the card is about what the dish HOLDS. Shown at a
-                // whole multiple of its pixels, centred in the picture's box.
-                var grain = ItemArt.Load(prop.Id == "sugar_rim" ? "carry_sugar" : "carry_salt");
-                var img = picRt.gameObject.AddComponent<Image>();
-                img.sprite = grain;
-                img.preserveAspect = true;
-                img.raycastTarget = false;
-                img.enabled = grain != null;
-                if (grain != null)
-                {
-                    int whole = Mathf.Max(1, Mathf.FloorToInt(Box / Mathf.Max(grain.rect.width, grain.rect.height)));
-                    picRt.sizeDelta = new Vector2(grain.rect.width * whole, grain.rect.height * whole);
-                    picRt.anchoredPosition = new Vector2((Box - picRt.sizeDelta.x) * 0.5f, 0f);
-                }
-                tell = UIText.T("chrome.garnish.tell_rim");
+                int whole = Mathf.Max(1, Mathf.FloorToInt(Box / Mathf.Max(shown.rect.width, shown.rect.height)));
+                picRt.sizeDelta = new Vector2(shown.rect.width * whole, shown.rect.height * whole);
+                picRt.anchoredPosition = new Vector2((Box - picRt.sizeDelta.x) * 0.5f, 0f);
             }
-            else
-            {
-                var img = picRt.gameObject.AddComponent<Image>();
-                img.sprite = GarnishCounterArt(prop.Id) ?? (card != null ? ItemArt.Bottle(card) : null);
-                img.preserveAspect = true;
-                img.raycastTarget = false;
-                img.enabled = img.sprite != null;
-                tell = prop.Id == "ice" ? UIText.T("chrome.garnish.tell_ice") : UIText.T("chrome.garnish.tell_garnish");
-            }
+            string tell = prop.IsRim ? UIText.T("chrome.garnish.tell_rim")
+                : prop.Id == "ice" ? UIText.T("chrome.garnish.tell_ice")
+                : UIText.T("chrome.garnish.tell_garnish");
 
             var word = NewText("Tell", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
             word.rectTransform.anchorMin = new Vector2(0f, 0f);

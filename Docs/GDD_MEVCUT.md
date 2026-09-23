@@ -1603,6 +1603,35 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
   pip (yapılanlar yanık, bitince yeşil). Üstüne gelince ödül ve kalan gece: "ÖDÜL +$120 · 1 GECE KALDI".
 - Doğrulama: EditMode 625/626, PlayMode 13/13.
 
+### 9.111 · Onuncu liste (1/2): tezgâhın kenarları, bayına sığan mahzen konisi, kablodan çıkan hüzme, sürüklenen garniş (2026-09-23)
+
+Yazar: “tezgahtan aralanan ışık hüzmesi tezgahın dışına taşıyor… tezgahın ayaklarının altı birkaç pixel boş
+kalıyor… kenarlarında… boş gözüküyor orayıda doldur… tavan aydınlatmasında çıkan ışığın başlangıç noktası
+lambanın kablosunun en alt kısmından itibaren olacak ve lamba hiyerarşide ışığın üstünde olacak… garnishlerin
+hoverlarında garnishi sürüklerken gözüken asset gözükmeli”.
+
+- **Tezgâh pencereye ulaşıyor** (`DiegeticStage`): ÖLÇÜLDÜ — `counter.png` (638×250) ilk ALTI sütununda ve son
+  altısında yalnız tezgâh tablasının dudağını taşıyor (45–64. satırlar), altı şeffaf; son on satırı da yalnız iki
+  ayak. 16:9'da bar tam pencere genişliği çizildiği için o on iki şeffaf piksel pencerenin kenarına düşüyordu, ve
+  mahzen açılınca bütün bar `DrawerTravel` kadar yükselip ayağını ekranın altından kaldırıyordu. Sanat yazarın,
+  o yüzden çizim değişmedi: bar her uçtan **altı piksel daha geniş** çiziliyor (kendi kapağı pencere kenarını
+  örtüyor) ve arkasına **plinth** asıldı — barın kendi alt bandının bir satırı (238. satır), aşağı doğru
+  uzatılmış, sıra 21'de. Ölçüldü: tezgâh ekran x −12..1292, plinth y −90..6.
+- **Mahzen konisi bayına sığıyor:** 100/160 derecelik koni bir raf şeridi değil — ölçüldü, dış bayların ışıkları
+  x = ±199'da durup 150 menzille ±349'a atıyordu, yani 638'lik tezgâhın ucundan otuz piksel dışarı, yatay olarak.
+  Bir göz 175 geniş, 78 (üst raf) – 83 (alt raf) derin; tam dolduran koni 2·atan(87,5/derinlik) = 97° ve 93°,
+  **95** ikisini de tutuyor; iç koni eski oranını (0,61) koruyor → **58/95**.
+- **Hüzme kablonun ucundan başlıyor:** spot tepesini koruyor ama GÖRÜNEN hava artık abajurun ağzına değil
+  **kablonun bittiği yere** asılıyor (`ShadeTopOf`, çizimden okunuyor: flex en üstteki dar koşu, abajur onun iki
+  katından geniş ilk satır). **Lamba ışığın üstünde:** URP 2D volumetrik ışığı ait olduğu sıralama katmanının
+  TAMAMINDAN sonra çiziyor, bu yüzden sarkıtın gövdesi bir katman yukarı (28, müşteriler bandı) alındı — ve
+  kendi spotunun konisini camına basmasın diye gövde **ışıksız malzemeyle** çiziliyor (ölçüldü r197: küre kendi
+  konisini giyiyordu).
+- **Garniş hover'ı elde taşınanı gösteriyor** (`TycoonHud.Chrome`): kart tabağı gösteriyordu — işaretçinin zaten
+  üstünde durduğu şeyi. Artık her rayın kendi `PrepProp.Carry` sanatını çiziyor (limon kabuğu, üç küpten biri,
+  zeytin şişi, nane dalı, tuz/şeker tutamı), kendi pikselinin tam katında ve ortalanmış.
+- Doğrulama: oyunda ölçüldü (r194–r197); LookTests 3/3 (kutlanan kareler odayı almıyor).
+
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,

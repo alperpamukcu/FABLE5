@@ -100,7 +100,28 @@ namespace LastCall.UI
         private const float ShelfCeilPx = 84f;      // the shelf board above it
 
         private Transform _counterTr;
+        private Material _unlitMaterial;
         private Vector2 _counterNative;
+        // ── THE DRAWING DOES NOT REACH THE WINDOW (2026-09-23, the author's tenth list: "tezgahın
+        // ayaklarının altı birkaç pixel boş kalıyor orayı doldur, tezgahın oyun ekranı ile olan
+        // kenarlarında ise ekran aşağı indiğinden zeminin sonu olduğundan boş gözüküyor orayıda
+        // doldur") ────────────────────────────────────────────────────────────────────────────────
+        //
+        // MEASURED on the author's counter.png (638x250): its first SIX columns and its last six
+        // carry only the slab's lip - rows 45..64 - and are transparent under it; and the drawing's
+        // last ten rows are the two legs alone. At 16:9 the bar is drawn exactly the window's width,
+        // so those twelve transparent pixels land precisely on the window's edges; and when the
+        // cellar opens the whole bar rises by DrawerTravel, which lifts its foot off the bottom of
+        // the screen. Three holes, one cause: the drawing stops before the window does.
+        //
+        // Neither is fixed in the ART, which is the author's to draw: the bar is drawn six pixels
+        // WIDER at each end so its own opaque cap covers the window's edge, and a plinth - one row
+        // of the bar's own bottom band, stretched down behind it - means there is always bar under
+        // the bar, however far the drawer lifts it.
+        private const float CounterEdgeBleed = 6f;
+        private const float CounterPlinthArtRow = 238f;   // the last row the body fills edge to edge
+        private const float CounterPlinthDrop = 48f;      // past DrawerTravel, so the foot never lifts off
+        private Transform _counterPlinth;
         private float _counterScale;                // stage units per counter-art pixel
 
         // ── the cellar drawer (2026-08-22) ──────────────────────────────────────
@@ -1507,7 +1528,15 @@ namespace LastCall.UI
         /// is spent on the bottle necks and the feet stay in the dark they were in.</summary>
         private const float CellarLightInner = 0.30f;
         private const float CellarLightIntensity = 1.55f;  // 0.80 was "loş" and too dark (the author, second look: "şişeler çok karanlık kalıyor")
-        private const float CellarSpotInnerAngle = 100f, CellarSpotOuterAngle = 160f, CellarSpotRoll = 180f;   // a wide cone, pointing down
+        // THE CONE IS THE BAY'S WIDTH, NOT THE ROOM'S (2026-09-23, the author's tenth list: "tezgahtan
+        // aralanan ışık hüzmesi tezgahın dışına taşıyor yataylamasına onu tezgaha göre doldur"). It was
+        // 100/160, and a 160-degree cone is not a shelf strip at all: MEASURED, the outer bays' lights
+        // stood at x = ±199 with a reach of 150, so they threw light to ±349 against a counter that is
+        // 638 wide - thirty pixels past the end of the bar, sideways, out into the room. A compartment
+        // is 175 wide and 78 (top shelf) to 83 (bottom) deep, so the cone that exactly FILLS one and
+        // stops is 2·atan(87.5/depth) = 97° and 93°; 95 splits them, and the inner cone keeps its old
+        // share of the outer (0.61) so the falloff is unchanged.
+        private const float CellarSpotInnerAngle = 58f, CellarSpotOuterAngle = 95f, CellarSpotRoll = 180f;
         /// <summary>Warm, because the light in this room is tungsten and the cellar is part
         /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
         /// shelf actually reads against the lamps over it.</summary>
@@ -1679,6 +1708,31 @@ namespace LastCall.UI
             sr.tileMode = SpriteTileMode.Continuous;
             sr.size = new Vector2(drawn, _counterNative.y);
             return drawn;
+        }
+
+        /// <summary>
+        /// THE BAR UNDER THE BAR: one row of the counter's own bottom band, hung from its foot and
+        /// stretched down behind it (order 29, under the counter's 30), so the drawer can lift the
+        /// whole bar without opening a gap at the bottom of the screen. It is a SLICE of the
+        /// author's own drawing rather than a colour typed here, so a repainted counter takes its
+        /// plinth with it - including the finish the polish kit puts on it, since the slice is cut
+        /// from whatever sprite the renderer is carrying.
+        /// </summary>
+        private void BuildCounterPlinth(SpriteRenderer counter)
+        {
+            var src = counter != null ? counter.sprite : null;
+            if (src == null || src.texture == null) return;
+            var r = src.rect;
+            // the texture's rows run bottom-up and the art's numbering runs top-down
+            float row = Mathf.Clamp(_counterNative.y - 1f - CounterPlinthArtRow, 0f, _counterNative.y - 1f);
+            var slice = Sprite.Create(src.texture, new Rect(r.x, r.y + row, r.width, 1f),
+                new Vector2(0.5f, 1f), src.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+            // Order 21: the room's own layer, over the wall and the floor and under everything the bar
+            // draws - a plinth is part of the room's dark, not of the counter's lit face, and putting it
+            // in the drinkers' band (29) would have the patrons' own fill light lifting it a stop.
+            var sr = WorldSprite("CounterPlinth", slice, order: 21);
+            sr.transform.SetParent(counter.transform, false);
+            _counterPlinth = sr.transform;
         }
 
         /// <summary>
@@ -1927,6 +1981,47 @@ namespace LastCall.UI
             }
             catch (UnityException) { r = 0f; }                  // a sprite nobody made readable: back to a point
             return _bulbRadius[key] = r;
+        }
+
+        /// <summary>
+        /// WHERE THE CABLE ENDS, in art pixels ABOVE the lamp's widest row (2026-09-23, the author's tenth list:
+        /// "tavan aydınlatmasında çıkan ışığın başlangıç noktası lambanın kablosunun en alt kısmından itibaren
+        /// olacak"). Read off the drawing the same way the bulb is: the flex is the narrow run at the top, so the
+        /// shade begins at the first row from the top that is wider than twice it. Zero for a lamp with no flex
+        /// drawn, which then behaves exactly as it did before.
+        /// </summary>
+        private readonly Dictionary<string, float> _shadeTop = new Dictionary<string, float>();
+
+        private float ShadeTopOf(Sprite s)
+        {
+            if (s == null || s.texture == null) return 0f;
+            string key = s.name + ":" + s.rect;
+            if (_shadeTop.TryGetValue(key, out var had)) return had;
+            float up = 0f;
+            try
+            {
+                var px = s.texture.GetPixels32();
+                int tw = s.texture.width;
+                int x0 = (int)s.rect.x, y0 = (int)s.rect.y, w = (int)s.rect.width, h = (int)s.rect.height;
+                var wide = new int[h];
+                for (int y = 0; y < h; y++)
+                {
+                    int n = 0;
+                    for (int x = 0; x < w; x++)
+                        if (px[(y0 + y) * tw + x0 + x].a > 128) n++;
+                    wide[y] = n;
+                }
+                int mouth = 0;
+                for (int y = 0; y < h; y++) if (wide[y] > wide[mouth]) mouth = y;
+                int flex = 0;                                   // the topmost drawn row: the cable
+                for (int y = h - 1; y >= 0; y--) if (wide[y] > 0) { flex = wide[y]; break; }
+                int shade = mouth;                              // ...and the first row under it that is the shade
+                for (int y = h - 1; y >= 0; y--)
+                    if (wide[y] > Mathf.Max(2, flex * 2)) { shade = y; break; }
+                up = Mathf.Max(0f, shade - mouth);
+            }
+            catch (UnityException) { up = 0f; }                 // a sprite nobody made readable: as it was
+            return _shadeTop[key] = up;
         }
 
         /// <summary>How far above the bulb a cone of <see cref="PendantOuterAngle"/> is exactly the bulb's width.</summary>
@@ -2572,6 +2667,10 @@ namespace LastCall.UI
             var litShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Lit-Default");
             if (litShader != null) _litMaterial = new Material(litShader);
             else Debug.LogWarning("DiegeticStage: Sprite-Lit-Default not found — the stage will draw unlit.");
+            // ...and its opposite, for the few things that are SOURCES rather than surfaces: a pendant's
+            // own glass, which would otherwise wear the cone of its own spot (2026-09-23).
+            var flatShader = Shader.Find("Sprites/Default");
+            if (flatShader != null) _unlitMaterial = new Material(flatShader);
             // THE OUTSIDE IS NOT LIT BY THE INSIDE (2026-09-17). The view through the glass,
             // the palms in front of it and the pane's own sheen used to share the lit
             // material, so the room's lamps multiplied the sky — a sunset at 45% of itself
@@ -2732,6 +2831,7 @@ namespace LastCall.UI
                 _counterSr = sr;
                 _counterNative = counterSprite.rect.size;
                 _counterDrawWidth = SetUpCounterTiling(sr);
+                BuildCounterPlinth(sr);
                 // Built HERE and not up with the room's lights, because they are the BAR's:
                 // the slab, the stock standing on it and the drinkers leaning over it. The
                 // one they replace was hung with the window and inherited its branch, so a
@@ -3039,13 +3139,20 @@ namespace LastCall.UI
                 // at exactly 16:9 that is 640 and the caps land pixel-for-pixel where they
                 // were drawn, while a wider window is covered without a hairline gap.
                 sr.size = new Vector2(
-                    Mathf.Max(_counterNative.x, Mathf.Ceil(visibleW)), _counterNative.y);
+                    Mathf.Max(_counterNative.x, Mathf.Ceil(visibleW) + CounterEdgeBleed * 2f),
+                    _counterNative.y);
                 _counterTr.localScale = Vector3.one;
                 _counterScale = 1f;                            // stage units per art px
                 // Hung from the rest line: the art's top is CounterSurfaceInset above it.
                 float artTopStage = CounterRestY + CounterSurfaceInset * _counterScale;
                 float artHStage = _counterNative.y * _counterScale;
                 _counterTr.position = new Vector3(0f, artTopStage - artHStage * 0.5f - Reference.y * 0.5f, 0f);
+                if (_counterPlinth != null)
+                {
+                    // hung from the bar's own foot, as wide as the bar is drawn and stretched down
+                    _counterPlinth.localScale = new Vector3(sr.size.x / _counterNative.x, CounterPlinthDrop, 1f);
+                    _counterPlinth.localPosition = new Vector3(0f, -_counterNative.y * 0.5f, 0f);
+                }
                 if (_shutterTr != null)
                 {
                     // Laid out SHUT, then the drawer's own offset is re-applied on top, so a
@@ -3363,10 +3470,23 @@ namespace LastCall.UI
                     // A PIECE MAY WANT ITS OWN ORDER (2026-09-09, the author: the agave is
                     // counter dressing — "tezgahın önünde bira musluklarının arkasında" —
                     // which is neither its slot's hook nor its slot's band).
+                    // THE LAMP IS OVER ITS OWN LIGHT (2026-09-23, the author: "lamba hiyerarşide ışığın
+                    // üstünde olacak"). A pendant's shaft is a VOLUMETRIC light, and URP 2D draws those after
+                    // the whole sorting-layer batch they belong to - so a lamp drawn on the shaft's own layer
+                    // is always under it, whatever its order. The shaft is on the background's layer (see
+                    // HangPendantAir), so a lamp WITH a pendant light hangs one layer up instead, where it is
+                    // drawn after the background's volumetrics and before the counter. Nothing else moves:
+                    // a hanging fixture with no light of its own keeps its old order.
+                    bool pendant = hangs && def.HasLight && def.LightDy != 0f;
                     var sr = WorldSprite("Fx_" + def.Id + suffix, sprite,
                                          order: def.Order != 0 ? def.Order
                                               : onCounter ? (flat ? 34 : 35)
-                                              : hangs ? 15 : flat ? 16 : 20);
+                                              : pendant ? 28 : hangs ? 15 : flat ? 16 : 20);
+                    // ...AND IT IS NOT LIT BY ITSELF. Standing the lamp in the drinkers' band puts it inside
+                    // its own spot's reach, and a spot lighting the thing it hangs in prints its cone ON the
+                    // glass - a wedge across the globe, measured in play (r197). A lamp is the source, not a
+                    // surface: its drawing is taken as it is.
+                    if (pendant) sr.sharedMaterial = _unlitMaterial != null ? _unlitMaterial : sr.sharedMaterial;
                     if (def.Id == "prep_mat")
                     {
                         // Tiled along the rail (see SetPrepMatSpan): the art repeats its ribs
@@ -3682,11 +3802,17 @@ namespace LastCall.UI
                         ? ApexLift(BulbRadiusOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite)) : 0f;
                     placed.Glow.transform.position = basePos
                         + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
-                    // ...and the SHAFT hangs back down at the shade's mouth, the whole of the lift,
-                    // in the room's own scale (2026-09-23): the lamp is what light comes out of, not
-                    // something light is drawn over. See PendantAir.DropBelowSpot.
+                    // ...and the SHAFT hangs back down to WHERE THE CABLE ENDS (2026-09-23, the author:
+                    // "ışığın başlangıç noktası lambanın kablosunun en alt kısmından itibaren olacak").
+                    // It hung at the shade's MOUTH until today, which is the bottom of the glass; the
+                    // light now leaves at the top of the shade and the lamp is drawn over it, so what
+                    // shows is a shaft that starts inside the lamp the way a lit shade does.
                     var air = placed.Glow.GetComponentInChildren<PendantAir>();
-                    if (air != null) air.DropBelowSpot = lift * k;
+                    if (air != null)
+                    {
+                        float shadeUp = ShadeTopOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite);
+                        air.DropBelowSpot = Mathf.Max(0f, lift - shadeUp) * k;
+                    }
                 }
             }
 
