@@ -476,7 +476,7 @@ def open_carton(im):
         return c[3] and lum(c[:3]) > 185 and (max(c[:3]) - min(c[:3])) < 70
 
     seen = set()
-    best = None
+    blobs = []
     for y in range(top, limit + 1):
         for x in range(w):
             if (x, y) in seen or not pale(px[x, y]):
@@ -490,22 +490,40 @@ def open_carton(im):
                     if 0 <= nx < w and top <= ny <= limit + 6 and (nx, ny) not in seen and pale(px[nx, ny]):
                         seen.add((nx, ny))
                         stack.append((nx, ny))
-            if best is None or len(blob) > len(best):
-                best = blob
-    if not best or len(best) < 12:
+            if len(blob) >= 12:                 # a glint smaller than this is never a cap
+                blobs.append(blob)
+
+    def face_of(blob):
+        """The cap's FACE is the upper part of the blob (its top ellipse from 17 degrees); the rows
+        under it are the cap's side and stay as the spout's threaded collar. Returns the face's
+        inner pixels, or None when there is no face there to open."""
+        ys = [p[1] for p in blob]
+        y0, y1 = min(ys), max(ys)
+        face_bottom = y0 + max(2, int((y1 - y0 + 1) * 0.55))
+        face = {p for p in blob if p[1] <= face_bottom}
+        inner = {p for p in face
+                 if all(q in face for q in ((p[0] + 1, p[1]), (p[0] - 1, p[1]), (p[0], p[1] + 1), (p[0], p[1] - 1)))}
+        return inner if len(inner) >= 4 else None
+
+    # THE CAP IS THE FIRST PALE THING FROM THE TOP THAT CAN BE OPENED - not the biggest one
+    # (2026-09-23). It used to take the LARGEST pale blob in the top third, which was always the cap
+    # while the cartons were plain; a carton designed round its fruit carries its brand on a cream
+    # band high on the front face, bigger than the cap, and that band was "unscrewed" into a dark
+    # slot across the name. The cap sits on the gable above everything printed on the face, so the
+    # blobs are tried top-down; a gable glint that sits higher still has no face to open and is
+    # passed over (the lemon's does - measured, and why "topmost" alone was not enough). The five
+    # cartons already in the game come out of this byte for byte as they did.
+    best = inner = None
+    for blob in sorted(blobs, key=lambda b: min(q[1] for q in b)):
+        inner = face_of(blob)
+        if inner:
+            best = blob
+            break
+    if not best:
         return im, None
-    blob = set(best)
-    xs = [p[0] for p in blob]
-    ys = [p[1] for p in blob]
+    xs = [p[0] for p in best]
+    ys = [p[1] for p in best]
     y0, y1 = min(ys), max(ys)
-    # the cap's FACE is the upper part of the blob (its top ellipse from 17 degrees); the
-    # rows under it are the cap's side and stay as the spout's threaded collar
-    face_bottom = y0 + max(2, int((y1 - y0 + 1) * 0.55))
-    face = {p for p in blob if p[1] <= face_bottom}
-    inner = {p for p in face
-             if all(q in face for q in ((p[0] + 1, p[1]), (p[0] - 1, p[1]), (p[0], p[1] + 1), (p[0], p[1] - 1)))}
-    if len(inner) < 4:
-        return im, None
     hole = palette.ramp('Night', 1) + (255,)
     wall = palette.ramp('Graphite', 2) + (255,)
     iy1 = max(p[1] for p in inner)
@@ -883,6 +901,16 @@ def cellar_box(master, interior, glass, card_id, emblem=None):
     # the label: a two-colour snap (paper / mark) inside its box so the print is crisp,
     # and on glass a one-pixel darker border so the paper reads against a like-toned body
     lb = label_region(master)
+    # AN ILLUSTRATION IS NOT A LABEL (2026-09-23). The snap below turns a label into its paper and its
+    # print, which is what makes small lettering read at this size. On a carton designed round its
+    # fruit, the "label" the finder comes back with is the whole printed fruit - 36 x 101 on the
+    # pineapple against the old label's 35 x 43 - and the "print" colour it picks is the drawing's own
+    # outline INK, so every cell of the fruit with a third of a line in it went black (a black blob
+    # where the pineapple was, measured). A carton's label is never printed in the outline's ink - the
+    # five shipped ones print in cream and amber - so an ink "print" on a carton means there is no label
+    # to snap, only a drawing to keep: it is left as the area average drew it.
+    if lb is not None and fam == 'carton' and tuple(lb[2][:3]) == tuple(palette.INK[:3]):
+        lb = None
     label_cells = set()
     if lb is not None:
         (lx, ly, lw, lh), paper_q, mark_q = lb

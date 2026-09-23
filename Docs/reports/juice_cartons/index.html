@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Meyve suyu kartonları — meyvesi baskıda</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root { --bg:#0D0813; --panel:#1A1023; --ink:#F2E8D5; --ink2:#C9BCA8; --accent:#E8A33D; --warn:#D9455C; }
+body { margin:0; padding:24px 16px 64px; background:var(--bg); color:var(--ink); font:16px/1.5 Georgia,"Times New Roman",serif; }
+main { max-width:1100px; margin:0 auto; }
+h1 { font-size:28px; margin:0 0 4px; font-weight:normal; }
+h2 { font-size:20px; margin:36px 0 8px; font-weight:normal; color:var(--accent); }
+p, li { max-width:72ch; color:var(--ink2); }
+figure { margin:12px 0; background:var(--panel); padding:10px; overflow-x:auto; }
+figure img { display:block; max-width:100%; height:auto; image-rendering:pixelated; }
+figcaption { font-size:13px; color:var(--ink2); margin-top:6px; }
+.ask { border-left:3px solid var(--accent); padding:8px 12px; margin:24px 0; }
+.warn { color:var(--warn); }
+code { color:var(--accent); font-family:Consolas,monospace; font-size:14px; }
+table { border-collapse:collapse; margin:12px 0; color:var(--ink2); font-size:15px; }
+th, td { border-bottom:1px solid #2A1E38; padding:6px 14px 6px 0; text-align:left; vertical-align:top; }
+th { color:var(--ink); font-weight:normal; }
+</style></head><body><main>
+
+<h1>Meyve suyu kartonları — meyvesi baskıda</h1>
+<p>2026-09-23. İstek (sekizinci liste): <em>“Meyve suyu kutularının küçük hallerini tekrar üret, üzerindeki meyveleri
+sonradan ekleme, üretimde üzerinde meyve olan farklı tasarımlara sahip aynı perspektifte meyve suyu kutuları üret.
+Küçük ve büyük boylarda.”</em> Hiçbiri oyunda değil. Her meyve suyu için ayrı seçiyorsun.</p>
+
+<h2>Ne değişti</h2>
+<ul>
+<li><strong>Meyve artık üretimin içinde.</strong> Bugünkü kartonlar düz boya üretilmişti; raftaki küçük kopyalara hangi
+meyve olduğu, elle çizilmiş 13 piksellik bir işaretle <em>sonradan</em> basılıyordu. Yeni adaylarda meyve kartonun
+kendi baskısı: üretici onu kartonun ışığında ve paletinde çiziyor.</li>
+<li><strong>Aynı perspektif.</strong> Üreticiye senin seçtiğin karton “bu silüeti ve bu açıyı koru, yalnız ön yüzdeki
+baskı değişsin” diye referans verildi; evin üslup çapası ve kamera referansı da yanında.</li>
+<li><strong>İki tasarım × iki tohum.</strong> A = bütün meyve (+ kesik yarısı), B = dilim/serpme kompozisyon. Görsellerdeki
+etiketler: <code>A31</code> = A tasarımı, tohum 31.</li>
+<li><strong>Hepsi evin hattından geçti</strong> (sevk edilseydi nasıl çıkacaksa öyle): üreticinin sildiği gövde geri
+verildi, palete oturtuldu, çerçevelendi, el kartonunun kapağı açıldı, raf kopyası türetildi.</li>
+</ul>
+
+<h2>Küçük boy neden türetildi</h2>
+<p>Evin kuralı: 32×64 raf kopyası büyük masterdan <strong>türetilir</strong>, ayrıca üretilmez (GDD_MEVCUT §9.18).
+İsteğin küçük boyun da üretilmesiydi, o yüzden ikisini de denedim. Doğrudan 32×64 üretilenler kullanılamaz çıktı:
+üretici bu boyda büyük bir sayfadan kaymış kareler döndürüyor, kartonlar kesik ve birbirinin üstüne taşıyor.
+Aşağıda portakalın ilk sekizi var. Türetilenler ise temiz; meyve artık büyük basıldığı için ⅓'e inince de
+okunuyor.</p>
+<figure><img src="orange_grove_native0.png" alt="Doğrudan 32x64 üretilen portakal kartonları: kesik ve kaymış">
+<figcaption>Doğrudan üretilen 32×64 adaylar (4×). Kanıt olarak duruyor, seçenek değil.</figcaption></figure>
+
+<h2>Hatta iki düzeltme</h2>
+<p>İkisi de <strong>oyundaki beş kartonu bayt bayt aynı bırakıyor</strong>; beşinin el ve raf sprite'ı eski ve yeni kuralla
+yeniden üretilip karşılaştırıldı.</p>
+<ul>
+<li><code>open_carton</code>: “kapak = üst üçte birdeki en büyük soluk leke” diyordu. Yeni tasarımlarda krem marka bandı
+kapaktan büyük olduğu için bandı “açıp” ismin üstüne kara bir yarık çiziyordu. Kural artık “yukarıdan aşağı, açılabilen
+ilk leke”.</li>
+<li><code>cellar_box</code>: raf kopyasında etiketi “kâğıt + baskı” diye iki renge oturtuyordu. Yeni tasarımlarda etiket
+bulucu bütün meyveyi etiket sanıyor, baskı rengi olarak da çizimin kontur mürekkebini alıyordu; meyve kara bir lekeye
+dönüşüyordu. Bir kartonun etiketi hiçbir zaman mürekkeple basılmaz, o yüzden mürekkepli “baskı” artık çizim sayılıyor
+ve olduğu gibi bırakılıyor.</li>
+</ul>
+
+<h2>Portakal — GROVE</h2>
+<figure><img src="orange_grove_hand.png" alt="Portakal kartonu: şimdiki ve dört aday, el boyu"><figcaption>El boyu (bench'te
+dökülen karton), 2×. <code>NOW</code> = oyundaki.</figcaption></figure>
+<figure><img src="orange_grove_shelf.png" alt="Portakal kartonu: raf kopyaları"><figcaption>Raf kopyası (mahzen), 4×.</figcaption></figure>
+<p>A31 bugünkü kartonla aynı boyda. A37 daha uzun ve meyve sağ kenardan taşıyor. B31/B37'deki iri dilim rafta en iyi
+okunan, ama B37'nin kartonu kısa.</p>
+
+<h2>Limon — LEMONADE</h2>
+<figure><img src="lemon_fresh_hand.png" alt="Limonata kartonu: şimdiki ve dört aday"><figcaption>El boyu, 2×.</figcaption></figure>
+<figure><img src="lemon_fresh_shelf.png" alt="Limonata kartonu: raf kopyaları"><figcaption>Raf kopyası, 4×.</figcaption></figure>
+<p><span class="warn">A31'in rengi yanlış:</span> üretici soluk sarı gövdeyi arka planla birlikte silmiş, hat boşluğu
+amberle doldurdu. Önerilmez. A37 soluk sarı, limon ve yarısı yerinde. B'lerde dilimler rafta silik, B31'in kartonu da
+küçük.</p>
+
+<h2>Misket limonu — LIMEADE</h2>
+<figure><img src="lime_fresh_hand.png" alt="Limeade kartonu: şimdiki ve dört aday"><figcaption>El boyu, 2×.</figcaption></figure>
+<figure><img src="lime_fresh_shelf.png" alt="Limeade kartonu: raf kopyaları"><figcaption>Raf kopyası, 4×.</figcaption></figure>
+<p>Dördü de okunuyor. A31'in sağ yan yüzünde biraz doku gürültüsü var. B'ler bugünkünden daha açık yeşil.</p>
+
+<h2>Kızılcık — NORTH</h2>
+<figure><img src="cranberry_north_hand.png" alt="Kızılcık kartonu: şimdiki ve dört aday"><figcaption>El boyu, 2×.</figcaption></figure>
+<figure><img src="cranberry_north_shelf.png" alt="Kızılcık kartonu: raf kopyaları"><figcaption>Raf kopyası, 4×.</figcaption></figure>
+<p>A31'in salkımı rafta çok iyi okunuyor. <span class="warn">A37'nin açısı kaymış</span> (üst yüz dik açıdan
+görünüyor). B'lerdeki serpme meyveler rafta zayıf kalıyor.</p>
+
+<h2>Ananas — ISLA</h2>
+<figure><img src="pineapple_isla_hand.png" alt="Ananas kartonu: şimdiki ve dört aday"><figcaption>El boyu, 2×.</figcaption></figure>
+<figure><img src="pineapple_isla_shelf.png" alt="Ananas kartonu: raf kopyaları"><figcaption>Raf kopyası, 4×.</figcaption></figure>
+<p>A31 ve A37'deki bütün ananas iki boyda da net. B31 küçük ve koyu kalmış, B37 ise bugünkünden uzun.</p>
+
+<h2>Odada, mahzen rafında</h2>
+<p id="room">Mahzenin kendi rafında, barın ışığında çekimler: editör boşalınca eklenecek. (Bu tur çekilirken oyunda
+sen vardın, oturumu durdurmadım.)</p>
+
+<h2>Önerim</h2>
+<table>
+<tr><th>Meyve suyu</th><th>Öneri</th><th>Neden</th></tr>
+<tr><td>Portakal</td><td><strong>A31</strong></td><td>Bugünkü kartonun boyu ve silüeti; meyve büyük ve net</td></tr>
+<tr><td>Limon</td><td><strong>A37</strong></td><td>Rengi doğru tek A; rafta limon okunuyor</td></tr>
+<tr><td>Misket limonu</td><td><strong>A37</strong></td><td>İri misket + yarısı, rafta en net</td></tr>
+<tr><td>Kızılcık</td><td><strong>A31</strong></td><td>Salkım rafta çok iyi okunuyor; açı doğru</td></tr>
+<tr><td>Ananas</td><td><strong>A37</strong></td><td>Taç ve gövde rafta en okunaklı; A31 de olur</td></tr>
+</table>
+
+<div class="ask"><strong>Karar:</strong> her meyve suyu için bir aday (<code>A31 · A37 · B31 · B37</code>) ya da
+“kalsın”. Seçilenler hattın yaptığı hâliyle iner: el kartonu açık, raf kopyası türetilmiş, <strong>elle çizilmiş meyve
+işareti artık basılmaz</strong>. Beğenmediğin bir meyve için yeni bir tasarım cümlesi de söyleyebilirsin; tur başına
+çağrı 20 üretim.</div>
+
+<p>Maliyet: 30 çağrı, 600 üretim (9.340 kaldı; sayaç 18 Ekim'de sıfırlanıyor). Araçlar:
+<code>Tools/v4_bottles/juice_fruit.py</code> (üretim) ve <code>juice_fruit_report.py</code> (bu sayfanın görselleri).</p>
+
+</main></body></html>

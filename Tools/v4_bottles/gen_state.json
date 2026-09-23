@@ -364,6 +364,13 @@
    "n": 64,
    "secs": 163.7,
    "poll": "status: completed\nid: 4c76acfc-9a6c-4551-a56a-9beedab14488\njob_id: 4c76acfc-9a6c-4551-a56a-9beedab14488\nframes: 64\ndownload: https://api.pixellab.ai/mcp/images/4c76acfc-9a6c-4551-a56a-9beedab14488/download?index=0 ... ?index=63\n(60 more frames not shown \u2014 fetch them from the download URLs above)\n"
+  },
+  "orange_grove:L0:31": {
+   "job": "19f5dacb-96c7-4889-a509-990d1606177b",
+   "submit": "id: 19f5dacb-96c7-4889-a509-990d1606177b\njob_id: 19f5dacb-96c7-4889-a509-990d1606177b\nmodel: pro\ndescription: a tall gable-top orange juice carton in flat orange card with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the front face is a plain upright rectangle taking nearly the whole width, and beyond its right edge ",
+   "n": 1,
+   "secs": 489.6,
+   "poll": "status: completed\nid: 19f5dacb-96c7-4889-a509-990d1606177b\njob_id: 19f5dacb-96c7-4889-a509-990d1606177b\nframes: 1\ntransparent: yes\nasset_id: a1a99d99-4cc7-5f0d-951d-e70074d273ff\nasset_type: image\nasset_status: saved\ngallery: saved to your PixelLab gallery (pixellab.ai/create)\ndownload: https://api.p"
   }
  }
 }

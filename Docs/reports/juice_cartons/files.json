@@ -1,0 +1,42 @@
+{
+ "orange_grove": {
+  "hand": "orange_grove_hand.png",
+  "shelf": "orange_grove_shelf.png",
+  "native": [
+   "orange_grove_native0.png",
+   "orange_grove_native1.png"
+  ]
+ },
+ "lemon_fresh": {
+  "hand": "lemon_fresh_hand.png",
+  "shelf": "lemon_fresh_shelf.png",
+  "native": [
+   "lemon_fresh_native0.png",
+   "lemon_fresh_native1.png"
+  ]
+ },
+ "lime_fresh": {
+  "hand": "lime_fresh_hand.png",
+  "shelf": "lime_fresh_shelf.png",
+  "native": [
+   "lime_fresh_native0.png",
+   "lime_fresh_native1.png"
+  ]
+ },
+ "cranberry_north": {
+  "hand": "cranberry_north_hand.png",
+  "shelf": "cranberry_north_shelf.png",
+  "native": [
+   "cranberry_north_native0.png",
+   "cranberry_north_native1.png"
+  ]
+ },
+ "pineapple_isla": {
+  "hand": "pineapple_isla_hand.png",
+  "shelf": "pineapple_isla_shelf.png",
+  "native": [
+   "pineapple_isla_native0.png",
+   "pineapple_isla_native1.png"
+  ]
+ }
+}
