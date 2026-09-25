@@ -1465,7 +1465,7 @@
     {"key": "dayend.bill.fines", "text": "MULTAS · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "mais um dia no vermelho e o bar fecha", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "SALDO", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "FAZER A ENCOMENDA", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "CONTINUAR", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "SAÍDAS", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "RENDA", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "VENDAS", "src": "SALES"},

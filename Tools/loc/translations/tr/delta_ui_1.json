@@ -83,7 +83,7 @@
 {"key": "bench.tap.verdict.too_much_head", "text": "FAZLA KÖPÜK", "src": "TOO MUCH HEAD"},
 {"key": "build.basket.left", "text": "KASADA KALAN", "src": "LEFT IN THE TILL"},
 {"key": "build.basket.total", "text": "TOPLAM", "src": "TOTAL"},
-{"key": "build.bill.continue", "text": "DEVAM", "src": "CONTINUE"},
+{"key": "build.bill.continue", "text": "DEVAM ET", "src": "CONTINUE"},
 {"key": "build.bill.head", "text": "SON SİPARİŞ", "src": "LAST CALL"},
 {"key": "build.dayend.called", "text": "SON SİPARİŞ SAATİ", "src": "THAT'S LAST CALL"},
 {"key": "build.dayend.called_sub", "text": "kapılar kapandı · para sayılıyor", "src": "doors shut · counting the money"},

@@ -708,8 +708,20 @@ namespace LastCall.UI
             // the pack's plate now, repainted on the amber ramp like every primary key, with the pack's own NEXT
             // chevron, pressing and lighting blue the way the menu's keys do. Still named BillNext: the suite finds it.
             _billNext = PackWordKey(_dayEndPanel, "BillNext", UIText.T("build.bill.continue"), "next", MenuPack.Tone.Orange,
-                new Vector2(0.5f, 0.5f), new Vector2(300f, 56f), Vector2.zero, OnDayEndAdvance, 300f, 60f);
+                new Vector2(0.5f, 0.5f), new Vector2(300f, BillKeyH), Vector2.zero, OnDayEndAdvance, 300f, 60f);
             _billNextLabel = _billNext.Find("Face/Label").GetComponent<Text>();
+            // ...IN THE SCREEN'S OWN COLOURS (2026-09-25, the author's eleventh list: "Fatura ekranındaki go to the order
+            // butonunu 'devam et' ile değiştir ve buton tasarımını ve renklerini oyunumuzun renk paletine göre seç").
+            // Amber is the stars' and the till's colour on this screen, and an amber slab under the paper read as one
+            // more figure on it. The key keeps the house key's drawing and manners - the pack's plate, lit blue under
+            // the pointer, pressed in - cut from the colours the two boards beside the slip are framed in: the pack's
+            // four inks (outline, the shadow row, the face, the corner glints) land on night, a plum a step under the
+            // face, a berry face and the boards' own pink.
+            var berry = new[] { UITheme.Night[0], UITheme.Magenta[0], UITheme.Magenta[1], UITheme.Magenta[3], UITheme.Magenta[4] };
+            var berryInk = MenuPack.WordOn(berry);
+            _billNext.GetComponent<PackKey>().Refit(MenuPack.Plate("bill_berry", berry, false), MenuPack.Hovered(),
+                MenuPack.Plate("bill_berry", berry, true), berryInk, Color.Lerp(berryInk, Color.white, 0.35f));
+            _billNextLabel.color = berryInk;
 
             // The slip is the night's money; these two are the night's PLACE — where it sits
             // in the week, and what it did to the bar. See the block above RebuildDayEnd.

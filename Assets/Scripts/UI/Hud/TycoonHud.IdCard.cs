@@ -827,24 +827,21 @@ namespace LastCall.UI
             // the screen (TycoonHud.Note). Shown faint while the tip still follows - it cannot be reached then - and
             // whole once the tip holds still, which is when the pointer can be carried onto it. A 22-unit key round
             // the 12-unit pin, so it is a thing to press rather than a pixel to hunt.
-            var pinKey = NewRect("PinKey", _idRecipeTip);
-            pinKey.anchorMin = pinKey.anchorMax = pinKey.pivot = new Vector2(1, 1);
-            pinKey.sizeDelta = new Vector2(22f, 22f);
-            pinKey.anchoredPosition = new Vector2(-1f, -1f);
-            _idTipPinHit = pinKey.gameObject.AddComponent<Image>();
-            _idTipPinHit.color = new Color(1f, 1f, 1f, 0f);
-            _idTipPinHit.raycastTarget = true;
-            var pinButton = pinKey.gameObject.AddComponent<Button>();
-            pinButton.transition = Selectable.Transition.None;
-            pinButton.onClick.AddListener(PinRecipeFromCard);
-            var pin = NewRect("Pin", pinKey);
-            pin.anchorMin = pin.anchorMax = pin.pivot = new Vector2(0.5f, 0.5f);
-            pin.sizeDelta = new Vector2(12, 12);
-            pin.anchoredPosition = Vector2.zero;
-            _idTipPin = pin.gameObject.AddComponent<Image>();
+            // ...A KEY OF THE HOUSE'S OWN (the same day, the author: "Kimlikteki kokteyl hoverinin pinlenmesi için bir
+            // buton koy ve buton basıldığında içeri göçen butonlardan olsun escde kullandıklarımızdan olabilir"). The
+            // 22-unit hit round a faint 12-unit pin did not read as a button at all. It is the pause menu's own icon
+            // key now (PackIconKey: the pack's plate at 2x, lit club blue under the pointer, sunk two units while
+            // pressed), in the menu's amber, with the pin at 2x on it - whole from the moment the tip opens, and
+            // pressable once the tip holds still (it follows the pointer until then, so it cannot be reached).
+            var pinKey = PackIconKey(_idRecipeTip, "PinKey", "play", MenuPack.Tone.Orange, new Vector2(1, 1),
+                                     new Vector2(-6f, -6f), PinRecipeFromCard);
+            _idTipPinHit = pinKey.GetComponent<Image>();
+            _idTipPin = pinKey.Find("Face/Glyph").GetComponent<Image>();
             _idTipPin.sprite = IdArt.PinMark();
-            _idTipPin.color = UITheme.ViceRed[3];
-            _idTipPin.raycastTarget = false;
+            var pinRt = _idTipPin.rectTransform;
+            pinRt.anchorMin = pinRt.anchorMax = pinRt.pivot = new Vector2(0.5f, 0.5f);
+            pinRt.sizeDelta = new Vector2(24f, 24f);          // the 12-pixel pin at 2x, as the pack's glyphs are
+            pinRt.anchoredPosition = Vector2.zero;
             _idTipGroup = _idRecipeTip.gameObject.AddComponent<CanvasGroup>();
             _idTipGroup.alpha = 0f;
             _idRecipeTip.gameObject.SetActive(false);
@@ -923,12 +920,9 @@ namespace LastCall.UI
                 float k = _idTipPinned ? 1f : Mathf.Clamp01(_idTipRest / IdPinAfter);
                 _idTipBarRt.sizeDelta = new Vector2(full * k, 3f);
                 _idTipBar.enabled = k > 0.02f;
-                // On a recipe the pin is always there - faint while the tip follows, whole once it holds - because it
-                // is the key to the note; on the card's other tips it keeps its old meaning, the tip holding still.
+                // On a recipe the pin key is always there, whole (2026-09-25) - it is the key to the note; it takes the
+                // press once the tip holds still. Its colours are the key's own (PackKey), rest, lit and pressed.
                 bool recipe = _idTipFor != null && _idTipFor.Kind == IdTipKind.Recipe;
-                _idTipPin.enabled = recipe || _idTipPinned;
-                var pinInk = UITheme.ViceRed[3];
-                _idTipPin.color = new Color(pinInk.r, pinInk.g, pinInk.b, _idTipPinned ? 1f : 0.4f);
                 if (_idTipPinHit != null) _idTipPinHit.raycastTarget = recipe && _idTipPinned;
             }
 
@@ -995,7 +989,8 @@ namespace LastCall.UI
             try { asks = _idVisit?.Order?.Garnishes; }
             catch (InvalidOperationException) { asks = null; }
             string whose = ((_idFirst != null ? _idFirst.text : "") + " " + (_idSurname != null ? _idSurname.text : "")).Trim();
-            PinNote(r, asks, whose);
+            PinNote(r, asks, whose, _idVisit);      // the note knows whose drink it is, and goes when it is served
+            Sfx.Play("bill_slip", 0.45f);            // the slip torn off and stuck up (2026-09-25)
             HideIdTip(true);
         }
 

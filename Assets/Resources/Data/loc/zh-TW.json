@@ -1455,7 +1455,7 @@
     {"key": "dayend.bill.fines", "text": "罰款 · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "再一天赤字，酒吧就得關門", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "淨利", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "前往訂貨", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "繼續", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "支出", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "房租", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "營業額", "src": "SALES"},

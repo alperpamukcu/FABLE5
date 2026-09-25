@@ -1886,6 +1886,70 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
   musluk ile ağzın sağında, 18 birim payla duruyor (r224).
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
+
+### 9.118 · On birinci liste (1/…): duran ayarlar, tek satırlık post-it, teslimde solan not, iğne tuşu, DEVAM ET, ışık, tin'de dereceler, sesler, ikinci set (2026-09-25)
+
+Yazar: “Settings açıldığında oyun durmalı … Kimlikteki kokteyl hoverinin pinlenmesi için bir buton koy ve buton
+basıldığında içeri göçen butonlardan olsun … Postit sayfa düzenini düzelt alkol isimleri ile dereceleri aynı
+yükseklikte olmalı. Postitler biraz yukarı taşınsın … Sipariş teslim edildikten sonra otomatik olarak fade şekilde
+yok olarak ekrandan postit kalksın. Fatura ekranındaki go to the order butonunu ‘devam et’ ile değiştir.”
+
+- **Ayarlar geceyi durduruyor:** ESC menüsünden açılınca gece zaten tutuluyordu. Üst barın dişlisinden açılınca
+  gece arkada tam hızla sürüyordu, sabır dahil. Pencere artık saati merdiven penceresinin yaptığı gibi tutuyor
+  (`_settingsHeldClock`) ve yalnız kendi aldığı tutuşu bırakıyor.
+- **Post-it:** her döküm tek satır, isim ile beş nokta (ya da yüzde) aynı yükseklikte (`WorkCardRowPitch = 34`,
+  `BookPourRows`'un tek satır yolu). Not 336 genişlikte, yani GRENADINE ve TRIPLE SEC noktaların yanına sığıyor.
+  Not 104 yerine 64 aşağıda, üst barın hemen altında. Sipariş balonunun ipucu aynı iş kartını kullanıyor, o da
+  tek satır. Lisansın tarif kartı menünün 48'lik iki satırında kaldı.
+- **Teslimde solan not:** not artık hangi müşterinin siparişi olduğunu biliyor (`PinNote(…, visit)`). O müşteri
+  bu siparişi beklemeyi bırakınca, yani servis edilince, ikinci tur açılınca (`ExtraOrdersTaken` değişir) ya da
+  gidince, 0,6 sn bekleyip 0,8 sn'de solarak kalkıyor.
+- **İğne tuşu:** tarif kartının sağ üstündeki 22 birimlik, soluk 12 piksellik iğne düğme gibi okunmuyordu. Artık
+  ESC menüsünün kendi ikon tuşu (`PackIconKey`, amber). Üstüne gelince kulüp mavisi, basınca iki birim içeri
+  göçüyor, üstünde iğne 2x. Kart açıldığı andan itibaren tam görünüyor, kart durunca basılabiliyor.
+- **DEVAM ET:** faturanın “GO TO THE ORDER / SİPARİŞE GEÇ” tuşu artık “CONTINUE / DEVAM ET”. Her dil,
+  tablosunda zaten olan “devam” kelimesini aldı (`build.bill.continue`).
+  Tuşun rengi de değişti: bu ekranda amber yıldızların ve kasanın rengi, fişin altındaki amber levha bir rakam
+  daha gibi okunuyordu. Tuş evin tuşu olarak kaldı (paketin plakası, işaretçi altında mavi, basınca içeri göçüyor).
+  Renkleri fişin iki yanındaki panoların çerçevesinden alındı: paketin dört mürekkebi (dış çizgi, gölge satırı,
+  yüz, köşe parıltıları) gece siyahına, yüzün bir adım altındaki mürdüme, böğürtlen bir yüze ve panoların
+  pembesine düşüyor. Boyu 56'dan 48'e indi. Başı yırtığın 4 altında, ayağı ekranın 8 üstünde; 56'dayken ekranın
+  son iki satırına basıyor, kesik gibi okunuyordu.
+- **Pencereden düşen ışık:** yazar “ortadaki iki şeridi kopyala yan yana koy, en kenardaki iki şeridi kaldır”
+  dedi. Dört camın hepsi zaten çiziliyordu, ama 156 genişlikteki doku, 0,5'lik eğimle kenardaki iki camı kendi
+  sınırında kesiyordu. Duvarda yalnız ortadaki ikisi tamdı, kenardakiler yarım şerit gibi okunuyordu. Doku 188
+  genişlikte (`SunShaftCookie`): dört cam da tam, ortadaki çiftin kopyası yanında. Duvardaki yer ve boy aynı.
+- **Işık ampulün kendisinden** (`DiegeticStage.BulbOf`): yazar “görseldeki ampul nerede bak, o ampulün yayacağı
+  ışığa göre sahneyi ışıklandır” dedi. Eski ölçü ampulü şapkanın ağzının altındaki en geniş satır sayıyordu.
+  Yazarın yeniden çizdiği pirinç şapkada bu şapkanın parlak kenarı (41 piksel), camın kendisi ise 13 piksel.
+  Koni üç kat geniş çıkıyor, tepesi kabloya yakın duruyordu. Artık lambadaki tek KREM şey aranıyor: parlak ve
+  doygun olmayan pikseller, yani opal küre, koninin altındaki ampul ya da çanın aydınlık ağzı. En alttaki aydınlık
+  satırdan yukarı, genişlik düzgün arttığı sürece gidiliyor; şapka kenarına sıçrayınca duruluyor. Spot ampulün
+  merkezinin (x ve y) bir kaldırma üstüne asılıyor, havadaki ışık da camdan başlıyor. Krem çizilmemiş lambalar
+  eski ışık çizgisinde kalıyor. Sahnenin ışık tarzı (renk, güç, havuz) aynı.
+- **Tin'de dereceler** (`FillGauge`): yazar “kokteyl yaptığımız ekranda hangi alkolden ne kadar koyduğumuz
+  derece renkleri ile tin'in içerisinde gözüksün” dedi. Tin'deki her bant, post-it'in ve kitabın o şişe için
+  bastığı beş noktayı taşıyor. Noktalar, şişenin İÇKİDEKİ payının kutusuna kadar kutuların kendi renkleriyle
+  yanıyor (kırmızı → koyu yeşil, `BandBoxColors`). Tin notla sayarak karşılaştırılıyor. Göstergenin kendi 1x
+  ölçeğinde ve dar tabanına sığan boy kullanılıyor (`RatioDots(…, 4, 2)`, 50×9; 3 yarıçap ölçüldü, zerre gibi okundu). 11 birimden ince bant
+  noktasız kalıyor, büyüyünce noktaları geliyor.
+- **Sessiz kalan yerlere ses:** tarifi nota iğnelemek (`bill_slip`), notu X ile kaldırmak ve Escape'le
+  kimliği kapatmak (`id_card_away`), dersin ve son müşterinin satır tuşu (`key_press`), BU GECE HAYIR
+  (`deny`), defterin açılıp kapanması (`book_open` / `book_close`, Escape de aynı kapıdan), azaltılmış
+  harekette sayfa çevirmek (`page_turn`), Escape'le kapanan kılavuz ve geliştirici paneli (`menu_close`),
+  müşterinin sabrı sarıya dönerken (`patience_warn`). Menü paketinin her tuşu işaretçi altında, odanın
+  proplarıyla aynı kısa aralıkla “tık” diyor (`PackKey`, `hover`).
+- **İkinci set müzik** (`Tools/music_synth.py`): yazar “aynı tema biraz daha jazz 80'ler disco tarzında” dedi.
+  Aynı synth'ler (pad, FM piyano, arp, gated snare) o yılların gece radyosunun çaldığı gibi çalınıyor. Caz
+  tarafında swing sekizlikler, ride ve fırça, yürüyen kontrbas (birde kök, akor tonu ve gam adımı, dörtte
+  yarım ses yaklaşım), köksüz dokuzlu piyano ve nefesli kamış lead var. Disko tarafında dörtlü kick ve tef,
+  oktav zıplayan bas, her bölüme bir oktav alttan süpürülen yaylılar ve bras vuruşları var. Beş şarkı listelerin
+  sonuna eklendi: AFTER HOURS SWING (`night_6`, E♭'de ii-V-I-vi), GLITTER FLOOR (`night_7`, Mi minörde disko),
+  SIDE STREET FUNK (`night_8`, Fa'da şehir funk'ı), BOOTH IN THE BACK (`lastcall_2`, fırçalı yavaş caz),
+  COUNTING TIPS (`dayend_3`, hafif disko). İlk set sırasını koruyor. Liste geceden geceye yerini tuttuğu için
+  gece bunlara ilk setten sonra geliyor; oynatıcının SONRAKİ tuşu doğrudan atlatıyor. Hepsi -18 LUFS. İlk
+  çizimde GLITTER FLOOR enerjisinin %78'ini 120 Hz altına koydu (ilk disko şarkısı %56), çünkü her vuruştaki
+  kick ile oktav bas üst üste biniyordu. Kick 0,5'e, funk bası 0,105'e indirildi; yaylılar ve bras 0,036 / 0,034.
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,

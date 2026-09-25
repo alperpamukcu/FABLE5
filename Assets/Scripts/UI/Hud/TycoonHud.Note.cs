@@ -74,7 +74,10 @@ namespace LastCall.UI
             }
 
             if (run == null) return y;
-            y += BookPourRows(host, r, run, width, y, CardRowPitch, locked: false);   // the book's two lines, 2026-09-25
+            // ONE LINE A POUR (2026-09-25, the author: "Postit sayfa düzenini düzelt alkol isimleri ile dereceleri aynı
+            // yükseklikte olmalı"): the name and its five dots (or its share) side by side on one line, at a pitch
+            // under the one where BookPourRows keeps two - the book's pages keep their two lines.
+            y += BookPourRows(host, r, run, width, y, WorkCardRowPitch, locked: false);
 
             if (r.MinFill > 0)
             {
@@ -93,9 +96,22 @@ namespace LastCall.UI
         // until its X is pressed, and lets itself go when the night it was written for closes (a note from last
         // night over tomorrow's market is litter).
 
-        private const float NoteW = 280f, NotePad = 12f, NoteTop = 104f, NoteRight = 12f;
+        // 336 wide and 64 down since 2026-09-25 (the author: "Postitler biraz yukarı taşınsın", and the names beside
+        // their dots): at 280 a GRENADINE or a TRIPLE SEC beside the dots had no room left; the note now hangs just
+        // under the top bar instead of 104 down.
+        private const float NoteW = 336f, NotePad = 12f, NoteTop = 64f, NoteRight = 12f;
+        /// <summary>The work card's pours, one line each (see DrawWorkCard).</summary>
+        private const float WorkCardRowPitch = 34f;
         private RectTransform _note, _noteBody;
         private int _noteDay = -1;
+        // GONE WITH ITS DRINK (2026-09-25, the author: "Sipariş teslim edildikten sonra otomatik olarak fade şekilde yok
+        // olarak ekrandan postit kalksın"): the note knows whose order it is, and once that customer is no longer waiting
+        // for it - served, or gone - it fades out on its own.
+        private CustomerVisit _noteVisit;
+        private int _noteRound;                         // the visit's ExtraOrdersTaken when it was pinned
+        private CanvasGroup _noteGroup;
+        private float _noteFade = -1f;                  // -1: standing; 0..1: fading out
+        private const float NoteFadeSeconds = 0.8f, NoteFadeDelay = 0.6f;
 
         /// <summary>The note's canvas order: over the bench (25), the licence (26) and the book (27); under the
         /// pause menu and the settings (29) and the curtain and the toast (30).</summary>
@@ -111,6 +127,7 @@ namespace LastCall.UI
             canvas.overrideSorting = true;
             canvas.sortingOrder = NoteSortingOrder;
             _note.gameObject.AddComponent<ForgivingRaycaster>();
+            _noteGroup = _note.gameObject.AddComponent<CanvasGroup>();
 
             // Its shadow on whatever it is stuck over, then the paper - a post-it's pale amber, framed a step darker
             // - and a strip of tape across its head.
@@ -157,7 +174,7 @@ namespace LastCall.UI
             hit.raycastTarget = true;
             var key = close.gameObject.AddComponent<Button>();
             key.transition = Selectable.Transition.None;
-            key.onClick.AddListener(CloseNote);
+            key.onClick.AddListener(() => { if (Showing(_note)) Sfx.Play("id_card_away", 0.45f); CloseNote(); });
             var x = NewRect("X", close);
             x.anchorMin = x.anchorMax = x.pivot = new Vector2(0.5f, 0.5f);
             x.sizeDelta = new Vector2(16f, 16f);
@@ -171,7 +188,8 @@ namespace LastCall.UI
         }
 
         /// <summary>Pins the drink to the note, replacing whatever was pinned: one note, the drink being made.</summary>
-        private void PinNote(RecipeDefinition r, IReadOnlyList<PreparationDefinition> asks, string whose)
+        private void PinNote(RecipeDefinition r, IReadOnlyList<PreparationDefinition> asks, string whose,
+                             CustomerVisit visit = null)
         {
             if (_note == null || r == null) return;
             float inner = NoteW - NotePad * 2f;
@@ -182,6 +200,10 @@ namespace LastCall.UI
             _note.sizeDelta = new Vector2(NoteW, h + NotePad * 2f);
             foreach (var g in _noteBody.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
             _noteDay = Run != null ? Run.Day : -1;
+            _noteVisit = visit;
+            _noteRound = visit != null ? visit.ExtraOrdersTaken : 0;
+            _noteFade = -1f;
+            if (_noteGroup != null) { _noteGroup.alpha = 1f; _noteGroup.blocksRaycasts = true; }
             _note.gameObject.SetActive(true);
             _note.SetAsLastSibling();
         }
@@ -197,7 +219,20 @@ namespace LastCall.UI
         {
             if (_note == null || !_note.gameObject.activeSelf) return;
             var run = Run;
-            if (run == null || run.Day != _noteDay || run.Phase != TycoonPhase.DayOpen) CloseNote();
+            if (run == null || run.Day != _noteDay || run.Phase != TycoonPhase.DayOpen) { CloseNote(); return; }
+            // Its customer is no longer waiting for this drink: a short beat (the serve's own moment), then it fades.
+            // (a second round keeps them Waiting with a new order: the round count moving is the serve too)
+            if (_noteFade == -1f && _noteVisit != null
+                && (_noteVisit.State != VisitState.Waiting || _noteVisit.ExtraOrdersTaken != _noteRound))
+                _noteFade = -NoteFadeDelay / NoteFadeSeconds;     // counts up through the delay, then the fade
+            if (_noteFade == -1f) return;
+            _noteFade += Time.unscaledDeltaTime / NoteFadeSeconds;
+            if (_noteGroup != null)
+            {
+                _noteGroup.alpha = Mathf.Clamp01(1f - _noteFade);
+                _noteGroup.blocksRaycasts = _noteFade < 0.5f;
+            }
+            if (_noteFade >= 1f) CloseNote();
         }
     }
 }

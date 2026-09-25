@@ -11,7 +11,7 @@
 {"key": "dayend.bill.fines", "text": "BØDER · {reason}", "src": "FINES · {reason}"},
 {"key": "dayend.bill.last_strike", "text": "én rød dag mere, så lukker baren", "src": "one more red day closes the bar"},
 {"key": "dayend.bill.net", "text": "NETTO", "src": "NET"},
-{"key": "dayend.bill.next", "text": "GÅ TIL BESTILLING", "src": "GO TO THE ORDER"},
+{"key": "dayend.bill.next", "text": "FORTSÆT", "src": "CONTINUE"},
 {"key": "dayend.bill.paid_out", "text": "UDBETALT", "src": "PAID OUT"},
 {"key": "dayend.bill.rent", "text": "HUSLEJE", "src": "RENT"},
 {"key": "dayend.bill.sales", "text": "SALG", "src": "SALES"},

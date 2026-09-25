@@ -13,7 +13,7 @@
     {"key": "dayend.bill.fines", "text": "AMENZI · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "încă o zi pe minus și barul se închide", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "NET", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "MERGI LA COMANDĂ", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "CONTINUĂ", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "PLĂTIT", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "CHIRIE", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "VÂNZĂRI", "src": "SALES"},

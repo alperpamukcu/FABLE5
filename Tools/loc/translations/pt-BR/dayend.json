@@ -11,7 +11,7 @@
 {"key": "dayend.bill.fines", "text": "MULTAS · {reason}"},
 {"key": "dayend.bill.last_strike", "text": "mais um dia no vermelho fecha o bar"},
 {"key": "dayend.bill.net", "text": "LÍQUIDO"},
-{"key": "dayend.bill.next", "text": "IR PARA O PEDIDO"},
+{"key": "dayend.bill.next", "text": "CONTINUAR"},
 {"key": "dayend.bill.paid_out", "text": "SAIU"},
 {"key": "dayend.bill.rent", "text": "ALUGUEL"},
 {"key": "dayend.bill.sales", "text": "VENDAS"},

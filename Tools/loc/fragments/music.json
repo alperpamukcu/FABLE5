@@ -47,6 +47,31 @@
       "note": "Title of the second day's-end song (player and hover tip). ~16 characters."
     },
     {
+      "key": "music.night_6",
+      "text": "AFTER HOURS SWING",
+      "note": "Title of the sixth night song, a swung jazz tune (player and hover tip). Song titles stay in capitals; ~18 characters."
+    },
+    {
+      "key": "music.night_7",
+      "text": "GLITTER FLOOR",
+      "note": "Title of the seventh night song, an 80s disco tune (player and hover tip). ~16 characters."
+    },
+    {
+      "key": "music.night_8",
+      "text": "SIDE STREET FUNK",
+      "note": "Title of the eighth night song, a jazz-funk tune (player and hover tip). ~16 characters."
+    },
+    {
+      "key": "music.lastcall_2",
+      "text": "BOOTH IN THE BACK",
+      "note": "Title of the second last-call song, a slow jazz ballad (player and hover tip). ~18 characters."
+    },
+    {
+      "key": "music.dayend_3",
+      "text": "COUNTING TIPS",
+      "note": "Title of the third day's-end song, a light disco tune (player and hover tip). ~16 characters."
+    },
+    {
       "key": "build.player.place",
       "text": "{mood} · {at} / {of}",
       "note": "Second line of the top bar's music player, under the song's title: which mood's list and the song's place in it. {mood} = NIGHT / LAST CALL / STORY / DAY'S END (build.player.mood_*), {at} and {of} = digits. One line, 8px body face, ~16 characters."

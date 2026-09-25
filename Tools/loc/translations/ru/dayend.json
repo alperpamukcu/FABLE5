@@ -12,7 +12,7 @@
 {"key": "dayend.bill.fines", "text": "ШТРАФЫ · {reason}", "src": "FINES · {reason}"},
 {"key": "dayend.bill.last_strike", "text": "ещё один день в минусе — и бар закроют", "src": "one more red day closes the bar"},
 {"key": "dayend.bill.net", "text": "ИТОГ", "src": "NET"},
-{"key": "dayend.bill.next", "text": "К ЗАКАЗУ", "src": "GO TO THE ORDER"},
+{"key": "dayend.bill.next", "text": "ДАЛЕЕ", "src": "CONTINUE"},
 {"key": "dayend.bill.paid_out", "text": "РАСХОД", "src": "PAID OUT"},
 {"key": "dayend.bill.rent", "text": "АРЕНДА", "src": "RENT"},
 {"key": "dayend.bill.sales", "text": "ПРОДАЖИ", "src": "SALES"},

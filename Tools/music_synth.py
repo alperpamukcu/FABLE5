@@ -20,6 +20,10 @@ HOW IT SOUNDS 80s WITHOUT A SINGLE SAMPLE
   the mix      the kick ducks the bass, pad and arp (sidechain); a chorus widens the pad and the piano; a hall
                reverb and the delay are sends; the master is a static EQ, a slow glue compressor and tape-like
                saturation. Loudness is set to -18 LUFS on export, like every other music file in the game
+  second set   (2026-09-25, the author: "ayni tema biraz daha jazz 80ler disco tarzinda") the same synths played the
+               way the decade's late-night radio did. Jazz: swung eighths, a ride and brushes, an upright walking bass,
+               rootless ninth chords comped on the piano and a breathy reed lead. Disco: four on the floor with a
+               tambourine, an octave-popping bass, a string section swept up into each section, and brass stabs
   the writing  diatonic seventh chords voiced for the smallest movement from the last; a lead built from a
                two-bar motif (A A' B A-end) on the key's pentatonic, snapped to chord tones on the strong beats;
                sections switch parts in and out (intro, verse, chorus, break, outro) and open the filters as they go
@@ -327,6 +331,23 @@ def crash_sample():
     return _norm(fft_filter(noise(n, 19), lo=4000.0, hi=14000.0) * np.exp(-t / 1.1).astype(F32))
 
 
+def ride_sample():
+    """A ride cymbal: a bright wash with a few inharmonic partials ringing through it - the jazz time-keeper."""
+    n = int(1.6 * SR)
+    t = np.arange(n) / SR
+    wash = fft_filter(noise(n, 20), lo=3500.0, hi=12000.0) * np.exp(-t / 0.5).astype(F32)
+    ping = sum(np.sin(2.0 * np.pi * f * t) * a for f, a in ((3170.0, 1.0), (4290.0, 0.7), (5530.0, 0.5), (6970.0, 0.35)))
+    return _norm(0.55 * wash + (0.22 * ping * np.exp(-t / 0.4)).astype(F32))
+
+
+def brush_sample():
+    """A brush across the snare's head: a swell of mid noise, no crack."""
+    n = int(0.3 * SR)
+    t = np.arange(n) / SR
+    env = np.clip(t / 0.035, 0.0, 1.0) * np.exp(-t / 0.11)
+    return _norm(fft_filter(noise(n, 21), lo=1500.0, hi=7000.0) * env.astype(F32))
+
+
 _KIT = None
 
 
@@ -334,7 +355,7 @@ def kit():
     global _KIT
     if _KIT is None:
         _KIT = dict(kick=kick_sample(), snare=snare_sample(), clap=clap_sample(), hat=hat_sample(), ohat=hat_sample(True),
-                    shaker=shaker_sample(), rim=rim_sample(), crash=crash_sample(),
+                    shaker=shaker_sample(), rim=rim_sample(), crash=crash_sample(), ride=ride_sample(), brush=brush_sample(),
                     toms=[tom_sample(f) for f in (190.0, 150.0, 118.0, 92.0)])
     return _KIT
 
@@ -372,6 +393,57 @@ def voice(tones, prev, low, high):
             if score < best_score:
                 best, best_score = notes, score
     return best or [low + (p - low) % 12 for p in pcs]
+
+
+def swung(pos, swing):
+    """A position in beats with its off-grid notes pushed late. `swing` is (unit, ratio): (0.5, 0.64) swings the
+    eighths the way jazz does, (0.25, 0.55) the sixteenths the way a disco rhythm section leans; None is straight."""
+    if not swing:
+        return pos
+    unit, ratio = swing
+    k = pos / unit
+    ki = int(round(k))
+    if abs(k - ki) > 1e-6 or ki % 2 == 0:
+        return pos
+    return (ki - 1) * unit + 2.0 * unit * ratio
+
+
+def walk_line(key, mode, tones, next_root, two=False):
+    """One bar of walking bass: the root on one, a chord tone and a scale step heading for the next chord, and a
+    half step into it on four. `two` is the ballad's two-feel: the root held, the fifth on three, the approach on four.
+    Events are (beat, length, midi, velocity)."""
+    root = 36 + ((tones[0] - 36) % 12)
+    near = 36 + ((next_root - 36) % 12)
+    target = min((c for c in (near - 12, near) if c >= 31), key=lambda c: abs(c - root))
+    approach = target - 1 if target > root else target + 1
+    cpcs = {t % 12 for t in tones}
+    chord_pool = [p for p in range(31, 53) if p % 12 in cpcs and p != root]
+    if two:
+        # the chord tone halfway between the root and the approach, so the line steps rather than leaps
+        mid = min((p for p in chord_pool if p != approach), key=lambda p: (abs(p - (root + approach) / 2.0), p))
+        return [(0.0, 2.0, root, 0.9), (2.0, 1.0, mid, 0.75), (3.0, 1.0, approach, 0.65)]
+    span = approach - root
+    up = span >= 0
+    scale = {(key + st) % 12 for st in MODES[mode]}
+    scale_pool = [p for p in range(31, 53) if p % 12 in scale]
+    want1 = root + span / 3.0 if abs(span) >= 3 else root + (4 if up else -3)
+    b1 = min(chord_pool, key=lambda p: (abs(p - want1), p))
+    want2 = root + 2.0 * span / 3.0 if abs(span) >= 3 else b1 + (3 if up else -2)
+    b2 = min((p for p in scale_pool if p not in (b1, approach)), key=lambda p: (abs(p - want2), p))
+    return [(0.0, 1.0, root, 1.0), (1.0, 1.0, b1, 0.8), (2.0, 1.0, b2, 0.85), (3.0, 1.0, approach, 0.8)]
+
+
+# The piano's comping figures, (beat, length, velocity): jazz picks one a bar, disco alternates its two.
+JAZZ_COMP = [
+    [(0.0, 1.4, 0.6), (1.5, 0.8, 0.5)],          # the Charleston
+    [(1.0, 0.5, 0.45), (2.5, 1.2, 0.55)],
+    [(0.0, 0.9, 0.55), (3.5, 0.9, 0.5)],         # pushed into the next bar
+    [(0.5, 0.4, 0.45), (2.0, 1.4, 0.55)],
+]
+DISCO_COMP = [
+    [(0.5, 0.25, 0.6), (1.5, 0.25, 0.55), (2.5, 0.25, 0.6), (3.5, 0.25, 0.55)],
+    [(0.5, 0.25, 0.6), (1.5, 0.25, 0.55), (2.25, 0.25, 0.5), (2.5, 0.25, 0.6), (3.5, 0.5, 0.6)],
+]
 
 
 LEAD_RHYTHMS = [      # (start beat, length) within a bar
@@ -476,7 +548,15 @@ PATTERNS = {
     'disco': dict(kick=[0, 4, 8, 12], kick_odd=[0, 4, 8, 12], snare=[4, 12], clap=[4, 12], hat=[1, 3, 5, 7, 9, 11, 13, 15],
                   ohat=[2, 6, 10, 14]),
     'soft': dict(kick=[0, 8], kick_odd=[0, 8], rim=[4, 12], shaker=list(range(16))),
+    # the second set: the jazz kit (a feathered kick, the ride's ding ding-a ding, the hat's foot on two and four, a
+    # ghosted snare comping), the ballad's brushes, the disco's tambourine over four on the floor, and the city funk
+    'jazz': dict(kick=[0, 8], kick_odd=[0, 8], ride=[0, 4, 6, 8, 12, 14], foot=[4, 12], comp=True),
+    'brush': dict(kick=[0], kick_odd=[0], brush=[0, 2, 4, 6, 8, 10, 12, 14], ride=[0, 4, 6, 8, 12, 14], foot=[4, 12]),
+    'nudisco': dict(kick=[0, 4, 8, 12], kick_odd=[0, 4, 8, 12], snare=[4, 12], clap=[4, 12],
+                    hat=[0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15], ohat=[2, 6, 10, 14], shaker=list(range(16))),
+    'funk': dict(kick=[0, 7, 8], kick_odd=[0, 6, 10], snare=[4, 12], hat=list(range(16)), ohat=[14]),
 }
+KICK_GAIN = {'soft': 0.42, 'jazz': 0.16, 'brush': 0.12, 'nudisco': 0.5}
 
 
 def render_song(spec, max_bars=None, log=print):
@@ -485,6 +565,8 @@ def render_song(spec, max_bars=None, log=print):
     beat = 60.0 / bpm
     bar = 4.0 * beat
     bars = plan(spec, max_bars)
+    sw = spec.get('swing')           # None: straight
+    duck = spec.get('duck', 1.0)     # how hard the kick pumps the rest; a jazz kick does not
     mix = Mix(len(bars) * bar + 4.0)
     times = np.array([j * bar for j in range(len(bars))] + [len(bars) * bar])
     opens = np.array([b['open'] for b in bars] + [bars[-1]['open']])
@@ -494,8 +576,8 @@ def render_song(spec, max_bars=None, log=print):
 
     chords = [chord(key, mode, b['degree'], 4) for b in bars]
     pads, prev = [], None
-    for c in chords:
-        prev = voice(c, prev, 50, 76)
+    for b in bars:
+        prev = voice(chord(key, mode, b['degree'], spec.get('pad_size', 4)), prev, 50, 76)
         pads.append(prev)
     kicks = []
     clock = time.time()
@@ -510,30 +592,43 @@ def render_song(spec, max_bars=None, log=print):
                 continue
             t0 = j * bar
             fill = b['i'] == b['count'] - 1 and 'drums' in b['next'] and b['count'] >= 8
-            if b['i'] == 0 and style != 'soft':
+            if b['i'] == 0 and style not in ('soft', 'jazz', 'brush'):
                 put(drums, K['crash'], t0, 0.3, 0.16)
+
+            def at(s):
+                return t0 + swung(s / 4.0, sw) * beat
+
             for s in (P['kick_odd'] if j % 2 else P['kick']):
                 if fill and s >= 8:
                     continue
-                put(drums, K['kick'], t0 + s * beat / 4.0, 0.0, 0.6 if style != 'soft' else 0.42)
-                kicks.append(t0 + s * beat / 4.0)
+                put(drums, K['kick'], at(s), 0.0, KICK_GAIN.get(style, 0.6))
+                kicks.append(at(s))
             for s in P.get('snare', []):
                 if not (fill and s >= 8):
-                    put(drums, K['snare'], t0 + s * beat / 4.0, -0.05, 0.42)
+                    put(drums, K['snare'], at(s), -0.05, 0.42)
             for s in P.get('clap', []):
-                put(drums, K['clap'], t0 + s * beat / 4.0, 0.1, 0.22)
+                put(drums, K['clap'], at(s), 0.1, 0.22)
             for s in P.get('rim', []):
-                put(drums, K['rim'], t0 + s * beat / 4.0, -0.2, 0.2)
+                put(drums, K['rim'], at(s), -0.2, 0.2)
             for s in P.get('hat', []):
-                put(drums, K['hat'], t0 + s * beat / 4.0, 0.3, (0.24 if s % 4 == 0 else 0.16) * float(rng.uniform(0.85, 1.0)))
+                put(drums, K['hat'], at(s), 0.3, (0.24 if s % 4 == 0 else 0.16) * float(rng.uniform(0.85, 1.0)))
             for s in P.get('ohat', []):
-                put(drums, K['ohat'], t0 + s * beat / 4.0, 0.35, 0.15)
+                put(drums, K['ohat'], at(s), 0.35, 0.15)
             for s in P.get('shaker', []):
-                put(drums, K['shaker'], t0 + s * beat / 4.0, 0.25, (0.14 if s % 2 == 0 else 0.09) * float(rng.uniform(0.8, 1.0)))
+                put(drums, K['shaker'], at(s), 0.25, (0.14 if s % 2 == 0 else 0.09) * float(rng.uniform(0.8, 1.0)))
+            for s in P.get('ride', []):
+                put(drums, K['ride'], at(s), 0.4, (0.16 if s % 4 == 0 else 0.1) * float(rng.uniform(0.85, 1.0)))
+            for s in P.get('foot', []):
+                put(drums, K['hat'], at(s), 0.3, 0.07)
+            for s in P.get('brush', []):
+                put(drums, K['brush'], at(s), -0.15, 0.16 if s % 4 == 0 else 0.08)
+            if P.get('comp'):
+                for pos in rng.choice([0.5, 1.5, 2.5, 3.5, 1.0, 3.0], size=int(rng.integers(1, 3)), replace=False):
+                    put(drums, K['snare'], t0 + swung(float(pos), sw) * beat, -0.1, 0.05 + 0.04 * float(rng.uniform()))
             if fill:
                 for k, s in enumerate((8, 10, 12, 14)):
-                    put(drums, K['toms'][k], t0 + s * beat / 4.0, -0.4 + 0.25 * k, 0.4)
-                if style == 'disco':
+                    put(drums, K['toms'][k], at(s), -0.4 + 0.25 * k, 0.2 if style in ('jazz', 'brush') else 0.4)
+                if style in ('disco', 'nudisco'):
                     for k, s in enumerate((12, 13, 14, 15)):
                         put(drums, K['snare'], t0 + s * beat / 4.0, 0.0, 0.15 + 0.07 * k)
         mix.add(drums, verb=0.05)
@@ -561,9 +656,9 @@ def render_song(spec, max_bars=None, log=print):
                 cm = None if abs(hi_o - lo_o) < 0.02 else open_at(t0)
                 x = osc(hz(note), nn, 'saw', cutoff=spec.get('pad_cut', 3400.0) * (lo_o if cm is None else 1.0), cut_mul=cm,
                         reso=0.1, detune=dv, phase=float(rng.uniform(0, 2 * np.pi)), max_k=28)
-                put(pad, x * env, t0, pan, 0.07)
+                put(pad, x * env, t0, pan, spec.get('pad_gain', 0.07))
         j = k + 1
-    pad = chorus(pad) * sidechain(n, kicks, 0.35)
+    pad = chorus(pad) * sidechain(n, kicks, 0.35 * duck)
     mix.add(pad, verb=0.35)
     del pad
     log('    pad %.1fs' % (time.time() - clock))
@@ -581,16 +676,30 @@ def render_song(spec, max_bars=None, log=print):
         elif bstyle == 'drive':
             events = [(i * 0.5, 0.5, root, 1.0 if i % 4 == 0 else 0.8) for i in range(7)]
             events.append((3.5, 0.5, nxt if nxt != root else root + 7, 0.8))
+        elif bstyle in ('walk', 'two'):
+            events = walk_line(key, mode, chords[j], chords[j + 1][0] if j + 1 < len(bars) else chords[j][0], bstyle == 'two')
+        elif bstyle == 'funk':
+            # the octave-popping disco bass: the root on the beat, the octave on the sixteenths between
+            events = [(0.0, 0.5, root, 1.0), (0.75, 0.25, root + 12, 0.7), (1.0, 0.25, root, 0.8), (1.5, 0.25, root + 12, 0.85),
+                      (2.0, 0.5, root, 0.95), (2.5, 0.25, root, 0.65), (2.75, 0.25, root + 12, 0.75), (3.25, 0.25, root + 7, 0.6),
+                      (3.5, 0.5, nxt if nxt != root else root + 10, 0.85)]
         else:
             events = [(0.0, 2.0, root, 0.9), (2.0, 1.5, root, 0.75), (3.5, 0.5, root + 7, 0.6)]
         for pos, dur, m, vel in events:
             gate = int(dur * beat * SR * (0.8 if bstyle != 'long' else 0.95))
             nn = gate + int(0.12 * SR)
             tt = np.arange(nn) / SR
+            if bstyle in ('walk', 'two'):
+                # the upright: a round fundamental, a second harmonic that fades, a little of the string's buzz
+                x = (0.9 * np.sin(2.0 * np.pi * hz(m) * tt) + 0.3 * np.sin(4.0 * np.pi * hz(m) * tt) * np.exp(-tt / 0.25)).astype(F32)
+                x += 0.35 * osc(hz(m), nn, 'saw', cutoff=700.0, cut_mul=lambda tc: 0.4 + 0.6 * np.exp(-tc / 0.04), reso=0.05, max_k=20)
+                put(bass, x * adsr(nn, gate, 0.003, 0.3, 0.45, 0.07), j * bar + swung(pos, sw) * beat, 0.0, 0.16 * vel)
+                continue
             x = osc(hz(m), nn, 'saw', cutoff=950.0, cut_mul=lambda tc: 0.3 + 0.7 * np.exp(-tc / 0.13), reso=0.35, max_k=40)
             x += (0.3 * np.sin(2.0 * np.pi * hz(m) * tt)).astype(F32)
-            put(bass, x * adsr(nn, gate, 0.004, 0.25, 0.65, 0.08), j * bar + pos * beat, 0.0, 0.14 * vel)
-    mix.add(bass * sidechain(n, kicks, 0.55), verb=0.02)
+            put(bass, x * adsr(nn, gate, 0.004, 0.25, 0.65, 0.08), j * bar + swung(pos, sw) * beat, 0.0,
+                (0.105 if bstyle == 'funk' else 0.14) * vel)
+    mix.add(bass * sidechain(n, kicks, 0.55 * duck), verb=0.02)
     del bass
     log('    bass %.1fs' % (time.time() - clock))
 
@@ -610,30 +719,93 @@ def render_song(spec, max_bars=None, log=print):
             o = b['open']
             x = osc(hz(m), nn, 'square', cutoff=3400.0 * o, cut_mul=lambda tc: 0.3 + 0.7 * np.exp(-tc / 0.07), reso=0.25, max_k=24)
             vel = 1.0 if i % 4 == 0 else 0.75
-            put(arp, x * adsr(nn, gate, 0.002, 0.08, 0.35, 0.08), j * bar + i * step * beat, 0.35 if i % 2 else -0.35, 0.075 * vel)
-    mix.add(arp * sidechain(n, kicks, 0.25), verb=0.2, echo=0.35)
+            put(arp, x * adsr(nn, gate, 0.002, 0.08, 0.35, 0.08), j * bar + swung(i * step, sw) * beat, 0.35 if i % 2 else -0.35,
+                0.075 * vel)
+    mix.add(arp * sidechain(n, kicks, 0.25 * duck), verb=0.2, echo=0.35)
     del arp
     log('    arp %.1fs' % (time.time() - clock))
 
     # electric piano
     ep = mix.part()
     estyle = spec.get('ep', 'comp')
+    ep_prev = None
     for j, b in enumerate(bars):
         if 'ep' not in b['parts']:
             continue
-        tones = voice(chord(key, mode, b['degree'], 5), None, 53, 79)
-        hits = [(0.0, 4.0, 0.7)] if estyle == 'ballad' else ([(0.0, 1.5, 0.75), (2.5, 1.0, 0.6)] if j % 2 == 0
-                                                             else [(0.0, 1.5, 0.7), (2.5, 0.5, 0.55), (3.5, 0.5, 0.5)])
+        if estyle == 'jazz':
+            # rootless: the third, fifth, seventh and ninth, the bass has the root - led from the last chord's voicing
+            ep_prev = tones = voice(chord(key, mode, b['degree'], 5)[1:], ep_prev, 52, 76)
+            hits = JAZZ_COMP[int(rng.integers(len(JAZZ_COMP)))]
+        elif estyle == 'disco':
+            ep_prev = tones = voice(chord(key, mode, b['degree'], 5), ep_prev, 55, 79)
+            hits = DISCO_COMP[j % 2]
+        else:
+            tones = voice(chord(key, mode, b['degree'], 5), None, 53, 79)
+            hits = [(0.0, 4.0, 0.7)] if estyle == 'ballad' else ([(0.0, 1.5, 0.75), (2.5, 1.0, 0.6)] if j % 2 == 0
+                                                                 else [(0.0, 1.5, 0.7), (2.5, 0.5, 0.55), (3.5, 0.5, 0.5)])
         roll = 0.035 if estyle == 'ballad' else 0.0
         for pos, dur, vel in hits:
             for i, m in enumerate(tones):
                 gate = int(dur * beat * SR)
                 nn = gate + int(1.0 * SR)
-                put(ep, epiano(hz(m), nn, gate, vel), j * bar + pos * beat + i * roll, (i / (len(tones) - 1) - 0.5) * 0.5, 0.07)
-    ep = chorus(ep, rate=0.3, depth_ms=2.0, mix=0.35) * sidechain(n, kicks, 0.15)
+                put(ep, epiano(hz(m), nn, gate, vel), j * bar + swung(pos, sw) * beat + i * roll, (i / (len(tones) - 1) - 0.5) * 0.5,
+                    0.07)
+    ep = chorus(ep, rate=0.3, depth_ms=2.0, mix=0.35) * sidechain(n, kicks, 0.15 * duck)
     mix.add(ep, verb=0.25, echo=0.1)
     del ep
     log('    epiano %.1fs' % (time.time() - clock))
+
+    # strings: the disco section, bowed an octave over the pad and swept up from an octave under into each section
+    if any('strings' in b['parts'] for b in bars):
+        st = mix.part()
+        j, st_prev = 0, None
+        while j < len(bars):
+            b = bars[j]
+            if 'strings' not in b['parts']:
+                j += 1
+                continue
+            k = j
+            while k + 1 < len(bars) and 'strings' in bars[k + 1]['parts'] and bars[k + 1]['degree'] == b['degree'] and k + 1 - j < 2:
+                k += 1
+            st_prev = tones = voice(chord(key, mode, b['degree'], 3), st_prev, 64, 84)
+            rise = 0.3 if b['i'] == 0 and j > 0 else 0.0
+            t0, length = j * bar - rise, (k - j + 1) * bar + rise
+            nn = int((length + 0.8) * SR)
+            env = adsr(nn, int(length * SR), 0.05 if rise else 0.14, 1.0, 0.85, 0.5)
+            for note in tones:
+                for dv, pan in ((-7.0, -0.6), (0.0, 0.0), (7.0, 0.6)):
+                    x = osc(hz(note), nn, 'saw', cutoff=5200.0, reso=0.05, detune=dv, vib=(5.6, 9.0, 0.15),
+                            glide=(hz(note - 12), rise) if rise else None, phase=float(rng.uniform(0, 2 * np.pi)), max_k=30)
+                    put(st, x * env, t0, pan, 0.036)
+            j = k + 1
+        st = chorus(st, rate=0.6, depth_ms=2.5) * sidechain(n, kicks, 0.2 * duck)
+        mix.add(st, verb=0.4)
+        del st
+        log('    strings %.1fs' % (time.time() - clock))
+
+    # stabs: the brass section's short chords on the offbeats, a two-bar figure
+    if any('stab' in b['parts'] for b in bars):
+        stab = mix.part()
+        stab_prev = None
+        for j, b in enumerate(bars):
+            if 'stab' not in b['parts']:
+                continue
+            stab_prev = tones = voice(chord(key, mode, b['degree'], 4), stab_prev, 60, 82)
+            hits = ([(1.5, 0.3, 0.9), (3.5, 0.3, 0.8)] if j % 2 == 0
+                    else [(0.5, 0.2, 0.7), (1.5, 0.3, 0.9), (2.75, 0.2, 0.7), (3.5, 0.45, 0.85)])
+            for pos, dur, vel in hits:
+                gate = int(dur * beat * SR)
+                nn = gate + int(0.2 * SR)
+                env = adsr(nn, gate, 0.006, 0.1, 0.55, 0.09)
+                for i, m in enumerate(tones):
+                    for dv in (-8.0, 8.0):
+                        x = osc(hz(m), nn, 'saw', cutoff=4200.0, cut_mul=lambda tc: 0.35 + 0.65 * np.exp(-tc / 0.08), reso=0.15,
+                                detune=dv, max_k=28)
+                        put(stab, x * env, j * bar + swung(pos, sw) * beat, (i / (len(tones) - 1) - 0.5) * 0.6 + dv / 40.0, 0.034 * vel)
+        stab = stab * sidechain(n, kicks, 0.2 * duck)
+        mix.add(stab, verb=0.22, echo=0.08)
+        del stab
+        log('    stabs %.1fs' % (time.time() - clock))
 
     # lead
     lstyle = spec.get('lead')
@@ -648,10 +820,10 @@ def render_song(spec, max_bars=None, log=print):
             k = j
             while k + 1 < len(bars) and 'lead' in bars[k + 1]['parts'] and bars[k + 1]['start'] == bars[j]['start']:
                 k += 1
-            notes = realize(mot, key, mode, chords[j:k + 1])
+            notes = realize(mot, key, mode, chords[j:k + 1], *spec.get('lead_range', (62, 84)))
             last = None
             for pos, dur, m in notes:
-                t0 = j * bar + pos * beat
+                t0 = j * bar + swung(pos, sw) * beat
                 gate = int(dur * beat * SR * 0.92)
                 nn = gate + int(0.25 * SR)
                 glide = (hz(last[1]), 0.05) if last is not None and abs(last[0] - pos) < 1e-6 else None
@@ -660,6 +832,17 @@ def render_song(spec, max_bars=None, log=print):
                                 detune=dv, vib=(5.2, 14.0, 0.25), glide=glide, max_k=36) for dv in (-6.0, 6.0))
                     env = adsr(nn, gate, 0.01, 0.3, 0.8, 0.12)
                     put(lead, x * env, t0, 0.05, 0.05)
+                elif lstyle == 'sax':
+                    # a breathy reed: saw and square through a low-pass that opens with the breath, a scoop up from a
+                    # half step under the note, a late vibrato, and the air of the breath itself on the attack
+                    scoop = glide or (hz(m - 1), 0.06)
+                    x = osc(hz(m), nn, 'saw', cutoff=2100.0, cut_mul=lambda tc: 0.5 + 0.5 * np.clip(tc / 0.09, 0.0, 1.0), reso=0.3,
+                            vib=(5.4, 20.0, 0.32), glide=scoop, max_k=30)
+                    x += 0.45 * osc(hz(m), nn, 'square', cutoff=1500.0, vib=(5.4, 20.0, 0.32), glide=scoop, max_k=16)
+                    tt = np.arange(nn) / SR
+                    x += fft_filter(noise(nn, int(m * 131 + pos * 17)), lo=1400.0, hi=4800.0) * (0.10 * np.exp(-tt / 0.08) + 0.025).astype(F32)
+                    env = adsr(nn, gate, 0.035, 0.35, 0.82, 0.14)
+                    put(lead, x * env, t0, -0.1, 0.055)
                 else:
                     x = osc(hz(m), nn, 'square', cutoff=1600.0, reso=0.1, vib=(5.0, 18.0, 0.2), glide=glide, max_k=20)
                     env = adsr(nn, gate, 0.04, 0.4, 0.75, 0.2)
@@ -820,6 +1003,40 @@ SONGS = {
     'dayend_2': dict(seed=909, bpm=88, key=54, mode='minor', prog=[0, 5, 2, 6], drums='soft', bass='long', arp=8, lead=None, ep='comp',
                      form=[('intro', 8, 'pad arp', (0.3, 0.7)), ('verse', 16, 'pad arp ep bass drums'),
                            ('chorus', 16, 'pad arp ep bass drums'), ('outro', 8, 'pad ep', (0.7, 0.3))]),
+
+    # THE SECOND SET (2026-09-25, the author: "Oyundaki müzikleri çeşitleştirip aynı tema biraz daha jazz 80ler disco
+    # tarzında arkaplan müziği ekleyelim"). Appended to each mood's list, so the first set keeps its order and the
+    # night reaches these after it (the list keeps its place from night to night; the player's NEXT key skips there).
+    # night_6: a ii-V-I-vi in E flat, swung, walked, ridden, comped rootless, the reed on the head
+    'night_6': dict(seed=1601, bpm=96, key=51, mode='major', prog=[1, 4, 0, 5], swing=(0.5, 0.64), duck=0.0, drums='jazz',
+                    bass='walk', arp=8, lead='sax', lead_range=(60, 81), ep='jazz', pad_size=5, pad_gain=0.045,
+                    form=[('intro', 4, 'pad ep', (0.4, 0.7)), ('head', 16, 'pad ep bass drums lead'),
+                          ('solo', 16, 'pad ep bass drums arp', (0.6, 0.9)), ('break', 8, 'pad ep bass', (0.5, 0.5)),
+                          ('head2', 16, 'pad ep bass drums lead'), ('outro', 8, 'pad ep', (0.7, 0.3))]),
+    # night_7: the mirror ball - i-iv-VII-III in E minor on four on the floor, octave bass, strings and brass
+    'night_7': dict(seed=1702, bpm=118, key=52, mode='minor', prog=[0, 3, 6, 2], swing=(0.25, 0.53), drums='nudisco',
+                    bass='funk', arp=16, lead='saw', ep='disco', pad_size=5, pad_gain=0.045,
+                    form=[('intro', 8, 'drums bass strings', (0.3, 0.9)), ('verse', 16, 'pad drums bass ep stab'),
+                          ('chorus', 16, 'pad drums bass strings stab lead ep'), ('break', 8, 'pad arp drums', (0.5, 0.8)),
+                          ('chorus2', 16, 'drums bass strings stab lead arp'), ('outro', 8, 'drums bass strings', (0.8, 0.3))]),
+    # night_8: city funk - IV-iii-ii-V in F with a lean on the sixteenths, the reed over brass
+    'night_8': dict(seed=1803, bpm=104, key=53, mode='major', prog=[3, 2, 1, 4], swing=(0.25, 0.56), drums='funk',
+                    bass='funk', arp=16, lead='sax', lead_range=(60, 81), ep='disco', pad_size=5, pad_gain=0.055,
+                    form=[('intro', 8, 'pad ep', (0.4, 0.8)), ('verse', 16, 'pad ep bass drums'),
+                          ('chorus', 16, 'pad ep bass drums lead stab'), ('break', 8, 'pad arp', (0.5, 0.7)),
+                          ('chorus2', 16, 'pad ep bass drums lead stab arp'), ('outro', 8, 'pad ep bass', (0.8, 0.3))]),
+    # lastcall_2: the slow one - D dorian's i-IV on brushes, the bass in two, the reed low
+    'lastcall_2': dict(seed=1904, bpm=72, key=50, mode='dorian', prog=[0, 3, 0, 4], swing=(0.5, 0.66), duck=0.0,
+                       drums='brush', bass='two', arp=8, lead='sax', lead_range=(57, 77), ep='jazz', pad_size=5, pad_gain=0.05,
+                       form=[('intro', 4, 'pad ep', (0.4, 0.6)), ('verse', 16, 'pad ep bass drums'),
+                             ('chorus', 16, 'pad ep bass drums lead'), ('verse2', 8, 'ep bass drums'),
+                             ('outro', 8, 'pad ep', (0.6, 0.3))]),
+    # dayend_3: counting the tips - I-vi-ii-V in A on a lighter disco, strings in the chorus
+    'dayend_3': dict(seed=2005, bpm=112, key=57, mode='major', prog=[0, 5, 1, 4], swing=(0.25, 0.53), drums='nudisco',
+                     bass='funk', arp=8, lead='soft', ep='disco', pad_size=5,
+                     form=[('intro', 8, 'pad arp drums', (0.3, 0.8)), ('verse', 16, 'pad bass drums ep stab'),
+                           ('chorus', 16, 'strings bass drums ep lead stab'), ('break', 8, 'pad arp', (0.5, 0.7)),
+                           ('chorus2', 16, 'strings bass drums ep lead stab arp'), ('outro', 8, 'pad ep arp', (0.8, 0.3))]),
 }
 
 

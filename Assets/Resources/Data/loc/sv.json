@@ -1465,7 +1465,7 @@
     {"key": "dayend.bill.fines", "text": "BÖTER · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "en röd dag till och baren stänger", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "NETTO", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "TILL BESTÄLLNINGEN", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "FORTSÄTT", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "UTGIFTER", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "HYRA", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "FÖRSÄLJNING", "src": "SALES"},

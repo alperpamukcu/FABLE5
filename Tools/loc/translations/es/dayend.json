@@ -12,7 +12,7 @@
     {"key": "dayend.bill.fines", "text": "MULTAS · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "otro día en rojo y el bar cierra", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "NETO", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "IR AL PEDIDO", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "CONTINUAR", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "GASTOS", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "ALQUILER", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "VENTAS", "src": "SALES"},

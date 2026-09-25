@@ -87,6 +87,11 @@ namespace LastCall.UI
                 CloseId();
                 RefreshSettings();
                 if (!_settingsFromPause) Sfx.Play("menu_open", 0.7f);   // from the pause menu the wall is already down
+                // THE NIGHT STOPS FOR THE SETTINGS TOO (2026-09-25, the author: "Settings açıldığında oyun durmalı").
+                // From the pause menu it is already held; from the top bar's cog it ran on at full speed behind the
+                // window, patience and all. It holds the clock the way the ladder's window does, and lets go of only
+                // the hold it took.
+                if (!_settingsFromPause && !Paused) { SetPaused(true); _settingsHeldClock = true; }
             }
             else
             {
@@ -101,9 +106,13 @@ namespace LastCall.UI
                 }
                 else Sfx.Play("menu_close", 0.6f);
                 _settingsFromPause = false;
+                if (_settingsHeldClock) { _settingsHeldClock = false; SetPaused(false); }
             }
             _settingsPanel.gameObject.SetActive(show);
         }
+
+        /// <summary>The settings window took the clock when it opened (from the cog, not from the pause menu).</summary>
+        private bool _settingsHeldClock;
 
         private void BuildSettings(RectTransform root)
         {

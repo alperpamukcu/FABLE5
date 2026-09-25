@@ -37,10 +37,11 @@ namespace LastCall.UI
             if (Showing(_settingsPanel)) { ToggleSettings(); return; }
             // The bench is above the guide, so Escape must reach it first — a panel that
             // covers another and cannot be closed over it is a trap.
-            if (Showing(_devPanel)) { _devPanel.gameObject.SetActive(false); return; }
-            if (Showing(_guidePanel)) { _guidePanel.gameObject.SetActive(false); return; }
-            if (Showing(_ledgerPanel)) { _ledgerPanel.gameObject.SetActive(false); return; }
-            if (Showing(_idRoot)) { _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
+            // Every door Escape shuts makes the sound its own key makes (2026-09-25).
+            if (Showing(_devPanel)) { Sfx.Play("menu_close", 0.6f); _devPanel.gameObject.SetActive(false); return; }
+            if (Showing(_guidePanel)) { Sfx.Play("menu_close", 0.6f); _guidePanel.gameObject.SetActive(false); return; }
+            if (Showing(_ledgerPanel)) { ToggleLedger(); return; }
+            if (Showing(_idRoot)) { Sfx.Play("id_card_away", 0.6f); _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
             // The market (2026-08-19): now that the title bar's close box is gone the foot
             // key is the one exit, and a fullscreen panel with one small exit and no Escape
             // is a trap. Escape walks the SAME door — the ask first if it is up (Escape on
@@ -3035,6 +3036,7 @@ namespace LastCall.UI
             // Core is told so the next one can follow (GDD 26 §1b).
             if (run != null && _plateStage.StartsWith("lesson:", StringComparison.Ordinal))
             {
+                Sfx.Play("key_press", 0.5f);        // the lesson's key answers like every other (2026-09-25)
                 if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
                 _plateAt = _plateScript.Count;
                 _plateStage = "";
@@ -3045,6 +3047,7 @@ namespace LastCall.UI
             // guarding on `Trial` alone left the guest's own scene unadvanceable, with the
             // only way out being the clock.
             if (run == null || (run.Trial == null && !run.LastCallWithheld)) return;
+            Sfx.Play("key_press", 0.5f);
             if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
             _plateAt = _plateScript.Count;      // the script is spoken
             if (run.Trial != null && run.Trial.State == TrialState.Talking) run.BeginLastCallTrial();
@@ -3056,6 +3059,7 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || run.LastCustomer == null) return;
             run.DeclineLastCall();
+            Sfx.Play("deny", 0.5f);
             Toast(UIText.T("chrome.toast.said_no"));
         }
 
@@ -3108,6 +3112,7 @@ namespace LastCall.UI
             if (_ledgerPanel == null || Run == null) return;
             bool show = !_ledgerPanel.gameObject.activeSelf;
             if (show) { CloseId(); RefreshLedger(); }
+            Sfx.Play(show ? "book_open" : "book_close", 0.6f);
             _ledgerPanel.gameObject.SetActive(show);
         }
 

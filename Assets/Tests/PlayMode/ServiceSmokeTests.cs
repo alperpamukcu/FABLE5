@@ -269,14 +269,18 @@ namespace LastCall.PlayTests
             yield return WaitFrames(3);
             Assert.That(tip.position, Is.Not.EqualTo(followed),
                 "the recipe card did not follow the pointer before it was pinned");
+            var early = Find("PinKey", tip);
+            Assert.That(early != null && !early.GetComponent<Image>().raycastTarget, Is.True,
+                "the pin took presses while the card was still following the pointer");
 
             // rest, without moving, until it pins
             yield return new WaitForSecondsRealtime(1.8f);
-            // The pin shows FAINT on a recipe from the start since 2026-09-25 (it is the key to the note, TycoonHud.Note)
-            // and goes whole once the card holds still - so whole is what says pinned.
-            var pin = Find("Pin", tip);
-            var pinImg = pin != null ? pin.GetComponent<Image>() : null;
-            Assert.That(pinImg != null && pinImg.enabled && pinImg.color.a > 0.9f, Is.True,
+            // The pin is the pause menu's own icon key since 2026-09-25 (PackIconKey, drawn whole from the start - it
+            // is the key to the note, TycoonHud.Note) and takes a press only once the card holds still - so a key
+            // that answers the pointer is what says pinned.
+            var pinKey = Find("PinKey", tip);
+            var pinHit = pinKey != null ? pinKey.GetComponent<Image>() : null;
+            Assert.That(pinHit != null && pinHit.raycastTarget, Is.True,
                 "the pointer rested on the order for nearly two seconds and the card never pinned");
             var pinned = tip.position;
             Set(_mouse.position, at + new Vector2(26f, 0f));

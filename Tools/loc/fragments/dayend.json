@@ -60,7 +60,7 @@
     { "key": "dayend.aisle.rest", "text": "THE REST", "note": "Aisle heading on the market's restock page for anything that fits no other aisle. Shop sign band, one line, ~24 characters." },
 
     { "key": "dayend.market.title", "text": "MALIBU CLUB — TIME TO ORDER", "note": "Title line over the market tablet after the day-end slip. One line." },
-    { "key": "dayend.bill.next", "text": "GO TO THE ORDER", "note": "Key under the day-end slip that moves on to the market. One line on the key." },
+    { "key": "dayend.bill.next", "text": "CONTINUE", "note": "Key under the day-end slip that moves on to the market (the author, 2026-09-25: \"devam et\" - the same word as build.bill.continue). One line on the key." },
 
     { "key": "dayend.bill.took_in", "text": "TOOK IN", "note": "Block heading on the day-end slip over the income lines. Body face 16 px, quiet ink." },
     { "key": "dayend.bill.sales", "text": "SALES", "note": "Bill row label on the day-end slip, body face 24 px, money figure at the right; the label column is ~62% of the 384 px sheet, ~14 characters." },

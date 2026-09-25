@@ -588,6 +588,7 @@ namespace LastCall.UI
             int lo = dir > 0 ? _bookSpread : _bookSpread - 1;
             if (Motion.Reduced || _bookLeafFrames == null || _bookLeafFrames[0] == null)
             {
+                Sfx.Play("page_turn", 0.55f);      // no leaf to watch, but still a page turned
                 _bookSpread = lo + (dir > 0 ? 1 : 0);
                 ShowRestingSpread();
                 return;

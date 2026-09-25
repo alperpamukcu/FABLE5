@@ -4399,6 +4399,11 @@ namespace LastCall.UI
                 {
                     view.Nagged = true;
                     Emote(view, EmoteBeat.Patience);
+                    // ...AND IT IS HEARD (2026-09-25, the author: "Oyunun eksik seslerini güncelle, ses efekti olmayan
+                    // yerlere ses efekti ekle"): patience_warn was made for exactly this beat (Docs/SES_LISTESI.md,
+                    // "sabır bitmek üzereyken çalmalı") and never wired - a face over a head the player is not looking at
+                    // is a warning they miss. Once a visit, like the face.
+                    Sfx.Play("patience_warn", 0.55f);
                 }
                 // THE BAR IS ONLY UP WHILE IT IS EMPTYING (2026-08-20, the author: "herhangi
                 // bir sabır barı azalmıyorken kafasının üstünde bar gözükmesin ... içki

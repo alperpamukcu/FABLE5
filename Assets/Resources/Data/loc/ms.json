@@ -1455,7 +1455,7 @@
     {"key": "dayend.bill.fines", "text": "DENDA · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "satu lagi hari rugi dan bar ditutup", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "BERSIH", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "KE TEMPAHAN", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "TERUSKAN", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "KELUAR", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "SEWA", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "JUALAN", "src": "SALES"},

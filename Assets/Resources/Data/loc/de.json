@@ -1465,7 +1465,7 @@
     {"key": "dayend.bill.fines", "text": "BUSSGELD · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "noch ein roter Tag, und die Bar schließt"},
     {"key": "dayend.bill.net", "text": "NETTO"},
-    {"key": "dayend.bill.next", "text": "ZUR BESTELLUNG"},
+    {"key": "dayend.bill.next", "text": "WEITER"},
     {"key": "dayend.bill.paid_out", "text": "AUSGABEN"},
     {"key": "dayend.bill.rent", "text": "MIETE"},
     {"key": "dayend.bill.sales", "text": "UMSATZ"},

@@ -1475,7 +1475,7 @@
     {"key": "dayend.bill.fines", "text": "MANDATY · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "jeszcze jeden dzień pod kreską zamyka bar", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "NETTO", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "PRZEJDŹ DO ZAMÓWIENIA", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "DALEJ", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "WYDATKI", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "CZYNSZ", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "SPRZEDAŻ", "src": "SALES"},

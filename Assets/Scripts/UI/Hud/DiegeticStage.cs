@@ -1999,8 +1999,71 @@ namespace LastCall.UI
         /// </summary>
         private readonly Dictionary<string, float> _bulbRadius = new Dictionary<string, float>();
 
+        // ── THE BULB, FOUND BY ITS OWN LIGHT (2026-09-25) ─────────────────────────────────────────────────────────
+        // The author: "Tavan aydınlatmalarını incele görseldeki ampul nerede bak o ampulün yayacağı ışığa göre sahneyi
+        // ışıklandır, şu anki tarzda ana sahne ışıklandırması güzel." The widths said the bulb was the widest row
+        // under the shade's mouth - on the author's redrawn brass shade (2026-09-23) that is the shade's own lit rim,
+        // 41 wide, where the glass hanging out of it is 13 - so the cone left the lamp three times too wide and the
+        // apex sat up by the cable. The glass is the one CREAM thing on a lamp (bright, unsaturated: the opal globe,
+        // the bulb under the cone, the lit mouth of the bell; brass highlights are saturated and dark iron is dark):
+        // from the lowest lit row up, while the run widens smoothly, and not across the jump to a shade's rim.
+        private struct Bulb { public bool Found; public float Cx, Cy, R; }   // art px: Cx from the centre, Cy from the foot
+        private readonly Dictionary<string, Bulb> _bulbs = new Dictionary<string, Bulb>();
+
+        private Bulb BulbOf(Sprite s)
+        {
+            var b = new Bulb();
+            if (s == null || s.texture == null) return b;
+            string key = s.name + ":" + s.rect;
+            if (_bulbs.TryGetValue(key, out var had)) return had;
+            try
+            {
+                var px = s.texture.GetPixels32();
+                int tw = s.texture.width;
+                int x0 = (int)s.rect.x, y0 = (int)s.rect.y, w = (int)s.rect.width, h = (int)s.rect.height;
+                bool Lit(Color32 c)
+                {
+                    if (c.a < 128) return false;
+                    Color.RGBToHSV(c, out _, out float sat, out float val);
+                    return val >= 0.85f && sat <= 0.25f;
+                }
+                var run = new int[h];                           // lit pixels per row, the foot's row first
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        if (Lit(px[(y0 + y) * tw + x0 + x])) run[y]++;
+                int start = -1;
+                for (int y = 0; y < h; y++) if (run[y] >= 3) { start = y; break; }
+                if (start >= 0)
+                {
+                    int top = start, widest = run[start];
+                    for (int y = start + 1; y < h; y++)
+                    {
+                        if (run[y] < 3) break;
+                        if (run[y] > widest * 1.6f && run[y] - widest > 10) break;   // the shade's rim, not the glass
+                        top = y;
+                        widest = Mathf.Max(widest, run[y]);
+                    }
+                    double sx = 0, sy = 0; int n = 0;
+                    for (int y = start; y <= top; y++)
+                        for (int x = 0; x < w; x++)
+                            if (Lit(px[(y0 + y) * tw + x0 + x])) { sx += x; sy += y; n++; }
+                    if (n > 0)
+                    {
+                        b.Found = true;
+                        b.Cx = (float)(sx / n) - (w - 1) * 0.5f;
+                        b.Cy = (float)(sy / n) + 0.5f;
+                        b.R = widest * 0.5f;
+                    }
+                }
+            }
+            catch (UnityException) { }                            // unreadable: the widths below, as before
+            return _bulbs[key] = b;
+        }
+
         private float BulbRadiusOf(Sprite s)
         {
+            var glass = BulbOf(s);
+            if (glass.Found) return glass.R;
             if (s == null || s.texture == null) return 0f;
             string key = s.name + ":" + s.rect;
             if (_bulbRadius.TryGetValue(key, out var had)) return had;
@@ -3864,10 +3927,15 @@ namespace LastCall.UI
                 {
                     // a pendant's light hangs a bulb's lift above its glass, so its cone is the glass's width where
                     // it leaves the lamp (ApexLift); everything else hangs at its own light line
-                    float lift = placed.Def.LightDy != 0f
-                        ? ApexLift(BulbRadiusOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite)) : 0f;
-                    placed.Glow.transform.position = basePos
-                        + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
+                    var lampArt = placed.Body.GetComponent<SpriteRenderer>()?.sprite;
+                    float lift = placed.Def.LightDy != 0f ? ApexLift(BulbRadiusOf(lampArt)) : 0f;
+                    var bulb = placed.Def.LightDy != 0f ? BulbOf(lampArt) : default;
+                    // FROM THE GLASS (2026-09-25, see BulbOf): a pendant whose bulb is found hangs its spot a lift
+                    // above the bulb's own centre - x and y - so the cone is the glass's width where it leaves it;
+                    // one with no cream drawn keeps the data's light line.
+                    placed.Glow.transform.position = bulb.Found
+                        ? basePos + new Vector3(bulb.Cx * k, (bulb.Cy + lift) * k, 0f)
+                        : basePos + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
                     // ...and the SHAFT hangs back down to WHERE THE CABLE ENDS (2026-09-23, the author:
                     // "ışığın başlangıç noktası lambanın kablosunun en alt kısmından itibaren olacak").
                     // It hung at the shade's MOUTH until today, which is the bottom of the glass; the
@@ -3876,8 +3944,10 @@ namespace LastCall.UI
                     var air = placed.Glow.GetComponentInChildren<PendantAir>();
                     if (air != null)
                     {
-                        float shadeUp = ShadeTopOf(placed.Body.GetComponent<SpriteRenderer>()?.sprite);
-                        air.DropBelowSpot = Mathf.Max(0f, lift - shadeUp) * k;
+                        // ...and the lit air starts AT the glass (2026-09-25): its core is the bulb's own radius,
+                        // at the bulb's centre, and the lamp is drawn over it - no shaft out of the shade's top.
+                        float shadeUp = ShadeTopOf(lampArt);
+                        air.DropBelowSpot = bulb.Found ? lift * k : Mathf.Max(0f, lift - shadeUp) * k;
                     }
                 }
             }
@@ -4093,7 +4163,12 @@ namespace LastCall.UI
         {
             // 156 by 118 (2026-09-22, the author: "camdan yansıyan ışığın boyutunu küçült"): grown from 132x100
             // on the 21st, cut back here - four panes that read as four, not a wash across the wall.
-            W = 156; H = 118;
+            // 188 WIDE, THE SAME PANES (2026-09-25, the author: "ortadaki iki şeriti kopyala yan yana koy en kenarlarda
+            // bulunan 2 şeriti kaldır"). The run is 126 and leans 0.5 a row, 29.5 either way at the head and the sill;
+            // at 156 wide the texture's own edge cut the outer two panes along the lean, so only the middle two were
+            // whole. 188 holds the whole run leaned - four whole panes, the middle pair twice - and the extra columns
+            // are empty, so nothing on the wall moves or grows.
+            W = 188; H = 118;
             return PaintPanes(W, H, 0.5f, 24, 10, 4, 3, 7);   // leaning 0.5 x per row: sun through a side window on a wall
         }
 

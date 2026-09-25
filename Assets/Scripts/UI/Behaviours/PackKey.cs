@@ -29,7 +29,19 @@ namespace LastCall.UI
 
         public void OnPointerDown(PointerEventData _) { _held = true; Apply(); }
         public void OnPointerUp(PointerEventData _) { _held = false; Apply(); }
-        public void OnPointerEnter(PointerEventData _) { _over = true; Apply(); }
+        public void OnPointerEnter(PointerEventData _)
+        {
+            _over = true;
+            Apply();
+            // The pack's keys tick under the pointer like the room's props (HoverGlow), on the same short gap so a
+            // sweep down a column is one run of ticks and not a buzz (2026-09-25).
+            if (Time.unscaledTime - _lastTick < TickGap) return;
+            _lastTick = Time.unscaledTime;
+            Sfx.Play("hover", 0.14f);
+        }
+
+        private static float _lastTick = -1f;
+        private const float TickGap = 0.09f;
         public void OnPointerExit(PointerEventData _) { _over = false; _held = false; Apply(); }
 
         private void OnEnable() { _over = false; _held = false; Apply(); }   // a key shown again is at rest

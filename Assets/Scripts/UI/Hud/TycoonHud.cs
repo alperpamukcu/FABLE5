@@ -890,7 +890,7 @@ namespace LastCall.UI
         /// orange, yellow, green, dark green) mapped onto the palette's own ramps. Amber[3]
         /// is skipped on purpose: it is the Money colour, and a signal must never wear a
         /// sacred number's coat (GDD 16).</summary>
-        private static readonly Color[] BandBoxColors =
+        internal static readonly Color[] BandBoxColors =
         {
             UITheme.ViceRed[3], UITheme.Amber[2], UITheme.Amber[4],
             UITheme.Lime[3], UITheme.Lime[1],
@@ -1270,6 +1270,8 @@ namespace LastCall.UI
         private Text _billNextLabel;
 
         private RectTransform _marketKey, _billNext;
+        /// <summary>The invoice key's height (2026-09-25; it was 56).</summary>
+        private const float BillKeyH = 48f;
 
         private ScrollRect _shopScroll;
 
@@ -2200,7 +2202,7 @@ namespace LastCall.UI
                 if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
             }
             if (Showing(_pausePanel)) _pausePanel.gameObject.SetActive(false);
-            SetPaused(false); _settingsFromPause = false; _bindListening = null;
+            SetPaused(false); _settingsFromPause = false; _settingsHeldClock = false; _bindListening = null;
             if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
             if (Showing(_devPanel)) _devPanel.gameObject.SetActive(false);
             if (Showing(_guidePanel)) _guidePanel.gameObject.SetActive(false);

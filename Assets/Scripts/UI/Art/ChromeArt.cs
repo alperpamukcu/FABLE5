@@ -3704,11 +3704,13 @@ namespace LastCall.UI
         /// sliding level asked the reader to measure it; five dots are counted at a glance,
         /// which is what a recipe page is for.
         /// </summary>
-        public static Sprite RatioDots(int lit, Color[] colours, int count = 5)
+        public static Sprite RatioDots(int lit, Color[] colours, int count = 5, int radius = 4, int gap = 6)
         {
-            string key = "dots:" + lit + ":" + count;
+            string key = "dots:" + lit + ":" + count + (radius != 4 || gap != 6 ? ":" + radius + ":" + gap : "");
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
-            const int R = 4, Gap = 6;                    // dot radius, and the run between them
+            // dot radius, and the run between them. The page's dots are 4 and 6 at 2x; the tin's measure is drawn at
+            // 1x and its foot is narrow, so it wears 4 and 2 - 50 wide (2026-09-25).
+            int R = radius, Gap = gap;
             int step = R * 2 + Gap;
             // ONE PIXEL OF AIR AT EACH END (2026-09-08, the author: "en sondaki koyu yeşil
             // yuvarlağın sağ tarafından birkaç pixel kırpılmış"). The last dot's centre is

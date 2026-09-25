@@ -12,7 +12,7 @@
 {"key": "dayend.bill.fines", "text": "POKUTY · {reason}", "src": "FINES · {reason}"},
 {"key": "dayend.bill.last_strike", "text": "ještě jeden den v červených a bar se zavře", "src": "one more red day closes the bar"},
 {"key": "dayend.bill.net", "text": "BILANCE", "src": "NET"},
-{"key": "dayend.bill.next", "text": "K OBJEDNÁVCE", "src": "GO TO THE ORDER"},
+{"key": "dayend.bill.next", "text": "POKRAČOVAT", "src": "CONTINUE"},
 {"key": "dayend.bill.paid_out", "text": "VÝDAJE", "src": "PAID OUT"},
 {"key": "dayend.bill.rent", "text": "NÁJEM", "src": "RENT"},
 {"key": "dayend.bill.sales", "text": "TRŽBY", "src": "SALES"},

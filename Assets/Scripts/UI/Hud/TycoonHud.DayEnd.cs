@@ -2200,7 +2200,9 @@ namespace LastCall.UI
             // The sheet is the ROLL's size; the print is the night's. What varies is how
             // much blank stock is left above the foot tear — which is how receipts work.
             if (_billNext != null)
-                _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 30f));   // the pack key is 56 tall: its foot two over the frame's
+                // 48 tall, its head four under the tear and its foot eight over the screen's (2026-09-25: at 56 it
+                // stood on the screen's last two rows and read as cut off).
+                _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 4f + BillKeyH * 0.5f));
 
             // The tablet.
             foreach (Transform child in _offerRow) Destroy(child.gameObject);

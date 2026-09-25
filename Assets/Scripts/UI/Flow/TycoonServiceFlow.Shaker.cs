@@ -1282,6 +1282,23 @@ namespace LastCall.UI
                 }
                 // (The 8 px name and share beside each band left on 2026-09-21 - "çok küçük kalmış" - for the
                 //  plaque's bars, LayMixRows, which say the same at 16 px with the bottle's picture and a bar.)
+                // THE NOTE'S DOTS, IN THE TIN (2026-09-25, the author: "Kokteyl yaptığımız ekranda hangi alkolden ne
+                // kadar koyduğumuz derece renkleri ile tin'in içerisinde gözüksün"): each band carries the five dots
+                // the post-it and the book print for its bottle, lit up to the box its share OF THE DRINK is in, in the
+                // boxes' own colours - so the tin is read against the note by counting, the way the note is read. A
+                // band too thin to hold them (a first splash in a big tin) goes without until it grows.
+                if (segH >= TinDotsMinBand)
+                {
+                    var dotsArt = ChromeArt.RatioDots(RatioBox.IndexOf(glass.RatioOf(id)), TycoonHud.BandBoxColors,
+                                                      RatioBox.Count, TinDotR, TinDotGap);
+                    var dots = NewRect("Dots", seg);
+                    dots.anchorMin = dots.anchorMax = dots.pivot = new Vector2(0.5f, 0.5f);
+                    dots.sizeDelta = new Vector2(dotsArt.rect.width, dotsArt.rect.height);
+                    dots.anchoredPosition = Vector2.zero;
+                    var dimg = dots.gameObject.AddComponent<Image>();
+                    dimg.sprite = dotsArt;
+                    dimg.raycastTarget = false;
+                }
                 y += segH;
             }
 
@@ -1299,6 +1316,11 @@ namespace LastCall.UI
             // Layers while unmixed, one colour once mixed (2026-09-16): what Core says of the tin, on both benches.
             BlendGauge(bar, run.IsMixed ? 1f : 0f);
         }
+
+        /// <summary>The tin's dots: radius 4, two between - 50 x 9 at the measure's own 1x, inside its foot. (Radius 3
+        /// was measured first, 44 x 7, and read as a row of specks.) A band shows them once it is two taller than they are.</summary>
+        private const int TinDotR = 4, TinDotGap = 2;
+        private const float TinDotsMinBand = 11f;
 
         private RectTransform GaugeBand(RectTransform bar, string name, float height, float y, Color fill)
         {

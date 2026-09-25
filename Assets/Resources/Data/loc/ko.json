@@ -1455,7 +1455,7 @@
     {"key": "dayend.bill.fines", "text": "벌금 · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "하루만 더 적자면 가게 문을 닫습니다"},
     {"key": "dayend.bill.net", "text": "순이익"},
-    {"key": "dayend.bill.next", "text": "주문하러 가기"},
+    {"key": "dayend.bill.next", "text": "계속"},
     {"key": "dayend.bill.paid_out", "text": "지출"},
     {"key": "dayend.bill.rent", "text": "임대료"},
     {"key": "dayend.bill.sales", "text": "매출"},

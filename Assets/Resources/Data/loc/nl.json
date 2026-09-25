@@ -1465,7 +1465,7 @@
     {"key": "dayend.bill.fines", "text": "BOETES · {reason}", "src": "FINES · {reason}"},
     {"key": "dayend.bill.last_strike", "text": "nog één rode dag en de bar gaat dicht", "src": "one more red day closes the bar"},
     {"key": "dayend.bill.net", "text": "NETTO", "src": "NET"},
-    {"key": "dayend.bill.next", "text": "NAAR DE BESTELLING", "src": "GO TO THE ORDER"},
+    {"key": "dayend.bill.next", "text": "VERDER", "src": "CONTINUE"},
     {"key": "dayend.bill.paid_out", "text": "UITGEGEVEN", "src": "PAID OUT"},
     {"key": "dayend.bill.rent", "text": "HUUR", "src": "RENT"},
     {"key": "dayend.bill.sales", "text": "VERKOOP", "src": "SALES"},

@@ -62,8 +62,8 @@
     },
     {
       "key": "dayend.bill.next",
-      "text": "IR AL PEDIDO",
-      "src": "GO TO THE ORDER"
+      "text": "CONTINUAR",
+      "src": "CONTINUE"
     },
     {
       "key": "dayend.bill.paid_out",
