@@ -272,8 +272,11 @@ namespace LastCall.PlayTests
 
             // rest, without moving, until it pins
             yield return new WaitForSecondsRealtime(1.8f);
+            // The pin shows FAINT on a recipe from the start since 2026-09-25 (it is the key to the note, TycoonHud.Note)
+            // and goes whole once the card holds still - so whole is what says pinned.
             var pin = Find("Pin", tip);
-            Assert.That(pin != null && (pin.GetComponent<Image>()?.enabled ?? false), Is.True,
+            var pinImg = pin != null ? pin.GetComponent<Image>() : null;
+            Assert.That(pinImg != null && pinImg.enabled && pinImg.color.a > 0.9f, Is.True,
                 "the pointer rested on the order for nearly two seconds and the card never pinned");
             var pinned = tip.position;
             Set(_mouse.position, at + new Vector2(26f, 0f));
@@ -288,6 +291,28 @@ namespace LastCall.PlayTests
             tip = Find("CardTip", card);
             Assert.That(tip == null || !tip.gameObject.activeInHierarchy, Is.True,
                 "the pointer left the card and the recipe stayed up");
+
+            // THE PIN IS A KEY (2026-09-25, the author: "sağ üstteki bir sabitleme butonuna basarak ekranın sağına
+            // küçük postit gibi ... bilgi kutusu gelecek, o kutuyu x basarak kapatabilmeliyiz"). Rest on the order again
+            // until the card pins, press its pin: the card closes and the note stands on the right; its X takes it away.
+            at = ScreenPointOf(row);
+            Set(_mouse.position, at);
+            yield return WaitFrames(2);
+            Set(_mouse.position, at);
+            yield return new WaitForSecondsRealtime(1.9f);
+            tip = Find("CardTip", card);
+            Assert.That(tip != null && tip.gameObject.activeInHierarchy, Is.True,
+                "the recipe card did not open a second time");
+            yield return ClickOn(Find("PinKey", tip));
+            yield return new WaitForSecondsRealtime(0.3f);
+            var note = Find("PinnedNote");
+            Assert.That(note != null && note.gameObject.activeInHierarchy, Is.True,
+                "the pin was pressed and no note was pinned to the screen");
+            Assert.That(ScreenPointOf(note).x, Is.GreaterThan(Screen.width * 0.5f),
+                "the note is not on the right of the screen");
+            yield return ClickOn(Find("Close", note));
+            yield return WaitFrames(2);
+            Assert.That(!note.gameObject.activeInHierarchy, Is.True, "the note's X did not take it away");
         }
 
         [UnityTest]

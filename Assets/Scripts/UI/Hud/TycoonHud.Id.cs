@@ -88,19 +88,26 @@ namespace LastCall.UI
             var canvas = _orderTip.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 26;
+            // THE BOOK'S PAPER, THE PAGE FRAME'S GOLD (2026-09-25, the author: "Müşterilerin adının üstündeki
+            // balonların hoverini geliştirelim oyundaki kullandığımız hover tasarımına uyduralım tarifler için"). This
+            // tip was the last recipe in the house still printed on the old dark slate with a cyan hairline while the
+            // licence's own tip is a page of the menu; it is the same paper, frame and grain now.
             var bg = _orderTip.gameObject.AddComponent<Image>();
-            bg.color = new Color(0.06f, 0.05f, 0.09f, 0.96f);
+            bg.color = new Color(0.949f, 0.910f, 0.835f, 1f);
             bg.raycastTarget = false;
-            var edge = new Color(UITheme.Cyan[3].r, UITheme.Cyan[3].g, UITheme.Cyan[3].b, 0.45f);
-            Hairline(_orderTip, new Vector2(0, 0), new Vector2(1, 0), edge);
-            Hairline(_orderTip, new Vector2(0, 1), new Vector2(1, 1), edge);
-            HairlineV(_orderTip, 0f, edge);
-            HairlineV(_orderTip, 1f, edge);
+            Frame(_orderTip, 3f, new Color(0.788f, 0.510f, 0.169f, 0.98f));
+            var grain = NewRect("Grain", _orderTip);
+            Stretch(grain, Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            grain.SetAsFirstSibling();
+            var grainImg = grain.gameObject.AddComponent<Image>();
+            grainImg.sprite = ChromeArt.PaperGrain();
+            grainImg.type = Image.Type.Tiled;
+            grainImg.raycastTarget = false;
 
             // The drink's name is the HEADING (the author, 2026-08-11): it is the one thing
             // being answered, so it is set in the display face at 16 — a whole multiple of
             // the 8px design size, which is the only size a pixel font rasterises cleanly.
-            _orderTipTitle = TipLine("Title", 16, TextAnchor.UpperLeft, UITheme.Amber[4],
+            _orderTipTitle = TipLine("Title", 16, TextAnchor.UpperLeft, new Color(0.30f, 0.16f, 0.05f),
                                      display: true);
             _orderTipBody = NewRect("Body", _orderTip);
             Place(_orderTipBody, new Vector2(0, 1), new Vector2(OrderTipW - 20f, 10f), Vector2.zero);
@@ -117,7 +124,7 @@ namespace LastCall.UI
             row.childForceExpandWidth = false; row.childForceExpandHeight = false;
             row.childAlignment = TextAnchor.UpperLeft;
 
-            _orderTipHint = TipLine("Hint", 9, TextAnchor.UpperLeft, UITheme.Cyan[3]);
+            _orderTipHint = TipLine("Hint", 8, TextAnchor.UpperLeft, new Color(0.52f, 0.44f, 0.36f));
 
             _orderTip.gameObject.SetActive(false);
         }
@@ -172,6 +179,8 @@ namespace LastCall.UI
 
         private void UpdateOrderTip()
         {
+            StepNote();           // the pinned note lets itself go when its night is over (TycoonHud.Note)
+            StepMoneyFlight();    // bills fly in and out of the till as the money moves (TycoonHud.MoneyFlight)
             if (_orderTip == null) return;
             int seat = HoveredTicket();
             if (seat != _orderTipSeat)
@@ -193,6 +202,7 @@ namespace LastCall.UI
             _orderTipTitle.rectTransform.anchoredPosition = new Vector2(Pad, -y);
             if (!visit.IdInspected)
             {
+                _orderTipTitle.gameObject.SetActive(true);
                 // Unread. The card is the only thing that may answer, so this says where the
                 // answer is and stops — no name, no drink, no hint of either.
                 _orderTipTitle.text = UIText.T("id.tip.ready");
@@ -210,49 +220,22 @@ namespace LastCall.UI
                 return;
             }
 
-            _orderTipTitle.text = UIText.Caps(RecipeTitle(visit.Order.Wanted));
-            y += TitleH + Gap;
-            // The heading may be wider than the pours under it — SEX ON THE BEACH in the
-            // display face is. The box takes the widest thing it holds rather than clipping
-            // the one thing the player came to read.
-            float w = Mathf.Clamp(_orderTipTitle.preferredWidth + Pad * 2f, OrderTipW, OrderTipMaxW);
-
-            _orderTipBody.gameObject.SetActive(true);
-            _orderTipBody.anchoredPosition = new Vector2(Pad, -y);
-            // JUST THE POUR (the author, 2026-08-11). The prep word, the fill line and the
-            // glass name left this card: the glass is not the player's to pick — the run
-            // chooses it from the recipe — and the prep is not in the match at all, which
-            // reads only ratios. What is left is what actually goes in the glass.
-            float specH = DrawRecipeSpec(_orderTipBody, visit.Order.Wanted, dark: true,
-                width: w - Pad * 2f, poursOnly: true);
-            _orderTipBody.sizeDelta = new Vector2(w - Pad * 2f, specH);
-            y += specH;
-
-            foreach (Transform old in _orderTipPrefs) Destroy(old.gameObject);
-            int chips = 0;
-            foreach (var g in visit.Order.Garnishes)
-                chips += PrefChip(PrefArt.ForPreparation(g.Id), GarnishWord(g),
-                                  _orderTipPrefs);
-
-            // Asking for nothing is said by there being nothing there. A line announcing that
-            // the customer wants nothing is a line to read for no news, which is exactly what
-            // was asked to go.
+            // THE WORK CARD (2026-09-25): the drink in the title face, the book's chips, how THIS customer wants
+            // it and the pours at the page's measure - the same blocks the licence's tip and the pinned note print,
+            // so the three cannot tell the player three things. The tip is the page's column wide, like the
+            // licence's recipe tip, so every block stands at the width it was measured at.
+            _orderTipTitle.gameObject.SetActive(false);
             _orderTipHint.gameObject.SetActive(false);
-            _orderTipPrefHead.gameObject.SetActive(chips > 0);
-            _orderTipPrefs.gameObject.SetActive(chips > 0);
-            if (chips > 0)
-            {
-                y += Gap;
-                _orderTipPrefHead.rectTransform.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipPrefHead.text = UIText.T("id.tip.how_they_want_it");
-                y += 12f + 2f;
-                _orderTipPrefs.anchoredPosition = new Vector2(Pad, -y);
-                _orderTipPrefs.sizeDelta = new Vector2(w - Pad * 2f, 38f);
-                y += 38f;
-            }
-            y += Pad;
-
-            SizeTip(w, y);
+            _orderTipPrefHead.gameObject.SetActive(false);
+            _orderTipPrefs.gameObject.SetActive(false);
+            foreach (Transform old in _orderTipPrefs) Destroy(old.gameObject);
+            float w = BkColW + Pad * 2f;
+            _orderTipBody.gameObject.SetActive(true);
+            _orderTipBody.anchoredPosition = new Vector2(Pad, -Pad);
+            _orderTipBody.sizeDelta = new Vector2(BkColW, 10f);
+            float cardH = DrawWorkCard(_orderTipBody, visit.Order.Wanted, visit.Order.Garnishes, BkColW);
+            _orderTipBody.sizeDelta = new Vector2(BkColW, cardH);
+            SizeTip(w, cardH + Pad * 2f);
             Show();
 
             void SizeTip(float width, float height)
@@ -290,6 +273,8 @@ namespace LastCall.UI
             if (x + size.x > halfW) x = local.x - Gap - size.x;
             float yTop = local.y - Gap;
             if (yTop - size.y < -halfH) yTop = local.y + Gap + size.y;
+            // Never over the top bar, never off the foot (2026-09-25): the tip is a page of the book now and tall.
+            yTop = Mathf.Clamp(yTop, -halfH + size.y + 4f, halfH - TopBarH - 4f);
             _orderTip.anchoredPosition = new Vector2(x, yTop);
         }
 

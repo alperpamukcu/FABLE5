@@ -54,7 +54,7 @@ namespace LastCall.UI
             {
                 // The house's own drawings, at their own 16 (the service heart is 12x12: draw it at 1x).
                 case "tip":
-                    art = ItemArt.Load("coin3d_16");
+                    art = ItemArt.Money(16f);
                     if (art != null) { tinted = false; return art; }
                     return ChromeArt.Mark("tips");
                 case "comfort":

@@ -2256,7 +2256,7 @@ namespace LastCall.UI
             int leftInTill = run.Money - CartTotal();
             if (_cartLeft != null)
             {
-                if (_cart.Count == 0) ClearCoin(_cartLeft); else CoinFigure(_cartLeft, leftInTill);
+                if (_cart.Count == 0) ClearCoin(_cartLeft); else CoinFigure(_cartLeft, leftInTill, account: true);
                 _cartLeft.color = leftInTill > 0 ? Color.white : ShopCost;
             }
             if (_cartLeftLabel != null) _cartLeftLabel.enabled = _cart.Count > 0;

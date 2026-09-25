@@ -133,6 +133,7 @@ namespace LastCall.UI
             BuildLadderWindow(root); // the rank's window (2026-09-21), under the pause menu
             BuildPauseMenu(root);    // Escape with nothing open (2026-09-15)
             BuildOrderTip(root);
+            BuildNote(root);         // the pinned recipe note, over the benches (2026-09-25)
 
             // THE CURTAIN, above everything the HUD owns. Its own canvas at 30 so it also
             // covers the market (22), the licence (20) and the guide (24) — a night that

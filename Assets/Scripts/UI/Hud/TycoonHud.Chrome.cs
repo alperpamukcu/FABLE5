@@ -1025,7 +1025,7 @@ namespace LastCall.UI
             // The till wears the coin rather than a typed $ (2026-09-07). It is also the one
             // figure in the game that COUNTS, so the coin is re-placed as the digits change
             // width — $99 to $100 moves the mark a whole glyph.
-            CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "");
+            CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "", account: true);
             if (_beamTillCard != null)
             {
                 // AND IT GOES BEHIND A SHEET (2026-09-09): the books and the market draw
@@ -1054,11 +1054,41 @@ namespace LastCall.UI
         /// because it belongs to the arithmetic and not to the coin.
         ///
         /// The figure must be RIGHT-aligned; every money readout in the chrome already is.</summary>
-        private void CoinFigure(Text figure, int amount, string sign = "")
+        private void CoinFigure(Text figure, int amount, string sign = "", bool account = false)
         {
             if (figure == null) return;
             figure.text = sign + Mathf.Abs(amount);
             var rt = figure.rectTransform;
+            // THE DRAWN MARKS (2026-09-25, the author: "YENİ $ İCONU OLUŞTUR VE ONU KULLANALIM OYUNDA" and "fiyatlarda
+            // da D işaret'i kullanabiliriz"): a figure that is what the bar HAS - the till, what is left in it - wears
+            // the stack of bills; one that is what something COSTS wears the drawn $. Both are drawings at a whole size
+            // (16, or 24 beside a figure of 24 and up), placed by measuring the digits as the typed sign was. The typed
+            // sign below stays only as the fallback for a project whose art has not been imported yet.
+            var markArt = account ? ItemArt.Money(figure.fontSize >= 24 ? 24f : 16f)
+                                  : ItemArt.Price(figure.fontSize >= 24 ? 24f : 16f);
+            if (markArt != null)
+            {
+                var typed = rt.Find("Sign");
+                if (typed != null) typed.gameObject.SetActive(false);
+                var mark = rt.Find("Mark") as RectTransform;
+                Image markImg;
+                if (mark == null)
+                {
+                    mark = NewRect("Mark", rt);
+                    mark.anchorMin = mark.anchorMax = new Vector2(1f, 0.5f);
+                    mark.pivot = new Vector2(1f, 0.5f);
+                    markImg = mark.gameObject.AddComponent<Image>();
+                    markImg.preserveAspect = true;
+                    markImg.raycastTarget = false;
+                }
+                else markImg = mark.GetComponent<Image>();
+                if (!mark.gameObject.activeSelf) mark.gameObject.SetActive(true);
+                float px = figure.fontSize >= 24 ? 24f : 16f;
+                markImg.sprite = markArt;
+                mark.sizeDelta = new Vector2(px, px);
+                mark.anchoredPosition = new Vector2(-(figure.preferredWidth + CoinGap), 0f);
+                return;
+            }
             // A TYPED $, NOT THE DRAWN COIN (2026-09-09, the author: "dolar iconu yerine
             // fiyatlarda sarı $ ve sarı para miktarı kullanılsın"). The coin was a 16px
             // drawing that had to be sized against three different scales to stay a disc
@@ -1103,6 +1133,8 @@ namespace LastCall.UI
             figure.text = "";
             var sign = figure.rectTransform.Find("Sign");
             if (sign != null) sign.gameObject.SetActive(false);
+            var mark = figure.rectTransform.Find("Mark");
+            if (mark != null) mark.gameObject.SetActive(false);
         }
 
         /// <summary>The coin's drawn size in the chrome, and its gap off the digits. 24

@@ -1260,10 +1260,24 @@ namespace LastCall.UI
             // ── HOW IT IS USUALLY TAKEN, where the page has a habit ──────────────
             // Only on a page the bar OWNS: what goes in a drink is sealed until it is bought
             // (2026-09-13), and so is how it comes.
+            //
+            // AND ONLY WHERE THE PAGE HAS ROOM FOR IT (2026-09-25). The seven-pour Long Island with the player's best
+            // under its pours already printed past the story's rule, and the taller chips of the same day would have
+            // pushed it further. Everything the page must still print is counted at its floor - the legend, every
+            // pour at the 30 a bottle and its dots need, the tail, the tight character plate - and the habit, which
+            // the order itself repeats on the licence, is the line that gives way.
             if (!page.Locked)
             {
-                float usually = HabitRow(print, r, BkColW, y, dark: false);
-                if (usually > 0f) y += usually + 2f;
+                float legendFloor = (crowded ? 0f : 13f) + BookLegendDotsH + 15f;
+                bool hasCharacter = DrinkTraits.Of(r) is var pageCharacter && !ReferenceEquals(pageCharacter, DrinkTrait.None)
+                    && pageCharacter.HasStat;
+                float mustPrint = legendFloor + pourRowCount * 30f + pourTail
+                    + (hasCharacter ? StripRim + BuffRowH + StripFoot + 4f : 0f);
+                if ((BkStoryTop - 8f) - y - 4f - mustPrint >= 22f)
+                {
+                    float usually = HabitRow(print, r, BkColW, y, dark: false);
+                    if (usually > 0f) y += usually + 2f;
+                }
             }
 
             // ── THE CHARACTER, GIVEN WHAT THE REST OF THE PAGE DOES NOT NEED (2026-09-23) ──

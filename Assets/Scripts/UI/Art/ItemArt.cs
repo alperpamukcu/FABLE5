@@ -158,8 +158,31 @@ namespace LastCall.UI
         /// and the boards, and a 2:1 majority cut for the 16. The old green coin
         /// (coin3d) is retired; the accessor is the same, so every caller changed at once.</summary>
         public static Sprite Coin(float px = 24f) =>
-            Load("dollar" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"))
-            ?? Load("coin3d" + (px >= 30f ? "" : px >= 22f ? "_24" : "_16"));
+            Load("money" + SizeSuffix(px))
+            ?? Load("dollar" + SizeSuffix(px))
+            ?? Load("coin3d" + SizeSuffix(px));
+
+        /// <summary>
+        /// THE MONEY MARK (2026-09-25, the author: "YENİ $ İCONU OLUŞTUR VE ONU KULLANALIM OYUNDA"): the pick from
+        /// Tools/money_icon.py once it ships as Items/money[_24|_16].png. Until then the drawn coin the book and the
+        /// buffs already wear - so nothing moves before the author has chosen, and everything moves together after.
+        /// <see cref="Coin"/> prefers the same file, so the top bar and the tips follow the same pick.
+        /// </summary>
+        public static Sprite Money(float px = 24f) =>
+            Load("money" + SizeSuffix(px)) ?? Load("coin3d" + SizeSuffix(px)) ?? Coin(px);
+
+        private static string SizeSuffix(float px) => px >= 30f ? "" : px >= 22f ? "_24" : "_16";
+
+        /// <summary>
+        /// THE PRICE MARK (2026-09-25, the author: "fiyatlarda da D işaret'i kullanabiliriz"): the $ itself, heavy,
+        /// green and keylined (Tools/money_icon.py, candidate D), at the size it is drawn at. A PRICE wears it - the
+        /// menu's plinth, a market tile, a fitting card, the basket's total - where the account and the till wear the
+        /// stack (<see cref="Money"/>).
+        /// </summary>
+        public static Sprite Price(float px = 16f) => Load("price" + SizeSuffix(px)) ?? Money(px);
+
+        /// <summary>THE ONE BILL the stack is made of (26x16): what flies when money moves (TycoonHud.MoneyFlight).</summary>
+        public static Sprite MoneyBill() => Load("money_bill");
 
         private static string Name(string icon, bool lit, float px) =>
             icon + (lit ? "" : "_socket") + (px <= 20f ? "_16" : "");
@@ -283,6 +306,167 @@ namespace LastCall.UI
             if (card.Type == LastCall.Core.IngredientType.Garnish)
                 return GarnishArt.Lift(Load("counter_" + card.Info?.Style));
             return null;
+        }
+
+        /// <summary>
+        /// THE BOTTLE WITH ITS DRINK IN IT, AS ONE PICTURE (2026-09-25, the author: "Menüde tariflerde gösterilen
+        /// alkol şişeleri dolu olsun"). <see cref="Bottle"/> is the cellar's FRONT plate alone — the glass, the label
+        /// and the cap — so on the book's rows every bottle stood there empty. The market fills its bottles with a live
+        /// <see cref="BottleArt"/> (a stencil mask and five layers), which is right for one tile and wrong for fifty
+        /// rows: this flattens the same three cellar plates once — the interior, the drink through its cavity at full,
+        /// the glass over it — into one sprite, cached against the card. A card with no v4 plates (a carton, a garnish
+        /// dish) is its flat picture, which is already full.
+        /// </summary>
+        public static Sprite BottleFull(LastCall.Core.IngredientCard card)
+        {
+            if (card == null) return null;
+            string key = "full:" + card.Id;
+            if (Cache.TryGetValue(key, out var hit) && hit != null) return hit;
+            var plates = Plates(card, cellar: true);
+            if (plates == null || plates.Mask == null || plates.Back == null) return Bottle(card);
+            var bt = plates.Back.texture; var mt = plates.Mask.texture; var ft = plates.Front.texture;
+            Rect r = plates.Front.rect;
+            int w = (int)r.width, h = (int)r.height, x0 = (int)r.x, y0 = (int)r.y;
+            Color32[] b, m, f;
+            try
+            {
+                b = bt.GetPixels32(); m = mt.GetPixels32(); f = ft.GetPixels32();
+            }
+            catch (UnityException) { return Bottle(card); }   // an unreadable plate keeps the bare front
+            if (bt.width != ft.width || mt.width != ft.width || bt.height != ft.height || mt.height != ft.height)
+                return Bottle(card);
+            Color drink = UITheme.LiquidColor(card.Info?.Style, card.Type);
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    int i = (y0 + y) * ft.width + x0 + x;
+                    Color c = b[i];
+                    // The drink fills the cavity to its shoulder (the mask IS the full bottle) and is opaque, as the
+                    // market's full bottle draws it; the front's film and label then lie over it at their own alpha.
+                    if (m[i].a >= 128) c = new Color(drink.r, drink.g, drink.b, 1f);
+                    Color o = f[i];
+                    float a = o.a + c.a * (1f - o.a);
+                    Color outC = a <= 0f ? new Color(0, 0, 0, 0)
+                        : new Color((o.r * o.a + c.r * c.a * (1f - o.a)) / a,
+                                    (o.g * o.a + c.g * c.a * (1f - o.a)) / a,
+                                    (o.b * o.a + c.b * c.a * (1f - o.a)) / a, a);
+                    px[y * w + x] = outC;
+                }
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "full_" + card.Id,
+            };
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            var like = plates.Front;
+            var sp = Sprite.Create(tex, new Rect(0, 0, w, h),
+                new Vector2(like.pivot.x / like.rect.width, like.pivot.y / like.rect.height), like.pixelsPerUnit);
+            sp.name = "full_" + card.Id;
+            return Cache[key] = sp;
+        }
+
+        /// <summary>
+        /// THE GLASS AS THE GAME DRAWS IT, SMALL (2026-09-25, the author: "The glass kısmında menüde kullanılan
+        /// bardaklar oyundaki bardakların iconu olmalı şu an oyundaki bardağa benzemeyen bardaklar kullanılıyor").
+        /// The book's GLASS chip wore one generic stemmed mark for every glass — a coupe and a highball were the same
+        /// wine glass. This is the bench's own glass (<c>glass3d_&lt;id&gt;</c>, the author's drawing) brought down
+        /// to <paramref name="maxH"/> by a whole factor: each block of source pixels is averaged in linear light over
+        /// its opaque pixels, kept only where at least half the block is glass, and snapped back to the nearest colour
+        /// the drawing itself uses, so the small one is made of the big one's own inks rather than of a blur.
+        /// </summary>
+        public static Sprite GlassIcon(string glassId, int maxH = 16)
+        {
+            if (string.IsNullOrEmpty(glassId)) return null;
+            string key = "glassicon:" + glassId + ":" + maxH;
+            if (Cache.TryGetValue(key, out var hit) && hit != null) return hit;
+            var src = Load("glass3d_" + glassId);
+            if (src == null) return null;
+            var t = src.texture;
+            Color32[] all;
+            try { all = t.GetPixels32(); }
+            catch (UnityException) { return null; }
+            Rect sr = src.rect;
+            int sx = (int)sr.x, sy = (int)sr.y, sw = (int)sr.width, sh = (int)sr.height;
+            // The drawing's own box: its canvas carries air around the glass.
+            int minX = sw, minY = sh, maxX = -1, maxY = -1;
+            for (int y = 0; y < sh; y++)
+                for (int x = 0; x < sw; x++)
+                    if (all[(sy + y) * t.width + sx + x].a >= 128)
+                    {
+                        if (x < minX) minX = x; if (x > maxX) maxX = x;
+                        if (y < minY) minY = y; if (y > maxY) maxY = y;
+                    }
+            if (maxX < 0) return null;
+            int cw = maxX - minX + 1, ch = maxY - minY + 1;
+            int k = Mathf.Max(1, Mathf.CeilToInt(ch / (float)maxH));
+            int ow = Mathf.CeilToInt(cw / (float)k), oh = Mathf.CeilToInt(ch / (float)k);
+            var palette = new List<Color32>();
+            var seen = new HashSet<int>();
+            for (int y = minY; y <= maxY; y++)
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var c = all[(sy + y) * t.width + sx + x];
+                    if (c.a < 128) continue;
+                    int id = (c.r << 16) | (c.g << 8) | c.b;
+                    if (seen.Add(id)) palette.Add(c);
+                }
+            var px = new Color32[ow * oh];
+            for (int oy = 0; oy < oh; oy++)
+                for (int ox = 0; ox < ow; ox++)
+                {
+                    float lr = 0, lg = 0, lb = 0; int solid = 0, cells = 0;
+                    for (int dy = 0; dy < k; dy++)
+                        for (int dx = 0; dx < k; dx++)
+                        {
+                            int x = minX + ox * k + dx, y = minY + oy * k + dy;
+                            if (x > maxX || y > maxY) continue;
+                            cells++;
+                            var c = all[(sy + y) * t.width + sx + x];
+                            if (c.a < 128) continue;
+                            solid++;
+                            lr += Mathf.GammaToLinearSpace(c.r / 255f);
+                            lg += Mathf.GammaToLinearSpace(c.g / 255f);
+                            lb += Mathf.GammaToLinearSpace(c.b / 255f);
+                        }
+                    if (cells == 0 || solid * 2 < cells) { px[oy * ow + ox] = new Color32(0, 0, 0, 0); continue; }
+                    var avg = new Color(Mathf.LinearToGammaSpace(lr / solid), Mathf.LinearToGammaSpace(lg / solid),
+                        Mathf.LinearToGammaSpace(lb / solid));
+                    Color32 best = palette[0]; float bestD = float.MaxValue;
+                    foreach (var p in palette)
+                    {
+                        float d = (p.r / 255f - avg.r) * (p.r / 255f - avg.r) + (p.g / 255f - avg.g) * (p.g / 255f - avg.g)
+                                + (p.b / 255f - avg.b) * (p.b / 255f - avg.b);
+                        if (d < bestD) { bestD = d; best = p; }
+                    }
+                    px[oy * ow + ox] = new Color32(best.r, best.g, best.b, 255);
+                }
+            // AND ITS OUTLINE BACK. The drawing's 1-px ink is averaged away by any factor over one, and a pale
+            // glass on the book's cream paper then reads as nothing at all (measured on the five glasses). Every
+            // pixel of the silhouette's edge takes the drawing's own darkest ink, so the small glass is keylined
+            // the way the big one is - and a stem, which is all edge, is drawn as a line.
+            Color32 ink = palette[0];
+            foreach (var p in palette)
+                if (p.r * 299 + p.g * 587 + p.b * 114 < ink.r * 299 + ink.g * 587 + ink.b * 114) ink = p;
+            var edged = (Color32[])px.Clone();
+            for (int oy = 0; oy < oh; oy++)
+                for (int ox = 0; ox < ow; ox++)
+                {
+                    if (px[oy * ow + ox].a == 0) continue;
+                    bool Clear(int x, int y) => x < 0 || y < 0 || x >= ow || y >= oh || px[y * ow + x].a == 0;
+                    if (Clear(ox + 1, oy) || Clear(ox - 1, oy) || Clear(ox, oy + 1) || Clear(ox, oy - 1))
+                        edged[oy * ow + ox] = new Color32(ink.r, ink.g, ink.b, 255);
+                }
+            px = edged;
+            var tex = new Texture2D(ow, oh, TextureFormat.RGBA32, false)
+            {
+                filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "glassicon_" + glassId,
+            };
+            tex.SetPixels32(px);
+            tex.Apply(false, true);
+            var sp = Sprite.Create(tex, new Rect(0, 0, ow, oh), new Vector2(0.5f, 0f), 100f);
+            sp.name = "glassicon_" + glassId;
+            return Cache[key] = sp;
         }
 
         /// <summary>The same brand with its closure off — what the pour stage shows, because

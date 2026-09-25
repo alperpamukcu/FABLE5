@@ -3771,6 +3771,9 @@ namespace LastCall.UI
             var seat = _seats[seatIndex].Root;
             var start = seat.anchoredPosition + new Vector2(0f, 96f);
             int tip = visit.Paid - visit.PaidBase;
+            // The bills that fly into the till fly out of this stool (TycoonHud.MoneyFlight).
+            if (seat.parent is RectTransform seatHost)
+                MoneyFrom(RectTransformUtility.WorldToScreenPoint(null, seatHost.TransformPoint(start)));
 
             // THE SCORE CAME OFF THE STOOL (2026-09-04, the author: "müşterilerin verdikleri
             // ücretle beraber gözüken puanları gizlensin"). A leaving drinker threw three

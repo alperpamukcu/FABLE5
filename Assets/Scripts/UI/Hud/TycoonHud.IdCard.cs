@@ -789,7 +789,7 @@ namespace LastCall.UI
         private float _idTipRest, _idTipAway, _idTipShown;
         private bool _idTipPinned, _idTipClosing;
         private CanvasGroup _idTipGroup;
-        private Image _idTipBar, _idTipPin;
+        private Image _idTipBar, _idTipPin, _idTipPinHit;
         private RectTransform _idTipBarRt;
 
         private void BuildIdTip()
@@ -821,11 +821,26 @@ namespace LastCall.UI
             _idTipBar = _idTipBarRt.gameObject.AddComponent<Image>();
             _idTipBar.color = new Color(0.788f, 0.510f, 0.169f, 0.9f);
             _idTipBar.raycastTarget = false;
-            var pin = NewRect("Pin", _idRecipeTip);
-            pin.anchorMin = pin.anchorMax = new Vector2(1, 1);
-            pin.pivot = new Vector2(1, 1);
+            // THE PIN IS A KEY (2026-09-25, the author: "hover sağ üstteki bir sabitleme butonuna basarak ekranın
+            // sağına küçük postit gibi ... bilgi kutusu gelecek"). It was only the mark that said the tip had stopped
+            // following the pointer; on a recipe it is now the key that pins the drink to the note on the right of
+            // the screen (TycoonHud.Note). Shown faint while the tip still follows - it cannot be reached then - and
+            // whole once the tip holds still, which is when the pointer can be carried onto it. A 22-unit key round
+            // the 12-unit pin, so it is a thing to press rather than a pixel to hunt.
+            var pinKey = NewRect("PinKey", _idRecipeTip);
+            pinKey.anchorMin = pinKey.anchorMax = pinKey.pivot = new Vector2(1, 1);
+            pinKey.sizeDelta = new Vector2(22f, 22f);
+            pinKey.anchoredPosition = new Vector2(-1f, -1f);
+            _idTipPinHit = pinKey.gameObject.AddComponent<Image>();
+            _idTipPinHit.color = new Color(1f, 1f, 1f, 0f);
+            _idTipPinHit.raycastTarget = true;
+            var pinButton = pinKey.gameObject.AddComponent<Button>();
+            pinButton.transition = Selectable.Transition.None;
+            pinButton.onClick.AddListener(PinRecipeFromCard);
+            var pin = NewRect("Pin", pinKey);
+            pin.anchorMin = pin.anchorMax = pin.pivot = new Vector2(0.5f, 0.5f);
             pin.sizeDelta = new Vector2(12, 12);
-            pin.anchoredPosition = new Vector2(-6f, -6f);
+            pin.anchoredPosition = Vector2.zero;
             _idTipPin = pin.gameObject.AddComponent<Image>();
             _idTipPin.sprite = IdArt.PinMark();
             _idTipPin.color = UITheme.ViceRed[3];
@@ -908,7 +923,13 @@ namespace LastCall.UI
                 float k = _idTipPinned ? 1f : Mathf.Clamp01(_idTipRest / IdPinAfter);
                 _idTipBarRt.sizeDelta = new Vector2(full * k, 3f);
                 _idTipBar.enabled = k > 0.02f;
-                _idTipPin.enabled = _idTipPinned;
+                // On a recipe the pin is always there - faint while the tip follows, whole once it holds - because it
+                // is the key to the note; on the card's other tips it keeps its old meaning, the tip holding still.
+                bool recipe = _idTipFor != null && _idTipFor.Kind == IdTipKind.Recipe;
+                _idTipPin.enabled = recipe || _idTipPinned;
+                var pinInk = UITheme.ViceRed[3];
+                _idTipPin.color = new Color(pinInk.r, pinInk.g, pinInk.b, _idTipPinned ? 1f : 0.4f);
+                if (_idTipPinHit != null) _idTipPinHit.raycastTarget = recipe && _idTipPinned;
             }
 
             // IT GROWS OUT OF THE POINTER AND SHRINKS BACK INTO IT: the pivot is the corner nearest the pointer, so
@@ -954,9 +975,28 @@ namespace LastCall.UI
             _idRecipeTip.SetAsLastSibling();
             foreach (var g in _idRecipeTip.GetComponentsInChildren<Graphic>(true))
                 if (g.gameObject != _idRecipeTip.gameObject) g.raycastTarget = false;
+            // ...except the pin's key on a recipe, which StepIdTip arms once the tip holds still.
+            if (_idTipPinHit != null) _idTipPinHit.gameObject.SetActive(h.Kind == IdTipKind.Recipe);
             _idTipShown = Motion.Reduced ? 1f : 0f;
             _idTipGroup.alpha = _idTipShown;
             FollowPointerWithRecipeTip();          // placed before its first frame is drawn
+        }
+
+        /// <summary>
+        /// THE PIN, PRESSED: the drink on the card goes to the note on the right of the screen with this customer's
+        /// asks and the name the card prints (a borrowed card's lender, as the card itself says), and the tip closes
+        /// - the note is where it lives now.
+        /// </summary>
+        private void PinRecipeFromCard()
+        {
+            var r = OrderOnTheCard();
+            if (r == null) return;
+            IReadOnlyList<PreparationDefinition> asks = null;
+            try { asks = _idVisit?.Order?.Garnishes; }
+            catch (InvalidOperationException) { asks = null; }
+            string whose = ((_idFirst != null ? _idFirst.text : "") + " " + (_idSurname != null ? _idSurname.text : "")).Trim();
+            PinNote(r, asks, whose);
+            HideIdTip(true);
         }
 
         private RecipeDefinition OrderOnTheCard()
