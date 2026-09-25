@@ -66,22 +66,23 @@ namespace LastCall.UI
 
             // the keys, top down; each fitted to its word
             float y = -96f;
-            PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", MenuPack.Tone.Orange, ref y, TogglePause);
-            PauseKey(plate, "SAVE", UIText.T("chrome.pause.save"), "save", MenuPack.Tone.Grey, ref y, null);
-            PauseKey(plate, "CONTINUE", UIText.T("chrome.pause.continue"), "lock", MenuPack.Tone.Grey, ref y, null);
-            PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", MenuPack.Tone.Grey, ref y, () =>
+            var keys = new System.Collections.Generic.List<RectTransform>();
+            keys.Add(PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", MenuPack.Tone.Orange, ref y, TogglePause));
+            keys.Add(PauseKey(plate, "SAVE", UIText.T("chrome.pause.save"), "save", MenuPack.Tone.Grey, ref y, null));
+            keys.Add(PauseKey(plate, "CONTINUE", UIText.T("chrome.pause.continue"), "lock", MenuPack.Tone.Grey, ref y, null));
+            keys.Add(PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", MenuPack.Tone.Grey, ref y, () =>
             {
                 Sfx.Play("click");
                 _settingsFromPause = true;
                 _pausePanel.gameObject.SetActive(false);
                 if (_settingsPanel != null && !_settingsPanel.gameObject.activeSelf) ToggleSettings();
-            });
-            PauseKey(plate, "NEW RUN", UIText.T("chrome.pause.new_run"), "restart", MenuPack.Tone.Grey, ref y, () =>
+            }));
+            keys.Add(PauseKey(plate, "NEW RUN", UIText.T("chrome.pause.new_run"), "restart", MenuPack.Tone.Grey, ref y, () =>
             {
                 TogglePause();
                 _bootstrap.StartNewRun(null);
-            });
-            PauseKey(plate, "QUIT", UIText.T("chrome.pause.quit"), "exit", MenuPack.Tone.Grey, ref y, () =>
+            }));
+            keys.Add(PauseKey(plate, "QUIT", UIText.T("chrome.pause.quit"), "exit", MenuPack.Tone.Grey, ref y, () =>
             {
                 Sfx.Play("bar_closed", 0.6f);
 #if UNITY_EDITOR
@@ -89,7 +90,9 @@ namespace LastCall.UI
 #else
                 Application.Quit();
 #endif
-            });
+            }));
+            var door = MenuPack.Art("menu_door");
+            if (door != null) HangTheDoor(plate, door, keys);
 
             // the foot: the hour and the till, so the player knows where they left the night
             var footIcon = NewRect("ClockMark", plate);
@@ -114,6 +117,55 @@ namespace LastCall.UI
             _pausePanel.gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// THE DOOR BESIDE THE KEYS (2026-09-25, the menus' redesign - MenuPack.Art "menu_door"). The bar's front door at
+        /// night stands in its own framed window LEFT of the keys, level with the first of them, and the plate widens to
+        /// hold both; the keys keep every vertical number they had and become one even column as wide as the widest of
+        /// them (a long translation widens the plate, never the picture). Beside the keys and never behind them: the
+        /// author asked for a calm backdrop behind the menus on 2026-09-16. Rain falls over the picture (MenuRain) and
+        /// the title catches like a tube (NeonFlicker). Without the art the menu is the one before.
+        /// </summary>
+        private void HangTheDoor(RectTransform plate, Sprite door, System.Collections.Generic.List<RectTransform> keys)
+        {
+            const float Margin = 28f, Gap = 28f, Top = -96f;
+            var win = new Vector2(door.rect.width * 2f + 6f, door.rect.height * 2f + 6f);   // the art at 2x and the frame
+            float colW = PauseKeyMinW;
+            foreach (var k in keys) colW = Mathf.Max(colW, k.sizeDelta.x);
+            float plateW = Margin + win.x + Gap + colW + Margin;
+            plate.sizeDelta = new Vector2(plateW, PausePlateH);
+            float colX = Margin + win.x + Gap + colW * 0.5f - plateW * 0.5f;             // the column's centre, from the plate's
+            foreach (var k in keys)
+            {
+                k.sizeDelta = new Vector2(colW, k.sizeDelta.y);
+                k.anchoredPosition = new Vector2(colX, k.anchoredPosition.y);
+            }
+            for (int i = 0; i < 3; i++)                                                  // the rules run the plate's new width
+            {
+                var rule = plate.Find("Rule" + i) as RectTransform;
+                if (rule != null) rule.sizeDelta = new Vector2(plateW - 80f, rule.sizeDelta.y);
+            }
+
+            var window = NightPlate(plate, "Door", win, 0f, door);
+            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0f, 1f);
+            window.anchoredPosition = new Vector2(Margin, Top);
+            var picture = window.Find("Picture") as RectTransform;
+            var night = picture != null ? picture.Find("Night") : null;
+            if (picture != null)
+            {
+                var rain = NewRect("Rain", picture);
+                if (night != null) rain.SetSiblingIndex(night.GetSiblingIndex() + 1);   // over the picture, under the scanlines
+                Stretch(rain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var raw = rain.gameObject.AddComponent<RawImage>();
+                raw.texture = NightArt.RainTile().texture;
+                raw.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.35f);   // an alpha of a token
+                raw.raycastTarget = false;
+                rain.gameObject.AddComponent<MenuRain>();
+                UiAuditExempt.Mark(rain, "the door's rain, a tile at 2x scrolled by whole texels");
+            }
+            var title = plate.Find("Title");
+            if (title != null && title.GetComponent<NeonFlicker>() == null) title.gameObject.AddComponent<NeonFlicker>();
+        }
+
         /// <summary>A key on the pause plate: the pack's worded key with a glyph at its left, fitted to its word, and
         /// — with no <paramref name="onClick"/> — greyed with a SOON tag, because the thing it names is not built yet.</summary>
         private RectTransform PauseKey(RectTransform plate, string id, string label, string glyph, MenuPack.Tone tone, ref float y, Action onClick)
@@ -121,6 +173,7 @@ namespace LastCall.UI
             bool soon = onClick == null;
             var key = PackWordKey(plate, id, label, glyph, tone, new Vector2(0.5f, 1), new Vector2(PauseKeyMinW, PauseKeyH),
                 new Vector2(0, y), onClick ?? (() => { }), PauseKeyMinW, 48f + 24f + (soon ? 72f : 0f));
+            SurfaceKey(key, tone);                     // before the SOON dim below, which the surface then takes too
             if (soon)
             {
                 // The pack has no disabled drawing: the plate, the glyph and the word go to half light, and the key
@@ -132,7 +185,12 @@ namespace LastCall.UI
                 var face = (RectTransform)key.Find("Face");
                 face.Find("Label").GetComponent<Text>().color = UITheme.Cream[2];
                 var glyphImg = face.Find("Glyph");
-                if (glyphImg != null) glyphImg.GetComponent<Image>().color = UITheme.Cream[2];
+                if (glyphImg != null)
+                {
+                    var gi = glyphImg.GetComponent<Image>();
+                    // a brass icon takes the plate's own uniform dim; a pack mask goes to the half-light cream
+                    gi.color = MenuPack.IsIcon(gi.sprite) ? new Color(0.55f, 0.55f, 0.55f, 1f) : UITheme.Cream[2];
+                }
                 var tag = NewRect("Soon", face);
                 Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, 2f));
                 tag.pivot = new Vector2(1, 0.5f);
@@ -153,7 +211,7 @@ namespace LastCall.UI
         /// frame's own half size, cropped to its inside, under a tint of <paramref name="tint"/> and the scanlines —
         /// and the frame (NightArt.MenuFrame, its inner line the picture's mat) lies over it. The plate catches every
         /// click that lands on it, so nothing under it is pressed through it.</summary>
-        private RectTransform NightPlate(RectTransform parent, string name, Vector2 size, float tint)
+        private RectTransform NightPlate(RectTransform parent, string name, Vector2 size, float tint, Sprite art = null)
         {
             var plate = NewRect(name, parent);
             Place(plate, new Vector2(0.5f, 0.5f), size, Vector2.zero);
@@ -166,14 +224,17 @@ namespace LastCall.UI
             Stretch(pic, Vector2.zero, Vector2.one, new Vector2(3, 3), new Vector2(-3, -3));
             pic.gameObject.AddComponent<RectMask2D>();
             int w = Mathf.CeilToInt((size.x - 6f) / 2f), h = Mathf.CeilToInt((size.y - 6f) / 2f);
-            var art = NewRect("Night", pic);
-            Place(art, new Vector2(0.5f, 0.5f), new Vector2(w * 2, h * 2), Vector2.zero);
-            var ai = art.gameObject.AddComponent<Image>();
-            ai.sprite = NightArt.Picture(w, h);
+            // A GENERATED PICTURE (2026-09-25, MenuPack.Art) is drawn the same way - at its own size times two, in the
+            // same window - so a window sized from it (art x 2 + the frame's 6) shows it whole at exactly 2x.
+            if (art != null) { w = Mathf.RoundToInt(art.rect.width); h = Mathf.RoundToInt(art.rect.height); }
+            var night = NewRect("Night", pic);
+            Place(night, new Vector2(0.5f, 0.5f), new Vector2(w * 2, h * 2), Vector2.zero);
+            var ai = night.gameObject.AddComponent<Image>();
+            ai.sprite = art != null ? art : NightArt.Picture(w, h);
             ai.type = Image.Type.Simple;
             ai.color = Color.white;
             ai.raycastTarget = false;
-            UiAuditExempt.Mark(art, "the menu's glass (or drawn night), " + w + "x" + h + " shown at exactly 2x inside its frame");
+            UiAuditExempt.Mark(night, "the menu's glass (or drawn night), " + w + "x" + h + " shown at exactly 2x inside its frame");
             var glass = NewRect("Tint", pic);
             Stretch(glass, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var gi = glass.gameObject.AddComponent<Image>();
@@ -220,14 +281,18 @@ namespace LastCall.UI
             // clock, so the plate breathes rather than jumps.
             sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.03f;
             Image glyphImg = null;
+            // A GREY key shows the shipped brass icon in the glyph's slot when there is one (MenuPack.IconFor, 32x32 at
+            // 1x, the top bar's star3d / cog3d family), never tinted; the amber and lime keys keep the pack's mask in
+            // their own inks, where brass would sit on brass.
+            var icon = glyph != null && tone == MenuPack.Tone.Grey ? MenuPack.IconFor(glyph) : null;
             if (glyph != null)
             {
                 var g = NewRect("Glyph", face);
                 Place(g, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(10f, 1f));
                 g.pivot = new Vector2(0, 0.5f);
                 glyphImg = g.gameObject.AddComponent<Image>();
-                glyphImg.sprite = MenuPack.Glyph(glyph);
-                glyphImg.color = MenuPack.PalettedInk(tone, false);
+                glyphImg.sprite = icon != null ? icon : MenuPack.Glyph(glyph);
+                glyphImg.color = icon != null ? Color.white : MenuPack.PalettedInk(tone, false);
                 glyphImg.raycastTarget = false;
             }
             var pk = rt.gameObject.AddComponent<PackKey>();
@@ -236,7 +301,9 @@ namespace LastCall.UI
             // değiştir"): the pack's own lit sheet was its factory blue-grey; a key goes to the game's club blue
             // under the pointer, which is the answer the back bar already gives.
             pk.Rest = plate.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(tone, true);
-            pk.Glyph = glyphImg; pk.GlyphRest = MenuPack.PalettedInk(tone, false); pk.GlyphLit = MenuPack.PalettedInk(tone, true);
+            pk.Glyph = glyphImg;
+            pk.GlyphRest = icon != null ? Color.white : MenuPack.PalettedInk(tone, false);
+            pk.GlyphLit = icon != null ? Color.white : MenuPack.PalettedInk(tone, true);
             // THE WORD SITS DEAD CENTRE ON THE FACE (2026-09-16, the author: "butonların üstündeki yazılar butonların
             // tam ortasında olsun"; measured off a capture): centred across the WHOLE key, not the part right of the
             // glyph — which put it twenty units off — and two units up, because the pack's face runs from the rim
@@ -251,13 +318,43 @@ namespace LastCall.UI
             return rt;
         }
 
+        /// <summary>Which surface the ESC keys wear (ChromeArt.KeySurfaceTile). A field, so a probe can put the three
+        /// side by side.</summary>
+        internal static ChromeArt.KeySurface PauseKeySurface = ChromeArt.KeySurface.Terrazzo;
+
+        /// <summary>
+        /// THE KEY'S SURFACE (2026-09-25, the author: "ESC menüsündeki butonlara yüzey deseni ekle"). A tiled layer over
+        /// the plate and under the face (glyph, word, SOON tag), inset to the face the pack's drawing leaves inside its
+        /// outline, corner glints and shadow row: (4, 8) to (-4, -4) at rest, measured off pack_grey_blank at 2x, and
+        /// concentric with the word. It is the key root's own child, NOT the face's: the face grows 3% under the
+        /// pointer (PressSink.Bloom) and would carry the surface over the rim. PackKey inks it with the plate's state
+        /// and drops it the pressed drawing's 2 units.
+        /// </summary>
+        private static void SurfaceKey(RectTransform key, MenuPack.Tone tone)
+        {
+            var rt = NewRect("Surface", key);
+            Stretch(rt, Vector2.zero, Vector2.one, new Vector2(4f, 8f), new Vector2(-4f, -4f));
+            rt.SetAsFirstSibling();
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = ChromeArt.KeySurfaceTile(PauseKeySurface);
+            img.type = Image.Type.Tiled;
+            img.pixelsPerUnitMultiplier = 0.5f;        // one texel is two units, the pack's own 2x
+            img.raycastTarget = false;
+            var pk = key.GetComponent<PackKey>();
+            pk.Surface = img;
+            pk.SurfaceRest = MenuPack.SurfaceInk(tone);
+            pk.SurfaceLit = MenuPack.SurfaceHover;
+            pk.Apply();
+        }
+
         /// <summary>A worded key changing tone (a tab lit, a flag chosen, a switch thrown): new drawings and inks.</summary>
         private static void RetoneWordKey(RectTransform key, MenuPack.Tone tone)
         {
             var pk = key.GetComponent<PackKey>();
             if (pk == null) return;
+            bool icon = pk.Glyph != null && MenuPack.IsIcon(pk.Glyph.sprite);     // a brass icon keeps its own colours
             pk.Refit(MenuPack.Paletted(tone, false), MenuPack.Hovered(), MenuPack.Paletted(tone, true),
-                MenuPack.PalettedInk(tone, false), MenuPack.PalettedInk(tone, true));
+                icon ? Color.white : MenuPack.PalettedInk(tone, false), icon ? Color.white : MenuPack.PalettedInk(tone, true));
             var label = key.Find("Face/Label");
             if (label != null) label.GetComponent<Text>().color = MenuPack.PalettedInk(tone, false);
         }

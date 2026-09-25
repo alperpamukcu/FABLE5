@@ -964,7 +964,7 @@ def s_id_card_away():
 
 
 
-# ── the third pass (2026-08-27): the pour, the stamp, and voices ────────────
+# ── the third pass (2026-08-27): the pour and the stamp ─────────────────────
 
 
 def s_pour_glass():
@@ -1139,80 +1139,6 @@ def s_stamp():
     return lowpass(out, 7500.0)
 
 
-# ── voices ──────────────────────────────────────────────────────────────────
-#
-# The author asked whether a "sim language" is worth doing and what I think. My
-# answer, in code: NOT full babble. Simlish is voice-acted and cannot be synthesised
-# convincingly, and the cheap alternative — Animal Crossing's clipped chirping —
-# would fight this game's whole register. A Miami bar at 2am whose mechanic is
-# READING PEOPLE cannot have its customers chirp.
-#
-# So these are MURMURS, not speech: one to three formant-shaped syllables, low, warm
-# and short, played only where a person actually says something (they place an order,
-# they react to the drink). Formant synthesis is what makes them read as a voice
-# rather than a beep — a pulse train through three resonances IS a vowel, and moving
-# the resonances between syllables is what makes it sound like words rather than a
-# held note.
-
-
-def _voice(seconds, pitch, formants, name, breath=0.10):
-    """One syllable: a pulse train through three resonances."""
-    x = t_(seconds)
-    # A glottal pulse train, slightly drifting — a perfectly steady voice is a synth.
-    r = rng(name + ':v')
-    f0 = pitch * (1.0 + 0.02 * np.sin(2 * np.pi * 4.5 * x + r.uniform(0, 6)))
-    ph = 2 * np.pi * np.cumsum(f0) / SR
-    src = np.zeros_like(x)
-    for k in range(1, 14):
-        src += np.sin(ph * k) / (k ** 1.1)
-    src += noise(seconds, name + ':br', 'pink') * breath
-    out = np.zeros_like(x)
-    for hz, amp, q in formants:
-        out += bandpass(src, hz, q) * amp
-    return out
-
-
-def _say(syllables, name, pitch):
-    """A short utterance: a few syllables with a gap between them."""
-    total = sum(s[0] for s in syllables) + 0.05 * len(syllables)
-    out = silence(total + 0.10)
-    at = 0.02
-    # The vowel shapes, roughly: [a] [e] [o] [u] — three resonances each.
-    VOWELS = {
-        'a': [(730.0, 1.0, 7.0), (1090.0, 0.45, 9.0), (2440.0, 0.16, 11.0)],
-        'e': [(530.0, 1.0, 7.0), (1840.0, 0.40, 9.0), (2480.0, 0.18, 11.0)],
-        'o': [(570.0, 1.0, 6.0), (840.0, 0.40, 8.0), (2410.0, 0.10, 11.0)],
-        'u': [(300.0, 1.0, 6.0), (870.0, 0.30, 8.0), (2240.0, 0.08, 11.0)],
-    }
-    for k, (dur, vowel, bend) in enumerate(syllables):
-        v = _voice(dur, pitch * bend, VOWELS[vowel], '%s%d' % (name, k))
-        v = v * env_ar(dur, dur * 0.22, dur * 0.42)
-        place(out, at, v, 1.0 - 0.12 * k)
-        at += dur + 0.05
-    return lowpass(out, 3400.0)
-
-
-def s_voice_order():
-    """A customer saying what they want. Two syllables, level then falling — the
-    shape of a statement, not a question."""
-    return _say([(0.13, 'a', 1.0), (0.11, 'o', 0.88)], 'vo', 165.0)
-
-
-def s_voice_happy():
-    """Pleased. Two syllables RISING, and a little brighter."""
-    return _say([(0.11, 'e', 1.0), (0.13, 'a', 1.18)], 'vh', 190.0)
-
-
-def s_voice_upset():
-    """Not pleased. One syllable, low, falling away."""
-    return _say([(0.20, 'u', 1.0)], 'vu', 132.0)
-
-
-def s_voice_greet():
-    """Someone taking a stool. Short, low, barely a word."""
-    return _say([(0.10, 'o', 1.0)], 'vg', 150.0)
-
-
 def s_screen_on():
     """A screen coming up — the market tablet, the night's boards. A short filtered
     rise with a touch of the house synth under it, so the CHROME has a voice of its
@@ -1299,10 +1225,6 @@ BANK = {
     'pour_tin_far':   (s_pour_tin_far,  'loop',    True,  1.0),
     'slosh_glass':    (s_slosh_glass,   'loop',    True,  1.0),
     'slosh_tin':      (s_slosh_tin,     'loop',    True,  1.0),
-    'voice_order':    (s_voice_order,   'light',   False, 1.0),
-    'voice_happy':    (s_voice_happy,   'light',   False, 1.0),
-    'voice_upset':    (s_voice_upset,   'light',   False, 1.0),
-    'voice_greet':    (s_voice_greet,   'light',   False, 1.0),
     'screen_on':      (s_screen_on,     'light',   False, 1.0),
     'screen_off':     (s_screen_off,    'light',   False, 1.0),
     'menu_open':      (_cue('menu_open'),     'light',   False, 1.0),
@@ -1371,8 +1293,7 @@ SPACE = {
     'star_earn': 'near', 'another_round': 'near', 'buy': 'near',
     'verdict_good': 'near', 'verdict_bad': 'near', 'verdict_flat': 'near',
     # People are across the bar.
-    'voice_order': 'far', 'voice_happy': 'far', 'voice_upset': 'far',
-    'voice_greet': 'far', 'cheer_sfx': 'far', 'upset_sfx': 'far',
+    'cheer_sfx': 'far', 'upset_sfx': 'far',
     'last_call_bell': 'far', 'bar_closed': 'far',
     # And these are big enough that the room answers back.
     'door': 'wide', 'cellar_open': 'wide', 'cellar_close': 'wide',

@@ -154,7 +154,7 @@
     {
       "key": "chrome.settings.controls",
       "text": "CONTROLS",
-      "note": "Settings tab: the key bindings page. ~12 characters."
+      "note": "Settings window TAB word: opens the key bindings page. Printed on a key beside a 32px icon; the four tabs (AUDIO, CONTROLS, DISPLAY, LANGUAGE) share one row. 16px body face, one word, ~10 characters."
     },
     {
       "key": "chrome.settings.master",

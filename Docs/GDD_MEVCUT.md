@@ -80,8 +80,9 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 
 ### 5.1 · İçenin notu, sesi ve partikülleri (2026-09-04)
 
-**KONUŞMA SESİ YOK (yazar: "konuşma sesi olmayacak").** `SpeakSeat` ve dört mırıltı klibi
-(`voice_greet/order/happy/upset`) silindi — selamlama, sipariş ve çıkış artık sessiz.
+**KONUŞMA SESİ YOK (yazar: "konuşma sesi olmayacak").** `SpeakSeat` silindi — selamlama,
+sipariş ve çıkış artık sessiz. Bankada çağrısız kalan dört mırıltı klibi de 2026-09-25'te
+silindi — `voice_greet/order/happy/upset`, dosyalarıyla ve `sfx_bank.py` tarifleriyle.
 Söyledikleri YAZILI: baloncuk siparişi, düşünme ritmini ve içkinin notunu taşıyor, ve
 okunabilir bir satırın altındaki mırıltı aynı bilgiyi ikinci kez, göz atarak okunamayan tek
 kanalda söylüyordu. Tabure, kasa ve odanın bütün sesleri duruyor; yalnız ağızlar sustu.
@@ -1887,6 +1888,63 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.119 · On birinci liste (2/…): menülerin yeni yüzü, tuş yüzeyi, İngilizcenin bayrağı, sessiz sesler gitti (2026-09-26)
+
+Yazar: “1-devam 2-hayır kaldır. ESC menüsündeki butonlara yüzey deseni ekle. Dil kısmında ingilizce için ingiltere
+bayrağı var, yarısı ingiltere yarısı amerika bayrağı olsun.” (1: menülerin PixelLab'le yeniden tasarımı, yaklaşık
+elli üretim tahminiyle; 2: çağrılmayan müşteri mırıltıları.)
+
+- **Mırıltılar silindi:** `voice_greet/order/happy/upset` 2026-09-04'ten beri hiçbir yerden çalmıyordu. Dosyalar,
+  `sfx_bank.py`'deki tarifler (BANK 78 → 74, SPACE satırları) ve `sfx_demo` yürüyüşündeki iki adım gitti; banka yeniden
+  basılınca geri gelmezler. `Tools/sfx_v2` (izlenmeyen 2026-09-10 anlık kopyası) olduğu gibi kaldı.
+- **İngilizcenin bayrağı** (`fl_en`, `Tools/flags.py english`): sol alttan sağ üste çapraz kesim, üstte ABD (kantonu
+  bütün, 50 yıldız bu boyda artı işareti olarak — yıldız olarak okunan tek boy), altta Birleşik Krallık (haçı ve
+  çarpının bir kolu bütün). İki yarı da gerçek bayrağın kendi pikselleri. `fl_gb` ve `fl_us` kimliklerin bayrakları
+  olarak aynen kaldı; `LanguageFlag("en")` artık `en`. Dikey kesim (A, B) rapor sayfasında seçenek.
+- **ESC tuşlarının yüzeyi** (`ChromeArt.KeySurfaceTile`, `PauseKey → SurfaceKey`): tuşun yüzüne, paketin 2x'inde
+  karo olarak serilen beyaz bir maske, yüzün yarım basamak altındaki mürekkeple boyanıyor — gri tuşta `Night[2]`,
+  işaretçi altında `ClubBlue[2]`, amberde `Amber[1]`'in yarı alfası. Yüz ölçüldü (`pack_grey_blank` 2x): (4, 8)–(−4, −4);
+  desen kökün çocuğu, yüzün değil (yüz hover'da %3 büyür, çerçeveye taşardı); basılı çizim 2 birim alçak olduğu için
+  desen de 2 iner. SOON tuşu plakanın düz karartmasını alıyor. Varsayılan **TERRAZZO** (Miami zemini: 48×20 karo, tuş
+  yüzünden yüksek, taneler birbirine değmiyor, otuz texelde bir; ilk 16'lık karo tuş boyunca on kez yinelenip harf gibi
+  okundu, büyütüldü). **OLUK** (dikey) ve **İNCE ÇİZGİ** (çapraz) aynı mekanizmayla rapor sayfasında. Izgara yok:
+  yazar 2026-09-16'da ızgaralı menü karosunu tezgâh desenine benzediği için geri çevirmişti.
+- **Ayarların sekmeleri tek satır:** soldan 44'ten dizilip sağ kenara bakılmıyordu; İngilizce dört sekme 796'ya, yani
+  plakanın halkasının üstüne taşıyordu (Macarca, Vietnamca, Norveççe daha da). Artık plakaya ortalı, 4 aralıkla ve
+  kenarlardan 16 içeride; yine sığmayan bir satırda dört kelime birlikte 8'e iniyor (`LayTabs`). Veri tarafı: CONTROLS
+  28 dilin hiçbirinde yoktu, çevrildi; Norveççe AUDIO “LYDINNSTILLINGER” → “LYD”, Macarca DISPLAY “MEGJELENÍTÉS” →
+  “KÉPERNYŐ”.
+- **Dil sayfasının APPLY'ı** sayfanın sağ alt köşesinde: notun altında −302..−342'de, 310'luk sayfanın dışında
+  duruyordu (editörde DEV TOOLS'un üstünde). APPLY görünürken dilin adı ve notu sayfanın APPLY'ın solunda kalan
+  kısmına ortalanıyor; en uzun notlar (Ukraynaca, Yunanca, Macarca, kendi yüzlerinde) 370 birime varıp tuşa biniyordu.
+- **Menü yazıları 28 dile:** ESC'nin tamamı, tuş atamaları ve ayarların satır adları (28 dizgi) hiçbir tabloda yoktu,
+  her dil bu menüleri İngilizce görüyordu. Hepsi çevrildi; tablonun kendi kelimeleri (defter, mahzen, gece, yeni koşu)
+  yeniden kullanıldı, yer tutucular birebir. Bağımsız doğrulamanın düzelttikleri: aç/kapa beş dilde “evet/hayır”
+  okunuyordu, sıfırla tuşu dört dilde bir durum adıydı, Rumence ipucu tıklamayla basmayı aynı fiille söylüyordu,
+  Ukraynaca SOON etiketi kelimesine değiyordu, Vietnamca CONTINUE devam et gibi okunuyordu. Türkçe “YENİ KOŞU” ve
+  Felemenkçe “NIEUWE RUN” tablonun genel seçimi olduğu için yalnız burada değiştirilmedi.
+- **Menülerin yeni yüzü — kod hazır, sanat seçimi bekliyor** (`MenuPack.Art`, `Tools/menu_art_gen.py`):
+  - ESC: barın ön kapısı gece, tuşların SOLUNDA kendi çerçeveli penceresinde (`HangTheDoor`; 100×168 çizim 2x,
+    ilk tuşla aynı hizada). Tuşlar en genişine eşit tek sütun, uzun bir çeviri resmi değil plakayı genişletir. Arkada
+    değil yanında: yazar 2026-09-16'da menülerin arkasını sakin istemişti. Resmin üstünde yağmur yağıyor
+    (`MenuRain`, bütün texel adımları, gerçek saat), başlık bir neon tüp gibi arada takılıyor (`NeonFlicker`, bir
+    rampa basamağı, sabit tablo, strob yok). İkisi de azaltılmış harekette duruyor.
+  - Ayarlar: tepede boş bir neon marki pano (`HangTheMarquee`; 168×44 çizim 2x), başlık panonun sakin ortasında;
+    uzun başlık 16'ya iner. Pencere 42 uzuyor, sayfalar o kadar iniyor, her sayfa aynı alanı tutuyor.
+  - İkonlar: gri tuşlarda paketin gliflerinin yerine üst barın `star3d` / `cog3d` ailesinden pirinç ikonlar
+    (32×32, 1x, boyanmaz); amber ve lime tuşlar paketin glifinde kalır (pirinç üstüne pirinç olurdu). AYARLAR
+    dişlisi üst barın kendi `cog3d`'si.
+  - Sanat `Resources/Menu`'de değilken her menü bir öncekinin aynısı. Sondaj adayı `MenuPack.ArtOverride` ile
+    çalışma anında verip sahneyi aynı koşuyla yeniden kuruyor; rapor sayfasının oyun içi görüntüleri böyle çekildi,
+    Assets'e hiçbir şey girmedi. Üretilenler FLAT ve MAT (2026-08-18 kuralı: üretilen görselde ışık/yansıma yok).
+  - Maliyet: kapı 20 + pano 20 (ikisi de 170'in altında, dörder aday) + ikonlar 14 `pixflux` (dokuzu, zayıf çıkan
+    dördünün ve bir kez daha yenilenin yeniden çekimi) = **54 üretim**. Paketin glifinden başlatılan ikonlar zayıf
+    çıktı (içi boş üçgen, disket yerine tepsi, iki bloklu kapı), yalnız metinle çekilenler temizdi.
+  - Sanat girince GDD 16 §1'e adıyla istisna yazılacak: “chrome üretilmez” kuralının yanında, yazarın izniyle
+    üretilmiş iki resim (kapı, pano) ve ikonlar.
+  - **Seçim sayfası** (oyuna girmedi): https://claude.ai/artifact/Xw3Sug6mcYHZ5PMz4cBs3D — kopyası
+    `Docs/reports/menu_art`. Kapı K1–K4, pano P1–P4, ikonlar, yüzey, bayrak.
+
 ### 9.118 · On birinci liste (1/…): duran ayarlar, tek satırlık post-it, teslimde solan not, iğne tuşu, DEVAM ET, ışık, tin'de dereceler, sesler, ikinci set (2026-09-25)
 
 Yazar: “Settings açıldığında oyun durmalı … Kimlikteki kokteyl hoverinin pinlenmesi için bir buton koy ve buton
@@ -1937,7 +1995,7 @@ yok olarak ekrandan postit kalksın. Fatura ekranındaki go to the order butonun
   kimliği kapatmak (`id_card_away`), dersin ve son müşterinin satır tuşu (`key_press`), BU GECE HAYIR
   (`deny`), defterin açılıp kapanması (`book_open` / `book_close`, Escape de aynı kapıdan), azaltılmış
   harekette sayfa çevirmek (`page_turn`), Escape'le kapanan kılavuz ve geliştirici paneli (`menu_close`),
-  müşterinin sabrı sarıya dönerken (`patience_warn`). Menü paketinin her tuşu işaretçi altında, odanın
+  müşterinin sabrı son üçte bire, kırmızıya düşerken (`patience_warn`, `patience < 0.34`). Menü paketinin her tuşu işaretçi altında, odanın
   proplarıyla aynı kısa aralıkla “tık” diyor (`PackKey`, `hover`).
 - **İkinci set müzik** (`Tools/music_synth.py`): yazar “aynı tema biraz daha jazz 80'ler disco tarzında” dedi.
   Aynı synth'ler (pad, FM piyano, arp, gated snare) o yılların gece radyosunun çaldığı gibi çalınıyor. Caz
@@ -3248,7 +3306,7 @@ görselleri kullan animasyonlu olduğundan 2 frame olabilir. Butonlar içinde bu
   L biçimli) alınmadı: EMPTY2 + "ENTER". Satırlar 40, altta ipucu (`chrome.settings.controls_hint`).
 - **Bayraklı dil seçimi** (`BuildLanguagePage`; dördüncü sekme LANGUAGE, zarf glifi): bu yapının tablosu olan her dil
   (29) bayrağıyla, sekizli sıralarda 64×49 gri plakalarda; seçili dil yeşil plakada, altında adı ve — seçilen dilde —
-  "bir sonraki açılışta" notu; fare üstünde bayrak dilin adını söyler (hover plakası). Eşleme `LanguageFlag`: en→gb,
+  "bir sonraki açılışta" notu; fare üstünde bayrak dilin adını söyler (hover plakası). Eşleme `LanguageFlag`: en→en (2026-09-26: yarı ABD yarı İngiltere, §9.119),
   zh-CN→cn, zh-TW→tw, pt-BR→br, es-419→mx, ko→kr, ja→jp, uk→ua, cs→cz, sv→se, da→dk, el→gr, ms→my, vi→vn; gerisi
   kendi harfleri. On bir yeni bayrak `Tools/flags.py` ile aynı baskı paletinde çizildi (`LANGUAGE_ISOS`): ru, ua, tw
   (on iki ışınlı güneş), mx (üç renk + kahverengi kartal ve yeşil pad — İtalya'dan ayıran), cz, hu, gr (dokuz şerit,

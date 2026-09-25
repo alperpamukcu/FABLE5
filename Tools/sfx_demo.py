@@ -25,11 +25,11 @@ SR = 44100
 # A night, in order. Loops are cut to a couple of seconds so the walk keeps moving.
 WALK = [
     ('day_open', 0.55), ('ambience_loop', 3.0), ('click', 0.30), ('hover', 0.30),
-    ('id_card', 0.45), ('voice_order', 0.55), ('page_turn', 0.35),
+    ('id_card', 0.45), ('page_turn', 0.35),
     ('cellar_open', 0.55), ('bottle_open', 0.40), ('pour_tin', 2.0),
     ('cap_on', 0.40), ('shake_loop', 2.0), ('tin_tip', 0.40), ('pour_glass', 1.8),
     ('ice_drop', 0.40), ('garnish', 0.35), ('rim_turn', 1.4), ('rim_done', 0.45),
-    ('glass_down', 0.45), ('serve_clink', 0.70), ('voice_happy', 0.80),
+    ('glass_down', 0.45), ('serve_clink', 0.70),
     ('tap_pull', 1.8), ('head_settle', 0.60), ('coin', 0.45), ('cash', 0.80),
     ('star_earn', 0.80), ('door', 0.80), ('stool_take', 0.70), ('bill_slip', 0.50),
     ('stamp', 0.55), ('last_call_bell', 1.2), ('day_close', 1.2),

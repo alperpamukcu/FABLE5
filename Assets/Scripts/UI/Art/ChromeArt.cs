@@ -4002,6 +4002,67 @@ namespace LastCall.UI
                 SpriteMeshType.FullRect, Vector4.zero);
         }
 
+        /// <summary>The ESC keys' surface, three ways (2026-09-25).</summary>
+        public enum KeySurface { Terrazzo, Ribs, Pinstripe }
+
+        /// <summary>
+        /// THE ESC KEYS' SURFACE (2026-09-25, the author: "ESC menüsündeki butonlara yüzey deseni ekle"). A white mask
+        /// tiled at the pack's 2x over the key's face and tinted half a ramp step under it (MenuPack.SurfaceInk), so it
+        /// reads as the material the key is made of rather than as a drawing on it. Never a grid: the author sent back
+        /// a gridded menu tile on 2026-09-16 for looking like the bench counter ("Bu desen built sahnesindeki tezgah
+        /// desenine benziyor, olmaz"). TERRAZZO - the Miami floor's chips, hashed, about one texel in eleven, some two
+        /// wide; RIBS - a ribbed key face, one groove in three columns; PINSTRIPE - a rising hairline, one in four.
+        /// PPU 100 and Repeat, like PanelLattice: a code-made tile at PPU 1 draws as one giant tile (Ladder.cs).
+        /// </summary>
+        public static Sprite KeySurfaceTile(KeySurface kind)
+        {
+            string key = "key:surface:" + kind;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            // The terrazzo tile is 48x20 texels - 96x40 units at 2x, taller than a key's 38-unit face, so it never repeats
+            // down a key and only every 96 units along it (the first cut, 16 square, repeated ten times along a key and
+            // its clusters read as a row of letters). Chips are scattered by a fixed xorshift, never two touching,
+            // about one texel in thirty, a quarter of them two texels long.
+            int w = kind == KeySurface.Terrazzo ? 48 : kind == KeySurface.Ribs ? 3 : 4;
+            int h = kind == KeySurface.Terrazzo ? 20 : kind == KeySurface.Ribs ? 2 : 4;
+            var px = new Color32[w * h];
+            var chip = new Color32(255, 255, 255, 255);
+            if (kind == KeySurface.Terrazzo)
+            {
+                uint s = 0x7E22A2u;
+                int Next(int n) { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (int)(s % (uint)n); }
+                bool Free(int cx, int cy)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int xx = (cx + dx + w) % w, yy = (cy + dy + h) % h;          // the tile wraps: so do its gaps
+                            if (px[yy * w + xx].a != 0) return false;
+                        }
+                    return true;
+                }
+                for (int tries = 0, placed = 0; tries < 400 && placed < w * h / 30; tries++)
+                {
+                    int x = Next(w), y = Next(h);
+                    bool longChip = Next(4) == 0, across = Next(2) == 0;
+                    int x2 = longChip && across ? (x + 1) % w : x, y2 = longChip && !across ? (y + 1) % h : y;
+                    if (!Free(x, y) || !Free(x2, y2)) continue;
+                    px[y * w + x] = chip;
+                    px[y2 * w + x2] = chip;
+                    placed++;
+                }
+            }
+            else
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        if (kind == KeySurface.Ribs ? x == 0 : ((x - y + 4) & 3) == 0) px[y * w + x] = chip;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Repeat };
+            tex.SetPixels32(px);
+            tex.Apply();
+            return Cache[key] = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, Vector4.zero);
+        }
+
         /// <summary>
         /// THE TABLET'S WIFI AT ITS OWN SIZE (2026-09-22, the author's eighth list: market icons "kullanılacağı
         /// konumlardaki boyutuna göre özel olarak üret"): three arcs and a dot, 14x10, drawn for the status bar's 14x10

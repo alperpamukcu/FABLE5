@@ -213,6 +213,64 @@ namespace LastCall.UI
             return lit ? Color.Lerp(ink, Color.white, 0.35f) : ink;
         }
 
+        /// <summary>
+        /// THE SURFACE'S INK on a key of this tone (2026-09-25, ChromeArt.KeySurfaceTile): half a ramp step under the
+        /// face, which the repaint lands at Night 2.52 on a grey key and ClubBlue 2.52 under the pointer - so Night[2]
+        /// and ClubBlue[2]. An amber face lands on Amber 2.02, a whole step over Amber[1], so the amber (and the lime)
+        /// ink is that step at half alpha: the same half-step strength, and the word on it keeps its contrast.
+        /// </summary>
+        public static Color SurfaceInk(Tone tone)
+        {
+            if (tone == Tone.Orange) { var a = UITheme.Amber[1]; a.a = 0.5f; return a; }
+            if (tone == Tone.Green) { var l = UITheme.Lime[1]; l.a = 0.5f; return l; }
+            return UITheme.Night[2];
+        }
+
+        /// <summary>...and under the pointer, on the club-blue plate.</summary>
+        public static Color SurfaceHover => UITheme.ClubBlue[2];
+
+        // ── THE MENUS' GENERATED PIECES (2026-09-25, Tools/menu_art_gen.py) ─────────────────────────────────────────
+        //
+        // The author: "Settings, esc menülerinin UI tasarımı tekrardan tasarlansın. Gerekli arkaplan görsellerini icon
+        // görsellerini veya efektleri pixellabden üretebilirsin." The door beside the ESC keys, the marquee over the
+        // settings and the keys' brass icons live in Resources/Menu and are drawn only when they are there: without
+        // them every menu is exactly the one before. A probe can hand a candidate in through ArtOverride and rebuild
+        // the menus, which is how the report page shows a take in the game before anything enters Assets.
+
+        /// <summary>Candidates put in by a probe (never by the game), by name; they win over Resources.</summary>
+        internal static readonly Dictionary<string, Sprite> ArtOverride = new Dictionary<string, Sprite>();
+
+        /// <summary>A generated menu piece from Resources/Menu, or null. A miss is not cached, so a shipped file is
+        /// picked up by the next build of the menus.</summary>
+        public static Sprite Art(string name)
+        {
+            if (ArtOverride.TryGetValue(name, out var o) && o != null) return o;
+            return Resources.Load<Sprite>("Menu/" + name);
+        }
+
+        /// <summary>The brass icon a key of the pack shows in place of its glyph, when it has been shipped: SETTINGS
+        /// keeps the top bar's own cog (Items/cog3d).</summary>
+        public static Sprite IconFor(string glyph)
+        {
+            switch (glyph)
+            {
+                case "play": return Art("mi_resume");
+                case "save": return Art("mi_save");
+                case "lock": return Art("mi_continue");
+                case "restart": return Art("mi_new_run");
+                case "exit": return Art("mi_quit");
+                case "sound_on": return Art("mi_audio");
+                case "gamepad": return Art("mi_controls");
+                case "expand": return Art("mi_display");
+                case "mail": return Art("mi_language");
+                case "cog": return Art("mi_quit") != null ? ItemArt.Load("cog3d") : null;   // one set: with the rest or not at all
+                default: return null;
+            }
+        }
+
+        /// <summary>Whether a key's glyph image is showing a brass icon rather than a pack mask: an icon is never tinted.</summary>
+        public static bool IsIcon(Sprite s) => s != null && (s.name.StartsWith("mi_") || s.name == "cog3d");
+
         /// <summary>The face colour a tone's cells are filled with (Tools/menu_pack.py measured them).</summary>
         public static Color Face(Tone tone) =>
             tone == Tone.Orange ? new Color32(230, 69, 57, 255)

@@ -168,6 +168,31 @@ def maple(d, im):
     d.rectangle([cx - 1, cy + H * 0.08, cx + 1, cy + H * 0.26], fill=RED)
 
 
+def english(d, im):
+    """ENGLISH, THE LANGUAGE (2026-09-25, the author: "Dil kısmında ingilizce için ingiltere bayrağı var, yarısı
+    ingiltere yarısı amerika bayrağı olsun"): split on the diagonal from the lower-left corner to the upper-right, the
+    United States above it - its canton lands whole in that triangle - and the Union flag below, its cross and one arm
+    of the saltire whole. Each half is the real flag's own pixels. The canton's stars are drawn as five-pixel plus
+    signs here, the one size at which fifty stars in 19x18 still read as stars rather than as a white patch (fl_us, on
+    the licences, keeps its polygons). fl_gb and fl_us are the licences' flags and stay as they are; the language
+    picker alone flies fl_en."""
+    us = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    FLAGS['us'](ImageDraw.Draw(us), us)
+    ud = ImageDraw.Draw(us)
+    ud.rectangle([0, 0, 18, 17], fill=NAVY)
+    for y, xs in ((2, (2, 6, 10, 14)), (8, (2, 6, 10, 14)), (14, (2, 6, 10, 14)),
+                  (5, (4, 8, 12, 16)), (11, (4, 8, 12, 16))):
+        for x in xs:
+            for dx, dy in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                ud.point((x + dx, y + dy), fill=WHITE)
+    uk = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    union_jack(ImageDraw.Draw(uk), uk)
+    po, pu, pk = im.load(), us.load(), uk.load()
+    for y in range(H):
+        for x in range(W):
+            po[x, y] = pu[x, y] if y < (H - 1) - x * (H - 1) / (W - 1.0) else pk[x, y]
+
+
 def aus(d, im):
     """Australia: the jack in the canton, the Commonwealth star under it, the Cross at the fly."""
     d.rectangle([0, 0, W - 1, H - 1], fill=NAVY)
@@ -255,6 +280,7 @@ FLAGS = {
                                    (0.075 + r * 0.10) * H, 1.6, WHITE)
                               for r in range(5) for c in range(5 if r % 2 == 0 else 4)]),
     'gb': union_jack,
+    'en': english,
     'jp': over(bands([WHITE]), disc(RED, r=0.30)),
     'kr': taegeuk,
     'cn': china,
@@ -312,8 +338,9 @@ FLAGS = {
 }
 
 # One flag a language (Languages.cs; the picker's own table lives in TycoonHud.Settings.LanguageFlag). English flies
-# the Union flag, both Chinese tables their own, the two Spanish and Portuguese each theirs.
-LANGUAGE_ISOS = ('gb', 'cn', 'ru', 'de', 'br', 'es', 'fr', 'tr', 'pl', 'kr', 'jp', 'ua', 'tw', 'it', 'mx', 'pt', 'cz',
+# half the Union flag and half the Stars and Stripes (fl_en, 2026-09-25), both Chinese tables their own, the two
+# Spanish and Portuguese each theirs. (gb stays drawn for the licences through the roster.)
+LANGUAGE_ISOS = ('en', 'cn', 'ru', 'de', 'br', 'es', 'fr', 'tr', 'pl', 'kr', 'jp', 'ua', 'tw', 'it', 'mx', 'pt', 'cz',
                  'hu', 'ro', 'nl', 'se', 'dk', 'no', 'fi', 'gr', 'bg', 'id', 'my', 'vn')
 
 

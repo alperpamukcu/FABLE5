@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><title>Menülerin Yeni Yüzü</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/*CSS*/
+</style></head><body><main>
+
+<h1>Menülerin yeni yüzü: seçim sayfası</h1>
+<p>2026-09-26. ESC ve Settings'in yeniden tasarımı için üretilenler, hem çizildikleri haliyle hem oyunun içinde.
+Oyundaki görüntüler montaj değil. Her aday çalışma anında verildi (<code>MenuPack.ArtOverride</code>) ve sahne aynı koşuyla
+yeniden kuruldu. <strong>Assets'e hiçbir resim girmedi.</strong> Resimler senin seçiminden sonra
+<code>Resources/Menu</code>'ye girecek. O zamana kadar oyundaki menüler bugünküyle aynı.</p>
+<p>Oyuna zaten girenler, çünkü bunları doğrudan istedin: ESC tuşlarının yüzey deseni (varsayılanı terrazzo, aşağıda
+üç seçenek var), İngilizcenin yarım yarım bayrağı, tek satıra sığan ayar sekmeleri ve 28 dile çevrilen menü yazıları.</p>
+<div class="ask"><strong>Senden istenen:</strong> her satır için bir seçim. En alttaki tablodaki gibi kısa bir cevap
+yeter: “kapı 2, pano 1, ikonlar tamam, yüzey terrazzo, bayrak C”. Beğenmediğin bir öğe için “yeniden” dersen yalnız o
+öğe, tek adayla yeniden üretilir.</div>
+
+<h2>1 · ESC: barın kapısı, tuşların solunda</h2>
+<p>Resim tuşların <em>yanında</em> duruyor, arkasında değil (16 Eylül'de menülerin arkasını sakin istemiştin). İlk
+tuşla aynı hizada, kendi çerçeveli penceresinde, çizimin tam 2 katı. Tuşlar en genişine eşit tek sütun oluyor. Uzun bir
+çeviri resmi değil plakayı genişletiyor. Resmin üstünde yağmur yağıyor ve PAUSED yazısı arada bir neon tüp gibi
+takılıyor (tek renk basamağı, yavaş, strob yok). Hareket azaltılınca ikisi de duruyor. Dört aday tek çağrıdan geldi.</p>
+<figure><img src="art_door.png" alt="Dört kapı adayı yan yana, 3 kat büyütülmüş">
+<figcaption>Çizildiği haliyle, 3×. Soldan <strong>K1 · K2 · K3 · K4</strong>. 55 renge hizalandı, palet dışı piksel yok.</figcaption></figure>
+<div class="row">
+<figure><img src="esc_door0.png" alt="ESC menüsü, kapı K1"><figcaption><strong>K1</strong> oyunda.</figcaption></figure>
+<figure><img src="esc_door1.png" alt="ESC menüsü, kapı K2"><figcaption><strong>K2</strong> oyunda.</figcaption></figure>
+<figure><img src="esc_door2.png" alt="ESC menüsü, kapı K3"><figcaption><strong>K3</strong> oyunda.</figcaption></figure>
+<figure><img src="esc_door3.png" alt="ESC menüsü, kapı K4"><figcaption><strong>K4</strong> oyunda.</figcaption></figure>
+</div>
+<div class="row">
+<figure><img src="rain_0.png" alt="Yağmur, birinci kare"><figcaption>Yağmur, üç kare (0,05 sn'de bir texel).</figcaption></figure>
+<figure><img src="rain_1.png" alt="Yağmur, ikinci kare"><figcaption>&nbsp;</figcaption></figure>
+<figure><img src="rain_2.png" alt="Yağmur, üçüncü kare"><figcaption>&nbsp;</figcaption></figure>
+</div>
+<figure><img src="esc_hover_press.png" alt="ESC menüsünde bir tuşun üstüne gelinmiş, bir tuşa basılıyor">
+<figcaption>SETTINGS'in üstüne gelinmiş (mavi), NEW RUN basılı. Yüzey deseni basılınca 2 birim içeri iniyor.</figcaption></figure>
+
+<h2>2 · Settings: neon marki pano</h2>
+<p>Pencerenin tepesinde boş bir marki pano duruyor, SETTINGS yazısı panonun sakin ortasında. Başlık panoya sığmayacak
+kadar uzunsa 16'lık boya iniyor. Pencere 42 birim uzuyor ve sayfalar o kadar aşağı iniyor, yani her sayfa bugünkü
+alanını koruyor. Bu da tek çağrıdan dört aday.</p>
+<figure><img src="art_header.png" alt="Dört marki pano adayı"><figcaption>3×. Soldan <strong>P1 · P2 · P3 · P4</strong>.</figcaption></figure>
+<div class="row">
+<figure><img src="set_art_audio.png" alt="Ayarlar, pano P1, ses sayfası"><figcaption><strong>P1</strong>: AUDIO.</figcaption></figure>
+<figure><img src="set_header1.png" alt="Ayarlar, pano P2"><figcaption><strong>P2</strong>.</figcaption></figure>
+<figure><img src="set_header2.png" alt="Ayarlar, pano P3"><figcaption><strong>P3</strong>.</figcaption></figure>
+<figure><img src="set_header3.png" alt="Ayarlar, pano P4"><figcaption><strong>P4</strong>.</figcaption></figure>
+</div>
+<div class="row">
+<figure><img src="set_art_controls.png" alt="Ayarlar, kontroller sayfası"><figcaption>CONTROLS sayfası (P1 ile).</figcaption></figure>
+<figure><img src="set_art_display.png" alt="Ayarlar, görüntü sayfası"><figcaption>DISPLAY sayfası.</figcaption></figure>
+<figure><img src="set_art_language.png" alt="Ayarlar, dil sayfası"><figcaption>LANGUAGE sayfası. APPLY artık sayfanın içinde, sağ alt köşede (dil değişince görünür).</figcaption></figure>
+</div>
+
+<h2>3 · İkonlar</h2>
+<p>Gri tuşlarda paketin beyaz glifleri yerine üst barın <code>star3d</code> / <code>cog3d</code> ailesinden pirinç
+ikonlar var: 32×32, 1×, hiç boyanmıyorlar. Amber RESUME ve yeşil (seçili) sekme paketin glifinde kalıyor, çünkü
+pirincin üstünde pirinç kaybolurdu. AYARLAR'ın dişlisi üst barın kendi <code>cog3d</code>'si ve hiç üretilmedi.
+Dokuz ikon dokuz ayrı ucuz çağrıyla çekildi.</p>
+<figure><img src="art_icons.png" alt="On ikon yan yana"><figcaption>4×. Soldan: devam, kaydet, sürdür (kilit), yeni oyun,
+çıkış, ses, kontroller, görüntü, dil, (ayarlar: cog3d).</figcaption></figure>
+<figure><img src="art_icons_dropped.png" alt="Elenen ilk çekimler"><figcaption>Elenenler: paketin glifinden başlatılan ilk
+çekimler (içi boş üçgen, disket yerine tepsi, kapı değil iki blok, ok değil halka) ve “yükle” gibi okunan ikinci yeni
+oyun. Yeniden, yalnız metinle çekildiler.</figcaption></figure>
+
+<h2>4 · ESC tuşlarının yüzeyi (oyunda, terrazzo)</h2>
+<p>Tuşun yüzüne serilen desen. Yüzün yarım basamak altındaki mürekkeple boyanıyor: gri tuşta <code>Night[2]</code>,
+işaretçi altında <code>ClubBlue[2]</code>, amberde <code>Amber[1]</code>'in yarı alfası. Tuşun çerçevesine, köşe
+parıltılarına ve gölge satırına değmiyor. Izgara yok, çünkü 16 Eylül'de ızgaralı karoyu tezgâh desenine benzediği için
+geri çevirmiştin. <strong>Terrazzo</strong>: Miami zemininin taneleri, birbirine değmeden. <strong>Oluk</strong>: dikey.
+<strong>İnce çizgi</strong>: çapraz.</p>
+<figure><img src="surfaces_x2.png" alt="Üç yüzey: terrazzo, oluk, ince çizgi"><figcaption>2×, yukarıdan aşağı: terrazzo,
+oluk, ince çizgi. Koyu SOON tuşlarında desen plakayla birlikte kararıyor.</figcaption></figure>
+
+<h2>5 · İngilizcenin bayrağı (oyunda, C)</h2>
+<p>Yarısı ABD, yarısı İngiltere. İki yarı da gerçek bayrağın kendi pikselleri. ABD kantonundaki 50 yıldız bu boyda artı
+işareti olarak çizildi. Bu boyda yıldız olarak okunan tek biçim bu (kimliklerdeki <code>fl_us</code> çokgenleri beyaz bir
+leke gibi duruyor). Müşteri kimliklerindeki İngiltere ve ABD bayrakları değişmedi.</p>
+<figure><img src="art_flags.png" alt="Üç bayrak seçeneği ve iki kaynak bayrak"><figcaption>4×. <strong>C</strong> çapraz
+(oyunda) · <strong>A</strong> dikey: İngiltere'nin direk tarafı · <strong>B</strong> dikey: İngiltere'nin ortası ·
+kaynaklar: İngiltere, ABD.</figcaption></figure>
+<div class="row">
+<figure><img src="set_ship_language.png" alt="Dil sayfası, bayrak C"><figcaption><strong>C</strong> dil sayfasında.</figcaption></figure>
+<figure><img src="lang_flag_A.png" alt="Dil sayfası, bayrak A"><figcaption><strong>A</strong>.</figcaption></figure>
+<figure><img src="lang_flag_B.png" alt="Dil sayfası, bayrak B"><figcaption><strong>B</strong>.</figcaption></figure>
+</div>
+
+<h2>6 · Uzun dillerde</h2>
+<p>Menü yazıları (ESC'nin tamamı, tuş atamaları, ayarların satır adları) 28 dilin hiçbirinde yoktu. Hepsi İngilizce
+kalıyordu, şimdi çevrildi. CONTROLS sekmesi de öyle. Norveççe “LYDINNSTILLINGER” “LYD”, Macarca “MEGJELENÍTÉS”
+“KÉPERNYŐ” oldu. Sekmeler plakaya ortalı tek satır. Sığmazsa dördü birlikte 8'lik boya iniyor, biri tek başına asla.</p>
+<div class="row">
+<figure><img src="esc_de.png" alt="ESC menüsü Almanca"><figcaption>Almanca ESC.</figcaption></figure>
+<figure><img src="set_de_audio.png" alt="Ayarlar Almanca"><figcaption>Almanca ayarlar.</figcaption></figure>
+<figure><img src="set_de_controls.png" alt="Ayarlar Almanca, kontroller"><figcaption>Almanca kontroller.</figcaption></figure>
+<figure><img src="esc_no.png" alt="ESC menüsü Norveççe"><figcaption>Norveççe ESC.</figcaption></figure>
+<figure><img src="set_no_audio.png" alt="Ayarlar Norveççe"><figcaption>Norveççe ayarlar.</figcaption></figure>
+<figure><img src="set_no_language.png" alt="Ayarlar Norveççe, dil"><figcaption>Norveççe dil sayfası.</figcaption></figure>
+</div>
+
+<h2>7 · Bugün sevk edilen menü</h2>
+<div class="row">
+<figure><img src="esc_ship_terrazzo.png" alt="ESC menüsü, sanat olmadan"><figcaption>ESC, resimsiz: yalnız yüzey deseni yeni.</figcaption></figure>
+<figure><img src="set_ship_audio.png" alt="Ayarlar, sanat olmadan"><figcaption>Ayarlar, resimsiz: sekmeler tek satırda.</figcaption></figure>
+</div>
+
+<h2>Seçimler</h2>
+<table>
+<tr><th>Öğe</th><th>Seçenekler</th><th>Şu an oyunda</th></tr>
+<tr><td>ESC kapısı</td><td>K1 · K2 · K3 · K4 · yeniden · hayır</td><td>yok (bugünkü plaka)</td></tr>
+<tr><td>Settings panosu</td><td>P1 · P2 · P3 · P4 · yeniden · hayır</td><td>yok (bugünkü başlık)</td></tr>
+<tr><td>İkonlar</td><td>tamam · şu ikonlar yeniden: … · hayır (paketin glifleri)</td><td>paketin glifleri</td></tr>
+<tr><td>Yağmur ve neon</td><td>evet · yalnız yağmur · yalnız neon · hayır</td><td>kapıyla birlikte gelir</td></tr>
+<tr><td>Tuş yüzeyi</td><td>terrazzo · oluk · ince çizgi · hiçbiri</td><td>terrazzo</td></tr>
+<tr><td>İngilizce bayrağı</td><td>C · A · B</td><td>C</td></tr>
+</table>
+<p>Maliyet: kapı 20 + pano 20 + ikonlar 14 = <strong>54 üretim</strong>. Söylenen tahmin 50 civarıydı. Aradaki fark,
+paketin glifinden başlatılıp zayıf çıkan dört ikonun ve bir kez daha yenilenen yeni oyun ikonunun yeniden çekimi.</p>
+
+</main></body></html>

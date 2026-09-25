@@ -53,14 +53,15 @@ namespace LastCall.UI
         private KeyAction? _bindListening;
         private readonly Dictionary<string, RectTransform> _flagKeys = new Dictionary<string, RectTransform>();
 
-        /// <summary>One flag a language (Tools/flags.py draws them, LANGUAGE_ISOS): English flies the Union flag,
-        /// the two Chinese tables theirs, the two Spanish and the two Portuguese each their own; the rest fly their
-        /// own letters.</summary>
+        /// <summary>One flag a language (Tools/flags.py draws them, LANGUAGE_ISOS): English flies half the Union flag
+        /// and half the Stars and Stripes (fl_en, 2026-09-25 - the author: "yarısı ingiltere yarısı amerika bayrağı
+        /// olsun"; fl_gb stays the British licences' flag), the two Chinese tables theirs, the two Spanish and the two
+        /// Portuguese each their own; the rest fly their own letters.</summary>
         private static string LanguageFlag(string code)
         {
             switch (code)
             {
-                case "en": return "gb";
+                case "en": return "en";
                 case "zh-CN": return "cn";
                 case "zh-TW": return "tw";
                 case "pt-BR": return "br";
@@ -114,6 +115,69 @@ namespace LastCall.UI
         /// <summary>The settings window took the clock when it opened (from the cog, not from the pause menu).</summary>
         private bool _settingsHeldClock;
 
+        /// <summary>How far the marquee pushes the window's contents down (0 without it), and by how much it grows.</summary>
+        private float _settingsDrop;
+        private const float HeaderDrop = 42f;
+
+        /// <summary>
+        /// The marquee in its framed window at the top of the plate, the title on the board's calm middle and the
+        /// sunset rules under the window. The title steps down to the 16 size when the word would run onto the neon at
+        /// the board's ends (the calm middle is about 220 units at 2x).
+        /// </summary>
+        private void HangTheMarquee(RectTransform plate, Sprite header)
+        {
+            var win = new Vector2(header.rect.width * 2f + 6f, header.rect.height * 2f + 6f);
+            var window = NightPlate(plate, "Header", win, 0f, header);
+            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0.5f, 1f);
+            window.anchoredPosition = new Vector2(0f, -12f);
+            NightTitle(plate, UIText.T("chrome.settings.title"), -12f - win.y * 0.5f + 16f);   // the 32-tall title, centred on the board
+            var title = plate.Find("Title")?.GetComponent<Text>();
+            var shadow = plate.Find("TitleShadow")?.GetComponent<Text>();
+            if (title != null && title.preferredWidth > 220f)
+            {
+                title.fontSize = LanguageFonts.Size(title.font, 16);
+                if (shadow != null) shadow.fontSize = title.fontSize;
+            }
+            if (title != null) title.gameObject.AddComponent<NeonFlicker>();
+            SunsetRules(plate, -12f - win.y - 8f, SetW - 80f);
+        }
+
+        /// <summary>
+        /// THE TABS IN ONE ROW THAT FITS (2026-09-25): laid left to right from 44 with nothing checking the right edge,
+        /// four English tabs already ran to 796 on an 800 plate - LANGUAGE lay across the plate's ring - and Hungarian,
+        /// Vietnamese and Norwegian ran further. They are centred on the plate now with a 4-unit gap inside 16 of its
+        /// edges; a row that still does not fit steps ALL four words down to the 8 size together (never one alone) and
+        /// fits the keys to them again. The word stays dead centre on each key (PackWordKey's pad of 100).
+        /// </summary>
+        private void LayTabs(float y)
+        {
+            const float Edge = 16f, Gap = 4f;
+            var tabs = new List<RectTransform>();
+            foreach (var id in new[] { "AUDIO", "CONTROLS", "DISPLAY", "LANGUAGE" })
+                if (_settingsTabs.TryGetValue(id, out var t) && t != null) tabs.Add(t);
+            float Total()
+            {
+                float w = 0f;
+                foreach (var t in tabs) w += t.sizeDelta.x;
+                return w + Gap * (tabs.Count - 1);
+            }
+            if (Total() > SetW - Edge * 2f)
+                foreach (var t in tabs)
+                {
+                    var label = t.Find("Face/Label")?.GetComponent<Text>();
+                    if (label == null) continue;
+                    label.fontSize = LanguageFonts.Size(label.font, 8);
+                    t.sizeDelta = new Vector2(120f, t.sizeDelta.y);
+                    FitKey(t, 120f, 100f);
+                }
+            float x = Mathf.Round((SetW - Total()) * 0.5f);
+            foreach (var t in tabs)
+            {
+                t.anchoredPosition = new Vector2(x, y);
+                x += t.sizeDelta.x + Gap;
+            }
+        }
+
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
@@ -133,22 +197,32 @@ namespace LastCall.UI
             dimBtn.transition = Selectable.Transition.None;
             dimBtn.onClick.AddListener(ToggleSettings);
 
-            var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH));   // the ESC family's plate (2026-09-21)
-            NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
-            SunsetRules(plate, -66f, SetW - 80f);
+            // THE MARQUEE (2026-09-25, the menus' redesign - MenuPack.Art "menu_header"): a blank neon sign board at the
+            // top of the window, the title written on its calm middle. It pushes everything under it down by
+            // HeaderDrop and the plate grows by as much, so every page keeps the room it had. Without it the window
+            // is the one before.
+            var header = MenuPack.Art("menu_header");
+            _settingsDrop = header != null ? HeaderDrop : 0f;
+            var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH + _settingsDrop));   // the ESC family's plate (2026-09-21)
+            if (header != null) HangTheMarquee(plate, header);
+            else
+            {
+                NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
+                SunsetRules(plate, -66f, SetW - 80f);
+            }
 
-            // the tabs, each with a glyph of the pack, fitted to its word, laid left to right
-            float tx = SetPad;
+            // the tabs, each with a glyph of the pack, fitted to its word; LayTabs puts them in one row that fits
+            float tabY = -(90f + _settingsDrop);
             foreach (var (id, key, glyph) in new[] {
                 ("AUDIO", "chrome.settings.audio", "sound_on"), ("CONTROLS", "chrome.settings.controls", "gamepad"),
                 ("DISPLAY", "chrome.settings.display", "expand"), ("LANGUAGE", "chrome.settings.language", "mail") })
             {
                 string page = id;
                 var tab = PackWordKey(plate, "Tab_" + id, UIText.T(key), glyph, MenuPack.Tone.Grey, new Vector2(0, 1), new Vector2(140, 38),
-                    new Vector2(tx, -90f), () => { Sfx.Play("click"); ShowSettingsPage(page); }, 140f, 48f + 16f);
+                    new Vector2(SetPad, tabY), () => { Sfx.Play("click"); ShowSettingsPage(page); }, 140f, 48f + 16f);
                 _settingsTabs[id] = tab;
-                tx += tab.sizeDelta.x + 8f;
             }
+            LayTabs(tabY);
 
             _settingsPages["AUDIO"] = BuildAudioPage(plate);
             _settingsPages["CONTROLS"] = BuildControlsPage(plate);
@@ -190,7 +264,7 @@ namespace LastCall.UI
         private RectTransform BuildAudioPage(RectTransform plate)
         {
             var page = NewRect("Page_AUDIO", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -140f));
+            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
             float y = 0f;
             _settingsMeter = MeterRow(page, "MASTER", UIText.T("chrome.settings.master"), "speaker", ref y, () => Sound.Volume, v => Sound.Volume = v, out _settingsVolume, AudioRow);
             _settingsMusicMeter = MeterRow(page, "MUSIC", UIText.T("chrome.settings.music"), "note", ref y, () => Sound.MusicVolume, v => Sound.MusicVolume = v, out _settingsMusicPct, AudioRow);
@@ -422,7 +496,7 @@ namespace LastCall.UI
         private RectTransform BuildControlsPage(RectTransform plate)
         {
             var page = NewRect("Page_CONTROLS", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -140f));
+            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
             float y = 0f;
             foreach (var (action, key, mark) in new[] {
                 (KeyAction.Pause, "chrome.bind.pause", "cog"), (KeyAction.Book, "chrome.bind.book", "book"),
@@ -544,7 +618,7 @@ namespace LastCall.UI
         private RectTransform BuildDisplayPage(RectTransform plate)
         {
             var page = NewRect("Page_DISPLAY", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -140f));
+            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
             float y = 0f;
             var mot = SettingsRow(page, "MOTION", UIText.T("chrome.settings.motion"), "redo", ref y);
             _settingsMotionKey = PackWordKey(mot, "MOTION", UIText.T("chrome.settings.full"), null, MenuPack.Tone.Green, new Vector2(0, 0.5f), new Vector2(140, 40), new Vector2(300f, 0), () =>
@@ -582,7 +656,7 @@ namespace LastCall.UI
         private RectTransform BuildLanguagePage(RectTransform plate)
         {
             var page = NewRect("Page_LANGUAGE", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -140f));
+            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
             var hint = NewText("Hint", page, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
             Place(hint.rectTransform, new Vector2(0, 1), new Vector2(640, 12), new Vector2(0, -2f));
             hint.rectTransform.pivot = new Vector2(0, 1);
@@ -640,8 +714,11 @@ namespace LastCall.UI
             _settingsLanguageNote.horizontalOverflow = HorizontalWrapMode.Overflow;
             // APPLY (2026-09-16, the author: "dil seçildikten sonra uygula dendiğinde oyunun dili direkt değişmeli"):
             // shown once a different language is picked; the scene rebuilds around the same run in the new words.
+            // IN THE PAGE'S LOWER RIGHT CORNER (2026-09-25): under the note it stood at -302..-342 on a page 310 tall -
+            // over the window's foot and, in the editor, over DEV TOOLS. The corner is clear of the centred name and
+            // note (the longest note is about 230 units across the middle).
             _settingsApplyLanguage = PackWordKey(page, "APPLY", UIText.T("chrome.settings.apply_language"), "restart", MenuPack.Tone.Green,
-                new Vector2(0.5f, 1), new Vector2(180, 40), new Vector2(0, captionY - 44f), () =>
+                new Vector2(1f, 0f), new Vector2(180, 40), Vector2.zero, () =>
                 {
                     string pick = Localization.PreferredCode();
                     if (pick == Localization.Current.Code || _bootstrap == null) return;
@@ -691,7 +768,15 @@ namespace LastCall.UI
             {
                 string pick = Localization.PreferredCode();
                 var info = Languages.Find(pick);
-                if (_settingsApplyLanguage != null) _settingsApplyLanguage.gameObject.SetActive(pick != Localization.Current.Code);
+                bool applyUp = pick != Localization.Current.Code;
+                if (_settingsApplyLanguage != null) _settingsApplyLanguage.gameObject.SetActive(applyUp);
+                // While APPLY stands in the page's corner the name and the note are centred in what the page leaves
+                // beside it (2026-09-26: the longest notes - Ukrainian, Greek, Hungarian in their own faces - ran up
+                // to 370 units across the middle and onto the key); without it they are centred on the page.
+                float beside = applyUp && _settingsApplyLanguage != null ? _settingsApplyLanguage.sizeDelta.x + 16f : 0f;
+                foreach (var line in new[] { _settingsLanguage, _settingsLanguageNote })
+                    if (line != null)
+                        line.rectTransform.anchoredPosition = new Vector2(-Mathf.Round(beside * 0.5f), line.rectTransform.anchoredPosition.y);
                 _settingsLanguage.text = info != null ? info.Name : pick;
                 foreach (var pair in _flagKeys)
                     RetoneWordKey(pair.Value, pair.Key == pick ? MenuPack.Tone.Green : MenuPack.Tone.Grey);

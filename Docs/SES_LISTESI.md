@@ -15,7 +15,7 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) + **müzik kanalı** (iki kaynak, parçadan parçaya geçiş) + 2 **ortam yatağı** (kalabalık, yağmur) |
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume`; 2026-09-15'ten beri ayrıca efektler `Sound.EffectsVolume`, müzik `Sound.MusicVolume` (ayarlar penceresinin AUDIO sayfası) |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
-| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **68 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **12 müzikal işaret** ve **9 şarkı** oyunun kendi bestesi (`Tools/music_synth.py`), **11 klip sentetik** (`Tools/sfx_bank.py`), **1 ortam yatağı** CC0 |
+| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **68 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **12 müzikal işaret** ve **9 şarkı** oyunun kendi bestesi (`Tools/music_synth.py`), **7 klip sentetik** (`Tools/sfx_bank.py`), **1 ortam yatağı** CC0 |
 | **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
@@ -52,7 +52,7 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | `cheer_sfx` | 1.15 s | Memnun müşteri (memnuniyet ≥ 0.55) | Bildirim: iki parlak nota + e-piyano çınlaması (`music_synth`), insan sesi yok |
 | `upset_sfx` | 0.97 s | Küs müşteri çıkışı | Bildirim: inen iki yumuşak nota (`music_synth`), insan sesi yok |
 | `serve_clink` | 0.55 s | Bardak müşteriye gidince | Cam tokuşması |
-| `patience_warn` | 0.22 s | **Bağlanmadı** — sabır bitmek üzereyken çalmalı | Tik / huzursuz vuruş |
+| `patience_warn` | 0.22 s | Sabır kırmızıya (son üçte bire) dönerken, ziyarette bir kez (TycoonHud.Seats) | Tik / huzursuz vuruş |
 
 ### 1.3 Kimlik ve kapı (GDD 28)
 
@@ -160,13 +160,11 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 
 ### 1.12 Bağlanmamış (dosya var, kod çağırmıyor)
 
-`voice_greet` (0.25 s), `voice_order` (0.44 s), `voice_happy` (0.44 s),
-`voice_upset` (0.35 s), `patience_warn` (0.22 s).
-
-Bunlar müşteri konuşma balonlarına takılmak üzere üretilmiş ama hiçbir yerden
-çağrılmıyor. **Karar gerekiyor:** karakter başına kısa "mırıldanma" (Animal Crossing /
-Undertale usulü) istiyor muyuz? İstiyorsak kişi başına 3–4 heceli sete ihtiyaç var,
-istemiyorsak bu beş dosya silinir.
+Yok. Dört mırıltı klibi (`voice_greet`, `voice_order`, `voice_happy`, `voice_upset`)
+2026-09-25'te yazarın kararıyla silindi ("hayır, kaldır"; GDD_MEVCUT §5.1: müşterinin
+konuşma sesi yok). Hem dosyalar hem `Tools/sfx_bank.py`'deki tarifleri gitti, yani
+bankayı yeniden basmak onları geri getiremez. `patience_warn` aynı gün bağlandı: sabır
+kırmızıya (son üçte bire) dönerken ziyarette bir kez çalıyor (TycoonHud.Seats).
 
 ---
 
