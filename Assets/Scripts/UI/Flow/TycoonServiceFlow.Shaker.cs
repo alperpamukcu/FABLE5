@@ -1265,7 +1265,13 @@ namespace LastCall.UI
                 var card = run.Shelf.Find(id)?.Ingredient;
                 float share = (float)(glass.RatioOf(id) * glass.FillFraction);   // of the VESSEL
                 float segH = share * h;
-                var tone = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
+                // THE BAND IN ITS DEGREE (2026-09-26, the author: "Kırmızıdan yeşile doğru miktarı gösteren göstergeyi
+                // kaldır onun yerine bir kokteylden ne kadar koyduğuna göre o renk olmalı. Yani eğer gini 20-40 arası
+                // koyarsam eğer göstergede hangi renk ise o renk olmalı"): each band wears the colour of the box its
+                // share OF THE DRINK is in - the note's and the book's five colours, red to dark green - so the tin
+                // says at a glance what the dots on the note ask for. The bottle's own colour stays on the plaque's
+                // bars beside it, with its name.
+                var tone = TycoonHud.BandBoxColors[RatioBox.IndexOf(glass.RatioOf(id))];
                 var seg = GaugeBand(bar, $"S_{id}", segH, y, tone);
                 bands.Add((seg.GetComponent<Image>(), tone));
                 // THE MENISCUS: one lit row at the top of each measure.
@@ -1281,24 +1287,8 @@ namespace LastCall.UI
                     mimg.raycastTarget = false;
                 }
                 // (The 8 px name and share beside each band left on 2026-09-21 - "çok küçük kalmış" - for the
-                //  plaque's bars, LayMixRows, which say the same at 16 px with the bottle's picture and a bar.)
-                // THE NOTE'S DOTS, IN THE TIN (2026-09-25, the author: "Kokteyl yaptığımız ekranda hangi alkolden ne
-                // kadar koyduğumuz derece renkleri ile tin'in içerisinde gözüksün"): each band carries the five dots
-                // the post-it and the book print for its bottle, lit up to the box its share OF THE DRINK is in, in the
-                // boxes' own colours - so the tin is read against the note by counting, the way the note is read. A
-                // band too thin to hold them (a first splash in a big tin) goes without until it grows.
-                if (segH >= TinDotsMinBand)
-                {
-                    var dotsArt = ChromeArt.RatioDots(RatioBox.IndexOf(glass.RatioOf(id)), TycoonHud.BandBoxColors,
-                                                      RatioBox.Count, TinDotR, TinDotGap);
-                    var dots = NewRect("Dots", seg);
-                    dots.anchorMin = dots.anchorMax = dots.pivot = new Vector2(0.5f, 0.5f);
-                    dots.sizeDelta = new Vector2(dotsArt.rect.width, dotsArt.rect.height);
-                    dots.anchoredPosition = Vector2.zero;
-                    var dimg = dots.gameObject.AddComponent<Image>();
-                    dimg.sprite = dotsArt;
-                    dimg.raycastTarget = false;
-                }
+                //  plaque's bars, LayMixRows, which say the same at 16 px with the bottle's picture and a bar. The five
+                //  dots that stood in each band on 2026-09-25 left on the 26th: the band's own colour says it now.)
                 y += segH;
             }
 
@@ -1317,11 +1307,6 @@ namespace LastCall.UI
             BlendGauge(bar, run.IsMixed ? 1f : 0f);
         }
 
-        /// <summary>The tin's dots: radius 4, two between - 50 x 9 at the measure's own 1x, inside its foot. (Radius 3
-        /// was measured first, 44 x 7, and read as a row of specks.) A band shows them once it is two taller than they are.</summary>
-        private const int TinDotR = 4, TinDotGap = 2;
-        private const float TinDotsMinBand = 11f;
-
         private RectTransform GaugeBand(RectTransform bar, string name, float height, float y, Color fill)
         {
             var seg = NewRect(name, bar);
@@ -1332,11 +1317,11 @@ namespace LastCall.UI
             var img = seg.gameObject.AddComponent<Image>();
             img.color = fill;
             img.raycastTarget = false;
-            // the pouring liquid's checker over the band (2026-09-17), two-unit cells tiled
+            // the liquid's bubbles over the band (2026-09-26; the pouring checker of 2026-09-17 before it)
             var grain = NewRect("Grain", seg);
             Stretch(grain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var gi = grain.gameObject.AddComponent<Image>();
-            gi.sprite = ChromeArt.LiquidChecker();
+            gi.sprite = ChromeArt.LiquidBubbles();
             gi.type = Image.Type.Tiled;
             gi.raycastTarget = false;
             return seg;

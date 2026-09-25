@@ -121,5 +121,19 @@
   "pngs": [
    "AssetPipeline/staging/menu_art/raw/mi_new_run_0.png"
   ]
+ },
+ "esc_bg": {
+  "job_id": "94b11372-bdff-4afc-bc2a-8101feffa2d2",
+  "tool": "create_image_pro",
+  "pngs": [
+   "AssetPipeline/staging/menu_art/raw/esc_bg_0.png"
+  ]
+ },
+ "mi_settings": {
+  "job_id": "a339be0d-432b-4b57-ad1b-26cc4b942015",
+  "tool": "create_image_pixflux",
+  "pngs": [
+   "AssetPipeline/staging/menu_art/raw/mi_settings_0.png"
+  ]
  }
 }

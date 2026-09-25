@@ -1888,6 +1888,41 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.120 · On ikinci liste (1/…): menülerin resimleri girdi, ESC'nin arka planı ve enstrüman ayağı, küçük post-it, derece renkli tin, rafta duran şişeler (2026-09-26)
+
+Yazar: “ESC için arkaplanda kullanılan mavi UI yerine arkaplan görseli üret. P2. Dil sayfası C. Görseldeki yazıların
+tarzını değiş. Ana sahnede üst bardaki ayarlar butonunun iconunu da aynı icon sanat diliyle üret. Postit boyutu çok
+büyük. 2. görseldeki sıvı dokusunu değiştir. Kırmızıdan yeşile doğru miktarı gösteren göstergeyi kaldır onun yerine bir
+kokteylden ne kadar koyduğuna göre o renk olmalı. Alkoller raflarda havada duruyor aşağı çek ve 2.5d bir rafta tam
+üstünde duruyor hissiyatı ver.”
+
+- **Seçilenler oyunda:** ayarların marki panosu P2 (`Resources/Menu/menu_header.png`), dokuz pirinç ikon (`mi_*`);
+  İngilizcenin bayrağı zaten C'ydi. Kapı seçilmedi: yazar yerine arka plan istedi; kapının düzeni, yağmuru ve
+  `MenuRain` silindi (ölü kod beklemesin).
+- **ESC'nin plakası bir resim** (`menu_esc_bg`, `PicturePlate`): üretilmiş Art Deco panel (220×252, tam 2x → 440×504),
+  kendi pembe neonu, başlığın arkasında teal güneş ışını, alt köşelerde palmiye yaprakları, tuşların durduğu sakin bir
+  orta. Resim varken sunset çizgileri çizilmez ve PAUSED bir neon tüp gibi arada takılır (`NeonFlicker`). Tek aday,
+  20 üretim. Beğenilmezse tek dosya silinir, mavi plaka geri gelir.
+- **ESC'nin ayağı, beam'in enstrümanları:** 8'lik saat satırı ve turuncu kasa yazısı yerine üst barın iki kuyusu
+  (`ChromeArt.Well`): SAAT — cyan segment saat, gecenin numarası ve adı (16; sığmazsa 8); KASA — yeşil segment figür,
+  ekside kırmızı. Bar zaten bu sözcüklerle konuşuyor.
+- **Üst barın dişlisi** menülerin pirinç ailesinden (`mi_settings`, pixflux, 1 üretim); ESC'deki AYARLAR da aynısı.
+- **Post-it küçüldü:** 336'dan 288 genişliğe, satır 34'ten 26'ya, başlık aralığı 32'den 28'e; noktalar kitabın küçük
+  boyunda (`RatioDots(…, 3, 2)`, 2x'te 80×14). Üç dökümlük içki 336×237'den 288×187'ye. Kitabın sayfaları değişmedi.
+- **Tin'de derece rengi** (`FillGauge`): her bant, şişenin içkideki payının kutusunun rengi (`BandBoxColors`: kırmızı
+  → koyu yeşil). Gin %20–40 arasındaysa turuncu, not da turuncu iki nokta basar. Bantların içindeki beş nokta kalktı.
+  Sıvı dokusu dama yerine seyrek kabarcıklar (`ChromeArt.LiquidBubbles`). Şişenin kendi rengi yanındaki plakette,
+  adıyla duruyor.
+- **Şişeler rafta** (`PlaceCellarSlot`, `PlaceCellarShadow`, `PlaceCellarLights`): dünya kökü pencereyi kaplamak için
+  büyütülüyor (`DesignFrame.SceneScale`, 16:9'dan geniş pencerede > 1). Stok ise dünya konumuyla, ölçeksiz sahne
+  birimleriyle yerleşiyordu. 16:9'da doğru, geniş bir ekranda tahtanın (ölçek − 1) × 70 birim üstünde; yazarın
+  ekranında dört satır. Artık kökün altında yerel konumla: ölçek de çekmece de kendiliğinden geliyor (1600×720'de
+  ölçek 1,25 iken tabanlar 142–143. satırda ölçüldü). Aynı hata ışıklarda da vardı.
+- **2.5D raf:** tahtanın üst yüzü resimde altı satırdı; üstünde duran şişe tüm yüzü örtüp kenarda duruyormuş gibi
+  okunuyordu. Her bölmenin iki direği arasında yüz altı satır daha geriye, duvara değdiği koyu çizgiye kadar uzuyor
+  (`BuildShelfTops`, tezgâhın kendi iki rengiyle çizilip cilasıyla yeniden boyanıyor). Tabanlar derin bir rafın ön
+  kısmında.
+
 ### 9.119 · On birinci liste (2/…): menülerin yeni yüzü, tuş yüzeyi, İngilizcenin bayrağı, sessiz sesler gitti (2026-09-26)
 
 Yazar: “1-devam 2-hayır kaldır. ESC menüsündeki butonlara yüzey deseni ekle. Dil kısmında ingilizce için ingiltere

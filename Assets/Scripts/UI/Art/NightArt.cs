@@ -202,30 +202,6 @@ namespace LastCall.UI
             return Cache[Key] = Make(px, 1, 4, Vector4.zero);
         }
 
-        /// <summary>
-        /// RAIN ON THE DOOR (2026-09-25, the ESC menu's picture - MenuRain scrolls it): a 64x96 tile of short falling
-        /// streaks, one texel wide and three to six long, a brighter head at each foot, a white mask the caller inks
-        /// with a token. Seeded, so the same rain falls every time; Repeat, so it tiles as it scrolls.
-        /// </summary>
-        public static Sprite RainTile()
-        {
-            const string Key = "night:rain";
-            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
-            const int W = 64, H = 96, Streaks = 18;
-            var px = new Color32[W * H];
-            var rng = new Rng(0xA11CE5u);
-            for (int s = 0; s < Streaks; s++)
-            {
-                int x = rng.Range(W), y = rng.Range(H), len = 3 + rng.Range(4);
-                for (int k = 0; k < len; k++)
-                {
-                    int yy = (y + k) % H;                               // texture rows run upward: y is the streak's foot
-                    px[yy * W + x] = new Color32(255, 255, 255, (byte)(k == 0 ? 255 : 150));
-                }
-            }
-            return Cache[Key] = Make(px, W, H, Vector4.zero);
-        }
-
         // ── the plates ────────────────────────────────────────────────────────────────────────────────────────────
 
         /// <summary>The menu plate: a night glass with a two-unit cyan frame, a club-blue inner line, and its corners

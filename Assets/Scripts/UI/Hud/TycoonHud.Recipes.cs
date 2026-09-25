@@ -1106,8 +1106,13 @@ namespace LastCall.UI
         /// same rows). Rows stand <paramref name="pitch"/> apart. Returns the height used.
         /// </summary>
         private float BookPourRows(RectTransform host, RecipeDefinition r, TycoonRun run, float width, float y,
-            float pitch, bool locked)
+            float pitch, bool locked, bool smallDots = false)
         {
+            // THE NOTE'S SMALL DOTS (2026-09-26, the author: "Postit boyutu çok büyük"): the same five at radius 3 with
+            // two between (80x14 at 2x) where a card must stay small; the book's pages keep theirs (132x18).
+            int dotR = smallDots ? 3 : 4, dotGap = smallDots ? 2 : 6;
+            float dotsW = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count, dotR, dotGap).rect.width * 2f;
+            float dotsH = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count, dotR, dotGap).rect.height * 2f;
             Color ink = new Color(0.20f, 0.13f, 0.07f);
             Color quiet = new Color(0.52f, 0.44f, 0.36f);
             Color figure = new Color(0.10f, 0.06f, 0.02f);
@@ -1159,7 +1164,7 @@ namespace LastCall.UI
                 // all fit (the book's 48-unit rows, unchanged); anywhere tighter the dots stand beside the name, both
                 // centred in the slab.
                 bool dotsRow = spec.Amount.Length == 0 && spec.Box >= 0;
-                bool oneLine = dotsRow ? slabH < RowLine1 + BookLegendDotsH + PlateRim * 2f
+                bool oneLine = dotsRow ? slabH < RowLine1 + dotsH + PlateRim * 2f
                                        : slabH < RowLine1 + RowLine2;
                 float rowTop = oneLine ? Mathf.Max(0f, (slabH - RowLine1) * 0.5f)
                                        : Mathf.Max(0f, (slabH - (RowLine1 + RowLine2)) * 0.5f);
@@ -1225,7 +1230,7 @@ namespace LastCall.UI
                 label.text = SpecLabel(spec);
                 // Beside the dots, a name that would run under them steps down a face, as a card's title does
                 // (a crowded page's TRIPLE SEC / GRENADINE, 2026-09-25) - under the dots it was not readable at all.
-                if (oneLine && dotsRow && label.preferredWidth > width - textX - 8f - BookLegendDotsW - 12f)
+                if (oneLine && dotsRow && label.preferredWidth > width - textX - 8f - dotsW - 12f)
                 {
                     label.fontSize = LanguageFonts.Size(_body, 8);
                     label.alignment = TextAnchor.MiddleLeft;
@@ -1259,7 +1264,7 @@ namespace LastCall.UI
                 }
                 else if (spec.Box >= 0)
                 {
-                    var dotsArt = ChromeArt.RatioDots(locked ? -1 : spec.Box, BandBoxColors, RatioBox.Count);
+                    var dotsArt = ChromeArt.RatioDots(locked ? -1 : spec.Box, BandBoxColors, RatioBox.Count, dotR, dotGap);
                     float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
                     var dots = NewRect("Dots", line);
                     // One line: in the middle of the slab, whatever stands on the left of it. Two: under the name.

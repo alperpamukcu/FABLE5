@@ -59,6 +59,11 @@ namespace LastCall.UI
                 cogMark.anchoredPosition = new Vector2(0f, KeyPlate.Throw * 0.5f);
                 var mi = cogMark.GetComponent<Image>();
                 if (mi != null) mi.color = UITheme.Amber[4];
+                // ...AND NOW THE MENUS' BRASS COG (2026-09-26, the author: "Ana sahnede üst bardaki ayarlar butonunun
+                // iconunu da aynı icon sanat diliyle üret"): the icon family the ESC and settings keys wear, 32x32 at
+                // 1x and never tinted; the flat mark stays for a build without it.
+                var brass = MenuPack.Art("mi_settings");
+                if (mi != null && brass != null) { mi.sprite = brass; mi.color = Color.white; }
             }
             HoverTip(_cogKeyRt, cog, UIText.T("build.settings.tip_title"), UIText.T("build.settings.tip"));
 

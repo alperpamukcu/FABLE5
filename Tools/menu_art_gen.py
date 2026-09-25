@@ -74,6 +74,15 @@ HEADER = ('A small wide pixel-art sign, about four times wider than tall: the bl
           'edge of the board and another along the bottom edge. ' + FLAT + ' No text or letters anywhere; the sign '
           'fills the whole canvas edge to edge. Use only the colours of the palette reference.')
 
+ESC_BG = ('A pixel-art background panel, taller than wide, for the pause menu of a 1980s Miami cocktail bar at night. '
+          'An Art Deco wall panel in deep plum and night blue, framed along all four edges by one thin hot-pink neon tube '
+          'with rounded corners. At the top centre a small teal Art Deco sunburst fan, behind where a title will be '
+          'written. In each bottom corner a few dark plum palm leaves. The whole middle is one calm, even, dark plum-blue '
+          'surface with faint vertical Art Deco reeding lines, left empty because a column of menu buttons is laid over '
+          'it; a calm dark band across the bottom for a line of small text. ' + FLAT + ' No text, letters, numbers, '
+          'logo, people or buttons; the panel fills the whole canvas edge to edge. Use only the colours of the palette '
+          'reference.')
+
 ICON_TAIL = ('single chunky game menu icon, pixel art, a polished brass and gold metal object seen straight on, '
              'bevelled, light from the upper left and darker on the lower right, one pixel dark outline, centred, '
              'filling most of the canvas, transparent background, no text, no letters, no glow.')
@@ -91,6 +100,9 @@ ICONS = {
     'mi_controls': ('a single square keyboard key cap seen slightly from above', None),
     'mi_display':  ('a small old CRT computer monitor with a blank screen', None),
     'mi_language': ('a globe with meridian and parallel lines', None),
+    # the top bar's settings key and the ESC menu's SETTINGS (2026-09-26, the author: "Ana sahnede ust bardaki
+    # ayarlar butonunun iconunu da ayni icon sanat diliyle uret"): the family's own cog, in place of cog3d
+    'mi_settings': ('a gear cog with eight square teeth and a round hole in the middle', None),
 }
 GLYPHS = ['exit', 'tent', 'play', 'home', 'stats', 'back', 'pause', 'menu', 'music', 'gamepad',
           'expand', 'sound_on', 'sound_off', 'cog', 'save', 'restart', 'close', 'trophy', 'mail', 'heart_line',
@@ -193,6 +205,11 @@ def take(families):
     if 'door' in families:
         _queue('door', 'create_image_pro', {'description': DOOR, 'width': 100, 'height': 168,
                                             'no_background': False, 'seed': 5301, 'reference_images': refs})
+    if 'esc_bg' in families:
+        # 2026-09-26, the author: "ESC icin arkaplanda kullanilan mavi UI yerine arkaplan gorseli uret" - the ESC
+        # plate itself as a picture, at exactly 2x (440x504), one candidate (the one-alternative rule)
+        _queue('esc_bg', 'create_image_pro', {'description': ESC_BG, 'width': 220, 'height': 252,
+                                              'no_background': False, 'seed': 5303, 'reference_images': refs})
     if 'header' in families:
         _queue('header', 'create_image_pro', {'description': HEADER, 'width': 168, 'height': 44,
                                               'no_background': False, 'seed': 5302, 'reference_images': refs})

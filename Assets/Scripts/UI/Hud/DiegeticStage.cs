@@ -232,6 +232,9 @@ namespace LastCall.UI
         public void SetCounterFinish(string id)
         {
             if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
+            for (int i = 0; i < _shelfTops.Count; i++)                 // the deepened boards wear the counter's finish
+                if (_shelfTops[i] != null && i < _shelfTopSrc.Count) _shelfTops[i].sprite = CounterFinish.Recolour(_shelfTopSrc[i], id);
+            _shelfTopFinish = id;
             // THE DOOR IS NOT REFINISHED (2026-09-22, the author: "kapağın rengi raflarla aynı olmamalı, sabit bir
             // renk seçilmeli"): it is the one FIXED surface in the room - teal planks against the magenta shelves,
             // the palette's split-complement of the frames, with the pink flamingo on it landing on its own
@@ -1456,20 +1459,19 @@ namespace LastCall.UI
                 foot.color = new Color(0f, 0f, 0f, 0.62f);
                 _cellarShadow.Add(cast); _cellarFootShadow.Add(foot);
             }
-            var lift = _world != null ? _world.position : Vector3.zero;
             float w = i < _cellarSlotW.Count ? _cellarSlotW[i] : CellarBottleH * 0.5f;
             // the back wall behind the bottle's lower half
             var cast2 = _cellarShadow[i];
             var soft = cast2.sprite != null ? cast2.sprite.bounds.size : Vector3.one;
             float occH = CellarBottleH * 0.62f;
             cast2.transform.localScale = new Vector3(w * 1.45f / Mathf.Max(0.001f, soft.x), occH / Mathf.Max(0.001f, soft.y), 1f);
-            cast2.transform.position = new Vector3(x, footY + occH * 0.30f, -0.001f) + lift;
+            cast2.transform.localPosition = new Vector3(x, footY + occH * 0.30f, -0.001f);
             cast2.enabled = sr.enabled; cast2.gameObject.SetActive(sr.gameObject.activeSelf);
             // the pool on the board round the foot
             var foot2 = _cellarFootShadow[i];
             var disc = foot2.sprite != null ? foot2.sprite.bounds.size : Vector3.one;
             foot2.transform.localScale = new Vector3(w * 1.7f / Mathf.Max(0.001f, disc.x), 9f / Mathf.Max(0.001f, disc.y), 1f);
-            foot2.transform.position = new Vector3(x, footY + 2f, -0.001f) + lift;
+            foot2.transform.localPosition = new Vector3(x, footY + 2f, -0.001f);
             foot2.enabled = sr.enabled; foot2.gameObject.SetActive(sr.gameObject.activeSelf);
         }
 
@@ -1494,10 +1496,14 @@ namespace LastCall.UI
             // The slot is where the DRAWING stands; the sprite's pivot is its canvas centre,
             // so the canvas is shifted by the drawing's own offset (art px → stage units).
             float shift = CellarCentreShift(sr.sprite) * k / Mathf.Max(1f, sr.sprite.pixelsPerUnit);
-            sr.transform.position = new Vector3(
+            // IN THE STAGE WORLD'S OWN COORDINATES (2026-09-26, the author: "Alkoller raflarda havada duruyor aşağı
+            // çek"). The world root is magnified to cover the window (DesignFrame.SceneScale) and lifted by the drawer;
+            // the stock was placed by WORLD position in unscaled stage units plus the root's offset - exact at 16:9,
+            // where the scale is 1, and a bottle floating (scale - 1) x 70 units over its board anywhere else: four
+            // rows on the author's screen. Local position under the root takes both the scale and the lift for free.
+            sr.transform.localPosition = new Vector3(
                 artX + shift - _counterNative.x * 0.5f,
-                counterTop - artFoot + CellarBottleH * 0.5f, 0f)
-                + (_world != null ? _world.position : Vector3.zero);
+                counterTop - artFoot + CellarBottleH * 0.5f, 0f);
             PlaceCellarShadow(sr, i, artX + shift - _counterNative.x * 0.5f, counterTop - artFoot);
             // The sandwich rides the same transform as the front: same plate canvas, same
             // scale, same position — 1:1 by construction.
@@ -1553,6 +1559,59 @@ namespace LastCall.UI
         private readonly List<SpriteRenderer> _cellarLamps = new List<SpriteRenderer>();
 
         /// <summary>One strip per compartment, born dark: the drawer is what turns them on.</summary>
+        // ── the boards as ledges (2026-09-26) ────────────────────────────────────
+        //
+        // The author: "Alkoller raflarda havada duruyor aşağı çek ve 2.5d bir rafta tam üstünde duruyor hissiyatı ver."
+        // The counter draws each board as a six-row top face (rows 138..143, the darker magenta) over a six-row front
+        // (144..149) with an outline over and under, which reads as a plank seen from barely above: a bottle standing
+        // on it covers the whole top face and looks stood on the plank's edge. These strips carry the top face six rows
+        // further back, to a dark line where the board meets the wall (rows 131..137 over the upper board, 221..227 over
+        // the lower), across each bay between its posts - so a board has a depth the stock visibly stands in, the
+        // bottles' feet a few rows in from its front edge. Drawn in the counter's own two colours and recoloured with
+        // it (SetCounterFinish), at order 30 a hair nearer than the counter and farther than the stock's shadows.
+        private readonly List<SpriteRenderer> _shelfTops = new List<SpriteRenderer>();
+        private readonly List<Sprite> _shelfTopSrc = new List<Sprite>();
+        private string _shelfTopFinish;
+        /// <summary>The board outline rows the ledges grow back from, and how far.</summary>
+        private static readonly int[] ShelfBoardTopPx = { 137, 227 };
+        private const int ShelfLedgeRows = 7;
+        /// <summary>Each bay's inside, between its posts, in the counter art's columns (measured: posts at 7-32,
+        /// 209-226, 412-429, 605-630).</summary>
+        private static readonly int[,] CellarBayInsidePx = { { 33, 208 }, { 227, 411 }, { 430, 604 } };
+
+        private void BuildShelfTops()
+        {
+            if (_shelfTops.Count > 0 || _counterNative.x <= 0f) return;
+            var edge = new Color32(117, 0, 80, 255);           // the board's own outline
+            var face = new Color32(182, 84, 151, 255);         // and its top face
+            float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
+            for (int shelf = 0; shelf < ShelfBoardTopPx.Length; shelf++)
+                for (int bay = 0; bay < CellarBayInsidePx.GetLength(0); bay++)
+                {
+                    int x0 = CellarBayInsidePx[bay, 0], x1 = CellarBayInsidePx[bay, 1];
+                    int w = x1 - x0 + 1, h = ShelfLedgeRows;
+                    var px = new Color32[w * h];
+                    for (int y = 0; y < h; y++)                 // texture rows run upward: the top row is the wall line
+                        for (int x = 0; x < w; x++)
+                            px[y * w + x] = y == h - 1 ? edge : face;
+                    var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                    { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                    tex.SetPixels32(px);
+                    tex.Apply();
+                    var src = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+                    src.name = $"ShelfTop{shelf}_{bay}";
+                    _shelfTopSrc.Add(src);
+                    var sr = WorldSprite(src.name, CounterFinish.Recolour(src, _shelfTopFinish ?? CounterFinish.Current.Id), order: 30);
+                    // rows (top - h + 1) .. top of the drawing: the outline row is repainted as face, the wall line
+                    // stands h - 1 rows behind it
+                    float rowTop = ShelfBoardTopPx[shelf] - h + 1;
+                    sr.transform.localPosition = new Vector3(
+                        (x0 + x1 + 1) * 0.5f - _counterNative.x * 0.5f,
+                        counterTop - rowTop - h * 0.5f, -0.0005f);
+                    _shelfTops.Add(sr);
+                }
+        }
+
         private void BuildCellarLights()
         {
             if (_cellarLights.Count > 0) return;
@@ -1583,7 +1642,6 @@ namespace LastCall.UI
         {
             if (_cellarLights.Count == 0 || _counterNative.x <= 0f) return;
             float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
-            var lift = _world != null ? _world.position : Vector3.zero;
             int i = 0;
             for (int shelf = 0; shelf < CellarShelfCeilPx.Length; shelf++)
                 for (int bay = 0; bay < CellarBayCentrePx.Length; bay++, i++)
@@ -1591,14 +1649,14 @@ namespace LastCall.UI
                     if (i >= _cellarLights.Count || _cellarLights[i] == null) continue;
                     var at = new Vector3(
                         CellarBayCentrePx[bay] - _counterNative.x * 0.5f,
-                        counterTop - CellarShelfCeilPx[shelf] - CellarLightDropPx, 0f) + lift;
-                    _cellarLights[i].transform.position = at;
+                        counterTop - CellarShelfCeilPx[shelf] - CellarLightDropPx, 0f);
+                    _cellarLights[i].transform.localPosition = at;       // under the magnified root, as the stock is
                     if (i < _cellarLamps.Count && _cellarLamps[i] != null)
                     {
                         var lamp = _cellarLamps[i];
                         var size = lamp.sprite != null ? lamp.sprite.bounds.size : Vector3.one;
                         lamp.transform.localScale = new Vector3(30f / Mathf.Max(0.001f, size.x), 5f / Mathf.Max(0.001f, size.y), 1f);
-                        lamp.transform.position = at + new Vector3(0f, 2f, 0f);
+                        lamp.transform.localPosition = at + new Vector3(0f, 2f, 0f);
                     }
                 }
         }
@@ -2956,6 +3014,7 @@ namespace LastCall.UI
                 // ...and the cellar's, off the same art: the shelves are a room of their own
                 // once the roller is up, and nothing over the bar reaches into them.
                 BuildCellarLights();
+                BuildShelfTops();
             }
             // Order 33: over the counter's cabinet (30) AND over the stock standing in it
             // (31), and under anything on the bar top (35). The roller has to hide the

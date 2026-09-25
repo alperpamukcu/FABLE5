@@ -61,7 +61,7 @@ namespace LastCall.UI
             if (head.preferredWidth > width) { head.font = _display; head.fontSize = LanguageFonts.Size(_display, 16); }
             if (head.preferredWidth > width) { head.font = _body; head.fontSize = LanguageFonts.Size(_body, 16); }
             if (head.preferredWidth > width) head.fontSize = LanguageFonts.Size(_body, 8);
-            y += 32f;
+            y += 28f;
 
             y += RecipeChips(host, r, width, y, withWork) + 4f;
 
@@ -77,7 +77,7 @@ namespace LastCall.UI
             // ONE LINE A POUR (2026-09-25, the author: "Postit sayfa düzenini düzelt alkol isimleri ile dereceleri aynı
             // yükseklikte olmalı"): the name and its five dots (or its share) side by side on one line, at a pitch
             // under the one where BookPourRows keeps two - the book's pages keep their two lines.
-            y += BookPourRows(host, r, run, width, y, WorkCardRowPitch, locked: false);
+            y += BookPourRows(host, r, run, width, y, WorkCardRowPitch, locked: false, smallDots: true);
 
             if (r.MinFill > 0)
             {
@@ -99,9 +99,12 @@ namespace LastCall.UI
         // 336 wide and 64 down since 2026-09-25 (the author: "Postitler biraz yukarı taşınsın", and the names beside
         // their dots): at 280 a GRENADINE or a TRIPLE SEC beside the dots had no room left; the note now hangs just
         // under the top bar instead of 104 down.
-        private const float NoteW = 336f, NotePad = 12f, NoteTop = 64f, NoteRight = 12f;
+        // SMALLER (2026-09-26, the author: "Postit boyutu çok büyük"): 288 wide with the book's small dots beside the
+        // names (80 units instead of 132, so a GRENADINE still stands beside them at 16) and a 26-unit pour line - a
+        // three-pour drink went from 336x237 to about 288x185.
+        private const float NoteW = 288f, NotePad = 12f, NoteTop = 64f, NoteRight = 12f;
         /// <summary>The work card's pours, one line each (see DrawWorkCard).</summary>
-        private const float WorkCardRowPitch = 34f;
+        private const float WorkCardRowPitch = 26f;
         private RectTransform _note, _noteBody;
         private int _noteDay = -1;
         // GONE WITH ITS DRINK (2026-09-25, the author: "Sipariş teslim edildikten sonra otomatik olarak fade şekilde yok

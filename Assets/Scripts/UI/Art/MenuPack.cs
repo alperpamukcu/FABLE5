@@ -248,8 +248,8 @@ namespace LastCall.UI
             return Resources.Load<Sprite>("Menu/" + name);
         }
 
-        /// <summary>The brass icon a key of the pack shows in place of its glyph, when it has been shipped: SETTINGS
-        /// keeps the top bar's own cog (Items/cog3d).</summary>
+        /// <summary>The brass icon a key of the pack shows in place of its glyph, when it has been shipped: SETTINGS wears
+        /// the family's own cog (mi_settings), the one the top bar's key carries too.</summary>
         public static Sprite IconFor(string glyph)
         {
             switch (glyph)
@@ -263,13 +263,13 @@ namespace LastCall.UI
                 case "gamepad": return Art("mi_controls");
                 case "expand": return Art("mi_display");
                 case "mail": return Art("mi_language");
-                case "cog": return Art("mi_quit") != null ? ItemArt.Load("cog3d") : null;   // one set: with the rest or not at all
+                case "cog": return Art("mi_settings");
                 default: return null;
             }
         }
 
         /// <summary>Whether a key's glyph image is showing a brass icon rather than a pack mask: an icon is never tinted.</summary>
-        public static bool IsIcon(Sprite s) => s != null && (s.name.StartsWith("mi_") || s.name == "cog3d");
+        public static bool IsIcon(Sprite s) => s != null && s.name.StartsWith("mi_");
 
         /// <summary>The face colour a tone's cells are filled with (Tools/menu_pack.py measured them).</summary>
         public static Color Face(Tone tone) =>

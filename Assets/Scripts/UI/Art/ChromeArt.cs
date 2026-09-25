@@ -2598,6 +2598,26 @@ namespace LastCall.UI
         }
 
         /// <summary>The checker alone, as a tile for the gauge's bands: two-unit cells, a shade darker on the odd ones.</summary>
+        /// <summary>
+        /// THE MEASURE'S LIQUID (2026-09-26, the author, of the tin: "sıvı dokusunu değiştir"): a 12x20 tile of rising
+        /// bubbles - single texels and a few two-texel streams, white at low alpha - laid over a band's flat colour, so
+        /// the band reads as a drink with a fizz in it rather than as the checker of a fabric.
+        /// </summary>
+        public static Sprite LiquidBubbles()
+        {
+            const string Key = "liquid:bubbles";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 12, H = 20;
+            var px = new Color32[W * H];
+            var fizz = new Color32(255, 255, 255, 80);
+            var tail = new Color32(255, 255, 255, 40);
+            foreach (var (x, y) in new[] { (2, 2), (8, 5), (5, 9), (10, 13), (3, 15), (7, 18) })
+                px[y * W + x] = fizz;
+            foreach (var (x, y) in new[] { (8, 4), (3, 14) })                   // the two with a stream under them
+                px[y * W + x] = tail;
+            return Cache[Key] = Make(px, W, H, Vector4.zero);
+        }
+
         public static Sprite LiquidChecker()
         {
             const string Key = "liquid:checker";

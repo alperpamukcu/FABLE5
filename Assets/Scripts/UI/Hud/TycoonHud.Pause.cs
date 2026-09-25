@@ -25,7 +25,6 @@ namespace LastCall.UI
     public sealed partial class TycoonHud
     {
         private RectTransform _pausePanel;
-        private Text _pauseFoot, _pauseTill;
         private bool _paused;
         private bool _settingsFromPause;   // the window came from this menu, so BACK returns here
 
@@ -56,13 +55,19 @@ namespace LastCall.UI
             dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
 
-            // ON THE BLUE PLATE (2026-09-21, the author: "ESC menüsü backbar tasarımı ile uyumlu olmalı"): the
-            // same plate the certificate and the room's tips stand on, opaque in the middle.
-            var plate = BluePlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH));
+            // THE PLATE IS A PICTURE (2026-09-26, the author: "ESC için arkaplanda kullanılan mavi UI yerine arkaplan
+            // görseli üret"): the generated panel (MenuPack.Art "menu_esc_bg") at exactly 2x - its own neon edge, a
+            // sunburst behind the title and a calm middle the keys stand on. Without it, the blue plate the certificate
+            // and the room's tips stand on (2026-09-21, "ESC menüsü backbar tasarımı ile uyumlu olmalı").
+            var bg = MenuPack.Art("menu_esc_bg");
+            var plate = bg != null ? PicturePlate(_pausePanel, "Plate", bg)
+                                   : BluePlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH));
 
-            // the title, a shadow copy under it, and the three sunset rules under that
+            // the title, a shadow copy under it; the three sunset rules under it on the blue plate, while the picture's
+            // own sunburst stands behind it and the word catches like a tube (NeonFlicker)
             NightTitle(plate, UIText.T("chrome.pause.title"), -36f);
-            SunsetRules(plate, -66f, PausePlateW - 80f);
+            if (bg == null) SunsetRules(plate, -66f, PausePlateW - 80f);
+            else plate.Find("Title")?.gameObject.AddComponent<NeonFlicker>();
 
             // the keys, top down; each fitted to its word
             float y = -96f;
@@ -91,79 +96,75 @@ namespace LastCall.UI
                 Application.Quit();
 #endif
             }));
-            var door = MenuPack.Art("menu_door");
-            if (door != null) HangTheDoor(plate, door, keys);
-
-            // the foot: the hour and the till, so the player knows where they left the night
-            var footIcon = NewRect("ClockMark", plate);
-            Place(footIcon, new Vector2(0, 0), new Vector2(16, 16), new Vector2(40f, 22f));
-            footIcon.pivot = new Vector2(0, 0);
-            var fi = footIcon.gameObject.AddComponent<Image>();
-            fi.sprite = NightArt.Mark("clock"); fi.color = UITheme.Cream[3]; fi.raycastTarget = false;
-            _pauseFoot = NewText("Foot", plate, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
-            Place(_pauseFoot.rectTransform, new Vector2(0, 0), new Vector2(240, 16), new Vector2(64f, 22f));
-            _pauseFoot.rectTransform.pivot = new Vector2(0, 0);
-            _pauseFoot.horizontalOverflow = HorizontalWrapMode.Overflow;
-            var tillIcon = NewRect("TillMark", plate);
-            Place(tillIcon, new Vector2(1, 0), new Vector2(16, 16), new Vector2(-110f, 22f));
-            tillIcon.pivot = new Vector2(1, 0);
-            var ti = tillIcon.gameObject.AddComponent<Image>();
-            ti.sprite = NightArt.Mark("cash"); ti.color = UITheme.Cream[3]; ti.raycastTarget = false;
-            _pauseTill = NewText("Till", plate, _figures, 16, TextAnchor.MiddleRight, UITheme.Money);
-            Place(_pauseTill.rectTransform, new Vector2(1, 0), new Vector2(100, 20), new Vector2(-40f, 20f));
-            _pauseTill.rectTransform.pivot = new Vector2(1, 0);
-            _pauseTill.horizontalOverflow = HorizontalWrapMode.Overflow;
-
+            BuildPauseFoot(plate);
             _pausePanel.gameObject.SetActive(false);
         }
 
-        /// <summary>
-        /// THE DOOR BESIDE THE KEYS (2026-09-25, the menus' redesign - MenuPack.Art "menu_door"). The bar's front door at
-        /// night stands in its own framed window LEFT of the keys, level with the first of them, and the plate widens to
-        /// hold both; the keys keep every vertical number they had and become one even column as wide as the widest of
-        /// them (a long translation widens the plate, never the picture). Beside the keys and never behind them: the
-        /// author asked for a calm backdrop behind the menus on 2026-09-16. Rain falls over the picture (MenuRain) and
-        /// the title catches like a tube (NeonFlicker). Without the art the menu is the one before.
-        /// </summary>
-        private void HangTheDoor(RectTransform plate, Sprite door, System.Collections.Generic.List<RectTransform> keys)
-        {
-            const float Margin = 28f, Gap = 28f, Top = -96f;
-            var win = new Vector2(door.rect.width * 2f + 6f, door.rect.height * 2f + 6f);   // the art at 2x and the frame
-            float colW = PauseKeyMinW;
-            foreach (var k in keys) colW = Mathf.Max(colW, k.sizeDelta.x);
-            float plateW = Margin + win.x + Gap + colW + Margin;
-            plate.sizeDelta = new Vector2(plateW, PausePlateH);
-            float colX = Margin + win.x + Gap + colW * 0.5f - plateW * 0.5f;             // the column's centre, from the plate's
-            foreach (var k in keys)
-            {
-                k.sizeDelta = new Vector2(colW, k.sizeDelta.y);
-                k.anchoredPosition = new Vector2(colX, k.anchoredPosition.y);
-            }
-            for (int i = 0; i < 3; i++)                                                  // the rules run the plate's new width
-            {
-                var rule = plate.Find("Rule" + i) as RectTransform;
-                if (rule != null) rule.sizeDelta = new Vector2(plateW - 80f, rule.sizeDelta.y);
-            }
+        private SegmentClock _pauseClock;
+        private SegmentFigure _pauseTillFigure;
+        private Text _pauseNightNo, _pauseNightName;
+        private const float PauseFootH = 38f, PauseFootEdge = 12f, PauseFootY = 10f, PauseFootGap = 6f, PauseFootPad = 8f;
 
-            var window = NightPlate(plate, "Door", win, 0f, door);
-            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0f, 1f);
-            window.anchoredPosition = new Vector2(Margin, Top);
-            var picture = window.Find("Picture") as RectTransform;
-            var night = picture != null ? picture.Find("Night") : null;
-            if (picture != null)
-            {
-                var rain = NewRect("Rain", picture);
-                if (night != null) rain.SetSiblingIndex(night.GetSiblingIndex() + 1);   // over the picture, under the scanlines
-                Stretch(rain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var raw = rain.gameObject.AddComponent<RawImage>();
-                raw.texture = NightArt.RainTile().texture;
-                raw.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.35f);   // an alpha of a token
-                raw.raycastTarget = false;
-                rain.gameObject.AddComponent<MenuRain>();
-                UiAuditExempt.Mark(rain, "the door's rain, a tile at 2x scrolled by whole texels");
-            }
-            var title = plate.Find("Title");
-            if (title != null && title.GetComponent<NeonFlicker>() == null) title.gameObject.AddComponent<NeonFlicker>();
+        /// <summary>
+        /// THE FOOT, AS THE BEAM'S OWN INSTRUMENTS (2026-09-26, the author, of the 8px line and the orange till under the
+        /// keys: "Görseldeki yazıların tarzını değiş"). Two wells on the beam's glass (ChromeArt.Well): the HOUR - the
+        /// top bar's segment clock in cyan, the night's number over its name - and the TILL - the register's green figure,
+        /// red in the red. The same readouts the beam carries, so the menu says where the night was left in the words the
+        /// bar already uses. The night's name steps down to the 8 size when a language's weekday outgrows its box.
+        /// </summary>
+        private void BuildPauseFoot(RectTransform plate)
+        {
+            float plateW = plate.sizeDelta.x;
+            float tillW = SegmentFigure.Width + TopWellPad * 2f;
+            float hourW = plateW - PauseFootEdge * 2f - PauseFootGap - tillW;   // 98 units left for the night's name
+
+            var hour = NewRect("FootHour", plate);
+            hour.anchorMin = hour.anchorMax = hour.pivot = Vector2.zero;
+            hour.sizeDelta = new Vector2(hourW, PauseFootH);
+            hour.anchoredPosition = new Vector2(PauseFootEdge, PauseFootY);
+            var hi = hour.gameObject.AddComponent<Image>();
+            hi.sprite = ChromeArt.Well(); hi.type = Image.Type.Sliced; hi.raycastTarget = false;
+            var digits = NewRect("Digits", hour);
+            Place(digits, new Vector2(0, 0.5f), new Vector2(TopHourDigitsW, 28), new Vector2(PauseFootPad, 0));
+            _pauseClock = new SegmentClock(digits, UITheme.Cyan[4]);
+            float dayX = PauseFootPad + TopHourDigitsW + 6f, dayW = hourW - dayX - PauseFootPad;
+            _pauseNightNo = NewText("NightNo", hour, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
+            Place(_pauseNightNo.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 12), new Vector2(dayX, 8f));
+            _pauseNightNo.rectTransform.pivot = new Vector2(0, 0.5f);
+            _pauseNightNo.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _pauseNightName = NewText("NightName", hour, _body, 16, TextAnchor.MiddleLeft, UITheme.Amber[4]);
+            Place(_pauseNightName.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 18), new Vector2(dayX, -6f));
+            _pauseNightName.rectTransform.pivot = new Vector2(0, 0.5f);
+            _pauseNightName.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            var till = NewRect("FootTill", plate);
+            till.anchorMin = till.anchorMax = till.pivot = new Vector2(1, 0);
+            till.sizeDelta = new Vector2(tillW, PauseFootH);
+            till.anchoredPosition = new Vector2(-PauseFootEdge, PauseFootY);
+            var ti = till.gameObject.AddComponent<Image>();
+            ti.sprite = ChromeArt.Well(); ti.type = Image.Type.Sliced; ti.raycastTarget = false;
+            var host = NewRect("Figure", till);
+            Place(host, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width, 32), new Vector2(TopWellPad, 0));
+            host.pivot = new Vector2(0, 0.5f);
+            _pauseTillFigure = new SegmentFigure(host, UITheme.Lime[4]);
+        }
+
+        /// <summary>
+        /// A GENERATED PLATE (MenuPack.Art): the picture at exactly twice its size, catching every click that lands on it
+        /// so nothing under it is pressed through it.
+        /// </summary>
+        private RectTransform PicturePlate(RectTransform parent, string name, Sprite art)
+        {
+            var plate = NewRect(name, parent);
+            Place(plate, new Vector2(0.5f, 0.5f), new Vector2(art.rect.width * 2f, art.rect.height * 2f), Vector2.zero);
+            var img = plate.gameObject.AddComponent<Image>();
+            img.sprite = art;
+            img.type = Image.Type.Simple;
+            img.color = Color.white;
+            img.raycastTarget = true;
+            plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
+            UiAuditExempt.Mark(plate, "the menu's generated picture, " + art.rect.width + "x" + art.rect.height + " shown at exactly 2x");
+            return plate;
         }
 
         /// <summary>A key on the pause plate: the pack's worded key with a glyph at its left, fitted to its word, and
@@ -498,12 +499,17 @@ namespace LastCall.UI
         private void RefreshPauseFoot()
         {
             var run = Run;
-            if (run == null || _pauseFoot == null) return;
+            if (run == null || _pauseClock == null) return;
             double hour = run.Floor != null ? run.Floor.ClockHour : 0;
             int hh = (int)Math.Floor(hour), mm = (int)Math.Floor((hour - hh) * 60.0);
-            _pauseFoot.text = UIText.T("chrome.pause.foot", ("day", run.Day), ("night", NightWord(run)),
-                ("clock", (hh % 24).ToString("00") + ":" + mm.ToString("00")));
-            _pauseTill.text = "$" + run.Money;
+            _pauseClock.Show(hh % 24, mm, true);                  // held: the colon stands lit
+            _pauseNightNo.text = UIText.T("hud.day_well.caption") + " " + run.Day;
+            _pauseNightName.text = NightWord(run);
+            _pauseNightName.fontSize = LanguageFonts.Size(_pauseNightName.font, 16);
+            if (_pauseNightName.preferredWidth > _pauseNightName.rectTransform.sizeDelta.x)
+                _pauseNightName.fontSize = LanguageFonts.Size(_pauseNightName.font, 8);
+            _pauseTillFigure.SetHue(run.Money < 0 ? UITheme.ViceRed[3] : UITheme.Lime[4]);
+            _pauseTillFigure.Show(run.Money);
         }
 
         /// <summary>The night's name as the top bar's well prints it, in capitals (BarCalendar).</summary>
