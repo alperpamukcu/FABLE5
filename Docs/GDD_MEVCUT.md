@@ -1661,6 +1661,48 @@ bara ve oyun ekranının soluna göre hizala”.
   kendi kasasını giyiyor (iki kenar aynı kenar, ölçüldü: ikisi de 16) ve tüpün **iki piksel içine** asılıyor.
 - Doğrulama: LookTests 3/3; market ve sekme oyunda ölçüldü (r199–r200).
 
+### 9.113 · Onuncu listenin düzeltmeleri: kendi boyundaki tezgâh, odadaki bardak altlığı, halkayla ön kavis arasındaki limon, markalı kartonlar (2026-09-25)
+
+Yazar (2026-09-23): “Tezgah boyutunu değiştirme… tezgahın boyutu aynı kalacak sadece arkaplana bir şeyler koyarak
+o kenardaki tezgah boşluklarını kapatacaktık. Kepenk… pembe dik ayaklarının içerisindeki koyu renkli dik çizgiye
+1 pixel yakınlıkta olmalı… Anasahnedeki bardak altlığı bardakların önünde gözükebiliyor… limon görseli
+salted/sugar front'un arkasında olacak normal salted/sugar.png nin önünde olacak.”
+
+- **Tezgâh yine kendi boyunda** (`DiegeticStage`): §9.111'deki “her uçtan altı piksel geniş” cevabı geri alındı.
+  Bar büyüyünce kapakları ve kapakların taşıdığı her şey (kepenk dahil) kaymıştı. Artık delikleri kapatan her şey
+  barın ARKASINDA duruyor. Plinth kaldı. Buna iki **yan şerit** eklendi: çizimin her uçtan yarı boyundan fazlası
+  opak ilk sütunu (ayak, dudak değil), dokudan okunuyor ve tam boy tek piksellik bir dilim olarak pencere kenarının
+  24 px dışına kadar uzatılıyor, sıra 21'de. Barın kendi pikselleri hep durduğu yerde.
+- **Kepenk iki yanda da çizgiden bir piksel içeride:** ölçüldü (r203, 1280×720, 1 sanat pikseli = 2 ekran pikseli):
+  soldaki koyu çizgi x 44–45, kepenk 48'den başlıyor; sağda kepenk 1231'de bitiyor, koyu çizgi 1234–35. İkisi
+  arasında her iki yanda tam bir sanat pikseli var, o da iç direğin gölgesi.
+- **Bardak altlığı odada** (`TycoonHud.Seats`): HUD'da çiziliyordu, yani bütün odanın üstünde. O x'e bırakılan
+  bir bardak barın üstünde yatan bir altlığın ARKASINDA kalıyordu. Artık diğer tezgâh propları gibi
+  (`IntoTheRoom`) sahnede, **sıra 34**'te: tabakların (35) bir altında, tezgâhın (30) üstünde, odanın ışığını alıyor.
+  Taşınan bardak HUD'da kaldığı için her zaman altlığın önünde.
+- **Limon halkanın önünde, ön kavsin arkasında** (`GlassDecor`): bardak yazarın FRONT plakalı tuz/şeker
+  kabuğunu giyince bütün halka dekorda duruyor ve yalnız ön kavsi `_rimOver` üstünden bardağın önüne biniyor.
+  Limon da dekorda kalıyor: halkadan sonra kurulduğu için onun üstünde, üst katmandaki ön kavsin altında. Kabuksuz
+  bardakta limon eskisi gibi içkinin altında (2026-09-18). Ölçüldü (r203): tuzlu highball'da `Decor/Crust`,
+  `Decor/Wedge`, `RimOver/CrustFront` sırası.
+- **Markalı meyve suyu kartonları oyunda** (`Tools/v4_bottles`): yazarın seçimleri (`Docs/reports/juice_brands`).
+  Portakal KAPPY el A31 + raf A-native1. Limonata SIMPLE el A37 + raf A-native3. Limeade SIMPLE el A31 + raf
+  A-native1. Kızılcık SEA SPRAY el A31 + raf A-native1. Ananas DOLA el A37 + raf A-native1. El kartonu kapağı
+  açık, hattın kendi işlemesiyle. Raf kopyası 64×128 üretilip `native_shelf` ile 32×64'e indirildi, türetilmedi.
+  `picks.json` bir seçime kendi staging klasörünü (`dir`) ve ayrı raf plakasını (`shelf`) verebiliyor.
+  `juice_brand_report.py --stage-picks` ikisini ham takelerden yeniden yazıyor (staging git'te yok). Sonuç
+  sevk edilenle bayt bayt aynı. **`cellar_fruit.py` emekli:** yeni kartonlara eski 13 piksellik meyve
+  işaretini basmasın diye `--force` olmadan çalışmıyor.
+- **HEAD yine derleniyor:** 4a4c560e (2026-09-21) `TycoonHud.Seats.cs`'i, commit edilmemiş 2026-09-18 limon/buz
+  işinin alanlarıyla (`_drinkGlassUnder`, `GlassDecor.IceSprite`, sekiz parametreli `Sync`) birlikte almıştı.
+  O günden beri HEAD tek başına 5 hatayla derlenmiyordu. Bu turun limon commit'i o işi de taşıyor. HEAD'in
+  kendisine yalnız bu turun dosyaları bindirilince Core/Game/UI çevrimdışı 0 hatayla derleniyor.
+- Doğrulama: oyunda ölçüldü (r203). EditMode 730/731: düşen `V4PlateImportTests`, yazarın 2026-09-23'te
+  commit edilen Aseprite geçişinde `v4_bourbon_hollow_oak_front_c` 32×66 olmuş, HEAD'de de kırmızı. PlayMode
+  13/14: düşen market testi çalışma ağacındaki commit edilmemiş ekonomi turundan geliyor (boş ilk geceden
+  sonra kasa −$9, mikser reyonunda alınabilecek bir şey kalmıyor), bu turun dosyalarından değil.
+  LookTests 3/3.
+
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,

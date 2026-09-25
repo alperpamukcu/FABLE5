@@ -135,29 +135,39 @@
   "note": "single seed, 2026-09-04"
  },
  "orange_grove": {
-  "take": "s26",
+  "take": "brand_L0_s31",
   "emblem": null,
-  "note": "carton retake 2026-09-08 evening; s25 leaned / stood short and showed the left side, s26 is upright with the right side strip"
+  "dir": "brand/orange_grove/brand_L0_s31",
+  "shelf": "brand/orange_grove/native/brand_N0_s31.png",
+  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
  },
  "lemon_fresh": {
-  "take": "s25",
+  "take": "brand_L0_s37",
   "emblem": null,
-  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
+  "dir": "brand/lemon_fresh/brand_L0_s37",
+  "shelf": "brand/lemon_fresh/native/brand_N0_s31_c2.png",
+  "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native3 (juice_brands report)"
  },
  "lime_fresh": {
-  "take": "s26",
+  "take": "brand_L0_s31",
   "emblem": null,
-  "note": "carton retake 2026-09-08 evening; s25 leaned / stood short and showed the left side, s26 is upright with the right side strip"
+  "dir": "brand/lime_fresh/brand_L0_s31",
+  "shelf": "brand/lime_fresh/native/brand_N0_s31.png",
+  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
  },
  "cranberry_north": {
-  "take": "s25",
+  "take": "brand_L0_s31",
   "emblem": null,
-  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
+  "dir": "brand/cranberry_north/brand_L0_s31",
+  "shelf": "brand/cranberry_north/native/brand_N0_s31.png",
+  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
  },
  "pineapple_isla": {
-  "take": "s25",
+  "take": "brand_L0_s37",
   "emblem": null,
-  "note": "carton retake, 2026-09-08 evening (the author: \"karton olsun cam değil\"; glass takes parked as glass_s2*)"
+  "dir": "brand/pineapple_isla/brand_L0_s37",
+  "shelf": "brand/pineapple_isla/native/brand_N0_s31.png",
+  "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native1 (juice_brands report)"
  },
  "tonic_quinbury": {
   "take": "s23",

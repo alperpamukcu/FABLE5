@@ -371,6 +371,13 @@
    "n": 1,
    "secs": 489.6,
    "poll": "status: completed\nid: 19f5dacb-96c7-4889-a509-990d1606177b\njob_id: 19f5dacb-96c7-4889-a509-990d1606177b\nframes: 1\ntransparent: yes\nasset_id: a1a99d99-4cc7-5f0d-951d-e70074d273ff\nasset_type: image\nasset_status: saved\ngallery: saved to your PixelLab gallery (pixellab.ai/create)\ndownload: https://api.p"
+  },
+  "orange_grove:B0:31": {
+   "job": "88589f35-1423-4230-b977-7b5dad9bb547",
+   "submit": "id: 88589f35-1423-4230-b977-7b5dad9bb547\njob_id: 88589f35-1423-4230-b977-7b5dad9bb547\nmodel: pro\ndescription: a tall gable-top orange juice carton with a small white screw cap on the gable, standing perfectly upright and filling the height of the frame, seen almost straight on: the front face is a plain upright rectangle taking nearly the whole width, and beyond its right edge only a thin dark str",
+   "n": 1,
+   "secs": 68.4,
+   "poll": "status: completed\nid: 88589f35-1423-4230-b977-7b5dad9bb547\njob_id: 88589f35-1423-4230-b977-7b5dad9bb547\nframes: 1\ntransparent: no \u2014 every pixel is opaque. If you asked for no_background, background removal did not find one; retry or describe the subject on a plain background.\nasset_id: 4585855e-1a50"
   }
  }
 }

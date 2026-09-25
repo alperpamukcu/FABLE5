@@ -3,6 +3,8 @@
 (juice_fruit.py --round2).
 
   py -3 -X utf8 Tools/v4_bottles/juice_brand_report.py      -> Docs/reports/juice_brands/
+  py -3 -X utf8 Tools/v4_bottles/juice_brand_report.py --stage-picks
+                                                            -> staging/brand/ for ship.py (the author's picks)
 
 Every large take goes through the house pipeline as a shipped one would (process_take: palette, ring, the
 cap unscrewed for the hand, the shelf copy derived by cellar_box). The round's shelf takes were generated at
@@ -125,5 +127,23 @@ def build():
     return made
 
 
+def stage_picks():
+    """Writes what ship.py copies for every branded pick in picks.json (2026-09-25): the hand take's
+    processed plates, and the shelf plate its "shelf" names (brand/<cid>/native/<raw take>.png), brought
+    down by native_shelf. staging/ is not kept by git; the raw takes are, so this is how a clone gets
+    the picks back."""
+    picks = json.load(io.open(os.path.join(HERE, 'picks.json'), encoding='utf-8'))
+    for cid, pick in picks.items():
+        shelf = pick.get('shelf') or ''
+        if not shelf.startswith('brand/'):
+            continue
+        if not processed(cid, os.path.join(RAW, cid, pick['take'] + '.png')):
+            print('  !! %s: %s was rejected' % (cid, pick['take'])); continue
+        out = os.path.join(HERE, 'staging', *shelf.split('/'))
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        native_shelf(cid, os.path.join(RAW, cid, os.path.basename(out))).save(out)
+        print('  %-16s hand %s, shelf %s' % (cid, pick['take'], os.path.basename(out)))
+
+
 if __name__ == '__main__':
-    build()
+    stage_picks() if '--stage-picks' in sys.argv[1:] else build()

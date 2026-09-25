@@ -15,11 +15,20 @@ average, palette snap, one keyline).
 
   py -3 -X utf8 Tools/v4_bottles/cellar_fruit.py            # every card in FRUIT
   py -3 -X utf8 Tools/v4_bottles/cellar_fruit.py orange_grove
+
+RETIRED 2026-09-23. The juice cartons were redrawn in real juice brands' dress (juice_fruit.py --round2)
+with the fruit IN the print and their shelf copies generated for the shelf, and the author's standing
+note is that a fruit is never stuck on afterwards ("üzerindeki meyveleri sonradan ekleme"). Running this
+would press the old 13-pixel marks onto the new cartons, so it refuses unless given --force.
 """
 import io
 import json
 import os
 import sys
+
+if __name__ == '__main__' and '--force' not in sys.argv:
+    raise SystemExit('cellar_fruit.py is retired (2026-09-23): the branded cartons carry their own fruit. '
+                     'Use --force only to rebuild the old marks on purpose.')
 
 from PIL import Image
 
