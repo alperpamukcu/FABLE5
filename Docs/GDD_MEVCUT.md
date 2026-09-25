@@ -1752,6 +1752,11 @@ salted/sugar front'un arkasında olacak normal salted/sugar.png nin önünde ola
   `juice_brand_report.py --stage-picks` ikisini ham takelerden yeniden yazıyor (staging git'te yok). Sonuç
   sevk edilenle bayt bayt aynı. **`cellar_fruit.py` emekli:** yeni kartonlara eski 13 piksellik meyve
   işaretini basmasın diye `--force` olmadan çalışmıyor.
+- **Adlar da kartonun markası** (yazar onayladı, 2026-09-25): Kappy Orange Juice, Simple Lemonade, Simple
+  Limeade, Sea Spray Cranberry, Dola Pineapple (`base_bar.json`, ardından data_keys → merge_fragments →
+  assemble_table). 28 dilde marka çevrilmiyor. Cins adı dilin zaten kullandığı sözcük, sırası da o dilin
+  “Klara Soda” / “Vodka Smirkoff” sırası. Her yerde “Isla Piña” kalmış olan ananas artık her dilde ananas suyu.
+  Markette iki satıra kırılıyorlar, üçe çıkan yok (r205).
 - **HEAD yine derleniyor:** 4a4c560e (2026-09-21) `TycoonHud.Seats.cs`'i, commit edilmemiş 2026-09-18 limon/buz
   işinin alanlarıyla (`_drinkGlassUnder`, `GlassDecor.IceSprite`, sekiz parametreli `Sync`) birlikte almıştı.
   O günden beri HEAD tek başına 5 hatayla derlenmiyordu. Bu turun limon commit'i o işi de taşıyor. HEAD'in

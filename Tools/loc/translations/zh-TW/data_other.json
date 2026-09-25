@@ -132,8 +132,8 @@
   },
   {
    "key": "data.bottle.cranberry_north.name",
-   "text": "蔓越莓汁",
-   "src": "Cranberry"
+   "text": "Sea Spray 蔓越莓汁",
+   "src": "Sea Spray Cranberry"
   },
   {
    "key": "data.bottle.cranberry_north.style",
@@ -212,8 +212,8 @@
   },
   {
    "key": "data.bottle.lemon_fresh.name",
-   "text": "檸檬汁",
-   "src": "Lemonade"
+   "text": "Simple 檸檬汁",
+   "src": "Simple Lemonade"
   },
   {
    "key": "data.bottle.lemon_fresh.style",
@@ -222,8 +222,8 @@
   },
   {
    "key": "data.bottle.lime_fresh.name",
-   "text": "萊姆汁",
-   "src": "Limeade"
+   "text": "Simple 萊姆汁",
+   "src": "Simple Limeade"
   },
   {
    "key": "data.bottle.lime_fresh.style",
@@ -272,8 +272,8 @@
   },
   {
    "key": "data.bottle.orange_grove.name",
-   "text": "柳橙汁",
-   "src": "Orange Juice"
+   "text": "Kappy 柳橙汁",
+   "src": "Kappy Orange Juice"
   },
   {
    "key": "data.bottle.orange_grove.style",
@@ -282,8 +282,8 @@
   },
   {
    "key": "data.bottle.pineapple_isla.name",
-   "text": "Isla Piña",
-   "src": "Isla Piña"
+   "text": "Dola 鳳梨汁",
+   "src": "Dola Pineapple"
   },
   {
    "key": "data.bottle.pineapple_isla.style",

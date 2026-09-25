@@ -92,8 +92,8 @@
     },
     {
       "key": "data.bottle.cranberry_north.name",
-      "text": "Jugo de arándano",
-      "src": "Cranberry"
+      "text": "Jugo de arándano Sea Spray",
+      "src": "Sea Spray Cranberry"
     },
     {
       "key": "data.bottle.cranberry_north.style",
@@ -172,8 +172,8 @@
     },
     {
       "key": "data.bottle.lemon_fresh.name",
-      "text": "Jugo de limón",
-      "src": "Lemonade"
+      "text": "Jugo de limón Simple",
+      "src": "Simple Lemonade"
     },
     {
       "key": "data.bottle.lemon_fresh.style",
@@ -182,8 +182,8 @@
     },
     {
       "key": "data.bottle.lime_fresh.name",
-      "text": "Jugo de lima",
-      "src": "Limeade"
+      "text": "Jugo de lima Simple",
+      "src": "Simple Limeade"
     },
     {
       "key": "data.bottle.lime_fresh.style",
@@ -232,8 +232,8 @@
     },
     {
       "key": "data.bottle.orange_grove.name",
-      "text": "Jugo de naranja",
-      "src": "Orange Juice"
+      "text": "Jugo de naranja Kappy",
+      "src": "Kappy Orange Juice"
     },
     {
       "key": "data.bottle.orange_grove.style",
@@ -242,8 +242,8 @@
     },
     {
       "key": "data.bottle.pineapple_isla.name",
-      "text": "Isla Piña",
-      "src": "Isla Piña"
+      "text": "Jugo de piña Dola",
+      "src": "Dola Pineapple"
     },
     {
       "key": "data.bottle.pineapple_isla.style",

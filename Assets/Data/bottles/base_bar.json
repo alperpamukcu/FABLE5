@@ -108,7 +108,7 @@
   },
   {
    "id": "lemon_fresh",
-   "name": "Lemonade",
+   "name": "Simple Lemonade",
    "type": "Sour",
    "flavor": 3,
    "style": "lemon",
@@ -352,7 +352,7 @@
   },
   {
    "id": "orange_grove",
-   "name": "Orange Juice",
+   "name": "Kappy Orange Juice",
    "type": "Sour",
    "flavor": 2,
    "style": "orange",
@@ -367,7 +367,7 @@
   },
   {
    "id": "lime_fresh",
-   "name": "Limeade",
+   "name": "Simple Limeade",
    "type": "Sour",
    "flavor": 3,
    "style": "lime",
@@ -411,7 +411,7 @@
   },
   {
    "id": "cranberry_north",
-   "name": "Cranberry",
+   "name": "Sea Spray Cranberry",
    "type": "Sour",
    "flavor": 3,
    "style": "cranberry",
@@ -442,7 +442,7 @@
   },
   {
    "id": "pineapple_isla",
-   "name": "Isla Piña",
+   "name": "Dola Pineapple",
    "type": "Sour",
    "flavor": 4,
    "style": "pineapple",
