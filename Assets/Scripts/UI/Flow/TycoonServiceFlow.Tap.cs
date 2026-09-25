@@ -723,8 +723,19 @@ namespace LastCall.UI
         {
             if (_tapBars == null || _tapBarsGroup == null) return;
             if (_tapGlass != null)
-                _tapBars.anchoredPosition = _tapGlass.anchoredPosition
-                    + new Vector2(ToonBarOffX, PintH * (0.5f - GlassPivotY));
+            {
+                var at = _tapGlass.anchoredPosition + new Vector2(ToonBarOffX, PintH * (0.5f - GlassPivotY));
+                // OFF THE BEER'S PATH (2026-09-25, the author: the pair covered the fall). A leaned glass keeps its
+                // mouth under the faucet by sliding its grip LEFT, and the pair rode the grip - onto the column the beer
+                // falls down, spout to mouth. Its left edge now stays right of that column, whatever the lean.
+                if (_rig.Spouts != null && _rig.Spouts.Length > _tapFaucet)
+                {
+                    float pairHalf = ToonBarW + ToonBarGap * 0.5f;
+                    float streamRight = Mathf.Max(SpoutPoint().x, MouthPoint().x) + BarsClearOfStream;
+                    if (at.x - pairHalf < streamRight) at.x = streamRight + pairHalf;
+                }
+                _tapBars.anchoredPosition = at;
+            }
             bool want = _pouringNow || Time.unscaledTime - _tapBarsSeenAt < BarsLinger;
             float target = want ? 1f : 0f;
             _tapBarsGroup.alpha = Motion.Reduced ? target
@@ -733,6 +744,8 @@ namespace LastCall.UI
 
         /// <summary>How long a meter stays up after the last move, and how long it takes to come and go.</summary>
         private const float BarsLinger = 5f, BarsFade = 0.3f;
+        /// <summary>How far right of the beer's column the pair's left edge stays: the rope's half width and its sway.</summary>
+        private const float BarsClearOfStream = 18f;
 
         /// <summary>The ladder lit as far as the glass leans, each rung in the colour of what that angle pours.</summary>
         private void LightTiltLadder(float tilt)

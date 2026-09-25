@@ -1373,10 +1373,20 @@ namespace LastCall.UI
         // contents' plaque at its tallest. That plaque (2026-09-23, every pour named) is at its tallest four rows, or
         // two columns of four - 96 tall, its foot on 210.6 at BenchDrawer, 26 over the ring of the figure at a full
         // tin (184.4). The glass bench's gauge stands on the same two constants: they do not move for the plaque.
-        private static readonly Vector2 MeasureAt = new Vector2(458f, -240f);   // -87 until the props came down;
-                                                                               // 485 ran the tin's wall under the bin
-        /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
-        private static readonly Vector2 MeasureSize = new Vector2(136f, 136f);
+        //
+        // A TIN, NOT A CUP (2026-09-25, the author: "Built aşamasında sağdaki tin (shaker doluluk göstergesi) üstten
+        // basık olarak gözüküyor o tasarımı düzelt ve boyutunu büyüt"). The size had become 136 square, and the
+        // silhouette is traced row for row off shaker.png and stretched to whatever box it is given - so a tin 84
+        // wide and 181 tall was drawn 2.2 times too wide, and with the lid clipped off (2026-09-16) what was left was
+        // a wide, shallow cup, 95 tall under a 136 mouth. It is drawn at the shaker's own 84:181 now, and larger:
+        // 102 x 220, its foot on the counter at -340 (the TIN caption under it, clear of the screen's edge), its
+        // body 151 tall to the lip. Measured with the room lifted, as a bench always opens (r222/r223): the
+        // contents' plaque ends at 509 (screen) at its tallest, four rows; at 240 tall a full tin's "100%" ran
+        // into that last row, and at 220 it stands clear of it. The column still reads top to bottom with nothing
+        // on anything. The glass bench's gauge stands on the same numbers, and its column is empty above the gauge.
+        private static readonly Vector2 MeasureAt = new Vector2(458f, -230f);
+        /// <summary>102 x 220: the shaker's own 84:181.</summary>
+        private static readonly Vector2 MeasureSize = new Vector2(102f, 220f);
 
         /// <summary>
         /// The standing measure: the shaker in outline with the drink cut to its silhouette.

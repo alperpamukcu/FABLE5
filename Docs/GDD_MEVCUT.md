@@ -1866,6 +1866,26 @@ Yazar, sabitlenen notun (Sofia Marchetti · GIN & TONIC) ekran görüntüsüyle:
   sığıyor (r220).
 - **Menünün sıkışık sayfaları** (46'nın altı): noktalar ismin yanında, ikisi de satırda ortalı. Noktaların yanına
   sığmayan uzun bir isim (TRIPLE SEC, GRENADINE) bir boy küçülüyor, noktaların altına girmiyor.
+
+### 9.117 · Teneke göstergesi gerçek oranında ve büyük; bira göstergeleri akışın yolundan çekildi (2026-09-25)
+
+Yazar: “Built aşamasında sağdaki tin (shaker doluluk göstergesi) üstten basık olarak gözüküyor o tasarımı düzelt ve
+boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüşünü örtmesi için “düzelt”.
+
+- **Neden basıktı:** göstergenin silueti `shaker.png`'den satır satır izleniyor ve verilen kutuya esnetiliyor.
+  Kutu 136×136 kareydi, teneke ise 84×181. Yani 2,2 kat yayvan çiziliyordu. Kapağı kesilince (2026-09-16) geriye
+  136 genişliğinde, 95 yüksekliğinde basık bir kupa kalıyordu.
+- **Şimdi 102×220** (`MeasureSize`), tenekenin kendi 84:181 oranında. Ayağı tezgâhın dibinde (-340, TIN yazısı
+  ekranın içinde). Gövdesi dudağa kadar 151 birim. MIX tüpü tenekenin iç boşluğuyla birlikte uzadı. Oda
+  kalkık ölçüldü (tezgâh hep böyle açılıyor, r222–r225): içerik plakası en uzun haliyle (dört satır) 509'da
+  (ekran) bitiyor. 240 yükseklikte tam dolu tenekenin “100%” yazısı son satıra biniyordu; 220'de altında
+  kalıyor. Sağ sütun yukarıdan aşağı okunuyor, hiçbir şey birbirinin üstüne binmiyor. Bardak tezgâhının
+  göstergesi aynı sayılarla duruyor, üstü boş.
+- **Bira göstergeleri** (`LayTheBars`): çift bardağın tutma noktasıyla gidiyordu. Eğik bardak ağzını musluğun
+  altında tutmak için tutma noktasını sola kaydırınca çift, biranın düştüğü sütuna biniyordu. Artık sol kenarı
+  musluk ile ağzın sağında, 18 birim payla duruyor (r224).
+- Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
+  koşu, ikincisi geçti.
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,
