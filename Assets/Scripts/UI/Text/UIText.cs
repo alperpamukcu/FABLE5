@@ -29,7 +29,28 @@ namespace LastCall.UI
         public static string N(string key, long count, params (string name, object value)[] args) =>
             L.Render(Build(key, args).Counting("n", count));
 
-        public static string Caps(string s) => L.Upper(s);
+        /// <summary>
+        /// Capitals in this language - except for a word the language KEEPS IN ENGLISH (2026-09-25, measured on the
+        /// Turkish menu: "MAİ TAİ", "HİGHBALL", "TRİPLE SEC"). A cocktail's proper name, a glass's or a spirit's own word
+        /// is often left as it is in the tables, and Turkish capitals dot every i in it; English does not. A string
+        /// <see cref="Data"/> handed back unchanged from its English is remembered as English and takes English
+        /// capitals; a word the table translated (Cin Tonik, misket limonu) keeps this language's.
+        /// </summary>
+        public static string Caps(string s) =>
+            s != null && L.Code != "en" && IsKeptEnglish(s) ? TextCase.Upper("en", s) : L.Upper(s);
+
+        private static Localizer _keptFor;
+        private static readonly System.Collections.Generic.HashSet<string> KeptEnglish =
+            new System.Collections.Generic.HashSet<string>(StringComparer.Ordinal);
+
+        private static void KeepEnglish(string s)
+        {
+            if (!ReferenceEquals(_keptFor, L)) { KeptEnglish.Clear(); _keptFor = L; }
+            KeptEnglish.Add(s);
+            KeptEnglish.Add(s.Replace('_', ' '));        // a style id is shown with its underscores as spaces
+        }
+
+        private static bool IsKeptEnglish(string s) => ReferenceEquals(_keptFor, L) && KeptEnglish.Contains(s);
 
         /// <summary>Sentence case in this language: "SATIŞ" → "Satış" (<see cref="TextCase.Sentence"/>).</summary>
         public static string Sentence(string s) => L.Sentence(s);
@@ -43,8 +64,16 @@ namespace LastCall.UI
         public static string CapsT(string key, params (string name, object value)[] args) => Caps(T(key, args));
 
         /// <summary><c>data.{kind}.{id}.{field}</c>, falling back to the English the data file carries.</summary>
-        public static string Data(string kind, string id, string field, string english) =>
-            L.GetOr("data." + kind + "." + id + "." + field, english);
+        public static string Data(string kind, string id, string field, string english)
+        {
+            string s = L.GetOr("data." + kind + "." + id + "." + field, english);
+            // Case does not count: some callers hand in the data's id as the English ("highball") where the table
+            // holds the name ("Highball") - the same word, kept, and it must still take English capitals.
+            if (!string.IsNullOrEmpty(english) && L.Code != "en"
+                && string.Equals(s, english, StringComparison.OrdinalIgnoreCase))
+                KeepEnglish(s);
+            return s;
+        }
 
         /// <summary>A list of lines from a data file (a lesson's <c>say</c>, a story beat's <c>ask</c>), each
         /// as <c>data.{kind}.{id}.{field}.{index}</c>, falling back line by line to the English.</summary>

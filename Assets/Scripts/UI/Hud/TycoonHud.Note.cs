@@ -49,7 +49,7 @@ namespace LastCall.UI
             if (!string.IsNullOrEmpty(whose))
             {
                 var who = Centred("Whose", _body, 8, quiet, 12f);
-                who.text = UIText.Caps(whose);
+                who.text = whose;           // as the licence prints it, in its own case: a name is not a word to capitalise
                 y += 13f;
             }
 

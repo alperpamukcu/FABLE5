@@ -1806,8 +1806,14 @@ para harcandığında gittiğinde geldiğinde bu banknotlar animasyonla uçar te
   2x) geldiği yerden — hesabı kapatan müşterinin taburesinden, yoksa odanın ortasından — kasaya tek tek uçuyor ve her
   inişte kasa zıplıyor; para çıkınca kasadan çıkıp düşerek kayboluyor; pazarda ödemede sepete iniyor. Sayı miktardan
   (≤5 → 1 … >300 → 6). Hareket azaltılmışsa uçuş yok.
-- Doğrulama: altı assembly çevrimdışı 0 hata. Oyunda henüz ölçülmedi; pazarın sepet ayağı look-test karesi yeni
-  işaretler yüzünden bilerek değişiyor (yazar görmeden yeniden onaylanmayacak).
+- **Türkçe kitap (aynı gün, yazarın "evet"i):** tablonun İngilizce bıraktığı bir ad (Mai Tai, Highball, Triple Sec)
+  artık İngilizce büyük harf alıyor — `UIText.Data` kaynağıyla aynı dönen metni (büyük/küçük harf fark etmeksizin)
+  "İngilizce kaldı" diye not ediyor, `UIText.Caps` onu İngilizce kuralla büyütüyor ("MAİ TAİ" → "MAI TAI"); çevrilmiş
+  kelimeler (Cin Tonik) Türkçe kuralda. Kitabın döküm satırları stilin İngilizce kimliği yerine şişenin çevrilmiş stil
+  kelimesini basıyor (`data.bottle.<id>.style`: ROM, MİSKET LİMONU, ANANAS, ŞURUP). Notun başındaki müşteri adı
+  kimlikteki gibi kendi yazımıyla.
+- Doğrulama: editörde (paralel oturum) EditMode 732/732, PlayMode 14/14, look testleri yeşil (sepet ayağı karesi boş
+  sepeti çektiği için değişmedi); menü, not, sipariş kartı, uçan banknotlar ve Türkçe sayfalar ekran görüntüsüyle.
 
 ### 9.115 · Dökülen sıvı önde ve tabanına kadar: akışın kendi katmanı (2026-09-25)
 

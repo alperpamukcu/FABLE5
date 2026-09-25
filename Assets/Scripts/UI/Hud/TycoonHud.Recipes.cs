@@ -462,8 +462,28 @@ namespace LastCall.UI
             return UIText.T("recipes.way_line", ("prep", PrepWord(r)), ("glass", glassWord));
         }
 
-        /// <summary>A style id as a word on a card: "coffee_liqueur" is COFFEE LIQUEUR.</summary>
-        private static string StyleWord(string style) => UIText.Caps(style.Replace('_', ' '));
+        /// <summary>
+        /// A style as a word on a card, IN THIS LANGUAGE (2026-09-25, the Turkish menu measured in play: RUM, LIME,
+        /// PINEAPPLE on a page whose every other word was Turkish). The words already exist - the cellar card and the
+        /// market say a bottle's style from <c>data.bottle.&lt;id&gt;.style</c> ("rom", "misket limonu", "ananas") -
+        /// so the book asks the first bottle of that style on the shelf or in the catalogue for its word. A style no
+        /// bottle carries is the id itself: "coffee_liqueur" is COFFEE LIQUEUR.
+        /// </summary>
+        private string StyleWord(string style)
+        {
+            if (string.IsNullOrEmpty(style)) return "";
+            string word = null;
+            var run = Run;
+            if (run != null)
+            {
+                foreach (var b in run.Shelf.Bottles)
+                    if (b.Ingredient?.Info?.Style == style) { word = UIText.Data("bottle", b.Ingredient.Id, "style", style); break; }
+                if (word == null && run.CatalogueBottles != null)
+                    foreach (var c in run.CatalogueBottles)
+                        if (c?.Info?.Style == style) { word = UIText.Data("bottle", c.Id, "style", style); break; }
+            }
+            return UIText.Caps((word ?? style).Replace('_', ' '));
+        }
 
         /// <summary>A spec row's label with the tier it asks for, when it asks for more than the well.</summary>
         private static string SpecLabel(SpecRow spec) =>
@@ -1485,7 +1505,7 @@ namespace LastCall.UI
         /// (the shop's crate) — where the author's rule is that the MAKING stays locked. The
         /// shopping list is fair game and load-bearing: the tile beside it says whether the
         /// shelf could pour the thing, which is the decision being made here.</summary>
-        private static string BandLine(RecipeDefinition r)
+        private string BandLine(RecipeDefinition r)
         {
             var parts = new List<string>();
             foreach (var b in r.RatioRequirements)
