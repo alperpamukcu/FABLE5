@@ -848,6 +848,10 @@ namespace LastCall.UI
             _serveGlassImage.raycastTarget = false;
 
             _serveFluid = new MetaballFluid(_serveSurface);
+            // THE POUR IN FRONT (2026-09-25, MetaballFluid.PourInFront): what leaves the tin is drawn over the
+            // tin, the glass's sheet and its front plates, from the lip down to the drink.
+            _serveFluid.PourInFront();
+            _serveFluid.SetGround(CatchFootY + GlassFootLift);   // what falls past the glass ends on the bench
             // The serving glass stands still and never carries foam, and its tall glasses are
             // the columns the stacked regime exists for (MetaballFluid, 2026-09-11): without it
             // the full 420 highball boiled at 13 ms a step and drew its level wherever the boil

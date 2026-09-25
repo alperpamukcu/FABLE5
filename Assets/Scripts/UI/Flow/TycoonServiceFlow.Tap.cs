@@ -444,6 +444,12 @@ namespace LastCall.UI
             _tapGlass.gameObject.AddComponent<EventTrigger>().triggers.Add(glassGrab);
 
             _tapFluid = new MetaballFluid(_tapSurface);
+            // THE POUR IN FRONT (2026-09-25, MetaballFluid.PourInFront): the beer leaving the spout is drawn over
+            // the font and the pint, down to what is already in the glass. Over the PINT / HEAD pair too: it rides
+            // the glass's mouth (LayTheBars), so under it the beer vanished for most of its fall (r208) - a
+            // one-pixel line across the edge of a gauge reads, a stream that is not there does not.
+            _tapFluid.PourInFront();
+            _tapFluid.SetGround(CounterY + TowerPlinth);   // what falls past the pint ends on the drip tray
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
             // A pint is the one vessel that is filled and then STANDS, its beer creeping up a

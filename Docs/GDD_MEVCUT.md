@@ -1767,6 +1767,39 @@ salted/sugar front'un arkasında olacak normal salted/sugar.png nin önünde ola
   sonra kasa −$9, mikser reyonunda alınabilecek bir şey kalmıyor), bu turun dosyalarından değil.
   LookTests 3/3.
 
+### 9.115 · Dökülen sıvı önde ve tabanına kadar: akışın kendi katmanı (2026-09-25)
+
+Yazar (altıncı liste, 2026-09-22): “Dökülen sıvılar bira sahnesi de dahil bardakların ve shakerin png'sinin
+önünde olmalı ve tabanına kadar gitmeli.” O gün bekletildi, çünkü bardakların FRONT plakaları o sırada yazarın
+elindeydi. Plakalar repoya girdi, madde açıldı.
+
+- **Ölçüldü (r206):** teneke highball'un üstüne eğildi, bardağı %13'e doldurdu, ama ekranda akıştan tek piksel
+  yoktu. Sebep sıvının TEK dokusuydu. Doku yalnız `FitViewport`'un tezgâh yüzeyine göre kestiği görüş alanını
+  gösteriyor, oysa tenekenin ağzı da bardağın ağzı da o yüzeyin üst kenarının üstünde. Ayrıca doku gövdenin
+  durması gereken yerde, bardağın kesme cam sayfasının ve tenekenin altında duruyor.
+- **Akış kendi katmanında** (`MetaballFluid.PourInFront`): aynı shader, yalnız akış düğümleriyle, akışın kendi
+  sınırları kadar bir görüş alanında (doku yalnız büyür, her kare yeniden yaratılmaz), tezgâhtaki her şeyin
+  ÖNÜNDE: dökenin, bardağın sayfasının ve FRONT plakalarının. Gövde dokusu, görüş alanı ve yeri aynı kaldı;
+  sıçramalar da onunla birlikte bardağın içinde. İstemeyen akışkan eskisi gibi çiziliyor.
+  - **Serve:** tenekenin ağzından içkiye kadar, bardağın önünde.
+  - **Bira:** musluktan bardağa, kulenin ve bardağın önünde. PINT/HEAD göstergelerinin de önünde, çünkü
+    göstergeler bardağın ağzına biniyor; altlarında kalınca bira düşüşünün çoğunda görünmüyordu (r208).
+  - **Shaker:** teneke çelik (2026-09-06, “artık shakerimiz şeffaf değil”). Önüne çizilen akış tenekenin
+    dışından aşağı akardı. Bu yüzden akış tenekenin ön plakasının hemen ARKASINDA duruyor: şişenin ağzından,
+    tezgâhın üst kenarının üstünde de görünüyor, tenekenin ön dudağında kayboluyor (r209).
+- **Bir sanat pikselinden ince değil:** az dökülürken düğüm yarıçapı 2 px, bardağın pikseli 4,375 px. İp texel
+  merkezlerinin arasına düşüp hiç çizilmiyordu (r207, havada 92 düğüm, sıfır piksel). Akış en az 1,5 texel
+  yarıçapla çiziliyor: bir sütunun üstünde bir, iki sütun arasında iki piksel genişliğinde.
+- **İp kopmuyor:** düğümler dudaktaki hıza göre aralıklanıyordu. Tam akışta 4,5 px arayla çıkıp 20 px arayla
+  iniyorlardı, alanın köprüleyebildiğinden (~19) fazla. Çizim, aynı dökümün ardışık iki düğümü arasına ara
+  noktalar koyuyor (düğüm sırası `Seq`, aynı kare kuralı). Fizik aynı. Akış yuvası 96 → 176 (düşüş 110 düğüm
+  istiyordu); fark havuzdan alındı (2016 → 1936, en uzun bardak ~880), shader'ın toplamı değişmedi. Kare
+  başına yetişme sınırı dört düğümlük süreden bir 30 fps karesine çıktı, yoksa 60 fps altında her kare bir
+  delik bırakıyordu.
+- **Dışarı düşen tezgâhta bitiyor** (`SetGround`): bardak akışın altına kayarken dışarıda kalan damlalar
+  tezgâh çizgisinin ~45 px altında sönüyordu, yani önde çizilince tezgâhın içine giriyorlardı. Artık kabın
+  bastığı çizgide bitiyorlar: serve'de bardağın ayağı, birada damlalık tepsisi, shaker'da tezgâh.
+
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,

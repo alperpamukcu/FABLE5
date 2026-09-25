@@ -2916,6 +2916,12 @@ namespace LastCall.UI
             _tinFrontImg.raycastTarget = false;
             _tinFrontImg.preserveAspect = false;
             DressTinFront();
+            // THE POUR IN FRONT (2026-09-25, MetaballFluid.PourInFront): what leaves the bottle is drawn in its own
+            // layer, seen from the lip even above the bench's top edge - and kept just BEHIND the tin's front
+            // wall, because the tin is steel (2026-09-06): a stream drawn over it would run down the outside of the
+            // tin. It goes into the mouth and is gone, as it does in a real one.
+            _shakerFluid.PourInFront(_tinFrontRt);
+            _shakerFluid.SetGround(CatchFootY);   // what misses the tin ends on the bench
             // The tin's silhouette (bottom → rim): a full body that draws in to the neck, so the
             // drink takes the shaker's shape instead of filling an invisible box (2026-07-24).
             _shakerFluid.SetProfile(new[] {

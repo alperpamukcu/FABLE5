@@ -28,9 +28,13 @@ namespace LastCall.UI
         // fall at one drop per 6 ms), and into a full one the splashes held 60 and left the
         // stream 34. Splashes can no longer take a stream node's place, and the pool gave up 24
         // slots it never uses (the tallest stacked glass holds ~880), so RenderMax is unchanged.
-        private const int StreamMax = 96, SplashMax = 64;
+        // 176 since 2026-09-25: the pour in front (PourInFront) shows the whole fall, lip to drink, and a tin
+        // over the highball falls ~0.44 s at a node every 4 ms — 110 nodes against 96 slots, so the lower half
+        // of every pour broke into dashes where nodes were refused. The 80 came out of the pool, which the
+        // tallest glass fills to ~880 of its 1936.
+        private const int StreamMax = 176, SplashMax = 64;
         private const int MaxDrops = StreamMax + SplashMax;
-        private const int MaxPool = 2016;
+        private const int MaxPool = 1936;
         private const int RenderMax = 2176;   // must match MAX_DROPS in the shader = MaxPool + MaxDrops
 
         private const float Gravity = 1400f;          // px/s² down — the POOL's; its calibration hangs on it
@@ -477,7 +481,11 @@ namespace LastCall.UI
             /// <summary>Went in through the vessel's MOUTH: from then on it is inside the glass and
             /// the walls hold it. One that crossed the rim outside the mouth is falling past.</summary>
             public bool Entered;
+            /// <summary>A stream node's place in the rope: the one after it left the lip next (see
+            /// UploadPour, which draws the rope between them). 0 for a splash.</summary>
+            public int Seq;
         }
+        private int _streamSeq;
         private readonly Drop[] _drops = new Drop[MaxDrops];
         private readonly Vector4[] _dropData = new Vector4[RenderMax];
         private float _emitAccum;
@@ -499,6 +507,16 @@ namespace LastCall.UI
         }
 
         public void ClearSink() => _sinkSet = false;
+
+        // THE COUNTER (2026-09-25). A drop that falls past the vessel — the rope a tin leaves behind while the
+        // glass slides under it — used to fall on to the viewport's kill line, 70 px under the vessel's floor
+        // and some 45 under the bench it stands on: in front of the bench (PourInFront) it was seen going
+        // through the counter. It stops on the counter now, where the vessel's foot is.
+        private bool _groundSet;
+        private float _ground;
+
+        /// <summary>The line the vessel stands on (surface-local px): a drop outside the vessel ends there.</summary>
+        public void SetGround(float y) { _groundSet = true; _ground = y; }
 
         /// <summary>
         /// WHERE THE STREAM COMES DOWN NEXT (2026-09-14, the author: "yakalaması için sıvıyı takip etmesi gerekiyor
@@ -679,18 +697,37 @@ namespace LastCall.UI
         /// grid a little past the viewport, so its pixels land exactly on the glass's pixels;
         /// the image shows the viewport's part of it (uvRect) point-sampled.
         /// </summary>
-        private void DrawTexture(float texel)
+        private void DrawTexture(float texel) =>
+            DrawInto(_material, _owner, _image, _originX, _originY, _size, texel, false);
+
+        /// <summary>
+        /// Draws one layer of the drink — the body (<see cref="DrawTexture"/>) or the pour in front
+        /// (<see cref="UploadPour"/>) — into its owner's texture, for the viewport centred on
+        /// (<paramref name="ox"/>, <paramref name="oy"/>) of <paramref name="size"/>. A layer whose viewport
+        /// moves every frame (<paramref name="growOnly"/>) keeps a texture that only ever grows, and draws the
+        /// viewport into its corner: a texture made and freed sixty times a second is the one thing worse
+        /// than shading a few spare texels.
+        /// </summary>
+        private void DrawInto(Material m, FluidTexture owner, RawImage img, float ox, float oy, Vector2 size,
+                              float texel, bool growOnly)
         {
             float px = texel > 0f ? texel : SmoothPx;
             Vector2 g = texel > 0f ? _gridOrigin : Vector2.zero;
-            float vx0 = _originX - _size.x * 0.5f, vy0 = _originY - _size.y * 0.5f;
+            float vx0 = ox - size.x * 0.5f, vy0 = oy - size.y * 0.5f;
             float rx0 = g.x + Mathf.Floor((vx0 - g.x) / px) * px;
             float ry0 = g.y + Mathf.Floor((vy0 - g.y) / px) * px;
-            int w = Mathf.Clamp(Mathf.CeilToInt(_size.x / px) + 1, 1, 2048);
-            int h = Mathf.Clamp(Mathf.CeilToInt(_size.y / px) + 1, 1, 2048);
-            var tex = _owner.Tex;
-            if (tex == null || tex.width != w || tex.height != h)
+            int w = Mathf.Clamp(Mathf.CeilToInt(size.x / px) + 1, 1, 2048);
+            int h = Mathf.Clamp(Mathf.CeilToInt(size.y / px) + 1, 1, 2048);
+            var tex = owner.Tex;
+            bool fits = tex != null && (growOnly ? tex.width >= w && tex.height >= h
+                                                 : tex.width == w && tex.height == h);
+            if (!fits)
             {
+                if (growOnly)
+                {
+                    if (tex != null) { w = Mathf.Max(w, tex.width); h = Mathf.Max(h, tex.height); }
+                    w = Mathf.Min((w + 15) / 16 * 16, 2048); h = Mathf.Min((h + 15) / 16 * 16, 2048);
+                }
                 if (tex != null) { tex.Release(); Object.Destroy(tex); }
                 tex = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32)
                 {
@@ -698,22 +735,181 @@ namespace LastCall.UI
                     wrapMode = TextureWrapMode.Clamp, useMipMap = false,
                 };
                 tex.Create();
-                _owner.Tex = tex;
-                _image.texture = tex;
+                owner.Tex = tex;
+                img.texture = tex;
             }
+            else { w = tex.width; h = tex.height; }
             tex.filterMode = texel > 0f ? FilterMode.Point : FilterMode.Bilinear;
             float rw = w * px, rh = h * px;
-            _material.SetVector(IdRtMap, new Vector4(rw / _size.x, rh / _size.y,
-                                                     (rx0 - vx0) / _size.x, (ry0 - vy0) / _size.y));
-            _image.uvRect = new Rect((vx0 - rx0) / rw, (vy0 - ry0) / rh, _size.x / rw, _size.y / rh);
+            m.SetVector(IdRtMap, new Vector4(rw / size.x, rh / size.y,
+                                             (rx0 - vx0) / size.x, (ry0 - vy0) / size.y));
+            img.uvRect = new Rect((vx0 - rx0) / rw, (vy0 - ry0) / rh, size.x / rw, size.y / rh);
             // Blit leaves its destination as the ACTIVE target, and anything after it that
             // reads "the screen" through the active target — a ReadPixels, a capture — would
             // read the drink's texture instead. Put back whatever was active.
             var prev = RenderTexture.active;
             RenderTexture.active = tex;
             GL.Clear(false, true, Color.clear);
-            Graphics.Blit(null, tex, _material, TexturePass);
+            Graphics.Blit(null, tex, m, TexturePass);
             RenderTexture.active = prev;
+        }
+
+        // ── THE POUR IN FRONT (2026-09-25) ──────────────────────────────────────
+        // The author's sixth list (2026-09-22): "Dökülen sıvılar bira sahnesi de dahil bardakların
+        // ve shakerin png'sinin önünde olmalı ve tabanına kadar gitmeli." Measured (r206): a tin
+        // tipped over the highball poured it to 13% and not one pixel of the stream was on screen.
+        // Two reasons, both the drink's one texture. It shows only the viewport FitViewport sizes to
+        // the bench's work surface, and the tin's mouth and the glass's rim both stand above that
+        // surface's top edge. And the texture sits where the body has to, under the glass's sheet
+        // and under the tin, so what fell inside the glass was behind the cut crystal and what
+        // left the tin's lip was behind the tin.
+        //
+        // So the stream is its own layer: the same shader, drawn from the stream's drops alone, on
+        // a viewport that is the stream's own bounds, in an image that stands IN FRONT of
+        // everything on the bench — the pourer, the vessel's sheet and its front plates — from the
+        // lip down to the drink. The body keeps its texture, its viewport and its place, and the
+        // splashes stay with it inside the glass. Opt-in per bench (PourInFront): a fluid that
+        // never asks draws exactly as it did.
+        private RectTransform _pourRt;
+        private RawImage _pourImage;
+        private Material _pourMaterial;
+        private FluidTexture _pourOwner;
+        private bool _pourShown;
+        private bool _hidden;             // SetActive(false): nothing of the drink is drawn
+        private Transform _pourUnder;     // the one plate the pour stays behind, or null for none
+        private readonly int[] _pourOrder = new int[MaxDrops];
+        /// <summary>Two rope nodes are drawn joined when they are no further apart than this share of the
+        /// smaller one's radius (the field bridges ~1.28 of it; this keeps the neck as wide as the rope).</summary>
+        private const float RopeStep = 0.7f;
+        /// <summary>Two consecutive nodes born further apart in time than this are two pours, not one rope
+        /// (Life counts down from the spawn; one frame of a 30 fps game is 0.033).</summary>
+        private const float RopeSameFrames = 0.06f;
+        private const int RopeMaxFill = 12;
+
+        /// <summary>
+        /// Draws this fluid's STREAM in front of everything on its surface (see above), and returns the
+        /// image that does it. The fluid keeps it the surface's last child — or, given
+        /// <paramref name="under"/>, the child just behind that one: an OPAQUE vessel's front wall, which a
+        /// stream going into its mouth disappears behind (the steel tin, 2026-09-25).
+        /// </summary>
+        public RectTransform PourInFront(Transform under = null)
+        {
+            _pourUnder = under != null && under.parent == _surface ? under : null;
+            if (_pourRt != null || _material == null) return _pourRt;
+            var go = new GameObject("MetaballPour", typeof(RectTransform));
+            go.transform.SetParent(_surface, false);
+            _pourRt = (RectTransform)go.transform;
+            _pourRt.anchorMin = _pourRt.anchorMax = _pourRt.pivot = new Vector2(0.5f, 0.5f);
+            _pourImage = go.AddComponent<RawImage>();
+            _pourImage.raycastTarget = false;
+            _pourImage.enabled = false;
+            _pourMaterial = new Material(_material) { hideFlags = HideFlags.HideAndDontSave };
+            _pourOwner = go.AddComponent<FluidTexture>();
+            _pourOwner.Material = _pourMaterial;
+            return _pourRt;
+        }
+
+        /// <summary>
+        /// One frame of the pour's own layer: the stream's drops, in a viewport around them, in front of
+        /// the bench. Nothing in the air: the image stands down, and draws nothing until the next pour.
+        /// </summary>
+        private void UploadPour(float texel)
+        {
+            if (_pourRt == null) return;
+            // NEVER THINNER THAN ONE PIXEL OF THE VESSEL (2026-09-25). A tin just past level pours at the
+            // bottom of its lift steps, width 0.2, a node radius of 2 px; the rope that draws is ~2 px across,
+            // and the drink is sampled at the centres of 4.375 px texels (the highball's own pixels), so a
+            // thread that thin fell between them and drew nothing — measured (r207): 92 nodes in the air, a
+            // glass filling, and not one pixel of stream. The thinnest pour is one pixel of the glass's art,
+            // which still reads as "a little is running" (the author, 2026-09-13: "az dökülüyorken ... az
+            // gözükmeli"). A rope draws ~0.55 of its node radius either side, so at one texel of radius a
+            // thread swaying off its column's centre fell between two and broke into dashes (r207, the lower
+            // half of the fall); at 1.5 the nearest centre, never more than half a texel away, is always
+            // inside it — one column wide on a column, two on a seam.
+            float minR = 1.5f * (texel > 0f ? texel : SmoothPx);
+            float x0 = float.MaxValue, y0 = float.MaxValue, x1 = float.MinValue, y1 = float.MinValue;
+            int n = 0;
+            for (int i = 0; i < MaxDrops; i++)
+            {
+                if (!_drops[i].Active || !_drops[i].Merges) continue;
+                var p = _drops[i].Pos; float r = Mathf.Max(_drops[i].Radius, minR);
+                if (p.x - r < x0) x0 = p.x - r;
+                if (p.x + r > x1) x1 = p.x + r;
+                if (p.y - r < y0) y0 = p.y - r;
+                if (p.y + r > y1) y1 = p.y + r;
+                n++;
+            }
+            if (n == 0 || _hidden)
+            {
+                if (_pourShown) { _pourImage.enabled = false; _pourShown = false; }
+                return;
+            }
+            // A node's field reaches a little past its radius, and the texel grid snaps outward.
+            float pad = 4f + 2f * Mathf.Max(texel, SmoothPx);
+            x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+            var size = new Vector2(Mathf.Max(x1 - x0, 8f), Mathf.Max(y1 - y0, 8f));
+            float ox = (x0 + x1) * 0.5f, oy = (y0 + y1) * 0.5f;
+            _pourRt.sizeDelta = size;
+            _pourRt.anchoredPosition = new Vector2(ox, oy);
+            if (_pourUnder != null)
+            {
+                int at = _pourUnder.GetSiblingIndex();
+                if (_pourRt.GetSiblingIndex() != at - 1) _pourRt.SetSiblingIndex(at > _pourRt.GetSiblingIndex() ? at - 1 : at);
+            }
+            else if (_pourRt.GetSiblingIndex() != _surface.childCount - 1) _pourRt.SetAsLastSibling();
+
+            // Everything the body's material knows about the drink — its colours, the stream's own
+            // colour and alpha share, the threshold, the flow's clock — then this viewport and these drops.
+            _pourMaterial.CopyPropertiesFromMaterial(_material);
+
+            // THE ROPE BETWEEN ITS NODES (2026-09-25). A node leaves the lip each time the last has gone a
+            // fraction of its radius AT THE LIP's speed, and then the fall speeds them apart: a full-flow rope
+            // (radius 15, a node every 20 ms) left 4.5 px apart and landed ~20 apart, past the ~19 its field
+            // bridges — in the body's texture, where most of the fall was clipped or behind the glass, nobody
+            // saw it, and in front it drew as beads down the lower half (r207). The solver's nodes stay as
+            // they are; the DRAWING puts points between two neighbours of one pour — consecutive in the rope,
+            // born within a frame or two of each other — wherever they are further apart than they can join.
+            int m = 0;
+            for (int i = 0; i < MaxDrops; i++)
+                if (_drops[i].Active && _drops[i].Merges) _pourOrder[m++] = i;
+            for (int a = 1; a < m; a++)             // by Seq: at most StreamMax, nearly in order already
+            {
+                int v = _pourOrder[a], b = a - 1;
+                while (b >= 0 && _drops[_pourOrder[b]].Seq > _drops[v].Seq) { _pourOrder[b + 1] = _pourOrder[b]; b--; }
+                _pourOrder[b + 1] = v;
+            }
+            int count = 0;
+            for (int a = 0; a < m && count < RenderMax; a++)
+            {
+                ref Drop d = ref _drops[_pourOrder[a]];
+                float r = Mathf.Max(d.Radius, minR);
+                _dropData[count++] = new Vector4((d.Pos.x - ox) / size.x + 0.5f, (d.Pos.y - oy) / size.y + 0.5f, r, 3f);
+                if (a + 1 >= m) break;
+                ref Drop e = ref _drops[_pourOrder[a + 1]];
+                if (e.Seq != d.Seq + 1 || Mathf.Abs(e.Life - d.Life) > RopeSameFrames) continue;
+                float re = Mathf.Max(e.Radius, minR);
+                float step = RopeStep * Mathf.Min(r, re);
+                float dist = Vector2.Distance(d.Pos, e.Pos);
+                int extra = Mathf.Min(Mathf.CeilToInt(dist / step) - 1, RopeMaxFill);
+                for (int k = 1; k <= extra && count < RenderMax; k++)
+                {
+                    float t = k / (extra + 1f);
+                    var p = Vector2.Lerp(d.Pos, e.Pos, t);
+                    _dropData[count++] = new Vector4((p.x - ox) / size.x + 0.5f, (p.y - oy) / size.y + 0.5f,
+                                                     Mathf.Lerp(r, re, t), 3f);
+                }
+            }
+            for (int i = count; i < RenderMax; i++) _dropData[i] = Vector4.zero;
+            _pourMaterial.SetFloat(IdDropCount, count);
+            _pourMaterial.SetVectorArray(IdDrops, _dropData);
+            _pourMaterial.SetVector(IdSize, new Vector4(size.x, size.y, 0f, 0f));
+            _pourMaterial.SetFloat(IdTexel, texel);
+            _pourMaterial.SetVector(IdViewOrigin, new Vector4(ox - _gridOrigin.x, oy - _gridOrigin.y, 0f, 0f));
+            _pourMaterial.SetFloat(IdFlowT, _flowT);
+            _pourMaterial.SetFloat(IdBodyOn, 0f);          // the stream alone: no glass mask, no body
+            _pourMaterial.SetFloat(IdPoolTopY, 2f);        // and no liquid line to light
+            DrawInto(_pourMaterial, _pourOwner, _pourImage, ox, oy, size, texel, true);
+            if (!_pourShown) { _pourImage.enabled = true; _pourShown = true; }
         }
         private static readonly int IdColor     = Shader.PropertyToID("_Color");
         private static readonly int IdDropCount = Shader.PropertyToID("_DropCount");
@@ -1160,10 +1356,16 @@ namespace LastCall.UI
             width = Mathf.Clamp(width, 0.18f, 1.8f);
             float r = StreamRadius * width;
             float interval = Mathf.Clamp(StreamSpacing * r / Mathf.Max(vel.magnitude, 60f), 0.004f, 0.05f);
-            _emitAccum = Mathf.Min(_emitAccum + dt, interval * 4f);   // a hitch never fires a burst
+            // A FRAME'S WORTH, UP TO A 30 FPS FRAME (2026-09-25). The catch-up was capped at four nodes'
+            // time — 16 ms at a trickle — so under 60 fps every frame lost the rest of itself and the rope
+            // came out as a dash per frame with a hole after it (measured r207, the pour in front: dashes all
+            // down the lower half of the fall). Each node is placed where it would have fallen to by now (tau,
+            // below), so a whole frame's nodes lie along the fall rather than in a clump; only a real hitch,
+            // longer than a 30 fps frame, is still cut short.
+            _emitAccum = Mathf.Min(_emitAccum + dt, Mathf.Max(interval * 4f, 1f / 30f));
             _streamT += dt;
             int guard = 0;
-            while (_emitAccum >= interval && guard++ < 6)
+            while (_emitAccum >= interval && guard++ < 16)
             {
                 _emitAccum -= interval;
                 // WHERE IT WOULD BE BY NOW. What is left in the accumulator after this node is
@@ -1213,7 +1415,8 @@ namespace LastCall.UI
             for (int i = from; i < to; i++) if (!_drops[i].Active) { slot = i; break; }
             _lastSpawned = slot;
             if (slot < 0) return;   // full: let the new drop go, never cull one mid-fall
-            _drops[slot] = new Drop { Pos = pos, Vel = vel, Radius = radius, Life = life, Merges = merges, Active = true };
+            _drops[slot] = new Drop { Pos = pos, Vel = vel, Radius = radius, Life = life, Merges = merges, Active = true,
+                                      Seq = merges ? ++_streamSeq : 0 };
         }
 
         public void Step(float dt)
@@ -1958,7 +2161,7 @@ namespace LastCall.UI
                         continue;
                     }
                 }
-                if (d.Life <= 0f || d.Pos.y < floor)
+                if (d.Life <= 0f || d.Pos.y < floor || (_groundSet && !d.Entered && d.Pos.y <= _ground))
                 {
                     d.Active = false;
                     if (d.Merges) StreamLost++; else SplashLost++;
@@ -1970,6 +2173,9 @@ namespace LastCall.UI
         {
             if (_material == null) return;
             float texel = LiquidTexel <= 0f ? 0f : (_gridTexel > 0f ? _gridTexel : LiquidTexel);
+            // The pour in front first: it reads the body's material as the last frame left it, and
+            // the body below then fills the shared drop buffer with its own.
+            UploadPour(texel);
             // NOTHING TO DRAW: nothing is moving — a drink at rest, or no drink at all — nothing is
             // in the air, the look is as it was, and the last picture was already of this still
             // drink. The texture holds it; the GPU does no work for the liquid at all.
@@ -2005,6 +2211,7 @@ namespace LastCall.UI
             for (int i = 0; i < MaxDrops && count < RenderMax; i++)
             {
                 if (!_drops[i].Active) continue;
+                if (_pourRt != null && _drops[i].Merges) continue;   // the stream is drawn in front (UploadPour)
                 var uv = ToUv(_drops[i].Pos.x, _drops[i].Pos.y);
                 // Flagged 3: a drop still in the AIR. The shader draws it thinner than the
                 // settled body — a stream has nothing behind it, where the drink in a glass is
@@ -2083,6 +2290,8 @@ namespace LastCall.UI
         public void SetActive(bool on)
         {
             if (_image != null && _material != null) _image.enabled = on;
+            _hidden = !on;
+            if (!on && _pourShown) { _pourImage.enabled = false; _pourShown = false; }
         }
     }
 }
