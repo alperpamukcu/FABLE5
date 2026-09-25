@@ -62,7 +62,7 @@ Hard rules:
   `DataLoader` with loud validation. New content = new data, not new code. `RecipeCatalog`
   (code) and `recipes.json` are kept in sync by a parity test — change both.
 - **Determinism.** All randomness flows through `RunRng` named streams ("arrivals", "orders",
-  "patience", "customer", "read", "decide", "papers", "mess", "voice"). Never use `System.Random`/`UnityEngine.Random`
+  "patience", "customer", "read", "decide", "papers", "mess", "voice", "ice", "round", "plan"). Never use `System.Random`/`UnityEngine.Random`
   in game logic; string seeds must reproduce identical runs across platforms (custom PCG32).
 - **Hidden information stays hidden.** The order lives behind the ID card: `CustomerVisit.Order`
   throws until `InspectId()`, and only Core's `OrderTruth` sees past it. Drawing the drink, its
@@ -162,6 +162,12 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   accessor picks), and they carry their own colour, so a caller may dim one with alpha but
   never tint it. The art is `Items/{star3d,heart3d}[_socket][_16].png`; the heart and the 16s
   are drawn by `Tools/heart_icon.py` and `Tools/icon_sizes.py`, never by hand or a generator.
+- **Every fitting buffs one kind, and only while it is INSTALLED** (2026-09-23, GDD_MEVCUT §6.4):
+  `buff`/`buffPct` on every `fixtures.json` row, one kind per slot, caps per kind
+  (`FittingBuffs`, `HouseBuffs`). A bare room must stay bit-for-bit today's game — the hooks are
+  scales on existing constants and no kind draws a random number. The tools (shaker, tap, sink)
+  read the worn rung too. Every buff in the UI is drawn on the one `ChromeArt.BuffPlate` via
+  `TycoonHud.Buffs.cs` — never a second plate.
 - `MetaballFluid` fills a vessel from a particle-count estimate that is not exact for every
   silhouette. If a vessel draws short, measure it (`SurfaceY`) and correct that vessel with
   `SetDensity` — do not scale the fill fraction, which just clamps.
@@ -169,7 +175,19 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
 ## Balance
 
 `LastCall → Simulate Tycoon 200 Runs` batch-plays seeded runs through the real `TycoonRun`
-and writes `Docs/tycoon_sim_report.md`. Prefer measuring over guessing — it has already caught
+and writes `Docs/tycoon_sim_report.md`. **`LastCall → Economy Projection` is its other half**
+(2026-09-23): it COMPUTES what a night should pay, night by night at three standards of play,
+from the same constants the game reads — `EconomyProjection` in Core, written into the tables of
+`Docs/ECONOMY_2026-09-23.md` (the prose around them is hand-written and survives a re-run). Read
+the two together; where they disagree, one is wrong and it is worth knowing which.
+
+**A night's orders are PLANNED, not rolled** (2026-09-23): `DayPlan` cuts the whole night's
+composition up front — covers, how they split across the rungs the bar has opened, how many are
+easy/medium/hard — and shuffles only the ORDER, so two nights at the same standing take the same
+money and still play differently. The first seven nights are authored instead (`FirstWeek`, one
+new thing a night). A page's price is `DrinkPricing`'s band for its rung crossed with its work,
+never the bar's standing; the till is capped at `DrinkPricing.CeilingPerDrink`.
+ Prefer measuring over guessing — it has already caught
 two design bugs and two reporting bugs. The bot reads only the ID and never shops, so its
 survival rate is a **floor**, not a prediction; trust the shape comparisons, not the absolute
 number.

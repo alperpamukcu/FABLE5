@@ -122,7 +122,7 @@ memnuniyet bandı (4-7 / 8-13 / 14-20) mükemmel dökümü sıradan iyi bir içk
 
 | Kalem | Formül |
 |---|---|
-| Taban fiyat | `3 + (rank+1)/2` (bilerek düşük — $4–17) × **(0.10 + 0.90 × doğruluk)** (2026-08-20): doğruluk = mükemmel oranlara yakınlık, pay-ağırlıklı; doğru kutu her zaman BİR ŞEY kazandırır (taban $1 tabanı) |
+| Taban fiyat | **2026-09-23'ten beri `DrinkPricing`:** sayfanın açıldığı basamak × işin zorluğu (0★ kolay $3–6 / orta $7–10 / zor $11–12 … 5★ $48–60 / $64–80 / $86–105), bandın içindeki yer rank'tan; barın duruşu fiyatı ÇARPMAZ (eski `3 + (rank+1)/2` × `1 + ⌊yıldız⌋` kalktı). Karakterli sayfa ±%7 çentik (`DrinkOrder.MenuPrice`, $8 altı sayfaya dokunmaz); bira ve sek barın basamağından (`HousePourPrice`); tek bir içkinin kasaya bırakabileceği en çok **$399** (`CeilingPerDrink`, önce bahşiş kısılır); vitrindeki neon PRICE buff'ı (§6.4) çarpar — × **(0.10 + 0.90 × doğruluk)** (2026-08-20): doğruluk = mükemmel oranlara yakınlık, pay-ağırlıklı; doğru kutu her zaman BİR ŞEY kazandırır (taban $1 tabanı) |
 | Stok primi | seçkin Spirit/Bitter bandı başına `(rafın en iyi tier−1) × $2` |
 | Kalabalık çarpanı | HighRoller ×1.25 · Regular ×1.0 · Broke ×0.75 |
 | **Bahşiş (asıl kazanç)** | `ödenen taban × kalite` (yalnız Exact, 2026-08-20); kalite = **0.35 hız + 0.25 zanaat + 0.20 doğruluk + 0.20 doluluk**. Zanaat (2026-08-11): kokteylde `0.6 × garnitür-spec + 0.4 × YÖNTEM` — yöntem, SİPARİŞ EDİLEN tarifin `Prep`'ine karşı (Shaken çalkala ister, Stirred kaşık ister; yanlış karıştırma = hiç karıştırmama, çalkalanmış Martini berelidir; Built umursamaz). Draught'ta zanaat = köpük. Ekstra tur artık doğru yöntemi de ister. Broke/Yanlış/0 taban → bahşiş yok; Close bahşiş almaz — kasada ödeme yok (2026-08-20) |
@@ -130,7 +130,7 @@ memnuniyet bandı (4-7 / 8-13 / 14-20) mükemmel dökümü sıradan iyi bir içk
 | Yanlış içki | *teslim edilenin* taban fiyatı × kendi doğruluğu (tanımsızsa $0) |
 | Ret (doluluk <0.35) | $0, memnuniyet 0.02 · Decline: $0, 0.15 |
 
-**Gider:** kira (eksiye düşüren — 2026-09-05'ten beri reşit olmayana servis cezası da, §9.24) · dolum `eksik×$3` · marka `Info.Price` yoksa `8+6×tier(+6 spirit)` (yıldız kapılı `min(4, tier)`) — **MEŞRUBAT MERDİVENDEN ÇIKTI (2026-09-04, yazar: "meşrubat fiyatları daha uygun olmalı ... hacimleri daha az"):** kategorisi `mixer`/`juice` olan her şey json'da **$2–4** (kola/tonik/zencefil/nar 3, soda ve şurup 2, meyve suları 3–4) ve fiyatsız kalanı `Market.SoftDrinkPrice` $3 yakalar — eskiden soda listesizdi ve merdivenden **$14** çıkıyordu, yani kuyu romundan pahalı. **Rafta da yarım şişe:** `ShelfBottle.MixerCapacity` **3.0** ölçü (spirit 6.0, keg 24.0) — 70cl'lik bir kola şişesi diye bir şey yok; döküm hızı değişmedi, yalnız daha erken biter, dolumu da o kadar ucuzdur. 200 koşuluk sim: iflas %7.0 → **%2.0**, medyan kasa $145 → **$193**, karşılanamayan sipariş 1335 → **490** · tarif · tabure `$30/$50` (4→6) · bardak kademesi (hat başına 5 fiyat, json) · tezgah `40×tier` (yalnız Ambience) · çöp `hacim×$2`.
+**Gider:** kira (eksiye düşüren — 2026-09-05'ten beri reşit olmayana servis cezası da, §9.24) · dolum `eksik × şişenin kademesi` (**$1–4**, 2026-09-23; düz $3 açılış menüsünün $3–6'lık içkisinde kazancın %60–100'ünü yiyordu) · marka `Info.Price` yoksa `8+6×tier(+6 spirit)` (yıldız kapılı `min(4, tier)`) — **MEŞRUBAT MERDİVENDEN ÇIKTI (2026-09-04, yazar: "meşrubat fiyatları daha uygun olmalı ... hacimleri daha az"):** kategorisi `mixer`/`juice` olan her şey json'da **$2–4** (kola/tonik/zencefil/nar 3, soda ve şurup 2, meyve suları 3–4) ve fiyatsız kalanı `Market.SoftDrinkPrice` $3 yakalar — eskiden soda listesizdi ve merdivenden **$14** çıkıyordu, yani kuyu romundan pahalı. **Rafta da yarım şişe:** `ShelfBottle.MixerCapacity` **3.0** ölçü (spirit 6.0, keg 24.0) — 70cl'lik bir kola şişesi diye bir şey yok; döküm hızı değişmedi, yalnız daha erken biter, dolumu da o kadar ucuzdur. 200 koşuluk sim: iflas %7.0 → **%2.0**, medyan kasa $145 → **$193**, karşılanamayan sipariş 1335 → **490** · tarif · tabure `$30/$50` (4→6) · bardak kademesi (hat başına 5 fiyat, json) · tezgah `40×tier` (yalnız Ambience) · çöp `hacim×$2`.
 
 **Memnuniyet:** `(Exact .75 | Close .50 | Wrong .05) + 0.20(zanaat−.5) + 0.12(doluluk−.5) − 0.30×bekleme + Ambience` (0–1).
 
@@ -181,6 +181,65 @@ kullanan ilk merdivendi; **2026-08-25'te lavabo ikincisi oldu**: `counter_sink` 
 - **Odayla gelen yeni parçalar:** `floor_rug` (Tide Rug, x320 y106) ve `beer_mat`
   (Drip Mat, x540 y74 — kulenin ayağı üstünde). İkisi de `startsInTheRoom`, yani
   markette OURS görünür, satılmaz, iade edilmez.
+
+### 6.3 · Gecenin planı ve yazılmış ilk hafta (2026-09-23)
+
+Yazar: *"tamamen rastgele değil bir düzen içerisinde rastgele olmalı ... Her yıldız seviyesinde günler
+ve ilk 1 hafta için kesinlikle özel sipariş listesi olmalı."*
+
+- **`DayPlan`** gecenin BİLEŞİMİNİ kapı açılmadan keser: kaç kişi (kapının kendi aritmetiği,
+  `NightSeconds / ArrivalGap`), barın basamağından geriye 45/30/15/7/2/1 dağılım, basamağa göre
+  kolay/orta/zor karışımı (0★ 85/15/0 … 5★ 25/45/30), tek sayfa gecenin en çok %18'i, basamağın
+  sayfaları her gece bir yer döner. Yalnız SIRA karıştırılır ("plan" akışı) — aynı duruşta iki gece
+  aynı parayı kazanır, farklı oynar. Plan biterse aynı liste yeniden okunur, zar atılmaz.
+- **Silinen hata:** `OrderPoolSize(day) = 3 + day` havuzu yıldız kapısının ÜSTÜNE en düşük rank'lı
+  `3 + gün` sayfaya kısıyordu; 4. günde 3★ olan bar 21 sayfanın 7'sini soruluyordu.
+- **`FirstWeek`** ilk yedi geceyi DERS olarak yazar: build'ler → fıçı → sek → shaker → tüm menü;
+  her gecenin cirosu bir öncekinden büyük (test tutar), açılış gecesi yetkin elde ~$63. Bar ilk
+  haftada yerden kalkarsa yazılı hafta çekilir.
+- **Açılış menüsü altı sayfa:** `gin_tonic` ve `whiskey_cola` kilitli değil (json + katalog).
+- **Başlangıç kasası $50** (`TycoonConfig.DefaultStartingMoney`, eskiden $20): hiç servis yapılmayan
+  ilk gece kira + kaçanların cezasıyla $25–29 tutuyor; $20'de yeni bar daha bir içki dökmeden borca
+  giriyordu (PlayMode market testi kasayı −$9'da buldu). Şimdi en kötü ilk gece $21–25 bırakır.
+- Rakamların tamamı `Docs/ECONOMY_2026-09-23.md`'de, `LastCall → Economy Projection` üretir.
+
+### 6.4 · Her fikstür bir şeyi buff'lar — takılıysa (2026-09-23)
+
+Yazar: *"Tüm upgrade'ler çeşitli bufflar vermeli ... kimi upgrade ürün fiyatını bufflar, konforu
+bufflar, bekleme süresini bufflar, tip'i bufflar, servisi bufflar ... Hangi geliştirme takılıysa o buff
+aktif olacak, konfor gibi değil."*
+
+- **16 tür** (`Core/Shop/FittingBuffs.cs`): 12 veri türü — PRICE, TIP, PATIENCE, LATE PENALTY,
+  LATE TIP, REFILL, SECOND ROUND, CROWD, SERVICE, COMFORT, CLEAN-UP TIME, PERFECT WINDOW — ve 4 alet
+  türü — SHAKE SPEED, POUR SPEED, WASH TIME, FREE DRAIN (rakamı mevcut alandan türetilir, iki kez
+  yazılmaz). `fixtures.json`'ın 88 satırının her biri `buff` + `buffPct` taşır; **bir yuva = bir tür**,
+  merdivende rakam kesin artar, odayla gelen parça türünü 0 ile (BASE) gösterir. Yükleyici aksini
+  reddeder.
+- **Yuvalar:** arka duvar CROWD · sağ duvar COMFORT · tavan REFILL · zemin CLEAN-UP · halı ve
+  bitkiler PATIENCE · ekran/posterler LATE PENALTY · kapı üstü resim LATE TIP · orta resim SERVICE ·
+  neon PRICE (ilk basamağı 1★: tam-dolar yuvarlaması $3–9'luk sayfada küçük yüzdeyi yutar) · duvar
+  lambaları TIP · tezgâh lambaları PERFECT WINDOW · masalar SECOND ROUND · cila seti ve paspaslar
+  CLEAN-UP · kule/lavabo/shaker aletleri.
+- **Yalnız TAKILI parça sayılır** (`TycoonRun.IsActive`): merdivende giyilen basamak (`WornRung`),
+  tekil parça sahip olundukça. Konfor hâlâ tırmanılan basamağı okur. Kapılar açıkken giyilen
+  değiştirilemez (Core reddeder), satın alınan basamak kendiliğinden giyilir — gecenin odası sabit.
+- **Aletler de takılı parçayı okur** (Option A): `WorkSpeed`, `TapSpeed`, `WasteIsFree`. Bu,
+  2026-09-13'teki "çelik kap takılıyken de altın kabın hızında çalkalar" kuralını TERSİNE çevirir;
+  gerekçesi yazarın bu günkü "hangi geliştirme takılıysa o buff aktif olacak" sözü. Yolda
+  `SinkSeconds` hatası düzeldi: hangi lavabo alınırsa alınsın 3.4 sn dönüyordu.
+- **Her kanca var olan bir sabite ölçek** (DrinkTraits kalıbı): `HouseBuffs.None` her şeyin birimi,
+  çıplak oda bugünün sayılarını bit bit üretir, hiçbir tür zar atmaz. Aynı türün parçaları toplanır;
+  her türün `MaxPerPiece` (yükleyici) ve `HouseCap` (kıskaç) sınırı var; sevkedilen tam oda her
+  sınıra TAM oturur. CROWD ve evin SECOND ROUND'u yalnız barmen yetişirken (`BarDay.KeepingUp`,
+  bekleyen ≤ 1) işler — hiçbir buff alıcısına zarar veremez.
+- **Değer (projeksiyon, yetkin el, fiyat+bahşiş+kapı):** 1★'da net +%12–15, 2★'da +%28–35,
+  3★ ve üstü +%40–50; 42. gün kasası çıplak $33.3k → döşenmiş $46.4k. Saat türleri (sabır, gecikme,
+  tur) projeksiyonda yok; `LastCall → Simulate Fitting Buffs A-B` 200 tohumla ölçer.
+- **Görünüş:** menüde ve markette buff tek bir çerçeveli, köşesi yumuşak plakada (`ChromeArt.BuffPlate`
+  — yeşil buff, kırmızı nerf, krem kapalı/teklif) — ikon + beyaz gövdeli siyah çerçeveli rakam + kısa
+  kelime (`TycoonHud.Buffs.cs`). Geliştirme kartında durum satırı (`buff.state.*`): ŞU AN ÇALIŞIYOR / KAPALI · KULLANINCA AÇILIR /
+  SALONDAYKEN ÇALIŞIR / HEP AÇIK / EVİN STANDARDI / KİLİTLİ. Tabure, bar tezgâhı ve bardak hatları fikstür değildir; kartları gerçek
+  etkilerini HEP AÇIK rozetiyle gösterir.
 
 ## 7 · Yıldız / itibar omurgası
 

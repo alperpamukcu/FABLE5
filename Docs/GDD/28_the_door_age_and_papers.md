@@ -172,16 +172,37 @@ when the customer sits, before any card is read. So:
   owns them).
 - **Effect:** the visit ends in a new state, `VisitState.Kicked`. They leave nothing on the
   counter (`DrinkServed` is false — module 27 §4.1). The stool is free at once.
-- **Right kick** (the truth was a minor or a forgery): the visit is marked `OffTheBooks` and
-  `BarDay.FinishedCounted()` / `AverageSatisfaction` — the ONE place that decides who counts —
-  skip it exactly as they skip the guest: no review, no seat in the night's mean, not SERVED and
-  not WALKED on the slip. The person is `Barred`: the registry's return roll passes over them
-  (the draw is spent either way, so the stream does not learn who was barred; a stranger walks in
-  instead). `RightKicks++` for the night.
+- **Right kick** (the truth was a minor or a forgery): the visit is marked `OffTheBooks`, files a
+  review at `CustomerVisit.RightKickSatisfaction` (**1.0**) and is neither SERVED nor WALKED on the
+  slip — the split in `ContinueToNextDay` skips it off `OffTheBooks`, and `RightKicks` is the count
+  that speaks for it. The person is `Barred`: the registry's return roll passes over them (the draw
+  is spent either way, so the stream does not learn who was barred; a stranger walks in instead).
+  `RightKicks++` for the night, and the state's thanks is owed at close.
+
+  > **REVERSED 2026-09-23 (D10, below).** This used to be skipped by `FinishedCounted()` and
+  > `AverageSatisfaction` outright — "no review, no seat in the night's mean" — which made the door
+  > worth exactly **nothing** to the stars. The author: *"sahte kimlikle kovulması gereken müşteriler
+  > ... hem + puan sağlamalı hem de + para getirmeli."* What D10 was really protecting is the SLIP,
+  > and that is done where the slip is written. The bar cannot farm it: a bounced face never comes
+  > back (`RegularState.Bar`) and `MinorChance` caps at one in eight.
 - **Wrong kick** (an honest adult): the visit counts, at satisfaction **0** — it is a walk-out
   (they were refused a drink they were entitled to): the regular records the visit at 0 and the
   slip counts them as WALKED (the people count reads `StormedOff || Kicked && !OffTheBooks`).
-  There is no fine for it — the cost is the review and the lost tab. `WrongKicks++`.
+  **There is no fine for it, and there never will be** (2026-09-23, the author: *"müşteri kovmak hem
+  para cezası hem de puan cezası olmamalı ... kovmak puanı daha çok düşürmeli ama para
+  kaybetmemelisin"*) — the door costs standing and nothing else. Since zero is already the floor of
+  what one review can say, the only way for it to cost MORE than a slow drink is to weigh more of
+  the room: it counts `CustomerVisit.WrongKickWeight` = **2 seats** in `BarDay.AverageSatisfaction`,
+  which is a weighted mean because of this. `WrongKicks++`.
+- **And the drink that never came** (2026-09-23, the other half of the same ruling: *"eğer siparişini
+  yetiştiremediysen gün sonu faturasına ceza gelmeli ama puanı daha az düşürmeli"*). A storm-off and
+  a wrong kick used to be the same event to the books — both a flat zero, both free. Now a storm-off
+  files `CustomerVisit.StormOffSatisfaction` = **0.10** and lands on the night's BILL instead:
+  `TycoonConfig.WalkOutPenalty` ($8 sheet), scaled by `StarEconomy.PriceAt` like the rent, counted
+  as they get up and charged once at closing. 0.10 is not a taste call — it has to stay under
+  `BarRating.BrokeStars / MaxStars` (0.125) or a night where nobody was served stops drawing
+  tomorrow's broke crowd, and under `Declined()`'s 0.15 or an honest "we cannot make that" becomes
+  worse than letting them walk. **0.25 breaks both.**
 - **The button lives ON the card** (*"kimliğin üstündeki butondan"*): a KICK key in the licence's
   header band, right of `PATRON LICENCE · CLASS B` and left of the flag's roundel (100 × 52 since
   v3 — the red `KeyCap` at the height it was drawn, so the word fits on its face; it was 96 × 30
@@ -232,7 +253,8 @@ non-zero.
 |---|---|---|
 | `FINES · under age` / `FINES · borrowed card` | expense, red, `DayFines` (the label carries the reason; BillRow's label column has the width, the people line does not) | only when > 0 (GDD_MEVCUT §9.4: routine zeros were cut) |
 | `STATE'S THANKS · 2 SHOWN THE DOOR` | income, `DayBonus` | only when > 0 |
-| `DayDetail`/`DayResult` | `Fines`, `Bonus`, `RightKicks`, `WrongKicks`, `MinorsServed` | always carried, so the week board, the register's book and the sim read one record |
+| `WALK-OUTS` | expense, red, `DayWalkOutFees` (2026-09-23): the compensation for every drink that never came, at `StarEconomy.PriceAt(TycoonConfig.WalkOutPenalty, stars)` each | only when > 0 |
+| `DayDetail`/`DayResult` | `Fines`, `Bonus`, `RightKicks`, `WrongKicks`, `MinorsServed`, `WalkOutFees`, `WalkOutsCharged` | always carried, so the week board, the register's book and the sim read one record |
 
 - The slip's people line and its two critics read the FILED record, not the floor: a right kick is
   neither SERVED nor WALKED and is skipped by the critic search (it does not rate the bar); a wrong
@@ -301,6 +323,15 @@ forgeries, so the fine curve is measured as money per night at each standing bef
   face before the card is read without the face becoming the verdict.
 - **D10 — a right kick is off the books, decided in `BarDay`**, the one gate that already
   answers "does this person count", never in `ContinueToNextDay`.
+  **REVERSED 2026-09-23 on the author's ruling** (*"o hem + puan sağlamalı hem de + para
+  getirmeli"*): the visit files a review at 1.0 and IS counted. Half of D10 was right and stands —
+  the slip must not print it as SERVED or WALKED — and that half moved to `ContinueToNextDay`,
+  where the slip is written, off the `OffTheBooks` flag the visit still carries. The other half was
+  making the door worth nothing to the stars, which is not what a door is for.
+- **D11 — the two mistakes are paid in different currencies** (2026-09-23). A storm-off and a wrong
+  kick were numerically identical: both a flat zero, both free. The door costs STANDING (0, at two
+  seats' weight) and never money; the drink that never came costs MONEY (a line on the night's bill)
+  and files 0.10. One punishment with two ways to earn it is one punishment too few.
 
 ## 11. Out of scope (fenced deliberately)
 

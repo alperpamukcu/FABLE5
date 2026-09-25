@@ -324,8 +324,12 @@ days — it simply stops being what the player reads the night by.
   200-run sim is re-read without their $4 a night.
 - **Purchases require cash (2026-07-22):** refills, brands, stools and ambience cannot
   be bought on credit — if the till cannot cover it, the buy is refused with a notice.
-  Only **rent** can push the till below zero, which keeps debt something that happens
-  *to* you, never a button you pressed.
+  Only the **house's own bills** can push the till below zero, which keeps debt something
+  that happens *to* you, never a button you pressed. There are three of them now and they
+  arrived in that order: **rent**; the law's **fine** for serving somebody who should have
+  been shown the door (GDD 28 §5, 2026-09-05); and, since 2026-09-23, the **compensation for
+  a drink that never came** (GDD 28 §4 — `TycoonConfig.WalkOutPenalty`, charged at closing
+  with the rent). Every one of them is something the night did to you; none is a purchase.
 - **Losing:** close **3 consecutive days with the till below zero** and the bar closes —
   full run reset, roguelite style. In debt means in debt: a rich bar can eat a losing day
   without the clock starting; one close back above water wipes the strikes. *(Clarified
