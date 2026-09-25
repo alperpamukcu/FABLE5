@@ -155,7 +155,10 @@ namespace LastCall.EditorTools
         private static void CheckType(RectTransform rt, Text text, List<Finding> found)
         {
             int s = text.fontSize;
-            if (s != 8 && s != 16 && s != 24)
+            // The recipe title face is drawn on its OWN grid, 27 units to the em (LanguageFonts.Title,
+            // 2026-09-23): at 27 it is one design pixel to a unit, which is what 8/16/24 are for the 8-px faces.
+            bool ownGrid = s == LanguageFonts.TitlePx && LanguageFonts.IsTitle(text.font);
+            if (s != 8 && s != 16 && s != 24 && !ownGrid)
                 found.Add(new Finding("TYPE", Path(rt),
                     $"font size {s} — the pixel faces only rasterise at 8, 16 or 24"));
             if (text.resizeTextForBestFit)

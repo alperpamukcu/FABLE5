@@ -28,6 +28,8 @@ namespace LastCall.Core
         private readonly RunRng _rng;
         private readonly Shelf _shelf;
         private readonly List<RecipeDefinition> _recipes;   // unlocked only; grows as recipes are bought
+        private DayPlan _plan;                              // tonight's order plan (DayPlan)
+        private BarDay _planFloor;                          // the floor it was cut for
 
         /// <summary>The whole catalogue, locked recipes included — what the shop can sell.</summary>
         public IReadOnlyList<RecipeDefinition> AllRecipes { get; private set; }
@@ -95,6 +97,34 @@ namespace LastCall.Core
         /// </remarks>
         public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps)    // full at 25 steps
                                 + Math.Min(0.06, 0.03 * (CounterTier - 1));
+
+        /// <summary>
+        /// WHAT THE ROOM IS STILL TALKING ABOUT (2026-09-22, DrinkTraits' one room effect): the
+        /// lift a showy drink lends every OTHER serve for <see cref="DrinkTrait.AuraSeconds"/>
+        /// after it crosses the bar. Decayed on the floor's own clock and zeroed at BOTH of the
+        /// night's reset points — it is the only per-night state this system adds, and a leak
+        /// across the curtain would break a seed silently rather than loudly.
+        /// </summary>
+        public double RoomAura { get; private set; }
+
+        private double _auraLeft;
+
+        /// <summary>Raises the room to <paramref name="lift"/>, never past it and never by it:
+        /// two showy drinks inside twenty seconds are one bright room, not a stacking bonus.</summary>
+        private void LiftTheRoom(double lift)
+        {
+            RoomAura = Math.Max(RoomAura, lift);
+            _auraLeft = DrinkTrait.AuraSeconds;
+        }
+
+        /// <summary>Runs the room's memory down. Called from the tick with the same seconds the
+        /// floor gets, so it keeps the floor's clock and not the frame's.</summary>
+        private void FadeTheRoom(double seconds)
+        {
+            if (_auraLeft <= 0) { RoomAura = 0; return; }
+            _auraLeft -= seconds;
+            if (_auraLeft <= 0) { _auraLeft = 0; RoomAura = 0; }
+        }
 
         /// <summary>
         /// THE FITTINGS CEILING BECAME THE ROOM'S RATING (GDD 27, 2026-09-05). Since
@@ -168,10 +198,24 @@ namespace LastCall.Core
         public int DayRent { get; private set; }
         public int DayStock { get; private set; }
         public int DayUpgrades { get; private set; }
+        /// <summary>
+        /// WHAT A DRINK THAT NEVER CAME COSTS (2026-09-22, the author: "Eğer siparişini
+        /// yetiştiremediysen gün sonu faturasına ceza gelmeli ama puanı daha az düşürmeli").
+        /// Counted as they get up, charged once with the rent, so it reads as what it is — a line
+        /// on the night's bill and not a hand in the till mid-service.
+        /// </summary>
+        public int DayWalkOuts { get; private set; }
+
+        /// <summary>What those walk-outs came to in money: half of each drink they never got.</summary>
+        public int DayWalkOutFees { get; private set; }
+
+        /// <summary>The running total owed, built as they get up and charged once at closing.</summary>
+        private int DayWalkOutOwed { get; set; }
+
         /// <summary>Income counts the state's thanks; expenses count the law's fines (GDD 28
-        /// §7). Both are the door's, kept in <c>TycoonRun.Door.cs</c>.</summary>
+        /// §7) and the walk-outs' compensation. The door's two are kept in <c>TycoonRun.Door.cs</c>.</summary>
         public int DayIncome => DaySales + DayTips + DayBonus;
-        public int DayExpenses => DayRent + DayStock + DayUpgrades + DayFines;
+        public int DayExpenses => DayRent + DayStock + DayUpgrades + DayFines + DayWalkOutFees;
 
         /// <summary>The shaker: the vessel you build the drink in (GDD 24 §2).</summary>
         public GlassContents Glass { get; private set; }
@@ -434,14 +478,15 @@ namespace LastCall.Core
             // back tonight's purchases, so it cannot be sold back for money nobody paid.
             foreach (var fixture in _fixtureCatalogue)
                 if (fixture.StartsInTheRoom) _fixtures.Add(fixture.Id);
+            RoomChanged();
 
             Money = _config.StartingMoney;
             Seats = _config.StartingSeats;
             Glass = new GlassContents(_config.GlassCapacity);
             ServingGlass = NewServingGlass(DefaultGlassware);
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"),
-                messStream: _rng.GetStream("mess"));
-            Floor.House.SinkSeconds = SinkSeconds;
+            // The room as it opens is the house standard: every piece it opens with carries its
+            // slot's kind at 0, so this floor is built exactly as it was before the buffs.
+            Floor = NewFloor(BarRating.NeutralStars);
             // The story is opt-in exactly like the regulars: a run built without an arc has
             // no last customer and behaves in every way like a run from before there was one.
             Story = story != null ? new StoryProgress(story) : null;
@@ -809,8 +854,11 @@ namespace LastCall.Core
                     break;
                 case DayPurchase.Kind.Fixture:
                     // Dressing is not a fitting, so there is no fitting to give back —
-                    // the piece just goes back on the truck.
+                    // the piece just goes back on the truck. Its buff goes with it: a refunded
+                    // rung leaves the slot wearing the tallest rung still owned.
                     _fixtures.Remove(p.Id);
+                    RoomChanged();
+                    if (Floor != null) PushHouse(Floor, Buffs);
                     break;
             }
             Money += p.Price;
@@ -825,7 +873,8 @@ namespace LastCall.Core
             var bottle = _shelf.Find(ingredientId);
             if (bottle == null)
                 throw new InvalidOperationException($"No '{ingredientId}' on the shelf.");
-            int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining) * _config.RefillPricePerCapacity);
+            int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
+                * _config.RefillPricePerCapacity(bottle.Tier));
             if (cost == 0) return 0;
             EnsureAffordable(cost);
             Money -= cost;
@@ -949,13 +998,12 @@ namespace LastCall.Core
                 if (!tool && f.Level > 0 && f.Level > rungCap) continue;
                 _fixtures.Add(f.Id);
             }
-            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+            RoomChanged();
+            if (Floor != null) PushHouse(Floor, Buffs);
 
             RollMarket();
             Day = late ? 30 : 12;
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
-                _rng.GetStream("mess"));
-            Floor.House.SinkSeconds = SinkSeconds;
+            Floor = NewFloor(Rating.Average);
             LastCustomer = null;       // a jumped night starts its last call from scratch
             LastCallBeat = null;
             Trial = null;
@@ -1039,13 +1087,15 @@ namespace LastCall.Core
                 if (!tool && !f.StartsInTheRoom && rungCap == 0) continue;
                 _fixtures.Add(f.Id);
             }
-            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+            // A preset's room is a room like any other since 2026-09-23: the rungs it installs
+            // carry their buffs, so a preset night plays a fitted bar — longer patience, a
+            // quicker door while idle, dearer drinks from the neon's star.
+            RoomChanged();
+            if (Floor != null) PushHouse(Floor, Buffs);
 
             RollMarket();
             Day = stars < 1 ? 3 : stars < 2 ? 6 : stars < 3 ? 12 : stars < 4 ? 18 : stars < 5 ? 24 : 30;
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
-                _rng.GetStream("mess"));
-            Floor.House.SinkSeconds = SinkSeconds;
+            Floor = NewFloor(Rating.Average);
             LastCustomer = null;
             LastCallBeat = null;
             Trial = null;
@@ -1094,6 +1144,8 @@ namespace LastCall.Core
             // Everything ContinueToNextDay clears for a new night, minus the books.
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
+            DayWalkOuts = DayWalkOutFees = DayWalkOutOwed = 0;
+            RoomAura = 0; _auraLeft = 0;   // the room forgets at the curtain
             UpgradesToday = 0;
             _bestRankServedTonight = 0;
             _todayPurchases.Clear();
@@ -1102,9 +1154,7 @@ namespace LastCall.Core
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             ResetVessels();
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
-                _rng.GetStream("mess"));
-            Floor.House.SinkSeconds = SinkSeconds;
+            Floor = NewFloor(Rating.Average);
             return Day - from;
         }
 
@@ -1177,6 +1227,7 @@ namespace LastCall.Core
         {
             EnsurePhase(TycoonPhase.DayOpen);
             var seated = Floor.Tick(seconds, NextArrival);
+            FadeTheRoom(seconds);     // what the room is still talking about, running down
             SettleDepartures();
             Trial?.Waited(seconds);   // the talking backstop's clock, nothing else's
             seated = SettleLastCall(seated);
@@ -1204,11 +1255,23 @@ namespace LastCall.Core
                 // THE STATE'S THANKS, paid with the rent (GDD 28 §6): once, here, before the
                 // slip is drawn, so the paper's TILL is the till. A well drink per face
                 // rightly shown the door tonight.
-                int thanks = RightKicks * IdPapers.KickBonus;
+                // THE THANKS CLIMBS WITH THE BAR, like the fine it answers (2026-09-22). The
+                // sheet figure stays a well drink; the fine is $20 a whole star and the thanks was
+                // frozen at $5, so by four stars doing the right thing paid a twentieth of what
+                // doing the wrong thing cost.
+                int thanks = RightKicks * StarEconomy.PriceAt(IdPapers.KickBonus, Rating.Average);
                 if (thanks > 0)
                 {
                     Money += thanks;
                     DayBonus += thanks;
+                }
+                // AND THE WALK-OUTS LAND ON THE SAME BILL (2026-09-22). Scaled the way the rent and
+                // the drink are, so a missed order is still a missed order at four stars; a flat
+                // number would be free by then.
+                if (DayWalkOutOwed > 0)
+                {
+                    Money -= DayWalkOutOwed;
+                    DayWalkOutFees += DayWalkOutOwed;
                 }
                 // THE LANDLORD READS THE STARS TOO (StarEconomy, 2026-09-06): the room is
                 // let at the stage the bar has reached, so the night's take and the night's
@@ -1245,6 +1308,20 @@ namespace LastCall.Core
                     visit.MarkFined();
                     Money -= visit.FineOwed;
                     DayFines += visit.FineOwed;
+                }
+                // A DRINK THAT NEVER CAME IS COUNTED HERE AND PAID AT CLOSING (2026-09-22). The
+                // counting rides SettleTab's own idempotency, the same pass the fine does; the
+                // money moves once with the rent, because the author asked for a line on the
+                // night's BILL and not for the till to dip while the bar is still open.
+                // ...and it is priced on THEIR drink, not on the bar's standing (2026-09-23): the
+                // order is what they were owed, and half of it is what owing it costs. Read off
+                // OrderTruth because the card may never have been picked up — the law does not
+                // care whether you looked.
+                if (visit.State == VisitState.StormedOff && !visit.OnTheHouse)
+                {
+                    DayWalkOuts++;
+                    DayWalkOutOwed += Math.Max(_config.WalkOutFeeFloor, (int)Math.Round(
+                        visit.OrderTruth.Price * _config.WalkOutFeeShare, MidpointRounding.AwayFromZero));
                 }
                 if (visit.Paid <= 0) continue;
                 Money += visit.Paid;
@@ -1556,7 +1633,10 @@ namespace LastCall.Core
         {
             var order = RollOrder();
             var patienceRng = _rng.GetStream("patience");
-            double patience = _config.RollPatience(Day, patienceRng);
+            // A CALMER ROOM WAITS LONGER (2026-09-23, the room's PATIENCE). The same single draw,
+            // scaled after it: taken before the card is read and the same for every order, so it
+            // names nobody's drink. The story's guest is seated elsewhere and never passes here.
+            double patience = _config.RollPatience(Day, patienceRng) * Buffs.PatienceScale;
             double decide = _config.RollDecideDelay(_rng.GetStream("decide"));
             if (_regulars == null)
                 return new CustomerVisit(order, patience, decideSeconds: decide);
@@ -1584,22 +1664,77 @@ namespace LastCall.Core
 
         private DrinkOrder RollOrder()
         {
-            var order = DrinkOrder.Roll(_recipes, Day, _config, _rng.GetStream("orders"), PreparationsOpen);
-            int price = PriceOf(order.Wanted);
-            return price == order.Price
-                ? order
-                : new DrinkOrder(order.Wanted, price, order.Spec);   // keep how they want it served
+            var pick = TonightsPlan().Take();
+            return new DrinkOrder(pick, PriceOf(pick),
+                ServingSpec.Roll(pick, _rng.GetStream("orders"), PreparationsOpen));
         }
+
+        /// <summary>
+        /// TONIGHT'S ORDERS, CUT BEFORE THE DOOR OPENS (2026-09-23, the economy brief: *"tamamen
+        /// rastgele değil bir düzen içerisinde rastgele olmalı"*). The plan belongs to the FLOOR
+        /// rather than to the day number, so a night that is re-opened — a reset, a reload, the
+        /// story's own second shift — is cut again rather than continuing a list from a bar that no
+        /// longer exists. It is built on the first arrival, once, on a stream of its own.
+        /// </summary>
+        private DayPlan TonightsPlan()
+        {
+            if (_plan != null && ReferenceEquals(_planFloor, Floor)) return _plan;
+            var open = PreparationsOpen;
+            // A page whose signature extra the bar cannot give tonight (the ladder's rung, the market's
+            // jar) is not ordered (2026-09-21): nobody asks for a Southside where there is no mint.
+            var menu = _recipes
+                .Where(r => r.Garnish == null || open == null || open.Any(g => g.Id == r.Garnish))
+                .ToList();
+            _planFloor = Floor;
+            // The room's CROWD shortens the door's gap, so the plan is cut for the covers that may
+            // walk in — the upper bound, since the floor only reads it while the bar keeps up and
+            // the plan wraps with Take() whatever happens (2026-09-23).
+            return _plan = DayPlan.Roll(menu, Day, ShopStars, _config, _rng.GetStream("plan"),
+                Buffs.ArrivalGapScale);
+        }
+
+        /// <summary>What the night was planned to ask for. The slip reads it; so do the tests and the
+        /// sim, which is how a night's takings can be predicted rather than measured after the
+        /// fact.</summary>
+        public DayPlan Plan => TonightsPlan();
 
         /// <summary>What the bar charges for a drink tonight: the menu price, plus what the
         /// premium spirits on the shelf earn it, scaled by the crowd. No dice anywhere in it,
         /// which is why the scripted last call is priced through the same line as the crowd.</summary>
-        private int PriceOf(RecipeDefinition recipe) => Math.Max(1, (int)Math.Round(
-            (DrinkOrder.MenuPrice(recipe) + PremiumFor(recipe)) * _config.PriceMultiplier(CrowdToday)
-            // ...and the STAGE the bar has reached (StarEconomy, 2026-09-06): a one-star bar's
-            // drinkers pay twice the menu, a two-star bar's three times.
-            * StarEconomy.TierMultiplier(Rating.Average),
-            MidpointRounding.AwayFromZero));
+        /// <remarks>
+        /// THE STAGE MULTIPLIER CAME OFF THE DRINK (2026-09-23, the economy brief). It used to
+        /// stand here as well — a one-star bar's drinkers paid twice the menu, a two-star bar's
+        /// three times — and the menu price is a star BAND now (<see cref="DrinkPricing"/>), so
+        /// keeping both would be the stage counted twice and a four-dollar drink at twenty-four.
+        ///
+        /// It also fixes the thing the book was lying about: the page printed the sheet while the
+        /// drinker paid three times it, so from two stars up the one number the page is about was
+        /// wrong. What the page says is what a regular crowd pays.
+        ///
+        /// The way to earn more is now to SERVE BETTER DRINKS rather than to have earned more
+        /// before, which is the loop the brief asks for.
+        ///
+        /// A NAME IN LIGHTS CHARGES MORE (2026-09-23, the room's PRICE, carried by the neon). It
+        /// scales the whole ticket, inside the rounding and under the till's ceiling, so the
+        /// ceiling still applies after every multiplier; <see cref="PagePrice"/> prints the same
+        /// product, so the book never lies about it.
+        /// </remarks>
+        private int PriceOf(RecipeDefinition recipe) => Math.Min(DrinkPricing.CeilingPerDrink,
+            Math.Max(1, (int)Math.Round(
+                (DrinkOrder.MenuPrice(recipe, ShopStars) + PremiumFor(recipe))
+                    * _config.PriceMultiplier(CrowdToday) * Buffs.PriceScale,
+                MidpointRounding.AwayFromZero)));
+
+        /// <summary>
+        /// WHAT THE PAGE SAYS A DRINK COSTS (2026-09-23): what a regular crowd pays for it with no
+        /// premium on the shelf, the room's PRICE included. Every drink price the book, the market
+        /// or the licence prints comes from here — the neon moves the till, and a book that printed
+        /// the sheet under it would lie again. Unbuffed, it is exactly the menu price the book
+        /// printed before.
+        /// </summary>
+        public int PagePrice(RecipeDefinition r) => r == null ? 0
+            : Math.Min(DrinkPricing.CeilingPerDrink, Math.Max(1, (int)Math.Round(
+                DrinkOrder.MenuPrice(r, ShopStars) * Buffs.PriceScale, MidpointRounding.AwayFromZero)));
 
         /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
         /// for each spirit/bitter the recipe needs, the best bottle above the base tier adds
@@ -2321,13 +2456,16 @@ namespace LastCall.Core
         /// content and not a change here. A run built without a fixture catalogue has no
         /// drain at all and pays the fee, which is what every older test and bench setup
         /// expects.
+        ///
+        /// The INSTALLED basin's waiver (2026-09-23): a bar that bought the brass basin and
+        /// then put the old steel one back on the counter pours away at the steel one's price.
         /// </summary>
         public bool WasteIsFree
         {
             get
             {
                 foreach (var f in _fixtureCatalogue)
-                    if (f.DrainsFree && _fixtures.Contains(f.Id)) return true;
+                    if (f.IsDrain && f.DrainsFree && IsActive(f)) return true;
                 return false;
             }
         }
@@ -2406,8 +2544,16 @@ namespace LastCall.Core
             // is gone; what a customer gives you back is their reaction to the cocktail).
             // The lookup rides along since 2026-08-20 so the judge can measure the pour
             // against the recipe's perfect — accuracy is money now.
-            var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday, Ambience,
-                served: match, lookup: IngredientOf);
+            // ...plus whatever the room is still talking about (2026-09-22). Added at the CALL
+            // SITE, the way the fittings' ambience is, so no term inside the judge's satisfaction
+            // sum changes shape and every fixture that pins that sum stays exactly as it was.
+            // ...and the installed room's buffs (2026-09-23), read ONCE for this serve: its SERVICE
+            // is added here beside the ambience, and the rest ride into the judge as scales on the
+            // constants it already holds. A bare room is every identity.
+            var house = Buffs;
+            var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday,
+                Ambience + RoomAura + house.ServiceBonus, served: match, lookup: IngredientOf,
+                house: house);
 
             // THE WEEK'S JOB IS COUNTED ON THE DRINK THAT WAS ASKED FOR AND GOT MADE
             // (2026-09-04, kinds 2026-09-06). Exact only, and against the ORDERED recipe: a
@@ -2466,10 +2612,44 @@ namespace LastCall.Core
             // outside the mess as they are outside the books.
             visit.DrinkServed = true;
 
+            // THE SECOND ROUND, WHERE THE PAGE HAS AN OPINION (2026-09-22, DrinkTraits). The
+            // judge's rule is deterministic; two characters bend it, one each way. The draw is
+            // taken UNCONDITIONALLY, on every resolved serve, whatever page it is — so which
+            // pages carry NEVER JUST ONE is content and moving it cannot reseed anybody's night.
+            double roundRoll = _rng.GetStream("round").NextDouble();
+            var pageTrait = DrinkTraits.Of(match?.Recipe);
+            bool wantsAnother = verdict.OrdersAgain;
+            // THE TABLES' SECOND ROUND (2026-09-23) rides the SAME roll, added to the page's own
+            // grant — and only while nobody else is waiting (Floor.KeepingUp: the one being served
+            // is the only one at the bar). A room that kept people drinking while others waited
+            // would cost its buyer the stars it was bought for. No new draw either way.
+            double grant = pageTrait.GrantRound + (Floor.KeepingUp ? house.RoundChance : 0.0);
+            if (!wantsAnother && grant > 0 && roundRoll < grant
+                && matchKind == OrderMatch.Exact && visit.WaitFraction < ServiceJudge.ExtraOrderWindow
+                && visit.ExtraOrdersTaken < CustomerVisit.MaxExtraOrders
+                && (visit.Regular == null || visit.Regular.Visits >= 1))
+                wantsAnother = true;
+            else if (wantsAnother && pageTrait.TakeRound > 0 && roundRoll < pageTrait.TakeRound)
+                wantsAnother = false;
+            if (wantsAnother != verdict.OrdersAgain)
+                verdict = new ServiceVerdict(verdict.Match, verdict.BasePaid, verdict.Tip,
+                    verdict.CraftLanded, wantsAnother, verdict.Satisfaction, verdict.SpecScore,
+                    verdict.FillScore, verdict.Accuracy, verdict.PerfectMake);
+
+            // AND HOW LONG THEY SIT WITH IT: whole 4.4-second sip cycles, the page's own count.
+            // Taken off the DELIVERED drink, because the glass on the stool is what they are
+            // actually drinking.
+            double savor = _config.SavorSeconds / 3.0 * pageTrait.SavorCycles;
+
+            // THE ROOM LOOKS UP when something showy goes past (2026-09-22). Set at the SERVE and
+            // not at the order: the order lives behind the ID card, and a room that brightened
+            // the moment somebody sat down would name their drink.
+            if (pageTrait.RoomAura > 0) LiftTheRoom(pageTrait.RoomAura);
+
             // What actually went across the bar, not what was asked for — the receipt lists the
             // drink that was poured, and a wrong one is paid at its own price.
-            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, _config.SavorSeconds,
-                served: match?.Recipe);
+            visit.Resolve(verdict, verdict.OrdersAgain ? RollOrder() : null, savor,
+                served: match?.Recipe, refillScale: house.RefillScale);
             if (visit.State != VisitState.Waiting)
                 visit.Regular?.RecordVisit((int)Math.Round(verdict.Satisfaction * 3));
 
@@ -2578,7 +2758,7 @@ namespace LastCall.Core
         public int RefillShelf()
         {
             EnsurePhase(TycoonPhase.DayEnd);
-            int cost = _shelf.RefillCost(_config.RefillPricePerCapacity);
+            int cost = _shelf.RefillCost(_config.RefillPricePerCapacity);   // priced per bottle's tier
             if (cost == 0) return 0;
             EnsureAffordable(cost);
             Money -= cost;
@@ -2683,10 +2863,11 @@ namespace LastCall.Core
 
         // ── bar dressing (2026-08-10): the modular fixtures ─────────────────────
         // Plants, lamps, wall pieces — bought at day end like everything else, gated on
-        // the bar's standing like the better recipes, refundable the same night. They are
-        // COSMETIC: no ambience number, and no fitting slot spent, because the fitting
-        // cap is for things that change what the bar IS (stools, glassware, the counter),
-        // and a fern changes what it looks like.
+        // the bar's standing like the better recipes, refundable the same night. They change
+        // the look, the comfort (the climbed rung's) and one installed buff each (2026-09-23,
+        // the author: "Tüm upgrade'ler çeşitli bufflar vermeli"); they still spend no fitting
+        // slot, because the fitting cap is for things that change what the bar IS (stools,
+        // glassware, the counter). Money is their limit.
 
         private readonly IReadOnlyList<FixtureDefinition> _fixtureCatalogue;
         private readonly HashSet<string> _fixtures = new HashSet<string>();
@@ -2804,28 +2985,36 @@ namespace LastCall.Core
 
         // ── THE TOOLS WORK FASTER AS THEY CLIMB (2026-09-13) ─────────────────────
         // The author: "musluk ve shaker olacak, onlar sadece upgrade edilecek; upgrade etmenin
-        // üretime buffu olacak." The speed is the CLIMB's, like comfort: a bar that wears the
-        // steel tin because it likes the look still shakes at the gold one's pace.
+        // üretime buffu olacak."
+        //
+        // THE SPEED IS THE INSTALLED TOOL'S (2026-09-23, Option A). This read the CLIMB's speed,
+        // like comfort, so a bar that wore the steel tin for its look still shook at the gold
+        // one's pace (the 2026-09-13 ruling). The author's words of 2026-09-23 — "hangi geliştirme
+        // takılıysa o buff aktif olacak, konfor gibi değil" — supersede it: every effect of a
+        // fitting but comfort reads the piece that is INSTALLED, the tools included, so there is
+        // one rule to learn and not two. Wearing the steel tin shakes at the steel tin's pace.
 
         /// <summary>How much faster this slot's job goes: the <see cref="FixtureDefinition.WorkSpeed"/>
-        /// of the tallest rung owned there, 1 for a slot with nothing faster in it.</summary>
+        /// of the rung the slot WEARS (or its one owned single piece), 1 for a slot with nothing in it.</summary>
         public double WorkSpeed(string slot)
         {
-            FixtureDefinition top = null;
+            var worn = WornRung(slot);
+            if (worn != null) return worn.WorkSpeed;
             foreach (var f in _fixtureCatalogue)
-                if (f.Slot == slot && _fixtures.Contains(f.Id) && (top == null || f.Level > top.Level))
-                    top = f;
-            return top != null ? top.WorkSpeed : 1.0;
+                if (f.Slot == slot && f.Level == 0 && _fixtures.Contains(f.Id)) return f.WorkSpeed;
+            return 1.0;
         }
 
-        /// <summary>How fast the tower pours: its <see cref="FixtureDefinition.WorkSpeed"/>, 1
-        /// with none. <see cref="PourTilted"/> runs the tap's flow on this clock.</summary>
+        /// <summary>How fast the tower pours: the INSTALLED tower's <see cref="FixtureDefinition.WorkSpeed"/>,
+        /// 1 with none. <see cref="PourTilted"/> runs the tap's flow on this clock. The tower the room
+        /// DRAWS is still <see cref="StandingTap"/>, the tallest owned.</summary>
         public double TapSpeed
         {
             get
             {
-                var tower = StandingTap();
-                return tower != null ? tower.WorkSpeed : 1.0;
+                foreach (var f in _fixtureCatalogue)
+                    if (f.IsTap && IsActive(f)) return f.WorkSpeed;
+                return 1.0;
             }
         }
 
@@ -2851,22 +3040,33 @@ namespace LastCall.Core
         /// <summary>
         /// Wear an owned rung. Refused for anything the bar does not own: the room may only
         /// show what it paid for, and a look is not a way around a ladder.
+        ///
+        /// THE WARDROBE CLOSES WHEN THE DOORS OPEN (2026-09-23). Wearing was harmless while it
+        /// was only a look; a worn rung carries the room's buff now, and swapping the neon in
+        /// and out between two serves would be a rule the UI had to remember not to offer. Core
+        /// refuses it instead: the room is dressed at the day's end, and a night reads one room.
         /// </summary>
         public bool WearFixture(string fixtureId)
         {
+            if (Phase != TycoonPhase.DayEnd) return false;
             if (string.IsNullOrWhiteSpace(fixtureId) || !_fixtures.Contains(fixtureId)) return false;
             var def = FixtureById(fixtureId);
             if (def == null || def.Level <= 0) return false;     // unranked pieces have no ladder
             _worn[def.Slot] = fixtureId;
             LookRevision++;
+            RoomChanged();
+            if (Floor != null) PushHouse(Floor, Buffs);
             return true;
         }
 
-        /// <summary>Put a slot back to the rung it climbed to.</summary>
+        /// <summary>Put a slot back to the rung it climbed to. Day's end only, like wearing.</summary>
         public bool WearTopRung(string slot)
         {
+            if (Phase != TycoonPhase.DayEnd) return false;
             if (!_worn.Remove(slot ?? "")) return false;
             LookRevision++;
+            RoomChanged();
+            if (Floor != null) PushHouse(Floor, Buffs);
             return true;
         }
 
@@ -2913,7 +3113,8 @@ namespace LastCall.Core
                 if (f.Id == fixtureId)
                 {
                     _fixtures.Add(f.Id);
-                    if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+                    RoomChanged();
+                    if (Floor != null) PushHouse(Floor, Buffs);
                     return;
                 }
             throw new ArgumentException($"No fixture '{fixtureId}' in the catalogue.", nameof(fixtureId));
@@ -2966,9 +3167,14 @@ namespace LastCall.Core
             int price = FixturePrice(def);
             Spend(price);
             _fixtures.Add(fixtureId);
+            // BUYING IS INTENT (2026-09-23): the new rung is the one installed tonight, even over a
+            // lower rung the player had chosen to wear — its buff is what they paid for. The look
+            // is not bumped (buying is not wearing); the stage sees the ownership change anyway.
+            if (def.Level > 0) _worn.Remove(def.Slot);
+            RoomChanged();
             // A fitted basin changes how long the tap runs, and the counter is told at once
             // rather than at the next day's open — the night it is bought is a night it works.
-            if (Floor != null) Floor.House.SinkSeconds = SinkSeconds;
+            if (Floor != null) PushHouse(Floor, Buffs);
             _todayPurchases.Add(new DayPurchase(
                 DayPurchase.Kind.Fixture, fixtureId, def.Name, price));
             return price;
@@ -3063,10 +3269,15 @@ namespace LastCall.Core
             // could only say that it made or lost money — never which half of the bar did it.
             int served = 0, walked = 0;
             foreach (var visit in Floor.FinishedCounted())
-                // A wrong kick is on the books as a walk-out; a right one never reaches
-                // this list (GDD 28 §4).
+            {
+                // A right kick FILES A REVIEW now (2026-09-22) but is still neither served nor
+                // walked — the half of GDD 28 D10 that was always about the slip rather than about
+                // the stars. RightKicks is the count that speaks for them.
+                if (visit.OffTheBooks) continue;
+                // A wrong kick is on the books as the walk-out it is.
                 if (visit.State == VisitState.StormedOff || visit.State == VisitState.Kicked) walked++;
                 else served++;
+            }
             // A CLEAN NIGHT: nobody walked out, nothing wrong went over the bar (2026-09-06).
             // Counted here because this is the moment the night becomes a fact, and paid on
             // the spot like every other job — the money lands on the night that earned it.
@@ -3090,6 +3301,8 @@ namespace LastCall.Core
                     Fines = DayFines, Bonus = DayBonus,
                     RightKicks = RightKicks, WrongKicks = WrongKicks,
                     MinorsServed = MinorsServed, MinorsMet = MinorsMet,
+                    // And what the drinks that never came cost (2026-09-22).
+                    WalkOutFees = DayWalkOutFees, WalkOutsCharged = DayWalkOuts,
                 });
 
             if (Ledger.IsBankrupt)
@@ -3102,6 +3315,8 @@ namespace LastCall.Core
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
+            DayWalkOuts = DayWalkOutFees = DayWalkOutOwed = 0;
+            RoomAura = 0; _auraLeft = 0;   // the room forgets at the curtain
             NightHadAMistake = false;  // tomorrow starts clean, whatever tonight was
             UpgradesToday = 0;         // tonight's fitting is spent; tomorrow gets its own
             _bestRankServedTonight = 0;
@@ -3112,9 +3327,7 @@ namespace LastCall.Core
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             SettleTheJob();
             ResetVessels();
-            Floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), Rating.Average,
-                _rng.GetStream("mess"));
-            Floor.House.SinkSeconds = SinkSeconds;
+            Floor = NewFloor(Rating.Average);
             Phase = TycoonPhase.DayOpen;
             TeachAtOpen();
             return result;

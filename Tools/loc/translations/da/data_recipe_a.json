@@ -1,83 +1,349 @@
-{"strings": [
-{"key": "data.recipe.bahama_mama.lore", "text": "Rom stablet på rom under frugt. Paraplyen er bærende.", "src": "Rum stacked on rum under fruit. The umbrella is structural."},
-{"key": "data.recipe.bahama_mama.name", "text": "Bahama Mama", "src": "Bahama Mama"},
-{"key": "data.recipe.bahama_mama.origin", "text": "NASSAU, MIDT I 1900-TALLET", "src": "NASSAU, MIDCENTURY"},
-{"key": "data.recipe.black_russian.lore", "text": "Vodka over kaffelikør, opfundet til en ambassadør, der havde mørke timer foran sig.", "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."},
-{"key": "data.recipe.black_russian.name", "text": "Black Russian", "src": "Black Russian"},
-{"key": "data.recipe.black_russian.origin", "text": "BRUXELLES, 1949", "src": "BRUSSELS, 1949"},
-{"key": "data.recipe.boulevardier.lore", "text": "En negroni, der byttede gin ud med bourbon og flyttede til Paris for at skrive.", "src": "A negroni that swapped gin for bourbon and moved to Paris to write."},
-{"key": "data.recipe.boulevardier.name", "text": "Boulevardier", "src": "Boulevardier"},
-{"key": "data.recipe.boulevardier.origin", "text": "PARIS, 1927", "src": "PARIS, 1927"},
-{"key": "data.recipe.cape_codder.lore", "text": "Vodka og tranebær, opkaldt efter de moser, bærrene kommer fra. Reklamerne skrev sig selv.", "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."},
-{"key": "data.recipe.cape_codder.name", "text": "Cape Codder", "src": "Cape Codder"},
-{"key": "data.recipe.cape_codder.origin", "text": "NEW ENGLAND, 1945", "src": "NEW ENGLAND, 1945"},
-{"key": "data.recipe.cosmopolitan.lore", "text": "Den lyserøde. Tranebær holder vodkaen ærlig og glasset fotogent.", "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."},
-{"key": "data.recipe.cosmopolitan.name", "text": "Cosmopolitan", "src": "Cosmopolitan"},
-{"key": "data.recipe.cosmopolitan.origin", "text": "SOUTH BEACH, 1980'ERNE", "src": "SOUTH BEACH, 1980S"},
-{"key": "data.recipe.cuba_libre.lore", "text": "Rom, cola og en lime for et frit Cuba. Limen er ikke pynt; den er hele pointen.", "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."},
-{"key": "data.recipe.cuba_libre.name", "text": "Cuba Libre", "src": "Cuba Libre"},
-{"key": "data.recipe.cuba_libre.origin", "text": "HAVANA, 1900", "src": "HAVANA, 1900"},
-{"key": "data.recipe.daiquiri.lore", "text": "Rom, lime, sukker, rystet kold. Hemingway havde en åben regning på den.", "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."},
-{"key": "data.recipe.daiquiri.name", "text": "Daiquiri", "src": "Daiquiri"},
-{"key": "data.recipe.daiquiri.origin", "text": "SANTIAGO DE CUBA, 1898", "src": "SANTIAGO DE CUBA, 1898"},
-{"key": "data.recipe.dark_stormy.lore", "text": "Mørk rom over ginger beer – et tordenvejr i et glas. Der er advokater involveret i navnet.", "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."},
-{"key": "data.recipe.dark_stormy.name", "text": "Dark 'n' Stormy", "src": "Dark 'n' Stormy"},
-{"key": "data.recipe.dark_stormy.origin", "text": "BERMUDA, 1920'ERNE", "src": "BERMUDA, 1920S"},
-{"key": "data.recipe.dirty_martini.lore", "text": "En martini med olivenglassets mening. Lage, hvor dagslyset var.", "src": "A martini with the olive jar's opinion. Brine where the daylight was."},
-{"key": "data.recipe.dirty_martini.name", "text": "Dirty Martini", "src": "Dirty Martini"},
-{"key": "data.recipe.dirty_martini.origin", "text": "NEW YORK, 1901", "src": "NEW YORK, 1901"},
-{"key": "data.recipe.draught.lore", "text": "Hold glasset på skrå, lad fustagen tale, ret det op til skummet. Skummet er håndværket.", "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."},
-{"key": "data.recipe.draught.name", "text": "Fadøl", "src": "Draught"},
-{"key": "data.recipe.draught.origin", "text": "KÆLDEREN, HVER AFTEN", "src": "THE CELLAR, EVERY NIGHT"},
-{"key": "data.recipe.dry_martini.lore", "text": "Gin, knap nok generet af vermouth, rørt kold. Målestokken, alle barer bliver målt på.", "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."},
-{"key": "data.recipe.dry_martini.name", "text": "Dry Martini", "src": "Dry Martini"},
-{"key": "data.recipe.dry_martini.origin", "text": "NEW YORK, OMKRING 1900", "src": "NEW YORK, 1900S"},
-{"key": "data.recipe.el_presidente.lore", "text": "Cubas statsmand: rom, vermouth, curaçao og et strejf grenadine. Bærer sin coupe som et embede.", "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."},
-{"key": "data.recipe.el_presidente.name", "text": "El Presidente", "src": "El Presidente"},
-{"key": "data.recipe.el_presidente.origin", "text": "HAVANA, 1920'ERNE", "src": "HAVANA, 1920S"},
-{"key": "data.recipe.espresso_martini.lore", "text": "»Væk mig, og vend så op og ned på mig.« Dick Bradsell svarede med en shaker.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."},
-{"key": "data.recipe.espresso_martini.name", "text": "Espresso Martini", "src": "Espresso Martini"},
-{"key": "data.recipe.espresso_martini.origin", "text": "LONDON, 1983", "src": "LONDON, 1983"},
-{"key": "data.recipe.gimlet.lore", "text": "Gin og limecordial, først givet mod skørbug, siden mod kedsomhed.", "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."},
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "DEN BRITISKE FLÅDE, 1800-TALLET", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "En gin sour med sodaens døre slået op. Ramos rystede sin i tolv minutter.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "NEW ORLEANS, 1880'ERNE", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Spiritus, citron, sukker – den ældste ligning bag halvdelen af denne bog.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "SOUR-FAMILIEN, 1860'ERNE", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Kinin mod malaria, gin mod kininen. Imperiets mest nyttige uheld.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Gin & Tonic", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "BRITISK INDIEN, 1850'ERNE", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, lime, ingen overlevende. Shotkulturens svendeprøve i cocktails.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "HAVNEBARERNE, 1970'ERNE", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Husets drink til aftenens sidste gæst. Bogen gemmer siden; baren gemmer grunden.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Sidste omgang", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "DENNE BAR, I AFTEN", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Vodka i et citronjakkesæt med sukkerkant. En dessert, der har udfyldt papirerne som drink.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, 1970'ERNE", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Fem slags spiritus, der er enige om at udgive sig for iste. Det virker præcis én gang pr. aften.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic skænkede den; en ven fra Tahiti sagde »maita'i« – ude af denne verden.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Whisky og sød vermouth, rørt. Cocktailen med byens navneskilt på.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "NEW YORK, 1870'ERNE", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Tequila, appelsin og lime bag en saltkant. Ingen er enige om hvem; alle er enige om hvorfor.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "GRÆNSEN, 1940'ERNE", "src": "THE BORDER, 1940S"},
-{"key": "data.recipe.martinez.lore", "text": "Det manglende led mellem manhattan og martini, blandet på gin fra guldfeberens tid.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-{"key": "data.recipe.martinez.name", "text": "Martinez", "src": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, 1880'ERNE", "src": "SAN FRANCISCO, 1880S"},
-{"key": "data.recipe.matador.lore", "text": "Tequila, ananas, lime – margaritaen på ferie.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-{"key": "data.recipe.matador.name", "text": "Matador", "src": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "BARBØGERNE, 1950'ERNE", "src": "THE MIDCENTURY BOOKS, 1950S"},
-{"key": "data.recipe.mint_julep.lore", "text": "Bourbon gennem knust is og mynte. Løbsdagen sælger hundrede tusind af dem.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-{"key": "data.recipe.mint_julep.name", "text": "Mint Julep", "src": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, 1700-TALLET", "src": "KENTUCKY, 1700S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Rom stablet på rom under frugt. Paraplyen er bærende.",
+      "src": "Rum stacked on rum under fruit. The umbrella is structural."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Bahama Mama",
+      "src": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "NASSAU, MIDT I 1900-TALLET",
+      "src": "NASSAU, MIDCENTURY"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Vodka over kaffelikør, opfundet til en ambassadør, der havde mørke timer foran sig.",
+      "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Black Russian",
+      "src": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "BRUXELLES, 1949",
+      "src": "BRUSSELS, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "En negroni, der byttede gin ud med bourbon og flyttede til Paris for at skrive.",
+      "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Boulevardier",
+      "src": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "PARIS, 1927",
+      "src": "PARIS, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Vodka og tranebær, opkaldt efter de moser, bærrene kommer fra. Reklamerne skrev sig selv.",
+      "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Cape Codder",
+      "src": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "NEW ENGLAND, 1945",
+      "src": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "Den lyserøde. Tranebær holder vodkaen ærlig og glasset fotogent.",
+      "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Cosmopolitan",
+      "src": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "SOUTH BEACH, 1980'ERNE",
+      "src": "SOUTH BEACH, 1980S"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Rom, cola og en lime for et frit Cuba. Limen er ikke pynt; den er hele pointen.",
+      "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Cuba Libre",
+      "src": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "HAVANA, 1900",
+      "src": "HAVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Rom, lime, sukker, rystet kold. Hemingway havde en åben regning på den.",
+      "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Daiquiri",
+      "src": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "SANTIAGO DE CUBA, 1898",
+      "src": "SANTIAGO DE CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "BERMUDA, 1920'ERNE",
+      "src": "BERMUDA, 1920S"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "NEW YORK, 1901",
+      "src": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Hold glasset på skrå, lad fustagen tale, ret det op til skummet. Skummet er håndværket.",
+      "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Fadøl",
+      "src": "Draught"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "KÆLDEREN, HVER AFTEN",
+      "src": "THE CELLAR, EVERY NIGHT"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Dry Martini",
+      "src": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "NEW YORK, OMKRING 1900",
+      "src": "NEW YORK, 1900S"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "Cubas statsmand: rom, vermouth, curaçao og et strejf grenadine. Bærer sin coupe som et embede.",
+      "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "El Presidente",
+      "src": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "HAVANA, 1920'ERNE",
+      "src": "HAVANA, 1920S"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Espresso Martini",
+      "src": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "LONDON, 1983",
+      "src": "LONDON, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Gin og limecordial, først givet mod skørbug, siden mod kedsomhed.",
+      "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "DEN BRITISKE FLÅDE, 1800-TALLET",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "En gin sour med sodaens døre slået op. Ramos rystede sin i tolv minutter.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NEW ORLEANS, 1880'ERNE",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Spiritus, citron, sukker – den ældste ligning bag halvdelen af denne bog.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "SOUR-FAMILIEN, 1860'ERNE",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Kinin mod malaria, gin mod kininen. Imperiets mest nyttige uheld.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin & Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "BRITISK INDIEN, 1850'ERNE",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "HAVNEBARERNE, 1970'ERNE",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Husets drink til aftenens sidste gæst. Bogen gemmer siden; baren gemmer grunden.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Sidste omgang",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "DENNE BAR, I AFTEN",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Vodka i et citronjakkesæt med sukkerkant. En dessert, der har udfyldt papirerne som drink.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, 1970'ERNE",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Fem slags spiritus, der er enige om at udgive sig for iste. Det virker præcis én gang pr. aften.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Whisky og sød vermouth, rørt. Cocktailen med byens navneskilt på.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, 1870'ERNE",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, appelsin og lime bag en saltkant. Ingen er enige om hvem; alle er enige om hvorfor.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "GRÆNSEN, 1940'ERNE",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, 1880'ERNE",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "BARBØGERNE, 1950'ERNE",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, 1700-TALLET",
+      "src": "KENTUCKY, 1700S"
+    }
+  ]
+}

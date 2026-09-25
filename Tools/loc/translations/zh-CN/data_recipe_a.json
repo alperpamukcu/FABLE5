@@ -1,84 +1,288 @@
-{"strings": [
-{"key": "data.glass.coupe.name", "text": "碟形杯"},
-{"key": "data.glass.highball.name", "text": "高球杯"},
-{"key": "data.glass.martini.name", "text": "马天尼杯"},
-{"key": "data.glass.pint.name", "text": "品脱杯"},
-{"key": "data.glass.rocks.name", "text": "古典杯"},
-{"key": "data.recipe.bahama_mama.lore", "text": "朗姆酒叠着朗姆酒，上面压着水果。那把小伞是承重结构。"},
-{"key": "data.recipe.bahama_mama.name", "text": "巴哈马妈妈"},
-{"key": "data.recipe.bahama_mama.origin", "text": "拿骚，二十世纪中叶"},
-{"key": "data.recipe.black_russian.lore", "text": "伏特加兑咖啡利口酒，为一位要熬过漫漫长夜的大使而调。"},
-{"key": "data.recipe.black_russian.name", "text": "黑俄罗斯"},
-{"key": "data.recipe.black_russian.origin", "text": "布鲁塞尔，1949"},
-{"key": "data.recipe.boulevardier.lore", "text": "一杯把金酒换成波本、搬去巴黎写作的尼格罗尼。"},
-{"key": "data.recipe.boulevardier.name", "text": "花花公子"},
-{"key": "data.recipe.boulevardier.origin", "text": "巴黎，1927"},
-{"key": "data.recipe.cape_codder.lore", "text": "伏特加加蔓越莓，名字取自蔓越莓长大的那片沼泽。广告语自己就写好了。"},
-{"key": "data.recipe.cape_codder.name", "text": "科德角"},
-{"key": "data.recipe.cape_codder.origin", "text": "新英格兰，1945"},
-{"key": "data.recipe.cosmopolitan.lore", "text": "粉红色的那杯。蔓越莓让伏特加老老实实，也让杯子格外上镜。"},
-{"key": "data.recipe.cosmopolitan.name", "text": "大都会"},
-{"key": "data.recipe.cosmopolitan.origin", "text": "南海滩，1980年代"},
-{"key": "data.recipe.cuba_libre.lore", "text": "朗姆酒、可乐和一角青柠，敬自由的古巴。青柠不是装饰，它才是重点。"},
-{"key": "data.recipe.cuba_libre.name", "text": "自由古巴"},
-{"key": "data.recipe.cuba_libre.origin", "text": "哈瓦那，1900"},
-{"key": "data.recipe.daiquiri.lore", "text": "朗姆酒、青柠、糖，摇到冰凉。海明威在这杯酒上挂过账。"},
-{"key": "data.recipe.daiquiri.name", "text": "代基里"},
-{"key": "data.recipe.daiquiri.origin", "text": "古巴圣地亚哥，1898"},
-{"key": "data.recipe.dark_stormy.lore", "text": "黑朗姆倒在姜汁啤酒上 — 一朵能喝的暴风云。这个名字还牵扯着律师。"},
-{"key": "data.recipe.dark_stormy.name", "text": "月黑风高"},
-{"key": "data.recipe.dark_stormy.origin", "text": "百慕大，1920年代"},
-{"key": "data.recipe.dirty_martini.lore", "text": "带着橄榄罐意见的马天尼。白昼退去的地方，换上了盐水。"},
-{"key": "data.recipe.dirty_martini.name", "text": "脏马天尼"},
-{"key": "data.recipe.dirty_martini.origin", "text": "纽约，1901"},
-{"key": "data.recipe.draught.lore", "text": "斜过杯子，让酒桶说话，再扶正杯子打出泡沫。泡沫就是手艺。"},
-{"key": "data.recipe.draught.name", "text": "生啤"},
-{"key": "data.recipe.draught.origin", "text": "酒窖，每一晚"},
-{"key": "data.recipe.dry_martini.lore", "text": "金酒几乎没被味美思打扰，搅拌至冰凉。每家酒吧都拿它来衡量。"},
-{"key": "data.recipe.dry_martini.name", "text": "干马天尼"},
-{"key": "data.recipe.dry_martini.origin", "text": "纽约，1900年代"},
-{"key": "data.recipe.el_presidente.lore", "text": "古巴的政治家：朗姆酒、味美思、库拉索和一丝红石榴糖浆。端坐在碟形杯里，像在履职。"},
-{"key": "data.recipe.el_presidente.name", "text": "总统"},
-{"key": "data.recipe.el_presidente.origin", "text": "哈瓦那，1920年代"},
-{"key": "data.recipe.espresso_martini.lore", "text": "“让我清醒，再让我放飞。”Dick Bradsell 拿起雪克壶照办了。"},
-{"key": "data.recipe.espresso_martini.name", "text": "浓缩咖啡马天尼"},
-{"key": "data.recipe.espresso_martini.origin", "text": "伦敦，1983"},
-{"key": "data.recipe.gimlet.lore", "text": "金酒加青柠甘露，最早用来防坏血病，后来用来防无聊。"},
-{"key": "data.recipe.gimlet.name", "text": "螺丝锥子"},
-{"key": "data.recipe.gimlet.origin", "text": "英国皇家海军，1800年代"},
-{"key": "data.recipe.gin_fizz.lore", "text": "一杯为苏打水敞开大门的金酒酸。Ramos 摇他那杯要摇十二分钟。"},
-{"key": "data.recipe.gin_fizz.name", "text": "金菲士"},
-{"key": "data.recipe.gin_fizz.origin", "text": "新奥尔良，1880年代"},
-{"key": "data.recipe.gin_sour.lore", "text": "基酒、柠檬、糖 — 这本书里一半酒谱背后最古老的公式。"},
-{"key": "data.recipe.gin_sour.name", "text": "金酒酸"},
-{"key": "data.recipe.gin_sour.origin", "text": "酸酒家族，1860年代"},
-{"key": "data.recipe.gin_tonic.lore", "text": "奎宁对付疟疾，金酒对付奎宁。帝国最有用的一场意外。"},
-{"key": "data.recipe.gin_tonic.name", "text": "金汤力"},
-{"key": "data.recipe.gin_tonic.origin", "text": "英属印度，1850年代"},
-{"key": "data.recipe.kamikaze.lore", "text": "伏特加、橙皮酒、青柠，名字起得毫不留情。一口杯文化颁发的鸡尾酒毕业证。"},
-{"key": "data.recipe.kamikaze.name", "text": "神风"},
-{"key": "data.recipe.kamikaze.origin", "text": "港口酒吧，1970年代"},
-{"key": "data.recipe.last_call.lore", "text": "为当晚最后一位客人调的本店特饮。酒谱留着这一页，酒吧留着其中的缘由。"},
-{"key": "data.recipe.last_call.name", "text": "最后一轮"},
-{"key": "data.recipe.last_call.origin", "text": "本店，今晚"},
-{"key": "data.recipe.lemon_drop.lore", "text": "穿着蘸糖柠檬外衣的伏特加。一份以饮品名义报备的甜点。"},
-{"key": "data.recipe.lemon_drop.name", "text": "柠檬糖"},
-{"key": "data.recipe.lemon_drop.origin", "text": "旧金山，1970年代"},
-{"key": "data.recipe.long_island.lore", "text": "五种烈酒串通一气，假扮冰茶。这招每晚只灵一次。"},
-{"key": "data.recipe.long_island.name", "text": "长岛冰茶"},
-{"key": "data.recipe.long_island.origin", "text": "长岛，1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic 调出了这杯，一位塔希提朋友脱口而出“maita'i” — 好得不像人间之物。"},
-{"key": "data.recipe.mai_tai.name", "text": "迈泰"},
-{"key": "data.recipe.mai_tai.origin", "text": "奥克兰，1944"},
-{"key": "data.recipe.manhattan.lore", "text": "威士忌加甜味美思，搅拌。一杯挂着城市名牌的鸡尾酒。"},
-{"key": "data.recipe.manhattan.name", "text": "曼哈顿"},
-{"key": "data.recipe.manhattan.origin", "text": "纽约，1870年代"},
-{"key": "data.recipe.margarita.lore", "text": "盐边后面是龙舌兰、橙酒和青柠。谁发明的众说纷纭，为什么受欢迎人人都懂。"},
-{"key": "data.recipe.margarita.name", "text": "玛格丽特"},
-{"key": "data.recipe.margarita.origin", "text": "美墨边境，1940年代"},
-{"key": "data.recipe.martinez.lore", "text": "曼哈顿与马天尼之间缺失的那一环，用淘金热年代的金酒调成。"},
-{"key": "data.recipe.martinez.name", "text": "马丁内斯"},
-{"key": "data.recipe.martinez.origin", "text": "旧金山，1880年代"},
-{"key": "data.recipe.matador.lore", "text": "龙舌兰、菠萝、青柠 — 度假中的玛格丽特。"},
-{"key": "data.recipe.matador.name", "text": "斗牛士"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.glass.coupe.name",
+      "text": "碟形杯"
+    },
+    {
+      "key": "data.glass.highball.name",
+      "text": "高球杯"
+    },
+    {
+      "key": "data.glass.martini.name",
+      "text": "马天尼杯"
+    },
+    {
+      "key": "data.glass.pint.name",
+      "text": "品脱杯"
+    },
+    {
+      "key": "data.glass.rocks.name",
+      "text": "古典杯"
+    },
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "朗姆酒叠着朗姆酒，上面压着水果。那把小伞是承重结构。"
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "巴哈马妈妈"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "拿骚，二十世纪中叶"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "伏特加兑咖啡利口酒，为一位要熬过漫漫长夜的大使而调。"
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "黑俄罗斯"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "布鲁塞尔，1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "一杯把金酒换成波本、搬去巴黎写作的尼格罗尼。"
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "花花公子"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "巴黎，1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "伏特加加蔓越莓，名字取自蔓越莓长大的那片沼泽。广告语自己就写好了。"
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "科德角"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "新英格兰，1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "粉红色的那杯。蔓越莓让伏特加老老实实，也让杯子格外上镜。"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "大都会"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "南海滩，1980年代"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "朗姆酒、可乐和一角青柠，敬自由的古巴。青柠不是装饰，它才是重点。"
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "自由古巴"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "哈瓦那，1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "朗姆酒、青柠、糖，摇到冰凉。海明威在这杯酒上挂过账。"
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "代基里"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "古巴圣地亚哥，1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "百慕大，1920年代"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "纽约，1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "斜过杯子，让酒桶说话，再扶正杯子打出泡沫。泡沫就是手艺。"
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "生啤"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "酒窖，每一晚"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "干马天尼"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "纽约，1900年代"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "古巴的政治家：朗姆酒、味美思、库拉索和一丝红石榴糖浆。端坐在碟形杯里，像在履职。"
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "总统"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "哈瓦那，1920年代"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "浓缩咖啡马天尼"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "伦敦，1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "金酒加青柠甘露，最早用来防坏血病，后来用来防无聊。"
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "螺丝锥子"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "英国皇家海军，1800年代"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "一杯为苏打水敞开大门的金酒酸。Ramos 摇他那杯要摇十二分钟。"
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "金菲士"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "新奥尔良，1880年代"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "基酒、柠檬、糖 — 这本书里一半酒谱背后最古老的公式。"
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "金酒酸"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "酸酒家族，1860年代"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "奎宁对付疟疾，金酒对付奎宁。帝国最有用的一场意外。"
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "金汤力"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "英属印度，1850年代"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "神风"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "港口酒吧，1970年代"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "为当晚最后一位客人调的本店特饮。酒谱留着这一页，酒吧留着其中的缘由。"
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "最后一轮"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "本店，今晚"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "穿着蘸糖柠檬外衣的伏特加。一份以饮品名义报备的甜点。"
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "柠檬糖"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "旧金山，1970年代"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "五种烈酒串通一气，假扮冰茶。这招每晚只灵一次。"
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "长岛，1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "迈泰"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "奥克兰，1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "威士忌加甜味美思，搅拌。一杯挂着城市名牌的鸡尾酒。"
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "曼哈顿"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "纽约，1870年代"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "盐边后面是龙舌兰、橙酒和青柠。谁发明的众说纷纭，为什么受欢迎人人都懂。"
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "玛格丽特"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "美墨边境，1940年代"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "马丁内斯"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "旧金山，1880年代"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "斗牛士"
+    }
+  ]
+}

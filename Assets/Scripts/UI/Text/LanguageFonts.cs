@@ -60,6 +60,36 @@ namespace LastCall.UI
         /// <summary>Whether <paramref name="font"/> is the hand itself (and so needs no jitter to look written).</summary>
         public static bool IsHand(Font font) => font != null && Loaded.TryGetValue("IndieFlower-Regular", out var hand) && hand == font;
 
+        /// <summary>
+        /// THE RECIPE'S TITLE FACE (2026-09-23, the author: "Menüde alkollerin adının yazdığı üst başlığın fontunu
+        /// değiş okunaklı değil"). Jersey 15 (OFL, Assets/Fonts/OFL-Jersey15.txt) - the lowercase-and-Turkish pixel
+        /// face the crowd spoke for a day in September - at its own grid: 1350 units to the em in steps of 50, so
+        /// <see cref="TitlePx"/> 27 is one design pixel to a unit (measured then: 0.1% soft pixels). The heading
+        /// face it replaces on the page is an 8x8 monospace cell doubled, every letter the same width and the same
+        /// block; this one is proportional, condensed and heavy, so a name reads as a word. It is also narrower:
+        /// LONG ISLAND ICED TEA is 204 units here and 320 in the heading face, which ran past its 316 box.
+        ///
+        /// Latin only. Measured with fontTools against every recipe name in every table: it draws all the Latin
+        /// tables except Vietnamese, and no Cyrillic, Greek or CJK - those keep <paramref name="fallback"/>.
+        /// </summary>
+        public static Font Title(Font fallback)
+        {
+            switch (Localization.Current.Code)
+            {
+                case "bg": case "el": case "ja": case "ko": case "ru": case "uk": case "vi": case "zh-CN": case "zh-TW":
+                    return fallback;
+                default:
+                    return Face("Jersey15-Regular") ?? fallback;
+            }
+        }
+
+        /// <summary>The title face's own size: one of its design pixels to a unit.</summary>
+        public const int TitlePx = 27;
+
+        /// <summary>Whether <paramref name="font"/> is the title face (UiAudit lets it stand at its own 27).</summary>
+        public static bool IsTitle(Font font) =>
+            font != null && Loaded.TryGetValue("Jersey15-Regular", out var title) && title == font;
+
         /// <summary>The size to draw <paramref name="font"/> at for a UI size of 8, 16 or 24. The
         /// house faces, and any face on an 8 px grid, keep the size they were given.</summary>
         public static int Size(Font font, int size)

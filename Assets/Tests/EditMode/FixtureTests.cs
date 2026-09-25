@@ -516,7 +516,14 @@ namespace LastCall.Tests
 
             var result = run.ContinueToNextDay();
 
-            Assert.AreEqual(run.Config.Rent(1) + 20, result.Expenses, "rent + the fern");
+            // ...AND WHATEVER THE NIGHT'S WALK-OUTS COST (2026-09-23). RunAtDayEnd plays a real
+            // night with nobody serving, so everyone who sat down left without their drink, and a
+            // drink that never came is a line on the bill now (TycoonConfig.WalkOutPenalty). The
+            // fern and the rent are what this test is about; the third line is read off the run
+            // rather than typed, so it cannot go stale when the penalty is tuned.
+            Assert.AreEqual(run.Config.Rent(1) + 20 + result.WalkOutFees, result.Expenses,
+                "rent + the fern + the drinks that never came");
+            Assert.Greater(result.WalkOutFees, 0, "and the night did have walk-outs to pay for");
             Assert.AreEqual(0, run.TodaysPurchases.Count, "the slip is torn up");
             Assert.IsTrue(run.OwnsFixture("fern_pot"), "the fern stays");
         }
@@ -855,8 +862,12 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void AToolsSpeed_IsTheRungItClimbedTo_NotTheOneItWears()
+        public void AToolsSpeed_IsTheRungItWears()
         {
+            // INVERTED 2026-09-23 (Option A of the fitting buffs). This pinned the 2026-09-13 reading
+            // — the speed is the CLIMB's, so wearing the steel tin kept the gold one's pace — and the
+            // author's "hangi geliştirme takılıysa o buff aktif olacak, konfor gibi değil" reverses it:
+            // every effect of a fitting but comfort reads the piece that is INSTALLED, tools included.
             var steel = new FixtureDefinition("tin_1", "Steel", "s1", 35, 0, "", "shaker_prop",
                 startsInTheRoom: true, level: 1);
             var gold = new FixtureDefinition("tin_2", "Gold", "s1", 140, 0, "", "shaker_prop_t2",
@@ -865,9 +876,12 @@ namespace LastCall.Tests
             Assert.AreEqual(1.0, run.WorkSpeed("s1"), 1e-9, "the tin the bar opened with");
             Assert.AreEqual(1.0, run.WorkSpeed("nowhere"), 1e-9, "a slot with nothing in it works at the plain speed");
             run.BuyFixture("tin_2");
-            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "the gold tin shakes faster");
+            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "the gold tin, bought, goes up and shakes faster");
             Assert.IsTrue(run.WearFixture("tin_1"));
-            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "and wearing the steel one's look keeps the gold one's speed");
+            Assert.AreEqual(1.0, run.WorkSpeed("s1"), 1e-9, "gold owned and steel worn: the steel tin's pace");
+            Assert.AreEqual(0.4, run.FixtureComfort, 1e-9, "while the comfort stays the climb's");
+            Assert.IsTrue(run.WearFixture("tin_2"));
+            Assert.AreEqual(1.5, run.WorkSpeed("s1"), 1e-9, "wear the gold one and it is the gold one's again");
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new FixtureDefinition("x", "X", "s1", 10, 0, "", "fx", workSpeed: -1));
         }

@@ -1,0 +1,22 @@
+{
+  "strings": [
+    { "key": "buff.state.on", "text": "Şu an çalışıyor", "src": "Working now" },
+    { "key": "buff.state.off", "text": "Kapalı · kullanınca açılır", "src": "Off · wear it to switch it on" },
+    { "key": "buff.state.offer", "text": "Salondayken çalışır", "src": "Works while it is in the room" },
+    { "key": "buff.state.locked", "text": "Kilitli · salona girince çalışır", "src": "Locked · works once it is in the room" },
+    { "key": "buff.state.base", "text": "Evin standardı", "src": "The house standard" },
+    { "key": "buff.state.always", "text": "Hep açık", "src": "Always on" },
+    { "key": "buff.state.keeping_up", "text": "Başka bekleyen yokken", "src": "While nobody else is waiting" },
+    { "key": "buff.seconds", "text": "{seconds} sn", "src": "{seconds} s" },
+    { "key": "buff.band.title", "text": "SALONUN VERDİĞİ", "src": "THE ROOM GIVES" },
+    { "key": "buff.band.none", "text": "SALONDA HENÜZ SANA ÇALIŞAN BİR ŞEY YOK", "src": "NOTHING IN THE ROOM IS WORKING FOR YOU YET" },
+    { "key": "buff.band.note", "text": "YALNIZCA SERGİDEKİ ÇALIŞIR", "src": "ONLY WHAT IS ON SHOW WORKS" },
+    { "key": "buff.band.from", "text": "Kaynağı: {pieces}.", "src": "From: {pieces}." },
+    { "key": "decor.buff.speed", "text": "x{speed}", "src": "x{speed}" },
+    { "key": "decor.buff.comfort_ladder", "text": "Takılı olsun olmasın, alınan en yüksek seviye sayılır", "src": "The highest mark bought counts, worn or not" },
+    { "key": "decor.buff.comfort_kept", "text": "Salonda kalıcı", "src": "Stays with the room" },
+    { "key": "decor.buff.pct_tenths", "text": "+%{pct}", "src": "+{pct}%" },
+    { "key": "market.bottle.premium_live", "text": "Girdiği her içkide kazanılır", "src": "Earned on every drink it goes into" },
+    { "key": "market.bottle.premium_held", "text": "Rafta zaten bu kadar iyisi var", "src": "The shelf already pours one as good" }
+  ]
+}

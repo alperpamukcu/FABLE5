@@ -1,0 +1,30 @@
+{
+  "strings": [
+    {"key": "data.recipe.dark_stormy.lore", "text": "ジンジャービアに黒いラムを、雲ができるまで注ぐ。天気が変わる前に飲むこと。", "src": "Black rum poured over ginger beer until the cloud forms. Drink it before the weather turns."},
+    {"key": "data.recipe.dark_stormy.name", "text": "ブラックスコール", "src": "Black Squall"},
+    {"key": "data.recipe.dirty_martini.lore", "text": "夕食つきのマティーニ。オリーブの串がすべての違いだから、忘れないこと。", "src": "A martini that came with supper. The spear is the whole difference, so do not forget it."},
+    {"key": "data.recipe.dirty_martini.name", "text": "オリーブマティーニ", "src": "Olive Martini"},
+    {"key": "data.recipe.dry_martini.lore", "text": "ベルモットにほとんど邪魔されないジンを、冷たくステアし、最後にレモンピールを。どのバーもこの一杯で測られる。", "src": "Gin barely troubled by vermouth, stirred cold, finished with a twist. The measure all bars are taken by."},
+    {"key": "data.recipe.espresso_martini.lore", "text": "「目を覚まさせて、それからめちゃくちゃにして」。Dick Bradsellはシェイカーとコーヒーの瓶で応えた。", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker and the coffee bottle."},
+    {"key": "data.recipe.kamikaze.lore", "text": "ウォッカ、トリプルセック、ライム、生存者なし。ショットではなくカクテルなので、氷なしのグラスで出す。", "src": "Vodka, triple sec, lime, no survivors. Served up, because it is a cocktail and not a shot."},
+    {"key": "data.recipe.long_island.name", "text": "ロングアイランドアイスティー", "src": "Long Island Iced Tea"},
+    {"key": "data.recipe.mai_tai.lore", "text": "Trader Vicはクラッシュドアイスにそのまま注いだ。フルーツを足したのは島のほう。うちはフルーツを残している。", "src": "Trader Vic poured it neat over crushed ice; the islands added the fruit. Ours keeps the fruit."},
+    {"key": "data.recipe.martinez.lore", "text": "マンハッタンとマティーニをつなぐ失われた環。ゴールドラッシュのジンとレモンピールで作る。", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin and a twist."},
+    {"key": "data.recipe.matador.lore", "text": "テキーラ、パイナップル、ライムを氷で長く — 休暇中のマルガリータ。", "src": "Tequila, pineapple, lime, long over ice — the margarita on its holidays."},
+    {"key": "data.recipe.mint_julep.lore", "text": "詰めた氷とミントに通したバーボン。ミントの枝が立つほど背の高い一杯。", "src": "Bourbon through packed ice and mint, tall enough for the sprig to stand in."},
+    {"key": "data.recipe.paloma.lore", "text": "テキーラ、ライム、ソーダを暑さの中で背の高いグラスに。3つだけ、異論なし、儀式なし。", "src": "Tequila, lime and soda, built tall in the heat. Three things, no argument, no ceremony."},
+    {"key": "data.recipe.paloma.name", "text": "ランチウォーター", "src": "Ranch Water"},
+    {"key": "data.recipe.paloma.origin", "text": "西テキサス、2010年代", "src": "WEST TEXAS, 2010S"},
+    {"key": "data.recipe.sea_breeze.lore", "text": "クランベリーとパイナップルが、ウォッカを連れて海辺を歩く。", "src": "Cranberry and pineapple walking vodka down the shore."},
+    {"key": "data.recipe.sea_breeze.name", "text": "ベイブリーズ", "src": "Bay Breeze"},
+    {"key": "data.recipe.sex_on_beach.lore", "text": "ウォッカの上にクランベリーとオレンジ。名前の由来は街ではなく布地で、誰も気にしない。", "src": "Vodka under cranberry and orange. Named for a cloth, not a city, and nobody minds."},
+    {"key": "data.recipe.sex_on_beach.name", "text": "マドラス", "src": "Madras"},
+    {"key": "data.recipe.sex_on_beach.origin", "text": "マドラス、ニューイングランド経由、1960年代", "src": "MADRAS, BY WAY OF NEW ENGLAND, 1960S"},
+    {"key": "data.recipe.sidecar.lore", "text": "リッツは自分のものだと言い、ロンドンは異を唱える。うちのはウイスキーで、謝りもしない。", "src": "The Ritz claims it, London disputes it. Ours runs on whiskey and does not apologise."},
+    {"key": "data.recipe.sidecar.name", "text": "ウイスキーサイドカー", "src": "Whiskey Sidecar"},
+    {"key": "data.recipe.vodka_bull.name", "text": "ナイトシフト", "src": "Night Shift"},
+    {"key": "data.recipe.vodka_soda.name", "text": "ウォッカソーダ", "src": "Vodka & Soda"},
+    {"key": "data.recipe.vodka_tonic.name", "text": "ウォッカトニック", "src": "Vodka & Tonic"},
+    {"key": "data.recipe.whiskey_ginger.name", "text": "ウイスキージンジャー", "src": "Whiskey & Ginger"}
+  ]
+}

@@ -12,7 +12,9 @@ namespace LastCall.Core
         Drinking,
         /// <summary>Finished the drink (or a served leftover) and gone; leaves on the next tick.</summary>
         Served,
-        /// <summary>Patience ran out. No payment, satisfaction zero, stool frees up.</summary>
+        /// <summary>Patience ran out. No payment, a review just over nothing
+        /// (<see cref="CustomerVisit.StormOffSatisfaction"/>) and a line on the night's bill, stool
+        /// frees up.</summary>
         StormedOff,
         /// <summary>Shown the door (GDD 28 §4). Rightly — a minor or a borrowed card — they
         /// are off the books (<see cref="CustomerVisit.OffTheBooks"/>); wrongly, it is a
@@ -40,6 +42,40 @@ namespace LastCall.Core
         /// 0lamaz +1 kutu daha ekler"). One clock runs the whole visit and going over to ask
         /// is a move inside it, not a reset of it — see <see cref="InspectId"/>.</summary>
         public const double OrderTakenPatienceBonus = 1.0 / 3.0;
+
+        // ── the three bad endings, and which currency each is paid in (2026-09-22) ──────────
+        //
+        // The author: "müşteri kovmak hem para cezası hem de puan cezası olmamalı. Eğer siparişini
+        // yetiştiremediysen gün sonu faturasına ceza gelmeli ama puanı daha az düşürmeli. Kovmak
+        // puanı daha çok düşürmeli ama para kaybetmemelisin. Bu sahte kimlikle kovulması gereken
+        // müşteriler için geçerli değil, o hem + puan sağlamalı hem de + para getirmeli."
+        //
+        // Until now the two mistakes were the same mistake to the books: a storm-off and a wrong
+        // kick both filed a flat ZERO and neither cost a penny, so the game had one punishment and
+        // two ways to earn it. They are told apart now by WHICH currency each is paid in — the
+        // drink that never came costs money, the door costs standing.
+
+        /// <summary>
+        /// What a drink that never arrived is worth. A little over nothing: being too slow is a bad
+        /// night, not a refusal, and the bill is where it is really paid (TycoonRun.DayWalkOutFees).
+        ///
+        /// The ceiling is not taste. It has to stay UNDER <see cref="BarRating.BrokeStars"/>/
+        /// <see cref="BarRating.MaxStars"/> = 0.125, or a night where nobody was served stops
+        /// drawing tomorrow's broke crowd and the loop loses its floor; and under the 0.15 an
+        /// honest "we cannot make that" files (ServiceJudge.Declined), or saying so out loud
+        /// becomes worse than letting them walk.
+        /// </summary>
+        public const double StormOffSatisfaction = 0.10;
+
+        /// <summary>A wrong kick already files the floor — zero — so the only way the door can cost
+        /// MORE standing than a slow drink is to weigh more than one seat in the night's mean.
+        /// Two seats: one refused customer undoes one happy one.</summary>
+        public const double WrongKickWeight = 2.0;
+
+        /// <summary>And a face RIGHTLY shown the door is a good night's work, filed as one. The
+        /// bar cannot farm it: a bounced minor never comes back (RegularState.Bar) and the crowd
+        /// rolls at most one in eight (IdPapers.MinorChance).</summary>
+        public const double RightKickSatisfaction = 1.0;
 
         public RegularState Regular { get; }
 
@@ -72,8 +108,12 @@ namespace LastCall.Core
             // and reading the card afterwards must not top that up as well.
             if (_orderTaken) return;
             _orderTaken = true;
+            // NURSED gives a bigger box back (DrinkTraits). Deliberately here and not on the
+            // patience ROLL: the clock over an unread head drains at the house rate for
+            // everyone, so a long drink cannot be read off the gauge before the card is.
             PatienceLeft = Math.Min(PatienceMax,
-                PatienceLeft + PatienceMax * OrderTakenPatienceBonus);
+                PatienceLeft + PatienceMax * OrderTakenPatienceBonus
+                    * DrinkTraits.Of(_order?.Wanted).AskBoxScale);
         }
 
         /// <summary>True once the order is on the bar — set by reading the card, and by an
@@ -185,20 +225,32 @@ namespace LastCall.Core
 
         internal void MarkFined() => Fined = true;
 
-        /// <summary>Shown the door. The run decides whether it was right (off the books) or
-        /// wrong (a walk-out at zero) — this only ends the visit.</summary>
+        /// <summary>Shown the door. The run decides whether it was right (off the books, and a
+        /// night's work filed at <see cref="RightKickSatisfaction"/>) or wrong (a walk-out at zero
+        /// that weighs <see cref="WrongKickWeight"/> seats) — this only ends the visit.</summary>
         internal void Kick(bool offTheBooks)
         {
             if (State != VisitState.Waiting)
                 throw Said.With(new InvalidOperationException("They are not waiting any more."), Line.Of("rule.not_waiting"));
-            Satisfaction = 0;
+            Satisfaction = offTheBooks ? RightKickSatisfaction : 0;
             OffTheBooks = offTheBooks;
             State = VisitState.Kicked;
         }
 
+        /// <summary>
+        /// How many seats this visit weighs in the night's mean (<see cref="BarDay.AverageSatisfaction"/>).
+        /// One for everybody, and two for a customer who was refused a drink they were entitled to —
+        /// the whole of "kovmak puanı daha çok düşürmeli", since zero is already the floor of what
+        /// a single seat can file.
+        /// </summary>
+        public double RatingWeight =>
+            State == VisitState.Kicked && !OffTheBooks ? WrongKickWeight : 1.0;
+
         public int ExtraOrdersTaken { get; private set; }
 
-        /// <summary>Final satisfaction (0–1) once resolved; storm-offs stay at 0.</summary>
+        /// <summary>Final satisfaction (0–1) once resolved. The three endings that are not a serve
+        /// file their own: a wrong kick 0, a storm-off <see cref="StormOffSatisfaction"/>, a right
+        /// kick <see cref="RightKickSatisfaction"/>.</summary>
         public double Satisfaction { get; private set; }
 
         /// <summary>
@@ -297,7 +349,7 @@ namespace LastCall.Core
 
             PatienceLeft = 0;
             State = VisitState.StormedOff;
-            Satisfaction = 0;
+            Satisfaction = StormOffSatisfaction;
         }
 
         /// <summary>
@@ -305,10 +357,11 @@ namespace LastCall.Core
         /// is offered, the visit continues with refreshed patience; otherwise they take the
         /// drink and, given a <paramref name="savorSeconds"/>, nurse it on the stool before
         /// leaving. A zero savour keeps the old behaviour (gone on the next tick) for the sim
-        /// and the direct-construction tests.
+        /// and the direct-construction tests. <paramref name="refillScale"/> is the installed
+        /// room's REFILL (2026-09-23, the ceiling): 1 is the house's own clock.
         /// </summary>
         public void Resolve(ServiceVerdict verdict, DrinkOrder nextOrder = null,
-            double savorSeconds = 0, RecipeDefinition served = null)
+            double savorSeconds = 0, RecipeDefinition served = null, double refillScale = 1.0)
         {
             if (verdict == null) throw new ArgumentNullException(nameof(verdict));
             if (State != VisitState.Waiting)
@@ -326,7 +379,11 @@ namespace LastCall.Core
                 // A round they asked for across the bar: nobody has to come and take it, so
                 // reading the card later must not pay the asking box a second time.
                 _orderTaken = true;
-                PatienceLeft = PatienceMax * ExtraOrderPatienceRefill;
+                // SAME AGAIN refills further: the character of the drink they just finished, not
+                // of the one they are about to ask for — which nobody has heard yet.
+                // The room's REFILL multiplies beside it, and the clock still cannot pass full.
+                PatienceLeft = Math.Min(PatienceMax, PatienceMax * ExtraOrderPatienceRefill
+                    * DrinkTraits.Of(served).RefillScale * refillScale);
                 return;
             }
 

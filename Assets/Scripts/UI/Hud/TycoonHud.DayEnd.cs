@@ -2288,14 +2288,17 @@ namespace LastCall.UI
                     Identity = UIText.T("dayend.restock.well.identity"),
                     MetaLine = UIText.T("dayend.restock.well.meta_line"),
                     Body = UIText.T("dayend.restock.well.body",
-                           ("price", "$" + cfg.RefillPricePerCapacity)),
+                           ("price", "$" + cfg.RefillPricePerCapacity(1) + "-"
+                                     + cfg.RefillPricePerCapacity(TycoonConfig.MaxStockTier))),
                 };
                 if (restock > 0)
                 {
                     all.BuffA = new Buff(BuffKind.Cost, UIText.T(restock < shelfShort
                             ? "dayend.restock.well.cost_rest"
                             : "dayend.restock.well.cost_all",
-                        ("price", "$" + cfg.RefillPricePerCapacity), ("total", restock)));
+                        ("price", "$" + cfg.RefillPricePerCapacity(1) + "-"
+                                  + cfg.RefillPricePerCapacity(TycoonConfig.MaxStockTier)),
+                        ("total", restock)));
                     all.BuffB = new Buff(BuffKind.Gain,
                         UIText.T("dayend.restock.well.tops_up"));
                     DressBuyable(all, restock, WholeWellKey, false, () => run.RefillShelf());
@@ -2358,7 +2361,7 @@ namespace LastCall.UI
                     int aisle = RestockAisleOrder(bottle.Ingredient);
                     if (aisle != aisleNow) { aisleNow = aisle; ShopSection(RestockAisleWord(bottle.Ingredient)); }
                     int cost = (int)Math.Ceiling((bottle.Capacity - bottle.Remaining)
-                        * cfg.RefillPricePerCapacity);
+                        * cfg.RefillPricePerCapacity(bottle.Tier));
                     string key = RefillKey + bottle.Ingredient.Id;
                     var spec = new TileSpec
                     {

@@ -1,85 +1,280 @@
 {
   "strings": [
-    {"key": "data.recipe.bahama_mama.lore", "text": "Rum sopra rum, sotto la frutta. L'ombrellino è strutturale."},
-    {"key": "data.recipe.bahama_mama.name", "text": "Bahama Mama"},
-    {"key": "data.recipe.bahama_mama.origin", "text": "NASSAU, METÀ NOVECENTO"},
-    {"key": "data.recipe.black_russian.lore", "text": "Vodka sul liquore al caffè, inventato per un ambasciatore con ore buie da tirare."},
-    {"key": "data.recipe.black_russian.name", "text": "Black Russian"},
-    {"key": "data.recipe.black_russian.origin", "text": "BRUXELLES, 1949"},
-    {"key": "data.recipe.boulevardier.lore", "text": "Un negroni che ha scambiato il gin con il bourbon e si è trasferito a Parigi a scrivere."},
-    {"key": "data.recipe.boulevardier.name", "text": "Boulevardier"},
-    {"key": "data.recipe.boulevardier.origin", "text": "PARIGI, 1927"},
-    {"key": "data.recipe.cape_codder.lore", "text": "Vodka e mirtillo rosso, chiamato come le torbiere che svuota. Le pubblicità si sono scritte da sole."},
-    {"key": "data.recipe.cape_codder.name", "text": "Cape Codder"},
-    {"key": "data.recipe.cape_codder.origin", "text": "NEW ENGLAND, 1945"},
-    {"key": "data.recipe.cosmopolitan.lore", "text": "Quello rosa. Il mirtillo tiene onesta la vodka e fotogenico il bicchiere."},
-    {"key": "data.recipe.cosmopolitan.name", "text": "Cosmopolitan"},
-    {"key": "data.recipe.cosmopolitan.origin", "text": "SOUTH BEACH, ANNI '80"},
-    {"key": "data.recipe.cuba_libre.lore", "text": "Rum, cola e lime per una Cuba libera. Il lime non è una guarnizione: è il punto."},
-    {"key": "data.recipe.cuba_libre.name", "text": "Cuba Libre"},
-    {"key": "data.recipe.cuba_libre.origin", "text": "L'AVANA, 1900"},
-    {"key": "data.recipe.daiquiri.lore", "text": "Rum, lime, zucchero, shakerato freddo. Hemingway ci teneva un conto aperto."},
-    {"key": "data.recipe.daiquiri.name", "text": "Daiquiri"},
-    {"key": "data.recipe.daiquiri.origin", "text": "SANTIAGO DI CUBA, 1898"},
-    {"key": "data.recipe.dark_stormy.lore", "text": "Rum scuro sulla ginger beer: una nuvola temporalesca da bere. Sul nome ci sono di mezzo gli avvocati."},
-    {"key": "data.recipe.dark_stormy.name", "text": "Dark 'n' Stormy"},
-    {"key": "data.recipe.dark_stormy.origin", "text": "BERMUDA, ANNI '20"},
-    {"key": "data.recipe.dirty_martini.lore", "text": "Un martini con l'opinione del barattolo di olive. Salamoia dove prima c'era la luce del giorno."},
-    {"key": "data.recipe.dirty_martini.name", "text": "Dirty Martini"},
-    {"key": "data.recipe.dirty_martini.origin", "text": "NEW YORK, 1901"},
-    {"key": "data.recipe.draught.lore", "text": "Inclina il bicchiere, lascia parlare il fusto, raddrizza per la schiuma. La schiuma è il mestiere."},
-    {"key": "data.recipe.draught.name", "text": "Alla spina"},
-    {"key": "data.recipe.draught.origin", "text": "LA CANTINA, OGNI SERA"},
-    {"key": "data.recipe.dry_martini.lore", "text": "Gin appena disturbato dal vermouth, mescolato freddo. Il metro con cui si misurano tutti i bar."},
-    {"key": "data.recipe.dry_martini.name", "text": "Dry Martini"},
-    {"key": "data.recipe.dry_martini.origin", "text": "NEW YORK, PRIMO NOVECENTO"},
-    {"key": "data.recipe.el_presidente.lore", "text": "Lo statista di Cuba: rum, vermouth, curaçao e un sussurro di granatina. Porta la sua coppa come una carica pubblica."},
-    {"key": "data.recipe.el_presidente.name", "text": "El Presidente"},
-    {"key": "data.recipe.el_presidente.origin", "text": "L'AVANA, ANNI '20"},
-    {"key": "data.recipe.espresso_martini.lore", "text": "'Svegliami, e poi stendimi.' Dick Bradsell ha eseguito con uno shaker."},
-    {"key": "data.recipe.espresso_martini.name", "text": "Espresso Martini"},
-    {"key": "data.recipe.espresso_martini.origin", "text": "LONDRA, 1983"},
-    {"key": "data.recipe.gimlet.lore", "text": "Gin e cordiale al lime, prima dosato contro lo scorbuto, poi contro la noia."},
-    {"key": "data.recipe.gimlet.name", "text": "Gimlet"},
-    {"key": "data.recipe.gimlet.origin", "text": "LA ROYAL NAVY, OTTOCENTO"},
-    {"key": "data.recipe.gin_fizz.lore", "text": "Un gin sour che apre le porte alla soda. Ramos shakerava il suo per dodici minuti."},
-    {"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz"},
-    {"key": "data.recipe.gin_fizz.origin", "text": "NEW ORLEANS, ANNI 1880"},
-    {"key": "data.recipe.gin_sour.lore", "text": "Distillato, limone, zucchero: l'equazione più antica dietro metà di questo libro."},
-    {"key": "data.recipe.gin_sour.name", "text": "Gin Sour"},
-    {"key": "data.recipe.gin_sour.origin", "text": "LA FAMIGLIA DEI SOUR, ANNI 1860"},
-    {"key": "data.recipe.gin_tonic.lore", "text": "Chinino contro la malaria, gin contro il chinino. L'incidente più utile dell'Impero."},
-    {"key": "data.recipe.gin_tonic.name", "text": "Gin Tonic"},
-    {"key": "data.recipe.gin_tonic.origin", "text": "INDIA BRITANNICA, ANNI 1850"},
-    {"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, lime, nessun sopravvissuto. Il diploma da cocktail della cultura degli shot."},
-    {"key": "data.recipe.kamikaze.name", "text": "Kamikaze"},
-    {"key": "data.recipe.kamikaze.origin", "text": "I BAR DEL PORTO, ANNI '70"},
-    {"key": "data.recipe.last_call.lore", "text": "La dose della casa per l'ultimo ospite della serata. Il libro tiene la pagina; il bar tiene il motivo."},
-    {"key": "data.recipe.last_call.name", "text": "Ultimo giro"},
-    {"key": "data.recipe.last_call.origin", "text": "QUESTO BAR, STASERA"},
-    {"key": "data.recipe.lemon_drop.lore", "text": "Vodka in un completo al limone con il bordo di zucchero. Un dessert registrato all'anagrafe come drink."},
-    {"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop"},
-    {"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, ANNI '70"},
-    {"key": "data.recipe.long_island.lore", "text": "Cinque distillati d'accordo nello spacciarsi per tè freddo. Funziona esattamente una volta a sera."},
-    {"key": "data.recipe.long_island.name", "text": "Long Island"},
-    {"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972"},
-    {"key": "data.recipe.mai_tai.lore", "text": "Trader Vic lo versò; un amico tahitiano disse 'maita'i': fuori dal mondo."},
-    {"key": "data.recipe.mai_tai.name", "text": "Mai Tai"},
-    {"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944"},
-    {"key": "data.recipe.manhattan.lore", "text": "Whiskey e vermouth dolce, mescolati. Il cocktail con il nome della città sul cartellino."},
-    {"key": "data.recipe.manhattan.name", "text": "Manhattan"},
-    {"key": "data.recipe.manhattan.origin", "text": "NEW YORK, ANNI 1870"},
-    {"key": "data.recipe.margarita.lore", "text": "Tequila, arancia e lime dietro un bordo di sale. Nessuno è d'accordo sul chi; tutti sul perché."},
-    {"key": "data.recipe.margarita.name", "text": "Margarita"},
-    {"key": "data.recipe.margarita.origin", "text": "IL CONFINE, ANNI '40"},
-    {"key": "data.recipe.martinez.lore", "text": "L'anello mancante tra il manhattan e il martini, fatto con il gin della corsa all'oro."},
-    {"key": "data.recipe.martinez.name", "text": "Martinez"},
-    {"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, ANNI 1880"},
-    {"key": "data.recipe.matador.lore", "text": "Tequila, ananas, lime: il margarita in vacanza."},
-    {"key": "data.recipe.matador.name", "text": "Matador"},
-    {"key": "data.recipe.matador.origin", "text": "I MANUALI DI METÀ SECOLO, ANNI '50"},
-    {"key": "data.recipe.mint_julep.lore", "text": "Bourbon tra ghiaccio tritato e menta. Il giorno della corsa se ne vendono centomila."},
-    {"key": "data.recipe.mint_julep.name", "text": "Mint Julep"},
-    {"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, SETTECENTO"}
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Rum sopra rum, sotto la frutta. L'ombrellino è strutturale."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "NASSAU, METÀ NOVECENTO"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Vodka sul liquore al caffè, inventato per un ambasciatore con ore buie da tirare."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "BRUXELLES, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "Un negroni che ha scambiato il gin con il bourbon e si è trasferito a Parigi a scrivere."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "PARIGI, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Vodka e mirtillo rosso, chiamato come le torbiere che svuota. Le pubblicità si sono scritte da sole."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "Quello rosa. Il mirtillo tiene onesta la vodka e fotogenico il bicchiere."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "SOUTH BEACH, ANNI '80"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Rum, cola e lime per una Cuba libera. Il lime non è una guarnizione: è il punto."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "L'AVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Rum, lime, zucchero, shakerato freddo. Hemingway ci teneva un conto aperto."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "SANTIAGO DI CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "BERMUDA, ANNI '20"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Inclina il bicchiere, lascia parlare il fusto, raddrizza per la schiuma. La schiuma è il mestiere."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Alla spina"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "LA CANTINA, OGNI SERA"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "NEW YORK, PRIMO NOVECENTO"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "Lo statista di Cuba: rum, vermouth, curaçao e un sussurro di granatina. Porta la sua coppa come una carica pubblica."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "L'AVANA, ANNI '20"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "LONDRA, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Gin e cordiale al lime, prima dosato contro lo scorbuto, poi contro la noia."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "LA ROYAL NAVY, OTTOCENTO"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Un gin sour che apre le porte alla soda. Ramos shakerava il suo per dodici minuti."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NEW ORLEANS, ANNI 1880"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Distillato, limone, zucchero: l'equazione più antica dietro metà di questo libro."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "LA FAMIGLIA DEI SOUR, ANNI 1860"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Chinino contro la malaria, gin contro il chinino. L'incidente più utile dell'Impero."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "INDIA BRITANNICA, ANNI 1850"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "I BAR DEL PORTO, ANNI '70"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "La dose della casa per l'ultimo ospite della serata. Il libro tiene la pagina; il bar tiene il motivo."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Ultimo giro"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "QUESTO BAR, STASERA"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Vodka in un completo al limone con il bordo di zucchero. Un dessert registrato all'anagrafe come drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, ANNI '70"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Cinque distillati d'accordo nello spacciarsi per tè freddo. Funziona esattamente una volta a sera."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Whiskey e vermouth dolce, mescolati. Il cocktail con il nome della città sul cartellino."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, ANNI 1870"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, arancia e lime dietro un bordo di sale. Nessuno è d'accordo sul chi; tutti sul perché."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "IL CONFINE, ANNI '40"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, ANNI 1880"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "I MANUALI DI METÀ SECOLO, ANNI '50"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, SETTECENTO"
+    }
   ]
 }

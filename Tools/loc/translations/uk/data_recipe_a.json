@@ -1,83 +1,349 @@
-{"strings": [
-{"key": "data.recipe.bahama_mama.lore", "text": "Ром на ромі під фруктами. Парасолька тут — несуча конструкція.", "src": "Rum stacked on rum under fruit. The umbrella is structural."},
-{"key": "data.recipe.bahama_mama.name", "text": "Багама Мама", "src": "Bahama Mama"},
-{"key": "data.recipe.bahama_mama.origin", "text": "НАССАУ, СЕРЕДИНА СТОЛІТТЯ", "src": "NASSAU, MIDCENTURY"},
-{"key": "data.recipe.black_russian.lore", "text": "Горілка на кавовому лікері, вигадана для посла з довгими темними ночами.", "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."},
-{"key": "data.recipe.black_russian.name", "text": "Блек Рашн", "src": "Black Russian"},
-{"key": "data.recipe.black_russian.origin", "text": "БРЮССЕЛЬ, 1949", "src": "BRUSSELS, 1949"},
-{"key": "data.recipe.boulevardier.lore", "text": "Негроні, що проміняв джин на бурбон і переїхав до Парижа писати.", "src": "A negroni that swapped gin for bourbon and moved to Paris to write."},
-{"key": "data.recipe.boulevardier.name", "text": "Бульвардьє", "src": "Boulevardier"},
-{"key": "data.recipe.boulevardier.origin", "text": "ПАРИЖ, 1927", "src": "PARIS, 1927"},
-{"key": "data.recipe.cape_codder.lore", "text": "Горілка з журавлиною — на честь боліт, які вона спустошує. Реклама написала себе сама.", "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."},
-{"key": "data.recipe.cape_codder.name", "text": "Кейп-Кодер", "src": "Cape Codder"},
-{"key": "data.recipe.cape_codder.origin", "text": "НОВА АНГЛІЯ, 1945", "src": "NEW ENGLAND, 1945"},
-{"key": "data.recipe.cosmopolitan.lore", "text": "Той, розовий. Журавлина тримає горілку чесною, а келих — фотогенічним.", "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."},
-{"key": "data.recipe.cosmopolitan.name", "text": "Космополітен", "src": "Cosmopolitan"},
-{"key": "data.recipe.cosmopolitan.origin", "text": "САУТ-БІЧ, 1980-ТІ", "src": "SOUTH BEACH, 1980S"},
-{"key": "data.recipe.cuba_libre.lore", "text": "Ром, кола й лайм за вільну Кубу. Лайм — не прикраса, а вся суть.", "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."},
-{"key": "data.recipe.cuba_libre.name", "text": "Куба Лібре", "src": "Cuba Libre"},
-{"key": "data.recipe.cuba_libre.origin", "text": "ГАВАНА, 1900", "src": "HAVANA, 1900"},
-{"key": "data.recipe.daiquiri.lore", "text": "Ром, лайм, цукор, струшені до холоду. Гемінгвей тримав на нього відкритий рахунок.", "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."},
-{"key": "data.recipe.daiquiri.name", "text": "Дайкірі", "src": "Daiquiri"},
-{"key": "data.recipe.daiquiri.origin", "text": "САНТЬЯГО-ДЕ-КУБА, 1898", "src": "SANTIAGO DE CUBA, 1898"},
-{"key": "data.recipe.dark_stormy.lore", "text": "Темний ром поверх імбирного елю — грозова хмара в келиху. За назвою пильнують юристи.", "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."},
-{"key": "data.recipe.dark_stormy.name", "text": "Дарк-н-Стормі", "src": "Dark 'n' Stormy"},
-{"key": "data.recipe.dark_stormy.origin", "text": "БЕРМУДИ, 1920-ТІ", "src": "BERMUDA, 1920S"},
-{"key": "data.recipe.dirty_martini.lore", "text": "Мартіні з думкою банки оливок. Розсіл там, де був просвіт.", "src": "A martini with the olive jar's opinion. Brine where the daylight was."},
-{"key": "data.recipe.dirty_martini.name", "text": "Дерті Мартіні", "src": "Dirty Martini"},
-{"key": "data.recipe.dirty_martini.origin", "text": "НЬЮ-ЙОРК, 1901", "src": "NEW YORK, 1901"},
-{"key": "data.recipe.draught.lore", "text": "Нахили келих, дай кезі сказати своє, випрями заради шапки. Шапка — це і є майстерність.", "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."},
-{"key": "data.recipe.draught.name", "text": "Розливне", "src": "Draught"},
-{"key": "data.recipe.draught.origin", "text": "ЛЬОХ, ЩОНОЧІ", "src": "THE CELLAR, EVERY NIGHT"},
-{"key": "data.recipe.dry_martini.lore", "text": "Джин, ледь потривожений вермутом, перемішаний до холоду. Мірило, за яким судять усі бари.", "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."},
-{"key": "data.recipe.dry_martini.name", "text": "Драй Мартіні", "src": "Dry Martini"},
-{"key": "data.recipe.dry_martini.origin", "text": "НЬЮ-ЙОРК, 1900-ТІ", "src": "NEW YORK, 1900S"},
-{"key": "data.recipe.el_presidente.lore", "text": "Кубинський державник: ром, вермут, кюрасао й шепіт гренадину. Носить свій купе, як посаду.", "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."},
-{"key": "data.recipe.el_presidente.name", "text": "Ель Пресіденте", "src": "El Presidente"},
-{"key": "data.recipe.el_presidente.origin", "text": "ГАВАНА, 1920-ТІ", "src": "HAVANA, 1920S"},
-{"key": "data.recipe.espresso_martini.lore", "text": "«Розбуди мене, а потім розхитай». Дік Бредселл охоче взявся за шейкер.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."},
-{"key": "data.recipe.espresso_martini.name", "text": "Еспресо Мартіні", "src": "Espresso Martini"},
-{"key": "data.recipe.espresso_martini.origin", "text": "ЛОНДОН, 1983", "src": "LONDON, 1983"},
-{"key": "data.recipe.gimlet.lore", "text": "Джин і лаймовий кордіал — спершу від цинги, згодом від нудьги.", "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."},
-{"key": "data.recipe.gimlet.name", "text": "Гімлет", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "КОРОЛІВСЬКИЙ ФЛОТ, 1800-ТІ", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Джин сауер із дверима, відчиненими для содової. Рамос струшував свій дванадцять хвилин.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Джин Фіз", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "НОВИЙ ОРЛЕАН, 1880-ТІ", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Міцне, лимон, цукор — найдавніше рівняння за половиною цієї книги.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Джин Сауер", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "РОДИНА САУЕРІВ, 1860-ТІ", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Хінін від малярії, джин від хініну. Найкорисніша випадковість імперії.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Джин-тонік", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "БРИТАНСЬКА ІНДІЯ, 1850-ТІ", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Горілка, трипл-сек, лайм, без уцілілих. Коктейльний диплом культури шотів.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Камікадзе", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "ПОРТОВІ БАРИ, 1970-ТІ", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Напій закладу для останнього гостя ночі. Книга береже сторінку, бар — причину.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Останнє замовлення", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "ЦЕЙ БАР, СЬОГОДНІ", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Горілка в лимонному костюмі з цукровим обідком. Десерт, що оформився як напій.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Лемон Дроп", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "САН-ФРАНЦИСКО, 1970-ТІ", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "П’ять міцних напоїв змовилися вдавати холодний чай. Спрацьовує рівно раз за вечір.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Лонг-Айленд", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "ЛОНГ-АЙЛЕНД, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Трейдер Вік налив, а друг із Таїті сказав «maita’i» — неземне.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Май Тай", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "ОКЛЕНД, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Віскі й солодкий вермут, перемішані. Коктейль із бейджиком міста.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Мангеттен", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "НЬЮ-ЙОРК, 1870-ТІ", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Текіла, апельсин і лайм за солоним обідком. Хто вигадав — ніхто не згоден; чому — згодні всі.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Маргарита", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "ПРИКОРДОННЯ, 1940-ТІ", "src": "THE BORDER, 1940S"},
-{"key": "data.recipe.martinez.lore", "text": "Відсутня ланка між мангеттеном і мартіні, змішана на джині часів золотої лихоманки.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-{"key": "data.recipe.martinez.name", "text": "Мартінес", "src": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "САН-ФРАНЦИСКО, 1880-ТІ", "src": "SAN FRANCISCO, 1880S"},
-{"key": "data.recipe.matador.lore", "text": "Текіла, ананас, лайм — маргарита у відпустці.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-{"key": "data.recipe.matador.name", "text": "Матадор", "src": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "БАРНІ КНИГИ, 1950-ТІ", "src": "THE MIDCENTURY BOOKS, 1950S"},
-{"key": "data.recipe.mint_julep.lore", "text": "Бурбон крізь колотий лід і м’яту. У день перегонів їх продають сотню тисяч.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-{"key": "data.recipe.mint_julep.name", "text": "М’ятний джулеп", "src": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "КЕНТУККІ, 1700-ТІ", "src": "KENTUCKY, 1700S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Ром на ромі під фруктами. Парасолька тут — несуча конструкція.",
+      "src": "Rum stacked on rum under fruit. The umbrella is structural."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Багама Мама",
+      "src": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "НАССАУ, СЕРЕДИНА СТОЛІТТЯ",
+      "src": "NASSAU, MIDCENTURY"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Горілка на кавовому лікері, вигадана для посла з довгими темними ночами.",
+      "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Блек Рашн",
+      "src": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "БРЮССЕЛЬ, 1949",
+      "src": "BRUSSELS, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "Негроні, що проміняв джин на бурбон і переїхав до Парижа писати.",
+      "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Бульвардьє",
+      "src": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "ПАРИЖ, 1927",
+      "src": "PARIS, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Горілка з журавлиною — на честь боліт, які вона спустошує. Реклама написала себе сама.",
+      "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Кейп-Кодер",
+      "src": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "НОВА АНГЛІЯ, 1945",
+      "src": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "Той, розовий. Журавлина тримає горілку чесною, а келих — фотогенічним.",
+      "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Космополітен",
+      "src": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "САУТ-БІЧ, 1980-ТІ",
+      "src": "SOUTH BEACH, 1980S"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Ром, кола й лайм за вільну Кубу. Лайм — не прикраса, а вся суть.",
+      "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Куба Лібре",
+      "src": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "ГАВАНА, 1900",
+      "src": "HAVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Ром, лайм, цукор, струшені до холоду. Гемінгвей тримав на нього відкритий рахунок.",
+      "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Дайкірі",
+      "src": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "САНТЬЯГО-ДЕ-КУБА, 1898",
+      "src": "SANTIAGO DE CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "БЕРМУДИ, 1920-ТІ",
+      "src": "BERMUDA, 1920S"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "НЬЮ-ЙОРК, 1901",
+      "src": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Нахили келих, дай кезі сказати своє, випрями заради шапки. Шапка — це і є майстерність.",
+      "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Розливне",
+      "src": "Draught"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "ЛЬОХ, ЩОНОЧІ",
+      "src": "THE CELLAR, EVERY NIGHT"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Драй Мартіні",
+      "src": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "НЬЮ-ЙОРК, 1900-ТІ",
+      "src": "NEW YORK, 1900S"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "Кубинський державник: ром, вермут, кюрасао й шепіт гренадину. Носить свій купе, як посаду.",
+      "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "Ель Пресіденте",
+      "src": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "ГАВАНА, 1920-ТІ",
+      "src": "HAVANA, 1920S"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Еспресо Мартіні",
+      "src": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "ЛОНДОН, 1983",
+      "src": "LONDON, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Джин і лаймовий кордіал — спершу від цинги, згодом від нудьги.",
+      "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Гімлет",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "КОРОЛІВСЬКИЙ ФЛОТ, 1800-ТІ",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Джин сауер із дверима, відчиненими для содової. Рамос струшував свій дванадцять хвилин.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Джин Фіз",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "НОВИЙ ОРЛЕАН, 1880-ТІ",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Міцне, лимон, цукор — найдавніше рівняння за половиною цієї книги.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Джин Сауер",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "РОДИНА САУЕРІВ, 1860-ТІ",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Хінін від малярії, джин від хініну. Найкорисніша випадковість імперії.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Джин-тонік",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "БРИТАНСЬКА ІНДІЯ, 1850-ТІ",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Камікадзе",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "ПОРТОВІ БАРИ, 1970-ТІ",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Напій закладу для останнього гостя ночі. Книга береже сторінку, бар — причину.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Останнє замовлення",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "ЦЕЙ БАР, СЬОГОДНІ",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Горілка в лимонному костюмі з цукровим обідком. Десерт, що оформився як напій.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Лемон Дроп",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "САН-ФРАНЦИСКО, 1970-ТІ",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "П’ять міцних напоїв змовилися вдавати холодний чай. Спрацьовує рівно раз за вечір.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "ЛОНГ-АЙЛЕНД, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Май Тай",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "ОКЛЕНД, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Віскі й солодкий вермут, перемішані. Коктейль із бейджиком міста.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Мангеттен",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "НЬЮ-ЙОРК, 1870-ТІ",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Текіла, апельсин і лайм за солоним обідком. Хто вигадав — ніхто не згоден; чому — згодні всі.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Маргарита",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "ПРИКОРДОННЯ, 1940-ТІ",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Мартінес",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "САН-ФРАНЦИСКО, 1880-ТІ",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Матадор",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "БАРНІ КНИГИ, 1950-ТІ",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "М’ятний джулеп",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "КЕНТУККІ, 1700-ТІ",
+      "src": "KENTUCKY, 1700S"
+    }
+  ]
+}

@@ -1,74 +1,319 @@
-{"strings": [
-{"key": "data.recipe.bahama_mama.lore", "text": "Meyvenin altında rom üstüne rom. Şemsiye taşıyıcı sistemin parçası.", "src": "Rum stacked on rum under fruit. The umbrella is structural."},
-{"key": "data.recipe.bahama_mama.name", "text": "Bahama Mama", "src": "Bahama Mama"},
-{"key": "data.recipe.bahama_mama.origin", "text": "NASSAU, YÜZYIL ORTASI", "src": "NASSAU, MIDCENTURY"},
-{"key": "data.recipe.black_russian.lore", "text": "Kahve likörünün üstüne votka; karanlık saatleri olan bir büyükelçi için icat edildi.", "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."},
-{"key": "data.recipe.black_russian.name", "text": "Black Russian", "src": "Black Russian"},
-{"key": "data.recipe.black_russian.origin", "text": "BRÜKSEL, 1949", "src": "BRUSSELS, 1949"},
-{"key": "data.recipe.boulevardier.lore", "text": "Cini burbonla değiştirip yazar olmak için Paris'e taşınmış bir negroni.", "src": "A negroni that swapped gin for bourbon and moved to Paris to write."},
-{"key": "data.recipe.boulevardier.name", "text": "Boulevardier", "src": "Boulevardier"},
-{"key": "data.recipe.boulevardier.origin", "text": "PARİS, 1927", "src": "PARIS, 1927"},
-{"key": "data.recipe.cape_codder.lore", "text": "Votka ve kızılcık; adını suyunu çektiği bataklıklardan alır. Reklamlar kendi kendini yazdı.", "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."},
-{"key": "data.recipe.cape_codder.name", "text": "Cape Codder", "src": "Cape Codder"},
-{"key": "data.recipe.cape_codder.origin", "text": "NEW ENGLAND, 1945", "src": "NEW ENGLAND, 1945"},
-{"key": "data.recipe.cosmopolitan.lore", "text": "Pembe olan. Kızılcık votkayı dürüst, kadehi de fotojenik tutar.", "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."},
-{"key": "data.recipe.cosmopolitan.name", "text": "Cosmopolitan", "src": "Cosmopolitan"},
-{"key": "data.recipe.cosmopolitan.origin", "text": "SOUTH BEACH, 1980'LER", "src": "SOUTH BEACH, 1980S"},
-{"key": "data.recipe.cuba_libre.lore", "text": "Özgür bir Küba için rom, kola ve misket limonu. Misket limonu süs değil; asıl mesele o.", "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."},
-{"key": "data.recipe.cuba_libre.name", "text": "Cuba Libre", "src": "Cuba Libre"},
-{"key": "data.recipe.cuba_libre.origin", "text": "HAVANA, 1900", "src": "HAVANA, 1900"},
-{"key": "data.recipe.daiquiri.lore", "text": "Rom, misket limonu, şeker, soğuk çalkalanmış. Hemingway bunun için hesabını hep açık tutardı.", "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."},
-{"key": "data.recipe.daiquiri.name", "text": "Daiquiri", "src": "Daiquiri"},
-{"key": "data.recipe.daiquiri.origin", "text": "SANTIAGO DE CUBA, 1898", "src": "SANTIAGO DE CUBA, 1898"},
-{"key": "data.recipe.dark_stormy.lore", "text": "Zencefilli gazozun üstüne siyah rom: kadehteki bir fırtına bulutu. Adının avukatları var.", "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."},
-{"key": "data.recipe.dark_stormy.name", "text": "Dark 'n' Stormy", "src": "Dark 'n' Stormy"},
-{"key": "data.recipe.dark_stormy.origin", "text": "BERMUDA, 1920'LER", "src": "BERMUDA, 1920S"},
-{"key": "data.recipe.dirty_martini.lore", "text": "Zeytin kavanozunun da fikrini söylediği bir martini. Gün ışığının yerinde salamura.", "src": "A martini with the olive jar's opinion. Brine where the daylight was."},
-{"key": "data.recipe.dirty_martini.name", "text": "Dirty Martini", "src": "Dirty Martini"},
-{"key": "data.recipe.dirty_martini.origin", "text": "NEW YORK, 1901", "src": "NEW YORK, 1901"},
-{"key": "data.recipe.draught.lore", "text": "Bardağı yatır, fıçı konuşsun, köpük için doğrult. Zanaat köpüktedir.", "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."},
-{"key": "data.recipe.draught.name", "text": "Fıçı Bira", "src": "Draught"},
-{"key": "data.recipe.draught.origin", "text": "MAHZEN, HER GECE", "src": "THE CELLAR, EVERY NIGHT"},
-{"key": "data.recipe.dry_martini.lore", "text": "Vermutun zar zor dokunduğu cin, soğuk karıştırılmış. Bütün barlar bununla ölçülür.", "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."},
-{"key": "data.recipe.dry_martini.name", "text": "Dry Martini", "src": "Dry Martini"},
-{"key": "data.recipe.dry_martini.origin", "text": "NEW YORK, 1900'LER", "src": "NEW YORK, 1900S"},
-{"key": "data.recipe.el_presidente.lore", "text": "Küba'nın devlet adamı: rom, vermut, curaçao ve bir fısıltı grenadin. Kadehini makam gibi taşır.", "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."},
-{"key": "data.recipe.el_presidente.name", "text": "El Presidente", "src": "El Presidente"},
-{"key": "data.recipe.el_presidente.origin", "text": "HAVANA, 1920'LER", "src": "HAVANA, 1920S"},
-{"key": "data.recipe.espresso_martini.lore", "text": "'Önce uyandır, sonra dağıt.' Dick Bradsell isteği bir shaker'la yerine getirdi.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."},
-{"key": "data.recipe.espresso_martini.name", "text": "Espresso Martini", "src": "Espresso Martini"},
-{"key": "data.recipe.espresso_martini.origin", "text": "LONDRA, 1983", "src": "LONDON, 1983"},
-{"key": "data.recipe.gimlet.lore", "text": "Cin ve misket limonu şurubu; önce iskorbüte, sonra can sıkıntısına karşı verildi.", "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."},
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "KRALİYET DONANMASI, 1800'LER", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Sodayla kapıları açılmış bir gin sour. Ramos kendisininkini on iki dakika çalkalardı.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "NEW ORLEANS, 1880'LER", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Sert içki, limon, şeker: bu kitabın yarısının ardındaki en eski denklem.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "SOUR AİLESİ, 1860'LAR", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Sıtmaya karşı kinin, kinine karşı cin. İmparatorluğun en işe yarar kazası.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Cin Tonik", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "BRİTANYA HİNDİSTANI, 1850'LER", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Votka, triple sec, misket limonu; lafı dolandırmadan. Shot kültürünün kokteyl diploması.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "LİMAN BARLARI, 1970'LER", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Gecenin son konuğu için evin ikramı. Sayfayı kitap saklar; nedenini bar.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Son Sipariş", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "BU BAR, BU GECE", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Şekerli kenarlı bir limon takımı giymiş votka. Kâğıt üstünde içki, aslında tatlı.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, 1970'LER", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Buzlu çay taklidi yapmaya anlaşmış beş sert içki. Akşam başına tam bir kez işe yarar.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic hazırladı; Tahitili bir dostu 'maita'i' dedi: bu dünyadan değil.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Viski ve tatlı vermut, karıştırılmış. Şehrin isim kartını takan kokteyl.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "NEW YORK, 1870'LER", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Tuzlu kenarın ardında tekila, portakal ve misket limonu. Kimin bulduğunda kimse anlaşamaz; nedeninde herkes anlaşır.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "SINIR BOYU, 1940'LAR", "src": "THE BORDER, 1940S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Meyvenin altında rom üstüne rom. Şemsiye taşıyıcı sistemin parçası.",
+      "src": "Rum stacked on rum under fruit. The umbrella is structural."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Bahama Mama",
+      "src": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "NASSAU, YÜZYIL ORTASI",
+      "src": "NASSAU, MIDCENTURY"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Kahve likörünün üstüne votka; karanlık saatleri olan bir büyükelçi için icat edildi.",
+      "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Black Russian",
+      "src": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "BRÜKSEL, 1949",
+      "src": "BRUSSELS, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "Cini burbonla değiştirip yazar olmak için Paris'e taşınmış bir negroni.",
+      "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Boulevardier",
+      "src": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "PARİS, 1927",
+      "src": "PARIS, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Votka ve kızılcık; adını suyunu çektiği bataklıklardan alır. Reklamlar kendi kendini yazdı.",
+      "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Cape Codder",
+      "src": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "NEW ENGLAND, 1945",
+      "src": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "Pembe olan. Kızılcık votkayı dürüst, kadehi de fotojenik tutar.",
+      "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Cosmopolitan",
+      "src": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "SOUTH BEACH, 1980'LER",
+      "src": "SOUTH BEACH, 1980S"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Özgür bir Küba için rom, kola ve misket limonu. Misket limonu süs değil; asıl mesele o.",
+      "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Cuba Libre",
+      "src": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "HAVANA, 1900",
+      "src": "HAVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Rom, misket limonu, şeker, soğuk çalkalanmış. Hemingway bunun için hesabını hep açık tutardı.",
+      "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Daiquiri",
+      "src": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "SANTIAGO DE CUBA, 1898",
+      "src": "SANTIAGO DE CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "BERMUDA, 1920'LER",
+      "src": "BERMUDA, 1920S"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "NEW YORK, 1901",
+      "src": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Bardağı yatır, fıçı konuşsun, köpük için doğrult. Zanaat köpüktedir.",
+      "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Fıçı Bira",
+      "src": "Draught"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "MAHZEN, HER GECE",
+      "src": "THE CELLAR, EVERY NIGHT"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Dry Martini",
+      "src": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "NEW YORK, 1900'LER",
+      "src": "NEW YORK, 1900S"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "Küba'nın devlet adamı: rom, vermut, curaçao ve bir fısıltı grenadin. Kadehini makam gibi taşır.",
+      "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "El Presidente",
+      "src": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "HAVANA, 1920'LER",
+      "src": "HAVANA, 1920S"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Espresso Martini",
+      "src": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "LONDRA, 1983",
+      "src": "LONDON, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Cin ve misket limonu şurubu; önce iskorbüte, sonra can sıkıntısına karşı verildi.",
+      "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "KRALİYET DONANMASI, 1800'LER",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Sodayla kapıları açılmış bir gin sour. Ramos kendisininkini on iki dakika çalkalardı.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NEW ORLEANS, 1880'LER",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Sert içki, limon, şeker: bu kitabın yarısının ardındaki en eski denklem.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "SOUR AİLESİ, 1860'LAR",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Sıtmaya karşı kinin, kinine karşı cin. İmparatorluğun en işe yarar kazası.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Cin Tonik",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "BRİTANYA HİNDİSTANI, 1850'LER",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "LİMAN BARLARI, 1970'LER",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Gecenin son konuğu için evin ikramı. Sayfayı kitap saklar; nedenini bar.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Son Sipariş",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "BU BAR, BU GECE",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Şekerli kenarlı bir limon takımı giymiş votka. Kâğıt üstünde içki, aslında tatlı.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, 1970'LER",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Buzlu çay taklidi yapmaya anlaşmış beş sert içki. Akşam başına tam bir kez işe yarar.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Viski ve tatlı vermut, karıştırılmış. Şehrin isim kartını takan kokteyl.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, 1870'LER",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tuzlu kenarın ardında tekila, portakal ve misket limonu. Kimin bulduğunda kimse anlaşamaz; nedeninde herkes anlaşır.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "SINIR BOYU, 1940'LAR",
+      "src": "THE BORDER, 1940S"
+    }
+  ]
+}

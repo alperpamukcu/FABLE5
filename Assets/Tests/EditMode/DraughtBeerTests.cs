@@ -458,13 +458,24 @@ namespace LastCall.Tests
         [Test]
         public void DraughtIsOnTheMenuFromDayOne()
         {
-            var pourable = RecipeCatalog.CreateDefault()
-                .Where(r => r.RatioRequirements.Count > 0)
-                .OrderBy(r => r.Rank)
-                .Take(TycoonConfig.Default.OrderPoolSize(1))
-                .Select(r => r.Id);
-            CollectionAssert.Contains(pourable.ToList(), "draught",
-                "beer is the order a new bar can always answer");
+            // The day-scaled pool is gone (2026-09-23) and the night is cut by DayPlan, so the
+            // question is now the honest one: does the opening WEEK actually ask for a pint?
+            //
+            // Night ONE no longer does, on purpose: FirstWeek teaches one thing a night and the
+            // first is the two-part build. The keg is the second lesson, which is the earliest a
+            // bar could pull one anyway — and from there it is never off the list.
+            var opening = RecipeCatalog.CreateDefault()
+                .Where(r => !r.Locked && r.RatioRequirements.Count > 0).ToList();
+            CollectionAssert.Contains(opening.Select(r => r.Id).ToList(), "draught",
+                "beer is on the menu a new bar opens with");
+
+            for (int day = 2; day <= FirstWeek.Nights; day++)
+            {
+                var plan = DayPlan.Roll(opening, day, stars: 0.0, TycoonConfig.Default,
+                    new RunRng("draught-week").GetStream("plan"));
+                CollectionAssert.Contains(plan.Queue.Select(r => r.Id).ToList(), "draught",
+                    "night " + day + ": beer is the order a new bar can always answer");
+            }
         }
 
         // ── judging the pint ────────────────────────────────────────────────────

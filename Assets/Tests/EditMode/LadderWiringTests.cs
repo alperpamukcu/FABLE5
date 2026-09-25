@@ -253,14 +253,19 @@ namespace LastCall.Tests
         [Test]
         public void TheSignatureExtra_MakesThePage_AndTheOrderAlwaysAsksForIt()
         {
-            // A Dirty Martini is a Dry Martini with a spear of olives (2026-09-21): the same pour reads as the
-            // plain page without the spear and as the signed page with it, whatever their ranks (14 over 22);
-            // and every order for the signed page asks for the spear.
+            // A Dirty Martini is a Dry Martini with a spear of olives (2026-09-21): the same pour reads as
+            // one page with the spear and the other with a twist, whatever their ranks (14 over 22); and
+            // every order for a signed page asks for its own extra.
+            //
+            // THE DRY MARTINI IS SIGNED TOO NOW (2026-09-22). It was the PLAIN twin, and that was the hole:
+            // a signed page beats a plain one whatever its rank, so a perfect Dry Martini served to somebody
+            // who happened to ask for an olive as an ordinary extra was graded — and paid — as the cheaper
+            // Dirty Martini. Two signatures, one each, and neither can be the other.
             var all = RecipeCatalog.CreateDefault();
             var dirty = all.First(r => r.Id == "dirty_martini");
             var dry = all.First(r => r.Id == "dry_martini");
             Assert.AreEqual("olive", dirty.Garnish);
-            Assert.IsNull(dry.Garnish);
+            Assert.AreEqual("lemon_twist", dry.Garnish);
             var perfect = RatioRecipeMatcher.PerfectPour(dirty);
             var glass = new GlassContents(1.0);
             for (int i = 0; i < perfect.Length; i++) glass.Add(dirty.RatioRequirements[i].Style, perfect[i]);
@@ -269,14 +274,29 @@ namespace LastCall.Tests
                 cards[band.Style] = new IngredientCard(band.Style, band.Style, IngredientType.Spirit, 5,
                     new IngredientInfo(band.Style, 4, 5, "somewhere", 40, "test"));   // top shelf: every band's tier met
             System.Func<string, IngredientCard> lookup = id => cards.TryGetValue(id, out var c) ? c : null;
-            Assert.AreEqual("dry_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id, "no spear: a dry martini");
+            string bareId = RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id;
+            Assert.AreNotEqual("dry_martini", bareId, "bare, it is neither: each page needs its own extra");
+            Assert.AreNotEqual("dirty_martini", bareId, "bare, it is neither");
+            glass.AddPreparation(Preparations.LemonTwist);
+            Assert.AreEqual("dry_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id,
+                "the twist makes it a dry martini");
             glass.AddPreparation(Preparations.Olive);
-            Assert.AreEqual("dirty_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id, "the spear makes it a dirty martini");
+            Assert.AreEqual("dry_martini", RatioRecipeMatcher.Match(glass, all, lookup)?.Recipe.Id,
+                "and with both, rank decides: a martini that also got an olive is still a martini");
+
+            var bare = new GlassContents(1.0);
+            for (int i = 0; i < perfect.Length; i++) bare.Add(dirty.RatioRequirements[i].Style, perfect[i]);
+            bare.AddPreparation(Preparations.Olive);
+            Assert.AreEqual("dirty_martini", RatioRecipeMatcher.Match(bare, all, lookup)?.Recipe.Id,
+                "the spear alone makes it a dirty martini");
 
             var rng = new RunRng("signature").GetStream("orders");
             for (int i = 0; i < 40; i++)
                 CollectionAssert.Contains(ServingSpec.Roll(dirty, rng, ServingSpec.GarnishPool).Garnishes.Select(g => g.Id).ToList(), "olive",
                     "every order for a dirty martini asks for its olives");
+            for (int i = 0; i < 40; i++)
+                CollectionAssert.Contains(ServingSpec.Roll(dry, rng, ServingSpec.GarnishPool).Garnishes.Select(g => g.Id).ToList(), "lemon_twist",
+                    "and every order for a dry martini asks for its twist");
         }
 
         [Test]

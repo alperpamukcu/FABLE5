@@ -1,439 +1,359 @@
 {
- "strings": [
-  {
-   "key": "data.recipe.matador.lore",
-   "text": "龍舌蘭、鳳梨、萊姆 — 度假模式的瑪格麗特。",
-   "src": "Tequila, pineapple, lime — the margarita's holiday self."
-  },
-  {
-   "key": "data.recipe.matador.name",
-   "text": "鬥牛士",
-   "src": "Matador"
-  },
-  {
-   "key": "data.recipe.matador.origin",
-   "text": "世紀中葉的酒譜書，1950 年代",
-   "src": "THE MIDCENTURY BOOKS, 1950S"
-  },
-  {
-   "key": "data.recipe.mint_julep.lore",
-   "text": "波本流過碎冰和薄荷。賽馬日一天就賣出十萬杯。",
-   "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."
-  },
-  {
-   "key": "data.recipe.mint_julep.name",
-   "text": "薄荷茱莉普",
-   "src": "Mint Julep"
-  },
-  {
-   "key": "data.recipe.mint_julep.origin",
-   "text": "肯塔基，1700 年代",
-   "src": "KENTUCKY, 1700S"
-  },
-  {
-   "key": "data.recipe.mojito.lore",
-   "text": "薄荷壓碎，萊姆擠汁，蘭姆酒坐享其成。據說 Drake 的船員喝過它的草稿。",
-   "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
-  },
-  {
-   "key": "data.recipe.mojito.name",
-   "text": "莫希托",
-   "src": "Mojito"
-  },
-  {
-   "key": "data.recipe.mojito.origin",
-   "text": "哈瓦那，跟港口一樣老",
-   "src": "HAVANA, OLD AS THE HARBOUR"
-  },
-  {
-   "key": "data.recipe.moscow_mule.lore",
-   "text": "一個伏特加業務員加上一批賣不掉的薑汁啤酒，發明了俄羅斯最美國的一杯酒。",
-   "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
-  },
-  {
-   "key": "data.recipe.moscow_mule.name",
-   "text": "莫斯科騾子",
-   "src": "Moscow Mule"
-  },
-  {
-   "key": "data.recipe.moscow_mule.origin",
-   "text": "洛杉磯，1941",
-   "src": "LOS ANGELES, 1941"
-  },
-  {
-   "key": "data.recipe.neat_pour.lore",
-   "text": "一瓶酒，不用雪克杯，沒什麼好爭的。給早就知道答案的人點的。",
-   "src": "One bottle, no tin, no argument. The order for people who already know the answer."
-  },
-  {
-   "key": "data.recipe.neat_pour.name",
-   "text": "純飲",
-   "src": "Neat Pour"
-  },
-  {
-   "key": "data.recipe.neat_pour.origin",
-   "text": "任何有酒架的地方",
-   "src": "ANYWHERE WITH A SHELF"
-  },
-  {
-   "key": "data.recipe.negroni.lore",
-   "text": "Negroni 伯爵想要一杯更烈的美國佬。等比例，沒得商量。",
-   "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
-  },
-  {
-   "key": "data.recipe.negroni.name",
-   "text": "尼格羅尼",
-   "src": "Negroni"
-  },
-  {
-   "key": "data.recipe.negroni.origin",
-   "text": "佛羅倫斯，1919",
-   "src": "FLORENCE, 1919"
-  },
-  {
-   "key": "data.recipe.old_fashioned.lore",
-   "text": "糖、苦精、威士忌 — 「雞尾酒」這個詞就是為它造出來的。",
-   "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
-  },
-  {
-   "key": "data.recipe.old_fashioned.name",
-   "text": "古典雞尾酒",
-   "src": "Old Fashioned"
-  },
-  {
-   "key": "data.recipe.old_fashioned.origin",
-   "text": "路易維爾，1880 年代",
-   "src": "LOUISVILLE, 1880S"
-  },
-  {
-   "key": "data.recipe.paloma.lore",
-   "text": "龍舌蘭加葡萄柚汽水。墨西哥人真正的最愛；瑪格麗特只是公關做得比較好。",
-   "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."
-  },
-  {
-   "key": "data.recipe.paloma.name",
-   "text": "帕洛瑪",
-   "src": "Paloma"
-  },
-  {
-   "key": "data.recipe.paloma.origin",
-   "text": "墨西哥，1950 年代",
-   "src": "MEXICO, 1950S"
-  },
-  {
-   "key": "data.recipe.pink_lady.lore",
-   "text": "被紅石榴糖漿染紅臉頰的琴酒。禁酒令時期最體面的藉口。",
-   "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
-  },
-  {
-   "key": "data.recipe.pink_lady.name",
-   "text": "粉紅佳人",
-   "src": "Pink Lady"
-  },
-  {
-   "key": "data.recipe.pink_lady.origin",
-   "text": "紐約，1910 年代",
-   "src": "NEW YORK, 1910S"
-  },
-  {
-   "key": "data.recipe.rosita.lore",
-   "text": "尼格羅尼的龍舌蘭表親，在酒譜上印得小小的，很晚才被人愛上。",
-   "src": "The negroni's tequila cousin, printed small and loved late."
-  },
-  {
-   "key": "data.recipe.rosita.name",
-   "text": "羅西塔",
-   "src": "Rosita"
-  },
-  {
-   "key": "data.recipe.rosita.origin",
-   "text": "酒譜書，1974",
-   "src": "THE BAR BOOKS, 1974"
-  },
-  {
-   "key": "data.recipe.rum_punch.lore",
-   "text": "一分酸、二分甜、三分烈、四分淡。比裝它的杯子還要古老。",
-   "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
-  },
-  {
-   "key": "data.recipe.rum_punch.name",
-   "text": "蘭姆潘趣",
-   "src": "Rum Punch"
-  },
-  {
-   "key": "data.recipe.rum_punch.origin",
-   "text": "加勒比群島，1600 年代",
-   "src": "THE ISLANDS, 1600S"
-  },
-  {
-   "key": "data.recipe.screwdriver.lore",
-   "text": "名字來自最早拿來攪它的那把工具。在某些港口，它被當成早餐。",
-   "src": "Named for the tool that stirred it first. Breakfast in some ports."
-  },
-  {
-   "key": "data.recipe.screwdriver.name",
-   "text": "螺絲起子",
-   "src": "Screwdriver"
-  },
-  {
-   "key": "data.recipe.screwdriver.origin",
-   "text": "油田，1940 年代",
-   "src": "THE OIL FIELDS, 1940S"
-  },
-  {
-   "key": "data.recipe.sea_breeze.lore",
-   "text": "蔓越莓和葡萄柚陪著伏特加沿著海岸散步。",
-   "src": "Cranberry and grapefruit walking vodka down the shore."
-  },
-  {
-   "key": "data.recipe.sea_breeze.name",
-   "text": "海風",
-   "src": "Sea Breeze"
-  },
-  {
-   "key": "data.recipe.sea_breeze.origin",
-   "text": "美國海岸",
-   "src": "THE AMERICAN COAST"
-  },
-  {
-   "key": "data.recipe.sex_on_beach.lore",
-   "text": "水蜜桃、柳橙和蔓越莓倒在伏特加上。裝進杯子裡的春假。",
-   "src": "Peach, orange and cranberry over vodka. Spring break, decanted."
-  },
-  {
-   "key": "data.recipe.sex_on_beach.name",
-   "text": "性感沙灘",
-   "src": "Sex on the Beach"
-  },
-  {
-   "key": "data.recipe.sex_on_beach.origin",
-   "text": "佛羅里達，1980 年代",
-   "src": "FLORIDA, 1980S"
-  },
-  {
-   "key": "data.recipe.sidecar.lore",
-   "text": "麗池說是它發明的，倫敦不同意。我們這杯用波本，而且不打算道歉。",
-   "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."
-  },
-  {
-   "key": "data.recipe.sidecar.name",
-   "text": "波本側車",
-   "src": "Bourbon Sidecar"
-  },
-  {
-   "key": "data.recipe.sidecar.origin",
-   "text": "巴黎，1920 年代",
-   "src": "PARIS, 1920S"
-  },
-  {
-   "key": "data.recipe.southside.lore",
-   "text": "琴酒、萊姆和薄荷。黑幫喝的就是它；薄荷蓋住了浴缸私釀的味道。",
-   "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
-  },
-  {
-   "key": "data.recipe.southside.name",
-   "text": "南方",
-   "src": "Southside"
-  },
-  {
-   "key": "data.recipe.southside.origin",
-   "text": "芝加哥，1920 年代",
-   "src": "CHICAGO, 1920S"
-  },
-  {
-   "key": "data.recipe.tequila_mule.lore",
-   "text": "往南走的莫斯科騾子 — 龍舌蘭坐上了銅製馬鞍。",
-   "src": "The Moscow mule gone south — agave in the copper saddle."
-  },
-  {
-   "key": "data.recipe.tequila_mule.name",
-   "text": "龍舌蘭騾子",
-   "src": "Tequila Mule"
-  },
-  {
-   "key": "data.recipe.tequila_mule.origin",
-   "text": "邊境地帶",
-   "src": "THE BORDERLANDS"
-  },
-  {
-   "key": "data.recipe.tequila_sour.lore",
-   "text": "靴子沾滿塵土的酸酒公式。龍舌蘭回應了檸檬。",
-   "src": "The sour formula with dust on its boots. Agave answers the lemon."
-  },
-  {
-   "key": "data.recipe.tequila_sour.name",
-   "text": "龍舌蘭酸酒",
-   "src": "Tequila Sour"
-  },
-  {
-   "key": "data.recipe.tequila_sour.origin",
-   "text": "酸酒家族",
-   "src": "THE SOUR FAMILY"
-  },
-  {
-   "key": "data.recipe.tequila_sunrise.lore",
-   "text": "紅石榴糖漿往下沉，柳橙汁浮上來，滾石合唱團還帶著它去巡迴。",
-   "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
-  },
-  {
-   "key": "data.recipe.tequila_sunrise.name",
-   "text": "龍舌蘭日出",
-   "src": "Tequila Sunrise"
-  },
-  {
-   "key": "data.recipe.tequila_sunrise.origin",
-   "text": "索薩利托，1970 年代",
-   "src": "SAUSALITO, 1970S"
-  },
-  {
-   "key": "data.recipe.vesper.lore",
-   "text": "Fleming 為 Bond 寫下這杯：琴酒、伏特加，還有一個他留不住的名字。",
-   "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
-  },
-  {
-   "key": "data.recipe.vesper.name",
-   "text": "薇絲朋",
-   "src": "Vesper"
-  },
-  {
-   "key": "data.recipe.vesper.origin",
-   "text": "《皇家夜總會》，1953",
-   "src": "CASINO ROYALE, 1953"
-  },
-  {
-   "key": "data.recipe.vodka_bull.lore",
-   "text": "伏特加和能量飲料裝在同一杯 — 一杯同時上白班和夜班的酒。",
-   "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
-  },
-  {
-   "key": "data.recipe.vodka_bull.name",
-   "text": "伏特加公牛",
-   "src": "Vodka Bull"
-  },
-  {
-   "key": "data.recipe.vodka_bull.origin",
-   "text": "通宵酒吧",
-   "src": "THE ALL-NIGHT BARS"
-  },
-  {
-   "key": "data.recipe.vodka_soda.lore",
-   "text": "酒吧能合法稱為「一杯酒」的最輕的東西。乾淨、冰涼、一下就沒了。",
-   "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
-  },
-  {
-   "key": "data.recipe.vodka_soda.name",
-   "text": "伏特加蘇打",
-   "src": "Vodka Soda"
-  },
-  {
-   "key": "data.recipe.vodka_soda.origin",
-   "text": "沒有特定的地方，1900 年代",
-   "src": "NOWHERE IN PARTICULAR, 1900S"
-  },
-  {
-   "key": "data.recipe.vodka_sour.lore",
-   "text": "把燈光調暗的琴酒酸酒。客人比較斯文，檸檬還是同一顆。",
-   "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
-  },
-  {
-   "key": "data.recipe.vodka_sour.name",
-   "text": "伏特加酸酒",
-   "src": "Vodka Sour"
-  },
-  {
-   "key": "data.recipe.vodka_sour.origin",
-   "text": "酸酒家族",
-   "src": "THE SOUR FAMILY"
-  },
-  {
-   "key": "data.recipe.vodka_tonic.lore",
-   "text": "琴通寧比較安靜的手足 — 通寧水負責說話，伏特加負責幫忙拿外套。",
-   "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
-  },
-  {
-   "key": "data.recipe.vodka_tonic.name",
-   "text": "伏特加通寧",
-   "src": "Vodka Tonic"
-  },
-  {
-   "key": "data.recipe.vodka_tonic.origin",
-   "text": "戰後年間，1950 年代",
-   "src": "THE POSTWAR YEARS, 1950S"
-  },
-  {
-   "key": "data.recipe.whiskey_cola.lore",
-   "text": "本來在旁邊當追水的可樂放棄了，乾脆跳進波本的杯子裡。",
-   "src": "Bourbon with a cola chaser that gave up and got in the glass."
-  },
-  {
-   "key": "data.recipe.whiskey_cola.name",
-   "text": "威士忌可樂",
-   "src": "Whiskey & Cola"
-  },
-  {
-   "key": "data.recipe.whiskey_cola.origin",
-   "text": "公路旅店，1930 年代",
-   "src": "THE ROADHOUSES, 1930S"
-  },
-  {
-   "key": "data.recipe.whiskey_ginger.lore",
-   "text": "用薑汁汽水拉長的波本 — 讓威士忌變成平日晚上也能點的高球。",
-   "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
-  },
-  {
-   "key": "data.recipe.whiskey_ginger.name",
-   "text": "威士忌薑汁",
-   "src": "Whiskey Ginger"
-  },
-  {
-   "key": "data.recipe.whiskey_ginger.origin",
-   "text": "高球之鄉，1890 年代",
-   "src": "HIGHBALL COUNTRY, 1890S"
-  },
-  {
-   "key": "data.recipe.whiskey_smash.lore",
-   "text": "把銀杯換成檸檬、動作也變快了的茱莉普。",
-   "src": "A julep that traded the silver cup for lemon and got quicker about it."
-  },
-  {
-   "key": "data.recipe.whiskey_smash.name",
-   "text": "威士忌斯馬許",
-   "src": "Whiskey Smash"
-  },
-  {
-   "key": "data.recipe.whiskey_smash.origin",
-   "text": "茱莉普的城市表親，1880 年代",
-   "src": "THE JULEP'S CITY COUSIN, 1880S"
-  },
-  {
-   "key": "data.recipe.whiskey_sour.lore",
-   "text": "讓波本變得有禮貌的酸酒。骨架可不是選配。",
-   "src": "The sour that made bourbon polite. The backbone is not optional."
-  },
-  {
-   "key": "data.recipe.whiskey_sour.name",
-   "text": "威士忌酸酒",
-   "src": "Whiskey Sour"
-  },
-  {
-   "key": "data.recipe.whiskey_sour.origin",
-   "text": "蒸汽船時代，1860 年代",
-   "src": "THE STEAMSHIP ERA, 1860S"
-  },
-  {
-   "key": "data.recipe.white_lady.lore",
-   "text": "琴酒、橙皮酒、檸檬 — Harry MacElhone 的銀色雪克杯招牌。",
-   "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
-  },
-  {
-   "key": "data.recipe.white_lady.name",
-   "text": "白色佳人",
-   "src": "White Lady"
-  },
-  {
-   "key": "data.recipe.white_lady.origin",
-   "text": "倫敦，1920 年代",
-   "src": "LONDON, 1920S"
-  }
- ]
+  "strings": [
+    {
+      "key": "data.recipe.matador.name",
+      "text": "鬥牛士",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "世紀中葉的酒譜書，1950 年代",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "薄荷茱莉普",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "肯塔基，1700 年代",
+      "src": "KENTUCKY, 1700S"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "薄荷壓碎，萊姆擠汁，蘭姆酒坐享其成。據說 Drake 的船員喝過它的草稿。",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "莫希托",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "哈瓦那，跟港口一樣老",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "一個伏特加業務員加上一批賣不掉的薑汁啤酒，發明了俄羅斯最美國的一杯酒。",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "莫斯科騾子",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "洛杉磯，1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "一瓶酒，不用雪克杯，沒什麼好爭的。給早就知道答案的人點的。",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "純飲",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "任何有酒架的地方",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Negroni 伯爵想要一杯更烈的美國佬。等比例，沒得商量。",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "尼格羅尼",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "佛羅倫斯，1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "糖、苦精、威士忌 — 「雞尾酒」這個詞就是為它造出來的。",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "古典雞尾酒",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "路易維爾，1880 年代",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "被紅石榴糖漿染紅臉頰的琴酒。禁酒令時期最體面的藉口。",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "粉紅佳人",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "紐約，1910 年代",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "尼格羅尼的龍舌蘭表親，在酒譜上印得小小的，很晚才被人愛上。",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "羅西塔",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "酒譜書，1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "一分酸、二分甜、三分烈、四分淡。比裝它的杯子還要古老。",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "蘭姆潘趣",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "加勒比群島，1600 年代",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "名字來自最早拿來攪它的那把工具。在某些港口，它被當成早餐。",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "螺絲起子",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "油田，1940 年代",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "美國海岸",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "巴黎，1920 年代",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "琴酒、萊姆和薄荷。黑幫喝的就是它；薄荷蓋住了浴缸私釀的味道。",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "南方",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "芝加哥，1920 年代",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "往南走的莫斯科騾子 — 龍舌蘭坐上了銅製馬鞍。",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "龍舌蘭騾子",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "邊境地帶",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "靴子沾滿塵土的酸酒公式。龍舌蘭回應了檸檬。",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "龍舌蘭酸酒",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "酸酒家族",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "紅石榴糖漿往下沉，柳橙汁浮上來，滾石合唱團還帶著它去巡迴。",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "龍舌蘭日出",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "索薩利托，1970 年代",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming 為 Bond 寫下這杯：琴酒、伏特加，還有一個他留不住的名字。",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "薇絲朋",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "《皇家夜總會》，1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "伏特加和能量飲料裝在同一杯 — 一杯同時上白班和夜班的酒。",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "通宵酒吧",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "酒吧能合法稱為「一杯酒」的最輕的東西。乾淨、冰涼、一下就沒了。",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "沒有特定的地方，1900 年代",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "把燈光調暗的琴酒酸酒。客人比較斯文，檸檬還是同一顆。",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "伏特加酸酒",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "酸酒家族",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "琴通寧比較安靜的手足 — 通寧水負責說話，伏特加負責幫忙拿外套。",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "戰後年間，1950 年代",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "本來在旁邊當追水的可樂放棄了，乾脆跳進波本的杯子裡。",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "威士忌可樂",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "公路旅店，1930 年代",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "用薑汁汽水拉長的波本 — 讓威士忌變成平日晚上也能點的高球。",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "高球之鄉，1890 年代",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "把銀杯換成檸檬、動作也變快了的茱莉普。",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "威士忌斯馬許",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "茱莉普的城市表親，1880 年代",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "讓波本變得有禮貌的酸酒。骨架可不是選配。",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "威士忌酸酒",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "蒸汽船時代，1860 年代",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "琴酒、橙皮酒、檸檬 — Harry MacElhone 的銀色雪克杯招牌。",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "白色佳人",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "倫敦，1920 年代",
+      "src": "LONDON, 1920S"
+    }
+  ]
 }

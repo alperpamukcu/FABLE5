@@ -1,85 +1,349 @@
 {
   "strings": [
-    {"key": "data.recipe.bahama_mama.lore", "text": "Ron sobre ron bajo la fruta. La sombrillita es estructural.", "src": "Rum stacked on rum under fruit. The umbrella is structural."},
-    {"key": "data.recipe.bahama_mama.name", "text": "Bahama Mama", "src": "Bahama Mama"},
-    {"key": "data.recipe.bahama_mama.origin", "text": "NASSAU, MEDIADOS DE SIGLO", "src": "NASSAU, MIDCENTURY"},
-    {"key": "data.recipe.black_russian.lore", "text": "Vodka sobre licor de café, inventado para un embajador con muchas horas oscuras por delante.", "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."},
-    {"key": "data.recipe.black_russian.name", "text": "Black Russian", "src": "Black Russian"},
-    {"key": "data.recipe.black_russian.origin", "text": "BRUSELAS, 1949", "src": "BRUSSELS, 1949"},
-    {"key": "data.recipe.boulevardier.lore", "text": "Un negroni que cambió la ginebra por bourbon y se mudó a París a escribir.", "src": "A negroni that swapped gin for bourbon and moved to Paris to write."},
-    {"key": "data.recipe.boulevardier.name", "text": "Boulevardier", "src": "Boulevardier"},
-    {"key": "data.recipe.boulevardier.origin", "text": "PARÍS, 1927", "src": "PARIS, 1927"},
-    {"key": "data.recipe.cape_codder.lore", "text": "Vodka y arándano, bautizado por los pantanos de donde sale la fruta. Los anuncios se escribieron solos.", "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."},
-    {"key": "data.recipe.cape_codder.name", "text": "Cape Codder", "src": "Cape Codder"},
-    {"key": "data.recipe.cape_codder.origin", "text": "NUEVA INGLATERRA, 1945", "src": "NEW ENGLAND, 1945"},
-    {"key": "data.recipe.cosmopolitan.lore", "text": "El rosa. El arándano mantiene honrado al vodka y fotogénica la copa.", "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."},
-    {"key": "data.recipe.cosmopolitan.name", "text": "Cosmopolitan", "src": "Cosmopolitan"},
-    {"key": "data.recipe.cosmopolitan.origin", "text": "SOUTH BEACH, AÑOS 80", "src": "SOUTH BEACH, 1980S"},
-    {"key": "data.recipe.cuba_libre.lore", "text": "Ron, cola y lima por una Cuba libre. La lima no es decoración: es la clave.", "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."},
-    {"key": "data.recipe.cuba_libre.name", "text": "Cuba Libre", "src": "Cuba Libre"},
-    {"key": "data.recipe.cuba_libre.origin", "text": "LA HABANA, 1900", "src": "HAVANA, 1900"},
-    {"key": "data.recipe.daiquiri.lore", "text": "Ron, lima y azúcar, agitado bien frío. Hemingway tenía cuenta abierta con él.", "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."},
-    {"key": "data.recipe.daiquiri.name", "text": "Daiquiri", "src": "Daiquiri"},
-    {"key": "data.recipe.daiquiri.origin", "text": "SANTIAGO DE CUBA, 1898", "src": "SANTIAGO DE CUBA, 1898"},
-    {"key": "data.recipe.dark_stormy.lore", "text": "Ron negro sobre ginger beer: una nube de tormenta en un vaso. Con el nombre hay abogados de por medio.", "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."},
-    {"key": "data.recipe.dark_stormy.name", "text": "Dark 'n' Stormy", "src": "Dark 'n' Stormy"},
-    {"key": "data.recipe.dark_stormy.origin", "text": "BERMUDAS, AÑOS 20", "src": "BERMUDA, 1920S"},
-    {"key": "data.recipe.dirty_martini.lore", "text": "Un martini con la opinión del bote de aceitunas. Salmuera donde antes había luz del día.", "src": "A martini with the olive jar's opinion. Brine where the daylight was."},
-    {"key": "data.recipe.dirty_martini.name", "text": "Dirty Martini", "src": "Dirty Martini"},
-    {"key": "data.recipe.dirty_martini.origin", "text": "NUEVA YORK, 1901", "src": "NEW YORK, 1901"},
-    {"key": "data.recipe.draught.lore", "text": "Inclina el vaso, deja hablar al barril, enderézalo para la espuma. La espuma es el oficio.", "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."},
-    {"key": "data.recipe.draught.name", "text": "Caña", "src": "Draught"},
-    {"key": "data.recipe.draught.origin", "text": "LA BODEGA, CADA NOCHE", "src": "THE CELLAR, EVERY NIGHT"},
-    {"key": "data.recipe.dry_martini.lore", "text": "Ginebra apenas molestada por el vermut, removida en frío. La vara con la que se mide a todos los bares.", "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."},
-    {"key": "data.recipe.dry_martini.name", "text": "Dry Martini", "src": "Dry Martini"},
-    {"key": "data.recipe.dry_martini.origin", "text": "NUEVA YORK, HACIA 1900", "src": "NEW YORK, 1900S"},
-    {"key": "data.recipe.el_presidente.lore", "text": "El estadista de Cuba: ron, vermut, curaçao y un susurro de granadina. Lleva su copa como quien ocupa un cargo.", "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."},
-    {"key": "data.recipe.el_presidente.name", "text": "El Presidente", "src": "El Presidente"},
-    {"key": "data.recipe.el_presidente.origin", "text": "LA HABANA, AÑOS 20", "src": "HAVANA, 1920S"},
-    {"key": "data.recipe.espresso_martini.lore", "text": "«Que me despierte y luego me desmadre.» Dick Bradsell se lo concedió con una coctelera.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."},
-    {"key": "data.recipe.espresso_martini.name", "text": "Espresso Martini", "src": "Espresso Martini"},
-    {"key": "data.recipe.espresso_martini.origin", "text": "LONDRES, 1983", "src": "LONDON, 1983"},
-    {"key": "data.recipe.gimlet.lore", "text": "Ginebra y cordial de lima, recetada primero contra el escorbuto y después contra el aburrimiento.", "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."},
-    {"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-    {"key": "data.recipe.gimlet.origin", "text": "LA ARMADA REAL, SIGLO XIX", "src": "THE ROYAL NAVY, 1800S"},
-    {"key": "data.recipe.gin_fizz.lore", "text": "Un gin sour con las puertas abiertas a la soda. Ramos agitaba el suyo doce minutos.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-    {"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-    {"key": "data.recipe.gin_fizz.origin", "text": "NUEVA ORLEANS, AÑOS 1880", "src": "NEW ORLEANS, 1880S"},
-    {"key": "data.recipe.gin_sour.lore", "text": "Destilado, limón y azúcar: la ecuación más antigua, la que hay detrás de medio libro.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-    {"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-    {"key": "data.recipe.gin_sour.origin", "text": "LA FAMILIA SOUR, AÑOS 1860", "src": "THE SOUR FAMILY, 1860S"},
-    {"key": "data.recipe.gin_tonic.lore", "text": "Quinina contra la malaria, ginebra contra la quinina. El accidente más útil del Imperio.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-    {"key": "data.recipe.gin_tonic.name", "text": "Gin Tonic", "src": "Gin & Tonic"},
-    {"key": "data.recipe.gin_tonic.origin", "text": "INDIA BRITÁNICA, AÑOS 1850", "src": "BRITISH INDIA, 1850S"},
-    {"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple seco y lima, sin supervivientes. El título de cóctel de la cultura del chupito.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-    {"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-    {"key": "data.recipe.kamikaze.origin", "text": "LOS BARES DEL PUERTO, AÑOS 70", "src": "THE PORT BARS, 1970S"},
-    {"key": "data.recipe.last_call.lore", "text": "La copa de la casa para el último cliente de la noche. El libro guarda la página; el bar, el motivo.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-    {"key": "data.recipe.last_call.name", "text": "Última Ronda", "src": "Last Call"},
-    {"key": "data.recipe.last_call.origin", "text": "ESTE BAR, ESTA NOCHE", "src": "THIS BAR, TONIGHT"},
-    {"key": "data.recipe.lemon_drop.lore", "text": "Vodka con traje de limón y borde de azúcar. Un postre con papeles de bebida.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-    {"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-    {"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, AÑOS 70", "src": "SAN FRANCISCO, 1970S"},
-    {"key": "data.recipe.long_island.lore", "text": "Cinco destilados que se ponen de acuerdo para hacerse pasar por té helado. Funciona exactamente una vez por noche.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-    {"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-    {"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-    {"key": "data.recipe.mai_tai.lore", "text": "Lo sirvió Trader Vic; alguien de Tahití dijo «maita'i»: de otro mundo.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-    {"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-    {"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-    {"key": "data.recipe.manhattan.lore", "text": "Whisky y vermut dulce, removidos. El cóctel que lleva el nombre de la ciudad en la solapa.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-    {"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-    {"key": "data.recipe.manhattan.origin", "text": "NUEVA YORK, AÑOS 1870", "src": "NEW YORK, 1870S"},
-    {"key": "data.recipe.margarita.lore", "text": "Tequila, naranja y lima tras un borde de sal. Nadie sabe quién; todos saben por qué.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-    {"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-    {"key": "data.recipe.margarita.origin", "text": "LA FRONTERA, AÑOS 40", "src": "THE BORDER, 1940S"},
-    {"key": "data.recipe.martinez.lore", "text": "El eslabón perdido entre el manhattan y el martini, mezclado con ginebra de la fiebre del oro.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-    {"key": "data.recipe.martinez.name", "text": "Martinez", "src": "Martinez"},
-    {"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, AÑOS 1880", "src": "SAN FRANCISCO, 1880S"},
-    {"key": "data.recipe.matador.lore", "text": "Tequila, piña y lima: la margarita en modo vacaciones.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-    {"key": "data.recipe.matador.name", "text": "Matador", "src": "Matador"},
-    {"key": "data.recipe.matador.origin", "text": "LOS RECETARIOS DE LOS AÑOS 50", "src": "THE MIDCENTURY BOOKS, 1950S"},
-    {"key": "data.recipe.mint_julep.lore", "text": "Bourbon entre hielo picado y hierbabuena. El día de la gran carrera se venden cien mil.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-    {"key": "data.recipe.mint_julep.name", "text": "Mint Julep", "src": "Mint Julep"},
-    {"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, SIGLO XVIII", "src": "KENTUCKY, 1700S"}
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Ron sobre ron bajo la fruta. La sombrillita es estructural.",
+      "src": "Rum stacked on rum under fruit. The umbrella is structural."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Bahama Mama",
+      "src": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "NASSAU, MEDIADOS DE SIGLO",
+      "src": "NASSAU, MIDCENTURY"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Vodka sobre licor de café, inventado para un embajador con muchas horas oscuras por delante.",
+      "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Black Russian",
+      "src": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "BRUSELAS, 1949",
+      "src": "BRUSSELS, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "Un negroni que cambió la ginebra por bourbon y se mudó a París a escribir.",
+      "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Boulevardier",
+      "src": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "PARÍS, 1927",
+      "src": "PARIS, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Vodka y arándano, bautizado por los pantanos de donde sale la fruta. Los anuncios se escribieron solos.",
+      "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Cape Codder",
+      "src": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "NUEVA INGLATERRA, 1945",
+      "src": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "El rosa. El arándano mantiene honrado al vodka y fotogénica la copa.",
+      "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Cosmopolitan",
+      "src": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "SOUTH BEACH, AÑOS 80",
+      "src": "SOUTH BEACH, 1980S"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Ron, cola y lima por una Cuba libre. La lima no es decoración: es la clave.",
+      "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Cuba Libre",
+      "src": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "LA HABANA, 1900",
+      "src": "HAVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Ron, lima y azúcar, agitado bien frío. Hemingway tenía cuenta abierta con él.",
+      "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Daiquiri",
+      "src": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "SANTIAGO DE CUBA, 1898",
+      "src": "SANTIAGO DE CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "BERMUDAS, AÑOS 20",
+      "src": "BERMUDA, 1920S"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "NUEVA YORK, 1901",
+      "src": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Inclina el vaso, deja hablar al barril, enderézalo para la espuma. La espuma es el oficio.",
+      "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Caña",
+      "src": "Draught"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "LA BODEGA, CADA NOCHE",
+      "src": "THE CELLAR, EVERY NIGHT"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Dry Martini",
+      "src": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "NUEVA YORK, HACIA 1900",
+      "src": "NEW YORK, 1900S"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "El estadista de Cuba: ron, vermut, curaçao y un susurro de granadina. Lleva su copa como quien ocupa un cargo.",
+      "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "El Presidente",
+      "src": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "LA HABANA, AÑOS 20",
+      "src": "HAVANA, 1920S"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Espresso Martini",
+      "src": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "LONDRES, 1983",
+      "src": "LONDON, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Ginebra y cordial de lima, recetada primero contra el escorbuto y después contra el aburrimiento.",
+      "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "LA ARMADA REAL, SIGLO XIX",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Un gin sour con las puertas abiertas a la soda. Ramos agitaba el suyo doce minutos.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NUEVA ORLEANS, AÑOS 1880",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Destilado, limón y azúcar: la ecuación más antigua, la que hay detrás de medio libro.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "LA FAMILIA SOUR, AÑOS 1860",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Quinina contra la malaria, ginebra contra la quinina. El accidente más útil del Imperio.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "INDIA BRITÁNICA, AÑOS 1850",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "LOS BARES DEL PUERTO, AÑOS 70",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "La copa de la casa para el último cliente de la noche. El libro guarda la página; el bar, el motivo.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Última Ronda",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "ESTE BAR, ESTA NOCHE",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Vodka con traje de limón y borde de azúcar. Un postre con papeles de bebida.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, AÑOS 70",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Cinco destilados que se ponen de acuerdo para hacerse pasar por té helado. Funciona exactamente una vez por noche.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Whisky y vermut dulce, removidos. El cóctel que lleva el nombre de la ciudad en la solapa.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NUEVA YORK, AÑOS 1870",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, naranja y lima tras un borde de sal. Nadie sabe quién; todos saben por qué.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "LA FRONTERA, AÑOS 40",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, AÑOS 1880",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "LOS RECETARIOS DE LOS AÑOS 50",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, SIGLO XVIII",
+      "src": "KENTUCKY, 1700S"
+    }
   ]
 }

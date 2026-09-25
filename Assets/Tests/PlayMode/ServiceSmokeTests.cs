@@ -644,7 +644,9 @@ namespace LastCall.PlayTests
 
             // THE MIXERS AISLE, which is the cheap one — every bottle in it is 2–4, so a bar
             // that has just paid its first night's rent can still afford the first thing it
-            // points at. That is the aisle this key was merged alongside (the soft drinks got
+            // points at. (An EMPTY night also bills a walk-out fee per drinker since 2026-09-23,
+            // which took a $20 purse to -$9; the purse is $50 now and DayPlanTests holds that the
+            // worst opening night still leaves a soda's worth.) That is the aisle this key was merged alongside (the soft drinks got
             // small and cheap the same day), so it is the right one to shop from.
             yield return ClickOn(Find("Tab2"));
             yield return new WaitForSecondsRealtime(0.4f);

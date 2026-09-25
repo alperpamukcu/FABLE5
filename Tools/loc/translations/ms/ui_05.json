@@ -1,162 +1,704 @@
-{"strings": [
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "TENTERA LAUT DIRAJA, 1800-AN", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Gin sour dengan pintu soda terbuka. Ramos goncang miliknya selama dua belas minit.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "NEW ORLEANS, 1880-AN", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Spirit, lemon, gula — persamaan tertua di sebalik separuh buku ini.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "KELUARGA SOUR, 1860-AN", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Kuinin melawan malaria, gin melawan kuinin. Kemalangan paling berguna sebuah empayar.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Gin & Tonic", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "INDIA BRITISH, 1850-AN", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, limau nipis, tiada yang terselamat. Diploma koktel budaya shot.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "BAR PELABUHAN, 1970-AN", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Tuangan istimewa untuk tetamu terakhir malam itu. Buku simpan halamannya; bar simpan sebabnya.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Pesanan Terakhir", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "BAR INI, MALAM INI", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Vodka dalam sut lemon berbibir gula. Pencuci mulut yang mendaftar sebagai minuman.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, 1970-AN", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Lima spirit bersepakat menyamar sebagai teh ais. Ia menjadi tepat sekali setiap malam.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic menuangnya; kawan dari Tahiti berkata 'maita'i' — luar biasa.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Wiski dan vermouth manis, dikacau. Koktel yang memakai tanda nama kota itu.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "NEW YORK, 1870-AN", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Tequila, oren dan limau nipis di sebalik bibir bergaram. Tiada siapa setuju siapa; semua setuju kenapa.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "SEMPADAN, 1940-AN", "src": "THE BORDER, 1940S"},
-{"key": "data.recipe.martinez.lore", "text": "Mata rantai yang hilang antara manhattan dan martini, dibancuh dengan gin zaman demam emas.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-{"key": "data.recipe.martinez.name", "text": "Martinez", "src": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, 1880-AN", "src": "SAN FRANCISCO, 1880S"},
-{"key": "data.recipe.matador.lore", "text": "Tequila, nanas, limau nipis — margarita versi bercuti.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-{"key": "data.recipe.matador.name", "text": "Matador", "src": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "BUKU PERTENGAHAN ABAD, 1950-AN", "src": "THE MIDCENTURY BOOKS, 1950S"},
-{"key": "data.recipe.mint_julep.lore", "text": "Bourbon menembusi ais hancur dan pudina. Hari perlumbaan kuda jual seratus ribu gelas.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-{"key": "data.recipe.mint_julep.name", "text": "Mint Julep", "src": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, 1700-AN", "src": "KENTUCKY, 1700S"},
-{"key": "data.recipe.mojito.lore", "text": "Pudina ditumbuk, limau diperah, rum diberi ganjaran. Kononnya kru Drake minum draf kasarnya.", "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."},
-{"key": "data.recipe.mojito.name", "text": "Mojito", "src": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "HAVANA, SETUA PELABUHANNYA", "src": "HAVANA, OLD AS THE HARBOUR"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Seorang jurujual vodka dan lambakan ginger beer mencipta minuman Rusia yang paling Amerika.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule", "src": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941", "src": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Satu botol, tanpa tin, tanpa perbalahan. Pesanan untuk orang yang sudah tahu jawapannya.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-{"key": "data.recipe.neat_pour.name", "text": "Tuangan Tulen", "src": "Neat Pour"},
-{"key": "data.recipe.neat_pour.origin", "text": "MANA-MANA TEMPAT YANG ADA RAK", "src": "ANYWHERE WITH A SHELF"},
-{"key": "data.recipe.negroni.lore", "text": "Count Negroni minta Americano yang lebih keras. Sama banyak, tiada tawar-menawar.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-{"key": "data.recipe.negroni.name", "text": "Negroni", "src": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "FLORENCE, 1919", "src": "FLORENCE, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Gula, bitters, wiski — minuman yang melahirkan perkataan 'koktel'.", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned", "src": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, 1880-AN", "src": "LOUISVILLE, 1880S"},
-{"key": "data.recipe.paloma.lore", "text": "Tequila dan soda limau gedang. Kegemaran sebenar Mexico; margarita cuma lebih terkenal.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-{"key": "data.recipe.paloma.name", "text": "Paloma", "src": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "MEXICO, 1950-AN", "src": "MEXICO, 1950S"},
-{"key": "data.recipe.pink_lady.lore", "text": "Gin yang tersipu dengan grenadin. Alibi paling terhormat zaman Larangan.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady", "src": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "NEW YORK, 1910-AN", "src": "NEW YORK, 1910S"},
-{"key": "data.recipe.rosita.lore", "text": "Sepupu tequila kepada negroni, dicetak kecil dan disayangi lewat.", "src": "The negroni's tequila cousin, printed small and loved late."},
-{"key": "data.recipe.rosita.name", "text": "Rosita", "src": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "BUKU-BUKU BAR, 1974", "src": "THE BAR BOOKS, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Satu masam, dua manis, tiga kuat, empat lemah. Lebih tua daripada gelas tempatnya.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-{"key": "data.recipe.rum_punch.name", "text": "Rum Punch", "src": "Rum Punch"},
-{"key": "data.recipe.rum_punch.origin", "text": "KEPULAUAN, 1600-AN", "src": "THE ISLANDS, 1600S"},
-{"key": "data.recipe.screwdriver.lore", "text": "Dinamakan sempena alat yang mula-mula mengacaunya. Sarapan di sesetengah pelabuhan.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-{"key": "data.recipe.screwdriver.name", "text": "Screwdriver", "src": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "LADANG MINYAK, 1940-AN", "src": "THE OIL FIELDS, 1940S"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Kranberi dan limau gedang membawa vodka bersiar di tepi pantai.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze", "src": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "PANTAI AMERIKA", "src": "THE AMERICAN COAST"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Pic, oren dan kranberi di atas vodka. Cuti musim bunga, dalam gelas.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach", "src": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "FLORIDA, 1980-AN", "src": "FLORIDA, 1980S"},
-{"key": "data.recipe.sidecar.lore", "text": "The Ritz mengakuinya, London mempertikaikannya. Versi kami guna bourbon dan tak minta maaf.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar", "src": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "PARIS, 1920-AN", "src": "PARIS, 1920S"},
-{"key": "data.recipe.southside.lore", "text": "Gin, limau nipis dan pudina. Geng itu meminumnya; pudina menyorokkan rasa arak tab mandi.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-{"key": "data.recipe.southside.name", "text": "Southside", "src": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "CHICAGO, 1920-AN", "src": "CHICAGO, 1920S"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Moscow mule yang pergi ke selatan — agave di atas pelana tembaga.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule", "src": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "KAWASAN SEMPADAN", "src": "THE BORDERLANDS"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Formula sour dengan debu di kasutnya. Agave menyahut lemon.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour", "src": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "KELUARGA SOUR", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Grenadin tenggelam, oren terapung, dan Rolling Stones membawanya ke jelajah.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise", "src": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, 1970-AN", "src": "SAUSALITO, 1970S"},
-{"key": "data.recipe.vesper.lore", "text": "Fleming menulisnya untuk Bond: gin, vodka, dan nama yang tak dapat disimpannya.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-{"key": "data.recipe.vesper.name", "text": "Vesper", "src": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953", "src": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Vodka dan minuman tenaga dalam satu gelas — minuman yang kerja syif siang dan syif malam serentak.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-{"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull", "src": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "BAR SEPANJANG MALAM", "src": "THE ALL-NIGHT BARS"},
-{"key": "data.recipe.vodka_soda.lore", "text": "Benda paling ringan yang sebuah bar boleh panggil minuman. Bersih, sejuk, habis.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-{"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda", "src": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "ENTAH DI MANA, 1900-AN", "src": "NOWHERE IN PARTICULAR, 1900S"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Gin sour dengan lampu dimalapkan. Orangnya lebih lembut, lemonnya sama.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-{"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour", "src": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "KELUARGA SOUR", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "Adik G&T yang lebih pendiam — tonik yang bercakap, vodka yang pegang kot.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tonic", "src": "Vodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "SELEPAS PERANG, 1950-AN", "src": "THE POSTWAR YEARS, 1950S"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon dengan kola pengiring yang mengalah lalu masuk ke dalam gelas.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Wiski & Kola", "src": "Whiskey & Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "KEDAI TEPI JALAN, 1930-AN", "src": "THE ROADHOUSES, 1930S"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Bourbon dipanjangkan dengan halia — highball yang jadikan wiski minuman hari biasa.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Wiski Halia", "src": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "NEGERI HIGHBALL, 1890-AN", "src": "HIGHBALL COUNTRY, 1890S"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Julep yang tukar cawan perak dengan lemon dan jadi lebih pantas.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash", "src": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "SEPUPU KOTA SI JULEP, 1880-AN", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Sour yang buat bourbon jadi sopan. Tulang belakangnya bukan pilihan.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour", "src": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "ERA KAPAL WAP, 1860-AN", "src": "THE STEAMSHIP ERA, 1860S"},
-{"key": "data.recipe.white_lady.lore", "text": "Gin, triple sec, lemon — resipi standard shaker perak Harry MacElhone.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady", "src": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "LONDON, 1920-AN", "src": "LONDON, 1920S"},
-{"key": "data.slot.beer_mat.place", "text": "Kaunter", "src": "The counter"},
-{"key": "data.slot.beer_mat.title", "text": "Alas titisan", "src": "Drip mat"},
-{"key": "data.slot.ceiling.place", "text": "Siling", "src": "The ceiling"},
-{"key": "data.slot.ceiling.title", "text": "Siling", "src": "Ceiling"},
-{"key": "data.slot.floor.place", "text": "Lantai", "src": "The floor"},
-{"key": "data.slot.floor.title", "text": "Lantai", "src": "Floor"},
-{"key": "data.slot.floor_rug.place", "text": "Lantai", "src": "The floor"},
-{"key": "data.slot.floor_rug.title", "text": "Ambal", "src": "Rug"},
-{"key": "data.slot.plant_left.place", "text": "Tepi tingkap", "src": "By the window"},
-{"key": "data.slot.plant_left.title", "text": "Pokok kiri", "src": "Left plant"},
-{"key": "data.slot.plant_right.place", "text": "Kaunter", "src": "The counter"},
-{"key": "data.slot.plant_right.title", "text": "Pokok kanan", "src": "Right plant"},
-{"key": "data.slot.prep_mat.place", "text": "Kaunter", "src": "The counter"},
-{"key": "data.slot.prep_mat.title", "text": "Alas snek", "src": "Snack mat"},
-{"key": "data.slot.shaker.place", "text": "Di tangan anda", "src": "In your hand"},
-{"key": "data.slot.shaker.title", "text": "Shaker", "src": "Shaker"},
-{"key": "data.slot.sink.place", "text": "Kaunter", "src": "The counter"},
-{"key": "data.slot.sink.title", "text": "Singki", "src": "Sink"},
-{"key": "data.slot.table_left.place", "text": "Lantai", "src": "The floor"},
-{"key": "data.slot.table_left.title", "text": "Meja kiri", "src": "Left table"},
-{"key": "data.slot.table_right.place", "text": "Lantai", "src": "The floor"},
-{"key": "data.slot.table_right.title", "text": "Meja kanan", "src": "Right table"},
-{"key": "data.slot.taps.place", "text": "Kaunter", "src": "The counter"},
-{"key": "data.slot.taps.title", "text": "Menara bir", "src": "Beer tower"},
-{"key": "data.slot.wall_center.place", "text": "Dinding belakang", "src": "The back wall"},
-{"key": "data.slot.wall_center.title", "text": "Gambar tengah", "src": "Centre picture"},
-{"key": "data.slot.wall_lamps.place", "text": "Dinding belakang", "src": "The back wall"},
-{"key": "data.slot.wall_lamps.title", "text": "Lampu dinding", "src": "Wall lamps"},
-{"key": "data.slot.wall_right.place", "text": "Dinding belakang", "src": "The back wall"},
-{"key": "data.slot.wall_right.title", "text": "Papan tanda neon", "src": "Neon sign"},
-{"key": "data.slot.wall_right_art.place", "text": "Dinding kanan", "src": "The right wall"},
-{"key": "data.slot.wall_right_art.title", "text": "Gambar atas skrin", "src": "Picture over the screen"},
-{"key": "data.slot.wall_tv.place", "text": "Dinding kanan", "src": "The right wall"},
-{"key": "data.slot.wall_tv.title", "text": "Skrin & poster", "src": "Screen & posters"},
-{"key": "data.slot.walls.place", "text": "Dinding belakang", "src": "The back wall"},
-{"key": "data.slot.walls.title", "text": "Dinding belakang", "src": "Back wall"},
-{"key": "data.slot.walls_right.place", "text": "Dinding kanan", "src": "The right wall"},
-{"key": "data.slot.walls_right.title", "text": "Dinding kanan", "src": "Right wall"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "TENTERA LAUT DIRAJA, 1800-AN",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Gin sour dengan pintu soda terbuka. Ramos goncang miliknya selama dua belas minit.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NEW ORLEANS, 1880-AN",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Spirit, lemon, gula — persamaan tertua di sebalik separuh buku ini.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "KELUARGA SOUR, 1860-AN",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Kuinin melawan malaria, gin melawan kuinin. Kemalangan paling berguna sebuah empayar.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin & Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "INDIA BRITISH, 1850-AN",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "BAR PELABUHAN, 1970-AN",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Tuangan istimewa untuk tetamu terakhir malam itu. Buku simpan halamannya; bar simpan sebabnya.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Pesanan Terakhir",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "BAR INI, MALAM INI",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Vodka dalam sut lemon berbibir gula. Pencuci mulut yang mendaftar sebagai minuman.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, 1970-AN",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Lima spirit bersepakat menyamar sebagai teh ais. Ia menjadi tepat sekali setiap malam.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Wiski dan vermouth manis, dikacau. Koktel yang memakai tanda nama kota itu.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, 1870-AN",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, oren dan limau nipis di sebalik bibir bergaram. Tiada siapa setuju siapa; semua setuju kenapa.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "SEMPADAN, 1940-AN",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, 1880-AN",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "BUKU PERTENGAHAN ABAD, 1950-AN",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, 1700-AN",
+      "src": "KENTUCKY, 1700S"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Pudina ditumbuk, limau diperah, rum diberi ganjaran. Kononnya kru Drake minum draf kasarnya.",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANA, SETUA PELABUHANNYA",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Seorang jurujual vodka dan lambakan ginger beer mencipta minuman Rusia yang paling Amerika.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Satu botol, tanpa tin, tanpa perbalahan. Pesanan untuk orang yang sudah tahu jawapannya.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Tuangan Tulen",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "MANA-MANA TEMPAT YANG ADA RAK",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Count Negroni minta Americano yang lebih keras. Sama banyak, tiada tawar-menawar.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FLORENCE, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Gula, bitters, wiski — minuman yang melahirkan perkataan 'koktel'.",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, 1880-AN",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Gin yang tersipu dengan grenadin. Alibi paling terhormat zaman Larangan.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NEW YORK, 1910-AN",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Sepupu tequila kepada negroni, dicetak kecil dan disayangi lewat.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "BUKU-BUKU BAR, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Satu masam, dua manis, tiga kuat, empat lemah. Lebih tua daripada gelas tempatnya.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rum Punch",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "KEPULAUAN, 1600-AN",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Dinamakan sempena alat yang mula-mula mengacaunya. Sarapan di sesetengah pelabuhan.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "LADANG MINYAK, 1940-AN",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "PANTAI AMERIKA",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PARIS, 1920-AN",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, limau nipis dan pudina. Geng itu meminumnya; pudina menyorokkan rasa arak tab mandi.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, 1920-AN",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Moscow mule yang pergi ke selatan — agave di atas pelana tembaga.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "KAWASAN SEMPADAN",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Formula sour dengan debu di kasutnya. Agave menyahut lemon.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "KELUARGA SOUR",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Grenadin tenggelam, oren terapung, dan Rolling Stones membawanya ke jelajah.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, 1970-AN",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming menulisnya untuk Bond: gin, vodka, dan nama yang tak dapat disimpannya.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Vodka dan minuman tenaga dalam satu gelas — minuman yang kerja syif siang dan syif malam serentak.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "BAR SEPANJANG MALAM",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "Benda paling ringan yang sebuah bar boleh panggil minuman. Bersih, sejuk, habis.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "ENTAH DI MANA, 1900-AN",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Gin sour dengan lampu dimalapkan. Orangnya lebih lembut, lemonnya sama.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "KELUARGA SOUR",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "Adik G&T yang lebih pendiam — tonik yang bercakap, vodka yang pegang kot.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "SELEPAS PERANG, 1950-AN",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon dengan kola pengiring yang mengalah lalu masuk ke dalam gelas.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Wiski & Kola",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "KEDAI TEPI JALAN, 1930-AN",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Bourbon dipanjangkan dengan halia — highball yang jadikan wiski minuman hari biasa.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "NEGERI HIGHBALL, 1890-AN",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Julep yang tukar cawan perak dengan lemon dan jadi lebih pantas.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "SEPUPU KOTA SI JULEP, 1880-AN",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Sour yang buat bourbon jadi sopan. Tulang belakangnya bukan pilihan.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "ERA KAPAL WAP, 1860-AN",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, triple sec, lemon — resipi standard shaker perak Harry MacElhone.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDON, 1920-AN",
+      "src": "LONDON, 1920S"
+    },
+    {
+      "key": "data.slot.beer_mat.place",
+      "text": "Kaunter",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.beer_mat.title",
+      "text": "Alas titisan",
+      "src": "Drip mat"
+    },
+    {
+      "key": "data.slot.ceiling.place",
+      "text": "Siling",
+      "src": "The ceiling"
+    },
+    {
+      "key": "data.slot.ceiling.title",
+      "text": "Siling",
+      "src": "Ceiling"
+    },
+    {
+      "key": "data.slot.floor.place",
+      "text": "Lantai",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor.title",
+      "text": "Lantai",
+      "src": "Floor"
+    },
+    {
+      "key": "data.slot.floor_rug.place",
+      "text": "Lantai",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor_rug.title",
+      "text": "Ambal",
+      "src": "Rug"
+    },
+    {
+      "key": "data.slot.plant_left.place",
+      "text": "Tepi tingkap",
+      "src": "By the window"
+    },
+    {
+      "key": "data.slot.plant_left.title",
+      "text": "Pokok kiri",
+      "src": "Left plant"
+    },
+    {
+      "key": "data.slot.plant_right.place",
+      "text": "Kaunter",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.plant_right.title",
+      "text": "Pokok kanan",
+      "src": "Right plant"
+    },
+    {
+      "key": "data.slot.prep_mat.place",
+      "text": "Kaunter",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.prep_mat.title",
+      "text": "Alas snek",
+      "src": "Snack mat"
+    },
+    {
+      "key": "data.slot.shaker.place",
+      "text": "Di tangan anda",
+      "src": "In your hand"
+    },
+    {
+      "key": "data.slot.shaker.title",
+      "text": "Shaker",
+      "src": "Shaker"
+    },
+    {
+      "key": "data.slot.sink.place",
+      "text": "Kaunter",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.sink.title",
+      "text": "Singki",
+      "src": "Sink"
+    },
+    {
+      "key": "data.slot.table_left.place",
+      "text": "Lantai",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_left.title",
+      "text": "Meja kiri",
+      "src": "Left table"
+    },
+    {
+      "key": "data.slot.table_right.place",
+      "text": "Lantai",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_right.title",
+      "text": "Meja kanan",
+      "src": "Right table"
+    },
+    {
+      "key": "data.slot.taps.place",
+      "text": "Kaunter",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.taps.title",
+      "text": "Menara bir",
+      "src": "Beer tower"
+    },
+    {
+      "key": "data.slot.wall_center.place",
+      "text": "Dinding belakang",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_center.title",
+      "text": "Gambar tengah",
+      "src": "Centre picture"
+    },
+    {
+      "key": "data.slot.wall_lamps.place",
+      "text": "Dinding belakang",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_lamps.title",
+      "text": "Lampu dinding",
+      "src": "Wall lamps"
+    },
+    {
+      "key": "data.slot.wall_right.place",
+      "text": "Dinding belakang",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_right.title",
+      "text": "Papan tanda neon",
+      "src": "Neon sign"
+    },
+    {
+      "key": "data.slot.wall_right_art.place",
+      "text": "Dinding kanan",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_right_art.title",
+      "text": "Gambar atas skrin",
+      "src": "Picture over the screen"
+    },
+    {
+      "key": "data.slot.wall_tv.place",
+      "text": "Dinding kanan",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_tv.title",
+      "text": "Skrin & poster",
+      "src": "Screen & posters"
+    },
+    {
+      "key": "data.slot.walls.place",
+      "text": "Dinding belakang",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.walls.title",
+      "text": "Dinding belakang",
+      "src": "Back wall"
+    },
+    {
+      "key": "data.slot.walls_right.place",
+      "text": "Dinding kanan",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.walls_right.title",
+      "text": "Dinding kanan",
+      "src": "Right wall"
+    }
+  ]
+}

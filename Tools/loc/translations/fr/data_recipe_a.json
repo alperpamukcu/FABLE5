@@ -1,79 +1,344 @@
-{"strings": [
-{"key": "data.glass.coupe.name", "text": "Coupe", "src": "Coupe"},
-{"key": "data.glass.highball.name", "text": "Highball", "src": "Highball"},
-{"key": "data.glass.martini.name", "text": "Martini", "src": "Martini"},
-{"key": "data.glass.pint.name", "text": "Pinte", "src": "Pint"},
-{"key": "data.glass.rocks.name", "text": "Tumbler", "src": "Rocks"},
-{"key": "data.recipe.bahama_mama.lore", "text": "Du rhum sur du rhum sous les fruits. L'ombrelle fait partie de la structure.", "src": "Rum stacked on rum under fruit. The umbrella is structural."},
-{"key": "data.recipe.bahama_mama.name", "text": "Bahama Mama", "src": "Bahama Mama"},
-{"key": "data.recipe.bahama_mama.origin", "text": "NASSAU, MILIEU DU SIÈCLE", "src": "NASSAU, MIDCENTURY"},
-{"key": "data.recipe.black_russian.lore", "text": "Vodka sur liqueur de café, inventé pour un ambassadeur qui avait des heures sombres à tenir.", "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."},
-{"key": "data.recipe.black_russian.name", "text": "Black Russian", "src": "Black Russian"},
-{"key": "data.recipe.black_russian.origin", "text": "BRUXELLES, 1949", "src": "BRUSSELS, 1949"},
-{"key": "data.recipe.boulevardier.lore", "text": "Un negroni qui a troqué le gin contre le bourbon et s'est installé à Paris pour écrire.", "src": "A negroni that swapped gin for bourbon and moved to Paris to write."},
-{"key": "data.recipe.boulevardier.name", "text": "Boulevardier", "src": "Boulevardier"},
-{"key": "data.recipe.boulevardier.origin", "text": "PARIS, 1927", "src": "PARIS, 1927"},
-{"key": "data.recipe.cape_codder.lore", "text": "Vodka et cranberry, baptisé d'après les tourbières qu'il vide. Les pubs se sont écrites toutes seules.", "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."},
-{"key": "data.recipe.cape_codder.name", "text": "Cape Codder", "src": "Cape Codder"},
-{"key": "data.recipe.cape_codder.origin", "text": "NOUVELLE-ANGLETERRE, 1945", "src": "NEW ENGLAND, 1945"},
-{"key": "data.recipe.cosmopolitan.lore", "text": "Le rose. La cranberry garde la vodka honnête et le verre photogénique.", "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."},
-{"key": "data.recipe.cosmopolitan.name", "text": "Cosmopolitan", "src": "Cosmopolitan"},
-{"key": "data.recipe.cosmopolitan.origin", "text": "SOUTH BEACH, ANNÉES 1980", "src": "SOUTH BEACH, 1980S"},
-{"key": "data.recipe.cuba_libre.lore", "text": "Rhum, cola et citron vert pour une Cuba libre. Le citron vert n'est pas une garniture : c'est tout l'intérêt.", "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."},
-{"key": "data.recipe.cuba_libre.name", "text": "Cuba Libre", "src": "Cuba Libre"},
-{"key": "data.recipe.cuba_libre.origin", "text": "LA HAVANE, 1900", "src": "HAVANA, 1900"},
-{"key": "data.recipe.daiquiri.lore", "text": "Rhum, citron vert, sucre, frappé bien froid. Hemingway y avait une ardoise ouverte.", "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."},
-{"key": "data.recipe.daiquiri.name", "text": "Daiquiri", "src": "Daiquiri"},
-{"key": "data.recipe.daiquiri.origin", "text": "SANTIAGO DE CUBA, 1898", "src": "SANTIAGO DE CUBA, 1898"},
-{"key": "data.recipe.dark_stormy.lore", "text": "Rhum ambré sur ginger beer — un nuage d'orage qui se boit. Le nom a ses avocats.", "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."},
-{"key": "data.recipe.dark_stormy.name", "text": "Dark 'n' Stormy", "src": "Dark 'n' Stormy"},
-{"key": "data.recipe.dark_stormy.origin", "text": "BERMUDES, ANNÉES 1920", "src": "BERMUDA, 1920S"},
-{"key": "data.recipe.dirty_martini.lore", "text": "Un martini qui a demandé l'avis du bocal d'olives. De la saumure là où il y avait la lumière du jour.", "src": "A martini with the olive jar's opinion. Brine where the daylight was."},
-{"key": "data.recipe.dirty_martini.name", "text": "Dirty Martini", "src": "Dirty Martini"},
-{"key": "data.recipe.dirty_martini.origin", "text": "NEW YORK, 1901", "src": "NEW YORK, 1901"},
-{"key": "data.recipe.draught.lore", "text": "Incline le verre, laisse parler le fût, redresse pour la mousse. La mousse, c'est tout l'art.", "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."},
-{"key": "data.recipe.draught.name", "text": "Pression", "src": "Draught"},
-{"key": "data.recipe.draught.origin", "text": "LA CAVE, CHAQUE SOIR", "src": "THE CELLAR, EVERY NIGHT"},
-{"key": "data.recipe.dry_martini.lore", "text": "Du gin à peine dérangé par le vermouth, remué bien froid. L'étalon auquel on mesure tous les bars.", "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."},
-{"key": "data.recipe.dry_martini.name", "text": "Dry Martini", "src": "Dry Martini"},
-{"key": "data.recipe.dry_martini.origin", "text": "NEW YORK, ANNÉES 1900", "src": "NEW YORK, 1900S"},
-{"key": "data.recipe.el_presidente.lore", "text": "L'homme d'État cubain : rhum, vermouth, curaçao et un soupçon de grenadine. Il porte sa coupe comme une écharpe officielle.", "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."},
-{"key": "data.recipe.el_presidente.name", "text": "El Presidente", "src": "El Presidente"},
-{"key": "data.recipe.el_presidente.origin", "text": "LA HAVANE, ANNÉES 1920", "src": "HAVANA, 1920S"},
-{"key": "data.recipe.espresso_martini.lore", "text": "« Réveille-moi, et puis secoue-moi. » Dick Bradsell s'est exécuté, shaker en main.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."},
-{"key": "data.recipe.espresso_martini.name", "text": "Espresso Martini", "src": "Espresso Martini"},
-{"key": "data.recipe.espresso_martini.origin", "text": "LONDRES, 1983", "src": "LONDON, 1983"},
-{"key": "data.recipe.gimlet.lore", "text": "Gin et cordial de citron vert, d'abord contre le scorbut, puis contre l'ennui.", "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."},
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "LA ROYAL NAVY, ANNÉES 1800", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Un gin sour qui ouvre grand les portes au soda. Ramos secouait le sien douze minutes.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "LA NOUVELLE-ORLÉANS, ANNÉES 1880", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Alcool, citron, sucre — la plus vieille équation derrière la moitié de ce livre.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "LA FAMILLE DES SOURS, ANNÉES 1860", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "La quinine contre le paludisme, le gin contre la quinine. L'accident le plus utile de l'Empire.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Gin Tonic", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "INDE BRITANNIQUE, ANNÉES 1850", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, citron vert, aucun survivant. Le diplôme cocktail de la culture des shots.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "LES BARS DU PORT, ANNÉES 1970", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Le service maison pour le dernier client de la soirée. Le livre garde la page, le bar garde la raison.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Dernière Tournée", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "CE BAR, CE SOIR", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "De la vodka dans un costume de citron givré au sucre. Un dessert qui a rempli les papiers pour passer boisson.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, ANNÉES 1970", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Cinq alcools d'accord pour se faire passer pour du thé glacé. Ça marche exactement une fois par soirée.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic l'a servi, et un ami tahitien a dit « maita'i » — pas de ce monde.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Whisky et vermouth rouge, remués. Le cocktail qui porte le badge de la ville.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "NEW YORK, ANNÉES 1870", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Tequila, orange et citron vert derrière un bord salé. Personne ne sait qui. Tout le monde sait pourquoi.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "LA FRONTIÈRE, ANNÉES 1940", "src": "THE BORDER, 1940S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.glass.coupe.name",
+      "text": "Coupe",
+      "src": "Coupe"
+    },
+    {
+      "key": "data.glass.highball.name",
+      "text": "Highball",
+      "src": "Highball"
+    },
+    {
+      "key": "data.glass.martini.name",
+      "text": "Martini",
+      "src": "Martini"
+    },
+    {
+      "key": "data.glass.pint.name",
+      "text": "Pinte",
+      "src": "Pint"
+    },
+    {
+      "key": "data.glass.rocks.name",
+      "text": "Tumbler",
+      "src": "Rocks"
+    },
+    {
+      "key": "data.recipe.bahama_mama.lore",
+      "text": "Du rhum sur du rhum sous les fruits. L'ombrelle fait partie de la structure.",
+      "src": "Rum stacked on rum under fruit. The umbrella is structural."
+    },
+    {
+      "key": "data.recipe.bahama_mama.name",
+      "text": "Bahama Mama",
+      "src": "Bahama Mama"
+    },
+    {
+      "key": "data.recipe.bahama_mama.origin",
+      "text": "NASSAU, MILIEU DU SIÈCLE",
+      "src": "NASSAU, MIDCENTURY"
+    },
+    {
+      "key": "data.recipe.black_russian.lore",
+      "text": "Vodka sur liqueur de café, inventé pour un ambassadeur qui avait des heures sombres à tenir.",
+      "src": "Vodka over coffee liqueur, invented for an ambassador with dark hours to keep."
+    },
+    {
+      "key": "data.recipe.black_russian.name",
+      "text": "Black Russian",
+      "src": "Black Russian"
+    },
+    {
+      "key": "data.recipe.black_russian.origin",
+      "text": "BRUXELLES, 1949",
+      "src": "BRUSSELS, 1949"
+    },
+    {
+      "key": "data.recipe.boulevardier.lore",
+      "text": "Un negroni qui a troqué le gin contre le bourbon et s'est installé à Paris pour écrire.",
+      "src": "A negroni that swapped gin for bourbon and moved to Paris to write."
+    },
+    {
+      "key": "data.recipe.boulevardier.name",
+      "text": "Boulevardier",
+      "src": "Boulevardier"
+    },
+    {
+      "key": "data.recipe.boulevardier.origin",
+      "text": "PARIS, 1927",
+      "src": "PARIS, 1927"
+    },
+    {
+      "key": "data.recipe.cape_codder.lore",
+      "text": "Vodka et cranberry, baptisé d'après les tourbières qu'il vide. Les pubs se sont écrites toutes seules.",
+      "src": "Vodka and cranberry, named for the bogs it drains. The ads wrote themselves."
+    },
+    {
+      "key": "data.recipe.cape_codder.name",
+      "text": "Cape Codder",
+      "src": "Cape Codder"
+    },
+    {
+      "key": "data.recipe.cape_codder.origin",
+      "text": "NOUVELLE-ANGLETERRE, 1945",
+      "src": "NEW ENGLAND, 1945"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.lore",
+      "text": "Le rose. La cranberry garde la vodka honnête et le verre photogénique.",
+      "src": "The pink one. Cranberry keeps the vodka honest and the glass photogenic."
+    },
+    {
+      "key": "data.recipe.cosmopolitan.name",
+      "text": "Cosmopolitan",
+      "src": "Cosmopolitan"
+    },
+    {
+      "key": "data.recipe.cosmopolitan.origin",
+      "text": "SOUTH BEACH, ANNÉES 1980",
+      "src": "SOUTH BEACH, 1980S"
+    },
+    {
+      "key": "data.recipe.cuba_libre.lore",
+      "text": "Rhum, cola et citron vert pour une Cuba libre. Le citron vert n'est pas une garniture : c'est tout l'intérêt.",
+      "src": "Rum, cola and a lime for a free Cuba. The lime is not a garnish; it is the point."
+    },
+    {
+      "key": "data.recipe.cuba_libre.name",
+      "text": "Cuba Libre",
+      "src": "Cuba Libre"
+    },
+    {
+      "key": "data.recipe.cuba_libre.origin",
+      "text": "LA HAVANE, 1900",
+      "src": "HAVANA, 1900"
+    },
+    {
+      "key": "data.recipe.daiquiri.lore",
+      "text": "Rhum, citron vert, sucre, frappé bien froid. Hemingway y avait une ardoise ouverte.",
+      "src": "Rum, lime, sugar, shaken cold. Hemingway kept a tab open on it."
+    },
+    {
+      "key": "data.recipe.daiquiri.name",
+      "text": "Daiquiri",
+      "src": "Daiquiri"
+    },
+    {
+      "key": "data.recipe.daiquiri.origin",
+      "text": "SANTIAGO DE CUBA, 1898",
+      "src": "SANTIAGO DE CUBA, 1898"
+    },
+    {
+      "key": "data.recipe.dark_stormy.origin",
+      "text": "BERMUDES, ANNÉES 1920",
+      "src": "BERMUDA, 1920S"
+    },
+    {
+      "key": "data.recipe.dirty_martini.origin",
+      "text": "NEW YORK, 1901",
+      "src": "NEW YORK, 1901"
+    },
+    {
+      "key": "data.recipe.draught.lore",
+      "text": "Incline le verre, laisse parler le fût, redresse pour la mousse. La mousse, c'est tout l'art.",
+      "src": "Lean the glass, let the keg talk, straighten for the head. The head is the craft."
+    },
+    {
+      "key": "data.recipe.draught.name",
+      "text": "Pression",
+      "src": "Draught"
+    },
+    {
+      "key": "data.recipe.draught.origin",
+      "text": "LA CAVE, CHAQUE SOIR",
+      "src": "THE CELLAR, EVERY NIGHT"
+    },
+    {
+      "key": "data.recipe.dry_martini.name",
+      "text": "Dry Martini",
+      "src": "Dry Martini"
+    },
+    {
+      "key": "data.recipe.dry_martini.origin",
+      "text": "NEW YORK, ANNÉES 1900",
+      "src": "NEW YORK, 1900S"
+    },
+    {
+      "key": "data.recipe.el_presidente.lore",
+      "text": "L'homme d'État cubain : rhum, vermouth, curaçao et un soupçon de grenadine. Il porte sa coupe comme une écharpe officielle.",
+      "src": "Cuba's statesman: rum, vermouth, curaçao and a whisper of grenadine. Wears its coupe like office."
+    },
+    {
+      "key": "data.recipe.el_presidente.name",
+      "text": "El Presidente",
+      "src": "El Presidente"
+    },
+    {
+      "key": "data.recipe.el_presidente.origin",
+      "text": "LA HAVANE, ANNÉES 1920",
+      "src": "HAVANA, 1920S"
+    },
+    {
+      "key": "data.recipe.espresso_martini.name",
+      "text": "Espresso Martini",
+      "src": "Espresso Martini"
+    },
+    {
+      "key": "data.recipe.espresso_martini.origin",
+      "text": "LONDRES, 1983",
+      "src": "LONDON, 1983"
+    },
+    {
+      "key": "data.recipe.gimlet.lore",
+      "text": "Gin et cordial de citron vert, d'abord contre le scorbut, puis contre l'ennui.",
+      "src": "Gin and lime cordial, first dosed against scurvy, later against boredom."
+    },
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "LA ROYAL NAVY, ANNÉES 1800",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Un gin sour qui ouvre grand les portes au soda. Ramos secouait le sien douze minutes.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "LA NOUVELLE-ORLÉANS, ANNÉES 1880",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Alcool, citron, sucre — la plus vieille équation derrière la moitié de ce livre.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "LA FAMILLE DES SOURS, ANNÉES 1860",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "La quinine contre le paludisme, le gin contre la quinine. L'accident le plus utile de l'Empire.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "INDE BRITANNIQUE, ANNÉES 1850",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "LES BARS DU PORT, ANNÉES 1970",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Le service maison pour le dernier client de la soirée. Le livre garde la page, le bar garde la raison.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Dernière Tournée",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "CE BAR, CE SOIR",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "De la vodka dans un costume de citron givré au sucre. Un dessert qui a rempli les papiers pour passer boisson.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, ANNÉES 1970",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Cinq alcools d'accord pour se faire passer pour du thé glacé. Ça marche exactement une fois par soirée.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Whisky et vermouth rouge, remués. Le cocktail qui porte le badge de la ville.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, ANNÉES 1870",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, orange et citron vert derrière un bord salé. Personne ne sait qui. Tout le monde sait pourquoi.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "LA FRONTIÈRE, ANNÉES 1940",
+      "src": "THE BORDER, 1940S"
+    }
+  ]
+}

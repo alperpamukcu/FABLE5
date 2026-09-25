@@ -51,11 +51,12 @@
    "scoreAllMixCards": false,
    "locked": false,
    "glassId": "rocks",
-   "prepMethod": "Built"
+   "prepMethod": "Built",
+   "trait": "knocked_back"
   },
   {
    "id": "vodka_soda",
-   "name": "Vodka Soda",
+   "name": "Vodka & Soda",
    "rank": 2,
    "baseFlavor": 15,
    "baseMult": 2,
@@ -83,6 +84,9 @@
    "locked": false,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -132,6 +136,10 @@
    "locked": false,
    "prepMethod": "Shaken",
    "glassId": "rocks",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -177,9 +185,12 @@
    "allDistinctTypes": false,
    "allEqualFlavor": false,
    "scoreAllMixCards": false,
-   "locked": true,
+   "locked": false,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -220,9 +231,12 @@
    "allDistinctTypes": false,
    "allEqualFlavor": false,
    "scoreAllMixCards": false,
-   "locked": true,
+   "locked": false,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -266,6 +280,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "keeps_well",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -309,6 +327,10 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "trait": "no_place_to_hide",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -324,7 +346,7 @@
   },
   {
    "id": "vodka_bull",
-   "name": "Vodka Bull",
+   "name": "Night Shift",
    "rank": 7,
    "baseFlavor": 15,
    "baseMult": 2,
@@ -352,6 +374,9 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -401,6 +426,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "nursed",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -421,7 +450,7 @@
   },
   {
    "id": "whiskey_ginger",
-   "name": "Whiskey Ginger",
+   "name": "Whiskey & Ginger",
    "rank": 10,
    "baseFlavor": 20,
    "baseMult": 2,
@@ -449,6 +478,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "same_again",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -499,6 +532,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "same_again",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -554,6 +591,7 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "coupe",
+   "trait": "easy_to_learn",
    "ratios": [
     {
      "style": "gin",
@@ -575,7 +613,7 @@
   },
   {
    "id": "sex_on_beach",
-   "name": "Sex on the Beach",
+   "name": "Madras",
    "rank": 13,
    "baseFlavor": 25,
    "baseMult": 2,
@@ -603,6 +641,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "the_room_looks_up",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -657,6 +699,11 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "rocks",
+   "trait": "dies_warm",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -711,6 +758,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "wrecks_the_bar",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -765,6 +816,11 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "rocks",
+   "trait": "dies_warm",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -820,6 +876,7 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "coupe",
+   "trait": "easy_to_learn",
    "ratios": [
     {
      "style": "rum",
@@ -881,6 +938,11 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "highball",
+   "trait": "drink_it_hot",
+   "likes": [
+    "ice",
+    "sugar_rim"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -939,7 +1001,8 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Shaken",
-   "glassId": "rocks",
+   "glassId": "martini",
+   "trait": "knocked_back",
    "ratios": [
     {
      "style": "vodka",
@@ -993,7 +1056,12 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Shaken",
-   "glassId": "coupe",
+   "glassId": "rocks",
+   "garnish": "salt_rim",
+   "trait": "never_just_one",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -1049,6 +1117,10 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "martini",
+   "trait": "the_room_looks_up",
+   "likes": [
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -1074,7 +1146,7 @@
   },
   {
    "id": "sidecar",
-   "name": "Bourbon Sidecar",
+   "name": "Whiskey Sidecar",
    "rank": 20,
    "baseFlavor": 30,
    "baseMult": 3,
@@ -1108,6 +1180,10 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "coupe",
+   "trait": "reads_full",
+   "likes": [
+    "sugar_rim"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -1162,16 +1238,20 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "highball",
+   "trait": "nursed",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
-     "min": 0.35,
-     "max": 0.55
+     "min": 0.25,
+     "max": 0.4
     },
     {
      "style": "orange",
-     "min": 0.2,
-     "max": 0.4
+     "min": 0.3,
+     "max": 0.5
     },
     {
      "style": "lime",
@@ -1221,6 +1301,9 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "coupe",
+   "likes": [
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -1325,6 +1408,8 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "martini",
+   "garnish": "lemon_twist",
+   "trait": "no_place_to_hide",
    "ratios": [
     {
      "style": "gin",
@@ -1340,7 +1425,7 @@
   },
   {
    "id": "dirty_martini",
-   "name": "Dirty Martini",
+   "name": "Olive Martini",
    "rank": 14,
    "baseFlavor": 30,
    "baseMult": 3,
@@ -1369,6 +1454,7 @@
    "prepMethod": "Stirred",
    "glassId": "martini",
    "garnish": "olive",
+   "trait": "one_is_plenty",
    "ratios": [
     {
      "style": "gin",
@@ -1418,6 +1504,7 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "coupe",
+   "trait": "still_good_late",
    "ratios": [
     {
      "style": "bourbon",
@@ -1472,6 +1559,11 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "trait": "keeps_well",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -1526,6 +1618,11 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "trait": "keeps_well",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -1574,6 +1671,7 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "martini",
+   "trait": "drink_it_hot",
    "ratios": [
     {
      "style": "vodka",
@@ -1627,7 +1725,11 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Shaken",
-   "glassId": "highball",
+   "glassId": "rocks",
+   "trait": "holds_the_stool",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -1699,6 +1801,10 @@
    "prepMethod": "Built",
    "glassId": "highball",
    "garnish": "mint",
+   "trait": "wrecks_the_bar",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -1724,7 +1830,7 @@
   },
   {
    "id": "long_island",
-   "name": "Long Island",
+   "name": "Long Island Iced Tea",
    "rank": 28,
    "baseFlavor": 40,
    "baseMult": 4,
@@ -1758,47 +1864,51 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "highball",
+   "trait": "one_is_plenty",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
-     "min": 0.08,
-     "max": 0.18
+     "min": 0.06,
+     "max": 0.12
     },
     {
      "style": "gin",
-     "min": 0.08,
-     "max": 0.18
+     "min": 0.06,
+     "max": 0.12
     },
     {
      "style": "rum",
-     "min": 0.08,
-     "max": 0.18
+     "min": 0.06,
+     "max": 0.12
     },
     {
      "style": "tequila",
-     "min": 0.08,
-     "max": 0.18
+     "min": 0.06,
+     "max": 0.12
     },
     {
      "style": "triple_sec",
-     "min": 0.08,
-     "max": 0.18
+     "min": 0.06,
+     "max": 0.12
     },
     {
      "style": "lemon",
-     "min": 0.08,
-     "max": 0.2
+     "min": 0.07,
+     "max": 0.15
     },
     {
      "style": "cola",
-     "min": 0.15,
-     "max": 0.3
+     "min": 0.34,
+     "max": 0.52
     }
    ]
   },
   {
    "id": "vodka_tonic",
-   "name": "Vodka Tonic",
+   "name": "Vodka & Tonic",
    "rank": 8,
    "baseFlavor": 15,
    "baseMult": 2,
@@ -1826,6 +1936,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "made_by_feel",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -1869,6 +1983,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "never_just_one",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -1918,6 +2036,9 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -1938,7 +2059,7 @@
   },
   {
    "id": "paloma",
-   "name": "Paloma",
+   "name": "Ranch Water",
    "rank": 14,
    "baseFlavor": 20,
    "baseMult": 2,
@@ -1972,6 +2093,11 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "leaves_no_ring",
+   "likes": [
+    "ice",
+    "salt_rim"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -1992,7 +2118,7 @@
   },
   {
    "id": "dark_stormy",
-   "name": "Dark 'n' Stormy",
+   "name": "Black Squall",
    "rank": 14,
    "baseFlavor": 20,
    "baseMult": 2,
@@ -2026,6 +2152,10 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "trait": "pays_the_bill",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -2047,7 +2177,7 @@
   },
   {
    "id": "sea_breeze",
-   "name": "Sea Breeze",
+   "name": "Bay Breeze",
    "rank": 14,
    "baseFlavor": 25,
    "baseMult": 2,
@@ -2075,6 +2205,9 @@
    "locked": true,
    "prepMethod": "Built",
    "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "vodka",
@@ -2129,6 +2262,11 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "rocks",
+   "trait": "still_good_late",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -2177,7 +2315,10 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Shaken",
-   "glassId": "coupe",
+   "glassId": "highball",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -2225,8 +2366,12 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Stirred",
-   "glassId": "rocks",
+   "glassId": "highball",
    "garnish": "mint",
+   "trait": "nursed",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -2277,6 +2422,10 @@
    "prepMethod": "Shaken",
    "glassId": "rocks",
    "garnish": "mint",
+   "trait": "wrecks_the_bar",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -2331,6 +2480,8 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "martini",
+   "garnish": "sugar_rim",
+   "trait": "reads_full",
    "ratios": [
     {
      "style": "vodka",
@@ -2390,6 +2541,9 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "coupe",
+   "likes": [
+    "sugar_rim"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -2444,6 +2598,10 @@
    "locked": true,
    "prepMethod": "Shaken",
    "glassId": "highball",
+   "trait": "holds_the_stool",
+   "likes": [
+    "ice"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -2497,6 +2655,8 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "martini",
+   "garnish": "lemon_twist",
+   "trait": "leaves_no_ring",
    "ratios": [
     {
      "style": "gin",
@@ -2552,6 +2712,11 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "trait": "made_by_feel",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "bourbon",
@@ -2607,6 +2772,11 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "trait": "pays_the_bill",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "tequila",
@@ -2656,6 +2826,10 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "coupe",
+   "trait": "they_tip_for_this",
+   "likes": [
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "rum",
@@ -2709,7 +2883,11 @@
    "scoreAllMixCards": false,
    "locked": true,
    "prepMethod": "Stirred",
-   "glassId": "martini",
+   "glassId": "coupe",
+   "trait": "they_tip_for_this",
+   "likes": [
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "gin",
@@ -2760,6 +2938,10 @@
    "locked": true,
    "prepMethod": "Stirred",
    "glassId": "rocks",
+   "likes": [
+    "ice",
+    "lemon_twist"
+   ],
    "ratios": [
     {
      "style": "bourbon",

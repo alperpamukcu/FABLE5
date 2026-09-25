@@ -269,7 +269,8 @@ namespace LastCall.EditorTools
             sb.AppendLine();
             sb.AppendLine($"A bottle holds **{F(ShelfBottle.BottleCapacity)} glasses** and a keg holds "
                           + $"**{F(ShelfBottle.KegCapacity)}**. Refilling costs "
-                          + $"**${config.RefillPricePerCapacity} per glass of capacity**, plus "
+                          + $"**${config.RefillPricePerCapacity(1)}–${config.RefillPricePerCapacity(TycoonConfig.MaxStockTier)} "
+                          + "per glass of capacity, by the bottle's tier**, plus "
                           + $"**${config.StockPremiumPerTier} per tier above the well** — so what a");
             sb.AppendLine("bottle costs to *keep* is usually the number that matters, not what it cost");
             sb.AppendLine("to buy. `cost/pour` is that refill spread over the bottle.");
@@ -417,7 +418,7 @@ namespace LastCall.EditorTools
                 ? ShelfBottle.KegCapacity : ShelfBottle.BottleCapacity;
             int tier = card.Info?.Tier ?? 1;
             var config = new TycoonConfig();
-            return (int)System.Math.Ceiling(cap * config.RefillPricePerCapacity)
+            return (int)System.Math.Ceiling(cap * config.RefillPricePerCapacity(tier))
                    + config.StockPremiumPerTier * (tier - 1);
         }
 

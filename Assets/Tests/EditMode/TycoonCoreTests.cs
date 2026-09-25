@@ -56,14 +56,28 @@ namespace LastCall.Tests
         {
             // v5 P11: was 4 + rank. Halving the ladder is the point -- a correct-but-careless
             // serve used to earn nearly as much as a perfect one.
-            Assert.AreEqual(7, DrinkOrder.MenuPrice(Spritz(rank: 7)));
-            Assert.AreEqual(4, DrinkOrder.MenuPrice(Spritz(rank: 1)));
-            Assert.Less(DrinkOrder.MenuPrice(Spritz(rank: 7)), 4 + 7, "lower than the old shape");
+            //
+            // AND SINCE 2026-09-23 IT IS NOT A LADDER AT ALL but a band per rung crossed with the
+            // work (DrinkPricing): the opening menu is still the author's own three-to-six-dollar
+            // easy row, so what this test has always been about — the zero-star drinks are cheap
+            // and the tip is the earner — is asserted against the band it now comes from.
+            var band = DrinkPricing.BandOfRung(0, DrinkDifficulty.Easy);
+            int cheap = DrinkOrder.MenuPrice(Spritz(rank: 1));
+            int dearer = DrinkOrder.MenuPrice(Spritz(rank: 7));
+            Assert.GreaterOrEqual(cheap, band.Lo);
+            Assert.LessOrEqual(dearer, band.Hi);
+            Assert.Greater(dearer, cheap, "the later page in the rung is the dearer page in the rung");
+            Assert.Less(dearer, 4 + 7, "and the whole rung is still cheap: the tip is the earner");
         }
 
         [Test]
-        public void OrderRoll_DrawsFromTheLowestRanks_AndGrowsWithTheDay()
+        public void OrderRoll_NeverAsksForWhatCannotBeMade()
         {
+            // THE DAY-SCALED POOL IS GONE (2026-09-23). This test used to hold "day 1 is the four
+            // lowest ranks" — a cap that sat on TOP of the star gate, so everything a player bought
+            // to climb was unorderable for a fortnight (DayPlanTests holds the shape that replaced
+            // it). What survives is the rule that was never about the day: a page with no bands is
+            // a page nobody can pour, and nobody is ever asked for one.
             var recipes = Enumerable.Range(1, 10)
                 .Select(rank => BandRecipe($"r{rank}", rank,
                     new RatioRequirement(IngredientType.Spirit, 0.3, 0.7)))
@@ -76,9 +90,13 @@ namespace LastCall.Tests
             for (int i = 0; i < 40; i++)
             {
                 var order = DrinkOrder.Roll(recipes, day: 1, TycoonConfig.Default, rng);
-                Assert.LessOrEqual(order.Wanted.Rank, 4, "day 1 pool is the 4 lowest ranks");
                 Assert.AreNotEqual("unpourable", order.Wanted.Id, "you cannot order what cannot be made");
             }
+
+            var plan = DayPlan.Roll(recipes, day: 1, stars: 0.0, TycoonConfig.Default,
+                new RunRng("orders-test").GetStream("plan"));
+            CollectionAssert.DoesNotContain(plan.Queue.Select(r => r.Id).ToList(), "unpourable",
+                "and the night's plan does not put one on the list either");
         }
 
         // ── the service verdict (GDD 23 §4) ─────────────────────────────────────
@@ -419,7 +437,10 @@ namespace LastCall.Tests
 
             Assert.AreEqual(VisitState.StormedOff, visit.State);
             Assert.AreEqual(0, visit.Paid, "no payment for no drink");
-            Assert.AreEqual(0, visit.Satisfaction, 1e-9);
+            // JUST OVER NOTHING, not nothing (2026-09-22): a drink that never came is a bad night
+            // and it is paid for on the bill, not with the whole of the review. Zero is reserved
+            // for the customer who was refused a drink they were entitled to.
+            Assert.AreEqual(CustomerVisit.StormOffSatisfaction, visit.Satisfaction, 1e-9);
             Assert.Throws<InvalidOperationException>(
                 () => visit.Resolve(ServiceJudge.Judge(visit, OrderMatch.Exact, null)),
                 "you cannot serve someone who already left");

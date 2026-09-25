@@ -113,7 +113,12 @@ namespace LastCall.UI
             spec.BuffA = uses.Count > 0
                 ? new Buff(BuffKind.Use, UIText.N("market.bottle.menu_calls", uses.Count))
                 : new Buff(BuffKind.Bad, UIText.T("market.bottle.menu_calls_none"));
-            if (tier > 1)
+            // A BETTER SPIRIT SAYS WHAT IT EARNS (2026-09-23, the author: "Bufflar ... markette ürünlerde
+            // gözükmeli"): the price it adds to every drink it goes into, as a badge on the tile and the first row
+            // of the card - whose line carries the "joins the shelf" this used to print on its own.
+            var premium = StockPremiumBuff(card, onShelf);
+            if (premium != null) SetShopBuffs(spec, new List<ShopBuff>(1) { premium });
+            else if (tier > 1)
                 spec.BuffB = new Buff(BuffKind.Gain,
                     UIText.T("market.bottle.joins_shelf"));
             // WHAT SIZE IT COMES IN, said out loud for the one kind of bottle that is not
@@ -641,6 +646,9 @@ namespace LastCall.UI
             else y += 2f;
             _shopCardRule.anchoredPosition = new Vector2(10f, -(y + 4f));
             y += 10f;
+            // THE BUFFS FIRST (2026-09-23): what the thing does for the bar, one row each - the badge with its
+            // figure, the word, and whether it is working - before the description says anything else.
+            y += ShopBuffRows(ShopBuffsOf(spec), y);
             if (_cardBody.text.Length > 0) y += RowAt(_cardBody, y, 0f);
             if (_cardBuffA.text.Length > 0) y += BuffAt(_cardBuffA, _cardBuffAIcon, y);
             if (_cardBuffB.text.Length > 0) y += BuffAt(_cardBuffB, _cardBuffBIcon, y);
@@ -1175,6 +1183,20 @@ namespace LastCall.UI
                 StarRow(win, new Vector2(0, 0), new Vector2(6f, 6f), 14f,
                     spec.RungStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
 
+            // THE LEAD BUFF, ON THE PICTURE (2026-09-23, the author: "Bufflar kısa ve net bir şekilde küçük
+            // iconuyla markette ürünlerde gözükmeli"): the shared badge - its mark and its figure - in the
+            // window's top-left corner, the one corner nothing else on a recipe or a fitting tile ever uses (the
+            // art stands at least 42 below the top). A bottle's neck rises into that corner, so a bottle's badge
+            // is tucked three in and prints its figure short ("+4" beside a price tag; the card says "+$4").
+            var tileBuffs = sealedTile ? NoShopBuffs : ShopBuffsOf(spec);
+            var leadBuff = LeadOf(tileBuffs);
+            RectTransform leadBadge = leadBuff == null ? null
+                : ShopBadge(win, leadBuff, new Vector2(0, 1),
+                    spec.Card != null ? new Vector2(3f, -3f) : new Vector2(6f, -6f), onTile: true);
+            float leadRight = leadBadge != null ? leadBadge.anchoredPosition.x + leadBadge.sizeDelta.x : 0f;
+            // (The stool's comfort is NOT pipped here: its 96-unit icon stands on the window's foot and a pip in
+            // either lower corner would sit on the drawing. The reading card says it, as the fitting cards do.)
+
             // THE STATE IS A STAMP (2026-09-08): the mark and its word in the window's
             // top-right corner, where the old state row used to take a line of the foot.
             string stateWord = spec.StateWord ?? StateWordOf(state);
@@ -1188,7 +1210,21 @@ namespace LastCall.UI
                 stampText.text = stateWord;
                 float textW = stampText.preferredWidth;
                 float markW = markArt != null ? TileStateH + 4f : 0f;
-                Place(stamp, new Vector2(1, 1), new Vector2(markW + textW + 12f, 20f), new Vector2(-4f, -4f));
+                float stampW = markW + textW + 12f;
+                // A TILE THAT WEARS A BUFF KEEPS ITS STAMP'S MARK and lets the word go when the two would meet
+                // (2026-09-23): the word is said again by the amber frame and TAKE OUT (in the basket), by SOLD in
+                // the foot beside the van (ordered) and by NO SLOT (no fitting tonight). Measured, not assumed. Only those
+                // three: a HELD tile draws no foot word, so its stamp is the one place SHELF FULL is said.
+                bool saidElsewhere = state == TileState.Picked || state == TileState.Ordered
+                                  || state == TileState.NoFitting;
+                if (leadBadge != null && markArt != null && saidElsewhere
+                    && leadRight + 4f > (TileW - 8f) - 4f - stampW)
+                {
+                    stampText.enabled = false;
+                    textW = 0f;
+                    stampW = markW + 8f;
+                }
+                Place(stamp, new Vector2(1, 1), new Vector2(stampW, 20f), new Vector2(-4f, -4f));
                 var stampBg = stamp.gameObject.AddComponent<Image>();
                 stampBg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.82f);
                 stampBg.raycastTarget = false;

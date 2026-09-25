@@ -1,83 +1,339 @@
-{"strings": [
-{"key": "data.recipe.mojito.lore", "text": "Máta pomačkaná, limeta vymačkaná, rum odměněný. Drakeova posádka prý pila hrubý náčrt.", "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."},
-{"key": "data.recipe.mojito.name", "text": "Mojito", "src": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "HAVANA, STARÉ JAKO PŘÍSTAV", "src": "HAVANA, OLD AS THE HARBOUR"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Obchodník s vodkou a přebytek zázvorového piva vymysleli nejameričtější ruský drink.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule", "src": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941", "src": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Jedna lahev, žádný shaker, žádná debata. Objednávka pro lidi, kteří odpověď už znají.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-{"key": "data.recipe.neat_pour.name", "text": "Čistě nalité", "src": "Neat Pour"},
-{"key": "data.recipe.neat_pour.origin", "text": "KDEKOLI, KDE JE POLICE", "src": "ANYWHERE WITH A SHELF"},
-{"key": "data.recipe.negroni.lore", "text": "Hrabě Negroni chtěl silnější Americano. Stejné díly, bez vyjednávání.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-{"key": "data.recipe.negroni.name", "text": "Negroni", "src": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "FLORENCIE, 1919", "src": "FLORENCE, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Cukr, bitter, whiskey — drink, kvůli kterému vzniklo slovo „cocktail“.", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned", "src": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, 80. LÉTA 19. ST.", "src": "LOUISVILLE, 1880S"},
-{"key": "data.recipe.paloma.lore", "text": "Tequila a grepová limonáda. Skutečný mexický favorit; margarita má jen lepší tisk.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-{"key": "data.recipe.paloma.name", "text": "Paloma", "src": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "MEXIKO, 50. LÉTA", "src": "MEXICO, 1950S"},
-{"key": "data.recipe.pink_lady.lore", "text": "Gin, který se červená grenadinou. Nejctihodnější alibi prohibice.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady", "src": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "NEW YORK, 10. LÉTA", "src": "NEW YORK, 1910S"},
-{"key": "data.recipe.rosita.lore", "text": "Tequilová sestřenice negroni, tištěná drobným písmem a milovaná pozdě.", "src": "The negroni's tequila cousin, printed small and loved late."},
-{"key": "data.recipe.rosita.name", "text": "Rosita", "src": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "BAROVÉ KNIHY, 1974", "src": "THE BAR BOOKS, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Jeden díl kyselého, dva sladkého, tři silného, čtyři slabého. Starší než sklenice, ve které je.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-{"key": "data.recipe.rum_punch.name", "text": "Rumový punč", "src": "Rum Punch"},
-{"key": "data.recipe.rum_punch.origin", "text": "OSTROVY, 17. STOLETÍ", "src": "THE ISLANDS, 1600S"},
-{"key": "data.recipe.screwdriver.lore", "text": "Pojmenovaný po nástroji, kterým se poprvé míchal. V některých přístavech se podává k snídani.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-{"key": "data.recipe.screwdriver.name", "text": "Screwdriver", "src": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "ROPNÁ POLE, 40. LÉTA", "src": "THE OIL FIELDS, 1940S"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Brusinka a grep doprovázejí vodku po pobřeží.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze", "src": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "AMERICKÉ POBŘEŽÍ", "src": "THE AMERICAN COAST"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Broskev, pomeranč a brusinka na vodce. Jarní prázdniny přelité do karafy.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach", "src": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "FLORIDA, 80. LÉTA", "src": "FLORIDA, 1980S"},
-{"key": "data.recipe.sidecar.lore", "text": "Hlásí se k němu Ritz, Londýn to popírá. Ten náš jede na bourbon a neomlouvá se.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar", "src": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "PAŘÍŽ, 20. LÉTA", "src": "PARIS, 1920S"},
-{"key": "data.recipe.southside.lore", "text": "Gin, limeta a máta. Pila ho mafie; máta zakryla, že gin byl z vany.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-{"key": "data.recipe.southside.name", "text": "Southside", "src": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "CHICAGO, 20. LÉTA", "src": "CHICAGO, 1920S"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Moscow mule, který se vydal na jih — agáve v měděném sedle.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule", "src": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "POHRANIČÍ", "src": "THE BORDERLANDS"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Sourová rovnice s prachem na botách. Agáve odpovídá citronu.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour", "src": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "RODINA SOURŮ", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Grenadina klesá, pomeranč plave a Rolling Stones ho vzali na turné.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise", "src": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, 70. LÉTA", "src": "SAUSALITO, 1970S"},
-{"key": "data.recipe.vesper.lore", "text": "Fleming ho napsal pro Bonda: gin, vodka a jméno, které si nedokázal udržet.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-{"key": "data.recipe.vesper.name", "text": "Vesper", "src": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953", "src": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Vodka a energeťák v jedné sklenici — drink, který dělá denní i noční směnu naráz.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-{"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull", "src": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "NONSTOP BARY", "src": "THE ALL-NIGHT BARS"},
-{"key": "data.recipe.vodka_soda.lore", "text": "To nejlehčí, čemu bar může legálně říkat drink. Čisté, studené, pryč.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-{"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda", "src": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "NIKDE KONKRÉTNĚ, POČÁTEK 20. ST.", "src": "NOWHERE IN PARTICULAR, 1900S"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Gin sour se ztlumenými světly. Uhlazenější publikum, stejný citron.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-{"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour", "src": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "RODINA SOURŮ", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "Tišší sourozenec G&T — mluví tonik, vodka drží kabáty.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tonic", "src": "Vodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "POVÁLEČNÉ ROKY, 50. LÉTA", "src": "THE POSTWAR YEARS, 1950S"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon s kolou na zapití, která to vzdala a vlezla rovnou do sklenice.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Whiskey Cola", "src": "Whiskey & Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "SILNIČNÍ HOSPODY, 30. LÉTA", "src": "THE ROADHOUSES, 1930S"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Bourbon prodloužený zázvorem — highball, díky kterému se z whiskey stal drink na všední večer.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey Ginger", "src": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "ZEMĚ HIGHBALLŮ, 90. LÉTA 19. ST.", "src": "HIGHBALL COUNTRY, 1890S"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Julep, který vyměnil stříbrný pohár za citron a zrychlil.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash", "src": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "MĚSTSKÝ BRATRANEC JULEPU, 80. LÉTA 19. ST.", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Sour, který naučil bourbon slušnému chování. Páteř není volitelná.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour", "src": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "ÉRA PARNÍKŮ, 60. LÉTA 19. ST.", "src": "THE STEAMSHIP ERA, 1860S"},
-{"key": "data.recipe.white_lady.lore", "text": "Gin, triple sec, citron — standard ze stříbrného shakeru Harryho MacElhonea.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady", "src": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "LONDÝN, 20. LÉTA", "src": "LONDON, 1920S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Máta pomačkaná, limeta vymačkaná, rum odměněný. Drakeova posádka prý pila hrubý náčrt.",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANA, STARÉ JAKO PŘÍSTAV",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Obchodník s vodkou a přebytek zázvorového piva vymysleli nejameričtější ruský drink.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Jedna lahev, žádný shaker, žádná debata. Objednávka pro lidi, kteří odpověď už znají.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Čistě nalité",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "KDEKOLI, KDE JE POLICE",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Hrabě Negroni chtěl silnější Americano. Stejné díly, bez vyjednávání.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FLORENCIE, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Cukr, bitter, whiskey — drink, kvůli kterému vzniklo slovo „cocktail“.",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, 80. LÉTA 19. ST.",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Gin, který se červená grenadinou. Nejctihodnější alibi prohibice.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NEW YORK, 10. LÉTA",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Tequilová sestřenice negroni, tištěná drobným písmem a milovaná pozdě.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "BAROVÉ KNIHY, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Jeden díl kyselého, dva sladkého, tři silného, čtyři slabého. Starší než sklenice, ve které je.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rumový punč",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "OSTROVY, 17. STOLETÍ",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Pojmenovaný po nástroji, kterým se poprvé míchal. V některých přístavech se podává k snídani.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "ROPNÁ POLE, 40. LÉTA",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "AMERICKÉ POBŘEŽÍ",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PAŘÍŽ, 20. LÉTA",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, limeta a máta. Pila ho mafie; máta zakryla, že gin byl z vany.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, 20. LÉTA",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Moscow mule, který se vydal na jih — agáve v měděném sedle.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "POHRANIČÍ",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Sourová rovnice s prachem na botách. Agáve odpovídá citronu.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "RODINA SOURŮ",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Grenadina klesá, pomeranč plave a Rolling Stones ho vzali na turné.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, 70. LÉTA",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming ho napsal pro Bonda: gin, vodka a jméno, které si nedokázal udržet.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Vodka a energeťák v jedné sklenici — drink, který dělá denní i noční směnu naráz.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "NONSTOP BARY",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "To nejlehčí, čemu bar může legálně říkat drink. Čisté, studené, pryč.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "NIKDE KONKRÉTNĚ, POČÁTEK 20. ST.",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Gin sour se ztlumenými světly. Uhlazenější publikum, stejný citron.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "RODINA SOURŮ",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "Tišší sourozenec G&T — mluví tonik, vodka drží kabáty.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "POVÁLEČNÉ ROKY, 50. LÉTA",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon s kolou na zapití, která to vzdala a vlezla rovnou do sklenice.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whiskey Cola",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "SILNIČNÍ HOSPODY, 30. LÉTA",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Bourbon prodloužený zázvorem — highball, díky kterému se z whiskey stal drink na všední večer.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "ZEMĚ HIGHBALLŮ, 90. LÉTA 19. ST.",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Julep, který vyměnil stříbrný pohár za citron a zrychlil.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "MĚSTSKÝ BRATRANEC JULEPU, 80. LÉTA 19. ST.",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Sour, který naučil bourbon slušnému chování. Páteř není volitelná.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "ÉRA PARNÍKŮ, 60. LÉTA 19. ST.",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, triple sec, citron — standard ze stříbrného shakeru Harryho MacElhonea.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDÝN, 20. LÉTA",
+      "src": "LONDON, 1920S"
+    }
+  ]
+}

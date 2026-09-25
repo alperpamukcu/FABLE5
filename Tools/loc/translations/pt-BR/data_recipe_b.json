@@ -1,92 +1,296 @@
-{"strings": [
-{"key": "data.recipe.martinez.lore", "text": "O elo perdido entre o manhattan e o martini, feito com gin da corrida do ouro."},
-{"key": "data.recipe.martinez.name", "text": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, ANOS 1880"},
-{"key": "data.recipe.matador.lore", "text": "Tequila, abacaxi, limão — a margarita em versão férias."},
-{"key": "data.recipe.matador.name", "text": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "OS LIVROS DE BAR DOS ANOS 1950"},
-{"key": "data.recipe.mint_julep.lore", "text": "Bourbon com gelo picado e hortelã. O dia da corrida vende cem mil deles."},
-{"key": "data.recipe.mint_julep.name", "text": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, SÉC. XVIII"},
-{"key": "data.recipe.mojito.lore", "text": "Hortelã amassada, limão espremido, rum recompensado. Dizem que a tripulação de Drake bebeu o rascunho."},
-{"key": "data.recipe.mojito.name", "text": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "HAVANA, VELHO COMO O PORTO"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Um vendedor de vodka e um encalhe de ginger beer inventaram o drinque mais americano da Rússia."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Uma garrafa, nada de coqueteleira, nada de discussão. O pedido de quem já sabe a resposta."},
-{"key": "data.recipe.neat_pour.name", "text": "Dose Pura"},
-{"key": "data.recipe.neat_pour.origin", "text": "QUALQUER LUGAR COM PRATELEIRA"},
-{"key": "data.recipe.negroni.lore", "text": "O conde Negroni pediu um Americano mais forte. Partes iguais, sem negociação."},
-{"key": "data.recipe.negroni.name", "text": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "FLORENÇA, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Açúcar, bitter, whisky — o drinque para o qual a palavra 'coquetel' foi cunhada."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, ANOS 1880"},
-{"key": "data.recipe.paloma.lore", "text": "Tequila e refrigerante de grapefruit. O verdadeiro favorito do México; a margarita só tem melhor assessoria de imprensa."},
-{"key": "data.recipe.paloma.name", "text": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "MÉXICO, ANOS 1950"},
-{"key": "data.recipe.pink_lady.lore", "text": "Gin corado de granadina. O álibi mais respeitável da Lei Seca."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "NOVA YORK, ANOS 1910"},
-{"key": "data.recipe.rosita.lore", "text": "A prima tequileira do negroni, impressa em letra miúda e amada tarde da noite."},
-{"key": "data.recipe.rosita.name", "text": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "OS LIVROS DE BAR, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Um de azedo, dois de doce, três de forte, quatro de fraco. Mais velho que o copo em que está."},
-{"key": "data.recipe.rum_punch.name", "text": "Ponche de Rum"},
-{"key": "data.recipe.rum_punch.origin", "text": "AS ILHAS, SÉC. XVII"},
-{"key": "data.recipe.screwdriver.lore", "text": "Leva o nome da chave de fenda que o mexeu pela primeira vez. Café da manhã em alguns portos."},
-{"key": "data.recipe.screwdriver.name", "text": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "OS CAMPOS DE PETRÓLEO, ANOS 1940"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Cranberry e grapefruit levando a vodka para passear na orla."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "A COSTA AMERICANA"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Pêssego, laranja e cranberry sobre vodka. O spring break, decantado."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "FLÓRIDA, ANOS 1980"},
-{"key": "data.recipe.sidecar.lore", "text": "O Ritz reivindica, Londres contesta. O nosso vai de bourbon e não pede desculpas."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "PARIS, ANOS 1920"},
-{"key": "data.recipe.southside.lore", "text": "Gin, limão e hortelã. A máfia bebia; a hortelã disfarçava o gin de banheira."},
-{"key": "data.recipe.southside.name", "text": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "CHICAGO, ANOS 1920"},
-{"key": "data.recipe.tequila_mule.lore", "text": "O moscow mule que desceu para o sul — agave na sela de cobre."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "AS TERRAS DA FRONTEIRA"},
-{"key": "data.recipe.tequila_sour.lore", "text": "A fórmula sour com poeira nas botas. O agave responde ao limão-siciliano."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "A FAMÍLIA SOUR"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "A granadina afunda, a laranja flutua, e os Rolling Stones levaram o drinque em turnê."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, ANOS 1970"},
-{"key": "data.recipe.vesper.lore", "text": "Fleming o escreveu para Bond: gin, vodka e um nome que ele não conseguiu manter."},
-{"key": "data.recipe.vesper.name", "text": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Vodka e energético no mesmo copo — um drinque fazendo o turno do dia e o da noite ao mesmo tempo."},
-{"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "OS BARES QUE VARAM A NOITE"},
-{"key": "data.recipe.vodka_soda.lore", "text": "A coisa mais leve que um bar pode, legalmente, chamar de drinque. Limpo, gelado, foi."},
-{"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "LUGAR NENHUM EM ESPECIAL, ANOS 1900"},
-{"key": "data.recipe.vodka_sour.lore", "text": "O gin sour com as luzes baixas. Público mais suave, mesmo limão."},
-{"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "A FAMÍLIA SOUR"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "O irmão mais quieto do gin tônica — a tônica fala, a vodka segura os casacos."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tônica"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "O PÓS-GUERRA, ANOS 1950"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon com um chaser de cola que desistiu e entrou no copo."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Whisky com Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "OS BARES DE ESTRADA, ANOS 1930"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Bourbon esticado com ginger — o highball que fez do whisky um drinque de dia de semana."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Whisky Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "TERRA DO HIGHBALL, ANOS 1890"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Um julep que trocou a caneca de prata pelo limão-siciliano e ficou mais ligeiro."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whisky Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "O PRIMO URBANO DO JULEP, ANOS 1880"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "O sour que deixou o bourbon educado. A espinha dorsal não é opcional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whisky Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "A ERA DOS NAVIOS A VAPOR, ANOS 1860"},
-{"key": "data.recipe.white_lady.lore", "text": "Gin, triple sec, limão-siciliano — o clássico de coqueteleira prateada de Harry MacElhone."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "LONDRES, ANOS 1920"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, ANOS 1880"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "OS LIVROS DE BAR DOS ANOS 1950"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, SÉC. XVIII"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Hortelã amassada, limão espremido, rum recompensado. Dizem que a tripulação de Drake bebeu o rascunho."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANA, VELHO COMO O PORTO"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Um vendedor de vodka e um encalhe de ginger beer inventaram o drinque mais americano da Rússia."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Uma garrafa, nada de coqueteleira, nada de discussão. O pedido de quem já sabe a resposta."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Dose Pura"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "QUALQUER LUGAR COM PRATELEIRA"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "O conde Negroni pediu um Americano mais forte. Partes iguais, sem negociação."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FLORENÇA, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Açúcar, bitter, whisky — o drinque para o qual a palavra 'coquetel' foi cunhada."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, ANOS 1880"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Gin corado de granadina. O álibi mais respeitável da Lei Seca."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NOVA YORK, ANOS 1910"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "A prima tequileira do negroni, impressa em letra miúda e amada tarde da noite."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "OS LIVROS DE BAR, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Um de azedo, dois de doce, três de forte, quatro de fraco. Mais velho que o copo em que está."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Ponche de Rum"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "AS ILHAS, SÉC. XVII"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Leva o nome da chave de fenda que o mexeu pela primeira vez. Café da manhã em alguns portos."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "OS CAMPOS DE PETRÓLEO, ANOS 1940"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "A COSTA AMERICANA"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PARIS, ANOS 1920"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, limão e hortelã. A máfia bebia; a hortelã disfarçava o gin de banheira."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, ANOS 1920"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "O moscow mule que desceu para o sul — agave na sela de cobre."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "AS TERRAS DA FRONTEIRA"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "A fórmula sour com poeira nas botas. O agave responde ao limão-siciliano."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "A FAMÍLIA SOUR"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "A granadina afunda, a laranja flutua, e os Rolling Stones levaram o drinque em turnê."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, ANOS 1970"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming o escreveu para Bond: gin, vodka e um nome que ele não conseguiu manter."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Vodka e energético no mesmo copo — um drinque fazendo o turno do dia e o da noite ao mesmo tempo."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "OS BARES QUE VARAM A NOITE"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "A coisa mais leve que um bar pode, legalmente, chamar de drinque. Limpo, gelado, foi."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "LUGAR NENHUM EM ESPECIAL, ANOS 1900"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "O gin sour com as luzes baixas. Público mais suave, mesmo limão."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "A FAMÍLIA SOUR"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "O irmão mais quieto do gin tônica — a tônica fala, a vodka segura os casacos."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "O PÓS-GUERRA, ANOS 1950"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon com um chaser de cola que desistiu e entrou no copo."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whisky com Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "OS BARES DE ESTRADA, ANOS 1930"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Bourbon esticado com ginger — o highball que fez do whisky um drinque de dia de semana."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "TERRA DO HIGHBALL, ANOS 1890"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Um julep que trocou a caneca de prata pelo limão-siciliano e ficou mais ligeiro."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whisky Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "O PRIMO URBANO DO JULEP, ANOS 1880"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "O sour que deixou o bourbon educado. A espinha dorsal não é opcional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whisky Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "A ERA DOS NAVIOS A VAPOR, ANOS 1860"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, triple sec, limão-siciliano — o clássico de coqueteleira prateada de Harry MacElhone."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDRES, ANOS 1920"
+    }
+  ]
+}

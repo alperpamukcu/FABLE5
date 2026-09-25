@@ -337,9 +337,13 @@ namespace LastCall.Tests
                 new ShelfBottle(Bottle("vodka_a", "vodka", 1)),
                 new ShelfBottle(Bottle("gin_a", "gin", 1)),
             });
-            // Rich enough that no-income test days can still shop (purchases need cash).
+            // Rich enough that no-income test days can still shop (purchases need cash) — and
+            // since 2026-09-23 an unserved night is not free: everyone storms off and half of every
+            // drink they never got lands on the bill (TycoonConfig.WalkOutFeeShare). These tests
+            // are about what the MARKET offers, so the purse is scaffolding and is sized to outlast
+            // the night rather than to be interesting.
             return new TycoonRun(shelf, Recipes, new RunRng("MKT"),
-                config: new TycoonConfig(startingMoney: 100), brandCatalogue: catalogue);
+                config: new TycoonConfig(startingMoney: 900), brandCatalogue: catalogue);
         }
 
         /// <summary>Fast-forwards an unserved day: everyone storms off and the day closes.</summary>
@@ -444,7 +448,7 @@ namespace LastCall.Tests
         {
             var shelf = new Shelf(new[] { new ShelfBottle(Bottle("vodka_a", "vodka", 1)) });
             return new TycoonRun(shelf, Recipes, new RunRng("KEG"),
-                config: new TycoonConfig(startingMoney: 400),
+                config: new TycoonConfig(startingMoney: 1500),   // outlasts an unserved night's bill
                 brandCatalogue: new[]
                 {
                     Keg("beer_one", "lager", 1),

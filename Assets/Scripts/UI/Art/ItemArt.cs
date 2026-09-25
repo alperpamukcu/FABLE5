@@ -276,8 +276,12 @@ namespace LastCall.UI
             // market board as on the bar. (The flat v3 plates, the bot_{id} takes and the
             // v2 style bottles that used to stand behind this line were swept on
             // 2026-09-05 — every pourable card has its v4 sandwich, so nothing reached them.)
+            // LIFTED LIKE THE RAIL'S (2026-09-23, the author: "Garnishler hem menü görsellerinde
+            // hem de ana sahnede çok karanlık kalıyorlar"): the market board, the cellar's hover
+            // card and the day-end rows show the same brightened dish the counter does, so a
+            // bowl of olives is one picture wherever it is met. GarnishArt never writes the PNG.
             if (card.Type == LastCall.Core.IngredientType.Garnish)
-                return Load("counter_" + card.Info?.Style);
+                return GarnishArt.Lift(Load("counter_" + card.Info?.Style));
             return null;
         }
 

@@ -1,0 +1,30 @@
+{
+  "strings": [
+    {"key": "data.recipe.dark_stormy.lore", "text": "진저 비어 위에 다크 럼을 구름이 생길 때까지 붓는다. 날씨가 바뀌기 전에 마실 것.", "src": "Black rum poured over ginger beer until the cloud forms. Drink it before the weather turns."},
+    {"key": "data.recipe.dark_stormy.name", "text": "블랙 스콜", "src": "Black Squall"},
+    {"key": "data.recipe.dirty_martini.lore", "text": "저녁 식사가 딸려 나오는 마티니. 올리브 꼬치가 전부를 가르니 잊지 말 것.", "src": "A martini that came with supper. The spear is the whole difference, so do not forget it."},
+    {"key": "data.recipe.dirty_martini.name", "text": "올리브 마티니", "src": "Olive Martini"},
+    {"key": "data.recipe.dry_martini.lore", "text": "베르무트가 겨우 스친 진을 차갑게 스터링하고, 마지막에 레몬 트위스트. 모든 바를 재는 잣대.", "src": "Gin barely troubled by vermouth, stirred cold, finished with a twist. The measure all bars are taken by."},
+    {"key": "data.recipe.espresso_martini.lore", "text": "“잠 좀 깨워 주고, 그다음엔 정신 쏙 빼 줘.” 딕 브래드셀이 셰이커와 커피 병으로 답했다.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker and the coffee bottle."},
+    {"key": "data.recipe.kamikaze.lore", "text": "보드카, 트리플 섹, 라임, 생존자 없음. 샷이 아니라 칵테일이니 얼음 없이 잔에 담아 낸다.", "src": "Vodka, triple sec, lime, no survivors. Served up, because it is a cocktail and not a shot."},
+    {"key": "data.recipe.long_island.name", "text": "롱아일랜드 아이스티", "src": "Long Island Iced Tea"},
+    {"key": "data.recipe.mai_tai.lore", "text": "트레이더 빅은 잘게 부순 얼음 위에 그대로 따랐고, 과일은 섬이 얹었다. 우리 건 과일을 그대로 둔다.", "src": "Trader Vic poured it neat over crushed ice; the islands added the fruit. Ours keeps the fruit."},
+    {"key": "data.recipe.martinez.lore", "text": "골드러시 시절의 진과 레몬 트위스트로 섞은, 맨해튼과 마티니 사이의 잃어버린 고리.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin and a twist."},
+    {"key": "data.recipe.matador.lore", "text": "데킬라, 파인애플, 라임을 얼음 위에 길게. 휴가 간 마가리타.", "src": "Tequila, pineapple, lime, long over ice — the margarita on its holidays."},
+    {"key": "data.recipe.mint_julep.lore", "text": "꽉 채운 얼음과 민트 사이로 버번. 민트 가지가 꽂혀 설 만큼 높은 잔.", "src": "Bourbon through packed ice and mint, tall enough for the sprig to stand in."},
+    {"key": "data.recipe.paloma.lore", "text": "데킬라와 라임, 소다를 더위 속에서 긴 잔에. 세 가지, 이견 없음, 격식 없음.", "src": "Tequila, lime and soda, built tall in the heat. Three things, no argument, no ceremony."},
+    {"key": "data.recipe.paloma.name", "text": "랜치 워터", "src": "Ranch Water"},
+    {"key": "data.recipe.paloma.origin", "text": "서부 텍사스, 2010년대", "src": "WEST TEXAS, 2010S"},
+    {"key": "data.recipe.sea_breeze.lore", "text": "크랜베리와 파인애플이 보드카를 데리고 바닷가를 걷는다.", "src": "Cranberry and pineapple walking vodka down the shore."},
+    {"key": "data.recipe.sea_breeze.name", "text": "베이 브리즈", "src": "Bay Breeze"},
+    {"key": "data.recipe.sex_on_beach.lore", "text": "보드카 위에 크랜베리와 오렌지. 도시가 아니라 천에서 딴 이름인데, 아무도 신경 쓰지 않는다.", "src": "Vodka under cranberry and orange. Named for a cloth, not a city, and nobody minds."},
+    {"key": "data.recipe.sex_on_beach.name", "text": "마드라스", "src": "Madras"},
+    {"key": "data.recipe.sex_on_beach.origin", "text": "마드라스, 뉴잉글랜드를 거쳐, 1960년대", "src": "MADRAS, BY WAY OF NEW ENGLAND, 1960S"},
+    {"key": "data.recipe.sidecar.lore", "text": "리츠는 자기 것이라 하고, 런던은 아니라 한다. 우리 건 위스키로 만들고, 사과하지 않는다.", "src": "The Ritz claims it, London disputes it. Ours runs on whiskey and does not apologise."},
+    {"key": "data.recipe.sidecar.name", "text": "위스키 사이드카", "src": "Whiskey Sidecar"},
+    {"key": "data.recipe.vodka_bull.name", "text": "나이트 시프트", "src": "Night Shift"},
+    {"key": "data.recipe.vodka_soda.name", "text": "보드카 소다", "src": "Vodka & Soda"},
+    {"key": "data.recipe.vodka_tonic.name", "text": "보드카 토닉", "src": "Vodka & Tonic"},
+    {"key": "data.recipe.whiskey_ginger.name", "text": "위스키 진저", "src": "Whiskey & Ginger"}
+  ]
+}

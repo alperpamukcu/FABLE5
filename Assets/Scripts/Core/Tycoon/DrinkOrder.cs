@@ -40,14 +40,67 @@ namespace LastCall.Core
         /// <summary>The P16 redesign tried steeper ladders here (3+r, 3+0.75r) and measured
         /// both too rich once the floor bot could actually GROW the menu — the original curve
         /// was never the problem, the unplayable menu was. Rank 1 = $4, 7 = $7, 28 = $17.</summary>
-        public static int MenuPrice(RecipeDefinition recipe) => 3 + (recipe.Rank + 1) / 2;
+        /// <summary>
+        /// A CHARACTER IS WORTH A NOTCH OFF THE SHEET (2026-09-22, the author: "o kokteyller
+        /// hiçbir özelliği olmayanlardan bir tık daha uygun fiyatlı olabilir"). A buff is cheaper
+        /// by <see cref="TraitPriceShare"/> and a nerf dearer by it, applied LAST and in exactly
+        /// one place in the game, so nothing else has to know that characters exist.
+        ///
+        /// Stored as a share rather than a dollar so a future price curve keeps the notch
+        /// proportional instead of inheriting a literal. Across the live range ($8 at rank 9 to
+        /// $18 at rank 30) the rounding makes it exactly one dollar every time, which is a figure
+        /// the book can print and the player can hold in their head — biggest as a SHARE where the
+        /// drink is cheapest and the character weakest, smallest where the character is strongest.
+        /// </summary>
+        public const double TraitPriceShare = 0.07;
+
+        /// <summary>The sheet below which a character is free. Below it the ladder has no room — a
+        /// dollar off a $4 page is a quarter of the drink — and the opening menu is the fragile
+        /// part of the economy, so the whole zero-star book is priced exactly as it was. At 0.07
+        /// the integer rounding already lands the break here; the constant is written down so a
+        /// tuner raising the share cannot move it by accident.</summary>
+        public const int TraitPriceFloor = 8;
+
+        /// <summary>What the page is worth before its character moves it: its rung's band for its
+        /// kind of work (<see cref="DrinkPricing"/>, 2026-09-23). The menu prints this beside the
+        /// real price on a page that carries a character, so the trade reads as a trade.</summary>
+        public static int SheetPrice(RecipeDefinition recipe) => DrinkPricing.SheetPrice(recipe);
+
+        /// <summary>
+        /// THE TWO PAGES THE RANK TABLE CANNOT PRICE (2026-09-23). A pint and a neat pour carry no
+        /// authored bands, so <see cref="DrinkPricing.RungOf"/> reads them as rank-1 pages and
+        /// prices them at the bottom of the opening menu for ever — the keg would leave the economy
+        /// the moment the bar climbed off the ground. Their price rides the BAR's rung instead; every
+        /// caller that knows the standing passes it, and the ones that do not (a bench test, a page
+        /// drawn with no run behind it) get the ground-floor figure, which is what they had.
+        /// </summary>
+        public static int MenuPrice(RecipeDefinition recipe, double barStars)
+        {
+            if (DrinkPricing.IsHousePour(recipe))
+                return DrinkPricing.HousePourPrice(recipe, barStars);
+            return MenuPrice(recipe);
+        }
+
+        public static int MenuPrice(RecipeDefinition recipe)
+        {
+            int sheet = SheetPrice(recipe);
+            int sign = DrinkTraits.Of(recipe).PriceSign;
+            if (sign == 0 || sheet < TraitPriceFloor) return sheet;
+            return Math.Max(1, sheet + sign * (int)Math.Round(
+                sheet * TraitPriceShare, MidpointRounding.AwayFromZero));
+        }
 
         /// <summary>The garnishes a customer can ask for. Kept as the old name for callers.</summary>
         public static IReadOnlyList<PreparationDefinition> GarnishPool => ServingSpec.GarnishPool;
 
         /// <summary>
-        /// Rolls an order from the day-scaled pool (stream "orders"): the lowest-rank pourable
-        /// recipes on the bar's menu, the pool growing by one each day.
+        /// Rolls one order uniformly from everything the bar can pour. THE REAL RUN DOES NOT COME
+        /// THROUGH HERE ANY MORE (2026-09-23): a night's covers are cut as a whole by
+        /// <see cref="DayPlan"/>, because a uniform pick is how the same bar doing the same work
+        /// banked $40 one night and $95 the next. What is left here is the bench's roll — a fixture
+        /// that wants "an order, any order" without standing up a run — and the day-scaled pool went
+        /// with the rewrite: it capped the menu at the lowest-ranked <c>3 + day</c> pages, so
+        /// everything a player bought to climb was unorderable for a fortnight.
         /// </summary>
         public static DrinkOrder Roll(IReadOnlyList<RecipeDefinition> recipes, int day,
             TycoonConfig config, SeededRng rng, IReadOnlyList<PreparationDefinition> garnishes = null)
@@ -59,7 +112,6 @@ namespace LastCall.Core
                 .Where(r => r.RatioRequirements.Count > 0)
                 .Where(r => r.Garnish == null || garnishes == null || garnishes.Any(g => g.Id == r.Garnish))
                 .OrderBy(r => r.Rank)
-                .Take(config.OrderPoolSize(day))
                 .ToList();
             if (pool.Count == 0)
                 throw Said.With(new InvalidOperationException("No drinks you can pour yet."),

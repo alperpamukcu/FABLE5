@@ -34,6 +34,36 @@ namespace LastCall.UI
             public SpriteRenderer Sr;     // what the room lights
             public CanvasGroup Group;     // holds the canvas copy invisible while keeping its raycasts
             public bool OnCanvas;         // drawn on the HUD again for as long as its card stands over it
+            public SpriteRenderer Own;    // the unlit share of the picture, over Sr (null for most props)
+            public float OwnShare;        // its alpha: how much of the prop is its own colour
+        }
+
+        // A PROP KEEPS A SHARE OF ITS OWN COLOUR (2026-09-23, the author: "Garnishler hem menü görsellerinde hem de
+        // ana sahnede çok karanlık kalıyorlar"). Lit, a dish is the drawing times the room, and the counter's light is
+        // low and amber: the blue goes first, so the ice and the salt went tan and the mint went olive-drab. A second,
+        // UNLIT copy of the picture drawn over the lit one at alpha OwnShare gives, per pixel,
+        //     share * drawing + (1 - share) * room(drawing)
+        // so the room still makes most of it — warm under the pendants, pink at the neon, dimmer at the last call — and
+        // the prop can never fall below its share of itself. The room's light is clamped at 1 (the renderer's HDR
+        // emulation scale is 1), so the lit copy is never brighter than the drawing, and neither is the mix: it cannot
+        // glow. Clear pixels are clear in both copies, so the counter never shows through a dish ("katı olması
+        // gerekiyor", 2026-09-21, still holds). The book and the cloth take no share; only the dishes ask for one.
+        private static Material s_ownLight;
+
+        /// <summary>The one unlit material every prop's own share draws with, made once. The same two shaders
+        /// DiegeticStage already finds for the view through the window, so both are in the build.</summary>
+        private static Material OwnLightMaterial
+        {
+            get
+            {
+                if (s_ownLight == null)
+                {
+                    var sh = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                             ?? Shader.Find("Sprites/Default");
+                    if (sh != null) s_ownLight = new Material(sh) { name = "PropOwnLight" };
+                }
+                return s_ownLight;
+            }
         }
 
         private readonly List<LitProp> _litProps = new List<LitProp>();
@@ -59,9 +89,10 @@ namespace LastCall.UI
         /// <summary>
         /// Moves a counter prop's PICTURE into the room. The rect keeps everything it had; the image is held at
         /// nothing and mirrored by a stage sprite at <paramref name="order"/> (the stage's ledger: the bar is 30,
-        /// what stands on it 35, the cloth in front of it 36).
+        /// what stands on it 35, the cloth in front of it 36). <paramref name="ownLight"/> above 0 lays that share of
+        /// the prop's own, unlit colour over the lit picture (see OwnLightMaterial); 0 leaves it wholly the room's.
         /// </summary>
-        private void IntoTheRoom(string name, RectTransform rt, Image img, int order = 35)
+        private void IntoTheRoom(string name, RectTransform rt, Image img, int order = 35, float ownLight = 0f)
         {
             if (rt == null || img == null) return;
             var theStage = stage != null ? stage : FindFirstObjectByType<DiegeticStage>();
@@ -72,7 +103,21 @@ namespace LastCall.UI
             group.blocksRaycasts = true;                       // invisible, and still the thing the pointer is on
             group.interactable = true;
             var sr = theStage.NewStageSprite(name, order);
-            var prop = new LitProp { Rt = rt, Img = img, Sr = sr, Group = group };
+            SpriteRenderer own = null;
+            if (ownLight > 0f && OwnLightMaterial != null)
+            {
+                // A CHILD of the lit sprite, so its position, scale, turn and on/off (PropOnCanvas, StepLitProps) all
+                // follow for nothing. Same layer, same order, a hair nearer the camera: the 2D renderer sorts a tie by
+                // z (Renderer2D: transparency sort Default, orthographic), so it draws after the lit copy, over it.
+                var go = new GameObject(name + "_Own");
+                go.transform.SetParent(sr.transform, false);
+                go.transform.localPosition = new Vector3(0f, 0f, -0.01f);
+                own = go.AddComponent<SpriteRenderer>();
+                own.sharedMaterial = OwnLightMaterial;
+                own.sortingLayerID = sr.sortingLayerID;
+                own.sortingOrder = sr.sortingOrder;
+            }
+            var prop = new LitProp { Rt = rt, Img = img, Sr = sr, Group = group, Own = own, OwnShare = ownLight };
             _litProps.Add(prop);
             _litByRect[rt] = prop;
         }
@@ -98,6 +143,12 @@ namespace LastCall.UI
                 // so it is kept; its alpha is not, because a prop in a room is either there or it is not.
                 var c = p.Img.color;
                 p.Sr.color = new Color(c.r, c.g, c.b, 1f);
+                if (p.Own != null)
+                {
+                    // the prop's own share: the same picture, in the same tint (so a spent dish is spent in both)
+                    p.Own.sprite = sprite;
+                    p.Own.color = new Color(c.r, c.g, c.b, p.OwnShare);
+                }
 
                 // the rect, in the HUD's own units (through the root, so a prop on its own canvas measures the same)
                 p.Rt.GetWorldCorners(_litCorners);

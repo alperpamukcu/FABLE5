@@ -417,6 +417,14 @@ namespace LastCall.UI
         // The share is the RATIO - what the recipe book asks for and what the matcher reads - not the share of the
         // vessel; the tin's fill is on the standing measure already. The plaque grows a row at a time and hangs from
         // the rail as before, so the readout keeps its two lines at the foot.
+        //
+        // EVERY POUR (2026-09-23, the author: "3ten fazla koyulanlar görülmüyor"). The plaque grows DOWN from 306.6
+        // (the rail at BenchDrawer 0.72: 432.6 - 48 - 78) toward the tin gauge, whose figure at a full tin rings at
+        // 184.4. Four full rows (96 tall, foot 210.6) leave BenchClear over it; a fifth would leave 6. So four full
+        // rows, then two columns of four compact cells (still 96 at most: the bottle's picture, its style, its
+        // share - no bar, the gauge beside it carries every colour), and the eighth cell folds whatever is past
+        // seven into "+N" and the folded bottles' pictures. Long Island's seven - the most any page names - are all
+        // named. The slots are built ONCE and dressed on every pour; nothing is destroyed while the bottle pours.
 
         private RectTransform _mixRowsHost;
         /// <summary>The contents' own plaque, under the words' (2026-09-22, the eighth list); down while the tin is empty.</summary>
@@ -425,85 +433,158 @@ namespace LastCall.UI
         // beğendim"): the same rows in the same style, 20 high rather than 24, the bar 12 rather than 16, the names in
         // 150 rather than 168 - the face stays 16, the grid the pixel fonts are drawn on.
         private const float MixRowH = 20f, MixRowsPad = 8f, MixBarH = 12f, MixNameW = 150f, MixShareW = 64f;   // 64: "100%" is four figures
-        // Three, not five (2026-09-22): the rows grow the plaque DOWN the right column, and the gauges stand under
-        // it. The tin gauge carries every pour's band, so the fourth and fifth line were its double anyway.
-        private const int MixRowsMax = 3;
+        /// <summary>A full row's name and bar: the name after the picture, the bar after the name, the share at the end.</summary>
+        private const float MixRowNameX = 24f, MixBarX = MixRowNameX + MixNameW + 8f;                        // 182
+        private const float MixBarW = PlaqueW - PlaquePad * 2f - MixBarX - MixShareW - 8f;                  // 106
+        // Four, not three (2026-09-23): three was chosen when "the tin gauge carries every pour's band", but the
+        // gauge lost its names on 2026-09-21 and the plaque is the only place the fourth bottle is named. Four full
+        // rows is what the column holds over the tin's figure (above); past four the cells go two abreast.
+        private const int MixRowsMax = 4;
+        private const int MixCellsMax = 8;
+        private const float MixCellGap = 8f;
+        private const float MixCellW = (PlaqueW - PlaquePad * 2f - MixCellGap) * 0.5f;          // 176
+        private const float MixCellNameX = 18f, MixCellShareW = 48f;                            // "99%" is 48 at 16
+        private const float MixCellNameW = MixCellW - MixCellNameX - 4f - MixCellShareW;        // 106
+        private const float MixFoldCountW = 40f, MixFoldPitch = 16f;
+        private const int MixFoldIcons = 5;                                                      // (176-40-4-48)/16
+        /// <summary>A compact cell names the bottle's STYLE at 16 ("VODKA", "TRIPLE SEC" - the book's word, what a
+        /// seven-part page is checked against) rather than its brand, which is mostly 8 there and does not fit even
+        /// at 8 for seven of them. One line, because it is a taste call made by eye.</summary>
+        private static readonly bool MixCompactSaysStyle = true;   // static readonly, not const: no CS0162 on the other branch
 
-        private void LayMixRows(TycoonRun run)
+        /// <summary>One line of the contents' plaque, built once: a full row (picture, name, bar, share) or a
+        /// compact cell (picture, style, share). The last slot can also FOLD: "+N" and the folded bottles'
+        /// pictures, with their summed share.</summary>
+        private sealed class MixSlot
         {
-            if (_mixPlaque == null || run == null) return;
-            if (_mixRowsHost == null)
-            {
-                _mixRowsHost = NewRect("MixRows", _mixPlaque);
-                _mixRowsHost.anchorMin = _mixRowsHost.anchorMax = new Vector2(0f, 1f);
-                _mixRowsHost.pivot = new Vector2(0f, 1f);
-                _mixRowsHost.sizeDelta = new Vector2(PlaqueW - PlaquePad * 2f, 0f);
-                _mixRowsHost.anchoredPosition = new Vector2(PlaquePad, -PlaquePad);
-            }
-            foreach (Transform c in _mixRowsHost) Destroy(c.gameObject);
-            var glass = run.Glass;
-            float innerW = PlaqueW - PlaquePad * 2f;
-            int rows = 0;
-            foreach (var id in glass.Ingredients)
-            {
-                if (rows >= MixRowsMax) break;
-                var card = run.Shelf.Find(id)?.Ingredient;
-                float ratio = Mathf.Clamp01((float)glass.RatioOf(id));
-                var tone = UITheme.LiquidColor(card?.Info?.Style, card?.Type ?? IngredientType.Spirit);
-                var row = NewRect("Row" + rows, _mixRowsHost);
-                row.anchorMin = row.anchorMax = new Vector2(0f, 1f);
-                row.pivot = new Vector2(0f, 1f);
-                row.sizeDelta = new Vector2(innerW, MixRowH);
-                row.anchoredPosition = new Vector2(0f, -rows * MixRowH);
+            public RectTransform Rt, NameRt, TrackRt, FillRt, ShareRt, StripRt;
+            public Image Icon, Track, Fill;
+            public Text Name, Share, Count;   // Count / Strip exist on the last slot only: the fold
+            public Image[] Strip;
+            public string Id;                 // what the slot was last dressed as (null: nothing, or the fold)
+            public bool Compact, Folded;
+            public string FoldFirst;          // the fold's first bottle and how many it holds, when it last drew
+            public int FoldN = -1;
+        }
+        private readonly List<MixSlot> _mixSlots = new List<MixSlot>();
+        private readonly List<string> _mixIds = new List<string>();
 
-                var icon = NewRect("Icon", row);
+        /// <summary>The plaque's eight slots, built once under their host (2026-09-23): every Text and Image a row
+        /// or a cell can show, all down until a pour dresses them. LayMixRows only moves, dresses and hides.</summary>
+        private void BuildMixSlots()
+        {
+            _mixSlots.Clear();
+            _mixRowsHost = NewRect("MixRows", _mixPlaque);
+            _mixRowsHost.anchorMin = _mixRowsHost.anchorMax = new Vector2(0f, 1f);
+            _mixRowsHost.pivot = new Vector2(0f, 1f);
+            _mixRowsHost.sizeDelta = new Vector2(PlaqueW - PlaquePad * 2f, 0f);
+            _mixRowsHost.anchoredPosition = new Vector2(PlaquePad, -PlaquePad);
+            var tube = ChromeArt.GaugeTube((int)(MixBarW * 0.5f), (int)(MixBarH * 0.5f));   // the ladder's channel, at 2x
+            for (int i = 0; i < MixCellsMax; i++)
+            {
+                var s = new MixSlot();
+                s.Rt = NewRect("Row" + i, _mixRowsHost);
+                s.Rt.anchorMin = s.Rt.anchorMax = s.Rt.pivot = new Vector2(0f, 1f);
+                s.Rt.sizeDelta = new Vector2(PlaqueW - PlaquePad * 2f, MixRowH);
+
+                var icon = NewRect("Icon", s.Rt);
                 Place(icon, new Vector2(0f, 0.5f), new Vector2(14f, MixRowH - 2f), Vector2.zero);
-                icon.pivot = new Vector2(0f, 0.5f);
-                var ii = icon.gameObject.AddComponent<Image>();
-                ii.sprite = card != null ? ItemArt.Bottle(card) : null;
-                ii.preserveAspect = true;
-                ii.raycastTarget = false;
-                ii.enabled = ii.sprite != null;
+                s.Icon = icon.gameObject.AddComponent<Image>();
+                s.Icon.preserveAspect = true;
+                s.Icon.raycastTarget = false;
+                s.Icon.enabled = false;
 
-                var name = NewText("Name", row, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
-                Place(name.rectTransform, new Vector2(0f, 0.5f), new Vector2(MixNameW, MixRowH), new Vector2(24f, 0f));
-                name.rectTransform.pivot = new Vector2(0f, 0.5f);
-                name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                name.text = UIText.Caps(UIText.Data("bottle", id, "name", card?.Name ?? id));
-                name.raycastTarget = false;
-                Engraved(name);
+                s.Name = NewText("Name", s.Rt, _body, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+                s.NameRt = s.Name.rectTransform;
+                Place(s.NameRt, new Vector2(0f, 0.5f), new Vector2(MixNameW, MixRowH), new Vector2(MixRowNameX, 0f));
+                s.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
+                s.Name.raycastTarget = false;
+                Engraved(s.Name);
 
-                float barX = 24f + MixNameW + 8f, barW = innerW - barX - MixShareW - 8f;
-                var track = NewRect("Track", row);
-                Place(track, new Vector2(0f, 0.5f), new Vector2(barW, MixBarH), new Vector2(barX, 0f));
-                track.pivot = new Vector2(0f, 0.5f);
-                var ti = track.gameObject.AddComponent<Image>();
-                ti.sprite = ChromeArt.GaugeTube((int)(barW * 0.5f), (int)(MixBarH * 0.5f));   // the ladder's channel, at 2x
-                ti.color = CounterFinish.Ramp(CounterFinish.Current.Slab, 0f);
-                ti.raycastTarget = false;
-                var fill = NewRect("Fill", track);
-                fill.anchorMin = new Vector2(0f, 0f); fill.anchorMax = new Vector2(0f, 1f);
-                fill.pivot = new Vector2(0f, 0.5f);
-                fill.sizeDelta = new Vector2(Mathf.Round((barW - 4f) * ratio), -4f);
-                fill.anchoredPosition = new Vector2(2f, 0f);
-                var fi = fill.gameObject.AddComponent<Image>();
-                fi.color = tone;
-                fi.raycastTarget = false;
-                var grain = NewRect("Grain", fill);   // the pouring liquid's checker, as the measure's bands wear it
+                s.TrackRt = NewRect("Track", s.Rt);
+                Place(s.TrackRt, new Vector2(0f, 0.5f), new Vector2(MixBarW, MixBarH), new Vector2(MixBarX, 0f));
+                s.Track = s.TrackRt.gameObject.AddComponent<Image>();
+                s.Track.sprite = tube;
+                s.Track.raycastTarget = false;
+                s.FillRt = NewRect("Fill", s.TrackRt);
+                s.FillRt.anchorMin = new Vector2(0f, 0f); s.FillRt.anchorMax = new Vector2(0f, 1f);
+                s.FillRt.pivot = new Vector2(0f, 0.5f);
+                s.FillRt.sizeDelta = new Vector2(0f, -4f);
+                s.FillRt.anchoredPosition = new Vector2(2f, 0f);
+                s.Fill = s.FillRt.gameObject.AddComponent<Image>();
+                s.Fill.raycastTarget = false;
+                var grain = NewRect("Grain", s.FillRt);   // the pouring liquid's checker, as the measure's bands wear it
                 Stretch(grain, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var gi = grain.gameObject.AddComponent<Image>();
                 gi.sprite = ChromeArt.LiquidChecker();
                 gi.type = Image.Type.Tiled;
                 gi.raycastTarget = false;
 
-                var share = NewText("Share", row, _display, 16, TextAnchor.MiddleRight, UITheme.TextPrimary);
-                Place(share.rectTransform, new Vector2(1f, 0.5f), new Vector2(MixShareW, MixRowH), Vector2.zero);
-                share.rectTransform.pivot = new Vector2(1f, 0.5f);
-                share.horizontalOverflow = HorizontalWrapMode.Overflow;   // a share never breaks onto a second line
-                share.text = ratio.ToString("P0");
-                share.raycastTarget = false;
-                Engraved(share);
-                rows++;
+                s.Share = NewText("Share", s.Rt, _display, 16, TextAnchor.MiddleRight, UITheme.TextPrimary);
+                s.ShareRt = s.Share.rectTransform;
+                Place(s.ShareRt, new Vector2(1f, 0.5f), new Vector2(MixShareW, MixRowH), Vector2.zero);
+                s.Share.horizontalOverflow = HorizontalWrapMode.Overflow;   // a share never breaks onto a second line
+                s.Share.raycastTarget = false;
+                Engraved(s.Share);
+
+                if (i == MixCellsMax - 1)
+                {
+                    // THE FOLD, on the last cell only: "+N" (symbols and digits, like the "%" - no words to translate)
+                    // and the folded bottles' own pictures after it, so a botched tin still shows every bottle in it.
+                    s.Count = NewText("Count", s.Rt, _display, 16, TextAnchor.MiddleLeft, UITheme.TextPrimary);
+                    Place(s.Count.rectTransform, new Vector2(0f, 0.5f), new Vector2(MixFoldCountW, MixRowH), Vector2.zero);
+                    s.Count.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    s.Count.raycastTarget = false;
+                    Engraved(s.Count);
+                    s.Count.gameObject.SetActive(false);
+                    s.StripRt = NewRect("Strip", s.Rt);
+                    Place(s.StripRt, new Vector2(0f, 0.5f), new Vector2(MixFoldIcons * MixFoldPitch, MixRowH),
+                          new Vector2(MixFoldCountW, 0f));
+                    s.Strip = new Image[MixFoldIcons];
+                    for (int k = 0; k < MixFoldIcons; k++)
+                    {
+                        var pic = NewRect("Pic" + k, s.StripRt);
+                        Place(pic, new Vector2(0f, 0.5f), new Vector2(14f, MixRowH - 2f), new Vector2(k * MixFoldPitch, 0f));
+                        s.Strip[k] = pic.gameObject.AddComponent<Image>();
+                        s.Strip[k].preserveAspect = true;
+                        s.Strip[k].raycastTarget = false;
+                        s.Strip[k].enabled = false;
+                    }
+                    s.StripRt.gameObject.SetActive(false);
+                }
+                s.Rt.gameObject.SetActive(false);
+                _mixSlots.Add(s);
+            }
+        }
+
+        private void LayMixRows(TycoonRun run)
+        {
+            if (_mixPlaque == null || run == null) return;
+            // A destroyed host reads null (the benches rebuilt in a new finish), and a host left on an old plaque
+            // is not this one's: either way the slots are built again, once.
+            if (_mixRowsHost == null || _mixRowsHost.parent != _mixPlaque) BuildMixSlots();
+            _mixIds.Clear();
+            foreach (var id in run.Glass.Ingredients) _mixIds.Add(id);   // first-pour order = FillGauge's band order
+            int n = _mixIds.Count;
+            bool compact = n > MixRowsMax, fold = n > MixCellsMax;
+            int slots = compact ? Mathf.Min(n, MixCellsMax) : n;
+            int rows = compact ? (slots + 1) / 2 : n;                    // n=5,6 -> 3; n>=7 -> 4
+            float innerW = PlaqueW - PlaquePad * 2f;
+            var trackTone = CounterFinish.Ramp(CounterFinish.Current.Slab, 0f);   // re-read: the finish can change
+            for (int i = 0; i < _mixSlots.Count; i++)
+            {
+                var s = _mixSlots[i];
+                bool on = i < slots;
+                if (s.Rt.gameObject.activeSelf != on) s.Rt.gameObject.SetActive(on);
+                if (!on) continue;
+                // column-major: a list that runs on into a second column (1-4 | 5-8; five is 1-3 | 4-5)
+                int col = compact ? i / rows : 0, row = compact ? i % rows : i;
+                var size = new Vector2(compact ? MixCellW : innerW, MixRowH);
+                var at = new Vector2(col * (MixCellW + MixCellGap), -row * MixRowH);
+                if (s.Rt.sizeDelta != size) s.Rt.sizeDelta = size;
+                if (s.Rt.anchoredPosition != at) s.Rt.anchoredPosition = at;
+                if (fold && i == MixCellsMax - 1) FoldMixSlot(s, run, i);
+                else DressMixSlot(s, run, _mixIds[i], compact, trackTone);
             }
             _mixRowsHost.sizeDelta = new Vector2(innerW, rows * MixRowH);
             // its own plaque now: the words above it keep their place, and it is only there while the tin holds something
@@ -511,11 +592,100 @@ namespace LastCall.UI
             if (_mixPlaque.gameObject.activeSelf != rows > 0) _mixPlaque.gameObject.SetActive(rows > 0);
         }
 
+        /// <summary>A slot as one bottle: a full row (picture, brand, bar, share) or a compact cell (picture, style,
+        /// share). What the bottle IS is dressed only when the slot changes hands; its share on every lay.</summary>
+        private void DressMixSlot(MixSlot s, TycoonRun run, string id, bool compact, Color trackTone)
+        {
+            var card = run.Shelf.Find(id)?.Ingredient;
+            float ratio = Mathf.Clamp01((float)run.Glass.RatioOf(id));
+            if (s.Id != id || s.Compact != compact || s.Folded)
+            {
+                s.Id = id; s.Compact = compact; s.Folded = false; s.FoldN = -1;
+                if (s.Count != null && s.Count.gameObject.activeSelf) s.Count.gameObject.SetActive(false);
+                if (s.StripRt != null && s.StripRt.gameObject.activeSelf) s.StripRt.gameObject.SetActive(false);
+
+                s.Icon.sprite = card != null ? ItemArt.Bottle(card) : null;
+                s.Icon.enabled = s.Icon.sprite != null;
+
+                float nameW = compact ? MixCellNameW : MixNameW;
+                if (!s.NameRt.gameObject.activeSelf) s.NameRt.gameObject.SetActive(true);
+                Place(s.NameRt, new Vector2(0f, 0.5f), new Vector2(nameW, MixRowH),
+                      new Vector2(compact ? MixCellNameX : MixRowNameX, 0f));
+                string style = card?.Info?.Style;
+                s.Name.text = compact && MixCompactSaysStyle && !string.IsNullOrEmpty(style)
+                    ? UIText.Caps(UIText.Data("bottle", id, "style", style).Replace('_', ' '))   // the cellar card's word
+                    : UIText.Caps(UIText.Data("bottle", id, "name", card?.Name ?? id));
+                // A LONG BRAND RAN UNDER ITS OWN BAR (2026-09-23, photographed: "GRAND MARINER
+                // TRIPLE SEC" printed straight through the orange measure beside it). The overflow
+                // mode is right — a brand broken over two lines in a 20-unit row is worse — so the
+                // name is MEASURED and stepped back to the tag size when it does not fit, the way
+                // the book's own titles are. Four words of brand still read at 8; half a word
+                // under a gauge does not. (A slot is reused, so the size goes back to 16 BEFORE it
+                // is measured: it would otherwise keep the 8 of the last long name it carried.)
+                s.Name.fontSize = LanguageFonts.Size(_body, 16);
+                if (s.Name.preferredWidth > nameW)
+                    s.Name.fontSize = LanguageFonts.Size(_body, 8);
+
+                if (s.TrackRt.gameObject.activeSelf == compact) s.TrackRt.gameObject.SetActive(!compact);
+                if (!compact)
+                    s.Fill.color = UITheme.LiquidColor(style, card?.Type ?? IngredientType.Spirit);
+                s.ShareRt.sizeDelta = new Vector2(compact ? MixCellShareW : MixShareW, MixRowH);
+            }
+            if (!compact)
+            {
+                s.Track.color = trackTone;
+                s.FillRt.sizeDelta = new Vector2(Mathf.Round((MixBarW - 4f) * ratio), -4f);
+            }
+            s.Share.text = ratio.ToString("P0");
+        }
+
+        /// <summary>The last slot as the FOLD (a tin of nine or more bottles, which no page asks for): "+N", up to
+        /// five of the folded bottles' pictures, and their summed share. Every bottle is still there, by picture.</summary>
+        private void FoldMixSlot(MixSlot s, TycoonRun run, int from)
+        {
+            int folded = _mixIds.Count - from;
+            if (!s.Folded)
+            {
+                s.Folded = true; s.Id = null;
+                s.Icon.enabled = false;
+                if (s.NameRt.gameObject.activeSelf) s.NameRt.gameObject.SetActive(false);
+                if (s.TrackRt.gameObject.activeSelf) s.TrackRt.gameObject.SetActive(false);
+                s.ShareRt.sizeDelta = new Vector2(MixCellShareW, MixRowH);
+            }
+            if (!s.Count.gameObject.activeSelf) s.Count.gameObject.SetActive(true);
+            if (!s.StripRt.gameObject.activeSelf) s.StripRt.gameObject.SetActive(true);
+            // the pictures change only when the fold does (ids only ever join the end of the list, in pour order)
+            if (s.FoldN != folded || s.FoldFirst != _mixIds[from])
+            {
+                s.FoldN = folded; s.FoldFirst = _mixIds[from];
+                s.Count.text = "+" + folded;
+                // measured, not guessed: "+9" is 32 wide and leaves the pictures at 40, a two-figure count pushes
+                // them on and the strip gives up the pictures that would reach the share
+                float stripX = Mathf.Max(MixFoldCountW, Mathf.Ceil(s.Count.preferredWidth) + 4f);
+                s.StripRt.anchoredPosition = new Vector2(stripX, 0f);
+                int room = Mathf.Min(folded, (int)((MixCellW - MixCellShareW - 4f - stripX + 2f) / MixFoldPitch));
+                for (int k = 0; k < s.Strip.Length; k++)
+                {
+                    var pic = k < room ? ItemArt.Bottle(run.Shelf.Find(_mixIds[from + k])?.Ingredient) : null;
+                    s.Strip[k].sprite = pic;
+                    s.Strip[k].enabled = pic != null;
+                }
+            }
+            float sum = 0f;
+            for (int k = from; k < _mixIds.Count; k++) sum += Mathf.Clamp01((float)run.Glass.RatioOf(_mixIds[k]));
+            s.Share.text = Mathf.Clamp01(sum).ToString("P0");
+        }
+
         /// <summary>A plaque at a new height, still hung the same distance under the rail: the top stays put, the
         /// foot moves, and the readout placed from the foot moves with it.</summary>
         private void RehangPlaque(RectTransform plaque, float h, float dyFromRailFoot = PlaqueUnderRail)
         {
             if (plaque == null || Mathf.Approximately(plaque.sizeDelta.y, h)) return;
+            // THE TOP HOLDS IN THE SAME FRAME (2026-09-23): the plaque stands on its foot (pivot 0,0) and the mix rows
+            // are laid AFTER the alignment in the frame, so a grown plaque rose over the words' plaque for one frame
+            // until the next alignment put it back. Its foot goes down by what it grew - the very place
+            // AlignBenchCounters puts it next frame (railTop - dy), so nothing else moves.
+            plaque.anchoredPosition -= new Vector2(0f, h - plaque.sizeDelta.y);
             plaque.sizeDelta = new Vector2(plaque.sizeDelta.x, h);
             for (int i = 0; i < _railHung.Count; i++)
                 if (_railHung[i].rt == plaque) { _railHung[i] = (plaque, RailBandH + dyFromRailFoot + h); break; }
@@ -1196,11 +1366,13 @@ namespace LastCall.UI
         // could not simply rise with it - at 300 tall its head already reached the counter's rail. It stands
         // between the two now: its foot on 130, seven over the keys, its head on 380, five under the rail.
         // UNDER THE WORDS, IN THE RIGHT COLUMN (2026-09-22): the tin gauge and the mix column stand as a pair
-        // centred in 848..1264, from a hand over the floor-row keys (88) to a hand under the plaque at its tallest
-        // (three mix rows, 235). Drawn with its aspect kept, so it stays a tin, only smaller.
+        // centred in 848..1264, from a hand over the floor-row keys (88) to a hand under the plaque at its tallest.
+        // Drawn with its aspect kept, so it stays a tin, only smaller.
         // (458, -240) since the eighth list: the column moved to 888..1264 and the bin left the right foot, so the pair -
         // the MIX tube, its gap and the tin - is centred in the column and stands 120 over the floor, clear under the
-        // contents' plaque at its tallest.
+        // contents' plaque at its tallest. That plaque (2026-09-23, every pour named) is at its tallest four rows, or
+        // two columns of four - 96 tall, its foot on 210.6 at BenchDrawer, 26 over the ring of the figure at a full
+        // tin (184.4). The glass bench's gauge stands on the same two constants: they do not move for the plaque.
         private static readonly Vector2 MeasureAt = new Vector2(458f, -240f);   // -87 until the props came down;
                                                                                // 485 ran the tin's wall under the bin
         /// <summary>136x300: the shaker's own 82:181, at the height the measure grew to.</summary>
@@ -1304,21 +1476,8 @@ namespace LastCall.UI
             return bore;
         }
 
-        private string ShakerLine(TycoonRun run)
-        {
-            if (run.Glass.IsEmpty) return UIText.T("bench.shaker.line.empty");
-            var parts = new List<string>();
-            foreach (var id in run.Glass.Ingredients)
-            {
-                var card = run.Shelf.Find(id)?.Ingredient;
-                parts.Add(UIText.T("bench.shaker.line.part",
-                    ("name", UIText.Caps(UIText.Data("bottle", id, "name", card?.Name ?? id))),
-                    ("share", run.Glass.RatioOf(id).ToString("P0"))));
-            }
-            // The list separator is a symbol and stays here (PLAN_localization_L1 §4).
-            return UIText.T("bench.shaker.line.contents",
-                ("fill", run.Glass.FillFraction.ToString("P0")), ("parts", string.Join(", ", parts)));
-        }
+        // (ShakerLine, the tin's contents as one sentence, left on 2026-09-23 with its last two callers: the
+        //  contents' plaque names every part, so the readout no longer repeats them.)
 
         /// <summary>The readout's ordinary voice — and it clears any warning colour left on it.</summary>
         private void SayShaker(string line)
@@ -2167,8 +2326,10 @@ namespace LastCall.UI
                 {
                     run.Stir(_stirEnergy);
                     Sfx.Play("stir_commit", 0.6f);
-                    SayShaker(UIText.T("bench.shaker.stirred_line",
-                        ("pct", _stirEnergy.ToString("P0")), ("line", ShakerLine(run))));
+                    // ONE LINE (2026-09-23): the stirred line used to carry the tin's whole list after the figure,
+                    // and at seven parts it ran five lines down the words' plaque into the contents' under it. The
+                    // contents' plaque names every part now, so the readout says only what the spoon did.
+                    SayShaker(UIText.T("bench.shaker.meter.stir", ("pct", _stirEnergy.ToString("P0"))));
                 }
                 _spoonHeld = false;
                 _stirEnergy = 0;
@@ -2284,8 +2445,8 @@ namespace LastCall.UI
                     bool blows = run.ShakeBlowsTheTin;
                     run.Shake(_shakeEnergy);
                     if (blows) BlowTheTin();
-                    else SayShaker(UIText.T("bench.shaker.shaken_line",
-                        ("pct", _shakeEnergy.ToString("P0")), ("line", ShakerLine(run))));
+                    // one line, as the stir's (2026-09-23): the parts are on the contents' plaque under it
+                    else SayShaker(UIText.T("bench.shaker.meter.shaken", ("pct", _shakeEnergy.ToString("P0"))));
                 }
                 _shaking = false;
                 _shakeEnergy = 0;

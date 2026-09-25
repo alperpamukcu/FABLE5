@@ -259,7 +259,7 @@ namespace LastCall.Tests
             shelf.PourInto(new GlassContents(1.0), "gin", 2.0);
             shelf.PourInto(new GlassContents(1.0), "gin", 2.0);
 
-            Assert.AreEqual(4, shelf.RefillCost(pricePerCapacity: 2), "2 capacity used × $2");
+            Assert.AreEqual(4, shelf.RefillCost(tier => 2), "2 capacity used × $2");
         }
 
         [Test]

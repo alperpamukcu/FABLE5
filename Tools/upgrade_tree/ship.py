@@ -3,6 +3,10 @@
 geliştirme sistemine güncelleme ... Her bölümün ayrı kısmı olmalı markette. Örneğin duvar
 dendiğinde tüm seçenekler desen png si ile gözükmeli").
 
+NOTE (2026-09-23): fixtures.json is HAND-OWNED now: its prices were re-set by hand and every row
+carries a "buff"/"buffPct" pair (the fitting buffs) that this script does not write — re-running
+it would drop both, so carry any new rung into fixtures.json by hand.
+
 The upgrade tree is where the author sets each ladder's tiers and leaves out what they do not
 want (Tools/upgrade_tree/decisions.json, read back from the tree page's own database). This
 turns those choices into the game: every rung that stayed in, in the order it was given, as

@@ -305,8 +305,10 @@ namespace LastCall.Tests
             // day and lands the rent — there is no moment between to measure. So the rent is
             // accounted for by name: what the till lost must be the LANDLORD'S line, exactly.
             CloseTheNight(run);
-            Assert.AreEqual(moneyBefore - run.DayRent, run.Money,
-                "a guest of the house pays nothing — only the rent moved the till");
+            // ...and, since 2026-09-22, whatever the drinks that never came cost. Both land in
+            // the same closing block; the guest still contributes nothing to either.
+            Assert.AreEqual(moneyBefore - run.DayRent - run.DayWalkOutFees, run.Money,
+                "a guest of the house pays nothing — only the house's own bills moved the till");
             Assert.AreEqual(salesBefore, run.DaySales, "and books no sale");
             Assert.AreEqual(0, guest.Paid);
             Assert.AreEqual(0, run.DayTips, "and tips nothing");
@@ -323,7 +325,10 @@ namespace LastCall.Tests
             for (int i = 0; i < 3; i++) { BuildPerfect(run); run.ServeTo(guest); }
 
             CloseTheNight(run);
-            Assert.AreEqual(0.0, run.Floor.AverageSatisfaction,
+            // An empty night is what the crowd filed, and the crowd filed nothing but walk-outs
+            // (CustomerVisit.StormOffSatisfaction since 2026-09-22). What matters here is that the
+            // guest's perfect trial did not lift it by so much as a hair.
+            Assert.LessOrEqual(run.Floor.AverageSatisfaction, CustomerVisit.StormOffSatisfaction + 1e-9,
                 "an empty night with a perfect trial is still an empty night");
             var counted = run.Floor.FinishedCounted();
             Assert.IsFalse(counted.Any(v => v.OnTheHouse), "the slip never sees the guest");

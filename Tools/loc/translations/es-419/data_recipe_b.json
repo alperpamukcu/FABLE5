@@ -76,21 +76,6 @@
       "src": "LOUISVILLE, 1880S"
     },
     {
-      "key": "data.recipe.paloma.lore",
-      "text": "Tequila y refresco de toronja. El verdadero favorito de México; la margarita solo tiene mejor prensa.",
-      "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."
-    },
-    {
-      "key": "data.recipe.paloma.name",
-      "text": "Paloma",
-      "src": "Paloma"
-    },
-    {
-      "key": "data.recipe.paloma.origin",
-      "text": "MÉXICO, AÑOS 50",
-      "src": "MEXICO, 1950S"
-    },
-    {
       "key": "data.recipe.pink_lady.lore",
       "text": "Ginebra sonrojada con granadina. La coartada más respetable de la Ley Seca.",
       "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
@@ -151,44 +136,9 @@
       "src": "THE OIL FIELDS, 1940S"
     },
     {
-      "key": "data.recipe.sea_breeze.lore",
-      "text": "Arándano y toronja acompañando al vodka por la orilla.",
-      "src": "Cranberry and grapefruit walking vodka down the shore."
-    },
-    {
-      "key": "data.recipe.sea_breeze.name",
-      "text": "Sea Breeze",
-      "src": "Sea Breeze"
-    },
-    {
       "key": "data.recipe.sea_breeze.origin",
       "text": "LA COSTA ESTADOUNIDENSE",
       "src": "THE AMERICAN COAST"
-    },
-    {
-      "key": "data.recipe.sex_on_beach.lore",
-      "text": "Durazno, naranja y arándano sobre vodka. Vacaciones de primavera, decantadas.",
-      "src": "Peach, orange and cranberry over vodka. Spring break, decanted."
-    },
-    {
-      "key": "data.recipe.sex_on_beach.name",
-      "text": "Sex on the Beach",
-      "src": "Sex on the Beach"
-    },
-    {
-      "key": "data.recipe.sex_on_beach.origin",
-      "text": "FLORIDA, AÑOS 80",
-      "src": "FLORIDA, 1980S"
-    },
-    {
-      "key": "data.recipe.sidecar.lore",
-      "text": "El Ritz lo reclama, Londres lo discute. El nuestro va con bourbon y no pide disculpas.",
-      "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."
-    },
-    {
-      "key": "data.recipe.sidecar.name",
-      "text": "Bourbon Sidecar",
-      "src": "Bourbon Sidecar"
     },
     {
       "key": "data.recipe.sidecar.origin",
@@ -276,11 +226,6 @@
       "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
     },
     {
-      "key": "data.recipe.vodka_bull.name",
-      "text": "Vodka Bull",
-      "src": "Vodka Bull"
-    },
-    {
       "key": "data.recipe.vodka_bull.origin",
       "text": "LOS BARES DE TODA LA NOCHE",
       "src": "THE ALL-NIGHT BARS"
@@ -289,11 +234,6 @@
       "key": "data.recipe.vodka_soda.lore",
       "text": "Lo más ligero que un bar puede llamar trago sin mentir. Limpio, frío, y se acabó.",
       "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
-    },
-    {
-      "key": "data.recipe.vodka_soda.name",
-      "text": "Vodka Soda",
-      "src": "Vodka Soda"
     },
     {
       "key": "data.recipe.vodka_soda.origin",
@@ -321,11 +261,6 @@
       "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
     },
     {
-      "key": "data.recipe.vodka_tonic.name",
-      "text": "Vodka Tonic",
-      "src": "Vodka Tonic"
-    },
-    {
       "key": "data.recipe.vodka_tonic.origin",
       "text": "LA POSGUERRA, AÑOS 50",
       "src": "THE POSTWAR YEARS, 1950S"
@@ -349,11 +284,6 @@
       "key": "data.recipe.whiskey_ginger.lore",
       "text": "Bourbon alargado con ginger: el highball que volvió al whisky un trago de entre semana.",
       "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
-    },
-    {
-      "key": "data.recipe.whiskey_ginger.name",
-      "text": "Whiskey Ginger",
-      "src": "Whiskey Ginger"
     },
     {
       "key": "data.recipe.whiskey_ginger.origin",

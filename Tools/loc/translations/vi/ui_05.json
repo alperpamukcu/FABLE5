@@ -1,162 +1,704 @@
-{"strings": [
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "HẢI QUÂN HOÀNG GIA ANH, THẾ KỶ 19", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Một ly gin sour mở toang cửa cho soda. Ramos lắc ly của ông suốt mười hai phút.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "NEW ORLEANS, THẬP NIÊN 1880", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Rượu, chanh, đường — phương trình cổ xưa đứng sau nửa cuốn sổ này.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "HỌ SOUR, THẬP NIÊN 1860", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Quinine chống sốt rét, gin chống vị quinine. Tai nạn hữu ích nhất của đế quốc.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Gin & Tonic", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "ẤN ĐỘ THUỘC ANH, THẬP NIÊN 1850", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, chanh, gọn và gắt. Tấm bằng tốt nghiệp cocktail của dân uống shot.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "QUÁN BAR BẾN CẢNG, THẬP NIÊN 1970", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Ly của quán dành cho vị khách cuối cùng trong đêm. Sổ giữ trang, quầy giữ lý do.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Lượt Gọi Cuối", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "QUÁN NÀY, ĐÊM NAY", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Vodka khoác bộ vest chanh viền đường. Món tráng miệng làm giấy tờ để thành đồ uống.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "SAN FRANCISCO, THẬP NIÊN 1970", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Năm loại rượu đồng lòng đóng giả trà đá. Mỗi tối chỉ lừa được đúng một lần.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "LONG ISLAND, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Trader Vic rót nó; một người bạn Tahiti thốt lên 'maita'i' — ngon hết sẩy.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "OAKLAND, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Whiskey và vermouth ngọt, khuấy đều. Ly cocktail đeo bảng tên của cả thành phố.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "NEW YORK, THẬP NIÊN 1870", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Tequila, cam và chanh sau lớp viền muối. Chẳng ai thống nhất ai chế ra; ai cũng hiểu vì sao.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "VÙNG BIÊN GIỚI, THẬP NIÊN 1940", "src": "THE BORDER, 1940S"},
-{"key": "data.recipe.martinez.lore", "text": "Mắt xích còn thiếu giữa manhattan và martini, pha bằng gin thời đổ xô đi tìm vàng.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-{"key": "data.recipe.martinez.name", "text": "Martinez", "src": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "SAN FRANCISCO, THẬP NIÊN 1880", "src": "SAN FRANCISCO, 1880S"},
-{"key": "data.recipe.matador.lore", "text": "Tequila, dứa, chanh — margarita lúc đi nghỉ mát.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-{"key": "data.recipe.matador.name", "text": "Matador", "src": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "SÁCH PHA CHẾ GIỮA THẾ KỶ, THẬP NIÊN 1950", "src": "THE MIDCENTURY BOOKS, 1950S"},
-{"key": "data.recipe.mint_julep.lore", "text": "Bourbon lọc qua đá xay và bạc hà. Ngày đua ngựa bán cả trăm nghìn ly.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-{"key": "data.recipe.mint_julep.name", "text": "Mint Julep", "src": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "KENTUCKY, THẾ KỶ 18", "src": "KENTUCKY, 1700S"},
-{"key": "data.recipe.mojito.lore", "text": "Bạc hà dập, chanh vắt, rum được thưởng. Nghe đồn thủy thủ của Drake đã uống bản nháp.", "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."},
-{"key": "data.recipe.mojito.name", "text": "Mojito", "src": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "HAVANA, CŨ NHƯ BẾN CẢNG", "src": "HAVANA, OLD AS THE HARBOUR"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Một anh bán vodka và một lô bia gừng ế đã chế ra thức uống Nga đậm chất Mỹ nhất.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule", "src": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941", "src": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Một chai, không bình lắc, không bàn cãi. Món của những người đã biết sẵn câu trả lời.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-{"key": "data.recipe.neat_pour.name", "text": "Rót Suông", "src": "Neat Pour"},
-{"key": "data.recipe.neat_pour.origin", "text": "BẤT CỨ ĐÂU CÓ KỆ RƯỢU", "src": "ANYWHERE WITH A SHELF"},
-{"key": "data.recipe.negroni.lore", "text": "Bá tước Negroni muốn một ly Americano mạnh hơn. Chia đều các phần, miễn mặc cả.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-{"key": "data.recipe.negroni.name", "text": "Negroni", "src": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "FLORENCE, 1919", "src": "FLORENCE, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Đường, bitters, whiskey — thức uống mà chữ 'cocktail' được đặt ra để gọi.", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned", "src": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, THẬP NIÊN 1880", "src": "LOUISVILLE, 1880S"},
-{"key": "data.recipe.paloma.lore", "text": "Tequila và soda bưởi. Món Mexico thật sự mê; margarita chỉ được báo chí chiều hơn.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-{"key": "data.recipe.paloma.name", "text": "Paloma", "src": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "MEXICO, THẬP NIÊN 1950", "src": "MEXICO, 1950S"},
-{"key": "data.recipe.pink_lady.lore", "text": "Gin ửng hồng nhờ grenadine. Bằng chứng ngoại phạm đứng đắn nhất thời cấm rượu.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady", "src": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "NEW YORK, THẬP NIÊN 1910", "src": "NEW YORK, 1910S"},
-{"key": "data.recipe.rosita.lore", "text": "Người anh em tequila của negroni, in chữ nhỏ mà được yêu muộn.", "src": "The negroni's tequila cousin, printed small and loved late."},
-{"key": "data.recipe.rosita.name", "text": "Rosita", "src": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "SÁCH PHA CHẾ, 1974", "src": "THE BAR BOOKS, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Một phần chua, hai phần ngọt, ba phần mạnh, bốn phần nhẹ. Còn lâu đời hơn cả chiếc ly đựng nó.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-{"key": "data.recipe.rum_punch.name", "text": "Rum Punch", "src": "Rum Punch"},
-{"key": "data.recipe.rum_punch.origin", "text": "QUẦN ĐẢO, THẾ KỶ 17", "src": "THE ISLANDS, 1600S"},
-{"key": "data.recipe.screwdriver.lore", "text": "Mang tên dụng cụ đầu tiên dùng để khuấy nó. Ở vài bến cảng, nó có mặt từ bữa sáng.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-{"key": "data.recipe.screwdriver.name", "text": "Screwdriver", "src": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "MỎ DẦU, THẬP NIÊN 1940", "src": "THE OIL FIELDS, 1940S"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Việt quất và bưởi dắt vodka đi dạo dọc bờ biển.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze", "src": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "BỜ BIỂN NƯỚC MỸ", "src": "THE AMERICAN COAST"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Đào, cam và việt quất trên nền vodka. Kỳ nghỉ xuân, rót vào ly.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach", "src": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "FLORIDA, THẬP NIÊN 1980", "src": "FLORIDA, 1980S"},
-{"key": "data.recipe.sidecar.lore", "text": "Khách sạn Ritz nhận là của mình, London cãi lại. Ly của quán dùng bourbon và chẳng xin lỗi ai.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar", "src": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "PARIS, THẬP NIÊN 1920", "src": "PARIS, 1920S"},
-{"key": "data.recipe.southside.lore", "text": "Gin, chanh và bạc hà. Băng đảng uống nó; bạc hà che mùi rượu nấu trong bồn tắm.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-{"key": "data.recipe.southside.name", "text": "Southside", "src": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "CHICAGO, THẬP NIÊN 1920", "src": "CHICAGO, 1920S"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Moscow mule xuôi về phương nam — agave ngồi trên yên đồng.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule", "src": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "MIỀN BIÊN VIỄN", "src": "THE BORDERLANDS"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Công thức sour với bụi đường bám trên đôi bốt. Agave đáp lời chanh.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour", "src": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "HỌ SOUR", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Grenadine chìm, nước cam nổi, và Rolling Stones mang nó đi lưu diễn.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise", "src": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, THẬP NIÊN 1970", "src": "SAUSALITO, 1970S"},
-{"key": "data.recipe.vesper.lore", "text": "Fleming viết nó cho Bond: gin, vodka, và một cái tên ông không giữ được.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-{"key": "data.recipe.vesper.name", "text": "Vesper", "src": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953", "src": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Vodka và nước tăng lực trong một ly — thức uống làm cả ca ngày lẫn ca đêm.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-{"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull", "src": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "QUÁN BAR THÂU ĐÊM", "src": "THE ALL-NIGHT BARS"},
-{"key": "data.recipe.vodka_soda.lore", "text": "Thứ nhẹ nhất mà quán bar được phép gọi là đồ uống. Sạch, lạnh, hết.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-{"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda", "src": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "CHẲNG ĐÂU CỤ THỂ, THẬP NIÊN 1900", "src": "NOWHERE IN PARTICULAR, 1900S"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Gin sour lúc đèn đã dịu. Khách êm hơn, vẫn chanh ấy.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-{"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour", "src": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "HỌ SOUR", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "Người em trầm tính của G&T — tonic lo phần nói chuyện, vodka giữ áo khoác.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tonic", "src": "Vodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "NHỮNG NĂM HẬU CHIẾN, THẬP NIÊN 1950", "src": "THE POSTWAR YEARS, 1950S"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon cùng ly cola uống kèm đã bỏ cuộc mà nhảy luôn vào ly.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Whiskey & Cola", "src": "Whiskey & Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "QUÁN VEN ĐƯỜNG, THẬP NIÊN 1930", "src": "THE ROADHOUSES, 1930S"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Bourbon kéo dài bằng gừng — ly highball biến whiskey thành đồ uống ngày thường.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey Ginger", "src": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "XỨ HIGHBALL, THẬP NIÊN 1890", "src": "HIGHBALL COUNTRY, 1890S"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Một ly julep đổi cốc bạc lấy chanh và nhanh nhẹn hơn hẳn.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash", "src": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "ANH HỌ THÀNH THỊ CỦA JULEP, THẬP NIÊN 1880", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Ly sour khiến bourbon trở nên lịch sự. Phần xương sống không phải tùy chọn.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour", "src": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "THỜI TÀU HƠI NƯỚC, THẬP NIÊN 1860", "src": "THE STEAMSHIP ERA, 1860S"},
-{"key": "data.recipe.white_lady.lore", "text": "Gin, triple sec, chanh — món chuẩn bình lắc bạc của Harry MacElhone.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady", "src": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "LONDON, THẬP NIÊN 1920", "src": "LONDON, 1920S"},
-{"key": "data.slot.beer_mat.place", "text": "Quầy bar", "src": "The counter"},
-{"key": "data.slot.beer_mat.title", "text": "Thảm hứng bia", "src": "Drip mat"},
-{"key": "data.slot.ceiling.place", "text": "Trần nhà", "src": "The ceiling"},
-{"key": "data.slot.ceiling.title", "text": "Trần", "src": "Ceiling"},
-{"key": "data.slot.floor.place", "text": "Sàn nhà", "src": "The floor"},
-{"key": "data.slot.floor.title", "text": "Sàn", "src": "Floor"},
-{"key": "data.slot.floor_rug.place", "text": "Sàn nhà", "src": "The floor"},
-{"key": "data.slot.floor_rug.title", "text": "Thảm", "src": "Rug"},
-{"key": "data.slot.plant_left.place", "text": "Cạnh cửa sổ", "src": "By the window"},
-{"key": "data.slot.plant_left.title", "text": "Cây bên trái", "src": "Left plant"},
-{"key": "data.slot.plant_right.place", "text": "Quầy bar", "src": "The counter"},
-{"key": "data.slot.plant_right.title", "text": "Cây bên phải", "src": "Right plant"},
-{"key": "data.slot.prep_mat.place", "text": "Quầy bar", "src": "The counter"},
-{"key": "data.slot.prep_mat.title", "text": "Thảm đồ nhắm", "src": "Snack mat"},
-{"key": "data.slot.shaker.place", "text": "Trong tay bạn", "src": "In your hand"},
-{"key": "data.slot.shaker.title", "text": "Bình lắc", "src": "Shaker"},
-{"key": "data.slot.sink.place", "text": "Quầy bar", "src": "The counter"},
-{"key": "data.slot.sink.title", "text": "Bồn rửa", "src": "Sink"},
-{"key": "data.slot.table_left.place", "text": "Sàn nhà", "src": "The floor"},
-{"key": "data.slot.table_left.title", "text": "Bàn bên trái", "src": "Left table"},
-{"key": "data.slot.table_right.place", "text": "Sàn nhà", "src": "The floor"},
-{"key": "data.slot.table_right.title", "text": "Bàn bên phải", "src": "Right table"},
-{"key": "data.slot.taps.place", "text": "Quầy bar", "src": "The counter"},
-{"key": "data.slot.taps.title", "text": "Tháp bia", "src": "Beer tower"},
-{"key": "data.slot.wall_center.place", "text": "Tường sau quầy", "src": "The back wall"},
-{"key": "data.slot.wall_center.title", "text": "Tranh chính giữa", "src": "Centre picture"},
-{"key": "data.slot.wall_lamps.place", "text": "Tường sau quầy", "src": "The back wall"},
-{"key": "data.slot.wall_lamps.title", "text": "Đèn tường", "src": "Wall lamps"},
-{"key": "data.slot.wall_right.place", "text": "Tường sau quầy", "src": "The back wall"},
-{"key": "data.slot.wall_right.title", "text": "Biển neon", "src": "Neon sign"},
-{"key": "data.slot.wall_right_art.place", "text": "Tường bên phải", "src": "The right wall"},
-{"key": "data.slot.wall_right_art.title", "text": "Tranh trên màn hình", "src": "Picture over the screen"},
-{"key": "data.slot.wall_tv.place", "text": "Tường bên phải", "src": "The right wall"},
-{"key": "data.slot.wall_tv.title", "text": "Màn hình & áp phích", "src": "Screen & posters"},
-{"key": "data.slot.walls.place", "text": "Tường sau quầy", "src": "The back wall"},
-{"key": "data.slot.walls.title", "text": "Tường sau", "src": "Back wall"},
-{"key": "data.slot.walls_right.place", "text": "Tường bên phải", "src": "The right wall"},
-{"key": "data.slot.walls_right.title", "text": "Tường phải", "src": "Right wall"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "HẢI QUÂN HOÀNG GIA ANH, THẾ KỶ 19",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Một ly gin sour mở toang cửa cho soda. Ramos lắc ly của ông suốt mười hai phút.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "NEW ORLEANS, THẬP NIÊN 1880",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Rượu, chanh, đường — phương trình cổ xưa đứng sau nửa cuốn sổ này.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "HỌ SOUR, THẬP NIÊN 1860",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Quinine chống sốt rét, gin chống vị quinine. Tai nạn hữu ích nhất của đế quốc.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin & Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "ẤN ĐỘ THUỘC ANH, THẬP NIÊN 1850",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "QUÁN BAR BẾN CẢNG, THẬP NIÊN 1970",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Ly của quán dành cho vị khách cuối cùng trong đêm. Sổ giữ trang, quầy giữ lý do.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Lượt Gọi Cuối",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "QUÁN NÀY, ĐÊM NAY",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Vodka khoác bộ vest chanh viền đường. Món tráng miệng làm giấy tờ để thành đồ uống.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "SAN FRANCISCO, THẬP NIÊN 1970",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Năm loại rượu đồng lòng đóng giả trà đá. Mỗi tối chỉ lừa được đúng một lần.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "LONG ISLAND, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "OAKLAND, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Whiskey và vermouth ngọt, khuấy đều. Ly cocktail đeo bảng tên của cả thành phố.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "NEW YORK, THẬP NIÊN 1870",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Tequila, cam và chanh sau lớp viền muối. Chẳng ai thống nhất ai chế ra; ai cũng hiểu vì sao.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "VÙNG BIÊN GIỚI, THẬP NIÊN 1940",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "SAN FRANCISCO, THẬP NIÊN 1880",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "SÁCH PHA CHẾ GIỮA THẾ KỶ, THẬP NIÊN 1950",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "KENTUCKY, THẾ KỶ 18",
+      "src": "KENTUCKY, 1700S"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Bạc hà dập, chanh vắt, rum được thưởng. Nghe đồn thủy thủ của Drake đã uống bản nháp.",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANA, CŨ NHƯ BẾN CẢNG",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Một anh bán vodka và một lô bia gừng ế đã chế ra thức uống Nga đậm chất Mỹ nhất.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Một chai, không bình lắc, không bàn cãi. Món của những người đã biết sẵn câu trả lời.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Rót Suông",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "BẤT CỨ ĐÂU CÓ KỆ RƯỢU",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Bá tước Negroni muốn một ly Americano mạnh hơn. Chia đều các phần, miễn mặc cả.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FLORENCE, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Đường, bitters, whiskey — thức uống mà chữ 'cocktail' được đặt ra để gọi.",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, THẬP NIÊN 1880",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Gin ửng hồng nhờ grenadine. Bằng chứng ngoại phạm đứng đắn nhất thời cấm rượu.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NEW YORK, THẬP NIÊN 1910",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Người anh em tequila của negroni, in chữ nhỏ mà được yêu muộn.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "SÁCH PHA CHẾ, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Một phần chua, hai phần ngọt, ba phần mạnh, bốn phần nhẹ. Còn lâu đời hơn cả chiếc ly đựng nó.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rum Punch",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "QUẦN ĐẢO, THẾ KỶ 17",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Mang tên dụng cụ đầu tiên dùng để khuấy nó. Ở vài bến cảng, nó có mặt từ bữa sáng.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "MỎ DẦU, THẬP NIÊN 1940",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "BỜ BIỂN NƯỚC MỸ",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PARIS, THẬP NIÊN 1920",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, chanh và bạc hà. Băng đảng uống nó; bạc hà che mùi rượu nấu trong bồn tắm.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, THẬP NIÊN 1920",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Moscow mule xuôi về phương nam — agave ngồi trên yên đồng.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "MIỀN BIÊN VIỄN",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Công thức sour với bụi đường bám trên đôi bốt. Agave đáp lời chanh.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "HỌ SOUR",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Grenadine chìm, nước cam nổi, và Rolling Stones mang nó đi lưu diễn.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, THẬP NIÊN 1970",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming viết nó cho Bond: gin, vodka, và một cái tên ông không giữ được.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Vodka và nước tăng lực trong một ly — thức uống làm cả ca ngày lẫn ca đêm.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "QUÁN BAR THÂU ĐÊM",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "Thứ nhẹ nhất mà quán bar được phép gọi là đồ uống. Sạch, lạnh, hết.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "CHẲNG ĐÂU CỤ THỂ, THẬP NIÊN 1900",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Gin sour lúc đèn đã dịu. Khách êm hơn, vẫn chanh ấy.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "HỌ SOUR",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "Người em trầm tính của G&T — tonic lo phần nói chuyện, vodka giữ áo khoác.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "NHỮNG NĂM HẬU CHIẾN, THẬP NIÊN 1950",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon cùng ly cola uống kèm đã bỏ cuộc mà nhảy luôn vào ly.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whiskey & Cola",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "QUÁN VEN ĐƯỜNG, THẬP NIÊN 1930",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Bourbon kéo dài bằng gừng — ly highball biến whiskey thành đồ uống ngày thường.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "XỨ HIGHBALL, THẬP NIÊN 1890",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Một ly julep đổi cốc bạc lấy chanh và nhanh nhẹn hơn hẳn.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "ANH HỌ THÀNH THỊ CỦA JULEP, THẬP NIÊN 1880",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Ly sour khiến bourbon trở nên lịch sự. Phần xương sống không phải tùy chọn.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "THỜI TÀU HƠI NƯỚC, THẬP NIÊN 1860",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, triple sec, chanh — món chuẩn bình lắc bạc của Harry MacElhone.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDON, THẬP NIÊN 1920",
+      "src": "LONDON, 1920S"
+    },
+    {
+      "key": "data.slot.beer_mat.place",
+      "text": "Quầy bar",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.beer_mat.title",
+      "text": "Thảm hứng bia",
+      "src": "Drip mat"
+    },
+    {
+      "key": "data.slot.ceiling.place",
+      "text": "Trần nhà",
+      "src": "The ceiling"
+    },
+    {
+      "key": "data.slot.ceiling.title",
+      "text": "Trần",
+      "src": "Ceiling"
+    },
+    {
+      "key": "data.slot.floor.place",
+      "text": "Sàn nhà",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor.title",
+      "text": "Sàn",
+      "src": "Floor"
+    },
+    {
+      "key": "data.slot.floor_rug.place",
+      "text": "Sàn nhà",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor_rug.title",
+      "text": "Thảm",
+      "src": "Rug"
+    },
+    {
+      "key": "data.slot.plant_left.place",
+      "text": "Cạnh cửa sổ",
+      "src": "By the window"
+    },
+    {
+      "key": "data.slot.plant_left.title",
+      "text": "Cây bên trái",
+      "src": "Left plant"
+    },
+    {
+      "key": "data.slot.plant_right.place",
+      "text": "Quầy bar",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.plant_right.title",
+      "text": "Cây bên phải",
+      "src": "Right plant"
+    },
+    {
+      "key": "data.slot.prep_mat.place",
+      "text": "Quầy bar",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.prep_mat.title",
+      "text": "Thảm đồ nhắm",
+      "src": "Snack mat"
+    },
+    {
+      "key": "data.slot.shaker.place",
+      "text": "Trong tay bạn",
+      "src": "In your hand"
+    },
+    {
+      "key": "data.slot.shaker.title",
+      "text": "Bình lắc",
+      "src": "Shaker"
+    },
+    {
+      "key": "data.slot.sink.place",
+      "text": "Quầy bar",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.sink.title",
+      "text": "Bồn rửa",
+      "src": "Sink"
+    },
+    {
+      "key": "data.slot.table_left.place",
+      "text": "Sàn nhà",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_left.title",
+      "text": "Bàn bên trái",
+      "src": "Left table"
+    },
+    {
+      "key": "data.slot.table_right.place",
+      "text": "Sàn nhà",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_right.title",
+      "text": "Bàn bên phải",
+      "src": "Right table"
+    },
+    {
+      "key": "data.slot.taps.place",
+      "text": "Quầy bar",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.taps.title",
+      "text": "Tháp bia",
+      "src": "Beer tower"
+    },
+    {
+      "key": "data.slot.wall_center.place",
+      "text": "Tường sau quầy",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_center.title",
+      "text": "Tranh chính giữa",
+      "src": "Centre picture"
+    },
+    {
+      "key": "data.slot.wall_lamps.place",
+      "text": "Tường sau quầy",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_lamps.title",
+      "text": "Đèn tường",
+      "src": "Wall lamps"
+    },
+    {
+      "key": "data.slot.wall_right.place",
+      "text": "Tường sau quầy",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_right.title",
+      "text": "Biển neon",
+      "src": "Neon sign"
+    },
+    {
+      "key": "data.slot.wall_right_art.place",
+      "text": "Tường bên phải",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_right_art.title",
+      "text": "Tranh trên màn hình",
+      "src": "Picture over the screen"
+    },
+    {
+      "key": "data.slot.wall_tv.place",
+      "text": "Tường bên phải",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_tv.title",
+      "text": "Màn hình & áp phích",
+      "src": "Screen & posters"
+    },
+    {
+      "key": "data.slot.walls.place",
+      "text": "Tường sau quầy",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.walls.title",
+      "text": "Tường sau",
+      "src": "Back wall"
+    },
+    {
+      "key": "data.slot.walls_right.place",
+      "text": "Tường bên phải",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.walls_right.title",
+      "text": "Tường phải",
+      "src": "Right wall"
+    }
+  ]
+}

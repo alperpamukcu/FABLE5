@@ -936,7 +936,12 @@ namespace LastCall.UI
             _idTipClosing = false;
             _idTipRest = 0f;
             _idTipAway = 0f;
-            float inner = TipW - 20f, bodyH;
+            // A RECIPE IS A PAGE OF THE BOOK, AT THE BOOK'S OWN MEASURE (2026-09-23, the author: "bu menü
+            // görüntüsüne ve tasarımına göre kimlikte alkol hoverini güncelle"). The recipe tip is the page's
+            // column (BkColW) plus the tip's own 10-unit margins, so every block in it is the page's block at the
+            // width it was measured at; the three small tips keep TipW.
+            float tipW = h.Kind == IdTipKind.Recipe ? BkColW + 20f : TipW;
+            float inner = tipW - 20f, bodyH;
             switch (h.Kind)
             {
                 case IdTipKind.Recipe: bodyH = DrawRecipeCard(_idRecipeTipBody, OrderOnTheCard(), inner); break;
@@ -944,7 +949,7 @@ namespace LastCall.UI
                 case IdTipKind.Stats: bodyH = DrawStatsTip(_idRecipeTipBody, inner); break;
                 default: bodyH = DrawFlagTip(_idRecipeTipBody, inner); break;
             }
-            _idRecipeTip.sizeDelta = new Vector2(TipW, bodyH + 18f);
+            _idRecipeTip.sizeDelta = new Vector2(tipW, bodyH + 18f);
             _idRecipeTip.gameObject.SetActive(true);
             _idRecipeTip.SetAsLastSibling();
             foreach (var g in _idRecipeTip.GetComponentsInChildren<Graphic>(true))

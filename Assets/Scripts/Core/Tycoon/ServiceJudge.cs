@@ -226,6 +226,11 @@ namespace LastCall.Core
         /// third of a drink in it is not a drink, whatever the ratios say.</summary>
         public const double RefusalFill = 0.35;
 
+        /// <summary>How much of a serve's satisfaction being late can take. It was written into
+        /// the sum as a literal until 2026-09-22; it is named now because a page's character
+        /// scales it (DrinkTrait.WaitPenaltyScale) and a scale on a literal is a bug waiting.</summary>
+        public const double WaitPenalty = 0.30;
+
         // Widened 0.75 → 0.90 (2026-07-22): the extra order should reward *reading* someone
         // and serving their drink right, not also racing the clock.
         public const double ExtraOrderWindow = 0.90;
@@ -354,18 +359,38 @@ namespace LastCall.Core
         /// because a wrong drink now pays the delivered drink's own base price (v5 P11 / C1). An
         /// unidentifiable glass is worth nothing, which is the honest reading of "whatever this
         /// is, it is not a drink".</para>
+        ///
+        /// <para><paramref name="house"/> is the installed room's buffs (2026-09-23); null reads as
+        /// <see cref="HouseBuffs.None"/>, so every caller that predates the room is judged as it
+        /// was. Its SERVICE is added by the caller, beside the ambience; the rest ride in here.</para>
         /// </summary>
         public static ServiceVerdict Judge(CustomerVisit visit, OrderMatch match,
             GlassContents delivered, WealthTier crowd = WealthTier.Regular, double ambienceBonus = 0,
-            RecipeMatch served = null, Func<string, IngredientCard> lookup = null)
+            RecipeMatch served = null, Func<string, IngredientCard> lookup = null,
+            HouseBuffs house = null)
         {
             if (visit == null) throw new ArgumentNullException(nameof(visit));
 
             var spec = visit.OrderTruth.Spec;
             double fill = delivered?.FillFraction ?? 0;
 
+            // THE PAGE'S CHARACTER (2026-09-22, DrinkTraits). Every use below is a SCALE on a
+            // house constant that is already in this method, so a page with no character — and
+            // every synthetic recipe the tests build — computes exactly what it computed before.
+            // Two of them, because a wrong drink is priced as the drink it actually IS: the
+            // ordered page's character grades the service, the delivered page's prices the glass.
+            var t = DrinkTraits.Of(visit.OrderTruth.Wanted);
+            var poured = DrinkTraits.Of(served?.Recipe);
+            // THE ROOM'S BUFFS (2026-09-23, HouseBuffs): the same pattern, one level up. Each is a
+            // scale beside the page's own on the constant they both touch, and None is every
+            // identity. The refusal line, the pay floors and the satisfaction constants are the
+            // judge's own and no fitting reaches them.
+            var h = house ?? HouseBuffs.None;
+
             // A glass with barely anything in it is refused before anything else is weighed.
-            if (delivered != null && !delivered.IsEmpty && fill < RefusalFill)
+            // A drink that READS FULL is refused a little later than the rest: the line is a
+            // step and not a curve, so a character may only ever lower it.
+            if (delivered != null && !delivered.IsEmpty && fill < RefusalFill * t.RefusalFillScale)
                 return new ServiceVerdict(OrderMatch.Refused, 0, 0, false, false,
                     0.02, 0, 0);
 
@@ -386,15 +411,21 @@ namespace LastCall.Core
             // something. The ordered drink in the WRONG box pays nothing at all ("tamamen
             // yanlış"): the box is on the menu for everyone to read, and missing it is
             // missing the drink. A different drink still pays what it actually is.
+            //
+            // The FLOOR is the character's (MADE BY FEEL lifts it, NO PLACE TO HIDE drops it):
+            // it is worth nothing at a perfect pour and everything at a shaky one, which is the
+            // shape a forgiving drink should have.
             int basePaid;
+            double payFloor = AccuracyPayFloor * t.PayFloorScale;
+            double pouredFloor = AccuracyPayFloor * poured.PayFloorScale;
             if (match == OrderMatch.Exact)
                 basePaid = Math.Max(1, (int)Math.Round(visit.OrderTruth.Price
-                    * (AccuracyPayFloor + (1 - AccuracyPayFloor) * accuracy),
+                    * (payFloor + (1 - payFloor) * accuracy),
                     MidpointRounding.AwayFromZero));
             else if (match == OrderMatch.Wrong)
                 basePaid = served?.Recipe != null
                     ? Math.Max(1, (int)Math.Round(DrinkOrder.MenuPrice(served.Recipe)
-                        * (AccuracyPayFloor + (1 - AccuracyPayFloor) * accuracy),
+                        * (pouredFloor + (1 - pouredFloor) * accuracy),
                         MidpointRounding.AwayFromZero))
                     : 0;
             else
@@ -422,7 +453,11 @@ namespace LastCall.Core
             double craft = SpecWeight * craftScore
                          + AccuracyWeight * accuracy
                          + FillWeight * fillScore;
-            double quality = craft * (ClockFloor + (1.0 - ClockFloor) * speedScore);
+            // STILL GOOD LATE / DIES WARM move the off-clock share, which taper to exactly
+            // nothing at speedScore 1: they pay, or cost, only a serve that is already late.
+            // ...and the room's LATE TIP beside them (the picture that watches the door).
+            double clockFloor = ClockFloor * t.ClockFloorScale * h.ClockFloorScale;
+            double quality = craft * (clockFloor + (1.0 - clockFloor) * speedScore);
 
             // Only the RIGHT drink is tipped now (2026-08-20): a broke crowd never tips, a
             // wrong drink is paid for and nothing more, and the ordered drink out of its box
@@ -432,8 +467,25 @@ namespace LastCall.Core
             // treats a drink that is nearly right.
             int tip = 0;
             if (crowd != WealthTier.Broke && match == OrderMatch.Exact && basePaid > 0)
-                tip = (int)Math.Round(basePaid * TipCeiling * quality,
+                // THEY TIP FOR THIS ONE / PAYS THE BILL ride the CEILING, outside the weighted
+                // craft sum — so the three craft weights still add to exactly one and the page's
+                // character multiplies what was earned rather than re-deciding how it was earned.
+                // The room's TIP (the wall lamps) rides the same ceiling, and the till's backstop
+                // below still runs after it.
+                tip = (int)Math.Round(basePaid * TipCeiling * t.TipCeilingScale * h.TipScale * quality,
                     MidpointRounding.AwayFromZero);
+
+            // NOBODY HANDS OVER FOUR HUNDRED DOLLARS FOR A DRINK (2026-09-23, the author: "bir
+            // kokteyl 400 dolar olmamali"). The bands are cut so the shipped book cannot come near
+            // DrinkPricing.CeilingPerDrink; this is the backstop, and it is here rather than on the
+            // menu price because the till is where every multiplier has finally been applied — the
+            // crowd, the shelf's premium and the thanks on top. The tip gives way first: what is
+            // capped is generosity, never the bill the drink was actually worth.
+            if (basePaid + tip > DrinkPricing.CeilingPerDrink)
+            {
+                basePaid = Math.Min(basePaid, DrinkPricing.CeilingPerDrink);
+                tip = Math.Max(0, DrinkPricing.CeilingPerDrink - basePaid);
+            }
 
             // Close drops from its P11 half-way house (0.5) to 0.30: they can tell it is
             // their drink and they can tell it is ruined. Still well above Wrong — being
@@ -443,7 +495,9 @@ namespace LastCall.Core
                 + (match == OrderMatch.Exact ? 0.10 * (accuracy - 0.5) : 0.0)
                 + (match != OrderMatch.Wrong ? 0.20 * (craftScore - 0.5) : 0.0)
                 + (match != OrderMatch.Wrong ? 0.12 * (fillScore - 0.5) : 0.0)
-                - 0.30 * visit.WaitFraction
+                // KEEPS IN THE GLASS / DRINK IT HOT: how much being late sours THIS drink — and
+                // the room's LATE PENALTY (the screen and its posters) softens it for every drink.
+                - WaitPenalty * t.WaitPenaltyScale * h.WaitPenaltyScale * visit.WaitFraction
                 + ambienceBonus;
             satisfaction = Math.Max(0.0, Math.Min(1.0, satisfaction));
 
@@ -452,7 +506,9 @@ namespace LastCall.Core
             // menu — the run keeps the set, the judge only says whether this serve was one.
             bool perfectMake = match == OrderMatch.Exact && lookup != null
                 && visit.OrderTruth.Wanted.HasAuthoredRatios
-                && worstMiss <= PerfectWindow;
+                // EASY TO LEARN widens the window — the page you go and learn the book on — and
+                // the counter lamps' PERFECT WINDOW widens it for every page they light.
+                && worstMiss <= PerfectWindow * t.PerfectWindowScale * h.PerfectWindowScale;
 
             // Another round is the reward for the exact drink made the way they asked,
             // comfortably inside patience — and only from someone who has been in before.

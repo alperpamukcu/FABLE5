@@ -74,6 +74,11 @@ namespace LastCall.Core
         public int MinorsServed { get; }
         public int MinorsMet { get; }
 
+        /// <summary>What the night's unserved customers came to on the bill (2026-09-22): the
+        /// compensation charged for every drink that never arrived, and how many there were.</summary>
+        public int WalkOutFees { get; }
+        public int WalkOutsCharged { get; }
+
         /// <summary>The till once everything was paid. This is the number the strike watches,
         /// so it is the number the book has to show.</summary>
         public int TillAfter { get; }
@@ -86,7 +91,8 @@ namespace LastCall.Core
             int served = 0, int walkedOut = 0, double nightStars = 0, int tillAfter = 0,
             bool hasDetail = false, double serviceStars = 0, double comfortStars = 0,
             int fines = 0, int bonus = 0, int rightKicks = 0, int wrongKicks = 0,
-            int minorsServed = 0, int minorsMet = 0)
+            int minorsServed = 0, int minorsMet = 0,
+            int walkOutFees = 0, int walkOutsCharged = 0)
         {
             Day = day;
             Income = income;
@@ -110,6 +116,8 @@ namespace LastCall.Core
             WrongKicks = wrongKicks;
             MinorsServed = minorsServed;
             MinorsMet = minorsMet;
+            WalkOutFees = walkOutFees;
+            WalkOutsCharged = walkOutsCharged;
         }
     }
 
@@ -122,6 +130,7 @@ namespace LastCall.Core
         public double NightStars;
         public double ServiceStars, ComfortStars;
         public int Fines, Bonus, RightKicks, WrongKicks, MinorsServed, MinorsMet;
+        public int WalkOutFees, WalkOutsCharged;
     }
 
     /// <summary>
@@ -177,7 +186,8 @@ namespace LastCall.Core
                     detail.Served, detail.WalkedOut, detail.NightStars, tillAfter, true,
                     detail.ServiceStars, detail.ComfortStars,
                     detail.Fines, detail.Bonus, detail.RightKicks, detail.WrongKicks,
-                    detail.MinorsServed, detail.MinorsMet);
+                    detail.MinorsServed, detail.MinorsMet,
+                    detail.WalkOutFees, detail.WalkOutsCharged);
             _history.Add(result);
 
             DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;

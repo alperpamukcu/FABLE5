@@ -51,6 +51,20 @@ namespace LastCall.Core
         /// is a good story, not a new reputation.</summary>
         public const double MaxNightlyGain = 0.25;
 
+        /// <summary>
+        /// A STEP TOWARD THE NIGHT, NOT A SHARE OF THE GAP (2026-09-23, measured).
+        ///
+        /// The standing used to move a TENTH of the distance to the night it filed, which
+        /// approaches a target without ever arriving: <c>5 × 0.9^n &lt; 1e-9</c> needs 212
+        /// consecutive five-star nights, so the fifth rung, the 5.0 market shelf and the book's
+        /// last page were unreachable by arithmetic rather than by difficulty. A fixed step
+        /// arrives: six good nights is a star, thirty is the whole ladder, and it still cannot
+        /// overshoot the night that was actually filed.
+        ///
+        /// Losing stays faster than earning, which is the rule this class was written on.
+        /// </summary>
+        public const double GainStep = 1.0 / 6.0, LossStep = 0.25;
+
         private readonly List<double> _nights = new List<double>();
 
         /// <summary>Every night this bar has closed, in the (capped) stars that were filed,
@@ -168,8 +182,9 @@ namespace LastCall.Core
         public double StandingAfter(double nightStars)
         {
             double delta = nightStars - _standing;
-            double move = delta * (delta >= 0 ? GainRate : LossRate);
-            if (move > MaxNightlyGain) move = MaxNightlyGain;
+            // A STEP, CLAMPED TO THE NIGHT (2026-09-23 — see GainStep). Never further than the
+            // night actually was, so a good night cannot carry the bar past what it earned.
+            double move = delta >= 0 ? Math.Min(delta, GainStep) : Math.Max(delta, -LossStep);
             return Math.Max(0.0, Math.Min(MaxStars, _standing + move));
         }
 

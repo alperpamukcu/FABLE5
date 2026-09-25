@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace LastCall.Core
 {
@@ -36,6 +37,89 @@ namespace LastCall.Core
             }
         }
 
+        // ── what the room DOES: the installed pieces' buffs (2026-09-23) ─────────────────────
+        // The author: "Hangi geliştirme takılıysa o buff aktif olacak, konfor gibi değil." Comfort
+        // reads the rung a ladder CLIMBED to (above); a buff reads the rung it WEARS — the one the
+        // player chose to show, else the tallest owned — and a single piece while it is owned. The
+        // tools follow the same rule (Option A, TycoonRun.WorkSpeed), so there is one answer to
+        // "which rung counts" for everything but comfort.
+
+        /// <summary>
+        /// A fitting's buff is live while this piece is the one INSTALLED: the rung its slot
+        /// wears (the one the player chose, else the tallest owned), or, for a single piece, while
+        /// it is owned. Comfort does not read this; it reads the rung the ladder CLIMBED to
+        /// (<see cref="FixtureComfort"/>).
+        /// </summary>
+        public bool IsActive(FixtureDefinition f) =>
+            f != null && _fixtures.Contains(f.Id) && (f.Level == 0 || WornRung(f.Slot)?.Id == f.Id);
+
+        /// <summary>Every installed piece, in catalogue order.</summary>
+        public IEnumerable<FixtureDefinition> ActiveFittings
+        {
+            get
+            {
+                foreach (var f in _fixtureCatalogue)
+                    if (IsActive(f)) yield return f;
+            }
+        }
+
+        /// <summary>
+        /// The installed room's buffs. Cached on the room's revision and the A/B gate: the top
+        /// bar reads <see cref="ComfortNow"/> every frame, and a fresh aggregate per frame would
+        /// allocate per frame. The room cannot change while the doors are open
+        /// (<see cref="WearFixture"/>), so a night reads one room from its first arrival to its last.
+        /// </summary>
+        public HouseBuffs Buffs
+        {
+            get
+            {
+                if (_buffs == null || _buffsRevision != _roomRevision || _buffsEnabled != HouseBuffs.Enabled)
+                {
+                    _buffs = HouseBuffs.From(ActiveFittings);
+                    _buffsRevision = _roomRevision;
+                    _buffsEnabled = HouseBuffs.Enabled;
+                }
+                return _buffs;
+            }
+        }
+
+        private HouseBuffs _buffs;
+        private int _buffsRevision = -1;
+        private bool _buffsEnabled;
+        private int _roomRevision;
+
+        /// <summary>Called at every site that changes what the bar owns or what a slot wears.</summary>
+        private void RoomChanged() => _roomRevision++;
+
+        /// <summary>One piece's effects, lead first, with the tools' figures derived against the
+        /// slot's own foot (<see cref="FittingBuffs.EffectsOf"/>). What the market tile, the upgrade
+        /// card and the hover print.</summary>
+        public IReadOnlyList<FittingEffect> FittingEffects(FixtureDefinition f) =>
+            FittingBuffs.EffectsOf(f, _fixtureCatalogue);
+
+        /// <summary>The floor's house is told what the installed room says: the basin's wash and
+        /// the counter's grace. One body for every site that builds a floor or changes the room.</summary>
+        private void PushHouse(BarDay floor, HouseBuffs b)
+        {
+            floor.House.SinkSeconds = SinkSeconds;
+            floor.House.Grace = Housekeeping.DirtGrace * b.GraceScale;
+        }
+
+        /// <summary>
+        /// ONE FLOOR FACTORY (2026-09-23). Five sites built a <see cref="BarDay"/> and then pushed
+        /// the basin into it; they all come here now, so the door's CROWD and the counter's grace
+        /// reach every night the same way. The streams are fetched in the order they always were
+        /// ("arrivals", then "mess"), and a bare room's gap scale is exactly 1.
+        /// </summary>
+        private BarDay NewFloor(double stars)
+        {
+            var b = Buffs;
+            var floor = new BarDay(Day, Seats, _config, _rng.GetStream("arrivals"), stars,
+                                   _rng.GetStream("mess"), b.ArrivalGapScale);
+            PushHouse(floor, b);
+            return floor;
+        }
+
         /// <summary>The glassware ladder's cap, as the old fittings ceiling summed it
         /// (front-loaded per step, measured 2026-08-02 — see <see cref="GlassStepCap"/>).
         /// Comfort counts half of it (<see cref="VenueComfort.GlassComfortShare"/>).</summary>
@@ -62,16 +146,18 @@ namespace LastCall.Core
             VenueComfort.Base(FixtureComfort, GlassStepsCap, Math.Max(0, Seats - _config.StartingSeats));
 
         /// <summary>The room as it stands THIS SECOND: the base less the messes past their
-        /// grace (GDD 27 §2.2). The shift's gauge, and what the sim reads per tick.</summary>
+        /// grace (GDD 27 §2.2), cushioned by the installed COMFORT buff (2026-09-23). The shift's
+        /// gauge, and what the sim reads per tick.</summary>
         public double ComfortNow =>
-            VenueComfort.Now(ComfortBase, Floor.House.DirtySpots, Seats);
+            VenueComfort.Now(ComfortBase, Floor.House.DirtySpots, Seats, Buffs.ComfortScale);
 
         /// <summary>Tonight's filed comfort: the base less what the mess cost over the whole
-        /// night so far, time-weighted per seat against the night the floor actually ran.
-        /// Exactly the number <see cref="ContinueToNextDay"/> files as ComfortStars, asked
-        /// before it is filed.</summary>
+        /// night so far, time-weighted per seat against the night the floor actually ran, and
+        /// then cushioned by the installed COMFORT buff — after the mess, never under it
+        /// (2026-09-23). Exactly the number <see cref="ContinueToNextDay"/> files as ComfortStars,
+        /// asked before it is filed.</summary>
         public double ComfortTonight =>
-            VenueComfort.Tonight(ComfortBase, Floor.House.Cleanliness(Seats, Floor.Elapsed));
+            VenueComfort.Tonight(ComfortBase, Floor.House.Cleanliness(Seats, Floor.Elapsed), Buffs.ComfortScale);
 
         /// <summary>The share of the night the counter was clean so far, 0..1.</summary>
         public double CleanlinessTonight => Floor.House.Cleanliness(Seats, Floor.Elapsed);
@@ -92,13 +178,19 @@ namespace LastCall.Core
         /// The basin the bar has fitted, in seconds — read off the FIXTURE, like the drain's
         /// waiver beside it (2026-09-06). Pushed into the counter whenever the room changes,
         /// so Core never has to ask the shop mid-night.
+        ///
+        /// THE INSTALLED BASIN (2026-09-23). This used to return the first OWNED drain in
+        /// catalogue order, and the old steel sink the room opens with is listed first — so the
+        /// Steel Sink's 3.0 s and the Brass Sink's 2.5 s never applied, while the upgrade card
+        /// promised them. It reads the basin the slot wears now, like every other tool.
         /// </summary>
         public double SinkSeconds
         {
             get
             {
                 foreach (var f in _fixtureCatalogue)
-                    if (f.WashSeconds > 0 && _fixtures.Contains(f.Id)) return f.WashSeconds;
+                    if (f.IsDrain && IsActive(f))
+                        return f.WashSeconds > 0 ? f.WashSeconds : Housekeeping.WashSeconds;
                 return Housekeeping.WashSeconds;
             }
         }

@@ -798,6 +798,361 @@ namespace LastCall.UI
                 ".########.......",
                 "................",
             },
+
+            // ── the levers a drink's CHARACTER pulls (2026-09-22, DrinkTraits) ───────────────
+            //
+            // Four marks, one per lever the existing set could not already say. The other two
+            // are borrowed rather than drawn twice: the pour's is "mix" (the tin) and the
+            // till's is the author's own coin (ItemArt.Coin), which carries its own colour.
+
+            // THE CLOCK — a dial with one hand up and one out. How long they will sit for it.
+            ["clock"] = new[]
+            {
+                "................",
+                "................",
+                "....########....",
+                "..##........##..",
+                ".##....##.....##",
+                ".##....##.....##",
+                "##.....##......#",
+                "##.....######..#",
+                "##.............#",
+                ".##...........##",
+                ".##...........##",
+                "..##........##..",
+                "....########....",
+                "................",
+                "................",
+                "................",
+            },
+            // ANOTHER ROUND — two glasses, the second one behind the first.
+            ["round"] = new[]
+            {
+                "................",
+                "................",
+                ".......########.",
+                "..#####.##...##.",
+                "..#####..##.##..",
+                "..#####...###...",
+                "..#####....#....",
+                "..#####....#....",
+                "...###..####....",
+                "....#...........",
+                "....#...........",
+                "..#####.........",
+                "................",
+                "................",
+                "................",
+                "................",
+            },
+            // THE ROOM — three heads at the bar, and the middle one looking up.
+            ["room"] = new[]
+            {
+                "................",
+                "................",
+                "......####......",
+                "......####......",
+                "................",
+                "..##........##..",
+                "..##........##..",
+                "................",
+                ".....######.....",
+                "....########....",
+                "................",
+                "###....##....###",
+                "####..####..####",
+                "####..####..####",
+                "................",
+                "................",
+            },
+            // THE COUNTER — a cloth over a wiped board, the mark half gone under it.
+            ["counter"] = new[]
+            {
+                "................",
+                "................",
+                "................",
+                "......##........",
+                ".....####.......",
+                "......##........",
+                "................",
+                "..############..",
+                ".##############.",
+                ".##############.",
+                "..############..",
+                "................",
+                "................",
+                "###.###.###.###.",
+                "................",
+                "................",
+            },
+
+            // ── the BUFFS' OWN MARKS (2026-09-23, the author: "Bufflar için küçük iconlar oluştur oyuncular
+            // o iconlarla anlayabilmeli ileride ne tarz buffları olduğunu") ───────────────────────────────────
+            //
+            // One per thing a buff can move, named buff_<stat> after the SAME key the string table and Core use
+            // (DrinkTrait.StatKey, the fittings' buff kinds), so a page's character and a fitting's buff that
+            // move one number wear one mark. Round and room reuse the lever marks above; tip, comfort and
+            // service are the house's own drawn coin, medallion and heart (TycoonHud.BuffIcon), never tinted.
+            // PATIENCE - an hourglass, the sand still in the lower bulb: how long they will wait.
+            ["buff_patience"] = new[]
+            {
+                "................",
+                "..############..",
+                "..############..",
+                "...##......##...",
+                "....##....##....",
+                ".....##..##.....",
+                "......####......",
+                ".......##.......",
+                ".......##.......",
+                "......####......",
+                ".....##..##.....",
+                "....##.##.##....",
+                "...##.####.##...",
+                "..############..",
+                "..############..",
+                "................",
+            },
+            // REFILL - a dial wound back: the ring, its hand, and the arrowhead that turns it.
+            ["buff_refill"] = new[]
+            {
+                "................",
+                ".....#####...#..",
+                "...###...###.#..",
+                "..##.......####.",
+                "..#.........###.",
+                ".##.....#...###.",
+                ".#......#.......",
+                ".#......#.......",
+                ".#......####....",
+                ".#..............",
+                ".##...........#.",
+                "..#..........##.",
+                "..##........##..",
+                "...###....###...",
+                ".....######.....",
+                "................",
+            },
+            // LATE PENALTY - the dial with a warning in it instead of hands.
+            ["buff_lateness"] = new[]
+            {
+                "................",
+                ".....######.....",
+                "...##......##...",
+                "..#....##....#..",
+                ".##....##....##.",
+                ".#.....##.....#.",
+                ".#.....##.....#.",
+                ".#.....##.....#.",
+                ".#.....##.....#.",
+                ".#............#.",
+                ".##....##....##.",
+                "..#....##....#..",
+                "...##......##...",
+                ".....######.....",
+                "................",
+                "................",
+            },
+            // LATE TIP - a coin, rim and face, with a dial's two hands cut out of it.
+            ["buff_late_tip"] = new[]
+            {
+                "................",
+                ".....######.....",
+                "...##......##...",
+                "..#..######..#..",
+                ".#..####.###..#.",
+                ".#.#####.####.#.",
+                "#..#####.####..#",
+                "#..#####....#..#",
+                "#..#########...#",
+                ".#..#########.#.",
+                ".#...#######..#.",
+                "..#..........#..",
+                "...##......##...",
+                ".....######.....",
+                "................",
+                "................",
+            },
+            // STOOL TIME - a bar stool: seat, post, foot ring, base.
+            ["buff_stool"] = new[]
+            {
+                "................",
+                "...##########...",
+                "..############..",
+                "..############..",
+                "...##########...",
+                ".......##.......",
+                ".......##.......",
+                ".......##.......",
+                ".....######.....",
+                ".....#.##.#.....",
+                ".......##.......",
+                ".......##.......",
+                ".......##.......",
+                "....########....",
+                "...##########...",
+                "................",
+            },
+            // MINIMUM PAY - three coins stacked on a floor they cannot fall through.
+            ["buff_pay_floor"] = new[]
+            {
+                "................",
+                ".....######.....",
+                "...##########...",
+                "...##########...",
+                "................",
+                ".....######.....",
+                "...##########...",
+                "...##########...",
+                "................",
+                "################",
+                "################",
+                "..##..##..##..##",
+                ".##..##..##..##.",
+                "................",
+                "................",
+                "................",
+            },
+            // PERFECT WINDOW - two brackets, and the mark between them.
+            ["buff_window"] = new[]
+            {
+                "................",
+                "................",
+                ".####......####.",
+                ".####......####.",
+                ".##..........##.",
+                ".##..........##.",
+                ".##....##....##.",
+                ".##...####...##.",
+                ".##...####...##.",
+                ".##....##....##.",
+                ".##..........##.",
+                ".##..........##.",
+                ".####......####.",
+                ".####......####.",
+                "................",
+                "................",
+            },
+            // REFUSAL LINE - a glass poured short, and the line it has to reach drawn through it.
+            ["buff_refusal"] = new[]
+            {
+                "................",
+                "................",
+                "..#..........#..",
+                "..#..........#..",
+                "..#..........#..",
+                "##.##.##.##.##.#",
+                "..#..........#..",
+                "..#..........#..",
+                "..#..........#..",
+                "..############..",
+                "..############..",
+                "..############..",
+                "...##########...",
+                "....########....",
+                "................",
+                "................",
+            },
+            // MESS - a spill: the puddle and the drops that made it.
+            ["buff_mess"] = new[]
+            {
+                "................",
+                "..........#.....",
+                ".........###....",
+                ".........###....",
+                "...#......#.....",
+                "..###...........",
+                "..###......#....",
+                "...#......###...",
+                "...........#....",
+                "................",
+                "....######......",
+                "..###########...",
+                ".##############.",
+                "..############..",
+                "....#######.....",
+                "................",
+            },
+            // PRICE - a price tag, hole and all.
+            ["buff_price"] = new[]
+            {
+                "................",
+                "................",
+                ".....##########.",
+                "....###########.",
+                "...############.",
+                "..####..#######.",
+                ".####....######.",
+                ".####....######.",
+                "..####..#######.",
+                "...############.",
+                "....###########.",
+                ".....##########.",
+                "................",
+                "................",
+                "................",
+                "................",
+            },
+            // ARRIVALS - the door, and somebody's arrow coming in through it.
+            ["buff_arrivals"] = new[]
+            {
+                "................",
+                "....##########..",
+                "....#........#..",
+                "....#........#..",
+                "....#........#..",
+                "#...#........#..",
+                "##..#........#..",
+                "#######......#..",
+                "#######....#.#..",
+                "##..#........#..",
+                "#...#........#..",
+                "....#........#..",
+                "....#........#..",
+                "....#........#..",
+                "..############..",
+                "................",
+            },
+            // MESS GRACE - the spill, and the hourglass it is given before it counts.
+            ["buff_grace"] = new[]
+            {
+                "................",
+                "..######........",
+                "..######........",
+                "...#..#.........",
+                "....##..........",
+                "....##..........",
+                "...#..#.........",
+                "..######........",
+                "..######........",
+                "................",
+                "........#####...",
+                "......#########.",
+                ".....##########.",
+                "......########..",
+                "................",
+                "................",
+            },
+            // WASH TIME - a drop over the basin.
+            ["buff_wash"] = new[]
+            {
+                "................",
+                ".......#........",
+                "......###.......",
+                ".....#####......",
+                ".....#####......",
+                "......###.......",
+                "................",
+                "################",
+                "################",
+                ".##..........##.",
+                "..##........##..",
+                "...##########...",
+                "....########....",
+                "................",
+                "................",
+                "................",
+            },
         };
 
         /// <summary>One 16x16 mark, white, for the caller to tint. Null for a name that has
@@ -3668,6 +4023,50 @@ namespace LastCall.UI
                     px[y * W + x] = arc || dot ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
                 }
             return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>
+        /// THE PLATE A BUFF STANDS ON (2026-09-23, the author: "Buff olduğunu belirten yeşil plakanın etrafında
+        /// çerçeve olsun ve köşesiz köşeleri oval olsun hafif"). Twelve texels: a one-texel rim in the ramp's
+        /// darkest step that rounds each corner over two texels, a second dark row along the foot so the plate
+        /// stands ON the page, and the fill one step up. Baked from the ramp rather than tinted white, so the
+        /// frame and the fill are palette steps (14 §3: shading moves along a ramp) and the type on the plate
+        /// keeps its contrast: Cream[4] on Lime[1] is 6.8:1 and on ViceRed[1] 9.3:1, where the old Lime[2]
+        /// wash gave the same cream 2.9:1. Pass UITheme.Lime for a buff, UITheme.ViceRed for a nerf,
+        /// UITheme.Cream for a buff that is owned but not live. Sliced three deep; stand it at
+        /// pixelsPerUnitMultiplier 0.5 for the house's 2x (a 2-unit frame, 4-unit corners, a 4-unit foot).
+        /// </summary>
+        public static Sprite BuffPlate(Color[] ramp)
+        {
+            if (ramp == null || ramp.Length < 2) return null;
+            Color32 rim = ramp[0], fill = ramp[1], clear = new Color32(0, 0, 0, 0);
+            string key = "plate:buff:" + rim.r + "." + rim.g + "." + rim.b;
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            string[] rows =
+            {
+                "..RRRRRRRR..",
+                ".RFFFFFFFFR.",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                "RFFFFFFFFFFR",
+                ".RRRRRRRRRR.",
+                "..RRRRRRRR..",
+            };
+            const int S = 12;
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    // Authored top-down, the way it reads in source; the texture counts up.
+                    char c = rows[S - 1 - y][x];
+                    px[y * S + x] = c == 'R' ? rim : c == 'F' ? fill : clear;
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(3, 3, 3, 3));
         }
 
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)

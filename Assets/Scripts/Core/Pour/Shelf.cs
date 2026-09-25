@@ -185,12 +185,16 @@ namespace LastCall.Core
             return poured;
         }
 
-        /// <summary>Total refill cost for everything below full, at the given price per capacity.</summary>
-        public int RefillCost(int pricePerCapacity)
+        /// <summary>Total refill cost for everything below full. The price is asked PER BOTTLE
+        /// (2026-09-23): a glass of stock costs what the tier it came out of costs, so a shelf of
+        /// well bottles and a shelf of top-shelf ones do not restock for the same money.</summary>
+        public int RefillCost(Func<int, int> pricePerCapacityForTier)
         {
-            double missing = 0;
-            foreach (var bottle in _bottles) missing += bottle.Capacity - bottle.Remaining;
-            return (int)Math.Ceiling(missing * pricePerCapacity);
+            if (pricePerCapacityForTier == null) throw new ArgumentNullException(nameof(pricePerCapacityForTier));
+            double cost = 0;
+            foreach (var bottle in _bottles)
+                cost += (bottle.Capacity - bottle.Remaining) * pricePerCapacityForTier(bottle.Tier);
+            return (int)Math.Ceiling(cost);
         }
 
         public void RefillAll()

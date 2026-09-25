@@ -1,82 +1,334 @@
-{"strings": [
-  {"key": "data.recipe.mojito.name", "text": "Mojito", "src": "Mojito"},
-  {"key": "data.recipe.mojito.origin", "text": "HAVANNA, RÉGI, MINT A KIKÖTŐ", "src": "HAVANA, OLD AS THE HARBOUR"},
-  {"key": "data.recipe.moscow_mule.lore", "text": "Egy vodkaügynök és egy gyömbérsör-felesleg találta fel Oroszország legamerikaibb italát.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-  {"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule", "src": "Moscow Mule"},
-  {"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941", "src": "LOS ANGELES, 1941"},
-  {"key": "data.recipe.neat_pour.lore", "text": "Egy üveg, se shaker, se vita. Azoknak a rendelés, akik már tudják a választ.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-  {"key": "data.recipe.neat_pour.name", "text": "Tisztán", "src": "Neat Pour"},
-  {"key": "data.recipe.neat_pour.origin", "text": "BÁRHOL, AHOL VAN POLC", "src": "ANYWHERE WITH A SHELF"},
-  {"key": "data.recipe.negroni.lore", "text": "Negroni gróf egy erősebb Americanót kért. Egyenlő arányok, alku nincs.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-  {"key": "data.recipe.negroni.name", "text": "Negroni", "src": "Negroni"},
-  {"key": "data.recipe.negroni.origin", "text": "FIRENZE, 1919", "src": "FLORENCE, 1919"},
-  {"key": "data.recipe.old_fashioned.lore", "text": "Cukor, bitter, whiskey — az ital, amelyre a „koktél” szót kitalálták.", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-  {"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned", "src": "Old Fashioned"},
-  {"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, 1880-AS ÉVEK", "src": "LOUISVILLE, 1880S"},
-  {"key": "data.recipe.paloma.lore", "text": "Tequila és grépfrútos szóda. Mexikó igazi kedvence; a margaritának csak jobb a sajtója.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-  {"key": "data.recipe.paloma.name", "text": "Paloma", "src": "Paloma"},
-  {"key": "data.recipe.paloma.origin", "text": "MEXIKÓ, 1950-ES ÉVEK", "src": "MEXICO, 1950S"},
-  {"key": "data.recipe.pink_lady.lore", "text": "Grenadintól elpiruló gin. A szesztilalom legtisztességesebb alibije.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-  {"key": "data.recipe.pink_lady.name", "text": "Pink Lady", "src": "Pink Lady"},
-  {"key": "data.recipe.pink_lady.origin", "text": "NEW YORK, 1910-ES ÉVEK", "src": "NEW YORK, 1910S"},
-  {"key": "data.recipe.rosita.lore", "text": "A negroni tequilás unokatestvére: apró betűvel nyomták, későn szerették meg.", "src": "The negroni's tequila cousin, printed small and loved late."},
-  {"key": "data.recipe.rosita.name", "text": "Rosita", "src": "Rosita"},
-  {"key": "data.recipe.rosita.origin", "text": "A BÁRKÖNYVEK, 1974", "src": "THE BAR BOOKS, 1974"},
-  {"key": "data.recipe.rum_punch.lore", "text": "Egy rész savanyú, két rész édes, három erős, négy gyenge. Idősebb a pohárnál, amiben áll.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-  {"key": "data.recipe.rum_punch.name", "text": "Rumpuncs", "src": "Rum Punch"},
-  {"key": "data.recipe.rum_punch.origin", "text": "A SZIGETEK, 17. SZÁZAD", "src": "THE ISLANDS, 1600S"},
-  {"key": "data.recipe.screwdriver.lore", "text": "Arról a szerszámról kapta a nevét, amivel először megkeverték. Néhány kikötőben ez a reggeli.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-  {"key": "data.recipe.screwdriver.name", "text": "Screwdriver", "src": "Screwdriver"},
-  {"key": "data.recipe.screwdriver.origin", "text": "AZ OLAJMEZŐK, 1940-ES ÉVEK", "src": "THE OIL FIELDS, 1940S"},
-  {"key": "data.recipe.sea_breeze.lore", "text": "Vörösáfonya és grépfrút sétáltatja a vodkát a parton.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-  {"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze", "src": "Sea Breeze"},
-  {"key": "data.recipe.sea_breeze.origin", "text": "AZ AMERIKAI PART", "src": "THE AMERICAN COAST"},
-  {"key": "data.recipe.sex_on_beach.lore", "text": "Barack, narancs és vörösáfonya vodkán. A tavaszi szünet, pohárba töltve.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-  {"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach", "src": "Sex on the Beach"},
-  {"key": "data.recipe.sex_on_beach.origin", "text": "FLORIDA, 1980-AS ÉVEK", "src": "FLORIDA, 1980S"},
-  {"key": "data.recipe.sidecar.lore", "text": "A Ritz magáénak vallja, London vitatja. A miénk bourbonnel megy, és nem kér bocsánatot.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-  {"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar", "src": "Bourbon Sidecar"},
-  {"key": "data.recipe.sidecar.origin", "text": "PÁRIZS, 1920-AS ÉVEK", "src": "PARIS, 1920S"},
-  {"key": "data.recipe.southside.lore", "text": "Gin, lime és menta. A banda itta; a menta elfedte a kádban főzött gint.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-  {"key": "data.recipe.southside.name", "text": "Southside", "src": "Southside"},
-  {"key": "data.recipe.southside.origin", "text": "CHICAGO, 1920-AS ÉVEK", "src": "CHICAGO, 1920S"},
-  {"key": "data.recipe.tequila_mule.lore", "text": "A Moscow mule délre ment — agávé a rézből készült nyeregben.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-  {"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule", "src": "Tequila Mule"},
-  {"key": "data.recipe.tequila_mule.origin", "text": "A HATÁRVIDÉK", "src": "THE BORDERLANDS"},
-  {"key": "data.recipe.tequila_sour.lore", "text": "A sour képlet poros csizmában. Az agávé felel a citromnak.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-  {"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour", "src": "Tequila Sour"},
-  {"key": "data.recipe.tequila_sour.origin", "text": "A SOUR CSALÁD", "src": "THE SOUR FAMILY"},
-  {"key": "data.recipe.tequila_sunrise.lore", "text": "A grenadin lesüllyed, a narancs fent úszik, a Rolling Stones pedig turnéra vitte.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-  {"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise", "src": "Tequila Sunrise"},
-  {"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, 1970-ES ÉVEK", "src": "SAUSALITO, 1970S"},
-  {"key": "data.recipe.vesper.lore", "text": "Fleming Bondnak írta: gin, vodka, és egy név, amit nem tarthatott meg.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-  {"key": "data.recipe.vesper.name", "text": "Vesper", "src": "Vesper"},
-  {"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953", "src": "CASINO ROYALE, 1953"},
-  {"key": "data.recipe.vodka_bull.lore", "text": "Vodka és energiaital egy pohárban — egy ital, ami egyszerre viszi a nappali és az éjszakai műszakot.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-  {"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull", "src": "Vodka Bull"},
-  {"key": "data.recipe.vodka_bull.origin", "text": "AZ ÉJJEL-NAPPALI BÁROK", "src": "THE ALL-NIGHT BARS"},
-  {"key": "data.recipe.vodka_soda.lore", "text": "A legkönnyebb dolog, amit egy bár jogszerűen italnak nevezhet. Tiszta, hideg, eltűnt.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-  {"key": "data.recipe.vodka_soda.name", "text": "Vodka-szóda", "src": "Vodka Soda"},
-  {"key": "data.recipe.vodka_soda.origin", "text": "SEHOL KÜLÖNÖSEBBEN, 1900-AS ÉVEK", "src": "NOWHERE IN PARTICULAR, 1900S"},
-  {"key": "data.recipe.vodka_sour.lore", "text": "A gin sour, tompított fénnyel. Simulékonyabb közönség, ugyanaz a citrom.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-  {"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour", "src": "Vodka Sour"},
-  {"key": "data.recipe.vodka_sour.origin", "text": "A SOUR CSALÁD", "src": "THE SOUR FAMILY"},
-  {"key": "data.recipe.vodka_tonic.lore", "text": "A gin-tonik csendesebb testvére — a tonik beszél, a vodka tartja a kabátokat.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-  {"key": "data.recipe.vodka_tonic.name", "text": "Vodka-tonik", "src": "Vodka Tonic"},
-  {"key": "data.recipe.vodka_tonic.origin", "text": "A HÁBORÚ UTÁN, 1950-ES ÉVEK", "src": "THE POSTWAR YEARS, 1950S"},
-  {"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon és egy kóla, ami megunta a kíséretet, és beszállt a pohárba.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-  {"key": "data.recipe.whiskey_cola.name", "text": "Whiskey-kóla", "src": "Whiskey & Cola"},
-  {"key": "data.recipe.whiskey_cola.origin", "text": "ÚTSZÉLI KOCSMÁK, 1930-AS ÉVEK", "src": "THE ROADHOUSES, 1930S"},
-  {"key": "data.recipe.whiskey_ginger.lore", "text": "Gyömbérrel hosszabbított bourbon — a highball, amitől a whiskey hétköznapi ital lett.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-  {"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey-gyömbér", "src": "Whiskey Ginger"},
-  {"key": "data.recipe.whiskey_ginger.origin", "text": "A HIGHBALL HAZÁJA, 1890-ES ÉVEK", "src": "HIGHBALL COUNTRY, 1890S"},
-  {"key": "data.recipe.whiskey_smash.lore", "text": "Egy julep, ami az ezüstkupát citromra cserélte, és fürgébb lett tőle.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-  {"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash", "src": "Whiskey Smash"},
-  {"key": "data.recipe.whiskey_smash.origin", "text": "A JULEP VÁROSI ROKONA, 1880-AS ÉVEK", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-  {"key": "data.recipe.whiskey_sour.lore", "text": "A sour, amitől a bourbon udvarias lett. A gerinc nem opcionális.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-  {"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour", "src": "Whiskey Sour"},
-  {"key": "data.recipe.whiskey_sour.origin", "text": "A GŐZHAJÓK KORA, 1860-AS ÉVEK", "src": "THE STEAMSHIP ERA, 1860S"},
-  {"key": "data.recipe.white_lady.lore", "text": "Gin, triple sec, citrom — Harry MacElhone ezüstshakeres klasszikusa.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-  {"key": "data.recipe.white_lady.name", "text": "White Lady", "src": "White Lady"},
-  {"key": "data.recipe.white_lady.origin", "text": "LONDON, 1920-AS ÉVEK", "src": "LONDON, 1920S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANNA, RÉGI, MINT A KIKÖTŐ",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Egy vodkaügynök és egy gyömbérsör-felesleg találta fel Oroszország legamerikaibb italát.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Egy üveg, se shaker, se vita. Azoknak a rendelés, akik már tudják a választ.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Tisztán",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "BÁRHOL, AHOL VAN POLC",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Negroni gróf egy erősebb Americanót kért. Egyenlő arányok, alku nincs.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FIRENZE, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Cukor, bitter, whiskey — az ital, amelyre a „koktél” szót kitalálták.",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, 1880-AS ÉVEK",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Grenadintól elpiruló gin. A szesztilalom legtisztességesebb alibije.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NEW YORK, 1910-ES ÉVEK",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "A negroni tequilás unokatestvére: apró betűvel nyomták, későn szerették meg.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "A BÁRKÖNYVEK, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Egy rész savanyú, két rész édes, három erős, négy gyenge. Idősebb a pohárnál, amiben áll.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rumpuncs",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "A SZIGETEK, 17. SZÁZAD",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Arról a szerszámról kapta a nevét, amivel először megkeverték. Néhány kikötőben ez a reggeli.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "AZ OLAJMEZŐK, 1940-ES ÉVEK",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "AZ AMERIKAI PART",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PÁRIZS, 1920-AS ÉVEK",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, lime és menta. A banda itta; a menta elfedte a kádban főzött gint.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, 1920-AS ÉVEK",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "A Moscow mule délre ment — agávé a rézből készült nyeregben.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "A HATÁRVIDÉK",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "A sour képlet poros csizmában. Az agávé felel a citromnak.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "A SOUR CSALÁD",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "A grenadin lesüllyed, a narancs fent úszik, a Rolling Stones pedig turnéra vitte.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, 1970-ES ÉVEK",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming Bondnak írta: gin, vodka, és egy név, amit nem tarthatott meg.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Vodka és energiaital egy pohárban — egy ital, ami egyszerre viszi a nappali és az éjszakai műszakot.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "AZ ÉJJEL-NAPPALI BÁROK",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "A legkönnyebb dolog, amit egy bár jogszerűen italnak nevezhet. Tiszta, hideg, eltűnt.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "SEHOL KÜLÖNÖSEBBEN, 1900-AS ÉVEK",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "A gin sour, tompított fénnyel. Simulékonyabb közönség, ugyanaz a citrom.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "A SOUR CSALÁD",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "A gin-tonik csendesebb testvére — a tonik beszél, a vodka tartja a kabátokat.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "A HÁBORÚ UTÁN, 1950-ES ÉVEK",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon és egy kóla, ami megunta a kíséretet, és beszállt a pohárba.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whiskey-kóla",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "ÚTSZÉLI KOCSMÁK, 1930-AS ÉVEK",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Gyömbérrel hosszabbított bourbon — a highball, amitől a whiskey hétköznapi ital lett.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "A HIGHBALL HAZÁJA, 1890-ES ÉVEK",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Egy julep, ami az ezüstkupát citromra cserélte, és fürgébb lett tőle.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "A JULEP VÁROSI ROKONA, 1880-AS ÉVEK",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "A sour, amitől a bourbon udvarias lett. A gerinc nem opcionális.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "A GŐZHAJÓK KORA, 1860-AS ÉVEK",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, triple sec, citrom — Harry MacElhone ezüstshakeres klasszikusa.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDON, 1920-AS ÉVEK",
+      "src": "LONDON, 1920S"
+    }
+  ]
+}

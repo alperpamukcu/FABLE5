@@ -100,9 +100,17 @@ namespace LastCall.Tests
             while (!a.HasOrdered || !b.HasOrdered) { Assert.Less(guard++, 200); zero.Tick(1); made.Tick(1); }
             a.InspectId(); b.InspectId();
             Assert.AreEqual(a.Order.Wanted.Id, b.Order.Wanted.Id, "the same page, on the same seed");
-            Assert.AreEqual(3 * a.Order.Price, b.Order.Price, "a two-star bar's drinker pays three times");
+            // THE DRINK STOPPED PAYING THE BAR'S STAGE (2026-09-23, the economy brief). A page is
+            // priced by its OWN rung now (DrinkPricing) — a Vodka & Soda is a four-dollar drink at
+            // five stars exactly as it is at none — so the way to earn more is to serve something
+            // better rather than to have earned more before. Two drinkers on the same page pay the
+            // same, whatever the two bars are standing at.
+            Assert.AreEqual(a.Order.Price, b.Order.Price,
+                "the same page is the same price: the band is the page's, not the bar's");
 
             zero.DevSkipToDayEnd(); made.DevSkipToDayEnd();
+            // The LANDLORD still reads the stage — that half of StarEconomy is untouched, and it is
+            // the half that makes a bar's costs climb with it.
             Assert.AreEqual(3 * zero.DayRent, made.DayRent, "and its landlord asks three times");
         }
     }

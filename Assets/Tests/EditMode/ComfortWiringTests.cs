@@ -33,8 +33,15 @@ namespace LastCall.Tests
         };
 
         private static TycoonRun NewRun(string seed = "house", params FixtureDefinition[] fixtures) =>
+            NewRunWithPurse(200, seed, fixtures);
+
+        /// <summary>A purse big enough for what the test is about. The fittings test plays a
+        /// night nobody is served in before it shops, and since 2026-09-22 that night lands the
+        /// walk-outs' compensation on the bill — so a purse sized to the shopping list alone now
+        /// runs out before the third lamp. The rungs are what that test measures, not the till.</summary>
+        private static TycoonRun NewRunWithPurse(int purse, string seed, params FixtureDefinition[] fixtures) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
-                config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
+                config: new TycoonConfig(purse, orderDecisionSeconds: 0, savorSeconds: 0),
                 fixtures: fixtures);
 
         private static void ServeEveryone(TycoonRun run)
@@ -89,7 +96,8 @@ namespace LastCall.Tests
         [Test]
         public void FixtureComfort_CountsWhatTheRoomStands_NeverAFittedOverRung()
         {
-            var run = NewRun("rungs", Lamp(1, 0.0, owned: true), Lamp(2, 0.15), Lamp(3, 0.35), Candle(0.10));
+            var run = NewRunWithPurse(400, "rungs",
+                Lamp(1, 0.0, owned: true), Lamp(2, 0.15), Lamp(3, 0.35), Candle(0.10));
             Assert.AreEqual(0.0, run.FixtureComfort, 1e-9, "the mark the room opens with is worth nothing");
             Assert.AreEqual(0.0, run.ComfortBase, 1e-9, "and so is the room (2026-09-06)");
 

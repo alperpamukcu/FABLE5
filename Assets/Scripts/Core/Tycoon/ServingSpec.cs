@@ -35,6 +35,18 @@ namespace LastCall.Core
             Garnishes = garnishes ?? Array.Empty<PreparationDefinition>();
         }
 
+        /// <summary>
+        /// How often a customer wants the drink THE WAY IT COMES — its own dressing, from
+        /// <see cref="RecipeDefinition.Likes"/> (2026-09-23, the author: "gin fizz söyleyen biri
+        /// yüksek ihtimalle şeker gerdanlıklı söylemeli").
+        ///
+        /// Three in four, and not four in four on purpose: a habit that never failed would be a
+        /// second signature, and the difference between the two is the point of having both. It is
+        /// also the reason the number lives here rather than per page — a habit is how the DRINK is
+        /// taken, and how strongly a habit holds is how this bar's crowd behaves.
+        /// </summary>
+        public const int UsualChance = 75;
+
         /// <summary>The fill every order expects ("filled to the top" retired 2026-08-02,
         /// its machinery removed in the 2026-08-07 sweep). Under-filling costs;
         /// over-filling cannot happen — the glass stops at the brim.</summary>
@@ -74,28 +86,58 @@ namespace LastCall.Core
 
             bool draught = IsDraught(recipe);
 
-            // Roughly half of all orders are plain, as before the spec existed.
-            // THE SIGNATURE EXTRA (2026-09-21): a page that names its garnish is always asked for with it — the
-            // extras rolled below come on top, and the stream's draws are the same as before for every other page.
+            // THE SIGNATURE EXTRA (2026-09-21): a page that names its garnish is always asked for with it.
             var signature = recipe.Garnish != null ? Preparations.Find(recipe.Garnish) : null;
-            var always = signature != null ? new List<PreparationDefinition> { signature } : null;
-
-            bool wantsSomething = rng.NextInt(100) >= 50;
-            if (!wantsSomething) return always != null ? new ServingSpec(always) : Plain;
-
             var garnishes = new List<PreparationDefinition>(3);
             if (signature != null) garnishes.Add(signature);
+
+            // ── the two rolls, taken for EVERY order (2026-09-23) ────────────────────────────
+            //
+            // Roughly half of all orders want something extra, as before the spec existed. The
+            // second roll is new: whether this one wants the drink THE WAY IT COMES.
+            //
+            // Both are taken whatever page it is, and so is everything below — which is the whole
+            // reason this is safe. A stream whose draw COUNT depends on the recipe means re-tuning
+            // content silently reseeds every later customer's night, and a page's habit is content.
+            // (The old shape already had that fault in miniature: it removed the signature from the
+            // bag, so a signed page drew its index against a smaller number than a plain one. It
+            // does not any more.)
+            bool wantsSomething = rng.NextInt(100) >= 50;
+            bool wantsTheUsual = rng.NextInt(100) < UsualChance;
+
+            // ── how the drink is usually taken ───────────────────────────────────────────────
+            //
+            // The author (2026-09-23): "bazı kokteyllerde bazı garnishler şarttır, örneğin gin
+            // fizz'de şeker gerdanlık". So a page's own dressing is asked for far more often than
+            // the dice would ever ask for it — and when it IS asked for, it is the whole ask: the
+            // random extras stand down rather than piling a twist and a salt rim on top of a drink
+            // that already came with its sugared rim. A pint takes none of this (GDD 21 §10).
+            bool tookTheUsual = false;
+            if (wantsTheUsual && !draught)
+                foreach (var id in recipe.Likes)
+                {
+                    var wanted = Preparations.Find(id);
+                    if (wanted == null || garnishes.Contains(wanted)) continue;
+                    if (!OnTheRail(allowed, wanted)) continue;   // the rail cannot give it tonight
+                    garnishes.Add(wanted);
+                    tookTheUsual = true;
+                }
+
+            // ── and the extras, rolled either way and kept only when they are wanted ─────────
             if (!draught)
             {
                 var bag = new List<PreparationDefinition>(allowed ?? GarnishPool);
-                if (signature != null) bag.Remove(signature);
-                if (bag.Count == 0) return garnishes.Count == 0 ? Plain : new ServingSpec(garnishes);
-                int count = rng.NextInt(100) < 65 ? 1 : 2;
-                for (int i = 0; i < count && bag.Count > 0; i++)
+                if (bag.Count > 0)
                 {
-                    int k = rng.NextInt(bag.Count);
-                    garnishes.Add(bag[k]);
-                    bag.RemoveAt(k);
+                    int count = rng.NextInt(100) < 65 ? 1 : 2;
+                    for (int i = 0; i < count && bag.Count > 0; i++)
+                    {
+                        int k = rng.NextInt(bag.Count);
+                        var picked = bag[k];
+                        bag.RemoveAt(k);
+                        if (wantsSomething && !tookTheUsual && !garnishes.Contains(picked))
+                            garnishes.Add(picked);
+                    }
                 }
             }
 
@@ -114,6 +156,17 @@ namespace LastCall.Core
             Preparations.Ice, Preparations.LemonTwist, Preparations.SaltRim, Preparations.SugarRim,
             Preparations.Olive, Preparations.Mint,
         };
+
+        /// <summary>Whether the bar can put this on a glass tonight. A null rail is every bench
+        /// setup and every older test, where the whole pool is open.</summary>
+        private static bool OnTheRail(IReadOnlyList<PreparationDefinition> allowed,
+            PreparationDefinition wanted)
+        {
+            if (allowed == null) return true;
+            for (int i = 0; i < allowed.Count; i++)
+                if (ReferenceEquals(allowed[i], wanted) || allowed[i].Id == wanted.Id) return true;
+            return false;
+        }
 
         private static bool IsDraught(RecipeDefinition recipe)
         {

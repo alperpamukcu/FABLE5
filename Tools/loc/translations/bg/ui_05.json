@@ -1,162 +1,704 @@
-{"strings": [
-{"key": "data.recipe.gimlet.name", "text": "Gimlet", "src": "Gimlet"},
-{"key": "data.recipe.gimlet.origin", "text": "КРАЛСКИЯТ ФЛОТ, 1800-ТЕ", "src": "THE ROYAL NAVY, 1800S"},
-{"key": "data.recipe.gin_fizz.lore", "text": "Джин сауър с отворени врати за содата. Рамос разклащал своя по дванайсет минути.", "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."},
-{"key": "data.recipe.gin_fizz.name", "text": "Gin Fizz", "src": "Gin Fizz"},
-{"key": "data.recipe.gin_fizz.origin", "text": "НЮ ОРЛИЙНС, 1880-ТЕ", "src": "NEW ORLEANS, 1880S"},
-{"key": "data.recipe.gin_sour.lore", "text": "Алкохол, лимон, захар — най-старото уравнение зад половината от тази книга.", "src": "Spirit, lemon, sugar — the oldest equation behind half this book."},
-{"key": "data.recipe.gin_sour.name", "text": "Gin Sour", "src": "Gin Sour"},
-{"key": "data.recipe.gin_sour.origin", "text": "СЕМЕЙСТВОТО САУЪР, 1860-ТЕ", "src": "THE SOUR FAMILY, 1860S"},
-{"key": "data.recipe.gin_tonic.lore", "text": "Хинин срещу маларията, джин срещу хинина. Най-полезната случайност на империята.", "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."},
-{"key": "data.recipe.gin_tonic.name", "text": "Gin & Tonic", "src": "Gin & Tonic"},
-{"key": "data.recipe.gin_tonic.origin", "text": "БРИТАНСКА ИНДИЯ, 1850-ТЕ", "src": "BRITISH INDIA, 1850S"},
-{"key": "data.recipe.kamikaze.lore", "text": "Водка, трипъл сек и лайм, без никакво колебание. Дипломата по коктейли на шот културата.", "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."},
-{"key": "data.recipe.kamikaze.name", "text": "Kamikaze", "src": "Kamikaze"},
-{"key": "data.recipe.kamikaze.origin", "text": "ПРИСТАНИЩНИТЕ БАРОВЕ, 1970-ТЕ", "src": "THE PORT BARS, 1970S"},
-{"key": "data.recipe.last_call.lore", "text": "Питието на заведението за последния гост на нощта. Книгата пази страницата, барът пази причината.", "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."},
-{"key": "data.recipe.last_call.name", "text": "Последна поръчка", "src": "Last Call"},
-{"key": "data.recipe.last_call.origin", "text": "ТОЗИ БАР, ТАЗИ НОЩ", "src": "THIS BAR, TONIGHT"},
-{"key": "data.recipe.lemon_drop.lore", "text": "Водка в лимонов костюм със захарен ръб. Десерт, заведен по документи като питие.", "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."},
-{"key": "data.recipe.lemon_drop.name", "text": "Lemon Drop", "src": "Lemon Drop"},
-{"key": "data.recipe.lemon_drop.origin", "text": "САН ФРАНЦИСКО, 1970-ТЕ", "src": "SAN FRANCISCO, 1970S"},
-{"key": "data.recipe.long_island.lore", "text": "Пет алкохола, които се разбраха да се правят на студен чай. Номерът минава точно веднъж на вечер.", "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."},
-{"key": "data.recipe.long_island.name", "text": "Long Island", "src": "Long Island"},
-{"key": "data.recipe.long_island.origin", "text": "ЛОНГ АЙЛЪНД, 1972", "src": "LONG ISLAND, 1972"},
-{"key": "data.recipe.mai_tai.lore", "text": "Трейдър Вик го наля; приятел от Таити каза „maita'i“ — неземно.", "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."},
-{"key": "data.recipe.mai_tai.name", "text": "Mai Tai", "src": "Mai Tai"},
-{"key": "data.recipe.mai_tai.origin", "text": "ОУКЛАНД, 1944", "src": "OAKLAND, 1944"},
-{"key": "data.recipe.manhattan.lore", "text": "Уиски и сладък вермут, разбъркани. Коктейлът, който носи баджа с името на града.", "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."},
-{"key": "data.recipe.manhattan.name", "text": "Manhattan", "src": "Manhattan"},
-{"key": "data.recipe.manhattan.origin", "text": "НЮ ЙОРК, 1870-ТЕ", "src": "NEW YORK, 1870S"},
-{"key": "data.recipe.margarita.lore", "text": "Текила, портокал и лайм зад солен ръб. Никой не е съгласен кой, всички са съгласни защо.", "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."},
-{"key": "data.recipe.margarita.name", "text": "Margarita", "src": "Margarita"},
-{"key": "data.recipe.margarita.origin", "text": "ГРАНИЦАТА, 1940-ТЕ", "src": "THE BORDER, 1940S"},
-{"key": "data.recipe.martinez.lore", "text": "Липсващото звено между манхатън и мартини, смесено с джин от времето на златната треска.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."},
-{"key": "data.recipe.martinez.name", "text": "Martinez", "src": "Martinez"},
-{"key": "data.recipe.martinez.origin", "text": "САН ФРАНЦИСКО, 1880-ТЕ", "src": "SAN FRANCISCO, 1880S"},
-{"key": "data.recipe.matador.lore", "text": "Текила, ананас, лайм — маргаритата, когато е на почивка.", "src": "Tequila, pineapple, lime — the margarita's holiday self."},
-{"key": "data.recipe.matador.name", "text": "Matador", "src": "Matador"},
-{"key": "data.recipe.matador.origin", "text": "КНИГИТЕ ОТ СРЕДАТА НА ВЕКА, 1950-ТЕ", "src": "THE MIDCENTURY BOOKS, 1950S"},
-{"key": "data.recipe.mint_julep.lore", "text": "Бърбън през натрошен лед и мента. В ден на конни надбягвания се продават сто хиляди.", "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."},
-{"key": "data.recipe.mint_julep.name", "text": "Mint Julep", "src": "Mint Julep"},
-{"key": "data.recipe.mint_julep.origin", "text": "КЕНТЪКИ, 1700-ТЕ", "src": "KENTUCKY, 1700S"},
-{"key": "data.recipe.mojito.lore", "text": "Мента смачкана, лайм изстискан, ромът възнаграден. Екипажът на Дрейк уж пиел черновата.", "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."},
-{"key": "data.recipe.mojito.name", "text": "Mojito", "src": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "ХАВАНА, СТАР КОЛКОТО ПРИСТАНИЩЕТО", "src": "HAVANA, OLD AS THE HARBOUR"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Търговец на водка и излишък от джинджифилова бира измислиха най-американското руско питие.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule", "src": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "ЛОС АНДЖЕЛИС, 1941", "src": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Една бутилка, без шейкър, без спорове. Поръчката за хора, които вече знаят отговора.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-{"key": "data.recipe.neat_pour.name", "text": "Чисто", "src": "Neat Pour"},
-{"key": "data.recipe.neat_pour.origin", "text": "ВСЯКЪДЕ, КЪДЕТО ИМА РАФТ", "src": "ANYWHERE WITH A SHELF"},
-{"key": "data.recipe.negroni.lore", "text": "Граф Негрони поискал по-силно Американо. Равни части, без пазарлък.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-{"key": "data.recipe.negroni.name", "text": "Negroni", "src": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "ФЛОРЕНЦИЯ, 1919", "src": "FLORENCE, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Захар, битер, уиски — питието, заради което е измислена думата „коктейл“.", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned", "src": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "ЛУИВИЛ, 1880-ТЕ", "src": "LOUISVILLE, 1880S"},
-{"key": "data.recipe.paloma.lore", "text": "Текила и сода с грейпфрут. Истинският любимец на Мексико; маргаритата просто има по-добър PR.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-{"key": "data.recipe.paloma.name", "text": "Paloma", "src": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "МЕКСИКО, 1950-ТЕ", "src": "MEXICO, 1950S"},
-{"key": "data.recipe.pink_lady.lore", "text": "Джин, изчервен от гренадин. Най-почтеното алиби на сухия режим.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady", "src": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "НЮ ЙОРК, 1910-ТЕ", "src": "NEW YORK, 1910S"},
-{"key": "data.recipe.rosita.lore", "text": "Братовчедката на негрони с текила, отпечатана с дребен шрифт и обикната късно.", "src": "The negroni's tequila cousin, printed small and loved late."},
-{"key": "data.recipe.rosita.name", "text": "Rosita", "src": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "БАРОВИТЕ КНИГИ, 1974", "src": "THE BAR BOOKS, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Една част кисело, две сладко, три силно, четири слабо. По-стар от чашата, в която стои.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-{"key": "data.recipe.rum_punch.name", "text": "Rum Punch", "src": "Rum Punch"},
-{"key": "data.recipe.rum_punch.origin", "text": "ОСТРОВИТЕ, 1600-ТЕ", "src": "THE ISLANDS, 1600S"},
-{"key": "data.recipe.screwdriver.lore", "text": "Кръстен на инструмента, с който за пръв път е разбъркан. В някои пристанища минава за закуска.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-{"key": "data.recipe.screwdriver.name", "text": "Отвертка", "src": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "НЕФТЕНИТЕ ПОЛЕТА, 1940-ТЕ", "src": "THE OIL FIELDS, 1940S"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Боровинка и грейпфрут разхождат водката по брега.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze", "src": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "АМЕРИКАНСКИЯТ БРЯГ", "src": "THE AMERICAN COAST"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Праскова, портокал и боровинка върху водка. Пролетна ваканция в гарафа.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach", "src": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "ФЛОРИДА, 1980-ТЕ", "src": "FLORIDA, 1980S"},
-{"key": "data.recipe.sidecar.lore", "text": "Ритц си го приписва, Лондон го оспорва. Нашият е с бърбън и не се извинява.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar", "src": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "ПАРИЖ, 1920-ТЕ", "src": "PARIS, 1920S"},
-{"key": "data.recipe.southside.lore", "text": "Джин, лайм и мента. Бандата го пиеше; ментата скриваше джина от ваната.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-{"key": "data.recipe.southside.name", "text": "Southside", "src": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "ЧИКАГО, 1920-ТЕ", "src": "CHICAGO, 1920S"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Московското муле, тръгнало на юг — агаве в медното седло.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule", "src": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "ПОГРАНИЧНИТЕ ЗЕМИ", "src": "THE BORDERLANDS"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Формулата сауър с прах по ботушите. Агавето отговаря на лимона.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour", "src": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "СЕМЕЙСТВОТО САУЪР", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Гренадинът потъва, портокалът изплува, а „Ролинг Стоунс“ го взеха на турне.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise", "src": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "САУСАЛИТО, 1970-ТЕ", "src": "SAUSALITO, 1970S"},
-{"key": "data.recipe.vesper.lore", "text": "Флеминг го написа за Бонд: джин, водка и име, което той не успя да задържи.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-{"key": "data.recipe.vesper.name", "text": "Vesper", "src": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "КАЗИНО РОЯЛ, 1953", "src": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Водка и енергийна напитка в една чаша — питие, което кара и дневна, и нощна смяна наведнъж.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-{"key": "data.recipe.vodka_bull.name", "text": "Vodka Bull", "src": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "НОЩНИТЕ БАРОВЕ", "src": "THE ALL-NIGHT BARS"},
-{"key": "data.recipe.vodka_soda.lore", "text": "Най-лекото нещо, което един бар законно може да нарече питие. Чисто, студено, изчезнало.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-{"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda", "src": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "НИКЪДЕ КОНКРЕТНО, 1900-ТЕ", "src": "NOWHERE IN PARTICULAR, 1900S"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Джин сауър с приглушени светлини. По-гладка публика, същият лимон.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-{"key": "data.recipe.vodka_sour.name", "text": "Vodka Sour", "src": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "СЕМЕЙСТВОТО САУЪР", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "По-тихият брат на джин с тоник — тоникът говори, водката държи палтата.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tonic", "src": "Vodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "СЛЕДВОЕННИТЕ ГОДИНИ, 1950-ТЕ", "src": "THE POSTWAR YEARS, 1950S"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Бърбън с кола за запивка, която се предаде и влезе в чашата.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Whiskey & Cola", "src": "Whiskey & Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "КРАЙПЪТНИТЕ БАРОВЕ, 1930-ТЕ", "src": "THE ROADHOUSES, 1930S"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Бърбън, удължен с джинджифил — хайболът, който направи уискито питие за делничен ден.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey Ginger", "src": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "СТРАНАТА НА ХАЙБОЛА, 1890-ТЕ", "src": "HIGHBALL COUNTRY, 1890S"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Джулеп, който смени сребърната чаша с лимон и стана по-бърз.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash", "src": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "ГРАДСКИЯТ БРАТОВЧЕД НА ДЖУЛЕПА, 1880-ТЕ", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Сауърът, който направи бърбъна възпитан. Гръбнакът не е по избор.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour", "src": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "ЕРАТА НА ПАРАХОДИТЕ, 1860-ТЕ", "src": "THE STEAMSHIP ERA, 1860S"},
-{"key": "data.recipe.white_lady.lore", "text": "Джин, трипъл сек, лимон — стандартът на Хари Макелхоун от сребърния шейкър.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady", "src": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "ЛОНДОН, 1920-ТЕ", "src": "LONDON, 1920S"},
-{"key": "data.slot.beer_mat.place", "text": "Тезгяхът", "src": "The counter"},
-{"key": "data.slot.beer_mat.title", "text": "Подложка за капки", "src": "Drip mat"},
-{"key": "data.slot.ceiling.place", "text": "Таванът", "src": "The ceiling"},
-{"key": "data.slot.ceiling.title", "text": "Таван", "src": "Ceiling"},
-{"key": "data.slot.floor.place", "text": "Подът", "src": "The floor"},
-{"key": "data.slot.floor.title", "text": "Под", "src": "Floor"},
-{"key": "data.slot.floor_rug.place", "text": "Подът", "src": "The floor"},
-{"key": "data.slot.floor_rug.title", "text": "Килим", "src": "Rug"},
-{"key": "data.slot.plant_left.place", "text": "До прозореца", "src": "By the window"},
-{"key": "data.slot.plant_left.title", "text": "Ляво растение", "src": "Left plant"},
-{"key": "data.slot.plant_right.place", "text": "Тезгяхът", "src": "The counter"},
-{"key": "data.slot.plant_right.title", "text": "Дясно растение", "src": "Right plant"},
-{"key": "data.slot.prep_mat.place", "text": "Тезгяхът", "src": "The counter"},
-{"key": "data.slot.prep_mat.title", "text": "Подложка за мезета", "src": "Snack mat"},
-{"key": "data.slot.shaker.place", "text": "В ръката ти", "src": "In your hand"},
-{"key": "data.slot.shaker.title", "text": "Шейкър", "src": "Shaker"},
-{"key": "data.slot.sink.place", "text": "Тезгяхът", "src": "The counter"},
-{"key": "data.slot.sink.title", "text": "Мивка", "src": "Sink"},
-{"key": "data.slot.table_left.place", "text": "Подът", "src": "The floor"},
-{"key": "data.slot.table_left.title", "text": "Лява маса", "src": "Left table"},
-{"key": "data.slot.table_right.place", "text": "Подът", "src": "The floor"},
-{"key": "data.slot.table_right.title", "text": "Дясна маса", "src": "Right table"},
-{"key": "data.slot.taps.place", "text": "Тезгяхът", "src": "The counter"},
-{"key": "data.slot.taps.title", "text": "Бирена кула", "src": "Beer tower"},
-{"key": "data.slot.wall_center.place", "text": "Задната стена", "src": "The back wall"},
-{"key": "data.slot.wall_center.title", "text": "Централна картина", "src": "Centre picture"},
-{"key": "data.slot.wall_lamps.place", "text": "Задната стена", "src": "The back wall"},
-{"key": "data.slot.wall_lamps.title", "text": "Стенни лампи", "src": "Wall lamps"},
-{"key": "data.slot.wall_right.place", "text": "Задната стена", "src": "The back wall"},
-{"key": "data.slot.wall_right.title", "text": "Неонова табела", "src": "Neon sign"},
-{"key": "data.slot.wall_right_art.place", "text": "Дясната стена", "src": "The right wall"},
-{"key": "data.slot.wall_right_art.title", "text": "Картина над екрана", "src": "Picture over the screen"},
-{"key": "data.slot.wall_tv.place", "text": "Дясната стена", "src": "The right wall"},
-{"key": "data.slot.wall_tv.title", "text": "Екран и постери", "src": "Screen & posters"},
-{"key": "data.slot.walls.place", "text": "Задната стена", "src": "The back wall"},
-{"key": "data.slot.walls.title", "text": "Задна стена", "src": "Back wall"},
-{"key": "data.slot.walls_right.place", "text": "Дясната стена", "src": "The right wall"},
-{"key": "data.slot.walls_right.title", "text": "Дясна стена", "src": "Right wall"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.gimlet.name",
+      "text": "Gimlet",
+      "src": "Gimlet"
+    },
+    {
+      "key": "data.recipe.gimlet.origin",
+      "text": "КРАЛСКИЯТ ФЛОТ, 1800-ТЕ",
+      "src": "THE ROYAL NAVY, 1800S"
+    },
+    {
+      "key": "data.recipe.gin_fizz.lore",
+      "text": "Джин сауър с отворени врати за содата. Рамос разклащал своя по дванайсет минути.",
+      "src": "A gin sour with soda's doors open. Ramos shook his for twelve minutes."
+    },
+    {
+      "key": "data.recipe.gin_fizz.name",
+      "text": "Gin Fizz",
+      "src": "Gin Fizz"
+    },
+    {
+      "key": "data.recipe.gin_fizz.origin",
+      "text": "НЮ ОРЛИЙНС, 1880-ТЕ",
+      "src": "NEW ORLEANS, 1880S"
+    },
+    {
+      "key": "data.recipe.gin_sour.lore",
+      "text": "Алкохол, лимон, захар — най-старото уравнение зад половината от тази книга.",
+      "src": "Spirit, lemon, sugar — the oldest equation behind half this book."
+    },
+    {
+      "key": "data.recipe.gin_sour.name",
+      "text": "Gin Sour",
+      "src": "Gin Sour"
+    },
+    {
+      "key": "data.recipe.gin_sour.origin",
+      "text": "СЕМЕЙСТВОТО САУЪР, 1860-ТЕ",
+      "src": "THE SOUR FAMILY, 1860S"
+    },
+    {
+      "key": "data.recipe.gin_tonic.lore",
+      "text": "Хинин срещу маларията, джин срещу хинина. Най-полезната случайност на империята.",
+      "src": "Quinine against malaria, gin against quinine. Empire's most useful accident."
+    },
+    {
+      "key": "data.recipe.gin_tonic.name",
+      "text": "Gin & Tonic",
+      "src": "Gin & Tonic"
+    },
+    {
+      "key": "data.recipe.gin_tonic.origin",
+      "text": "БРИТАНСКА ИНДИЯ, 1850-ТЕ",
+      "src": "BRITISH INDIA, 1850S"
+    },
+    {
+      "key": "data.recipe.kamikaze.name",
+      "text": "Kamikaze",
+      "src": "Kamikaze"
+    },
+    {
+      "key": "data.recipe.kamikaze.origin",
+      "text": "ПРИСТАНИЩНИТЕ БАРОВЕ, 1970-ТЕ",
+      "src": "THE PORT BARS, 1970S"
+    },
+    {
+      "key": "data.recipe.last_call.lore",
+      "text": "Питието на заведението за последния гост на нощта. Книгата пази страницата, барът пази причината.",
+      "src": "The house pour for the last guest of the night. The book keeps the page; the bar keeps the reason."
+    },
+    {
+      "key": "data.recipe.last_call.name",
+      "text": "Последна поръчка",
+      "src": "Last Call"
+    },
+    {
+      "key": "data.recipe.last_call.origin",
+      "text": "ТОЗИ БАР, ТАЗИ НОЩ",
+      "src": "THIS BAR, TONIGHT"
+    },
+    {
+      "key": "data.recipe.lemon_drop.lore",
+      "text": "Водка в лимонов костюм със захарен ръб. Десерт, заведен по документи като питие.",
+      "src": "Vodka in a sugar-rimmed lemon suit. Dessert, filing paperwork as a drink."
+    },
+    {
+      "key": "data.recipe.lemon_drop.name",
+      "text": "Lemon Drop",
+      "src": "Lemon Drop"
+    },
+    {
+      "key": "data.recipe.lemon_drop.origin",
+      "text": "САН ФРАНЦИСКО, 1970-ТЕ",
+      "src": "SAN FRANCISCO, 1970S"
+    },
+    {
+      "key": "data.recipe.long_island.lore",
+      "text": "Пет алкохола, които се разбраха да се правят на студен чай. Номерът минава точно веднъж на вечер.",
+      "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
+    },
+    {
+      "key": "data.recipe.long_island.origin",
+      "text": "ЛОНГ АЙЛЪНД, 1972",
+      "src": "LONG ISLAND, 1972"
+    },
+    {
+      "key": "data.recipe.mai_tai.name",
+      "text": "Mai Tai",
+      "src": "Mai Tai"
+    },
+    {
+      "key": "data.recipe.mai_tai.origin",
+      "text": "ОУКЛАНД, 1944",
+      "src": "OAKLAND, 1944"
+    },
+    {
+      "key": "data.recipe.manhattan.lore",
+      "text": "Уиски и сладък вермут, разбъркани. Коктейлът, който носи баджа с името на града.",
+      "src": "Whiskey and sweet vermouth, stirred. The cocktail wearing the city's name tag."
+    },
+    {
+      "key": "data.recipe.manhattan.name",
+      "text": "Manhattan",
+      "src": "Manhattan"
+    },
+    {
+      "key": "data.recipe.manhattan.origin",
+      "text": "НЮ ЙОРК, 1870-ТЕ",
+      "src": "NEW YORK, 1870S"
+    },
+    {
+      "key": "data.recipe.margarita.lore",
+      "text": "Текила, портокал и лайм зад солен ръб. Никой не е съгласен кой, всички са съгласни защо.",
+      "src": "Tequila, orange and lime behind a salted rim. Nobody agrees who; everyone agrees why."
+    },
+    {
+      "key": "data.recipe.margarita.name",
+      "text": "Margarita",
+      "src": "Margarita"
+    },
+    {
+      "key": "data.recipe.margarita.origin",
+      "text": "ГРАНИЦАТА, 1940-ТЕ",
+      "src": "THE BORDER, 1940S"
+    },
+    {
+      "key": "data.recipe.martinez.name",
+      "text": "Martinez",
+      "src": "Martinez"
+    },
+    {
+      "key": "data.recipe.martinez.origin",
+      "text": "САН ФРАНЦИСКО, 1880-ТЕ",
+      "src": "SAN FRANCISCO, 1880S"
+    },
+    {
+      "key": "data.recipe.matador.name",
+      "text": "Matador",
+      "src": "Matador"
+    },
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "КНИГИТЕ ОТ СРЕДАТА НА ВЕКА, 1950-ТЕ",
+      "src": "THE MIDCENTURY BOOKS, 1950S"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "Mint Julep",
+      "src": "Mint Julep"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "КЕНТЪКИ, 1700-ТЕ",
+      "src": "KENTUCKY, 1700S"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Мента смачкана, лайм изстискан, ромът възнаграден. Екипажът на Дрейк уж пиел черновата.",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "ХАВАНА, СТАР КОЛКОТО ПРИСТАНИЩЕТО",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Търговец на водка и излишък от джинджифилова бира измислиха най-американското руско питие.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "ЛОС АНДЖЕЛИС, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Една бутилка, без шейкър, без спорове. Поръчката за хора, които вече знаят отговора.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Чисто",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "ВСЯКЪДЕ, КЪДЕТО ИМА РАФТ",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Граф Негрони поискал по-силно Американо. Равни части, без пазарлък.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "ФЛОРЕНЦИЯ, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Захар, битер, уиски — питието, заради което е измислена думата „коктейл“.",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "ЛУИВИЛ, 1880-ТЕ",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Джин, изчервен от гренадин. Най-почтеното алиби на сухия режим.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "НЮ ЙОРК, 1910-ТЕ",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Братовчедката на негрони с текила, отпечатана с дребен шрифт и обикната късно.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "БАРОВИТЕ КНИГИ, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Една част кисело, две сладко, три силно, четири слабо. По-стар от чашата, в която стои.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rum Punch",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "ОСТРОВИТЕ, 1600-ТЕ",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Кръстен на инструмента, с който за пръв път е разбъркан. В някои пристанища минава за закуска.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Отвертка",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "НЕФТЕНИТЕ ПОЛЕТА, 1940-ТЕ",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "АМЕРИКАНСКИЯТ БРЯГ",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "ПАРИЖ, 1920-ТЕ",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Джин, лайм и мента. Бандата го пиеше; ментата скриваше джина от ваната.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "ЧИКАГО, 1920-ТЕ",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Московското муле, тръгнало на юг — агаве в медното седло.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "ПОГРАНИЧНИТЕ ЗЕМИ",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Формулата сауър с прах по ботушите. Агавето отговаря на лимона.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "СЕМЕЙСТВОТО САУЪР",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Гренадинът потъва, портокалът изплува, а „Ролинг Стоунс“ го взеха на турне.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "САУСАЛИТО, 1970-ТЕ",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Флеминг го написа за Бонд: джин, водка и име, което той не успя да задържи.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "КАЗИНО РОЯЛ, 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Водка и енергийна напитка в една чаша — питие, което кара и дневна, и нощна смяна наведнъж.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "НОЩНИТЕ БАРОВЕ",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "Най-лекото нещо, което един бар законно може да нарече питие. Чисто, студено, изчезнало.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "НИКЪДЕ КОНКРЕТНО, 1900-ТЕ",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Джин сауър с приглушени светлини. По-гладка публика, същият лимон.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Vodka Sour",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "СЕМЕЙСТВОТО САУЪР",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "По-тихият брат на джин с тоник — тоникът говори, водката държи палтата.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "СЛЕДВОЕННИТЕ ГОДИНИ, 1950-ТЕ",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Бърбън с кола за запивка, която се предаде и влезе в чашата.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whiskey & Cola",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "КРАЙПЪТНИТЕ БАРОВЕ, 1930-ТЕ",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Бърбън, удължен с джинджифил — хайболът, който направи уискито питие за делничен ден.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "СТРАНАТА НА ХАЙБОЛА, 1890-ТЕ",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Джулеп, който смени сребърната чаша с лимон и стана по-бърз.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "ГРАДСКИЯТ БРАТОВЧЕД НА ДЖУЛЕПА, 1880-ТЕ",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Сауърът, който направи бърбъна възпитан. Гръбнакът не е по избор.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "ЕРАТА НА ПАРАХОДИТЕ, 1860-ТЕ",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Джин, трипъл сек, лимон — стандартът на Хари Макелхоун от сребърния шейкър.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "ЛОНДОН, 1920-ТЕ",
+      "src": "LONDON, 1920S"
+    },
+    {
+      "key": "data.slot.beer_mat.place",
+      "text": "Тезгяхът",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.beer_mat.title",
+      "text": "Подложка за капки",
+      "src": "Drip mat"
+    },
+    {
+      "key": "data.slot.ceiling.place",
+      "text": "Таванът",
+      "src": "The ceiling"
+    },
+    {
+      "key": "data.slot.ceiling.title",
+      "text": "Таван",
+      "src": "Ceiling"
+    },
+    {
+      "key": "data.slot.floor.place",
+      "text": "Подът",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor.title",
+      "text": "Под",
+      "src": "Floor"
+    },
+    {
+      "key": "data.slot.floor_rug.place",
+      "text": "Подът",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.floor_rug.title",
+      "text": "Килим",
+      "src": "Rug"
+    },
+    {
+      "key": "data.slot.plant_left.place",
+      "text": "До прозореца",
+      "src": "By the window"
+    },
+    {
+      "key": "data.slot.plant_left.title",
+      "text": "Ляво растение",
+      "src": "Left plant"
+    },
+    {
+      "key": "data.slot.plant_right.place",
+      "text": "Тезгяхът",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.plant_right.title",
+      "text": "Дясно растение",
+      "src": "Right plant"
+    },
+    {
+      "key": "data.slot.prep_mat.place",
+      "text": "Тезгяхът",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.prep_mat.title",
+      "text": "Подложка за мезета",
+      "src": "Snack mat"
+    },
+    {
+      "key": "data.slot.shaker.place",
+      "text": "В ръката ти",
+      "src": "In your hand"
+    },
+    {
+      "key": "data.slot.shaker.title",
+      "text": "Шейкър",
+      "src": "Shaker"
+    },
+    {
+      "key": "data.slot.sink.place",
+      "text": "Тезгяхът",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.sink.title",
+      "text": "Мивка",
+      "src": "Sink"
+    },
+    {
+      "key": "data.slot.table_left.place",
+      "text": "Подът",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_left.title",
+      "text": "Лява маса",
+      "src": "Left table"
+    },
+    {
+      "key": "data.slot.table_right.place",
+      "text": "Подът",
+      "src": "The floor"
+    },
+    {
+      "key": "data.slot.table_right.title",
+      "text": "Дясна маса",
+      "src": "Right table"
+    },
+    {
+      "key": "data.slot.taps.place",
+      "text": "Тезгяхът",
+      "src": "The counter"
+    },
+    {
+      "key": "data.slot.taps.title",
+      "text": "Бирена кула",
+      "src": "Beer tower"
+    },
+    {
+      "key": "data.slot.wall_center.place",
+      "text": "Задната стена",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_center.title",
+      "text": "Централна картина",
+      "src": "Centre picture"
+    },
+    {
+      "key": "data.slot.wall_lamps.place",
+      "text": "Задната стена",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_lamps.title",
+      "text": "Стенни лампи",
+      "src": "Wall lamps"
+    },
+    {
+      "key": "data.slot.wall_right.place",
+      "text": "Задната стена",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.wall_right.title",
+      "text": "Неонова табела",
+      "src": "Neon sign"
+    },
+    {
+      "key": "data.slot.wall_right_art.place",
+      "text": "Дясната стена",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_right_art.title",
+      "text": "Картина над екрана",
+      "src": "Picture over the screen"
+    },
+    {
+      "key": "data.slot.wall_tv.place",
+      "text": "Дясната стена",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.wall_tv.title",
+      "text": "Екран и постери",
+      "src": "Screen & posters"
+    },
+    {
+      "key": "data.slot.walls.place",
+      "text": "Задната стена",
+      "src": "The back wall"
+    },
+    {
+      "key": "data.slot.walls.title",
+      "text": "Задна стена",
+      "src": "Back wall"
+    },
+    {
+      "key": "data.slot.walls_right.place",
+      "text": "Дясната стена",
+      "src": "The right wall"
+    },
+    {
+      "key": "data.slot.walls_right.title",
+      "text": "Дясна стена",
+      "src": "Right wall"
+    }
+  ]
+}

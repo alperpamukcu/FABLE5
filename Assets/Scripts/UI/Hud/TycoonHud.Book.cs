@@ -1078,23 +1078,26 @@ namespace LastCall.UI
             foreach (var ch in _bookChapters)
             {
                 var chTitle = ch.Title;
-                // TWO LINES OF COUNT (2026-09-08, the author: "yazılar üst üste biniyor").
-                // "11 POURS · 1 PERFECT · 7 LOCKED" is wider than the column at 16, and a
-                // bottom-anchored line grows UP into the title. The row is tall enough for
-                // the count to wrap under the title instead: 72 (title 5..29, count 3..39).
-                var row = TocRow(body, y, 72f, () => { _bookTocChapter = chTitle; BuildTocBody(body); });
+                // ONE LINE OF COUNT, AT THE TAG SIZE (2026-09-22). The tally was set at 16 —
+                // "11 POURS · 1 PERFECT · 7 LOCKED" is wider than the column there — so the row
+                // was made 72 tall to let it wrap UNDER the title, and four chapters then filled
+                // 312 of a 468-unit body. It is a tally, not prose: at 8 it is one line, the row
+                // is 50, and the shelf shows what it has instead of most of what it has.
+                var row = TocRow(body, y, 50f, () => { _bookTocChapter = chTitle; BuildTocBody(body); });
                 var nm = NewText("N", row, _display, 16, TextAnchor.UpperLeft, ink);
                 Place(nm.rectTransform, new Vector2(0, 1), new Vector2(BkColW - 70f, 24f), Vector2.zero);
                 nm.rectTransform.pivot = new Vector2(0, 1);
-                nm.rectTransform.anchoredPosition = new Vector2(8f, -5f);
+                nm.rectTransform.anchoredPosition = new Vector2(8f, -6f);
+                nm.horizontalOverflow = HorizontalWrapMode.Overflow;
                 nm.text = ch.Title;
                 var fo = NewText("P", row, _display, 16, TextAnchor.MiddleRight, figure);
                 Place(fo.rectTransform, new Vector2(1, 0.5f), new Vector2(56f, 24f), new Vector2(-8f, 0));
                 fo.text = (ch.FirstPage + 1).ToString();
-                var meta = NewText("M", row, _body, 16, TextAnchor.LowerLeft, quiet);
-                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 36f), Vector2.zero);
+                var meta = NewText("M", row, _body, 8, TextAnchor.LowerLeft, quiet);
+                Place(meta.rectTransform, new Vector2(0, 0), new Vector2(BkColW - 70f, 14f), Vector2.zero);
                 meta.rectTransform.pivot = new Vector2(0, 0);
-                meta.rectTransform.anchoredPosition = new Vector2(8f, 3f);
+                meta.rectTransform.anchoredPosition = new Vector2(8f, 6f);
+                meta.horizontalOverflow = HorizontalWrapMode.Overflow;
                 // THE CHAPTER SAYS HOW MANY ARE MASTERED (2026-09-08, the author: "perfect
                 // tarifler içindekiler kısmında belirtilmeli"): the count beside the locks,
                 // so the index reads progress in both directions at a glance.
@@ -1103,7 +1106,7 @@ namespace LastCall.UI
                 meta.text = UIText.N("book.contents.chapter_pours", ch.Count)
                     + (ch.PerfectCount > 0 ? " · " + UIText.N("book.contents.chapter_perfect", ch.PerfectCount) : "")
                     + (ch.LockedCount > 0 ? " · " + UIText.N("book.contents.chapter_locked", ch.LockedCount) : "");
-                y += 78f;
+                y += 56f;
             }
 
             var note = NewText("Note", body, _body, 16, TextAnchor.MiddleCenter, quiet);
@@ -1128,14 +1131,10 @@ namespace LastCall.UI
             var r = page.Recipe;
             bool perfected = !page.Locked && r.HasAuthoredRatios && run.IsPerfected(r.Id);
 
-            Color ink = new Color(0.20f, 0.13f, 0.07f);
+            // (The plinth's, the chips' and the pours' own inks moved with them to TycoonHud.Recipes.cs.)
             Color quiet = new Color(0.52f, 0.44f, 0.36f);
             Color figure = new Color(0.10f, 0.06f, 0.02f);
-            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
             Color goneInk = new Color(0.66f, 0.12f, 0.16f);
-            Color miss = new Color(0.52f, 0.44f, 0.36f, 0.6f);
-            Color have = new Color(0.36f, 0.22f, 0.08f, 0.09f);
-            Color gone = new Color(0.74f, 0.16f, 0.20f, 0.13f);
 
             // ── the heading zone: the chapter above, the name on the rule ────────
             // A PERFECTED PAGE IS A DIFFERENT SHEET (2026-09-08, the author: "perfect recipe'de
@@ -1191,7 +1190,12 @@ namespace LastCall.UI
                 sealImg.raycastTarget = false;
             }
 
-            var head = NewText("Head", print, perfected ? _shop : _display, perfected ? 24 : 16, TextAnchor.MiddleCenter,
+            // THE NAME IN THE TITLE FACE (2026-09-23, the author: "Menüde alkollerin adının yazdığı üst başlığın
+            // fontunu değiş okunaklı değil"): see TitleFace. A perfected page used to change face as well as
+            // sheet; the platinum paper, the ink and the rosette say it now, and the name reads the same way on
+            // every page.
+            var (titleFace, titlePx) = TitleFace();
+            var head = NewText("Head", print, titleFace, titlePx, TextAnchor.MiddleCenter,
                 page.Locked ? new Color(0.45f, 0.36f, 0.28f)
                 : perfected ? new Color(0.22f, 0.20f, 0.34f) : new Color(0.30f, 0.16f, 0.05f));
             head.rectTransform.anchorMin = head.rectTransform.anchorMax = new Vector2(0.5f, 1f);
@@ -1199,10 +1203,12 @@ namespace LastCall.UI
             head.rectTransform.sizeDelta = new Vector2(BkColW + 20f, 30f);
             head.rectTransform.anchoredPosition = new Vector2(0, -40f);
             head.text = UIText.Caps(RecipeTitle(r));
-            // THE TITLE FITS ITS COLUMN (2026-09-09). A perfected page sets the name in the
-            // heavy face at 24, and a long one — SEX ON THE BEACH, TEQUILA SUNRISE — is wider
+            // THE TITLE FITS ITS COLUMN (2026-09-09). A perfected page set the name in the
+            // heavy face at 24, and a long one — SEX ON THE BEACH, TEQUILA SUNRISE — was wider
             // than the column, so it wrapped into the line under it. Measured, and stepped
-            // back to the page's own 16 when it must be.
+            // back to the page's own 16 when it must be. (The title face is narrower than
+            // either — LONG ISLAND ICED TEA is 204 of the 316 — so on the Latin tables this
+            // is now the guard for a translation nobody has measured, 2026-09-23.)
             if (head.preferredWidth > head.rectTransform.sizeDelta.x)
             {
                 head.font = _display;
@@ -1212,254 +1218,79 @@ namespace LastCall.UI
 
             float y = BkContentTop;
 
-            // ── how it is worked, and in what ────────────────────────────────────
-            var way = NewText("Way", print, _body, 16, TextAnchor.MiddleCenter, prepInk);
-            way.rectTransform.anchorMin = way.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            way.rectTransform.pivot = new Vector2(0.5f, 1f);
-            way.rectTransform.sizeDelta = new Vector2(BkColW, 22f);
-            way.rectTransform.anchoredPosition = new Vector2(0, -y);
-            way.text = WayLine(r);
-            y += 24f;
-            // HOW HARD IT IS, on every page, bought or not (2026-09-13, the author:
-            // "kokteyllere zorluk seviyesi ekleyelim").
-            y += DifficultyRow(print, r, BkColW, y, dark: false) + 2f;
+            // ── THE PLATE: the drink, and what it sells for (2026-09-22) ─────────
+            //
+            // The page used to open with three stacked centred lines — "SHAKEN · COUPE GLASS",
+            // the difficulty, then the picture and the price — and a stack of centred lines is
+            // a page with no subject (GDD 16 §6.3). It opens on ONE block now: the drink stood
+            // on a drawn plinth at exactly twice its own 32 px, and the price beside it as the
+            // biggest figure on the page. The three sentences that were above it are the three
+            // CHIPS under it, which is the same information in a third of the height and with
+            // a drawing against each fact instead of a word.
+            // HOW CROWDED THIS PAGE IS, DECIDED BEFORE ANYTHING IS DRAWN (2026-09-22). Seventeen
+            // dated bugs in this file are the same bug: a cursor growing down met the foot, which
+            // is pinned. The page counts its pours first now and spends its top half against what
+            // is left, so the two blocks that CAN give room back — the character strip and the
+            // legend's caption — give it back on the pages that need it instead of the page
+            // printing over its own provenance rule.
+            int pourRowCount = 0, hintRowCount = 0;
+            if (!page.Locked)
+            {
+                var peek = RecipeSpecRows(r, poursOnly: true, locked: false);
+                for (int k = 0; k < peek.Count; k++)
+                {
+                    if (k == 0 && r.Id != "draught") continue;      // the prep word stands over the icon
+                    if (peek[k].Hint) hintRowCount++; else pourRowCount++;
+                }
+            }
+            bool crowded = pourRowCount >= 6;
 
-            // THE DRINK ITSELF, BIGGER (2026-09-06, the author: "yapılan kokteylin görseli
-            // biraz daha büyültülsün"), with what it sells for beside it — the one number a
-            // page about a drink is really about ("ücreti daha ön plana çıkarılsın").
-            var icon = NewRect("I", print);
-            icon.anchorMin = icon.anchorMax = new Vector2(0.5f, 1f);
-            icon.pivot = new Vector2(0.5f, 1f);
-            icon.sizeDelta = new Vector2(76f, 76f);
-            icon.anchoredPosition = new Vector2(-46f, -y);
-            var img = icon.gameObject.AddComponent<Image>();
-            img.sprite = DrinkIcon.For(r, _bootstrap.Glassware);
-            img.preserveAspect = true;
-            img.raycastTarget = false;
-            img.enabled = img.sprite != null;
-            if (page.Locked) img.color = new Color(1, 1, 1, 0.4f);
+            // WHAT HANGS UNDER THE POURS, COUNTED BEFORE THE POURS ARE PITCHED (2026-09-23). The pitch was measured
+            // to the story's rule as though the type hints, the fill line and the player's best did not exist, so
+            // every page that had them printed its last line across the rule (the seven-pour page by nine units).
+            var bestMake = page.Locked || !r.HasAuthoredRatios ? null : run.BestMakeFor(r.Id);
+            float pourTail = hintRowCount * 16f
+                + (r.MinFill > 0 && !page.Locked ? 22f : 0f)
+                + (!perfected && bestMake != null ? 16f : 0f);
 
-            // The list price, not tonight's crowd-adjusted one: a menu prints what the
-            // drink is worth, and the night's premium is the night's business.
-            int price = DrinkOrder.MenuPrice(r);
-            var priceT = NewText("Price", print, _display, 24, TextAnchor.MiddleLeft, figure);
-            priceT.rectTransform.anchorMin = priceT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            priceT.rectTransform.pivot = new Vector2(0, 1f);
-            priceT.rectTransform.sizeDelta = new Vector2(120f, 30f);
-            priceT.rectTransform.anchoredPosition = new Vector2(6f, -(y + 16f));
-            priceT.raycastTarget = false;
-            priceT.text = "$" + price;
-            var priceCap = NewText("PriceCap", print, _body, 8, TextAnchor.MiddleLeft, quiet);
-            priceCap.rectTransform.anchorMin = priceCap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            priceCap.rectTransform.pivot = new Vector2(0, 1f);
-            priceCap.rectTransform.sizeDelta = new Vector2(120f, 12f);
-            priceCap.rectTransform.anchoredPosition = new Vector2(8f, -(y + 46f));
-            priceCap.raycastTarget = false;
-            priceCap.text = UIText.T("book.page.on_the_tab");
-            y += 84f;
+            // ── THE PLATE, THE CHIPS: see RecipePlinth and RecipeChips (shared with the licence's tip) ──
+            y += RecipePlinth(print, r, BkColW, y, page.Locked, perfected) + 4f;
+            y += RecipeChips(print, r, BkColW, y) + 4f;
+
+            // ── HOW IT IS USUALLY TAKEN, where the page has a habit ──────────────
+            // Only on a page the bar OWNS: what goes in a drink is sealed until it is bought
+            // (2026-09-13), and so is how it comes.
+            if (!page.Locked)
+            {
+                float usually = HabitRow(print, r, BkColW, y, dark: false);
+                if (usually > 0f) y += usually + 2f;
+            }
+
+            // ── THE CHARACTER, GIVEN WHAT THE REST OF THE PAGE DOES NOT NEED (2026-09-23) ──
+            // The strip is the one block that can give room back, so it is handed a height rather than a flag:
+            // everything under it is counted at the pitch where a pour row's two lines (20 + 14) still clear the
+            // next, and the strip keeps its host's line, then its name, only while they fit. Measured over the
+            // fifty-four pages: 38 print the whole strip, 2 (Mai Tai, Mojito) the fact and the name, 1 (Long
+            // Island) the fact alone.
+            const float PourRowMin = 34f;
+            float legendNeed = page.Locked ? 0f : (crowded ? 0f : 13f) + BookLegendDotsH + 15f;
+            float lockNeed = page.Locked ? 52f + 46f + 4f : 0f;      // the sealed line and the tallest gate plate
+            float stripMax = (BkStoryTop - 8f) - y - 4f - legendNeed - pourRowCount * PourRowMin - pourTail - lockNeed;
+            float strip = TraitStrip(print, r, BkColW, y, stripMax);
+            if (strip > 0f) y += strip + 4f;
 
             // WHAT GOES IN IT IS SEALED ON A PAGE NOT BOUGHT (2026-09-13, the author: "satın
             // alınmayan tariflerin içeriği gözükmemeli menüde"). The legend and the pours
             // print only for a drink the bar owns; a locked page says it is sealed.
             if (!page.Locked)
             {
-            // ── the gauge's own legend (the author: the bar must SAY what it means
-            // and which %-band each colour owns) ─────────────────────────────────
-            // READ AT THE BOOK'S OWN SIZE (2026-09-06, the author: "menüde daha okunaklı bir
-            // font kullanılsın"). The captions on this page were at 8 — the size the game
-            // keeps for tags over a head — while everything around them was at 16.
-            var cap = NewText("Cap", print, _body, 16, TextAnchor.MiddleCenter, quiet);
-            cap.rectTransform.anchorMin = cap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            cap.rectTransform.pivot = new Vector2(0.5f, 1f);
-            cap.rectTransform.sizeDelta = new Vector2(BkColW, 22f);   // 16pt needs 20 (measured)
-            cap.rectTransform.anchoredPosition = new Vector2(0, -y);
-            cap.text = UIText.T("book.page.pour_legend");
-            y += 22f;
-            // The legend is the SAME five dots the rows use, so nothing has to be learned
-            // twice: all five lit, with the share each one stands for written under it.
-            var legend = NewRect("Legend", print);
-            var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
-            float legendW = legendArt.rect.width * 2f, legendH = legendArt.rect.height * 2f;
-            legend.anchorMin = legend.anchorMax = new Vector2(0.5f, 1f);
-            legend.pivot = new Vector2(0.5f, 1f);
-            legend.sizeDelta = new Vector2(legendW, legendH);
-            legend.anchoredPosition = new Vector2(0, -y);
-            var legendImg = legend.gameObject.AddComponent<Image>();
-            legendImg.sprite = legendArt;
-            legendImg.raycastTarget = false;
-            var scale = NewText("Scale", print, _body, 16, TextAnchor.MiddleCenter, quiet);
-            scale.rectTransform.anchorMin = scale.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            scale.rectTransform.pivot = new Vector2(0.5f, 1f);
-            scale.rectTransform.sizeDelta = new Vector2(BkColW, 22f);   // 16pt needs 20 (measured)
-            scale.rectTransform.anchoredPosition = new Vector2(0, -(y + legendH + 2f));
-            scale.text = "20%   40%   60%   80%  100%";
-            y += legendH + 24f;
-
-            // ── the pours, one full-width row each ───────────────────────────────
-            var specRows = RecipeSpecRows(r, poursOnly: true, locked: page.Locked);
-            // THE ROWS FIT THE PAGE THEY ARE ON (2026-09-08, the author: "Long Island
-            // menüden taşıyor"). At 48 a row, seven pours are 336 units from a start near
-            // 264 on a page whose story foot begins about 540: the last three rows ran over
-            // the story and off the paper. The pitch is measured against what is left —
-            // 48 when it fits, tighter when it must, never under the 32 a bottle at 2x and
-            // its dots need.
-            int pourRows = 0;
-            for (int k = 0; k < specRows.Count; k++)
-                if (!(k == 0 && r.Id != "draught") && !specRows[k].Hint) pourRows++;
-            float rowPitch = pourRows <= 0 ? 48f
-                : Mathf.Clamp(Mathf.Floor((BkStoryTop - y - 8f) / pourRows), 32f, 48f);
-            for (int i = 0; i < specRows.Count; i++)
-            {
-                var spec = specRows[i];
-                // The prep word already stands over the icon; its row would say it twice.
-                if (i == 0 && r.Id != "draught") continue;
-                bool ingredient = spec.Style != null;
-                bool stocked = !ingredient || InStock(spec.Style, spec.MinTier);
-
-                if (spec.Hint)
-                {
-                    var hintT = NewText("H" + i, print, _body, 8, TextAnchor.MiddleLeft, quiet);
-                    hintT.rectTransform.anchorMin = hintT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                    hintT.rectTransform.pivot = new Vector2(0.5f, 1f);
-                    hintT.rectTransform.sizeDelta = new Vector2(BkColW - 8f, 14f);
-                    hintT.rectTransform.anchoredPosition = new Vector2(0, -y);
-                    hintT.text = spec.Label;
-                    y += 16f;
-                    continue;
-                }
-
-                var line = NewRect("S" + i, print);
-                line.anchorMin = line.anchorMax = new Vector2(0.5f, 1f);
-                line.pivot = new Vector2(0.5f, 1f);
-                line.sizeDelta = new Vector2(BkColW, rowPitch - 2f);
-                line.anchoredPosition = new Vector2(0, -y);
-                y += rowPitch;
-
-                if (ingredient)
-                {
-                    var slab = line.gameObject.AddComponent<Image>();
-                    slab.color = stocked ? have : gone;
-                    slab.raycastTarget = false;
-                }
-
-                float textX = 4f;
-                if (ingredient)
-                {
-                    var pour = new List<Sprite>();
-                    foreach (var b in run.Shelf.Bottles)
-                    {
-                        var info = b.Ingredient?.Info;
-                        if (info == null || info.Style != spec.Style) continue;
-                        if (info.Tier < spec.MinTier) continue;
-                        var a = ItemArt.Bottle(b.Ingredient);
-                        if (a != null) pour.Add(a);
-                    }
-                    if (pour.Count == 0)
-                    {
-                        // Nothing of that style on the shelf: the catalogue's own bottle
-                        // of it stands in, so the line still shows what it wants.
-                        var fallback = ItemArt.StyleBottle(run.CatalogueBottles, spec.Style);
-                        if (fallback != null) pour.Add(fallback);
-                    }
-                    // BIGGER BOTTLES ON THE PAGE (2026-09-06: "tarifteki alkol görsellerini
-                    // ve kapladıkları alanı sayfada büyütelim") — the row grew with them.
-                    // ...AND NO BIGGER THAN THE ROW (2026-09-08, photographed on the
-                    // endgame's Long Island): seven pours tighten the pitch to ~34, and a
-                    // 40-unit bottle in a 32-unit row stood across the row below it — with
-                    // every rung on the shelf, four bottles a row, the column was a heap.
-                    // The box follows the pitch; a bottle drawn smaller is still the bottle.
-                    float box = Mathf.Min(40f, rowPitch - 6f);
-                    float step = pour.Count > 1 ? Mathf.Min(box, 56f / pour.Count) : box;
-                    for (int b = 0; b < pour.Count; b++)
-                    {
-                        var bi = NewRect("B" + b, line);
-                        Place(bi, new Vector2(0, 0.5f), new Vector2(box, box),
-                            new Vector2(3f + b * step, 0));
-                        var bimg = bi.gameObject.AddComponent<Image>();
-                        bimg.sprite = pour[b];
-                        bimg.preserveAspect = true;
-                        bimg.raycastTarget = false;
-                        bimg.color = stocked ? Color.white : new Color(1f, 1f, 1f, 0.35f);
-                    }
-                    textX = box + 6f + Mathf.Max(0, pour.Count - 1) * step;
-                }
-
-                // THE NAME OWNS ITS LINE (2026-09-07, the author: "barlar ucundan kesik
-                // gözüküyor, tam oturtulmamış"). The name's box used to stop 116 units short
-                // of the row's end for a gauge 72 wide, and the five dots at 2x are 128: a
-                // long name ran under the first dot, and a name that wrapped ran over the
-                // dots. The dots stand on the row's SECOND line now (below), so the name
-                // may run to the row's end and never meets them.
-                var label = NewText("L", line, _body, 16, TextAnchor.UpperLeft,
-                    ingredient ? (stocked ? ink : miss) : prepInk);
-                Place(label.rectTransform, new Vector2(0, 1),
-                    new Vector2(BkColW - textX - 8f, 20f), Vector2.zero);
-                label.horizontalOverflow = HorizontalWrapMode.Overflow;
-                label.rectTransform.pivot = new Vector2(0, 1);
-                label.rectTransform.anchoredPosition = new Vector2(textX, -1f);
-                label.raycastTarget = false;
-                label.text = SpecLabel(spec);
-
-                // A BOTTLE THE BAR CANNOT POUR SAYS SO (the author: "açık olmayan
-                // alkoller kilitli gözükür") — under its own name, on its own line,
-                // where it can never collide with the gauge.
-                if (ingredient && !stocked)
-                {
-                    // ONE SMALL LINE (2026-09-06, the author: "düzen kaymış yazılar görseller
-                    // üst üste biniyor"). At the body face's 16 the tag was 290 units in a
-                    // 200 box, so it wrapped to three rows and ran down over the next
-                    // ingredient and the gate notice under it. At 8 it is one row, under
-                    // the name, inside the 46 the row owns.
-                    var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
-                    Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f), Vector2.zero);
-                    lockT.rectTransform.pivot = new Vector2(0, 1);
-                    lockT.rectTransform.anchoredPosition = new Vector2(textX, -22f);
-                    lockT.horizontalOverflow = HorizontalWrapMode.Overflow;
-                    lockT.verticalOverflow = VerticalWrapMode.Truncate;
-                    lockT.raycastTarget = false;
-                    // Short, because the dots share this line now (2026-09-07).
-                    lockT.text = UIText.T("book.page.bottle_locked");
-                }
-
-                if (spec.Amount.Length > 0)
-                {
-                    // THE PERFECT SHARE PRINTS AS ITS NUMBER (the author: "perfect oran
-                    // bulunduğunda o barın yerini perfect oranın sayısı alır") — the
-                    // gauge stands down, the figure stands up, and the word under it
-                    // says why the page may print it at all.
-                    var amount = NewText("A", line, _display, 16, TextAnchor.UpperRight, figure);
-                    Place(amount.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, 20f),
-                        new Vector2(-4f, -1f));
-                    amount.rectTransform.pivot = new Vector2(1, 1);
-                    amount.raycastTarget = false;
-                    amount.text = spec.Amount;
-                    var tag = NewText("PT", line, _body, 8, TextAnchor.UpperRight,
-                        new Color(0.42f, 0.46f, 0.55f));
-                    Place(tag.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, 12f),
-                        new Vector2(-4f, -21f));
-                    tag.rectTransform.pivot = new Vector2(1, 1);
-                    tag.raycastTarget = false;
-                    tag.text = UIText.T("book.page.perfect_tag");
-                }
-                else if (spec.Box >= 0)
-                {
-                    // FIVE DOTS, NOT A LEVEL (2026-09-06). The sight glass asked the reader to
-                    // measure a bar; the dots are counted. Filled up to the box this band
-                    // wants, each in that box's own colour, the rest left open.
-                    var dotsArt = ChromeArt.RatioDots(page.Locked ? -1 : spec.Box,
-                                                      BandBoxColors, RatioBox.Count);
-                    float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
-                    var dots = NewRect("Dots", line);
-                    // On the row's second line, flush right: the name's line is the name's.
-                    Place(dots, new Vector2(1, 1), new Vector2(dw, dh), new Vector2(-6f, -22f));
-                    dots.pivot = new Vector2(1, 1);
-                    var dimg = dots.gameObject.AddComponent<Image>();
-                    dimg.sprite = dotsArt;
-                    dimg.raycastTarget = false;
-                    dimg.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
-                }
-            }
-
+                // The legend at the tag size, its caption only where the page has room (2026-09-22).
+                y += BookLegend(print, BkColW, y, caption: !crowded);
+                // THE ROWS FIT THE PAGE THEY ARE ON (2026-09-08; the tail reserved 2026-09-23): 48 when it fits,
+                // tighter when it must, never under the 30 a bottle and its dots need.
+                float rowPitch = pourRowCount <= 0 ? 48f
+                    : Mathf.Clamp(Mathf.Floor((BkStoryTop - y - 8f - pourTail) / pourRowCount), 30f, 48f);
+                y += BookPourRows(print, r, run, BkColW, y, rowPitch, locked: false);
             }
             else
             {
@@ -1485,7 +1316,7 @@ namespace LastCall.UI
                 y += 22f;
             }
 
-            var bestMake = page.Locked || !r.HasAuthoredRatios ? null : run.BestMakeFor(r.Id);
+            // (bestMake is read above, where the pours' pitch reserves this line's room.)
             if (!perfected && bestMake != null)
             {
                 var best = NewText("YB", print, _body, 16, TextAnchor.MiddleCenter, quiet);
@@ -1598,7 +1429,9 @@ namespace LastCall.UI
                 // it prints as struck-through provenance (seen in play, 2026-08-24).
                 facts.rectTransform.sizeDelta = new Vector2(BkColW, 12f);
                 facts.rectTransform.anchoredPosition = new Vector2(0, 50f);
-                facts.text = UIText.Data("recipe", r.Id, "origin", lore.Origin) + " · $" + DrinkOrder.MenuPrice(r);
+                // The same figure the plinth prints, the room's PRICE in it (TycoonRun.PagePrice, 2026-09-23).
+                facts.text = UIText.Data("recipe", r.Id, "origin", lore.Origin) + " · $"
+                    + (Run != null ? Run.PagePrice(r) : DrinkOrder.MenuPrice(r, 0.0));
             }
 
             if (perfected)

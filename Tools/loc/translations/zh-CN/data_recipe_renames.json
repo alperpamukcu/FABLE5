@@ -1,0 +1,30 @@
+{
+  "strings": [
+    {"key": "data.recipe.dark_stormy.lore", "text": "黑朗姆倒在姜汁啤酒上，直到那朵云成形。趁天气变脸之前喝掉。", "src": "Black rum poured over ginger beer until the cloud forms. Drink it before the weather turns."},
+    {"key": "data.recipe.dark_stormy.name", "text": "黑色风暴", "src": "Black Squall"},
+    {"key": "data.recipe.dirty_martini.lore", "text": "一杯自带晚餐的马天尼。区别全在那根橄榄签上，别忘了。", "src": "A martini that came with supper. The spear is the whole difference, so do not forget it."},
+    {"key": "data.recipe.dirty_martini.name", "text": "橄榄马天尼", "src": "Olive Martini"},
+    {"key": "data.recipe.dry_martini.lore", "text": "金酒几乎没被味美思打扰，搅拌至冰凉，最后加一卷柠檬皮。每家酒吧都拿它来衡量。", "src": "Gin barely troubled by vermouth, stirred cold, finished with a twist. The measure all bars are taken by."},
+    {"key": "data.recipe.espresso_martini.lore", "text": "“让我清醒，再让我放飞。”Dick Bradsell 拿起雪克壶和那瓶咖啡利口酒照办了。", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker and the coffee bottle."},
+    {"key": "data.recipe.kamikaze.lore", "text": "伏特加、橙皮酒、青柠，片甲不留。用高脚杯不加冰端上，因为它是鸡尾酒，不是一口杯。", "src": "Vodka, triple sec, lime, no survivors. Served up, because it is a cocktail and not a shot."},
+    {"key": "data.recipe.long_island.name", "text": "长岛冰茶", "src": "Long Island Iced Tea"},
+    {"key": "data.recipe.mai_tai.lore", "text": "Trader Vic 只把酒倒在碎冰上，水果是海岛后来加的。我们这杯留着水果。", "src": "Trader Vic poured it neat over crushed ice; the islands added the fruit. Ours keeps the fruit."},
+    {"key": "data.recipe.martinez.lore", "text": "曼哈顿与马天尼之间缺失的那一环，用淘金热年代的金酒和一卷柠檬皮调成。", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin and a twist."},
+    {"key": "data.recipe.matador.lore", "text": "龙舌兰、菠萝、青柠，加冰调成长饮 — 度假中的玛格丽特。", "src": "Tequila, pineapple, lime, long over ice — the margarita on its holidays."},
+    {"key": "data.recipe.mint_julep.lore", "text": "波本流过压实的碎冰和薄荷，杯子高得足够让那束薄荷立着。", "src": "Bourbon through packed ice and mint, tall enough for the sprig to stand in."},
+    {"key": "data.recipe.paloma.lore", "text": "龙舌兰、青柠加苏打水，在暑气里兑成一长杯。三样东西，没有争论，也没有仪式。", "src": "Tequila, lime and soda, built tall in the heat. Three things, no argument, no ceremony."},
+    {"key": "data.recipe.paloma.name", "text": "牧场水", "src": "Ranch Water"},
+    {"key": "data.recipe.paloma.origin", "text": "西得克萨斯，2010年代", "src": "WEST TEXAS, 2010S"},
+    {"key": "data.recipe.sea_breeze.lore", "text": "蔓越莓和菠萝陪着伏特加在海边散步。", "src": "Cranberry and pineapple walking vodka down the shore."},
+    {"key": "data.recipe.sea_breeze.name", "text": "海湾微风", "src": "Bay Breeze"},
+    {"key": "data.recipe.sex_on_beach.lore", "text": "伏特加上面是蔓越莓和橙汁。名字取自一种布料，不是那座城，也没人在意。", "src": "Vodka under cranberry and orange. Named for a cloth, not a city, and nobody minds."},
+    {"key": "data.recipe.sex_on_beach.name", "text": "马德拉斯", "src": "Madras"},
+    {"key": "data.recipe.sex_on_beach.origin", "text": "马德拉斯，经由新英格兰，1960年代", "src": "MADRAS, BY WAY OF NEW ENGLAND, 1960S"},
+    {"key": "data.recipe.sidecar.lore", "text": "丽兹酒店说是它的，伦敦不认账。我们这杯用威士忌，也不打算道歉。", "src": "The Ritz claims it, London disputes it. Ours runs on whiskey and does not apologise."},
+    {"key": "data.recipe.sidecar.name", "text": "威士忌边车", "src": "Whiskey Sidecar"},
+    {"key": "data.recipe.vodka_bull.name", "text": "夜班", "src": "Night Shift"},
+    {"key": "data.recipe.vodka_soda.name", "text": "伏特加苏打", "src": "Vodka & Soda"},
+    {"key": "data.recipe.vodka_tonic.name", "text": "伏特加汤力", "src": "Vodka & Tonic"},
+    {"key": "data.recipe.whiskey_ginger.name", "text": "威士忌姜汁", "src": "Whiskey & Ginger"}
+  ]
+}

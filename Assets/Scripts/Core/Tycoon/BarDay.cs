@@ -69,13 +69,17 @@ namespace LastCall.Core
         private readonly SeededRng _arrivals;
         private readonly SeededRng _mess;
         private readonly double _stars;
+        private readonly double _gapScale;
         private double _untilNextArrival;
 
+        /// <param name="gapScale">The installed room's CROWD (2026-09-23): × the gap between
+        /// arrivals, read only while the bar is <see cref="KeepingUp"/>. 1 is the door as it was.</param>
         public BarDay(int day, int seats, TycoonConfig config, SeededRng arrivalStream,
-            double stars = BarRating.NeutralStars, SeededRng messStream = null)
+            double stars = BarRating.NeutralStars, SeededRng messStream = null, double gapScale = 1.0)
         {
             if (day < 1) throw new ArgumentOutOfRangeException(nameof(day));
             if (seats < 1) throw new ArgumentOutOfRangeException(nameof(seats));
+            if (!(gapScale > 0)) throw new ArgumentOutOfRangeException(nameof(gapScale), "A door opens at a positive pace.");
             Day = day;
             Seats = seats;
             _config = config ?? throw new ArgumentNullException(nameof(config));
@@ -84,6 +88,8 @@ namespace LastCall.Core
             // built without one leaves the single mark the counter left before today.
             _mess = messStream;
             _stars = stars;
+            // Stored BEFORE the first gap is rolled: that gap is rolled here, in the constructor.
+            _gapScale = gapScale;
             NightSeconds = config.NightSeconds;
             _untilNextArrival = NextGap();
         }
@@ -94,12 +100,20 @@ namespace LastCall.Core
         /// should usually look worked-in and only sometimes look neglected — an even roll
         /// makes every fourth customer a disaster, which reads as noise rather than as people.
         /// </summary>
+        /// <remarks>
+        /// SOME DRINKS ARE WORSE TO MAKE THAN OTHERS (2026-09-22, DrinkTraits): the three
+        /// thresholds are the page's, off the DELIVERED drink — a Mojito is mint torn on the
+        /// board and fruit crushed in the glass, a Ranch Water is a pour and a wipe of the hand.
+        /// The same single draw is taken whatever the page is, so the "mess" stream's shape is
+        /// exactly what it was and no seed moves because a character was re-tuned.
+        /// </remarks>
         private int MarksLeftBy(CustomerVisit visit)
         {
             if (!_config.CounterSmudges) return 0;
             if (_mess == null) return 1;               // an older floor: what it always left
             double r = _mess.NextDouble();
-            return r < 0.25 ? 0 : r < 0.65 ? 1 : r < 0.90 ? 2 : 3;
+            var t = DrinkTraits.Of(visit?.Served);
+            return r < t.Mess0 ? 0 : r < t.Mess1 ? 1 : r < t.Mess2 ? 2 : 3;
         }
 
         /// <summary>The shift is over when the door has shut AND the last stool is empty:
@@ -143,6 +157,15 @@ namespace LastCall.Core
             }
         }
 
+        /// <summary>
+        /// THE BARTENDER IS KEEPING UP (2026-09-23): nobody is waiting but, at most, the one
+        /// who just sat down or the one being served. The room's greed kinds — CROWD at the
+        /// door, the tables' SECOND ROUND at the serve — act only then: measured unconditional,
+        /// they sat or kept more people than a busy bar could serve and cost their buyer stars.
+        /// A deterministic reading of the room; it draws nothing.
+        /// </summary>
+        public bool KeepingUp => Waiting <= 1;
+
         /// <summary>Whether the room looks too far behind to be worth sitting down in
         /// (v5 P12). Someone who walks in, counts the people still waiting on a drink and
         /// thinks better of it never becomes a storm-off — they were never a customer.</summary>
@@ -162,28 +185,38 @@ namespace LastCall.Core
         public List<CustomerVisit> FinishedCounted()
         {
             var counted = new List<CustomerVisit>(_finished.Count);
-            // ...and neither does a face rightly shown the door (GDD 28 §4, D10): no
-            // review, no seat in the mean, neither served nor walked. A WRONG kick stays
-            // on the books as the walk-out it is.
+            // A FACE RIGHTLY SHOWN THE DOOR NOW FILES ONE (2026-09-22, the author: "sahte kimlikle
+            // kovulması gereken müşteriler ... hem + puan sağlamalı hem de + para getirmeli"). GDD
+            // 28 D10 kept them out of this list entirely — no review, no seat in the mean — which
+            // made the door worth exactly nothing to the stars. They are counted now, at
+            // CustomerVisit.RightKickSatisfaction; what D10 was really protecting is that they are
+            // neither SERVED nor WALKED on the slip, and that is done where the slip is written
+            // (TycoonRun.ContinueToNextDay) off OffTheBooks, which they still carry.
             foreach (var visit in _finished)
-                if (!visit.OnTheHouse && !visit.OffTheBooks) counted.Add(visit);
+                if (!visit.OnTheHouse) counted.Add(visit);
             return counted;
         }
 
-        /// <summary>Mean of every finished visit's satisfaction, storm-offs counting as 0.</summary>
+        /// <summary>
+        /// Mean of every finished visit's review — WEIGHTED, since 2026-09-22. A seat is one seat,
+        /// except a customer who was refused a drink they were entitled to: a wrong kick is already
+        /// at the floor of what one review can say, so the only way for the door to cost more
+        /// standing than a slow drink is for it to weigh more of the room
+        /// (<see cref="CustomerVisit.RatingWeight"/>).
+        /// </summary>
         public double AverageSatisfaction
         {
             get
             {
-                double total = 0;
-                int counted = 0;
+                double total = 0, weight = 0;
                 foreach (var visit in _finished)
                 {
-                    if (visit.OnTheHouse || visit.OffTheBooks) continue;
-                    total += visit.Satisfaction;
-                    counted++;
+                    if (visit.OnTheHouse) continue;
+                    double w = visit.RatingWeight;
+                    total += visit.Satisfaction * w;
+                    weight += w;
                 }
-                return counted == 0 ? 0 : total / counted;
+                return weight <= 0 ? 0 : total / weight;
             }
         }
 
@@ -281,8 +314,10 @@ namespace LastCall.Core
             return newlySeated;
         }
 
+        // Still ONE draw per gap. The room's CROWD shortens it only while the bar keeps up; a
+        // bare room's scale is exactly 1, and (a × 1.0) × b is a × b to the last bit.
         private double NextGap() =>
-            _config.ArrivalGap(Day, _stars) *
+            _config.ArrivalGap(Day, _stars) * (KeepingUp ? _gapScale : 1.0) *
             (1.0 + (_arrivals.NextDouble() * 2.0 - 1.0) * TycoonConfig.ArrivalJitter);
     }
 }

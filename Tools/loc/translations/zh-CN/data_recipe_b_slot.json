@@ -1,129 +1,452 @@
-{"strings": [
-{"key": "data.recipe.matador.origin", "text": "世纪中叶的酒谱书，1950年代"},
-{"key": "data.recipe.mint_julep.lore", "text": "波本流过碎冰和薄荷。赛马日一天能卖出十万杯。"},
-{"key": "data.recipe.mint_julep.name", "text": "薄荷朱利普"},
-{"key": "data.recipe.mint_julep.origin", "text": "肯塔基，1700年代"},
-{"key": "data.recipe.mojito.lore", "text": "薄荷捣碎，青柠挤汁，朗姆酒得偿所愿。据说德雷克的船员喝过它的草稿版。"},
-{"key": "data.recipe.mojito.name", "text": "莫吉托"},
-{"key": "data.recipe.mojito.origin", "text": "哈瓦那，和港口一样古老"},
-{"key": "data.recipe.moscow_mule.lore", "text": "一个伏特加推销员加上一批卖不掉的姜汁啤酒，发明了俄罗斯最有美国味的酒。"},
-{"key": "data.recipe.moscow_mule.name", "text": "莫斯科骡子"},
-{"key": "data.recipe.moscow_mule.origin", "text": "洛杉矶，1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "一瓶酒，不用雪克壶，没什么好争的。给早就知道答案的人点的。"},
-{"key": "data.recipe.neat_pour.name", "text": "纯饮"},
-{"key": "data.recipe.neat_pour.origin", "text": "任何有酒架的地方"},
-{"key": "data.recipe.negroni.lore", "text": "尼格罗尼伯爵想要一杯更烈的美国佬。等量调配，没得商量。"},
-{"key": "data.recipe.negroni.name", "text": "尼格罗尼"},
-{"key": "data.recipe.negroni.origin", "text": "佛罗伦萨，1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "糖、苦精、威士忌 — “鸡尾酒”这个词就是为它造的。"},
-{"key": "data.recipe.old_fashioned.name", "text": "古典"},
-{"key": "data.recipe.old_fashioned.origin", "text": "路易斯维尔，1880年代"},
-{"key": "data.recipe.paloma.lore", "text": "龙舌兰加西柚苏打。墨西哥人真正的最爱；玛格丽特只是名气更响。"},
-{"key": "data.recipe.paloma.name", "text": "帕洛玛"},
-{"key": "data.recipe.paloma.origin", "text": "墨西哥，1950年代"},
-{"key": "data.recipe.pink_lady.lore", "text": "金酒被红石榴糖浆染红了脸。禁酒令时期最体面的不在场证明。"},
-{"key": "data.recipe.pink_lady.name", "text": "红粉佳人"},
-{"key": "data.recipe.pink_lady.origin", "text": "纽约，1910年代"},
-{"key": "data.recipe.rosita.lore", "text": "尼格罗尼的龙舌兰表亲，在书里印得小小的，人们很晚才爱上它。"},
-{"key": "data.recipe.rosita.name", "text": "罗西塔"},
-{"key": "data.recipe.rosita.origin", "text": "酒吧酒谱书，1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "一分酸，二分甜，三分烈，四分淡。比盛它的杯子还要古老。"},
-{"key": "data.recipe.rum_punch.name", "text": "朗姆潘趣"},
-{"key": "data.recipe.rum_punch.origin", "text": "海岛，1600年代"},
-{"key": "data.recipe.screwdriver.lore", "text": "得名于最早用来搅它的那件工具。在某些港口，它是早餐。"},
-{"key": "data.recipe.screwdriver.name", "text": "螺丝起子"},
-{"key": "data.recipe.screwdriver.origin", "text": "油田，1940年代"},
-{"key": "data.recipe.sea_breeze.lore", "text": "蔓越莓和西柚陪着伏特加在海边散步。"},
-{"key": "data.recipe.sea_breeze.name", "text": "海风"},
-{"key": "data.recipe.sea_breeze.origin", "text": "美国海岸"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "伏特加上倒入桃子、橙汁和蔓越莓。装进杯里的春假。"},
-{"key": "data.recipe.sex_on_beach.name", "text": "性感沙滩"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "佛罗里达，1980年代"},
-{"key": "data.recipe.sidecar.lore", "text": "丽兹酒店说是它的，伦敦不认账。我们这杯用波本，也不打算道歉。"},
-{"key": "data.recipe.sidecar.name", "text": "波本边车"},
-{"key": "data.recipe.sidecar.origin", "text": "巴黎，1920年代"},
-{"key": "data.recipe.southside.lore", "text": "金酒、青柠和薄荷。黑帮爱喝它；薄荷盖住了浴缸私酿的味道。"},
-{"key": "data.recipe.southside.name", "text": "南区"},
-{"key": "data.recipe.southside.origin", "text": "芝加哥，1920年代"},
-{"key": "data.recipe.tequila_mule.lore", "text": "南下的莫斯科骡子 — 龙舌兰坐上了铜马鞍。"},
-{"key": "data.recipe.tequila_mule.name", "text": "龙舌兰骡子"},
-{"key": "data.recipe.tequila_mule.origin", "text": "边境地带"},
-{"key": "data.recipe.tequila_sour.lore", "text": "靴子上沾着尘土的酸酒公式。龙舌兰回应了柠檬。"},
-{"key": "data.recipe.tequila_sour.name", "text": "龙舌兰酸"},
-{"key": "data.recipe.tequila_sour.origin", "text": "酸酒家族"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "红石榴糖浆下沉，橙汁上浮，滚石乐队还带着它去巡演。"},
-{"key": "data.recipe.tequila_sunrise.name", "text": "龙舌兰日出"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "索萨利托，1970年代"},
-{"key": "data.recipe.vesper.lore", "text": "弗莱明为邦德写下这杯酒：金酒、伏特加，还有一个他留不住的名字。"},
-{"key": "data.recipe.vesper.name", "text": "维斯帕"},
-{"key": "data.recipe.vesper.origin", "text": "皇家赌场，1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "伏特加和能量饮料装在一只杯里 — 一杯酒同时上白班和夜班。"},
-{"key": "data.recipe.vodka_bull.name", "text": "伏特加公牛"},
-{"key": "data.recipe.vodka_bull.origin", "text": "通宵酒吧"},
-{"key": "data.recipe.vodka_soda.lore", "text": "酒吧能合法称作“一杯酒”的最清淡的东西。干净，冰凉，转眼就没。"},
-{"key": "data.recipe.vodka_soda.name", "text": "伏特加苏打"},
-{"key": "data.recipe.vodka_soda.origin", "text": "无特定地点，1900年代"},
-{"key": "data.recipe.vodka_sour.lore", "text": "调暗了灯光的金酒酸。客人更斯文，柠檬还是那个柠檬。"},
-{"key": "data.recipe.vodka_sour.name", "text": "伏特加酸"},
-{"key": "data.recipe.vodka_sour.origin", "text": "酸酒家族"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "金汤力那位更安静的兄弟 — 汤力水负责说话，伏特加负责拿外套。"},
-{"key": "data.recipe.vodka_tonic.name", "text": "伏特加汤力"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "战后年代，1950年代"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "波本配可乐当追水，结果可乐放弃了，直接跳进了杯子。"},
-{"key": "data.recipe.whiskey_cola.name", "text": "威士忌可乐"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "公路酒馆，1930年代"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "用姜汁拉长的波本 — 让威士忌走进工作日夜晚的那杯高球。"},
-{"key": "data.recipe.whiskey_ginger.name", "text": "威士忌姜汁"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "高球之乡，1890年代"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "一杯把银杯换成柠檬的朱利普，动作也利落了不少。"},
-{"key": "data.recipe.whiskey_smash.name", "text": "威士忌斯马什"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "朱利普的城里表亲，1880年代"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "让波本变得有礼貌的酸酒。骨架可不能省。"},
-{"key": "data.recipe.whiskey_sour.name", "text": "威士忌酸"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "蒸汽船时代，1860年代"},
-{"key": "data.recipe.white_lady.lore", "text": "金酒、橙皮酒、柠檬 — Harry MacElhone 银色雪克壶里的招牌。"},
-{"key": "data.recipe.white_lady.name", "text": "白色佳人"},
-{"key": "data.recipe.white_lady.origin", "text": "伦敦，1920年代"},
-{"key": "data.slot.beer_mat.place", "text": "吧台"},
-{"key": "data.slot.beer_mat.title", "text": "滴水垫"},
-{"key": "data.slot.ceiling.place", "text": "头顶"},
-{"key": "data.slot.ceiling.title", "text": "天花板"},
-{"key": "data.slot.floor.place", "text": "地面"},
-{"key": "data.slot.floor.title", "text": "地板"},
-{"key": "data.slot.floor_rug.place", "text": "地面"},
-{"key": "data.slot.floor_rug.title", "text": "地毯"},
-{"key": "data.slot.plant_left.place", "text": "窗边"},
-{"key": "data.slot.plant_left.title", "text": "左侧植物"},
-{"key": "data.slot.plant_right.place", "text": "吧台"},
-{"key": "data.slot.plant_right.title", "text": "右侧植物"},
-{"key": "data.slot.prep_mat.place", "text": "吧台"},
-{"key": "data.slot.prep_mat.title", "text": "小食垫"},
-{"key": "data.slot.shaker.place", "text": "你手里"},
-{"key": "data.slot.shaker.title", "text": "雪克壶"},
-{"key": "data.slot.sink.place", "text": "吧台"},
-{"key": "data.slot.sink.title", "text": "水槽"},
-{"key": "data.slot.table_left.place", "text": "地面"},
-{"key": "data.slot.table_left.title", "text": "左侧桌子"},
-{"key": "data.slot.table_right.place", "text": "地面"},
-{"key": "data.slot.table_right.title", "text": "右侧桌子"},
-{"key": "data.slot.taps.place", "text": "吧台"},
-{"key": "data.slot.taps.title", "text": "生啤塔"},
-{"key": "data.slot.wall_center.place", "text": "后墙"},
-{"key": "data.slot.wall_center.title", "text": "中央挂画"},
-{"key": "data.slot.wall_lamps.place", "text": "后墙"},
-{"key": "data.slot.wall_lamps.title", "text": "壁灯"},
-{"key": "data.slot.wall_right.place", "text": "后墙"},
-{"key": "data.slot.wall_right.title", "text": "霓虹招牌"},
-{"key": "data.slot.wall_right_art.place", "text": "右墙"},
-{"key": "data.slot.wall_right_art.title", "text": "屏幕上方的画"},
-{"key": "data.slot.wall_tv.place", "text": "右墙"},
-{"key": "data.slot.wall_tv.title", "text": "屏幕与海报"},
-{"key": "data.slot.walls.place", "text": "后墙"},
-{"key": "data.slot.walls.title", "text": "后墙"},
-{"key": "data.slot.walls_right.place", "text": "右墙"},
-{"key": "data.slot.walls_right.title", "text": "右墙"},
-{"key": "data.snack.chips.name", "text": "薯片"},
-{"key": "data.snack.mixed_nuts.name", "text": "什锦坚果"},
-{"key": "data.snack.peanuts.name", "text": "花生"},
-{"key": "data.snack.popcorn.name", "text": "爆米花"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.matador.origin",
+      "text": "世纪中叶的酒谱书，1950年代"
+    },
+    {
+      "key": "data.recipe.mint_julep.name",
+      "text": "薄荷朱利普"
+    },
+    {
+      "key": "data.recipe.mint_julep.origin",
+      "text": "肯塔基，1700年代"
+    },
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "薄荷捣碎，青柠挤汁，朗姆酒得偿所愿。据说德雷克的船员喝过它的草稿版。"
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "莫吉托"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "哈瓦那，和港口一样古老"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "一个伏特加推销员加上一批卖不掉的姜汁啤酒，发明了俄罗斯最有美国味的酒。"
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "莫斯科骡子"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "洛杉矶，1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "一瓶酒，不用雪克壶，没什么好争的。给早就知道答案的人点的。"
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "纯饮"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "任何有酒架的地方"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "尼格罗尼伯爵想要一杯更烈的美国佬。等量调配，没得商量。"
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "尼格罗尼"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "佛罗伦萨，1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "糖、苦精、威士忌 — “鸡尾酒”这个词就是为它造的。"
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "古典"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "路易斯维尔，1880年代"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "金酒被红石榴糖浆染红了脸。禁酒令时期最体面的不在场证明。"
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "红粉佳人"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "纽约，1910年代"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "尼格罗尼的龙舌兰表亲，在书里印得小小的，人们很晚才爱上它。"
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "罗西塔"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "酒吧酒谱书，1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "一分酸，二分甜，三分烈，四分淡。比盛它的杯子还要古老。"
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "朗姆潘趣"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "海岛，1600年代"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "得名于最早用来搅它的那件工具。在某些港口，它是早餐。"
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "螺丝起子"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "油田，1940年代"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "美国海岸"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "巴黎，1920年代"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "金酒、青柠和薄荷。黑帮爱喝它；薄荷盖住了浴缸私酿的味道。"
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "南区"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "芝加哥，1920年代"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "南下的莫斯科骡子 — 龙舌兰坐上了铜马鞍。"
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "龙舌兰骡子"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "边境地带"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "靴子上沾着尘土的酸酒公式。龙舌兰回应了柠檬。"
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "龙舌兰酸"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "酸酒家族"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "红石榴糖浆下沉，橙汁上浮，滚石乐队还带着它去巡演。"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "龙舌兰日出"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "索萨利托，1970年代"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "弗莱明为邦德写下这杯酒：金酒、伏特加，还有一个他留不住的名字。"
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "维斯帕"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "皇家赌场，1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "伏特加和能量饮料装在一只杯里 — 一杯酒同时上白班和夜班。"
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "通宵酒吧"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "酒吧能合法称作“一杯酒”的最清淡的东西。干净，冰凉，转眼就没。"
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "无特定地点，1900年代"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "调暗了灯光的金酒酸。客人更斯文，柠檬还是那个柠檬。"
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "伏特加酸"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "酸酒家族"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "金汤力那位更安静的兄弟 — 汤力水负责说话，伏特加负责拿外套。"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "战后年代，1950年代"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "波本配可乐当追水，结果可乐放弃了，直接跳进了杯子。"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "威士忌可乐"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "公路酒馆，1930年代"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "用姜汁拉长的波本 — 让威士忌走进工作日夜晚的那杯高球。"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "高球之乡，1890年代"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "一杯把银杯换成柠檬的朱利普，动作也利落了不少。"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "威士忌斯马什"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "朱利普的城里表亲，1880年代"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "让波本变得有礼貌的酸酒。骨架可不能省。"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "威士忌酸"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "蒸汽船时代，1860年代"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "金酒、橙皮酒、柠檬 — Harry MacElhone 银色雪克壶里的招牌。"
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "白色佳人"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "伦敦，1920年代"
+    },
+    {
+      "key": "data.slot.beer_mat.place",
+      "text": "吧台"
+    },
+    {
+      "key": "data.slot.beer_mat.title",
+      "text": "滴水垫"
+    },
+    {
+      "key": "data.slot.ceiling.place",
+      "text": "头顶"
+    },
+    {
+      "key": "data.slot.ceiling.title",
+      "text": "天花板"
+    },
+    {
+      "key": "data.slot.floor.place",
+      "text": "地面"
+    },
+    {
+      "key": "data.slot.floor.title",
+      "text": "地板"
+    },
+    {
+      "key": "data.slot.floor_rug.place",
+      "text": "地面"
+    },
+    {
+      "key": "data.slot.floor_rug.title",
+      "text": "地毯"
+    },
+    {
+      "key": "data.slot.plant_left.place",
+      "text": "窗边"
+    },
+    {
+      "key": "data.slot.plant_left.title",
+      "text": "左侧植物"
+    },
+    {
+      "key": "data.slot.plant_right.place",
+      "text": "吧台"
+    },
+    {
+      "key": "data.slot.plant_right.title",
+      "text": "右侧植物"
+    },
+    {
+      "key": "data.slot.prep_mat.place",
+      "text": "吧台"
+    },
+    {
+      "key": "data.slot.prep_mat.title",
+      "text": "小食垫"
+    },
+    {
+      "key": "data.slot.shaker.place",
+      "text": "你手里"
+    },
+    {
+      "key": "data.slot.shaker.title",
+      "text": "雪克壶"
+    },
+    {
+      "key": "data.slot.sink.place",
+      "text": "吧台"
+    },
+    {
+      "key": "data.slot.sink.title",
+      "text": "水槽"
+    },
+    {
+      "key": "data.slot.table_left.place",
+      "text": "地面"
+    },
+    {
+      "key": "data.slot.table_left.title",
+      "text": "左侧桌子"
+    },
+    {
+      "key": "data.slot.table_right.place",
+      "text": "地面"
+    },
+    {
+      "key": "data.slot.table_right.title",
+      "text": "右侧桌子"
+    },
+    {
+      "key": "data.slot.taps.place",
+      "text": "吧台"
+    },
+    {
+      "key": "data.slot.taps.title",
+      "text": "生啤塔"
+    },
+    {
+      "key": "data.slot.wall_center.place",
+      "text": "后墙"
+    },
+    {
+      "key": "data.slot.wall_center.title",
+      "text": "中央挂画"
+    },
+    {
+      "key": "data.slot.wall_lamps.place",
+      "text": "后墙"
+    },
+    {
+      "key": "data.slot.wall_lamps.title",
+      "text": "壁灯"
+    },
+    {
+      "key": "data.slot.wall_right.place",
+      "text": "后墙"
+    },
+    {
+      "key": "data.slot.wall_right.title",
+      "text": "霓虹招牌"
+    },
+    {
+      "key": "data.slot.wall_right_art.place",
+      "text": "右墙"
+    },
+    {
+      "key": "data.slot.wall_right_art.title",
+      "text": "屏幕上方的画"
+    },
+    {
+      "key": "data.slot.wall_tv.place",
+      "text": "右墙"
+    },
+    {
+      "key": "data.slot.wall_tv.title",
+      "text": "屏幕与海报"
+    },
+    {
+      "key": "data.slot.walls.place",
+      "text": "后墙"
+    },
+    {
+      "key": "data.slot.walls.title",
+      "text": "后墙"
+    },
+    {
+      "key": "data.slot.walls_right.place",
+      "text": "右墙"
+    },
+    {
+      "key": "data.slot.walls_right.title",
+      "text": "右墙"
+    },
+    {
+      "key": "data.snack.chips.name",
+      "text": "薯片"
+    },
+    {
+      "key": "data.snack.mixed_nuts.name",
+      "text": "什锦坚果"
+    },
+    {
+      "key": "data.snack.peanuts.name",
+      "text": "花生"
+    },
+    {
+      "key": "data.snack.popcorn.name",
+      "text": "爆米花"
+    }
+  ]
+}

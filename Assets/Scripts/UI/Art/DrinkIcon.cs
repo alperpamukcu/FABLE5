@@ -116,10 +116,41 @@ namespace LastCall.UI
             return UITheme.BlendLiquid(parts, UITheme.Night[2], 1f);
         }
 
-        /// <summary>The garnish riding on the rim, if the recipe asks for one by name.</summary>
-        private static bool GarnishFor(RecipeDefinition recipe, out Color colour)
+        /// <summary>What rides on the rim of a drawn drink. Four shapes, because a mark that is
+        /// the same three pixels whatever it stands for says only "this one has something".</summary>
+        private enum GarnishMark { None, Wedge, Olive, Sprig, Crust }
+
+        /// <summary>The crust along the mouth: salt is the paper white, sugar the warm one. Both
+        /// are ramp steps, not mixed inks (GDD 16 §0).</summary>
+        private static readonly Color SaltCrust = UITheme.Cream[4], SugarCrust = UITheme.Amber[4];
+
+        /// <summary>
+        /// THE PAGE'S OWN GARNISH, NOT A GUESS AT IT (2026-09-22). This read the recipe's BANDS,
+        /// and the 2026-09-21 ruling took mint and olive OUT of every band — so the two pages
+        /// whose whole identity is the garnish drew none at all, and the Martini and the olive
+        /// one came out byte for byte the same picture on the book page, the hover card and the
+        /// market's aisle. The SIGNATURE EXTRA is asked first (<see cref="RecipeDefinition.Garnish"/>,
+        /// which every order for the page asks for and the matcher demands in the glass); a fruit
+        /// BAND is still read after it, because a Cuba Libre's lime is poured rather than hung and
+        /// should still show on the rim.
+        /// </summary>
+        private static GarnishMark GarnishFor(RecipeDefinition recipe, out Color colour)
         {
             colour = default;
+            switch (recipe.Garnish)
+            {
+                case "olive":
+                    colour = UITheme.StyleColor("olive", IngredientType.Garnish);
+                    return GarnishMark.Olive;
+                case "mint":
+                    colour = UITheme.StyleColor("mint", IngredientType.Garnish);
+                    return GarnishMark.Sprig;
+                case "lemon_twist":
+                    colour = UITheme.StyleColor("lemon", IngredientType.Garnish);
+                    return GarnishMark.Wedge;
+                case "salt_rim": colour = SaltCrust; return GarnishMark.Crust;
+                case "sugar_rim": colour = SugarCrust; return GarnishMark.Crust;
+            }
             foreach (var band in recipe.RatioRequirements)
             {
                 if (band.IsStyleBand)
@@ -128,17 +159,67 @@ namespace LastCall.UI
                     {
                         case "lemon": case "lime": case "orange": case "mint": case "olive":
                             colour = UITheme.StyleColor(band.Style, IngredientType.Garnish);
-                            return true;
+                            return GarnishMark.Wedge;
                     }
                     continue;
                 }
                 if (band.Type == IngredientType.Garnish)
                 {
                     colour = UITheme.StyleColor(null, IngredientType.Garnish);
-                    return true;
+                    return GarnishMark.Wedge;
                 }
             }
-            return false;
+            return GarnishMark.None;
+        }
+
+        /// <summary>
+        /// Draws the mark on the mouth. The wedge perches on the right-hand corner as it always
+        /// has; the olive hangs INSIDE the mouth on a pick that stands a pixel proud of it, which
+        /// is the silhouette that separates it from the wedge at 32 px; the sprig is a leafy
+        /// cluster over the same corner; and a crust is not a garnish at all, so it is drawn as
+        /// what it is — a speckled run along the whole mouth row.
+        /// </summary>
+        private static void DrawGarnish(Color[] px, bool[] solid, GarnishMark mark, Color c,
+            IReadOnlyList<double> profile, Shape shape)
+        {
+            int half = HalfWidth(profile, 1f, shape.Half);
+            int left = Centre(half), right = left + half * 2 - 1;
+            switch (mark)
+            {
+                case GarnishMark.Wedge:
+                    for (int y = shape.Rim; y <= shape.Rim + 2; y++)
+                        for (int x = right - 2; x <= right; x++) { Put(px, x, y, c); Mark(solid, x, y); }
+                    break;
+
+                case GarnishMark.Olive:
+                    // The pick first, so the fruit draws over its lower end.
+                    for (int y = shape.Rim; y <= shape.Rim + 3; y++)
+                    { Put(px, right - 3, y, SaltCrust); Mark(solid, right - 3, y); }
+                    for (int y = shape.Rim - 1; y <= shape.Rim + 1; y++)
+                        for (int x = right - 4; x <= right - 2; x++)
+                        {
+                            if (y == shape.Rim - 1 && x != right - 3) continue;   // a ball, not a box
+                            Put(px, x, y, c); Mark(solid, x, y);
+                        }
+                    break;
+
+                case GarnishMark.Sprig:
+                    for (int y = shape.Rim; y <= shape.Rim + 3; y++)
+                    {
+                        int w = y <= shape.Rim + 1 ? 3 : 2;      // wide at the leaf, narrow at the stem
+                        for (int x = right - w + 1; x <= right; x++) { Put(px, x, y, c); Mark(solid, x, y); }
+                    }
+                    break;
+
+                case GarnishMark.Crust:
+                    for (int x = left; x <= right; x++)
+                    {
+                        Put(px, x, shape.Rim + 1, c); Mark(solid, x, shape.Rim + 1);
+                        if (((x - left) & 1) == 0)                 // the speckle: every other pip stands proud
+                        { Put(px, x, shape.Rim + 2, c); Mark(solid, x, shape.Rim + 2); }
+                    }
+                    break;
+            }
         }
 
         private static Sprite Draw(RecipeDefinition recipe, GlasswareDefinition glass)
@@ -193,17 +274,8 @@ namespace LastCall.UI
                 else if (y > shape.Floor) Put(px, left + 1, y, Highlight);
             }
 
-            if (GarnishFor(recipe, out var garnish))
-            {
-                int half = HalfWidth(profile, 1f, shape.Half);
-                int gx = Centre(half) + half * 2 - 3;
-                for (int y = shape.Rim; y <= shape.Rim + 2; y++)
-                    for (int x = gx; x < gx + 3; x++)
-                    {
-                        Put(px, x, y, garnish);
-                        Mark(solid, x, y);
-                    }
-            }
+            var mark = GarnishFor(recipe, out var garnish);
+            if (mark != GarnishMark.None) DrawGarnish(px, solid, mark, garnish, profile, shape);
 
             Trace(px, solid);
 

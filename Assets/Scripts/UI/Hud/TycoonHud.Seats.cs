@@ -987,8 +987,15 @@ namespace LastCall.UI
 
         /// <summary>The dish this garnish is taken from, as it stands on the counter — the
         /// picture a hover shows when a word is not enough (2026-09-09). One table, because
-        /// the rail's own table is built inside a method and this is asked from the licence.</summary>
-        private static Sprite GarnishCounterArt(string id)
+        /// the rail's own table is built inside a method and this is asked from the licence.
+        /// LIFTED (2026-09-23, the author: "Garnishler hem menü görsellerinde hem de ana
+        /// sahnede çok karanlık kalıyorlar"): every reader — the licence's hover, the menu's
+        /// habit row, the garnish card — gets the dish GarnishArt.Lift makes, the same picture
+        /// the rail stands in the room, so a dish is one drawing wherever it is read.</summary>
+        private static Sprite GarnishCounterArt(string id) => GarnishArt.Lift(GarnishCounterRaw(id));
+
+        /// <summary>The shipped PNG behind <see cref="GarnishCounterArt"/>, as the author drew it.</summary>
+        private static Sprite GarnishCounterRaw(string id)
         {
             switch (id)
             {
@@ -1068,6 +1075,20 @@ namespace LastCall.UI
         /// the square as air — which is why a dish's rect says nothing about where its foot
         /// is, and why <see cref="DishRestY"/> exists.</summary>
         private const float PrepDishBox = 64f;
+
+        /// <summary>How dark a dish goes once the drink in front of it has taken it, or cannot take it
+        /// (a pint and a salt rim). Only then: a dish with no drink in front of it is still a dish you can
+        /// pick up (GrabPrep asks for no glass), and dimming it said the opposite (2026-09-23). 0.45 went
+        /// to 0.6 the same day — it is multiplied by a room that is itself dim, and 0.45 of that read as a
+        /// hole in the counter rather than a dish that is done.</summary>
+        private const float DishSpentDim = 0.6f;
+
+        /// <summary>How much of a dish on the counter is its OWN colour rather than the room's light
+        /// (2026-09-23). The rest is the lamps, so the rail still warms under the pendants and dims at the
+        /// last call; this is the floor that keeps a bowl of ice reading as ice under an amber key. It can
+        /// never glow: the room's light is clamped at 1, so the lit share is never brighter than the
+        /// drawing, and a share of the drawing over it is never brighter either. See IntoTheRoom.</summary>
+        private const float DishOwnLight = 0.40f;
 
         /// <summary>
         /// WHERE A DISH'S RECT HAS TO SIT for the drawing inside it to STAND on the
@@ -1204,7 +1225,10 @@ namespace LastCall.UI
             {
                 var (id, art, prep, style, word, carry, carryH) = rail[i];
                 var rt = NewRect("MP_" + id, _prepRail);
-                var dish = ItemArt.Load(art);
+                // The dish's own colours lifted (2026-09-23, GarnishArt): the same picture GarnishCounterArt
+                // hands the licence and the menu. Its alpha is the PNG's, pixel for pixel, so DishRestY below
+                // stands it on the same foot line it always stood on.
+                var dish = GarnishArt.Lift(ItemArt.Load(art));
                 float rest = DishRestY(dish, PrepDishBox);
                 Place(rt, new Vector2(0.5f, 0.5f), new Vector2(PrepDishBox, PrepDishBox),
                     new Vector2(PrepRailX0 + i * PrepRailGap, rest));
@@ -1263,7 +1287,9 @@ namespace LastCall.UI
                 // ...AND THE DISH ITSELF STANDS IN THE ROOM (2026-09-22, the author: "Garnishler ve menü ve bez
                 // stage world'ün içinde olmadığından sahnede kullandığımız ışıklandırmalardan etkilenmiyor"): the
                 // rect keeps the grab, the hover and the card; the picture is a stage sprite the lamps can reach.
-                IntoTheRoom("Prep_" + id, rt, img);
+                // ...and keeps DishOwnLight of its own colour under them (2026-09-23): an amber key with the blue
+                // taken out of it turned the ice and the salt tan and the mint olive-drab.
+                IntoTheRoom("Prep_" + id, rt, img, 35, DishOwnLight);
                 _prepProps.Add(prop);
             }
 
@@ -2734,13 +2760,20 @@ namespace LastCall.UI
                 // beer is finished with rather than learning it from a refusal.
                 bool wrong = glass && prop.Prep != null && !run.PreparationSuitsGlass(prop.Prep);
                 // DIMMED, NOT SEE-THROUGH (2026-09-21, the author: "garnishlerde şeffaflık var ... katı olması
-                // gerekiyor"): a dish that cannot be used yet, or has been, darkens instead of fading, so the
+                // gerekiyor"): a dish that has been used, or cannot be, darkens instead of fading, so the
                 // counter never shows through it.
                 var baseCol = prop.Img.sprite != null ? Color.white : UITheme.Cyan[3];
-                float dim = !glass ? 0.6f : done || wrong ? 0.45f : 1f;
+                // ...AND ONLY THEN (2026-09-23, the author: "Garnishler hem menü görsellerinde hem de ana sahnede
+                // çok karanlık kalıyorlar"). The rail also went to 0.6 whenever no drink was standing — a leftover
+                // of 2026-08-25, when the dishes only offered themselves to a served glass. They have stood all
+                // night since 2026-08-26 and GrabPrep picks a piece up with or without a glass, so the idle dim
+                // said something false, and it said it for most of the night: reading the licence, walking the
+                // drink, between rounds. Spent and wrong both already need a glass in front of them.
+                float dim = done || wrong ? DishSpentDim : 1f;
                 // NO HAND-MADE LIGHT ANY MORE (2026-09-22): the dish is a stage sprite now (IntoTheRoom), so the
-                // room's own lamps fall on it. What is left here is what the RAIL is saying - a dish that cannot
-                // be used, or has been, darkens - and the room does the rest.
+                // room's own lamps fall on it. What is left here is what the RAIL is saying - a dish that has been
+                // used, or cannot be, darkens - and the room does the rest. The tint rides into both of the room's
+                // copies (StepLitProps), so a spent dish is dark in its own colour as well as in the lamps'.
                 prop.Img.color = new Color(baseCol.r * dim, baseCol.g * dim, baseCol.b * dim, 1f);
                 prop.Img.raycastTarget = reachable;
             }

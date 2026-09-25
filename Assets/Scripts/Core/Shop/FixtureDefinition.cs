@@ -4,9 +4,12 @@ namespace LastCall.Core
 {
     /// <summary>
     /// One piece of buyable bar dressing (2026-08-10, the author: modular background
-    /// objects — plants, lamps, wall pieces — sold as bar upgrades). Dressing is
-    /// COSMETIC: it changes what the room looks like, never what the bar can do, so it
-    /// is exempt from the one-fitting-a-night cap the way stock and recipes are.
+    /// objects — plants, lamps, wall pieces — sold as bar upgrades). Dressing changes the
+    /// room's LOOK, its COMFORT (the climbed rung's, summed) and, since 2026-09-23, one
+    /// BUFF: the kind the slot owns, live while this piece is the one installed (GDD_MEVCUT
+    /// "Fitting buffs"; the author: "Hangi geliştirme takılıysa o buff aktif olacak, konfor
+    /// gibi değil"). It is still exempt from the one-fitting-a-night cap the way stock and
+    /// recipes are; money is its limit.
     ///
     /// **THE TAPS ARE THE EXCEPTION** (2026-08-15, the author: "bira koyma sahnesi için
     /// oyuna yeni eklediğimiz bira musluğuna tıklanması gereksin"). A beer font is a
@@ -190,6 +193,22 @@ namespace LastCall.Core
         /// so their light hangs well under them (2026-09-21). Zero for every piece that lights where it stands.</summary>
         public float LightDy { get; }
 
+        /// <summary>
+        /// THE ONE BUFF THIS PIECE CARRIES (2026-09-23, the author: "Tüm upgrade'ler çeşitli
+        /// bufflar vermeli"), or null for a row that names none. The kind is its slot's — one
+        /// slot, one stat, which the loader holds across rows — and it is live only while this
+        /// piece is the one INSTALLED (<see cref="TycoonRun.IsActive"/>), unlike comfort, which
+        /// reads the rung the ladder climbed to.
+        /// </summary>
+        public FittingBuff Buff { get; }
+
+        /// <summary>The figure, signed, in the kind's unit (per cent, or points for the round and
+        /// the service). 0 on a piece the room opens with — the room as it opens is the base — and
+        /// on every tool row, whose figure is read off the tool (<see cref="FittingBuffs.EffectsOf"/>).</summary>
+        public int BuffPct { get; }
+
+        public bool HasBuff => Buff != null;
+
         public FixtureDefinition(string id, string name, string slot, int price,
             double stars, string flavor, string sprite,
             float lightR = 0f, float lightG = 0f, float lightB = 0f,
@@ -199,7 +218,7 @@ namespace LastCall.Core
             double comfort = 0, int cellW = 0, int cellH = 0, string water = null,
             string swatch = null, string group = null, double washSeconds = 0,
             float x = float.NaN, float y = float.NaN, int order = 0, double workSpeed = 0,
-            float lightDy = 0f)
+            float lightDy = 0f, string buff = null, int buffPct = 0)
         {
             if (workSpeed < 0) throw new ArgumentOutOfRangeException(nameof(workSpeed), $"Fixture '{id}' works at a negative speed.");
             if (cellW < 0 || cellH < 0) throw new ArgumentOutOfRangeException(nameof(cellW), "A cell is not negative.");
@@ -235,6 +254,7 @@ namespace LastCall.Core
             if (washSeconds > 0 && !isDrain)
                 throw new ArgumentException($"Fixture '{id}' names a wash time but is not a drain.",
                     nameof(washSeconds));
+            var kind = RefuseABadBuff(id, buff, buffPct, startsInTheRoom, tapLevel, isDrain);
             Id = id;
             Name = name;
             Slot = slot;
@@ -261,6 +281,64 @@ namespace LastCall.Core
             Group = string.IsNullOrWhiteSpace(group) ? null : group.Trim().ToLowerInvariant();
             X = x; Y = y; Order = order;
             WorkSpeed = workSpeed > 0 ? workSpeed : 1.0;
+            Buff = kind;
+            BuffPct = kind != null ? buffPct : 0;
+        }
+
+        /// <summary>
+        /// A ROW'S BUFF, CHECKED ON ITS OWN (2026-09-23). Every refusal is an ArgumentException,
+        /// which the loader re-throws as "Fixture '&lt;id&gt;': …", so a bad figure fails the build
+        /// at parse and never reaches a night. The two checks that need the whole slot — one kind
+        /// per slot, and every rung carrying more than the one below — are the loader's
+        /// (<see cref="FittingBuffs.CatalogueFault"/>). A row that names nothing is fine: it has
+        /// no buff, and no effects to print.
+        /// </summary>
+        private static FittingBuff RefuseABadBuff(string id, string buff, int buffPct,
+            bool startsInTheRoom, int tapLevel, bool isDrain)
+        {
+            if (string.IsNullOrWhiteSpace(buff))
+            {
+                if (buffPct != 0)
+                    throw new ArgumentException($"Fixture '{id}' has a buff figure ({buffPct}) but names no buff.",
+                        nameof(buffPct));
+                return null;
+            }
+            var kind = FittingBuffs.Find(buff);
+            if (kind == null)
+                throw new ArgumentException($"Fixture '{id}' names buff '{buff}', which nobody has written.",
+                    nameof(buff));
+            if (ReferenceEquals(kind, FittingBuffs.FreeDrain))
+                throw new ArgumentException($"Fixture '{id}': free drain is read off drainsFree; do not name it.",
+                    nameof(buff));
+            if (kind.IsTool)
+            {
+                if (buffPct != 0)
+                    throw new ArgumentException($"Fixture '{id}': '{kind.Id}' is read off the tool itself; " +
+                                                "its figure is never written in the data.", nameof(buffPct));
+                if (ReferenceEquals(kind, FittingBuffs.PourSpeed) && tapLevel <= 0)
+                    throw new ArgumentException($"Fixture '{id}' names pour speed but is not a draught tower.",
+                        nameof(buff));
+                if (ReferenceEquals(kind, FittingBuffs.Wash) && !isDrain)
+                    throw new ArgumentException($"Fixture '{id}' names wash time but is not a drain.",
+                        nameof(buff));
+                if (ReferenceEquals(kind, FittingBuffs.ShakeSpeed) && (tapLevel > 0 || isDrain))
+                    throw new ArgumentException($"Fixture '{id}' names shake speed on a tower or a drain.",
+                        nameof(buff));
+                return kind;
+            }
+            if (startsInTheRoom && buffPct != 0)
+                throw new ArgumentException($"Fixture '{id}' comes with the room, and the room as it opens " +
+                                            "is the base: its figure is 0.", nameof(buffPct));
+            if (!startsInTheRoom && buffPct == 0)
+                throw new ArgumentException($"Fixture '{id}' is bought, so it must buff the '{kind.Id}' it names.",
+                    nameof(buffPct));
+            if (buffPct != 0 && Math.Sign(buffPct) != kind.Direction)
+                throw new ArgumentException($"Fixture '{id}' moves '{kind.Id}' the wrong way ({buffPct}).",
+                    nameof(buffPct));
+            if (Math.Abs(buffPct) > kind.MaxPerPiece)
+                throw new ArgumentException($"Fixture '{id}' carries {buffPct} of '{kind.Id}'; one piece may " +
+                                            $"carry at most {kind.MaxPerPiece}.", nameof(buffPct));
+            return kind;
         }
 
         /// <summary>
@@ -271,6 +349,11 @@ namespace LastCall.Core
         /// the pint faster (<see cref="TycoonRun.TapSpeed"/>), a tin's rung shakes the drink in
         /// less arm. The basin's own answer came first and keeps its own field
         /// (<see cref="WashSeconds"/>). Content, like the price.
+        ///
+        /// It is the speed of the INSTALLED rung (2026-09-23, the author: "hangi geliştirme
+        /// takılıysa o buff aktif"), which reverses the 2026-09-13 reading that the speed was the
+        /// CLIMB's: a bar that wears the steel tin shakes at the steel tin's pace now. Comfort is
+        /// the one thing that still reads the climb.
         /// </summary>
         public double WorkSpeed { get; }
 

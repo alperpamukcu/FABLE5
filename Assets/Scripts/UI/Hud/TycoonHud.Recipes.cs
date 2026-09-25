@@ -43,9 +43,323 @@ namespace LastCall.UI
                 case "salt_rim": return UIText.T("recipes.garnish.salt_rim");
                 case "sugar_rim": return UIText.T("recipes.garnish.sugar_rim");
                 case "draught": return UIText.T("recipes.garnish.draught");
-                default: return UIText.Caps(g.Name);
+                // OLIVES AND MINT HAVE HAD LOCALISED NAMES ALL ALONG (2026-09-22): the
+                // preparation set carries prep.<id>.name in all 29 tables, and this branch was
+                // printing Core's raw English past them. The key already exists, so nothing has
+                // to be translated for the two signature pages to speak the player's language.
+                default: return UIText.Caps(UIText.TOr("prep." + g.Id + ".name", g.Name));
             }
         }
+
+        // ── the page's CHARACTER, said the way every buff is said (2026-09-22, DrinkTraits; redrawn 2026-09-23) ──
+        // The mark, the figure, the word and the plate come from TycoonHud.Buffs.cs (BuffIcon / Pct / BuffWord /
+        // BuffFactRow / ChromeArt.BuffPlate), shared with the market's tiles and the fittings' cards; this part
+        // lays them out on a page and on the licence's tip.
+
+        private static string TraitName(DrinkTrait t) => UIText.T("book.trait." + t.Id + ".name");
+        private static string TraitLine(DrinkTrait t) => UIText.T("book.trait." + t.Id + ".line");
+
+        /// <summary>The mark for the LEVER a character pulls - the family its stat belongs to (clock, round,
+        /// room, counter, craft, till). No longer drawn on the page, where every stat has a mark of its own
+        /// (BuffIcon); kept as the family's fallback for a caller that has a lever and no stat.</summary>
+        private static Sprite TraitMark(TraitChannel channel)
+        {
+            switch (channel)
+            {
+                case TraitChannel.Clock: return ChromeArt.Mark("clock");
+                case TraitChannel.Round: return ChromeArt.Mark("round");
+                case TraitChannel.Room: return ChromeArt.Mark("room");
+                case TraitChannel.Counter: return ChromeArt.Mark("counter");
+                case TraitChannel.Craft: return ChromeArt.Mark("mix");
+                // The till's mark is a COIN, not the flat dollar glyph (2026-09-23, the author:
+                // "$ gorseli de eski kullanilmayan bir gorsel o").
+                case TraitChannel.Coin: return ItemArt.Load("coin3d_16") ?? ItemArt.Coin(16f);
+                default: return null;
+            }
+        }
+
+        /// <summary>A coin is the author's own drawing and carries its colour; every other lever
+        /// mark is a white mask to tint.</summary>
+        private static bool TraitMarkIsTinted(TraitChannel channel) => channel != TraitChannel.Coin;
+
+        /// <summary>The fact, the groove and the character's name: 29 to the name, 12 of it, 3 of air, 4 of foot.</summary>
+        private const float BuffNamedPlateH = 48f;
+
+        /// <summary>
+        /// THE CHARACTER STRIP (redrawn 2026-09-23, the author: "okunması zor üst üste binen yazılar aynı fontta
+        /// aynı renkte yazılar, hangi yazının en önemli içeriği barındırdığını anlayamıyorsun").
+        ///
+        /// What it was: a Lime[2] wash with four texts on it in one colour. The name and the stat shared the top
+        /// row from fixed guesses - the stat took its measured width, the name got what was left with a floor of
+        /// 40, stepped to 8 and still ran 50-80 units under the stat on eleven of the nineteen English pages. The
+        /// lever word and the host's line were both hung at y -22, the line across the whole column, so the word
+        /// printed over the line's first row on eighteen of nineteen. Cream on Lime[2] is 2.9:1, and the two quiet
+        /// texts were at 72% of that.
+        ///
+        /// What it is: a framed plate with rounded corners in the sign's ramp (<see cref="ChromeArt.BuffPlate"/>) and
+        /// three rows that never share a line - the FACT (mark, the figure as the loudest thing, the word), a
+        /// groove, the character's NAME in the heavy face at 8, and the host's LINE in the body face at 8. Each
+        /// is placed at the measured end of the one above it.
+        ///
+        /// Returns the height it took, or zero for a page with no character. It spends no more than
+        /// <paramref name="maxH"/>: the host's line goes first, then the name and the groove; the fact always stays.
+        /// </summary>
+        private float TraitStrip(RectTransform host, RecipeDefinition r, float width, float y,
+            float maxH = float.PositiveInfinity)
+        {
+            var t = DrinkTraits.Of(r);
+            if (ReferenceEquals(t, DrinkTrait.None) || !t.HasStat) return 0f;
+            bool nerf = t.Sign == TraitSign.Nerf;
+            var ramp = nerf ? UITheme.ViceRed : UITheme.Lime;
+            const float Pad = 8f;
+            float inner = width - Pad * 2f;
+
+            var plate = NewRect("Character", host);
+            plate.anchorMin = plate.anchorMax = new Vector2(0.5f, 1f);
+            plate.pivot = new Vector2(0.5f, 1f);
+            plate.anchoredPosition = new Vector2(0f, -y);
+            var bg = plate.gameObject.AddComponent<Image>();
+            bg.sprite = ChromeArt.BuffPlate(ramp);
+            bg.type = Image.Type.Sliced;
+            bg.pixelsPerUnitMultiplier = 0.5f;      // a 2-unit frame, 4-unit corners, a 4-unit foot
+            bg.raycastTarget = false;
+
+            BuffFactRow(plate, Pad, 2f, width - Pad, t.StatKey, Pct(t.StatPercent), ramp);
+
+            float h = BuffFactPlateH;
+            if (maxH >= BuffNamedPlateH)
+            {
+                var groove = NewRect("Groove", plate);
+                Place(groove, new Vector2(0.5f, 1f), new Vector2(inner, 2f), new Vector2(0f, -24f));
+                var gi = groove.gameObject.AddComponent<Image>();
+                gi.color = ramp[0];
+                gi.raycastTarget = false;
+
+                var name = NewText("TraitName", plate, _shop, 8, TextAnchor.UpperLeft, UITheme.Cream[4]);   // never "Name": the PlayMode suite finds market tiles by a child Text of that name
+                name.raycastTarget = false;
+                name.horizontalOverflow = HorizontalWrapMode.Wrap;
+                Place(name.rectTransform, new Vector2(0, 1), new Vector2(inner, 400f), new Vector2(Pad, -29f));
+                name.text = UIText.Caps(TraitName(t));
+                // A language whose heavy face IS its body face (Turkish, Polish, Czech, Hungarian, Romanian and
+                // every non-Latin one) double-strikes the name, or it is the line under it in another colour.
+                if (_shop == _body) name.gameObject.AddComponent<PixelBold>().Distance = 1f;
+                float nameH = Mathf.Max(12f, Mathf.Ceil(name.preferredHeight));
+                name.rectTransform.sizeDelta = new Vector2(inner, nameH);
+                h = 29f + nameH + 3f + 4f;
+
+                var line = NewText("Line", plate, _body, 8, TextAnchor.UpperLeft, UITheme.Cream[3]);
+                line.raycastTarget = false;
+                line.horizontalOverflow = HorizontalWrapMode.Wrap;
+                Place(line.rectTransform, new Vector2(0, 1), new Vector2(inner, 400f),
+                    new Vector2(Pad, -(29f + nameH + 1f)));
+                line.text = TraitLine(t);
+                float lineH = Mathf.Max(12f, Mathf.Ceil(line.preferredHeight));
+                line.rectTransform.sizeDelta = new Vector2(inner, lineH);
+                float full = 29f + nameH + 1f + lineH + 3f + 4f;
+                if (full <= maxH) h = full;
+                else line.enabled = false;
+                // A name that wrapped past the budget goes with its groove: the fact alone, never a cut plate.
+                if (h > maxH)
+                {
+                    gi.enabled = false;
+                    name.enabled = false;
+                    h = BuffFactPlateH;
+                }
+            }
+            plate.sizeDelta = new Vector2(width, h);
+            return h;
+        }
+
+        /// <summary>
+        /// ONE CHIP: a drawn mark, a small caption over it and the fact under it, on its own
+        /// recessed plate. Three of them stand in a row where the page used to print three
+        /// separate sentences — how it is worked, what it goes in, and how hard it is.
+        /// </summary>
+        /// <param name="pips">0..3. Where a chip's fact is already spoken in the book's own
+        /// three-lamp language, it shows the lamps instead of a mark — a second shaker beside
+        /// the shaker would be two drawings of the same idea.</param>
+        private void MenuChip(RectTransform row, float x, float w, string cap, string value,
+            Sprite mark, Color ink, Color capInk, bool dark, int pips = 0)
+        {
+            var chip = NewRect("Chip", row);
+            // The plate is the row's own height, never taller: a chip standing two units proud of
+            // its row is the first pixel of the next collision.
+            Place(chip, new Vector2(0, 0.5f), new Vector2(w, Mathf.Max(24f, row.sizeDelta.y)),
+                new Vector2(x, 0f));
+            var plate = chip.gameObject.AddComponent<Image>();
+            plate.color = dark ? new Color(1f, 1f, 1f, 0.05f) : new Color(0.36f, 0.22f, 0.08f, 0.07f);
+            plate.raycastTarget = false;
+
+            var capT = NewText("C", chip, _body, 8, TextAnchor.UpperCenter, capInk);
+            Place(capT.rectTransform, new Vector2(0.5f, 1f), new Vector2(w - 4f, 12f), new Vector2(0f, -3f));
+            capT.rectTransform.pivot = new Vector2(0.5f, 1f);
+            capT.horizontalOverflow = HorizontalWrapMode.Overflow;
+            capT.raycastTarget = false;
+            capT.text = cap;
+
+            float textX = 0f;
+            if (pips > 0)
+            {
+                var bulb = ChromeArt.Bulb(8);
+                var socket = dark ? new Color(1f, 1f, 1f, 0.18f) : new Color(0.36f, 0.22f, 0.08f, 0.22f);
+                for (int i = 0; i < 3; i++)
+                {
+                    var p = NewRect("P" + i, chip);
+                    Place(p, new Vector2(0, 0), new Vector2(8f, 8f), new Vector2(5f + i * 11f, 8f));
+                    p.pivot = new Vector2(0, 0);
+                    var pi = p.gameObject.AddComponent<Image>();
+                    pi.sprite = bulb;
+                    pi.preserveAspect = true;
+                    pi.color = i < pips ? ink : socket;
+                    pi.raycastTarget = false;
+                }
+                textX = 38f;
+            }
+            else if (mark != null)
+            {
+                var m = NewRect("M", chip);
+                Place(m, new Vector2(0, 0), new Vector2(16f, 16f), new Vector2(5f, 4f));
+                m.pivot = new Vector2(0, 0);
+                var mi = m.gameObject.AddComponent<Image>();
+                mi.sprite = mark;
+                mi.preserveAspect = true;
+                mi.raycastTarget = false;
+                mi.color = ink;
+                textX = 22f;
+            }
+            var val = NewText("V", chip, _body, 16, TextAnchor.LowerLeft, ink);
+            Place(val.rectTransform, new Vector2(0, 0), new Vector2(w - textX - 4f, 20f),
+                new Vector2(textX + 3f, 2f));
+            val.horizontalOverflow = HorizontalWrapMode.Overflow;
+            val.raycastTarget = false;
+            val.text = value;
+            // MEASURED, AND STEPPED BACK WHEN IT MUST BE (2026-09-23). A chip is a third of the
+            // column and some of the words in it are not short — HIGHBALL at 16, and whatever the
+            // twenty-nine languages make of THE WAY's three prep words. The overflow mode keeps a
+            // long one on one line; this keeps it inside its own plate.
+            if (val.preferredWidth > val.rectTransform.sizeDelta.x)
+                val.fontSize = LanguageFonts.Size(_body, 8);
+        }
+
+        /// <summary>
+        /// HOW THE PAGE IS USUALLY TAKEN (2026-09-23): one line of the drink's own dressing, each
+        /// with its own drawn mark — the rail's four already have one, and the two jars borrow the
+        /// garnish mark. It is not a list of instructions: the order still says what THIS customer
+        /// wants, and this is what they will nearly always want. Returns the height it took, or
+        /// zero for a page that is taken as it comes.
+        /// </summary>
+        private float HabitRow(RectTransform host, RecipeDefinition r, float width, float y, bool dark)
+        {
+            if (r.Likes == null || r.Likes.Count == 0) return 0f;
+            var ink = dark ? new Color(0.61f, 0.58f, 0.66f) : new Color(0.42f, 0.34f, 0.24f);
+            const float RowH = 18f;
+
+            var row = NewRect("Usually", host);
+            row.anchorMin = row.anchorMax = new Vector2(0.5f, 1f);
+            row.pivot = new Vector2(0.5f, 1f);
+            row.sizeDelta = new Vector2(width, RowH);
+            row.anchoredPosition = new Vector2(0f, -y);
+
+            var cap = NewText("C", row, _body, 8, TextAnchor.MiddleLeft, ink);
+            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            cap.raycastTarget = false;
+            cap.text = UIText.T("book.page.usually");
+
+            // Laid out from a measured width so the run sits centred rather than starting at a
+            // guess — the one thing every dated overflow in this file has in common.
+            var words = new List<string>(r.Likes.Count);
+            var marks = new List<Sprite>(r.Likes.Count);
+            var tinted = new List<bool>(r.Likes.Count);
+            foreach (var id in r.Likes)
+            {
+                var p = Preparations.Find(id);
+                if (p == null) continue;
+                words.Add(GarnishWord(p));
+                // THE DISHES THE COUNTER ACTUALLY CARRIES (2026-09-23, the author: "menude
+                // kullanilan garnish iconlarini guncelle, artik onlari kullanmiyoruz"). The page was
+                // drawing ChromeArt's old 16-px masks while the rail, the licence and the
+                // certificate all show the author's drawn dishes; one set of pictures for one set
+                // of things. GarnishCounterArt is the table those three already read.
+                //
+                // ...AT HALF SIZE, IN ITS OWN COLOURS (2026-09-23, the author: "Garnishler hem menü
+                // görsellerinde hem de ana sahnede çok karanlık kalıyorlar"). The darkness was this
+                // row: it inked the author's COLOURED dish with the page's brown - a multiply by
+                // (0.42, 0.34, 0.24) that took the ice bucket's mean value from 179 to about 60 - and
+                // point-sampled the 35x33 drawing into 12, keeping one pixel in three. GarnishArt.Mini
+                // is the dish at half size the cellar's way (ring peeled, averaged, snapped back onto
+                // its own palette, one ring put back), 18x18, drawn at exactly 1x and never tinted.
+                // Only the white fallback mask takes the ink.
+                var dish = GarnishCounterArt(id);
+                marks.Add(dish != null ? GarnishArt.Mini(dish) : ChromeArt.Mark("garnish"));
+                tinted.Add(dish == null);
+            }
+            if (words.Count == 0) { Destroy(row.gameObject); return 0f; }
+
+            // The mark's column is the mini's 18 whatever the dish, so the words line up.
+            const float MarkBox = 18f, MarkGap = 3f;
+            var widths = new float[words.Count];
+            float capW = cap.preferredWidth + 6f;
+            float total = capW;
+            for (int i = 0; i < words.Count; i++)
+            {
+                var probe = NewText("W" + i, row, _body, 8, TextAnchor.MiddleLeft, ink);
+                probe.horizontalOverflow = HorizontalWrapMode.Overflow;
+                probe.raycastTarget = false;
+                probe.text = words[i];
+                widths[i] = probe.preferredWidth;
+                total += MarkBox + MarkGap + widths[i] + (i + 1 < words.Count ? 8f : 0f);
+                probe.rectTransform.anchorMin = probe.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                probe.rectTransform.pivot = new Vector2(0f, 0.5f);
+                probe.rectTransform.sizeDelta = new Vector2(widths[i] + 2f, RowH);
+            }
+            // A run wider than the column gives up its caption before it gives up a dish: the dishes
+            // and their words are the fact, "USUALLY WITH" is the preposition (measured 2026-09-23: the
+            // widest English habit is ~251 of the 296, so only a longer language ever gets here).
+            bool withCap = total <= width;
+            if (!withCap) { total -= capW; cap.enabled = false; }
+
+            // Whole units, so the 1x mini lands on pixels.
+            float x = Mathf.Round(-total * 0.5f);
+            if (withCap)
+            {
+                Place(cap.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(cap.preferredWidth + 2f, RowH),
+                    new Vector2(x, 0f));
+                cap.rectTransform.pivot = new Vector2(0f, 0.5f);
+                x = Mathf.Round(x + capW);
+            }
+            for (int i = 0; i < words.Count; i++)
+            {
+                if (marks[i] != null)
+                {
+                    // The mini at its own size (18x18 for the six dishes), the 16 mask at its own 16:
+                    // each centred in the column, neither drawn between sizes.
+                    float mw = tinted[i] ? 16f : Mathf.Min(MarkBox, marks[i].rect.width);
+                    float mh = tinted[i] ? 16f : Mathf.Min(MarkBox, marks[i].rect.height);
+                    var m = NewRect("M" + i, row);
+                    Place(m, new Vector2(0.5f, 0.5f), new Vector2(mw, mh),
+                        new Vector2(x + Mathf.Floor((MarkBox - mw) * 0.5f), 0f));
+                    m.pivot = new Vector2(0f, 0.5f);
+                    var mi = m.gameObject.AddComponent<Image>();
+                    mi.sprite = marks[i];
+                    mi.preserveAspect = true;
+                    mi.raycastTarget = false;
+                    mi.color = tinted[i] ? ink : Color.white;
+                }
+                x += MarkBox + MarkGap;
+                row.Find("W" + i).GetComponent<RectTransform>().anchoredPosition = new Vector2(x, 0f);
+                x = Mathf.Round(x + widths[i] + 8f);
+            }
+            return RowH;
+        }
+
+        /// <summary>The mark for how a drink is worked: the tin, the spoon, or nothing at all
+        /// for a built one — which is the instruction, and a mark for "do nothing" would be a
+        /// drawing of an absence.</summary>
+        private static Sprite PrepMark(RecipeDefinition r) =>
+            r.Id == "draught" ? ChromeArt.Mark("pour")
+            : r.Prep == PrepMethod.Shaken ? ChromeArt.Mark("step_shake")
+            : r.Prep == PrepMethod.Stirred ? ChromeArt.Mark("step_stir")
+            : ChromeArt.Mark("toglass");
 
         /// <summary>A recipe's name as the player's language has it (the English is recipes.json's).</summary>
         private static string RecipeTitle(RecipeDefinition r) =>
@@ -132,11 +446,16 @@ namespace LastCall.UI
             // printing. BUILT earns its place now that every drink comes through the tin:
             // it is the instruction NOT to work this one, which is a thing you can get
             // wrong. ON TAP stays out — the keg is its own stage and never reads a card.
+            // BRACED (2026-09-22). The signature row was indented INSIDE a braceless if and so
+            // was never the draught's to skip — harmless only for as long as no pint has a
+            // signature, which is a thing a future list could ask for in one line of data.
             if (r.Id != "draught")
+            {
                 rows.Add(new SpecRow(null, PrepWord(r)));
                 // THE SIGNATURE EXTRA (2026-09-21): the sprig or the spear the page is served with, as its own row.
                 if (r.Garnish != null && Preparations.Find(r.Garnish) != null)
                     rows.Add(new SpecRow(null, GarnishWord(Preparations.Find(r.Garnish))));
+            }
             var bands = r.RatioRequirements;
             var run = Run;
             // The reveal gate, asked rather than computed: only a perfected page has exact
@@ -438,23 +757,326 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// A RECIPE AS THE BOOK SETS IT (2026-09-09, the author: "kimlikte kokteyl tarifi çıkan
-        /// hoveri güncelleyelim ve menüdeki tarif tarzına benzetelim"). The same grammar as
-        /// FillRecipePage, on whatever paper the caller hands it: the chapter over the name,
-        /// the working and the glass, the drink beside its price, the legend that says what a
-        /// dot is worth, and the pours full width under it. The rows themselves are
-        /// <see cref="DrawRecipeSpec"/>'s — its light palette is this page's ink — so the two
-        /// surfaces can never drift apart. Returns the height it used.
+        /// THE PAGE'S TITLE FACE, AND ITS SIZE (2026-09-23, the author: "Menüde alkollerin adının yazdığı üst
+        /// başlığın fontunu değiş okunaklı değil"). Jersey 15 at its own 27 where it draws the language
+        /// (<see cref="LanguageFonts.Title"/>), the heading face at 16 where it does not. Asked each time rather
+        /// than kept in a field: the face follows the language, and the lookup is a dictionary hit.
+        /// </summary>
+        private (Font face, int px) TitleFace()
+        {
+            var face = LanguageFonts.Title(null);
+            return face != null ? (face, LanguageFonts.TitlePx) : (_display, 16);
+        }
+
+        /// <summary>
+        /// THE PLATE: the drink on a drawn plinth at exactly twice its own 32, and the price beside it as the
+        /// biggest figure on the page, the tab under it and the list price when the page's character has moved
+        /// it (2026-09-22, moved out of FillRecipePage 2026-09-23 so the licence's tip sets the same block).
+        /// Hung from its own top at <paramref name="y"/>; returns its height.
+        /// </summary>
+        private float RecipePlinth(RectTransform host, RecipeDefinition r, float width, float y, bool locked,
+            bool perfected)
+        {
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            Color figure = new Color(0.10f, 0.06f, 0.02f);
+            const float PlinthH = 72f, IconPx = 64f;
+            var plinth = NewRect("Plate", host);
+            plinth.anchorMin = plinth.anchorMax = new Vector2(0.5f, 1f);
+            plinth.pivot = new Vector2(0.5f, 1f);
+            plinth.sizeDelta = new Vector2(width, PlinthH);
+            plinth.anchoredPosition = new Vector2(0f, -y);
+            var plinthImg = plinth.gameObject.AddComponent<Image>();
+            plinthImg.color = perfected ? new Color(0.84f, 0.86f, 0.93f, 0.55f)
+                                        : new Color(0.36f, 0.22f, 0.08f, 0.06f);
+            plinthImg.raycastTarget = false;
+
+            // A WHOLE MULTIPLE, MEASURED (2026-09-22): DrinkIcon is struck at 32; 64 is 2x.
+            var icon = NewRect("I", plinth);
+            Place(icon, new Vector2(0, 0.5f), new Vector2(IconPx, IconPx), new Vector2(10f, 0f));
+            icon.pivot = new Vector2(0, 0.5f);
+            var img = icon.gameObject.AddComponent<Image>();
+            img.sprite = _bootstrap != null ? DrinkIcon.For(r, _bootstrap.Glassware) : null;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.enabled = img.sprite != null;
+            if (locked) img.color = new Color(1, 1, 1, 0.4f);
+
+            // The list price, not tonight's crowd-adjusted one, beside the drawn coin (2026-09-22/23) - and the
+            // room's PRICE in it (2026-09-23): the till charges the neon's share, so a page that printed the sheet
+            // under it would be lying again. TycoonRun.PagePrice is that one number, for the book and the licence.
+            int price = Run != null ? Run.PagePrice(r) : DrinkOrder.MenuPrice(r, 0.0);
+            var coin = NewRect("Coin", plinth);
+            Place(coin, new Vector2(0, 0.5f), new Vector2(24f, 24f), new Vector2(IconPx + 22f, 6f));
+            coin.pivot = new Vector2(0, 0.5f);
+            var coinImg = coin.gameObject.AddComponent<Image>();
+            coinImg.sprite = ItemArt.Load("coin3d_24") ?? ItemArt.Coin(24f);
+            coinImg.preserveAspect = true;
+            coinImg.raycastTarget = false;
+            coinImg.enabled = coinImg.sprite != null;
+
+            var priceT = NewText("Price", plinth, _display, 24, TextAnchor.MiddleLeft, figure);
+            Place(priceT.rectTransform, new Vector2(0, 0.5f), new Vector2(120f, 30f),
+                new Vector2(IconPx + (coinImg.sprite != null ? 50f : 22f), 6f));
+            priceT.rectTransform.pivot = new Vector2(0, 0.5f);
+            priceT.horizontalOverflow = HorizontalWrapMode.Overflow;
+            priceT.raycastTarget = false;
+            priceT.text = price.ToString();
+
+            var priceCap = NewText("PriceCap", plinth, _body, 8, TextAnchor.MiddleLeft, quiet);
+            Place(priceCap.rectTransform, new Vector2(0, 0.5f), new Vector2(150f, 12f),
+                new Vector2(IconPx + 22f, -13f));
+            priceCap.rectTransform.pivot = new Vector2(0, 0.5f);
+            priceCap.horizontalOverflow = HorizontalWrapMode.Overflow;
+            priceCap.raycastTarget = false;
+            priceCap.text = UIText.T("book.page.on_the_tab");
+
+            // AND WHAT IT WOULD HAVE COST WITHOUT ITS CHARACTER (2026-09-22).
+            var pageTrait = DrinkTraits.Of(r);
+            if (pageTrait.PriceSign != 0)
+            {
+                int sheet = DrinkOrder.SheetPrice(r);
+                var list = NewText("List", plinth, _body, 8, TextAnchor.MiddleLeft,
+                    pageTrait.Sign == TraitSign.Nerf ? UITheme.ViceRed[2] : UITheme.Lime[1]);
+                Place(list.rectTransform, new Vector2(0, 0.5f), new Vector2(150f, 12f),
+                    new Vector2(IconPx + 22f, -25f));
+                list.rectTransform.pivot = new Vector2(0, 0.5f);
+                list.horizontalOverflow = HorizontalWrapMode.Overflow;
+                list.raycastTarget = false;
+                list.text = UIText.T("book.page.list_price", ("price", sheet.ToString()));
+            }
+            return PlinthH;
+        }
+
+        /// <summary>
+        /// THREE CHIPS: the way, the glass, the work - one drawing against each fact (2026-09-22, moved out of
+        /// FillRecipePage 2026-09-23). Hung from its own top at <paramref name="y"/>; returns its height.
+        /// </summary>
+        private float RecipeChips(RectTransform host, RecipeDefinition r, float width, float y)
+        {
+            Color ink = new Color(0.20f, 0.13f, 0.07f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
+            const float ChipRowH = 36f, ChipGap = 6f, ChipEdge = 4f;
+            float chipW = (width - ChipEdge * 2f - ChipGap * 2f) / 3f;
+            var chips = NewRect("Chips", host);
+            chips.anchorMin = chips.anchorMax = new Vector2(0.5f, 1f);
+            chips.pivot = new Vector2(0.5f, 1f);
+            chips.sizeDelta = new Vector2(width, ChipRowH);
+            chips.anchoredPosition = new Vector2(0f, -y);
+            string glassId = string.IsNullOrEmpty(r.GlassId) ? "highball" : r.GlassId;
+            var work = RecipeDifficulty.Of(r);
+            MenuChip(chips, ChipEdge, chipW, UIText.T("book.page.way"),
+                PrepWord(r), PrepMark(r), prepInk, quiet, dark: false);
+            MenuChip(chips, ChipEdge + chipW + ChipGap, chipW, UIText.T("book.page.glass_cap"),
+                UIText.Caps(UIText.Data("glass", glassId, "name", glassId.Replace('_', ' '))),
+                ChromeArt.Mark("step_glass"), ink, quiet, dark: false);
+            MenuChip(chips, ChipEdge + 2f * (chipW + ChipGap), chipW, UIText.T("book.page.work_cap"),
+                DifficultyWord(work), null, DifficultyInk(work, false),
+                quiet, dark: false, pips: (int)work);
+            return ChipRowH;
+        }
+
+        /// <summary>The height of the pour legend's dots: RatioDots at 2x.</summary>
+        private static float BookLegendDotsH =>
+            ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count).rect.height * 2f;
+
+        /// <summary>
+        /// THE GAUGE'S LEGEND: the caption (on a page with room for it), the same five dots the rows use all
+        /// lit, and the scale under them (moved out of FillRecipePage 2026-09-23). Returns its height.
+        /// </summary>
+        private float BookLegend(RectTransform host, float width, float y, bool caption)
+        {
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            float y0 = y;
+            if (caption)
+            {
+                var cap = NewText("Cap", host, _body, 8, TextAnchor.MiddleCenter, quiet);
+                cap.rectTransform.anchorMin = cap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                cap.rectTransform.pivot = new Vector2(0.5f, 1f);
+                cap.rectTransform.sizeDelta = new Vector2(width, 12f);
+                cap.rectTransform.anchoredPosition = new Vector2(0, -y);
+                cap.horizontalOverflow = HorizontalWrapMode.Overflow;
+                cap.text = UIText.T("book.page.pour_legend");
+                y += 13f;
+            }
+            var legend = NewRect("Legend", host);
+            var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
+            float legendW = legendArt.rect.width * 2f, legendH = legendArt.rect.height * 2f;
+            legend.anchorMin = legend.anchorMax = new Vector2(0.5f, 1f);
+            legend.pivot = new Vector2(0.5f, 1f);
+            legend.sizeDelta = new Vector2(legendW, legendH);
+            legend.anchoredPosition = new Vector2(0, -y);
+            var legendImg = legend.gameObject.AddComponent<Image>();
+            legendImg.sprite = legendArt;
+            legendImg.raycastTarget = false;
+            var scale = NewText("Scale", host, _body, 8, TextAnchor.MiddleCenter, quiet);
+            scale.rectTransform.anchorMin = scale.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            scale.rectTransform.pivot = new Vector2(0.5f, 1f);
+            scale.rectTransform.sizeDelta = new Vector2(width, 12f);
+            scale.rectTransform.anchoredPosition = new Vector2(0, -(y + legendH + 1f));
+            scale.horizontalOverflow = HorizontalWrapMode.Overflow;
+            scale.text = UIText.T("book.page.pour_scale");
+            y += legendH + 15f;
+            return y - y0;
+        }
+
+        /// <summary>
+        /// THE POURS AS THE BOOK SETS THEM: one slab a pour, the bottles that would do, the name on the row's
+        /// first line and the five dots (or the perfected share) on its second, every row centred in its slab;
+        /// type hints at 16 after them (moved out of FillRecipePage 2026-09-23 so the licence's tip prints the
+        /// same rows). Rows stand <paramref name="pitch"/> apart. Returns the height used.
+        /// </summary>
+        private float BookPourRows(RectTransform host, RecipeDefinition r, TycoonRun run, float width, float y,
+            float pitch, bool locked)
+        {
+            Color ink = new Color(0.20f, 0.13f, 0.07f);
+            Color quiet = new Color(0.52f, 0.44f, 0.36f);
+            Color figure = new Color(0.10f, 0.06f, 0.02f);
+            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
+            Color goneInk = new Color(0.66f, 0.12f, 0.16f);
+            Color miss = new Color(0.52f, 0.44f, 0.36f, 0.6f);
+            Color have = new Color(0.36f, 0.22f, 0.08f, 0.09f);
+            Color gone = new Color(0.74f, 0.16f, 0.20f, 0.13f);
+            float y0 = y;
+            var specRows = RecipeSpecRows(r, poursOnly: true, locked: locked);
+            for (int i = 0; i < specRows.Count; i++)
+            {
+                var spec = specRows[i];
+                // The prep word already stands over the icon; its row would say it twice.
+                if (i == 0 && r.Id != "draught") continue;
+                bool ingredient = spec.Style != null;
+                bool stocked = !ingredient || InStock(spec.Style, spec.MinTier);
+
+                if (spec.Hint)
+                {
+                    var hintT = NewText("H" + i, host, _body, 8, TextAnchor.MiddleLeft, quiet);
+                    hintT.rectTransform.anchorMin = hintT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+                    hintT.rectTransform.pivot = new Vector2(0.5f, 1f);
+                    hintT.rectTransform.sizeDelta = new Vector2(width - 8f, 14f);
+                    hintT.rectTransform.anchoredPosition = new Vector2(0, -y);
+                    hintT.text = spec.Label;
+                    y += 16f;
+                    continue;
+                }
+
+                var line = NewRect("S" + i, host);
+                line.anchorMin = line.anchorMax = new Vector2(0.5f, 1f);
+                line.pivot = new Vector2(0.5f, 1f);
+                line.sizeDelta = new Vector2(width, pitch - 2f);
+                line.anchoredPosition = new Vector2(0, -y);
+                y += pitch;
+
+                const float RowLine1 = 20f, RowLine2 = 14f;
+                float rowTop = Mathf.Max(0f, ((pitch - 2f) - (RowLine1 + RowLine2)) * 0.5f);
+
+                if (ingredient)
+                {
+                    var slab = line.gameObject.AddComponent<Image>();
+                    slab.color = stocked ? have : gone;
+                    slab.raycastTarget = false;
+                }
+
+                float textX = 4f;
+                if (ingredient)
+                {
+                    var pour = new List<Sprite>();
+                    foreach (var b in run.Shelf.Bottles)
+                    {
+                        var info = b.Ingredient?.Info;
+                        if (info == null || info.Style != spec.Style) continue;
+                        if (info.Tier < spec.MinTier) continue;
+                        var a = ItemArt.Bottle(b.Ingredient);
+                        if (a != null) pour.Add(a);
+                    }
+                    if (pour.Count == 0)
+                    {
+                        var fallback = ItemArt.StyleBottle(run.CatalogueBottles, spec.Style);
+                        if (fallback != null) pour.Add(fallback);
+                    }
+                    float box = Mathf.Min(40f, pitch - 6f);
+                    float step = pour.Count > 1 ? Mathf.Min(box, 56f / pour.Count) : box;
+                    for (int b = 0; b < pour.Count; b++)
+                    {
+                        var bi = NewRect("B" + b, line);
+                        Place(bi, new Vector2(0, 0.5f), new Vector2(box, box), new Vector2(3f + b * step, 0));
+                        var bimg = bi.gameObject.AddComponent<Image>();
+                        bimg.sprite = pour[b];
+                        bimg.preserveAspect = true;
+                        bimg.raycastTarget = false;
+                        bimg.color = stocked ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                    }
+                    textX = box + 6f + Mathf.Max(0, pour.Count - 1) * step;
+                }
+
+                var label = NewText("L", line, _body, 16, TextAnchor.UpperLeft,
+                    ingredient ? (stocked ? ink : miss) : prepInk);
+                Place(label.rectTransform, new Vector2(0, 1),
+                    new Vector2(width - textX - 8f, RowLine1), new Vector2(textX, -rowTop));
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.raycastTarget = false;
+                label.text = SpecLabel(spec);
+
+                if (ingredient && !stocked)
+                {
+                    var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
+                    Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f),
+                        new Vector2(textX, -(rowTop + RowLine1)));
+                    lockT.horizontalOverflow = HorizontalWrapMode.Overflow;
+                    lockT.verticalOverflow = VerticalWrapMode.Truncate;
+                    lockT.raycastTarget = false;
+                    lockT.text = UIText.T("book.page.bottle_locked");
+                }
+
+                if (spec.Amount.Length > 0)
+                {
+                    var amount = NewText("A", line, _display, 16, TextAnchor.UpperRight, figure);
+                    Place(amount.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, RowLine1),
+                        new Vector2(-4f, -rowTop));
+                    amount.raycastTarget = false;
+                    amount.text = spec.Amount;
+                    var tag = NewText("PT", line, _body, 8, TextAnchor.UpperRight,
+                        new Color(0.42f, 0.46f, 0.55f));
+                    Place(tag.rectTransform, new Vector2(1, 1), new Vector2(BkGaugeW, 12f),
+                        new Vector2(-4f, -(rowTop + RowLine1)));
+                    tag.raycastTarget = false;
+                    tag.text = UIText.T("book.page.perfect_tag");
+                }
+                else if (spec.Box >= 0)
+                {
+                    var dotsArt = ChromeArt.RatioDots(locked ? -1 : spec.Box, BandBoxColors, RatioBox.Count);
+                    float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
+                    var dots = NewRect("Dots", line);
+                    Place(dots, new Vector2(1, 1), new Vector2(dw, dh),
+                        new Vector2(-6f, -(rowTop + RowLine1 + (RowLine2 - dh) * 0.5f)));
+                    var dimg = dots.gameObject.AddComponent<Image>();
+                    dimg.sprite = dotsArt;
+                    dimg.raycastTarget = false;
+                    dimg.color = stocked || !ingredient ? Color.white : new Color(1f, 1f, 1f, 0.5f);
+                }
+            }
+            return y - y0;
+        }
+
+        /// <summary>
+        /// A RECIPE AS THE BOOK SETS IT (2026-09-09; rebuilt on the page's own blocks 2026-09-23, the author:
+        /// "Aynı zamanda bu menü görüntüsüne ve tasarımına göre kimlikte alkol hoverini güncelle"). The licence's
+        /// tip IS a page of the book now, at the book's own column width: the chapter over the name in the title
+        /// face, the plinth with the drink and its price, the three chips, the character strip, the legend and
+        /// the pours - each drawn by the same method the page calls, so the two cannot drift apart.
+        ///
+        /// What it leaves out, and why: the page's USUALLY WITH row (the licence prints THIS customer's asks in
+        /// its own SERVE row beside the tip, and a second garnish list twenty units away that can disagree with
+        /// it is a trap), the player's best (read over a head, five times a night), and the story at the foot.
+        /// Returns the height it used.
         /// </summary>
         private float DrawRecipeCard(RectTransform host, RecipeDefinition r, float width)
         {
             for (int i = host.childCount - 1; i >= 0; i--) Destroy(host.GetChild(i).gameObject);
             if (r == null) return 0f;
-            Color ink = new Color(0.30f, 0.16f, 0.05f);
+            var run = Run;
             Color quiet = new Color(0.52f, 0.44f, 0.36f);
             Color figure = new Color(0.10f, 0.06f, 0.02f);
-            Color prepInk = new Color(0.11f, 0.37f, 0.40f);
-            bool perfected = Run != null && r.HasAuthoredRatios && Run.IsPerfected(r.Id);
+            bool perfected = run != null && r.HasAuthoredRatios && run.IsPerfected(r.Id);
             float y = 0f;
 
             Text Centred(string name, Font face, int size, Color colour, float h)
@@ -469,8 +1091,7 @@ namespace LastCall.UI
                 return t;
             }
 
-            var chapter = Centred("Tier", perfected ? _shop : _body, 16,
-                                  perfected ? new Color(0.42f, 0.46f, 0.55f) : quiet, 20f);
+            var chapter = Centred("Tier", perfected ? _shop : _body, 16, perfected ? BkPlatinumInk : quiet, 20f);
             chapter.text = TierName(r.Rank);
             if (perfected)
             {
@@ -486,73 +1107,38 @@ namespace LastCall.UI
             }
             y += 20f;
 
-            var head = Centred("Head", perfected ? _shop : _display, 16, ink, 24f);
+            var (titleFace, titlePx) = TitleFace();
+            var head = Centred("Head", titleFace, titlePx,
+                perfected ? new Color(0.22f, 0.20f, 0.34f) : new Color(0.30f, 0.16f, 0.05f), 30f);
             head.text = UIText.Caps(RecipeTitle(r));
-            y += 26f;
+            if (head.preferredWidth > width)
+            {
+                head.font = _display;
+                head.fontSize = LanguageFonts.Size(_display, 16);
+            }
+            y += 32f;
 
-            var way = Centred("Way", _body, 16, prepInk, 20f);
-            way.text = WayLine(r);
-            y += 24f;
-            y += DifficultyRow(host, r, width, y, dark: false) + 2f;   // how hard it is (2026-09-13)
+            y += RecipePlinth(host, r, width, y, locked: false, perfected) + 4f;
+            y += RecipeChips(host, r, width, y) + 4f;
+            float strip = TraitStrip(host, r, width, y);
+            if (strip > 0f) y += strip + 4f;
+            if (run == null) return y;
 
-            // the drink and what it sells for, the way the page pairs them
-            var icon = NewRect("I", host);
-            icon.anchorMin = icon.anchorMax = new Vector2(0.5f, 1f);
-            icon.pivot = new Vector2(1f, 1f);
-            icon.sizeDelta = new Vector2(48f, 48f);
-            icon.anchoredPosition = new Vector2(-8f, -y);
-            var img = icon.gameObject.AddComponent<Image>();
-            img.sprite = _bootstrap != null ? DrinkIcon.For(r, _bootstrap.Glassware) : null;
-            img.preserveAspect = true;
-            img.raycastTarget = false;
-            img.enabled = img.sprite != null;
+            y += BookLegend(host, width, y, caption: true);
+            int pours = 0;
+            var peek = RecipeSpecRows(r, poursOnly: true, locked: false);
+            for (int k = 0; k < peek.Count; k++)
+                if (!(k == 0 && r.Id != "draught") && !peek[k].Hint) pours++;
+            // Two lines to a row (20 + 14) is the floor; a short recipe gets the air the page gives it.
+            y += BookPourRows(host, r, run, width, y, pours <= 3 ? 40f : 34f, locked: false);
 
-            var priceT = NewText("Price", host, _display, 24, TextAnchor.MiddleLeft, figure);
-            priceT.rectTransform.anchorMin = priceT.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            priceT.rectTransform.pivot = new Vector2(0f, 1f);
-            priceT.rectTransform.sizeDelta = new Vector2(110f, 28f);
-            priceT.rectTransform.anchoredPosition = new Vector2(8f, -(y + 8f));
-            priceT.horizontalOverflow = HorizontalWrapMode.Overflow;
-            priceT.raycastTarget = false;
-            priceT.text = "$" + DrinkOrder.MenuPrice(r);
-            var priceCap = NewText("PriceCap", host, _body, 8, TextAnchor.MiddleLeft, quiet);
-            priceCap.rectTransform.anchorMin = priceCap.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-            priceCap.rectTransform.pivot = new Vector2(0f, 1f);
-            priceCap.rectTransform.sizeDelta = new Vector2(110f, 12f);
-            priceCap.rectTransform.anchoredPosition = new Vector2(10f, -(y + 34f));
-            priceCap.horizontalOverflow = HorizontalWrapMode.Overflow;
-            priceCap.raycastTarget = false;
-            priceCap.text = UIText.T("recipes.card.on_the_tab");
-            y += 56f;
-
-            // The book's caption is "THE POUR · ONE DOT IS A FIFTH" — 29 capitals, wider than
-            // this card (measured in play 2026-09-09: it ran off both edges). Same sentence,
-            // the half that carries the meaning.
-            var cap = Centred("Cap", _body, 16, quiet, 22f);
-            cap.text = UIText.T("recipes.card.one_dot");
-            y += 20f;
-            var legend = NewRect("Legend", host);
-            var legendArt = ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count);
-            float legendW = legendArt.rect.width * 2f, legendH = legendArt.rect.height * 2f;
-            legend.anchorMin = legend.anchorMax = new Vector2(0.5f, 1f);
-            legend.pivot = new Vector2(0.5f, 1f);
-            legend.sizeDelta = new Vector2(legendW, legendH);
-            legend.anchoredPosition = new Vector2(0f, -y);
-            var legendImg = legend.gameObject.AddComponent<Image>();
-            legendImg.sprite = legendArt;
-            legendImg.raycastTarget = false;
-            y += legendH + 6f;
-
-            // the pours, in the book's own order and the paper palette
-            var rows = NewRect("Rows", host);
-            rows.anchorMin = rows.anchorMax = new Vector2(0.5f, 1f);
-            rows.pivot = new Vector2(0.5f, 1f);
-            rows.sizeDelta = new Vector2(width, 10f);
-            rows.anchoredPosition = new Vector2(0f, -y);
-            float rowsH = DrawRecipeSpec(rows, r, dark: false, width: width, poursOnly: true,
-                                         skipPrep: true);
-            rows.sizeDelta = new Vector2(width, rowsH);
-            return y + rowsH;
+            if (r.MinFill > 0)
+            {
+                var fillLine = Centred("Fill", _body, 16, figure, 20f);
+                fillLine.text = UIText.T("book.page.fill", ("pct", (r.MinFill * 100).ToString("0")));
+                y += 22f;
+            }
+            return y;
         }
 
         /// <summary>
@@ -649,6 +1235,11 @@ namespace LastCall.UI
             float total = 3f * pip + 2f * gap + 8f + word.preferredWidth;
             float x = -total * 0.5f;
             var socket = dark ? new Color(1f, 1f, 1f, 0.18f) : new Color(0.36f, 0.22f, 0.08f, 0.22f);
+            // A DRAWN PIP, NOT A SQUARE OF COLOUR (2026-09-22, GDD 16 §6.8: "a dot standing in
+            // for an object"). ChromeArt.Bulb is a struck disc with a rim and a lit side, white
+            // for the caller to tint — and it is cached on its pixel size alone, so a lit one
+            // and an empty one are the same drawing in two inks rather than two sprites.
+            var bulb = ChromeArt.Bulb(Mathf.Max(6, Mathf.RoundToInt(pip)));
             for (int i = 0; i < 3; i++)
             {
                 var p = NewRect("P" + i, row);
@@ -657,6 +1248,8 @@ namespace LastCall.UI
                 p.sizeDelta = new Vector2(pip, pip);
                 p.anchoredPosition = new Vector2(x + i * (pip + gap), 0f);
                 var img = p.gameObject.AddComponent<Image>();
+                img.sprite = bulb;
+                img.preserveAspect = true;
                 img.color = i < (int)d ? ink : socket;
                 img.raycastTarget = false;
             }

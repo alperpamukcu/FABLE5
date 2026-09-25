@@ -1,0 +1,19 @@
+{
+  "strings": [
+    { "key": "book.trait.stat.up", "text": "{stat} +%{pct}", "src": "{stat} +{pct}%" },
+    { "key": "book.trait.stat.down", "text": "{stat} -%{pct}", "src": "{stat} -{pct}%" },
+
+    { "key": "book.trait.stat.patience", "text": "SABIR", "src": "PATIENCE" },
+    { "key": "book.trait.stat.refill", "text": "TAZELEME", "src": "REFILL" },
+    { "key": "book.trait.stat.lateness", "text": "GECİKME CEZASI", "src": "LATE PENALTY" },
+    { "key": "book.trait.stat.late_tip", "text": "GEÇ BAHŞİŞ", "src": "LATE TIP" },
+    { "key": "book.trait.stat.stool", "text": "TABURE SÜRESİ", "src": "STOOL TIME" },
+    { "key": "book.trait.stat.round", "text": "İKİNCİ TUR", "src": "SECOND ROUND" },
+    { "key": "book.trait.stat.pay_floor", "text": "TABAN ÖDEME", "src": "MINIMUM PAY" },
+    { "key": "book.trait.stat.window", "text": "KUSURSUZ ARALIK", "src": "PERFECT WINDOW" },
+    { "key": "book.trait.stat.refusal", "text": "RET SINIRI", "src": "REFUSAL LINE" },
+    { "key": "book.trait.stat.mess", "text": "KİRLİLİK", "src": "MESS" },
+    { "key": "book.trait.stat.room", "text": "SALON KEYFİ", "src": "ROOM MOOD" },
+    { "key": "book.trait.stat.tip", "text": "BAHŞİŞ", "src": "TIP" }
+  ]
+}

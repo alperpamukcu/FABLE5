@@ -1,0 +1,30 @@
+{
+  "strings": [
+    {"key": "data.recipe.dark_stormy.lore", "text": "Tmavý rum nalitý na zázvorové pivo, dokud se neudělá mrak. Vypij ho, než se počasí obrátí.", "src": "Black rum poured over ginger beer until the cloud forms. Drink it before the weather turns."},
+    {"key": "data.recipe.dark_stormy.name", "text": "Black Squall", "src": "Black Squall"},
+    {"key": "data.recipe.dirty_martini.lore", "text": "Martini, které přišlo s večeří. Celý rozdíl dělá oliva na napichovátku, tak na ni nezapomeň.", "src": "A martini that came with supper. The spear is the whole difference, so do not forget it."},
+    {"key": "data.recipe.dirty_martini.name", "text": "Olive Martini", "src": "Olive Martini"},
+    {"key": "data.recipe.dry_martini.lore", "text": "Gin, který vermut sotva vyrušil, promíchaný do chladu a dotažený citronovou kůrkou. Míra, podle které se měří všechny bary.", "src": "Gin barely troubled by vermouth, stirred cold, finished with a twist. The measure all bars are taken by."},
+    {"key": "data.recipe.espresso_martini.lore", "text": "„Probuď mě a pak mě rozhoď.“ Dick Bradsell vyhověl se shakerem a lahví kávového likéru v ruce.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker and the coffee bottle."},
+    {"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, limeta, žádní přeživší. Podává se ve sklenici na martini, protože je to koktejl, a ne panák.", "src": "Vodka, triple sec, lime, no survivors. Served up, because it is a cocktail and not a shot."},
+    {"key": "data.recipe.long_island.name", "text": "Long Island Iced Tea", "src": "Long Island Iced Tea"},
+    {"key": "data.recipe.mai_tai.lore", "text": "Trader Vic ho nalil čistý na drcený led; ostrovy přidaly ovoce. Ten náš si ovoce nechává.", "src": "Trader Vic poured it neat over crushed ice; the islands added the fruit. Ours keeps the fruit."},
+    {"key": "data.recipe.martinez.lore", "text": "Chybějící článek mezi manhattanem a martini, míchaný na ginu ze zlaté horečky, s citronovou kůrkou.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin and a twist."},
+    {"key": "data.recipe.matador.lore", "text": "Tequila, ananas, limeta, dlouhý drink s ledem — margarita na dovolené.", "src": "Tequila, pineapple, lime, long over ice — the margarita on its holidays."},
+    {"key": "data.recipe.mint_julep.lore", "text": "Bourbon přes napěchovaný led a mátu, tak vysoko, že snítka máty stojí sama.", "src": "Bourbon through packed ice and mint, tall enough for the sprig to stand in."},
+    {"key": "data.recipe.paloma.lore", "text": "Tequila, limeta a soda, natažené do vysoké sklenice v horku. Tři věci, žádné dohady, žádné ceremonie.", "src": "Tequila, lime and soda, built tall in the heat. Three things, no argument, no ceremony."},
+    {"key": "data.recipe.paloma.name", "text": "Ranch Water", "src": "Ranch Water"},
+    {"key": "data.recipe.paloma.origin", "text": "ZÁPADNÍ TEXAS, 10. LÉTA 21. ST.", "src": "WEST TEXAS, 2010S"},
+    {"key": "data.recipe.sea_breeze.lore", "text": "Brusinka a ananas doprovázejí vodku po pobřeží.", "src": "Cranberry and pineapple walking vodka down the shore."},
+    {"key": "data.recipe.sea_breeze.name", "text": "Bay Breeze", "src": "Bay Breeze"},
+    {"key": "data.recipe.sex_on_beach.lore", "text": "Vodka pod brusinkou a pomerančem. Pojmenovaný po látce, ne po městě, a nikomu to nevadí.", "src": "Vodka under cranberry and orange. Named for a cloth, not a city, and nobody minds."},
+    {"key": "data.recipe.sex_on_beach.name", "text": "Madras", "src": "Madras"},
+    {"key": "data.recipe.sex_on_beach.origin", "text": "MADRAS PŘES NOVOU ANGLII, 60. LÉTA", "src": "MADRAS, BY WAY OF NEW ENGLAND, 1960S"},
+    {"key": "data.recipe.sidecar.lore", "text": "Hlásí se k němu Ritz, Londýn to popírá. Ten náš jede na whiskey a neomlouvá se.", "src": "The Ritz claims it, London disputes it. Ours runs on whiskey and does not apologise."},
+    {"key": "data.recipe.sidecar.name", "text": "Whiskey Sidecar", "src": "Whiskey Sidecar"},
+    {"key": "data.recipe.vodka_bull.name", "text": "Night Shift", "src": "Night Shift"},
+    {"key": "data.recipe.vodka_soda.name", "text": "Vodka Soda", "src": "Vodka & Soda"},
+    {"key": "data.recipe.vodka_tonic.name", "text": "Vodka Tonic", "src": "Vodka & Tonic"},
+    {"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey Ginger", "src": "Whiskey & Ginger"}
+  ]
+}

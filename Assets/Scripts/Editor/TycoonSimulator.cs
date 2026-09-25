@@ -668,6 +668,144 @@ namespace LastCall.EditorTools
             Debug.Log($"[TycoonSim] wrote {path}");
         }
 
+        // ── THE ROOM'S BUFFS, A/B (2026-09-23) ──────────────────────────────────────────────
+        // The author: "oyuncu bu upgradelere biraz muhtaç edilmeli". The only honest way to say
+        // whether the room is needed is to play the same seeds with its buffs and without them:
+        // HouseBuffs.Enabled is the gate, and it belongs to this tool and nobody else.
+
+        /// <summary>
+        /// What one piece's buff is worth to the shopper, in comfort-star units: |figure| × a
+        /// weight per kind (the design's own table). The tools' figures are derived off the tool,
+        /// as the card prints them. Zero for a piece with no buff, or with the A/B gate off — a
+        /// bare bot must shop exactly as it did before the buffs existed.
+        /// </summary>
+        private static double BuffWorth(TycoonRun run, FixtureDefinition f)
+        {
+            if (f == null || f.Buff == null || !HouseBuffs.Enabled) return 0;
+            var effects = run.FittingEffects(f);          // a tool's figure, derived off the tool
+            return effects.Count == 0 ? 0 : Math.Abs(effects[0].Percent) * WorthPerPoint(f.Buff.Id);
+        }
+
+        private static double WorthPerPoint(string kind)
+        {
+            switch (kind)
+            {
+                case "price": return 0.10;
+                case "service": return 0.12;
+                case "tip": return 0.05;
+                case "round": return 0.04;
+                case "arrivals": return 0.04;
+                case "patience": return 0.04;
+                case "lateness": return 0.03;
+                case "late_tip": return 0.02;
+                case "refill": return 0.02;
+                case "comfort": return 0.03;
+                case "grace": return 0.006;
+                case "window": return 0.005;
+                case "shake_speed": return 0.01;
+                case "wash": return 0.01;
+                default: return 0.0;
+            }
+        }
+
+        [MenuItem("LastCall/Simulate Fitting Buffs A-B")]
+        public static void SimulateFittingBuffsAB() => SimulateFittingBuffs(200, 42);
+
+        /// <summary>
+        /// The same <paramref name="runs"/> seeds, played to a <paramref name="horizon"/>-night
+        /// horizon twice — the room's buffs on, then off — and written side by side to
+        /// Docs/tycoon_fitting_buffs_ab.md against the design's targets: net a night on days 20–30
+        /// fitted ÷ bare between 1.2× and 1.6×, storm-offs from day 15 at most 0.7× bare, and no
+        /// more bankruptcies. The gate is put back whatever happens.
+        /// </summary>
+        public static void SimulateFittingBuffs(int runs, int horizon)
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
+            var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+            var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
+
+            Aggregate Play(bool enabled)
+            {
+                bool was = HouseBuffs.Enabled;
+                try
+                {
+                    HouseBuffs.Enabled = enabled;
+                    var stats = new Aggregate();
+                    for (int i = 0; i < runs; i++)
+                        PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
+                            DrinkBuildSeconds, horizon, glassware, story, fixtures: fixtures);
+                    return stats;
+                }
+                finally { HouseBuffs.Enabled = was; }
+            }
+
+            var fitted = Play(true);
+            var bare = Play(false);
+            string report = BuffReport(fitted, bare, runs, horizon);
+            Debug.Log(report);
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs", "tycoon_fitting_buffs_ab.md"));
+            File.WriteAllText(path, report);
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
+        private static string BuffReport(Aggregate fitted, Aggregate bare, int runs, int horizon)
+        {
+            string Pc(int part, int whole) => whole == 0 ? "—" : $"{100.0 * part / whole:0.0}%";
+            string Star(double s) => double.IsNaN(s) ? "—" : s.ToString("0.00");
+            int standDay = Math.Min(30, horizon), tillDay = horizon;
+            double netFit = fitted.NetPerNight(20, 30), netBare = bare.NetPerNight(20, 30);
+            double stormFit = fitted.StormShareFrom(15), stormBare = bare.StormShareFrom(15);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("# Fitting buffs — A/B (the room's buffs on vs off)");
+            sb.AppendLine();
+            sb.AppendLine($"{runs} seeds, {horizon}-night horizon, the same floor bot both times; only");
+            sb.AppendLine("`HouseBuffs.Enabled` differs. The bot values a piece by its comfort plus its buff");
+            sb.AppendLine("(`BuffWorth`), so with the gate off it shops exactly as it did before the buffs.");
+            sb.AppendLine("Every figure is a floor, like the main report's.");
+            sb.AppendLine();
+            sb.AppendLine("| Measure | Fitted | Bare |");
+            sb.AppendLine("|---|--:|--:|");
+            sb.AppendLine($"| Bankruptcies | {Pc(fitted.Bankruptcies, fitted.Runs)} | {Pc(bare.Bankruptcies, bare.Runs)} |");
+            sb.AppendLine($"| Standing on day {standDay} (median) | {Star(fitted.MedianStanding(standDay))} | {Star(bare.MedianStanding(standDay))} |");
+            sb.AppendLine($"| Till on day {tillDay} (median) | ${fitted.MedianTill(tillDay)} | ${bare.MedianTill(tillDay)} |");
+            sb.AppendLine($"| Net a night, days 20–30 | ${netFit:0.0} | ${netBare:0.0} |");
+            sb.AppendLine($"| Nights at 4★+ (of nights) | {Pc(fitted.NightsAtFour, fitted.NightsClosed)} | {Pc(bare.NightsAtFour, bare.NightsClosed)} |");
+            sb.AppendLine($"| High rollers drawn (of nights) | {Pc(fitted.HighRollersDrawn, fitted.NightsClosed)} | {Pc(bare.HighRollersDrawn, bare.NightsClosed)} |");
+            sb.AppendLine($"| Storm-offs from day 15 | {100.0 * stormFit:0.0}% | {100.0 * stormBare:0.0}% |");
+            sb.AppendLine($"| Fitting buffs bought (by kind) | {fitted.BuffKindsLine()} | {bare.BuffKindsLine()} |");
+            sb.AppendLine();
+            sb.AppendLine("## Storm-offs by week");
+            sb.AppendLine();
+            sb.AppendLine("| Nights | Fitted | Bare |");
+            sb.AppendLine("|---|--:|--:|");
+            var bands = fitted.StormsByBand.Keys.Union(bare.StormsByBand.Keys).OrderBy(b => b);
+            foreach (int band in bands)
+            {
+                fitted.StormsByBand.TryGetValue(band, out var f);
+                bare.StormsByBand.TryGetValue(band, out var b);
+                sb.AppendLine($"| {band * 7 + 1}–{band * 7 + 7} | {Pc(f.storms, f.finished)} | {Pc(b.storms, b.finished)} |");
+            }
+            sb.AppendLine();
+            sb.AppendLine("## Against the design's targets");
+            sb.AppendLine();
+            double ratio = netBare == 0 ? double.NaN : netFit / netBare;
+            sb.AppendLine($"- Net a night, days 20–30, fitted ÷ bare: **{ratio:0.00}×** (target 1.2×–1.6×)" +
+                          (ratio > 1.6 ? " — RUNS HOT: take the pre-ordered trims (PRICE, then TIP, LATE PENALTY, PATIENCE)." :
+                           ratio < 1.2 ? " — RUNS COLD: the room is not yet needed; the held-back squeeze is the author's call." : ""));
+            double stormRatio = stormBare == 0 ? double.NaN : stormFit / stormBare;
+            sb.AppendLine($"- Storm-offs from day 15, fitted ÷ bare: **{stormRatio:0.00}×** (target ≤ 0.7×)");
+            sb.AppendLine($"- Bankruptcies: {fitted.Bankruptcies} fitted against {bare.Bankruptcies} bare (target: no higher)");
+            int hrDelta = (int)Math.Round(100.0 * fitted.HighRollersDrawn / Math.Max(1, fitted.NightsClosed)
+                                        - 100.0 * bare.HighRollersDrawn / Math.Max(1, bare.NightsClosed));
+            sb.AppendLine($"- High-roller nights: {hrDelta:+0;-0;0} points (the trims start past +30)");
+            return sb.ToString();
+        }
+
         /// <summary>
         /// THE DOOR, PLAYED (GDD 28 §9). Once the card is read, a minor or a forgery is shown
         /// the door — unless this hand misreads it, drawn once per visit from the bot's own
@@ -856,10 +994,19 @@ namespace LastCall.EditorTools
                     // THE COUNTED NIGHT ONLY (GDD 26 §3): the guest of the house is not one of
                     // the bar's customers, so a trial must not show up as a serve, a storm-off
                     // or a head in the throughput numbers.
+                    // ...AND NOT THE FACES SHOWN THE DOOR EITHER (2026-09-22). A right kick now
+                    // FILES A REVIEW, so it is in this list where it used to be skipped whole —
+                    // which is the point of the change, and which would also have made it a head
+                    // in the throughput and a bigger denominator under "minors met of seats".
+                    // RightKicks is the count that speaks for them, here as on the slip.
                     var counted = run.Floor.FinishedCounted();
                     foreach (var visit in counted)
+                    {
+                        if (visit.OffTheBooks) continue;
                         if (visit.State == VisitState.StormedOff) stats.StormOffs++;
-                    stats.CustomersFinished += counted.Count;
+                        stats.CustomersFinished++;
+                        stats.RecordStormBand(run.Day, visit.State == VisitState.StormedOff);
+                    }
 
                     int refill = run.Shelf.RefillCost(run.Config.RefillPricePerCapacity);
                     if (refill > 0 && run.Money >= refill) run.RefillShelf();
@@ -879,16 +1026,17 @@ namespace LastCall.EditorTools
                         double firstValue = 0;
                         foreach (var f in run.FixtureCatalogue)
                         {
-                            if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
+                            if (f.IsTap || (f.Comfort <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
                             if (f.Level > 0 && !run.CanBuyRung(f)) continue;
                             if (run.Rating.Average < f.Stars) continue;
-                            double value = f.Comfort / run.FixturePrice(f);
+                            double value = (f.Comfort + BuffWorth(run, f)) / run.FixturePrice(f);
                             if (first == null || value > firstValue) { first = f; firstValue = value; }
                         }
                         if (first != null && run.Money >= run.FixturePrice(first) + 10)
                         {
                             run.BuyFixture(first.Id);
                             stats.RecordRung(first.Slot);
+                            stats.RecordBuffKind(first);
                         }
                     }
 
@@ -1043,22 +1191,27 @@ namespace LastCall.EditorTools
                     // cheapest-first bot bought candles and palms for a twentieth of a star
                     // each and went from 0% to 4% bankruptcies for a standing that went
                     // DOWN; a player buys the rung that moves the room most per dollar.
+                    // ...AND WHAT IT DOES FOR THE BAR (2026-09-23, the fitting buffs): a piece is
+                    // valued by its comfort plus its buff in comfort-star units (BuffWorth), or the
+                    // bot would never measure the buffs at all — and the refinish kit, worth no
+                    // comfort and a fifth more clean-up time, would never be bought.
                     if (hands.BuysDressing)
                     {
                         FixtureDefinition bestPiece = null;
                         double bestValue = 0;
                         foreach (var f in run.FixtureCatalogue)
                         {
-                            if (f.IsTap || f.Comfort <= 0 || run.OwnsFixture(f.Id)) continue;
+                            if (f.IsTap || (f.Comfort <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
                             if (f.Level > 0 && !run.CanBuyRung(f)) continue;
                             if (run.Rating.Average < f.Stars) continue;
-                            double value = f.Comfort / run.FixturePrice(f);
+                            double value = (f.Comfort + BuffWorth(run, f)) / run.FixturePrice(f);
                             if (bestPiece == null || value > bestValue) { bestPiece = f; bestValue = value; }
                         }
                         if (bestPiece != null && run.Money >= run.FixturePrice(bestPiece) + 60)
                         {
                             run.BuyFixture(bestPiece.Id);
                             stats.RecordRung(bestPiece.Slot);
+                            stats.RecordBuffKind(bestPiece);
                         }
                     }
 
@@ -1069,6 +1222,7 @@ namespace LastCall.EditorTools
                     // moment the slip shows it to the player — so "the week the bar reached
                     // 2.5" means the same thing here and on the screen.
                     stats.RecordStanding(run.Day, run.Rating.Average);
+                    stats.RecordTill(run.Day, run.Money);
                     stats.RecordDay(run.ContinueToNextDay());
                 }
             }
@@ -1469,6 +1623,9 @@ namespace LastCall.EditorTools
             // paid, and the fines by the standing they were sized on.
             public int MinorsMet, RightKicks, WrongKicks, MinorsServed, MisreadCards;
             public long FinesSum, BonusSum;
+            /// <summary>What the drinks that never came cost, and how many there were
+            /// (2026-09-22): the loop's third way into the red, after the rent and the law.</summary>
+            public long WalkOutFeesSum; public long WalkOutsCharged;
             public readonly Dictionary<int, (long fines, int nights)> FinesByStar = new Dictionary<int, (long, int)>();
             private double _lastStanding;
             public double ComfortSum, ServiceSum, CleanSum, ComfortBaseSum;
@@ -1482,6 +1639,38 @@ namespace LastCall.EditorTools
                 RungsBySlot[slot] = n + 1;
             }
 
+            // THE ROOM'S BUFFS, MEASURED (2026-09-23): which kinds the bot bought, when it drew the
+            // high rollers, where the storm-offs fell and what the till held — the A/B's columns.
+            public readonly Dictionary<string, int> BuffKindsBought = new Dictionary<string, int>();
+            public int HighRollersDrawn, NightsAtFour;
+            public readonly Dictionary<int, List<double>> StandingOnDay = new Dictionary<int, List<double>>();
+            public readonly Dictionary<int, List<int>> TillOnDay = new Dictionary<int, List<int>>();
+            public readonly Dictionary<int, (int storms, int finished)> StormsByBand =
+                new Dictionary<int, (int, int)>();
+
+            public void RecordBuffKind(FixtureDefinition f)
+            {
+                string kind = f?.Buff?.Id ?? "none";
+                BuffKindsBought.TryGetValue(kind, out int n);
+                BuffKindsBought[kind] = n + 1;
+            }
+
+            public void RecordTill(int day, int money)
+            {
+                if (!TillOnDay.TryGetValue(day, out var list)) TillOnDay[day] = list = new List<int>();
+                list.Add(money);
+            }
+
+            /// <summary>The week a night falls in, as the A/B reads storm-offs: days 1–7 is band 0.</summary>
+            public static int BandOf(int day) => Math.Max(0, (day - 1) / 7);
+
+            public void RecordStormBand(int day, bool stormed)
+            {
+                int band = BandOf(day);
+                StormsByBand.TryGetValue(band, out var row);
+                StormsByBand[band] = (row.storms + (stormed ? 1 : 0), row.finished + 1);
+            }
+
             /// <summary>Read at day end, BEFORE the night is filed — the same moment the slip
             /// shows the player both ratings.</summary>
             public void RecordHouse(TycoonRun run)
@@ -1492,6 +1681,7 @@ namespace LastCall.EditorTools
                 ComfortBaseSum += run.ComfortBase;
                 if (run.ComfortTonight < run.ServiceTonight - 1e-9) ComfortBoundNights++;
                 if (run.CrowdTomorrow == WealthTier.Broke) BrokeDrawn++;
+                if (run.CrowdTomorrow == WealthTier.HighRoller) HighRollersDrawn++;
                 if (!ComfortBaseByDay.TryGetValue(run.Day, out var list))
                     ComfortBaseByDay[run.Day] = list = new List<double>();
                 list.Add(run.ComfortBase);
@@ -1606,6 +1796,7 @@ namespace LastCall.EditorTools
                 NightSecondsSum += seconds;
                 StarsSum += stars;
                 NightsClosed++;
+                if (stars >= 4.0 - 1e-9) NightsAtFour++;
             }
 
             // ── the star track (GDD 26 §12) ──────────────────────────────────
@@ -1637,6 +1828,8 @@ namespace LastCall.EditorTools
 
             public void RecordStanding(int day, double stars)
             {
+                if (!StandingOnDay.TryGetValue(day, out var standings)) StandingOnDay[day] = standings = new List<double>();
+                standings.Add(stars);
                 _lastStanding = stars;
                 for (int i = 0; i < Rungs; i++)
                 {
@@ -1658,6 +1851,8 @@ namespace LastCall.EditorTools
                 MinorsServed += result.MinorsServed;
                 FinesSum += result.Fines;
                 BonusSum += result.Bonus;
+                WalkOutFeesSum += result.WalkOutFees;
+                WalkOutsCharged += result.WalkOutsCharged;
                 int star = (int)Math.Floor(Math.Max(0, _lastStanding));
                 FinesByStar.TryGetValue(star, out var fs);
                 FinesByStar[star] = (fs.fines + result.Fines, fs.nights + 1);
@@ -1695,6 +1890,52 @@ namespace LastCall.EditorTools
                 foreach (var kv in RungsBySlot) parts.Add($"{kv.Key} {kv.Value}");
                 parts.Sort();
                 return string.Join(" · ", parts);
+            }
+
+            public string BuffKindsLine()
+            {
+                if (BuffKindsBought.Count == 0) return "none";
+                var parts = new List<string>();
+                foreach (var kv in BuffKindsBought.OrderByDescending(p => p.Value).ThenBy(p => p.Key, StringComparer.Ordinal))
+                    parts.Add($"{kv.Key} {kv.Value}");
+                return string.Join(" · ", parts);
+            }
+
+            /// <summary>The median of what was recorded on <paramref name="day"/>, or NaN when no run got there.</summary>
+            public double MedianStanding(int day)
+            {
+                if (!StandingOnDay.TryGetValue(day, out var list) || list.Count == 0) return double.NaN;
+                var sorted = new List<double>(list); sorted.Sort();
+                return sorted[sorted.Count / 2];
+            }
+
+            public int MedianTill(int day) =>
+                TillOnDay.TryGetValue(day, out var list) && list.Count > 0 ? Quantile(list, 0.5) : 0;
+
+            /// <summary>Net a night over a run of days — takings less rent and stock, the shopping left
+            /// out — averaged over every run that played them.</summary>
+            public double NetPerNight(int fromDay, int toDay)
+            {
+                long net = 0; int nights = 0;
+                foreach (var kv in ByNight)
+                {
+                    if (kv.Key < fromDay || kv.Key > toDay) continue;
+                    net += kv.Value.income - kv.Value.rent - kv.Value.stock;
+                    nights += kv.Value.nights;
+                }
+                return nights == 0 ? 0 : (double)net / nights;
+            }
+
+            public double StormShareFrom(int fromDay)
+            {
+                int storms = 0, finished = 0;
+                foreach (var kv in StormsByBand)
+                {
+                    if (kv.Key < BandOf(fromDay)) continue;
+                    storms += kv.Value.storms;
+                    finished += kv.Value.finished;
+                }
+                return finished == 0 ? 0 : (double)storms / finished;
             }
 
             public string Report(int requested)
@@ -1746,9 +1987,16 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Broke crowd drawn (of nights) | {Pct(BrokeDrawn, NightsClosed)} |");
                 sb.AppendLine($"| Comfort base by day 10 / 20 / 30 (median) | {BaseAt(10)} / {BaseAt(20)} / {BaseAt(30)} |");
                 sb.AppendLine($"| Dressing rungs bought (by slot) | {RungsLine()} |");
+                sb.AppendLine($"| Fitting buffs bought (by kind) | {BuffKindsLine()} |");
+                sb.AppendLine($"| High rollers drawn / nights at 4★+ (of nights) | {Pct(HighRollersDrawn, NightsClosed)} / {Pct(NightsAtFour, NightsClosed)} |");
                 sb.AppendLine($"| Minors met / shown the door / served (of seats) | {MinorsMet} / {RightKicks} / {MinorsServed} ({100.0 * MinorsMet / Math.Max(1, CustomersFinished + RightKicks):0.0}% of seats) |");
                 sb.AppendLine($"| Wrong kicks / cards misread | {WrongKicks} / {MisreadCards} |");
                 sb.AppendLine($"| Fines paid (total · per night at 0/1/2/3★) | ${FinesSum} · {FinesLine()} |");
+                // THE MISSED ORDER, PRICED (2026-09-22). A storm-off used to be free at the
+                // till and worth a flat zero to the stars; it is the other way round now, so
+                // the report has to carry what it actually costs before anybody reads the
+                // bankruptcy rate as a balance signal.
+                sb.AppendLine($"| Walk-out compensation (total · per walk-out) | ${WalkOutFeesSum} · ${(double)WalkOutFeesSum / Math.Max(1, WalkOutsCharged):0.00} |");
                 // Of INCOME, not of net: the floor bot runs on a knife edge by design (income
                 // and expenses within a dollar a night), so a share of its net says nothing
                 // about whether the thanks could be farmed. What the design fenced (GDD 28

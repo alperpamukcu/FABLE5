@@ -188,50 +188,58 @@
       "id": "counter_paint",
       "name": "Refinish Kit",
       "slot": "counter_paint",
-      "price": 120,
+      "price": 94,
       "stars": 1,
       "flavor": "Brushes, lacquer and five finishes for the counter. Buy it once; repaint whenever the market is open, and the benches take the same colour.",
       "sprite": "fx_counter_paint",
-      "group": "counter"
+      "group": "counter",
+      "buff": "grace",
+      "buffPct": 20
     },
     {
       "id": "walls_1",
       "name": "Cracked Plaster",
       "slot": "walls",
-      "price": 40,
+      "price": 27,
       "stars": 0,
       "flavor": "The wall the last tenant left. It holds, mostly, and the cracks have stopped growing.",
       "sprite": "fx_walls_1",
       "swatch": "fx_walls_swatch_1",
       "level": 1,
       "startsInTheRoom": true,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 0
     },
     {
       "id": "walls_2",
       "name": "Fresh Plaster",
       "slot": "walls",
-      "price": 45,
+      "price": 30,
       "comfort": 1.25,
       "stars": 0.5,
       "flavor": "Skimmed flat and painted cream. The cracks are under it, and nobody has to know.",
       "sprite": "fx_walls_2",
       "swatch": "fx_walls_swatch_2",
       "level": 2,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 2
     },
     {
       "id": "walls_3",
       "name": "Panelled Wall",
       "slot": "walls",
-      "price": 130,
+      "price": 100,
       "comfort": 2.25,
       "stars": 1,
       "flavor": "A coral wainscot along the whole wall and a stripe at the cornice. The room stops apologising.",
       "sprite": "fx_walls_3",
       "swatch": "fx_walls_swatch_3",
       "level": 3,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 4
     },
     {
       "id": "back6_chevron",
@@ -244,85 +252,99 @@
       "sprite": "fx_back6_chevron",
       "swatch": "fx_back6_chevron_swatch",
       "level": 4,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 6
     },
     {
       "id": "back7_wave",
       "name": "Wave Mural",
       "slot": "walls",
-      "price": 185,
+      "price": 170,
       "comfort": 3.0,
       "stars": 2.5,
       "flavor": "One great wave curling across the whole wall under a sunset. Every seat at the bar faces the surf.",
       "sprite": "fx_back7_wave",
       "swatch": "fx_back7_wave_swatch",
       "level": 5,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 8
     },
     {
       "id": "walls_4",
       "name": "Harlequin Paper",
       "slot": "walls",
-      "price": 200,
+      "price": 204,
       "comfort": 3.25,
       "stars": 3,
       "flavor": "Pink and lilac diamonds over the panelling. The wall the postcards are of.",
       "sprite": "fx_walls_4",
       "swatch": "fx_walls_swatch_4",
       "level": 6,
-      "group": "walls"
+      "group": "walls",
+      "buff": "arrivals",
+      "buffPct": 10
     },
     {
       "id": "walls_right_1",
       "name": "Peeling Purple",
       "slot": "walls_right",
-      "price": 25,
+      "price": 23,
       "stars": 0,
       "flavor": "The last tenant's purple, peeling where the damp got in. The boards show through in three places, and nobody has asked about them.",
       "sprite": "fx_walls_right_1",
       "swatch": "fx_walls_right_swatch_1",
       "level": 1,
       "startsInTheRoom": true,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 0
     },
     {
       "id": "walls_right_2",
       "name": "Plum Coat",
       "slot": "walls_right",
-      "price": 30,
+      "price": 25,
       "comfort": 0.5,
       "stars": 0.5,
       "flavor": "One coat of plum from the corner to the door. It hides the patches and nothing else.",
       "sprite": "fx_walls_right_2",
       "swatch": "fx_walls_right_swatch_2",
       "level": 2,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 1
     },
     {
       "id": "walls_right_3",
       "name": "Bubble Paper",
       "slot": "walls_right",
-      "price": 75,
+      "price": 66,
       "comfort": 1.0,
       "stars": 1,
       "flavor": "Dark rounds on the purple and a run of stripes into the corner. It makes the door look like somebody meant it.",
       "sprite": "fx_walls_right_3",
       "swatch": "fx_walls_right_swatch_3",
       "level": 3,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 2
     },
     {
       "id": "walls_right_4",
       "name": "Sunset Panelling",
       "slot": "walls_right",
-      "price": 120,
+      "price": 100,
       "comfort": 1.5,
       "stars": 1.5,
       "flavor": "Cream above a coral wainscot, a stripe at the cornice. The side wall finally matches the postcards.",
       "sprite": "fx_walls_right_4",
       "swatch": "fx_walls_right_swatch_4",
       "level": 4,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 3
     },
     {
       "id": "rwall6_stripe",
@@ -335,98 +357,114 @@
       "sprite": "fx_rwall6_stripe",
       "swatch": "fx_rwall6_stripe_swatch",
       "level": 5,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 5
     },
     {
       "id": "rwall6_tile",
       "name": "Turquoise Diamonds",
       "slot": "walls_right",
-      "price": 160,
+      "price": 157,
       "comfort": 2.0,
       "stars": 2.5,
       "flavor": "Teal diamonds on cream, set square to the wall as it runs away from you. A pool you can lean on.",
       "sprite": "fx_rwall6_tile",
       "swatch": "fx_rwall6_tile_swatch",
       "level": 6,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 6
     },
     {
       "id": "rwall6_sunray",
       "name": "Sunray Wall",
       "slot": "walls_right",
-      "price": 180,
+      "price": 190,
       "comfort": 2.25,
       "stars": 3,
       "flavor": "A sunset breaking out of the corner in coral and magenta rays. Nobody leaves by that door without looking at it.",
       "sprite": "fx_rwall6_sunray",
       "swatch": "fx_rwall6_sunray_swatch",
       "level": 7,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 8
     },
     {
       "id": "rwall7_deco",
       "name": "Deco Fans",
       "slot": "walls_right",
-      "price": 205,
+      "price": 208,
       "comfort": 2.5,
       "stars": 3.0,
       "flavor": "Stacked fans in coral, mint and cream from the corner to the door. The side wall of a hotel on Ocean Drive.",
       "sprite": "fx_rwall7_deco",
       "swatch": "fx_rwall7_deco_swatch",
       "level": 8,
-      "group": "walls"
+      "group": "walls",
+      "buff": "comfort",
+      "buffPct": 10
     },
     {
       "id": "ceil_beams",
       "name": "Beamed Ceiling",
       "slot": "ceiling",
-      "price": 40,
+      "price": 27,
       "comfort": 0.25,
       "stars": 0,
       "flavor": "Dark beams across the plaster. The room gets a lid, and the lamps something to throw light at.",
       "sprite": "fx_ceil_beams",
       "swatch": "fx_ceil_beams_swatch",
       "level": 1,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 2
     },
     {
       "id": "ceil_deco",
       "name": "Deco Ceiling",
       "slot": "ceiling",
-      "price": 60,
+      "price": 34,
       "comfort": 0.4,
       "stars": 0.5,
       "flavor": "Stepped cream mouldings in long panels. It looks like the ceiling of somewhere that charges more.",
       "sprite": "fx_ceil_deco",
       "swatch": "fx_ceil_deco_swatch",
       "level": 2,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 4
     },
     {
       "id": "ceil_palm",
       "name": "Palm Ceiling",
       "slot": "ceiling",
-      "price": 85,
+      "price": 72,
       "comfort": 0.55,
       "stars": 1.0,
       "flavor": "Fronds painted overhead, as if the bar were under a tree. The smoke drifts through them.",
       "sprite": "fx_ceil_palm",
       "swatch": "fx_ceil_palm_swatch",
       "level": 3,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 6
     },
     {
       "id": "ceil_stucco",
       "name": "Stucco Ceiling",
       "slot": "ceiling",
-      "price": 110,
+      "price": 93,
       "comfort": 0.7,
       "stars": 1.5,
       "flavor": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it.",
       "sprite": "fx_ceil_stucco",
       "swatch": "fx_ceil_stucco_swatch",
       "level": 4,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 8
     },
     {
       "id": "ceil6_grid",
@@ -439,52 +477,60 @@
       "sprite": "fx_ceil6_grid",
       "swatch": "fx_ceil6_grid_swatch",
       "level": 5,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 11
     },
     {
       "id": "ceil6_ray",
       "name": "Sunray Ceiling",
       "slot": "ceiling",
-      "price": 160,
+      "price": 157,
       "comfort": 1.0,
       "stars": 2.5,
       "flavor": "Coral and magenta rays from the middle of the room outward. The whole place leans towards the bar.",
       "sprite": "fx_ceil6_ray",
       "swatch": "fx_ceil6_ray_swatch",
       "level": 6,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 14
     },
     {
       "id": "ceil6_stars",
       "name": "Star Ceiling",
       "slot": "ceiling",
-      "price": 185,
+      "price": 193,
       "comfort": 1.2,
       "stars": 3.0,
       "flavor": "Night blue with gold stars pricked through it. Closing time outside, happy hour in here.",
       "sprite": "fx_ceil6_stars",
       "swatch": "fx_ceil6_stars_swatch",
       "level": 7,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 17
     },
     {
       "id": "ceil7_dusk",
       "name": "Dusk Ceiling",
       "slot": "ceiling",
-      "price": 210,
+      "price": 211,
       "comfort": 1.4,
       "stars": 3.0,
       "flavor": "A painted evening overhead, pink and lilac clouds on peach. The sun never quite goes down in here.",
       "sprite": "fx_ceil7_dusk",
       "swatch": "fx_ceil7_dusk_swatch",
       "level": 8,
-      "group": "walls"
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 20
     },
     {
       "id": "art_city",
       "name": "City Triptych",
       "slot": "wall_center",
-      "price": 45,
+      "price": 28,
       "comfort": 0.2,
       "stars": 0,
       "flavor": "The skyline at night in three frames. The only view in the room that is not out of the window.",
@@ -494,13 +540,15 @@
       "x": 319.0,
       "y": 201.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "service",
+      "buffPct": 1
     },
     {
       "id": "picS_trio",
       "name": "Pop Trio",
       "slot": "wall_center",
-      "price": 70,
+      "price": 62,
       "comfort": 0.35,
       "stars": 1.0,
       "flavor": "A flamingo, two cherries and a pair of lips, one small frame each. Somebody always asks where they are from.",
@@ -510,13 +558,15 @@
       "x": 319.0,
       "y": 207.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "service",
+      "buffPct": 2
     },
     {
       "id": "picS_trioA",
       "name": "Cocktail Trio",
       "slot": "wall_center",
-      "price": 95,
+      "price": 83,
       "comfort": 0.5,
       "stars": 1.5,
       "flavor": "A cocktail, a palm and a sun in gold frames. The house style, hung where everybody can read it.",
@@ -526,13 +576,15 @@
       "x": 319.0,
       "y": 203.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "service",
+      "buffPct": 3
     },
     {
       "id": "picS_trioB",
       "name": "Vinyl Trio",
       "slot": "wall_center",
-      "price": 120,
+      "price": 135,
       "comfort": 0.7,
       "stars": 2.5,
       "flavor": "A record, a parrot and a wave, framed in teal and red. The loudest wall in the room without a speaker on it.",
@@ -542,25 +594,29 @@
       "x": 319.0,
       "y": 203.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "service",
+      "buffPct": 4
     },
     {
       "id": "flamingo_triptych",
       "name": "Flamingo Triptych",
       "slot": "wall_center",
-      "price": 150,
+      "price": 168,
       "stars": 3.0,
       "flavor": "The coast in three frames. The flamingo stays past closing.",
       "sprite": "fx_triptych",
       "group": "wall_art",
       "comfort": 0.9,
-      "level": 5
+      "level": 5,
+      "buff": "service",
+      "buffPct": 5
     },
     {
       "id": "wall_tv",
       "name": "Wall Television",
       "slot": "wall_tv",
-      "price": 70,
+      "price": 35,
       "stars": 0,
       "flavor": "A boxy set bolted over the booths, running adverts nobody watches and everybody looks at.",
       "sprite": "fx_tv",
@@ -575,13 +631,15 @@
       "group": "wall_art",
       "comfort": 0.2,
       "level": 1,
-      "swatch": "fx_wall_tv_swatch"
+      "swatch": "fx_wall_tv_swatch",
+      "buff": "lateness",
+      "buffPct": -4
     },
     {
       "id": "post_malibu_R",
       "name": "Malibu Poster",
       "slot": "wall_tv",
-      "price": 80,
+      "price": 40,
       "comfort": 0.25,
       "stars": 0.5,
       "flavor": "A lifeguard hut under a burning sky, on a poster curling at one corner.",
@@ -592,13 +650,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -5
     },
     {
       "id": "post_surf_R",
       "name": "Surf Poster",
       "slot": "wall_tv",
-      "price": 90,
+      "price": 75,
       "comfort": 0.3,
       "stars": 1.0,
       "flavor": "A surfer on a teal wave, printed so big the grain shows. Nobody here has surfed.",
@@ -609,13 +669,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -7
     },
     {
       "id": "post_pier_R",
       "name": "Pier Poster",
       "slot": "wall_tv",
-      "price": 100,
+      "price": 86,
       "comfort": 0.35,
       "stars": 1.5,
       "flavor": "The pier at dusk with its lights coming on. The one postcard every tourist sends.",
@@ -626,7 +688,9 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -9
     },
     {
       "id": "post_coast_R",
@@ -643,13 +707,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -12
     },
     {
       "id": "post5_neon",
       "name": "Neon Avenue Poster",
       "slot": "wall_tv",
-      "price": 120,
+      "price": 135,
       "comfort": 0.45,
       "stars": 2.5,
       "flavor": "A street of pink and blue signs in the rain. It makes the room feel like part of a city.",
@@ -660,13 +726,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -14
     },
     {
       "id": "post5_car",
       "name": "Convertible Poster",
       "slot": "wall_tv",
-      "price": 130,
+      "price": 154,
       "comfort": 0.5,
       "stars": 3.0,
       "flavor": "A teal convertible parked facing the sunset, top down. The car the owner says he nearly bought.",
@@ -677,13 +745,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -17
     },
     {
       "id": "post5_diver",
       "name": "Diver Poster",
       "slot": "wall_tv",
-      "price": 140,
+      "price": 200,
       "comfort": 0.55,
       "stars": 3.5,
       "flavor": "A diver in mid-air over a turquoise pool. The whole bar holds its breath with them.",
@@ -694,13 +764,15 @@
       "x": 532.0,
       "y": 183.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "lateness",
+      "buffPct": -20
     },
     {
       "id": "pic_pelican",
       "name": "Pelican",
       "slot": "wall_right_art",
-      "price": 40,
+      "price": 27,
       "comfort": 0.15,
       "stars": 0,
       "flavor": "A pelican on a post in a dark wood frame. It watches the door so the bartender does not have to.",
@@ -711,13 +783,15 @@
       "x": 531.0,
       "y": 252.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "late_tip",
+      "buffPct": 5
     },
     {
       "id": "picR6_sunset",
       "name": "Ocean Sunset",
       "slot": "wall_right_art",
-      "price": 60,
+      "price": 56,
       "comfort": 0.25,
       "stars": 1.0,
       "flavor": "Two palms, a pink sun and a turquoise sea, in a thin gold frame.",
@@ -728,7 +802,9 @@
       "x": 531.0,
       "y": 251.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "late_tip",
+      "buffPct": 10
     },
     {
       "id": "picR6_conv",
@@ -745,13 +821,15 @@
       "x": 529.0,
       "y": 254.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "late_tip",
+      "buffPct": 15
     },
     {
       "id": "picR6_shapes",
       "name": "Memphis Shapes",
       "slot": "wall_right_art",
-      "price": 110,
+      "price": 139,
       "comfort": 0.45,
       "stars": 3.0,
       "flavor": "Triangles, circles and squiggles in the colours of the room. Nobody agrees what it is.",
@@ -762,13 +840,15 @@
       "x": 529.0,
       "y": 250.0,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "late_tip",
+      "buffPct": 20
     },
     {
       "id": "counter_lamps",
       "name": "Counter Pendants",
       "slot": "counter_lamps",
-      "price": 40,
+      "price": 27,
       "stars": 0,
       "flavor": "Three brass shades on a rail over the till, each throwing a warm pool on the counter where the hands work.",
       "sprite": "fx_counter_lamps",
@@ -781,13 +861,15 @@
       "startsInTheRoom": true,
       "level": 1,
       "group": "light",
-      "comfort": 0
+      "comfort": 0,
+      "buff": "window",
+      "buffPct": 0
     },
     {
       "id": "counter_lamps_bell",
       "name": "Chrome Bell Pendants",
       "slot": "counter_lamps",
-      "price": 95,
+      "price": 83,
       "stars": 1.5,
       "flavor": "Polished steel bells on a rail over the till. The light comes down whiter and harder, and the glasses shine under it.",
       "sprite": "fx_counter_lamps_bell",
@@ -799,13 +881,15 @@
       "lightDy": -36,
       "level": 2,
       "group": "light",
-      "comfort": 0.3
+      "comfort": 0.3,
+      "buff": "window",
+      "buffPct": 20
     },
     {
       "id": "counter_lamps_globe",
       "name": "Opal Globe Pendants",
       "slot": "counter_lamps",
-      "price": 170,
+      "price": 183,
       "stars": 3.0,
       "flavor": "Milk-glass globes on brass stems. Everyone at the bar looks a little better, and they know it.",
       "sprite": "fx_counter_lamps_globe",
@@ -817,13 +901,15 @@
       "lightDy": -28,
       "level": 3,
       "group": "light",
-      "comfort": 0.6
+      "comfort": 0.6,
+      "buff": "window",
+      "buffPct": 40
     },
     {
       "id": "wall_lamps_one",
       "name": "Glass Tube Lamps",
       "slot": "wall_lamps",
-      "price": 30,
+      "price": 24,
       "stars": 0,
       "flavor": "Cyan at the cap, pink down the tube, a steel bracket holding it. The cheapest thing in the room that knows what year it is.",
       "sprite": "fx_wall_lamp_lv0",
@@ -834,7 +920,9 @@
       "lightRadius": 118,
       "level": 1,
       "group": "light",
-      "comfort": 0.1
+      "comfort": 0.1,
+      "buff": "tip",
+      "buffPct": 2
     },
     {
       "id": "wall_lamps_two",
@@ -851,13 +939,15 @@
       "lightIntensity": 1.0,
       "lightRadius": 132,
       "level": 2,
-      "group": "light"
+      "group": "light",
+      "buff": "tip",
+      "buffPct": 4
     },
     {
       "id": "wall_lamps_three",
       "name": "Palm Lamps",
       "slot": "wall_lamps",
-      "price": 90,
+      "price": 125,
       "comfort": 0.7,
       "stars": 3.0,
       "flavor": "A brass palm with a lit coconut. Nobody needs it. Everybody wants it.",
@@ -868,13 +958,15 @@
       "lightIntensity": 1.15,
       "lightRadius": 148,
       "level": 3,
-      "group": "light"
+      "group": "light",
+      "buff": "tip",
+      "buffPct": 7
     },
     {
       "id": "lamp6_scallop",
       "name": "Scallop Sconces",
       "slot": "wall_lamps",
-      "price": 110,
+      "price": 139,
       "comfort": 0.8,
       "stars": 3.0,
       "flavor": "Cream shades on brass arms, washing the wall in warm light. The kind of lamp a hotel bar has.",
@@ -885,13 +977,15 @@
       "lightG": 0.86,
       "lightB": 0.66,
       "lightIntensity": 1.05,
-      "lightRadius": 136
+      "lightRadius": 136,
+      "buff": "tip",
+      "buffPct": 9
     },
     {
       "id": "lamp6_neonbar",
       "name": "Neon Tube Sconces",
       "slot": "wall_lamps",
-      "price": 130,
+      "price": 150,
       "comfort": 0.9,
       "stars": 3.5,
       "flavor": "A pink tube and a cyan tube side by side on each bracket. The wall hums, and so does the room.",
@@ -902,13 +996,15 @@
       "lightG": 0.55,
       "lightB": 0.95,
       "lightIntensity": 1.0,
-      "lightRadius": 140
+      "lightRadius": 140,
+      "buff": "tip",
+      "buffPct": 12
     },
     {
       "id": "lamp6_shell",
       "name": "Shell Lamps",
       "slot": "wall_lamps",
-      "price": 150,
+      "price": 170,
       "comfort": 1.0,
       "stars": 4.0,
       "flavor": "Coral seashells glowing from inside. Everybody under them looks like they have been on holiday.",
@@ -919,7 +1015,9 @@
       "lightG": 0.62,
       "lightB": 0.52,
       "lightIntensity": 1.15,
-      "lightRadius": 148
+      "lightRadius": 148,
+      "buff": "tip",
+      "buffPct": 15
     },
     {
       "id": "neon_martini",
@@ -936,13 +1034,15 @@
       "lightIntensity": 0.8,
       "lightRadius": 55,
       "group": "light",
-      "level": 1
+      "level": 1,
+      "buff": "price",
+      "buffPct": 6
     },
     {
       "id": "neon_flamingo",
       "name": "Neon Flamingo",
       "slot": "wall_right",
-      "price": 75,
+      "price": 69,
       "comfort": 0.3,
       "stars": 1.5,
       "flavor": "A pink flamingo on one leg, buzzing faintly. It never gets tired of standing there.",
@@ -953,7 +1053,9 @@
       "lightG": 0.35,
       "lightB": 0.8,
       "lightIntensity": 0.8,
-      "lightRadius": 55
+      "lightRadius": 55,
+      "buff": "price",
+      "buffPct": 7
     },
     {
       "id": "neon6_sun",
@@ -970,13 +1072,15 @@
       "lightG": 0.4,
       "lightB": 0.72,
       "lightIntensity": 0.8,
-      "lightRadius": 55
+      "lightRadius": 55,
+      "buff": "price",
+      "buffPct": 8
     },
     {
       "id": "neon6_glass",
       "name": "Neon Glass",
       "slot": "wall_right",
-      "price": 125,
+      "price": 138,
       "comfort": 0.5,
       "stars": 2.5,
       "flavor": "A tall glass in cyan with pink inside and a cherry on the rim. The sign says what the bar is for.",
@@ -987,13 +1091,15 @@
       "lightG": 0.6,
       "lightB": 1.0,
       "lightIntensity": 0.8,
-      "lightRadius": 55
+      "lightRadius": 55,
+      "buff": "price",
+      "buffPct": 10
     },
     {
       "id": "neon6_bird",
       "name": "Neon Pelican",
       "slot": "wall_right",
-      "price": 150,
+      "price": 168,
       "comfort": 0.6,
       "stars": 3.0,
       "flavor": "A pelican in white and pink tube, beak full. The locals call the bar after it.",
@@ -1004,59 +1110,69 @@
       "lightG": 0.55,
       "lightB": 0.85,
       "lightIntensity": 0.8,
-      "lightRadius": 55
+      "lightRadius": 55,
+      "buff": "price",
+      "buffPct": 12
     },
     {
       "id": "floor_terra",
       "name": "Terracotta",
       "slot": "floor",
-      "price": 45,
+      "price": 28,
       "comfort": 0.3,
       "stars": 0,
       "flavor": "Warm clay tiles over the boards. It hides a spilled drink better than wood ever did.",
       "sprite": "fx_floor_terra",
       "swatch": "fx_floor_terra_swatch",
       "level": 1,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 5
     },
     {
       "id": "floor_carpet",
       "name": "Carpet",
       "slot": "floor",
-      "price": 65,
+      "price": 36,
       "comfort": 0.45,
       "stars": 0.5,
       "flavor": "Plum carpet with a busy pattern, the kind that forgives everything. The room goes quiet underfoot.",
       "sprite": "fx_floor_carpet",
       "swatch": "fx_floor_carpet_swatch",
       "level": 2,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 10
     },
     {
       "id": "floor_marble",
       "name": "Marble Floor",
       "slot": "floor",
-      "price": 90,
+      "price": 75,
       "comfort": 0.6,
       "stars": 1.0,
       "flavor": "Cold white stone with grey veins. Heels sound expensive on it.",
       "sprite": "fx_floor_marble",
       "swatch": "fx_floor_marble_swatch",
       "level": 3,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 15
     },
     {
       "id": "floor_check",
       "name": "Checker Floor",
       "slot": "floor",
-      "price": 115,
+      "price": 97,
       "comfort": 0.75,
       "stars": 1.5,
       "flavor": "Black and white squares running to the back wall. Every diner in every film had one.",
       "sprite": "fx_floor_check",
       "swatch": "fx_floor_check_swatch",
       "level": 4,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 20
     },
     {
       "id": "floor6_grid",
@@ -1069,33 +1185,39 @@
       "sprite": "fx_floor6_grid",
       "swatch": "fx_floor6_grid_swatch",
       "level": 5,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 30
     },
     {
       "id": "floor6_chip",
       "name": "Miami Terrazzo",
       "slot": "floor",
-      "price": 165,
+      "price": 159,
       "comfort": 1.05,
       "stars": 2.5,
       "flavor": "Chips of coral, teal and cream set in polished cream. A hotel lobby floor for a room that is not one.",
       "sprite": "fx_floor6_chip",
       "swatch": "fx_floor6_chip_swatch",
       "level": 6,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 40
     },
     {
       "id": "floor6_wave",
       "name": "Wave Tiles",
       "slot": "floor",
-      "price": 190,
+      "price": 197,
       "comfort": 1.25,
       "stars": 3.0,
       "flavor": "Teal waves rolling across the whole floor. The tide came in and stayed for a drink.",
       "sprite": "fx_floor6_wave",
       "swatch": "fx_floor6_wave_swatch",
       "level": 7,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 50
     },
     {
       "id": "floor7_marble",
@@ -1108,59 +1230,69 @@
       "sprite": "fx_floor7_marble",
       "swatch": "fx_floor7_marble_swatch",
       "level": 8,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 60
     },
     {
       "id": "floor_rug",
       "name": "Tide Rug",
       "slot": "floor_rug",
-      "price": 35,
+      "price": 25,
       "stars": 0,
       "flavor": "Orange running through teal, a shoreline read from the air. It takes the echo off the boards.",
       "sprite": "fx_floor_rug",
       "group": "furniture",
       "comfort": 0.2,
       "level": 1,
-      "swatch": "fx_floor_rug_swatch"
+      "swatch": "fx_floor_rug_swatch",
+      "buff": "patience",
+      "buffPct": 2
     },
     {
       "id": "rug_leopard",
       "name": "Leopard Rug",
       "slot": "floor_rug",
-      "price": 55,
+      "price": 32,
       "comfort": 0.3,
       "stars": 0.5,
       "flavor": "Spots from wall to wall, with a teal border to keep them in. Loud, and proud of it.",
       "sprite": "fx_rug_leopard",
       "swatch": "fx_rug_leopard_swatch",
       "level": 2,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "patience",
+      "buffPct": 4
     },
     {
       "id": "rug_wave",
       "name": "Wave Rug",
       "slot": "floor_rug",
-      "price": 75,
+      "price": 66,
       "comfort": 0.4,
       "stars": 1.0,
       "flavor": "A breaking wave woven across the boards. The tables look like they are standing on the shore.",
       "sprite": "fx_rug_wave",
       "swatch": "fx_rug_wave_swatch",
       "level": 3,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "patience",
+      "buffPct": 6
     },
     {
       "id": "rug6_memphis",
       "name": "Memphis Rug",
       "slot": "floor_rug",
-      "price": 95,
+      "price": 83,
       "comfort": 0.5,
       "stars": 1.5,
       "flavor": "Squiggles, dots and triangles in every colour the eighties sold. It argues with the walls and wins.",
       "sprite": "fx_rug6_memphis",
       "swatch": "fx_rug6_memphis_swatch",
       "level": 4,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "patience",
+      "buffPct": 8
     },
     {
       "id": "rug6_sunset",
@@ -1173,130 +1305,152 @@
       "sprite": "fx_rug6_sunset",
       "swatch": "fx_rug6_sunset_swatch",
       "level": 5,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "patience",
+      "buffPct": 10
     },
     {
       "id": "rug6_palm",
       "name": "Palm Leaf Rug",
       "slot": "floor_rug",
-      "price": 135,
+      "price": 143,
       "comfort": 0.7,
       "stars": 2.5,
       "flavor": "Big green fronds on cream. It makes the whole floor feel like somebody's verandah.",
       "sprite": "fx_rug6_palm",
       "swatch": "fx_rug6_palm_swatch",
       "level": 6,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "patience",
+      "buffPct": 12
     },
     {
       "id": "table5_bistro_L",
       "name": "Bistro Table",
       "slot": "table_left",
-      "price": 30,
+      "price": 24,
       "comfort": 0,
       "stars": 0,
       "flavor": "A square top and two bentwood chairs that came with the lease. Nobody sits there long.",
       "sprite": "fx_table5_bistro_L",
       "level": 1,
       "startsInTheRoom": true,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 0
     },
     {
       "id": "table_v1_L",
       "name": "Cocktail High-Top",
       "slot": "table_left",
-      "price": 60,
+      "price": 34,
       "comfort": 0.25,
       "stars": 0.5,
       "flavor": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round.",
       "sprite": "fx_table_v1_L",
       "level": 2,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 2
     },
     {
       "id": "table_v2_L",
       "name": "Teal Pedestal Set",
       "slot": "table_left",
-      "price": 90,
+      "price": 79,
       "comfort": 0.45,
       "stars": 1.5,
       "flavor": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for.",
       "sprite": "fx_table_v2_L",
       "level": 3,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 3
     },
     {
       "id": "table_left_3",
       "name": "Steel Gaslift Set",
       "slot": "table_left",
-      "price": 120,
+      "price": 147,
       "comfort": 0.6,
       "stars": 3.0,
       "flavor": "Plum vinyl on a polished column. Spins if you let it.",
       "sprite": "fx_table_t3",
       "level": 4,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 5
     },
     {
       "id": "table5_bistro_R",
       "name": "Bistro Table",
       "slot": "table_right",
-      "price": 30,
+      "price": 24,
       "comfort": 0,
       "stars": 0,
       "flavor": "A square top and two bentwood chairs that came with the lease. Nobody sits there long.",
       "sprite": "fx_table5_bistro_R",
       "level": 1,
       "startsInTheRoom": true,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 0
     },
     {
       "id": "table_v1_R",
       "name": "Cocktail High-Top",
       "slot": "table_right",
-      "price": 60,
+      "price": 34,
       "comfort": 0.25,
       "stars": 0.5,
       "flavor": "A tall round top on a brass stem, two red stools and a glass waiting on it. People stay for a second round.",
       "sprite": "fx_table_v1_R",
       "level": 2,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 2
     },
     {
       "id": "table_v2_R",
       "name": "Teal Pedestal Set",
       "slot": "table_right",
-      "price": 90,
+      "price": 79,
       "comfort": 0.45,
       "stars": 1.5,
       "flavor": "A teal top on a chrome pedestal, stools to match and the bottles already on it. The seat people ask for.",
       "sprite": "fx_table_v2_R",
       "level": 3,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 3
     },
     {
       "id": "table_right_3",
       "name": "Steel Gaslift Set",
       "slot": "table_right",
-      "price": 120,
+      "price": 147,
       "comfort": 0.6,
       "stars": 3.0,
       "flavor": "Plum vinyl on a polished column. Spins if you let it.",
       "sprite": "fx_table_t3",
       "level": 4,
-      "group": "furniture"
+      "group": "furniture",
+      "buff": "round",
+      "buffPct": 5
     },
     {
       "id": "plant_palm",
       "name": "Areca Palm",
       "slot": "plant_left",
-      "price": 20,
+      "price": 21,
       "comfort": 0.1,
       "stars": 0.0,
       "flavor": "Thin fronds and a clay pot. The cheapest way to stop a corner looking like a corridor.",
       "sprite": "fx_plant_palm",
       "level": 1,
-      "group": "greenery"
+      "group": "greenery",
+      "buff": "patience",
+      "buffPct": 2
     },
     {
       "id": "plant5_yucca_L",
@@ -1308,13 +1462,15 @@
       "flavor": "A spiky crown on a bare cane, in a terracotta pot. It stands guard by the window.",
       "sprite": "fx_plant5_yucca_L",
       "level": 2,
-      "group": "greenery"
+      "group": "greenery",
+      "buff": "patience",
+      "buffPct": 3
     },
     {
       "id": "plant_pothos",
       "name": "Trailing Pothos",
       "slot": "plant_left",
-      "price": 95,
+      "price": 129,
       "comfort": 0.4,
       "stars": 3.0,
       "flavor": "It grows down instead of up, off three brass legs. The only plant in here that reaches for the floor.",
@@ -1324,13 +1480,15 @@
       "x": 150.0,
       "y": 125.5,
       "hasX": true,
-      "hasY": true
+      "hasY": true,
+      "buff": "patience",
+      "buffPct": 5
     },
     {
       "id": "plant_agave",
       "name": "Agave Bowl",
       "slot": "plant_right",
-      "price": 45,
+      "price": 28,
       "comfort": 0.2,
       "stars": 0,
       "flavor": "Blue-green and low and wide, in a shallow dish. It sits under the neon rather than in front of it.",
@@ -1341,25 +1499,29 @@
       "y": 107.0,
       "hasX": true,
       "hasY": true,
-      "order": 34
+      "order": 34,
+      "buff": "patience",
+      "buffPct": 3
     },
     {
       "id": "taps_one",
       "name": "Single Draught Tower",
       "slot": "taps",
-      "price": 35,
+      "price": 25,
       "stars": 0,
       "flavor": "One line, one lager. A start.",
       "sprite": "fx_tap_beer",
       "tapLevel": 1,
       "startsInTheRoom": true,
-      "group": "counter"
+      "group": "counter",
+      "buff": "pour_speed",
+      "buffPct": 0
     },
     {
       "id": "sink_old",
       "name": "Old Steel Sink",
       "slot": "sink",
-      "price": 20,
+      "price": 21,
       "stars": 0,
       "flavor": "The sink the last owner left: the same basin, the same tap, twenty years of grey on it. It works.",
       "sprite": "fx_sink_old",
@@ -1370,13 +1532,15 @@
       "level": 1,
       "drain": true,
       "washSeconds": 3.4,
-      "group": "counter"
+      "group": "counter",
+      "buff": "wash",
+      "buffPct": 0
     },
     {
       "id": "counter_sink",
       "name": "Steel Sink",
       "slot": "sink",
-      "price": 40,
+      "price": 27,
       "stars": 0,
       "flavor": "Cold water, a chipped drain, and a landlord who counts what goes down it.",
       "sprite": "fx_sink",
@@ -1387,13 +1551,15 @@
       "level": 2,
       "drain": true,
       "washSeconds": 3.0,
-      "group": "counter"
+      "group": "counter",
+      "buff": "wash",
+      "buffPct": 0
     },
     {
       "id": "sink_brass",
       "name": "Brass Sink",
       "slot": "sink",
-      "price": 85,
+      "price": 76,
       "comfort": 0.4,
       "stars": 1.5,
       "flavor": "A basin that catches the neon and keeps it — and a drain nobody bills you for.",
@@ -1405,19 +1571,23 @@
       "drain": true,
       "drainsFree": true,
       "group": "counter",
-      "washSeconds": 2.5
+      "washSeconds": 2.5,
+      "buff": "wash",
+      "buffPct": 0
     },
     {
       "id": "shaker_steel",
       "name": "Steel Shaker",
       "slot": "shaker",
       "group": "counter",
-      "price": 35,
+      "price": 25,
       "stars": 0,
       "flavor": "The tin the room came with. Dented at the base, cold in the hand, and it has never lost a drink.",
       "sprite": "shaker_prop",
       "level": 1,
-      "startsInTheRoom": true
+      "startsInTheRoom": true,
+      "buff": "shake_speed",
+      "buffPct": 0
     },
     {
       "id": "shaker_gold",
@@ -1430,29 +1600,35 @@
       "flavor": "Polished gold, and the drink inside it is exactly the same drink. That is not what anybody is looking at.",
       "sprite": "shaker_prop_t2",
       "level": 2,
-      "workSpeed": 1.5
+      "workSpeed": 1.5,
+      "buff": "shake_speed",
+      "buffPct": 0
     },
     {
       "id": "beer_mat",
       "name": "Drip Mat",
       "slot": "beer_mat",
-      "price": 15,
+      "price": 20,
       "stars": 0,
       "flavor": "Black rubber under the font. It catches what the glass does not.",
       "sprite": "fx_beer_mat",
       "startsInTheRoom": true,
-      "group": "counter"
+      "group": "counter",
+      "buff": "grace",
+      "buffPct": 0
     },
     {
       "id": "prep_mat",
       "name": "Snack Mat",
       "slot": "prep_mat",
-      "price": 15,
+      "price": 20,
       "stars": 0,
       "flavor": "Cork under the dishes. It has never once been washed.",
       "sprite": "fx_prep_mat",
       "startsInTheRoom": true,
-      "group": "counter"
+      "group": "counter",
+      "buff": "grace",
+      "buffPct": 0
     }
   ]
 }

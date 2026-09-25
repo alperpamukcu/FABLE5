@@ -136,6 +136,36 @@ namespace LastCall.Core
         /// </summary>
         public string Garnish { get; }
 
+        /// <summary>
+        /// THE PAGE'S CHARACTER (2026-09-22): the id of the one <see cref="DrinkTrait"/> this page
+        /// carries — "nursed" on a Julep, "wrecks_the_bar" on a Mojito — or null, which is thirteen
+        /// of the fifty-four. Never a NUMBER here: <see cref="DrinkTraits"/> owns every figure, so
+        /// re-tuning a house constant re-tunes the characters that scale it.
+        ///
+        /// Public information: it is printed in the book the player buys the page from, and it
+        /// belongs to the DRINK, never to the drinker — so it leaks nothing the ID card is keeping.
+        /// A string and not a resolved object, exactly like <see cref="Garnish"/>, so the loud
+        /// validation stays in the loader where every other content error is caught.
+        /// </summary>
+        public string Trait { get; }
+
+        /// <summary>
+        /// HOW THIS DRINK IS USUALLY TAKEN (2026-09-23, the author: "bazı kokteyllerde bazı
+        /// garnishler şarttır, örneğin gin fizz'de şeker gerdanlık — yani gin fizz söyleyen biri
+        /// yüksek ihtimalle şeker gerdanlıklı söylemeli").
+        ///
+        /// Preparation ids the page is nearly always dressed with: the ice in a Cuba Libre, the
+        /// twist on a sour, the sugared rim on a Gin Fizz. NOT the same thing as
+        /// <see cref="Garnish"/>, and the difference is the whole point of having both — a
+        /// signature is what MAKES the page (the matcher demands it and every order asks for it),
+        /// a habit is only what the customer is very likely to want. A drink served without its
+        /// habit is still that drink; one served without its signature is a different drink.
+        ///
+        /// Empty for a page with no habit, never null. The rail still has the last word: a habit
+        /// the bar cannot give tonight is simply not asked for (<see cref="ServingSpec.Roll"/>).
+        /// </summary>
+        public IReadOnlyList<string> Likes { get; }
+
         /// <summary>The glass this drink is served in (glassware.json id); "" = the default.</summary>
         public string GlassId { get; }
 
@@ -181,7 +211,9 @@ namespace LastCall.Core
             string icon = null,
             UnlockCondition unlock = null,
             string unlockBeatId = null,
-            string garnish = null)
+            string garnish = null,
+            string trait = null,
+            IReadOnlyList<string> likes = null)
         {
             // One kind of band per recipe. A style band and a type band can cover the same
             // pour (the gin is also a Spirit), so mixing kinds double-counts shares and lets
@@ -207,6 +239,8 @@ namespace LastCall.Core
             Unlock = unlock is null || ReferenceEquals(unlock, UnlockCondition.Open) ? null : unlock;
             UnlockBeatId = string.IsNullOrWhiteSpace(unlockBeatId) ? null : unlockBeatId;
             Garnish = string.IsNullOrWhiteSpace(garnish) ? null : garnish;
+            Trait = string.IsNullOrWhiteSpace(trait) ? null : trait;
+            Likes = likes ?? Array.Empty<string>();
             MinFill = minFill;
             Id = id;
             Name = name;

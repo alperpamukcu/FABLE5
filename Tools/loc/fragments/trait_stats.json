@@ -1,0 +1,20 @@
+{
+  "group": "trait_stats",
+  "strings": [
+    { "key": "book.trait.stat.up", "text": "{stat} +{pct}%", "note": "A cocktail character's figure on the recipe book page, when the number goes UP: {stat} is the short name of the thing that moves (PATIENCE, TIP, MESS...) and {pct} is a whole number. Put the per-cent sign where your language puts it — Turkish writes +%40, English +40%. Keep both placeholders. Heavy face at 16, right-aligned in a 140-unit box, so keep it short." },
+    { "key": "book.trait.stat.down", "text": "{stat} -{pct}%", "note": "The same figure when the number goes DOWN. {pct} is given without a sign, so the minus here is yours to place. Keep both placeholders. Heavy face at 16, right-aligned in a 140-unit box." },
+
+    { "key": "book.trait.stat.patience", "text": "PATIENCE", "note": "Short name of a cocktail character's stat: how long the customer will wait. Shown in capitals beside a figure like +40%. ONE WORD if you can — it shares a 140-unit box with the number." },
+    { "key": "book.trait.stat.refill", "text": "REFILL", "note": "Short name of a cocktail character's stat: how full the clock is when they order a second round. Capitals, one word, beside a figure." },
+    { "key": "book.trait.stat.lateness", "text": "LATE PENALTY", "note": "Short name of a cocktail character's stat: how much being slow with this drink sours the customer. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.late_tip", "text": "LATE TIP", "note": "Short name of a cocktail character's stat: how much of the tip survives when the drink arrives late. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.stool", "text": "STOOL TIME", "note": "Short name of a cocktail character's stat: how long the customer sits with the finished drink before leaving. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.round", "text": "SECOND ROUND", "note": "Short name of a cocktail character's stat: the chance they order another. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.pay_floor", "text": "MINIMUM PAY", "note": "Short name of a cocktail character's stat: the least a correct-but-sloppy pour still pays. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.window", "text": "PERFECT WINDOW", "note": "Short name of a cocktail character's stat: how close the pour must be to count as a perfect make. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.refusal", "text": "REFUSAL LINE", "note": "Short name of a cocktail character's stat: the fill below which the customer refuses to pay at all. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.mess", "text": "MESS", "note": "Short name of a cocktail character's stat: how much the drink leaves on the counter to be wiped. Capitals, one word, beside a figure." },
+    { "key": "book.trait.stat.room", "text": "ROOM MOOD", "note": "Short name of a cocktail character's stat: how much the rest of the bar cheers up when this goes past. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.tip", "text": "TIP", "note": "Short name of a cocktail character's stat: what the customer tips on a good one. Capitals, one word, beside a figure." }
+  ]
+}

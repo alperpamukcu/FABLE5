@@ -106,29 +106,9 @@
       "src": "SANTIAGO DE CUBA, 1898"
     },
     {
-      "key": "data.recipe.dark_stormy.lore",
-      "text": "Ron oscuro sobre ginger beer: una nube de tormenta en un vaso. Hay abogados de por medio con el nombre.",
-      "src": "Black rum over ginger beer — a storm cloud you can drink. There are lawyers about the name."
-    },
-    {
-      "key": "data.recipe.dark_stormy.name",
-      "text": "Dark 'n' Stormy",
-      "src": "Dark 'n' Stormy"
-    },
-    {
       "key": "data.recipe.dark_stormy.origin",
       "text": "BERMUDAS, AÑOS 20",
       "src": "BERMUDA, 1920S"
-    },
-    {
-      "key": "data.recipe.dirty_martini.lore",
-      "text": "Un martini con la opinión del frasco de aceitunas. Salmuera donde antes había luz de día.",
-      "src": "A martini with the olive jar's opinion. Brine where the daylight was."
-    },
-    {
-      "key": "data.recipe.dirty_martini.name",
-      "text": "Dirty Martini",
-      "src": "Dirty Martini"
     },
     {
       "key": "data.recipe.dirty_martini.origin",
@@ -149,11 +129,6 @@
       "key": "data.recipe.draught.origin",
       "text": "LA CAVA, CADA NOCHE",
       "src": "THE CELLAR, EVERY NIGHT"
-    },
-    {
-      "key": "data.recipe.dry_martini.lore",
-      "text": "Ginebra apenas molestada por el vermut, revuelta en frío. La vara con la que se mide a todos los bares.",
-      "src": "Gin barely troubled by vermouth, stirred cold. The measure all bars are taken by."
     },
     {
       "key": "data.recipe.dry_martini.name",
@@ -179,11 +154,6 @@
       "key": "data.recipe.el_presidente.origin",
       "text": "LA HABANA, AÑOS 20",
       "src": "HAVANA, 1920S"
-    },
-    {
-      "key": "data.recipe.espresso_martini.lore",
-      "text": "'Despiértame y después desármame.' Dick Bradsell cumplió con una coctelera.",
-      "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker."
     },
     {
       "key": "data.recipe.espresso_martini.name",
@@ -256,11 +226,6 @@
       "src": "BRITISH INDIA, 1850S"
     },
     {
-      "key": "data.recipe.kamikaze.lore",
-      "text": "Vodka, triple sec, lima, sin sobrevivientes. El diploma de cóctel de la cultura de los shots.",
-      "src": "Vodka, triple sec, lime, no survivors. Shot culture's cocktail diploma."
-    },
-    {
       "key": "data.recipe.kamikaze.name",
       "text": "Kamikaze",
       "src": "Kamikaze"
@@ -306,19 +271,9 @@
       "src": "Five spirits agreeing to impersonate iced tea. It works exactly once per evening."
     },
     {
-      "key": "data.recipe.long_island.name",
-      "text": "Long Island",
-      "src": "Long Island"
-    },
-    {
       "key": "data.recipe.long_island.origin",
       "text": "LONG ISLAND, 1972",
       "src": "LONG ISLAND, 1972"
-    },
-    {
-      "key": "data.recipe.mai_tai.lore",
-      "text": "Lo sirvió Trader Vic; alguien de Tahití dijo 'maita'i': de otro mundo.",
-      "src": "Trader Vic poured it; a Tahitian friend said 'maita'i' — out of this world."
     },
     {
       "key": "data.recipe.mai_tai.name",
@@ -361,11 +316,6 @@
       "src": "THE BORDER, 1940S"
     },
     {
-      "key": "data.recipe.martinez.lore",
-      "text": "El eslabón perdido entre el manhattan y el martini, mezclado con ginebra de la fiebre del oro.",
-      "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin."
-    },
-    {
       "key": "data.recipe.martinez.name",
       "text": "Martinez",
       "src": "Martinez"
@@ -376,11 +326,6 @@
       "src": "SAN FRANCISCO, 1880S"
     },
     {
-      "key": "data.recipe.matador.lore",
-      "text": "Tequila, piña, lima: la margarita en modo vacaciones.",
-      "src": "Tequila, pineapple, lime — the margarita's holiday self."
-    },
-    {
       "key": "data.recipe.matador.name",
       "text": "Matador",
       "src": "Matador"
@@ -389,11 +334,6 @@
       "key": "data.recipe.matador.origin",
       "text": "LOS RECETARIOS DE MEDIADOS DE SIGLO, AÑOS 50",
       "src": "THE MIDCENTURY BOOKS, 1950S"
-    },
-    {
-      "key": "data.recipe.mint_julep.lore",
-      "text": "Bourbon entre hielo picado y menta. El día de la carrera se venden cien mil.",
-      "src": "Bourbon through crushed ice and mint. Race day sells a hundred thousand of them."
     },
     {
       "key": "data.recipe.mint_julep.name",

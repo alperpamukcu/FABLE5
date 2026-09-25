@@ -79,21 +79,27 @@ namespace LastCall.Core
         /// off the time-weighted <paramref name="cleanliness"/> the floor kept
         /// (<see cref="Housekeeping.Cleanliness"/>), which is already clamped to [0, 1] so
         /// the most this can take off is <see cref="DirtPenalty"/>.
+        ///
+        /// <paramref name="scale"/> is the installed room's COMFORT (2026-09-23, the author:
+        /// "konforu bufflar"): a CUSHION on the filed night, applied AFTER the mess and before
+        /// the ceiling. Never on <see cref="Base"/>, where it would go dead the moment a room
+        /// passed five raw. 1 is the room as it was.
         /// </summary>
-        public static double Tonight(double comfortBase, double cleanliness) =>
-            Clamp(comfortBase - DirtPenalty * (1.0 - Clamp01(cleanliness)));
+        public static double Tonight(double comfortBase, double cleanliness, double scale = 1.0) =>
+            Clamp((comfortBase - DirtPenalty * (1.0 - Clamp01(cleanliness))) * scale);
 
         /// <summary>
         /// The shift's live reading — the same rule read off the counter as it stands this
         /// second, so a gauge drops when a glass is left and recovers when it is carried away.
         /// <paramref name="dirtySpots"/> counts what is past its grace, exactly as the night's
-        /// exposure does, so the two readings never disagree about what dirt is.
+        /// exposure does, so the two readings never disagree about what dirt is. The room's
+        /// COMFORT cushions it exactly as it cushions <see cref="Tonight"/>.
         /// </summary>
-        public static double Now(double comfortBase, int dirtySpots, int seats)
+        public static double Now(double comfortBase, int dirtySpots, int seats, double scale = 1.0)
         {
-            if (seats <= 0) return Clamp(comfortBase);
+            if (seats <= 0) return Clamp(comfortBase * scale);
             double share = Math.Min(1.0, Math.Max(0, dirtySpots) / (double)seats);
-            return Clamp(comfortBase - DirtPenalty * share);
+            return Clamp((comfortBase - DirtPenalty * share) * scale);
         }
 
         /// <summary>

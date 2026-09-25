@@ -1264,28 +1264,29 @@ namespace LastCall.UI
             return name;
         }
 
-        /// <summary>A feature's tiles: the pictures the room itself draws these things with.</summary>
+        /// <summary>A feature's tiles: the pictures the room itself draws these things with. The dishes come through
+        /// GarnishCounterArt (2026-09-23), so the certificate shows the same lifted dish the rail stands in the room.</summary>
         private static IEnumerable<(string cls, string name, Sprite art)> FeatureTiles(Feature f)
         {
             switch (f)
             {
                 case Feature.IceAndLemon:
-                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.ice"), ItemArt.Load("counter_ice"));
-                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.lemon"), ItemArt.Load("counter_lemon"));
+                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.ice"), GarnishCounterArt("ice"));
+                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.lemon"), GarnishCounterArt("lemon_twist"));
                     break;
                 case Feature.Door:
                     yield return ("rank.cert.class.door", UIText.T("rank.tile.door"), ItemArt.Load("card_body"));
                     break;
                 case Feature.Rims:
-                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.salt"), ItemArt.Load("counter_salt"));
-                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.sugar"), ItemArt.Load("counter_sugar"));
+                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.salt"), GarnishCounterArt("salt_rim"));
+                    yield return ("rank.cert.class.counter", UIText.T("rank.tile.sugar"), GarnishCounterArt("sugar_rim"));
                     break;
                 case Feature.Spoon:
                     yield return ("rank.cert.class.bench", UIText.T("rank.tile.spoon"), ItemArt.Load("bench_spoon"));
                     break;
                 case Feature.Jars:
-                    yield return ("rank.cert.class.market", UIText.T("rank.tile.olives"), ItemArt.Load("counter_olive"));
-                    yield return ("rank.cert.class.market", UIText.T("rank.tile.mint"), ItemArt.Load("counter_mint"));
+                    yield return ("rank.cert.class.market", UIText.T("rank.tile.olives"), GarnishCounterArt("olive"));
+                    yield return ("rank.cert.class.market", UIText.T("rank.tile.mint"), GarnishCounterArt("mint"));
                     break;
                 case Feature.SecondLine:
                     yield return ("rank.cert.class.draught", UIText.T("rank.tile.line2"), Resources.Load<Sprite>("Fixtures/fx_tap_beer"));

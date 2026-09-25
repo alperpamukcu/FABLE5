@@ -34,7 +34,7 @@ namespace LastCall.Core
         // orderDecisionSeconds 4.0 → 5.0 (2026-08-19, the author: "düşünme süresi biraz daha
         // uzun sürsün"): the "..." beat over the head is the thing the player waits ON now,
         // and at 4s the short rolls were over before the dots read as thinking.
-        public TycoonConfig(int startingMoney = 20,
+        public TycoonConfig(int startingMoney = DefaultStartingMoney,
             double orderDecisionSeconds = 5.0, double savorSeconds = 6.0,
             bool counterSmudges = true, bool weeklyJobs = true, bool lastCall = true)
         {
@@ -100,6 +100,19 @@ namespace LastCall.Core
         // ── the till ────────────────────────────────────────────────────────────
         public int StartingMoney { get; }
 
+        /// <summary>
+        /// THE PURSE A NEW BAR OPENS WITH: $50, up from $20 (2026-09-23). Measured, not chosen: an
+        /// opening night on which NOBODY is served costs $25–29 across eight seeds — the $14 rent plus
+        /// the walk-out fee each of the five or six drinkers leaves on the bill (the author's own rule,
+        /// "siparişini yetiştiremediysen gün sonu faturasına ceza gelmeli"). At $20 that put a brand-new
+        /// bar in debt on its first night, a debt strike before the player had poured a drink, and the
+        /// PlayMode market test found the till at -$9 with not even a $2 soda affordable. At $50 the
+        /// worst opening night still leaves $21–25 — the cheapest fitting, or the whole mixers aisle —
+        /// and a competent one closes at about $90 (Docs/ECONOMY_2026-09-23.md). The author: "Oyuncunun
+        /// parası hep 0a yakın olmamalı ... oyuncu oyundan bezdirilmesin."
+        /// </summary>
+        public const int DefaultStartingMoney = 50;
+
         /// <summary>The single glass, for a bar with no glass set (v5 P14). The glassware
         /// capacities are scaled against this, so a highball is 1.0 and the rest read off it.</summary>
         public double GlassCapacity { get; } = 1.0;
@@ -125,10 +138,26 @@ namespace LastCall.Core
         /// <summary>The glass a drink lands in when its recipe names none (v5 P14 / C9).</summary>
         public string DefaultGlassId { get; } = "highball";
 
-        /// <summary>Balance v1 (2026-07-22): tripled from v0 — stock is a real cost of
-        /// goods now (~$2.5 a drink), not a rounding error. The v0 sim banked $5k by day
-        /// 30 with zero bankruptcies; margins had to mean something.</summary>
-        public int RefillPricePerCapacity { get; } = 3;
+        /// <summary>
+        /// WHAT A GLASS OF STOCK COSTS, BY THE BOTTLE IT CAME OUT OF (2026-09-23, the economy
+        /// brief: *"Oyuncunun parası hep 0a yakın olmamalı"*).
+        ///
+        /// It was a flat 3 — tripled from v0 in 2026-07-22 to make margin mean something, and it
+        /// did, but it was written when every drink was priced off one straight rank line. Against
+        /// the star bands (<see cref="DrinkPricing"/>) a flat 3 is a tax that only bites the
+        /// bottom: the opening menu sells at $3–6 a glass, so a new bar was handing back sixty to
+        /// a hundred per cent of its takings to the van and could never get off the ground.
+        ///
+        /// The price is the BOTTLE'S TIER now. A well bottle is $1 a glass and a top-shelf one $4,
+        /// which is what a cheap bar and an expensive one actually pay — and it puts the premium
+        /// where it belongs: a better bottle costs more per pour AND earns
+        /// <see cref="StockPremiumPerTier"/> on every drink it goes into, so trading up is a
+        /// decision with two sides rather than a strictly better button.
+        /// </summary>
+        public int RefillPricePerCapacity(int tier) => Math.Max(1, Math.Min(MaxStockTier, tier));
+
+        /// <summary>The dearest a glass of stock gets — the top rung of the brand ladder.</summary>
+        public const int MaxStockTier = 4;
 
         // ── the floor (GDD 23 §1) ───────────────────────────────────────────────
         public int StartingSeats { get; } = 4;
@@ -199,6 +228,30 @@ namespace LastCall.Core
         /// for — serve faster, fewer people waiting, more of them willing to sit.
         /// </summary>
         public int BalkAtWaiting { get; } = 3;
+
+        /// <summary>
+        /// WHAT A CUSTOMER WHO NEVER GOT THEIR DRINK COSTS THE HOUSE, on the night's bill
+        /// (2026-09-22, the author: "Eğer siparişini yetiştiremediysen gün sonu faturasına ceza
+        /// gelmeli ama puanı daha az düşürmeli"). A SHARE OF THE DRINK THEY WERE OWED, not a flat
+        /// figure: you cost somebody the drink they ordered, and half of what it was worth is what
+        /// that costs you.
+        ///
+        /// IT WAS A FLAT $8 SCALED BY THE STANDING for one afternoon (2026-09-23), and that stopped
+        /// being right the moment the DRINK's own price stopped reading the standing
+        /// (<see cref="DrinkPricing"/>, the same day): the miss climbed to $24 a head at two stars
+        /// while the take it was measured against did not move at all. A share of the order the
+        /// customer was owed is self-scaling and says something truer — a missed Long Island Iced
+        /// Tea is a worse night than a missed Vodka &amp; Soda.
+        ///
+        /// A half, and never under <see cref="WalkOutFeeFloor"/>: enough that a storm-off is worse
+        /// than never seating them — which is the point — and well short of the $20 the law takes
+        /// for serving a minor, which must stay the night's worst mistake.
+        /// </summary>
+        public double WalkOutFeeShare { get; } = 0.5;
+
+        /// <summary>The least a missed drink can cost, so the opening menu's cheapest pages still
+        /// carry a sting.</summary>
+        public int WalkOutFeeFloor { get; } = 2;
 
         // ── patience (GDD 23 §2, balance v1) ────────────────────────────────────
 
@@ -289,8 +342,14 @@ namespace LastCall.Core
         }
 
         // ── orders (GDD 23 §3) ──────────────────────────────────────────────────
-        /// <summary>The order roll pool: this many lowest-rank pourable recipes.</summary>
-        public int OrderPoolSize(int day) => 3 + day;
+        // OrderPoolSize(day) => 3 + day WAS HERE, AND IT WAS THE ECONOMY'S QUIETEST BUG
+        // (deleted 2026-09-23). It capped the order pool at the lowest-ranked 3 + day pages, on
+        // top of the star gate that had already decided what the bar could pour — so a bar that
+        // reached three stars on day four owned twenty-one recipes and was asked for seven, all
+        // of them from its opening menu. Every page the player bought to climb was unorderable
+        // for a fortnight, which made buying up feel like nothing had happened.
+        //
+        // The night's covers are cut by DayPlan now, from the rungs the bar has actually opened.
 
         /// <summary>Premium stock lifts the menu price (2026-07-23): each tier a drink's spirit
         /// is above the base adds this much to its price. Start cheap, pour top-shelf, charge

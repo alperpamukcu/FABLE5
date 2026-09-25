@@ -163,15 +163,15 @@ namespace LastCall.Tests
                 made.Tick(5);
             }
 
-            // A rank-2 drink is $4 on the menu — to high rollers ×1.25, and at the stage the
-            // bar's standing has reached ×(1 + whole stars) (StarEconomy, 2026-09-06). The
-            // standing after that capped night is read rather than assumed: it slid under
-            // the 4.9 it was set to.
+            // A rank-2 drink is priced by its own rung (DrinkPricing, 2026-09-23) and the crowd's
+            // mood rides on top: high rollers pay ×1.25. The STAGE no longer does — a page is worth
+            // what the page is worth, whatever the bar is standing at — so this is the menu price
+            // and the crowd, and nothing else.
             made.Floor.Seated[0].InspectId();     // the price is read off the card (C3)
-            int stage = (int)Math.Round(4 * 1.25 * StarEconomy.TierMultiplier(made.Rating.Average),
-                MidpointRounding.AwayFromZero);
-            Assert.AreEqual(stage, made.Floor.Seated[0].Order.Price,
-                $"the $4 rank-2 drink sells for $5 to high rollers (×1.25), times the stage ({made.Rating.Average:0.00} stars)");
+            int sheet = DrinkOrder.MenuPrice(made.Floor.Seated[0].Order.Wanted);
+            int want = (int)Math.Round(sheet * 1.25, MidpointRounding.AwayFromZero);
+            Assert.AreEqual(want, made.Floor.Seated[0].Order.Price,
+                $"the ${sheet} drink sells for ${want} to high rollers (×1.25), at any standing");
         }
 
         [Test]
@@ -323,18 +323,21 @@ namespace LastCall.Tests
                 config: new TycoonConfig(200, orderDecisionSeconds: 0, savorSeconds: 0),
                 lockedStock: new[] { tonic });
 
-            Assert.IsFalse(run.MenuRecipes.Any(r => r.Id == "gin_tonic"), "locked = off the menu");
-            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("gin_tonic"),
+            // Vodka & Tonic rather than Gin & Tonic since 2026-09-23: the G&T is on the opening
+            // menu now (a bar that owned four pages could not be taught on), so it is no longer a
+            // locked page to buy. The tonic bottle is what this test is actually about.
+            Assert.IsFalse(run.MenuRecipes.Any(r => r.Id == "vodka_tonic"), "locked = off the menu");
+            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("vodka_tonic"),
                 "a recipe is bought at day end, not mid-shift");
 
             int guard = 0;
             while (run.Phase != TycoonPhase.DayEnd) { Assert.Less(guard++, 3000); run.Tick(5); }
 
             int before = run.Money;
-            var bought = run.UnlockRecipe("gin_tonic");
+            var bought = run.UnlockRecipe("vodka_tonic");
             Assert.AreEqual(before - run.RecipePrice(bought), run.Money);
-            Assert.IsTrue(run.MenuRecipes.Any(r => r.Id == "gin_tonic"), "on the menu");
-            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("gin_tonic"),
+            Assert.IsTrue(run.MenuRecipes.Any(r => r.Id == "vodka_tonic"), "on the menu");
+            Assert.Throws<InvalidOperationException>(() => run.UnlockRecipe("vodka_tonic"),
                 "no buying it twice");
 
             // The recipe brings its bottles: the quarantined tonic is on TONIGHT'S market,
@@ -409,12 +412,13 @@ namespace LastCall.Tests
             var run = NewRun();
             PlayDayServingEveryone(run);
 
-            // Every drink is 0.7 of capacity out of two bottles, refilled at $3 a capacity.
+            // Every drink is 0.7 of capacity out of two bottles, refilled at what the BOTTLE'S
+            // TIER costs (2026-09-23) — these are well bottles, so $1 a capacity.
             // Stated from the night that actually happened: an open night's customer count is
             // no longer a constant (v5 P12).
             double poured = 0.7 * run.Floor.Finished.Count;
             int cost = run.RefillShelf();
-            Assert.AreEqual((int)System.Math.Ceiling(poured * run.Config.RefillPricePerCapacity),
+            Assert.AreEqual((int)System.Math.Ceiling(poured * run.Config.RefillPricePerCapacity(1)),
                 cost, 1);
 
             var result = run.ContinueToNextDay();

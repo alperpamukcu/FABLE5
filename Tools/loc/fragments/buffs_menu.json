@@ -1,0 +1,20 @@
+{
+  "group": "buffs_menu",
+  "strings": [
+    { "key": "buff.pct.up", "text": "+{pct}%", "note": "A buff's figure when its number goes UP, printed ALONE as the loudest thing on the buff's green or red plate (white, ringed in black) beside the buff's small icon - on the recipe book page, the licence's recipe card, the market's tiles and the fittings' cards. {pct} is a whole number. Put the per-cent sign where your language puts it: Turkish writes +%40, English +40%. Digits, +, - and % only: it is set in the arcade figure face, which draws no other letters." },
+    { "key": "buff.pct.down", "text": "-{pct}%", "note": "The same figure when the number goes DOWN. {pct} is given without a sign, so the minus is yours to place - a plain hyphen-minus (-), because the figure face has no typographic minus. Digits, +, - and % only." },
+
+    { "key": "book.trait.stat.price", "text": "PRICE", "note": "Short name of a fitting's buff: what every drink costs the customer. Capitals, one or two short words, beside a figure like +8% on a small green plate." },
+    { "key": "book.trait.stat.service", "text": "SERVICE", "note": "Short name of a fitting's buff: how much every served customer likes the visit (the top bar's SERVICE rating). Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.arrivals", "text": "CROWD", "note": "Short name of a fitting's buff: how quickly new customers walk in. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.comfort", "text": "COMFORT", "note": "Short name of a fitting's buff: how much of the room's comfort survives the night's mess (the top bar's COMFORT rating). Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.grace", "text": "CLEAN-UP TIME", "note": "Short name of a fitting's buff: how long a used glass or a mark on the counter may stand before it costs comfort. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.shake_speed", "text": "SHAKE SPEED", "note": "Short name of a fitting's buff: how fast the shaker tin shakes. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.pour_speed", "text": "POUR SPEED", "note": "Short name of a fitting's buff: how fast the draught beer tower pours. Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.wash", "text": "WASH TIME", "note": "Short name of a fitting's buff: how long the sink runs to wash one glass (a minus figure is the good news). Capitals, one or two short words, beside a figure." },
+    { "key": "book.trait.stat.free_drain", "text": "FREE DRAIN", "note": "Short name of a fitting's buff: a drink poured away down the sink costs nothing. Printed ALONE beside its icon, with no figure. Capitals, one or two short words." },
+    { "key": "book.trait.stat.seats", "text": "SEATS", "note": "Short name of a fitting's buff: one more bar stool, so one more customer can sit. Capitals, one short word, beside a figure like +1." },
+    { "key": "book.trait.stat.stock_premium", "text": "PER DRINK", "note": "Short words beside a dollar figure like +$2 on a better bottle in the market: what every drink poured from it earns over the house bottle. Capitals, one or two short words, read as '+$2 PER DRINK'." },
+    { "key": "book.trait.stat.glass_rung", "text": "GLASS RUNG", "note": "Short name of a fitting's buff: the glass shelf's step, which opens dearer drinks. Capitals, one or two short words, beside a figure like +1." }
+  ]
+}

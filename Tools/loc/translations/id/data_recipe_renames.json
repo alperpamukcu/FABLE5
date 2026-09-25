@@ -1,0 +1,30 @@
+{
+  "strings": [
+    {"key": "data.recipe.dark_stormy.lore", "text": "Rum hitam dituang di atas ginger beer sampai awannya terbentuk. Minum sebelum cuacanya berubah.", "src": "Black rum poured over ginger beer until the cloud forms. Drink it before the weather turns."},
+    {"key": "data.recipe.dark_stormy.name", "text": "Black Squall", "src": "Black Squall"},
+    {"key": "data.recipe.dirty_martini.lore", "text": "Martini yang datang bersama makan malam. Tusuk zaitunnya yang membuat semua bedanya, jadi jangan lupa.", "src": "A martini that came with supper. The spear is the whole difference, so do not forget it."},
+    {"key": "data.recipe.dirty_martini.name", "text": "Olive Martini", "src": "Olive Martini"},
+    {"key": "data.recipe.dry_martini.lore", "text": "Gin yang nyaris tak diganggu vermouth, diaduk dingin, ditutup dengan twist lemon. Tolok ukur yang dipakai untuk menilai semua bar.", "src": "Gin barely troubled by vermouth, stirred cold, finished with a twist. The measure all bars are taken by."},
+    {"key": "data.recipe.espresso_martini.lore", "text": "'Bangunkan aku, lalu bikin aku kacau.' Dick Bradsell menurutinya dengan shaker dan botol likeur kopi.", "src": "'Wake me up, then mess me up.' Dick Bradsell obliged with a shaker and the coffee bottle."},
+    {"key": "data.recipe.kamikaze.lore", "text": "Vodka, triple sec, jeruk nipis, tak ada yang selamat. Disajikan tanpa es, karena ini koktail, bukan shot.", "src": "Vodka, triple sec, lime, no survivors. Served up, because it is a cocktail and not a shot."},
+    {"key": "data.recipe.long_island.name", "text": "Long Island Iced Tea", "src": "Long Island Iced Tea"},
+    {"key": "data.recipe.mai_tai.lore", "text": "Trader Vic menuangnya murni di atas es serut; pulau-pulaunya yang menambahkan buah. Versi kami tetap membawa buahnya.", "src": "Trader Vic poured it neat over crushed ice; the islands added the fruit. Ours keeps the fruit."},
+    {"key": "data.recipe.martinez.lore", "text": "Mata rantai yang hilang antara manhattan dan martini, diracik dengan gin zaman demam emas dan twist lemon.", "src": "The missing link between the manhattan and the martini, mixed on gold-rush gin and a twist."},
+    {"key": "data.recipe.matador.lore", "text": "Tequila, nanas, jeruk nipis, panjang di atas es — margarita versi liburan.", "src": "Tequila, pineapple, lime, long over ice — the margarita on its holidays."},
+    {"key": "data.recipe.mint_julep.lore", "text": "Bourbon menembus es padat dan daun mint, cukup tinggi untuk tangkainya berdiri.", "src": "Bourbon through packed ice and mint, tall enough for the sprig to stand in."},
+    {"key": "data.recipe.paloma.lore", "text": "Tequila, jeruk nipis, dan soda, disusun tinggi di tengah panas. Tiga bahan, tanpa debat, tanpa upacara.", "src": "Tequila, lime and soda, built tall in the heat. Three things, no argument, no ceremony."},
+    {"key": "data.recipe.paloma.name", "text": "Ranch Water", "src": "Ranch Water"},
+    {"key": "data.recipe.paloma.origin", "text": "TEXAS BARAT, 2010-AN", "src": "WEST TEXAS, 2010S"},
+    {"key": "data.recipe.sea_breeze.lore", "text": "Cranberry dan nanas menemani vodka menyusuri pantai.", "src": "Cranberry and pineapple walking vodka down the shore."},
+    {"key": "data.recipe.sea_breeze.name", "text": "Bay Breeze", "src": "Bay Breeze"},
+    {"key": "data.recipe.sex_on_beach.lore", "text": "Vodka di bawah cranberry dan jeruk. Dinamai dari sehelai kain, bukan sebuah kota, dan tak ada yang keberatan.", "src": "Vodka under cranberry and orange. Named for a cloth, not a city, and nobody minds."},
+    {"key": "data.recipe.sex_on_beach.name", "text": "Madras", "src": "Madras"},
+    {"key": "data.recipe.sex_on_beach.origin", "text": "MADRAS, LEWAT NEW ENGLAND, 1960-AN", "src": "MADRAS, BY WAY OF NEW ENGLAND, 1960S"},
+    {"key": "data.recipe.sidecar.lore", "text": "Ritz mengklaimnya, London membantahnya. Versi kami pakai wiski dan tidak minta maaf.", "src": "The Ritz claims it, London disputes it. Ours runs on whiskey and does not apologise."},
+    {"key": "data.recipe.sidecar.name", "text": "Whiskey Sidecar", "src": "Whiskey Sidecar"},
+    {"key": "data.recipe.vodka_bull.name", "text": "Night Shift", "src": "Night Shift"},
+    {"key": "data.recipe.vodka_soda.name", "text": "Vodka & Soda", "src": "Vodka & Soda"},
+    {"key": "data.recipe.vodka_tonic.name", "text": "Vodka & Tonic", "src": "Vodka & Tonic"},
+    {"key": "data.recipe.whiskey_ginger.name", "text": "Wiski & Jahe", "src": "Whiskey & Ginger"}
+  ]
+}

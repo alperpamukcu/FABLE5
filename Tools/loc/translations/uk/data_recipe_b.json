@@ -1,83 +1,339 @@
-{"strings": [
-{"key": "data.recipe.mojito.lore", "text": "М’ята пом’ята, лайм вичавлений, ром винагороджений. Кажуть, чернетку пила ще команда Дрейка.", "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."},
-{"key": "data.recipe.mojito.name", "text": "Мохіто", "src": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "ГАВАНА, СТАРА ЯК ГАВАНЬ", "src": "HAVANA, OLD AS THE HARBOUR"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Продавець горілки й надлишок імбирного елю вигадали найамериканніший «російський» напій.", "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Москоу Мюл", "src": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "ЛОС-АНДЖЕЛЕС, 1941", "src": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Одна пляшка, без шейкера, без суперечок. Замовлення для тих, хто вже знає відповідь.", "src": "One bottle, no tin, no argument. The order for people who already know the answer."},
-{"key": "data.recipe.neat_pour.name", "text": "Чистий налив", "src": "Neat Pour"},
-{"key": "data.recipe.neat_pour.origin", "text": "БУДЬ-ДЕ, ДЕ Є ПОЛИЦЯ", "src": "ANYWHERE WITH A SHELF"},
-{"key": "data.recipe.negroni.lore", "text": "Граф Негроні попросив міцніший «Американо». Рівні частини, без торгу.", "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."},
-{"key": "data.recipe.negroni.name", "text": "Негроні", "src": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "ФЛОРЕНЦІЯ, 1919", "src": "FLORENCE, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Цукор, бітер, віскі — напій, для якого й вигадали слово «коктейль».", "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."},
-{"key": "data.recipe.old_fashioned.name", "text": "Олд Фешн", "src": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "ЛУЇСВІЛЛ, 1880-ТІ", "src": "LOUISVILLE, 1880S"},
-{"key": "data.recipe.paloma.lore", "text": "Текіла й грейпфрутова газованка. Справжня улюблениця Мексики; просто в маргарити краща преса.", "src": "Tequila and grapefruit soda. Mexico's actual favourite; the margarita just has better press."},
-{"key": "data.recipe.paloma.name", "text": "Палома", "src": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "МЕКСИКА, 1950-ТІ", "src": "MEXICO, 1950S"},
-{"key": "data.recipe.pink_lady.lore", "text": "Джин, що зашарівся від гренадину. Найповажніше алібі сухого закону.", "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."},
-{"key": "data.recipe.pink_lady.name", "text": "Пінк Леді", "src": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "НЬЮ-ЙОРК, 1910-ТІ", "src": "NEW YORK, 1910S"},
-{"key": "data.recipe.rosita.lore", "text": "Текілова кузина негроні: надрукована дрібним шрифтом, полюблена пізно.", "src": "The negroni's tequila cousin, printed small and loved late."},
-{"key": "data.recipe.rosita.name", "text": "Росіта", "src": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "БАРНІ КНИГИ, 1974", "src": "THE BAR BOOKS, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Одна частина кислого, дві солодкого, три міцного, чотири легкого. Старший за келих, у якому стоїть.", "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."},
-{"key": "data.recipe.rum_punch.name", "text": "Ромовий пунш", "src": "Rum Punch"},
-{"key": "data.recipe.rum_punch.origin", "text": "ОСТРОВИ, 1600-ТІ", "src": "THE ISLANDS, 1600S"},
-{"key": "data.recipe.screwdriver.lore", "text": "Названа на честь інструмента, яким її вперше перемішали. У деяких портах — замість сніданку.", "src": "Named for the tool that stirred it first. Breakfast in some ports."},
-{"key": "data.recipe.screwdriver.name", "text": "Викрутка", "src": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "НАФТОВІ ПРОМИСЛИ, 1940-ТІ", "src": "THE OIL FIELDS, 1940S"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Журавлина й грейпфрут ведуть горілку прогулятися берегом.", "src": "Cranberry and grapefruit walking vodka down the shore."},
-{"key": "data.recipe.sea_breeze.name", "text": "Морський бриз", "src": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "АМЕРИКАНСЬКЕ УЗБЕРЕЖЖЯ", "src": "THE AMERICAN COAST"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Персик, апельсин і журавлина поверх горілки. Весняні канікули, розлиті в келих.", "src": "Peach, orange and cranberry over vodka. Spring break, decanted."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Секс на пляжі", "src": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "ФЛОРИДА, 1980-ТІ", "src": "FLORIDA, 1980S"},
-{"key": "data.recipe.sidecar.lore", "text": "«Рітц» каже, що це їхній, Лондон сперечається. Наш — на бурбоні, і вибачатися не збирається.", "src": "The Ritz claims it, London disputes it. Ours runs on bourbon and does not apologise."},
-{"key": "data.recipe.sidecar.name", "text": "Бурбон Сайдкар", "src": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "ПАРИЖ, 1920-ТІ", "src": "PARIS, 1920S"},
-{"key": "data.recipe.southside.lore", "text": "Джин, лайм і м’ята. Пила банда; м’ята ховала присмак ванни.", "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."},
-{"key": "data.recipe.southside.name", "text": "Саутсайд", "src": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "ЧИКАГО, 1920-ТІ", "src": "CHICAGO, 1920S"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Москоу мюл, що подався на південь, — агава в мідному сідлі.", "src": "The Moscow mule gone south — agave in the copper saddle."},
-{"key": "data.recipe.tequila_mule.name", "text": "Текіла Мюл", "src": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "ПРИКОРДОННЯ", "src": "THE BORDERLANDS"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Формула сауера з пилом на чоботях. Агава відповідає лимону.", "src": "The sour formula with dust on its boots. Agave answers the lemon."},
-{"key": "data.recipe.tequila_sour.name", "text": "Текіла Сауер", "src": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "РОДИНА САУЕРІВ", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Гренадин тоне, апельсин пливе, а «Ролінг Стоунз» узяли його в тур.", "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Текіла Санрайз", "src": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "САУСАЛІТО, 1970-ТІ", "src": "SAUSALITO, 1970S"},
-{"key": "data.recipe.vesper.lore", "text": "Флемінг вигадав його для Бонда: джин, горілка й ім’я, яке він не зміг зберегти.", "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."},
-{"key": "data.recipe.vesper.name", "text": "Веспер", "src": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "«КАЗИНО РОЯЛЬ», 1953", "src": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Горілка й енергетик в одному келиху — напій, що працює і денну, і нічну зміну водночас.", "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."},
-{"key": "data.recipe.vodka_bull.name", "text": "Горілка Булл", "src": "Vodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "НІЧНІ БАРИ", "src": "THE ALL-NIGHT BARS"},
-{"key": "data.recipe.vodka_soda.lore", "text": "Найлегше, що бар може законно назвати напоєм. Чисто, холодно, і нема.", "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."},
-{"key": "data.recipe.vodka_soda.name", "text": "Горілка-содова", "src": "Vodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "НІДЕ КОНКРЕТНО, 1900-ТІ", "src": "NOWHERE IN PARTICULAR, 1900S"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Джин сауер із приглушеним світлом. Публіка м’якша, лимон той самий.", "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."},
-{"key": "data.recipe.vodka_sour.name", "text": "Горілка Сауер", "src": "Vodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "РОДИНА САУЕРІВ", "src": "THE SOUR FAMILY"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "Тихіший брат джин-тоніка: тонік говорить, горілка тримає пальта.", "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Горілка-тонік", "src": "Vodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "ПОВОЄННІ РОКИ, 1950-ТІ", "src": "THE POSTWAR YEARS, 1950S"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Бурбон із колою на запивку, яка здалася й залізла в келих.", "src": "Bourbon with a cola chaser that gave up and got in the glass."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Віскі-кола", "src": "Whiskey & Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "ПРИДОРОЖНІ ЗАКЛАДИ, 1930-ТІ", "src": "THE ROADHOUSES, 1930S"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Бурбон, подовжений імбирним елем, — хайбол, що зробив віскі буденним.", "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Віскі-імбир", "src": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "КРАЇНА ХАЙБОЛІВ, 1890-ТІ", "src": "HIGHBALL COUNTRY, 1890S"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Джулеп, що проміняв срібний кубок на лимон і став швидшим.", "src": "A julep that traded the silver cup for lemon and got quicker about it."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Віскі Смеш", "src": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "МІСЬКИЙ КУЗЕН ДЖУЛЕПА, 1880-ТІ", "src": "THE JULEP'S CITY COUSIN, 1880S"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Сауер, що навчив бурбон манер. Хребет — не на вибір.", "src": "The sour that made bourbon polite. The backbone is not optional."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Віскі Сауер", "src": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "ЕПОХА ПАРОПЛАВІВ, 1860-ТІ", "src": "THE STEAMSHIP ERA, 1860S"},
-{"key": "data.recipe.white_lady.lore", "text": "Джин, трипл-сек, лимон — класика срібного шейкера Гаррі Макелгоуна.", "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."},
-{"key": "data.recipe.white_lady.name", "text": "Біла леді", "src": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "ЛОНДОН, 1920-ТІ", "src": "LONDON, 1920S"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "М’ята пом’ята, лайм вичавлений, ром винагороджений. Кажуть, чернетку пила ще команда Дрейка.",
+      "src": "Mint bruised, lime squeezed, rum rewarded. Drake's crew allegedly drank the rough draft."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Мохіто",
+      "src": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "ГАВАНА, СТАРА ЯК ГАВАНЬ",
+      "src": "HAVANA, OLD AS THE HARBOUR"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Продавець горілки й надлишок імбирного елю вигадали найамериканніший «російський» напій.",
+      "src": "A vodka salesman and a ginger-beer surplus invented Russia's most American drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Москоу Мюл",
+      "src": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "ЛОС-АНДЖЕЛЕС, 1941",
+      "src": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Одна пляшка, без шейкера, без суперечок. Замовлення для тих, хто вже знає відповідь.",
+      "src": "One bottle, no tin, no argument. The order for people who already know the answer."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Чистий налив",
+      "src": "Neat Pour"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "БУДЬ-ДЕ, ДЕ Є ПОЛИЦЯ",
+      "src": "ANYWHERE WITH A SHELF"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Граф Негроні попросив міцніший «Американо». Рівні частини, без торгу.",
+      "src": "Count Negroni asked for a harder Americano. Equal parts, no negotiation."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Негроні",
+      "src": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "ФЛОРЕНЦІЯ, 1919",
+      "src": "FLORENCE, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Цукор, бітер, віскі — напій, для якого й вигадали слово «коктейль».",
+      "src": "Sugar, bitters, whiskey — the drink the word 'cocktail' was coined for."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Олд Фешн",
+      "src": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "ЛУЇСВІЛЛ, 1880-ТІ",
+      "src": "LOUISVILLE, 1880S"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Джин, що зашарівся від гренадину. Найповажніше алібі сухого закону.",
+      "src": "Gin blushing with grenadine. Prohibition's most respectable alibi."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Пінк Леді",
+      "src": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "НЬЮ-ЙОРК, 1910-ТІ",
+      "src": "NEW YORK, 1910S"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Текілова кузина негроні: надрукована дрібним шрифтом, полюблена пізно.",
+      "src": "The negroni's tequila cousin, printed small and loved late."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Росіта",
+      "src": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "БАРНІ КНИГИ, 1974",
+      "src": "THE BAR BOOKS, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Одна частина кислого, дві солодкого, три міцного, чотири легкого. Старший за келих, у якому стоїть.",
+      "src": "One of sour, two of sweet, three of strong, four of weak. Older than the glass it sits in."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Ромовий пунш",
+      "src": "Rum Punch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "ОСТРОВИ, 1600-ТІ",
+      "src": "THE ISLANDS, 1600S"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Названа на честь інструмента, яким її вперше перемішали. У деяких портах — замість сніданку.",
+      "src": "Named for the tool that stirred it first. Breakfast in some ports."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Викрутка",
+      "src": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "НАФТОВІ ПРОМИСЛИ, 1940-ТІ",
+      "src": "THE OIL FIELDS, 1940S"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "АМЕРИКАНСЬКЕ УЗБЕРЕЖЖЯ",
+      "src": "THE AMERICAN COAST"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "ПАРИЖ, 1920-ТІ",
+      "src": "PARIS, 1920S"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Джин, лайм і м’ята. Пила банда; м’ята ховала присмак ванни.",
+      "src": "Gin, lime and mint. The outfit drank it; the mint hid the bathtub."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Саутсайд",
+      "src": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "ЧИКАГО, 1920-ТІ",
+      "src": "CHICAGO, 1920S"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Москоу мюл, що подався на південь, — агава в мідному сідлі.",
+      "src": "The Moscow mule gone south — agave in the copper saddle."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Текіла Мюл",
+      "src": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "ПРИКОРДОННЯ",
+      "src": "THE BORDERLANDS"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Формула сауера з пилом на чоботях. Агава відповідає лимону.",
+      "src": "The sour formula with dust on its boots. Agave answers the lemon."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Текіла Сауер",
+      "src": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "РОДИНА САУЕРІВ",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Гренадин тоне, апельсин пливе, а «Ролінг Стоунз» узяли його в тур.",
+      "src": "Grenadine sinks, orange floats, and the Rolling Stones took it on tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Текіла Санрайз",
+      "src": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "САУСАЛІТО, 1970-ТІ",
+      "src": "SAUSALITO, 1970S"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Флемінг вигадав його для Бонда: джин, горілка й ім’я, яке він не зміг зберегти.",
+      "src": "Fleming wrote it for Bond: gin, vodka, and a name he could not keep."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Веспер",
+      "src": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "«КАЗИНО РОЯЛЬ», 1953",
+      "src": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Горілка й енергетик в одному келиху — напій, що працює і денну, і нічну зміну водночас.",
+      "src": "Vodka and energy in one glass — a drink working the day shift and the night shift at once."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "НІЧНІ БАРИ",
+      "src": "THE ALL-NIGHT BARS"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "Найлегше, що бар може законно назвати напоєм. Чисто, холодно, і нема.",
+      "src": "The lightest thing a bar can legally call a drink. Clean, cold, gone."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "НІДЕ КОНКРЕТНО, 1900-ТІ",
+      "src": "NOWHERE IN PARTICULAR, 1900S"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Джин сауер із приглушеним світлом. Публіка м’якша, лимон той самий.",
+      "src": "The gin sour with the lights turned low. Smoother crowd, same lemon."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Горілка Сауер",
+      "src": "Vodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "РОДИНА САУЕРІВ",
+      "src": "THE SOUR FAMILY"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "Тихіший брат джин-тоніка: тонік говорить, горілка тримає пальта.",
+      "src": "The G&T's quieter sibling — tonic doing the talking, vodka holding the coats."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "ПОВОЄННІ РОКИ, 1950-ТІ",
+      "src": "THE POSTWAR YEARS, 1950S"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Бурбон із колою на запивку, яка здалася й залізла в келих.",
+      "src": "Bourbon with a cola chaser that gave up and got in the glass."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Віскі-кола",
+      "src": "Whiskey & Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "ПРИДОРОЖНІ ЗАКЛАДИ, 1930-ТІ",
+      "src": "THE ROADHOUSES, 1930S"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Бурбон, подовжений імбирним елем, — хайбол, що зробив віскі буденним.",
+      "src": "Bourbon lengthened with ginger — the highball that made whiskey a weeknight drink."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "КРАЇНА ХАЙБОЛІВ, 1890-ТІ",
+      "src": "HIGHBALL COUNTRY, 1890S"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Джулеп, що проміняв срібний кубок на лимон і став швидшим.",
+      "src": "A julep that traded the silver cup for lemon and got quicker about it."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Віскі Смеш",
+      "src": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "МІСЬКИЙ КУЗЕН ДЖУЛЕПА, 1880-ТІ",
+      "src": "THE JULEP'S CITY COUSIN, 1880S"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Сауер, що навчив бурбон манер. Хребет — не на вибір.",
+      "src": "The sour that made bourbon polite. The backbone is not optional."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Віскі Сауер",
+      "src": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "ЕПОХА ПАРОПЛАВІВ, 1860-ТІ",
+      "src": "THE STEAMSHIP ERA, 1860S"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Джин, трипл-сек, лимон — класика срібного шейкера Гаррі Макелгоуна.",
+      "src": "Gin, triple sec, lemon — Harry MacElhone's silver-shaker standard."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "Біла леді",
+      "src": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "ЛОНДОН, 1920-ТІ",
+      "src": "LONDON, 1920S"
+    }
+  ]
+}

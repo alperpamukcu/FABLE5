@@ -42,10 +42,14 @@ namespace LastCall.UI
         private const float RailW = 196f, RailGap = 12f, RailKeyH = 52f;
 
         /// <summary>One rung's card. The window takes a 64x48 swatch at 2x with room round it,
-        /// and the foot under it is a name on two lines, one fact and one control.</summary>
-        private const float CardW = 152f, CardH = 204f, CardWinH = 108f, CardGap = 8f;
+        /// and the foot under it is a name on two lines, one fact and one control.
+        /// TEN TALLER FOR THE BUFF (2026-09-23): the 16-unit fact row could hold 8-unit type and no badge, so it
+        /// became a 22-unit BUFF ROW (158..180) and the foot moved down under it (184..210, 4 of air). A rung with
+        /// no buff in its data keeps the old fact line, centred in the same row (CardMetaTop).</summary>
+        private const float CardW = 152f, CardH = 214f, CardWinH = 108f, CardGap = 8f;
         private const int CardCols = 5;
-        private const float CardNameTop = CardWinH + 8f, CardMetaTop = CardWinH + 48f, CardFootTop = CardWinH + 66f;
+        private const float CardNameTop = CardWinH + 8f, CardBuffTop = CardWinH + 50f,
+                            CardMetaTop = CardWinH + 52f, CardFootTop = CardWinH + 76f;
 
         /// <summary>
         /// Stands the rail beside the aisle, or takes it away. The aisle's own viewport gives up
@@ -80,12 +84,15 @@ namespace LastCall.UI
         {
             if (Array.IndexOf(DecorShelves, _decorSection ?? "") < 0) _decorSection = "walls";
             BuildDecorRail(run);
-            if (_decorSection == "bar") { BuildFittingShelves(run, cfg); return; }
+            // WHAT THE ROOM GIVES OPENS EVERY SHELF (2026-09-23, the author: "oyuncu bu upgradelere biraz muhtaç
+            // edilmeli"): the dependence is shown where the player spends - TycoonHud.ShopBuffs.cs.
+            if (_decorSection == "bar") { RoomBuffBand(run); BuildFittingShelves(run, cfg); return; }
 
             // THE WALLS ARE WHERE A BARE BAR IS SENT (2026-09-06): until the second rung of the
             // back wall is up, the walls' sign says so, and so does their key on the rail.
             bool sendHere = _decorSection == "walls" && run.LadderLevel("walls") < 2;
             ComfortBand(run);                   // where the room stands, over what would raise it (eighth list)
+            RoomBuffBand(run);                  // and what the pieces in it give, under it (2026-09-23)
             ShopSign(sendHere ? UIText.T("decor.sign.start_here")
                               : GroupTitle(_decorSection), sendHere);
 
@@ -233,9 +240,11 @@ namespace LastCall.UI
                 Identity = UIText.T("decor.fit.stool.identity"),
                 MetaLine = UIText.T("decor.fit.stool.meta_line", ("seat", seat), ("max", cfg.MaxSeats)),
                 Body = UIText.T("decor.fit.stool.body"),
-                BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.stool.gain")),
                 BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
             };
+            // WHAT IT ALWAYS GIVES (2026-09-23): a seat, and the comfort a stool past the opening four adds -
+            // said as comfort, where decor.fit.stool.gain promised "+0.25 stars" Core never paid.
+            SetShopBuffs(stool, AlwaysShopBuffs("seats", "+1", VenueComfort.StoolComfort));
             if (run.Seats < cfg.MaxSeats)
             {
                 DressBuyable(stool, cfg.SeatPrice(run.Seats), "seat", true, () => run.BuySeat());
@@ -257,9 +266,11 @@ namespace LastCall.UI
                 Identity = UIText.T("decor.fit.bar.identity"),
                 MetaLine = UIText.T("decor.fit.bar.meta_line", ("rung", run.CounterTier), ("max", cfg.MaxAmbienceTier)),
                 Body = UIText.T("decor.fit.bar.body"),
-                BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.bar.gain")),
                 BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
             };
+            // SERVICE +3%, ALWAYS (2026-09-23): the same points a picture on the wall gives while it hangs, and
+            // the same heart, so the two read as one number from two places.
+            SetShopBuffs(bar, AlwaysShopBuffs("service", Pct(BarTopServicePct), 0));
             if (run.CounterTier < cfg.MaxAmbienceTier)
             {
                 DressBuyable(bar, cfg.CounterPrice(run.CounterTier), "counter", true,
@@ -286,11 +297,13 @@ namespace LastCall.UI
                     Identity = UIText.T("decor.fit.glass.identity", ("glass", UIText.Caps(glassName))),
                     MetaLine = rungOf + " · " + DrinksServedIn(glass.Id),
                     Body = UIText.T("decor.fit.glass.body"),
-                    // Lower case the invariant way, as it always was (no per-language lower yet).
-                    BuffA = new Buff(BuffKind.Gain, UIText.T("decor.fit.glass.gain",
-                                     ("glass", glassName.ToLowerInvariant()))),
                     BuffB = new Buff(BuffKind.Bad, UIText.T("decor.fit.uses_upgrade")),
                 };
+                // A STEP OF GLASS IS SERVICE ON EVERY SERVE (2026-09-23): TycoonRun.Ambience counts the steps of
+                // every line together, so a step lifts every drink the bar serves - not only the ones poured into
+                // this glass, as decor.fit.glass.gain said. Its comfort is half a step cap Core keeps private
+                // (TycoonRun.GlassStepCap), so it is not printed rather than printed from a copy of the table.
+                SetShopBuffs(spec, AlwaysShopBuffs("service", GlassStepServiceFigure(), 0));
                 DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
                     () => run.BuyGlassTier(glass.Id));
                 AddTile(spec); raised++;
@@ -334,8 +347,16 @@ namespace LastCall.UI
             Stretch(status.rectTransform, Vector2.zero, Vector2.one, new Vector2(300, 8), new Vector2(-6, 0));
             status.horizontalOverflow = HorizontalWrapMode.Overflow;
             var top = climbed > 0 ? TopRung(rungs, climbed) : null;
-            string worth = top == null ? "" : ToolWords(run, top, brief: true) ?? (top.Comfort > 0
+            // THE COMFORT IS THE CLIMBED RUNG'S, THE BUFF THE WORN RUNG'S (2026-09-23, the fittings spec §11.4:
+            // "MARK 3 OF 6 · CROWD +4%"). A ladder whose rungs name a kind says what the worn one does in the
+            // buff's own words - a tool's speed included, which follows the worn rung now (Option A), so the old
+            // tool line read off the TOP rung would tell a bar wearing the steel tin that it shakes gold's speed.
+            var wornNow = climbed > 0 ? run.WornRung(slot) : null;
+            bool typed = wornNow != null && wornNow.Buff != null;
+            string does = typed ? LadderBuffWords(run, wornNow) : null;
+            string worth = top == null ? "" : (typed ? null : ToolWords(run, top, brief: true)) ?? (top.Comfort > 0
                 ? UIText.T("decor.comfort", ("comfort", top.Comfort.ToString("0.0#", CultureInfo.InvariantCulture))) : "");
+            if (does != null) worth = worth.Length > 0 ? worth + "  ·  " + does : does;
             status.text = total > 0
                 ? (climbed == 0 ? UIText.T("decor.ladder.nothing_fitted")
                                 : UIText.T("decor.ladder.mark_of", ("mark", climbed), ("total", total)))
@@ -532,6 +553,17 @@ namespace LastCall.UI
                 spec.BuffB = new Buff(BuffKind.Cost, UIText.T("decor.card.no_upgrade_spent"));
             }
 
+            // WHAT IT DOES, AND WHETHER IT IS DOING IT (2026-09-23, the author: "Hangi geliştirme takılıysa o buff
+            // aktif olacak, konfor gibi değil"): the rung's kind and figure, in the state Core says it is in, as the
+            // card's badge row and the reading card's first rows; its comfort as the medal pip on the picture. The
+            // old effect line (a tool's speed, the comfort to the room) is what those rows say now, so it goes -
+            // except a tower's kegs, which are a fact about the tap and not a buff.
+            var buffs = FittingShopBuffs(run, f, owned, locked);
+            SetShopBuffs(spec, buffs);
+            var leadBuff = LeadOf(buffs);
+            if (buffs.Count > 0)
+                spec.BuffA = f.IsTap ? new Buff(BuffKind.Use, UIText.N("decor.tool.kegs_on_tap", f.TapLevel)) : null;
+
             // ── the plate ──
             var rt = NewRect("Rung_" + f.Id, _cardTarget);
             var img = rt.gameObject.AddComponent<Image>();
@@ -594,25 +626,37 @@ namespace LastCall.UI
             name.lineSpacing = 1.0f;
             name.text = UIText.Caps(fixtureName);
 
-            string fact = ToolWords(run, f, brief: true)
-                ?? (comfort != null ? comfort
-                    : f.Level > 0 ? UIText.T("decor.card.mark", ("mark", f.Level)) : UIText.T("decor.card.given"));
-            float factX = 8f;
-            if (tool == null && comfort != null)
+            // THE BUFF ROW (2026-09-23): the lead buff's badge under the name, and the comfort as the medal pip in
+            // the picture's bottom-left, drawn after the stamps so nothing lies over it. A rung whose data names
+            // no kind keeps the old fact line exactly as it was, so the comfort is never said twice.
+            if (leadBuff != null)
             {
-                var medal = NewRect("Medal", rt);
-                Place(medal, new Vector2(0, 1), new Vector2(16, 16), new Vector2(8f, -CardMetaTop));
-                var md = medal.gameObject.AddComponent<Image>();
-                md.sprite = ItemArt.Medal(true, 16f);
-                md.preserveAspect = true; md.raycastTarget = false;
-                md.enabled = md.sprite != null;
-                factX = 28f;
+                ShopBadge(rt, leadBuff, new Vector2(0, 1), new Vector2(8f, -CardBuffTop));
+                var pip = ComfortOf(buffs);
+                if (pip != null) ComfortPip(win, Vector2.zero, new Vector2(4f, 4f), pip.Comfort, pip.Alpha);
             }
-            var meta = NewText("Fact", rt, _shop, 8, TextAnchor.MiddleLeft, TileMetaInk);
-            Place(meta.rectTransform, new Vector2(0, 1), new Vector2(CardW - factX - 8f, 16f), new Vector2(factX, -CardMetaTop));
-            meta.horizontalOverflow = HorizontalWrapMode.Wrap;
-            meta.verticalOverflow = VerticalWrapMode.Truncate;
-            meta.text = UIText.Caps(fact);
+            else
+            {
+                string fact = ToolWords(run, f, brief: true)
+                    ?? (comfort != null ? comfort
+                        : f.Level > 0 ? UIText.T("decor.card.mark", ("mark", f.Level)) : UIText.T("decor.card.given"));
+                float factX = 8f;
+                if (tool == null && comfort != null)
+                {
+                    var medal = NewRect("Medal", rt);
+                    Place(medal, new Vector2(0, 1), new Vector2(16, 16), new Vector2(8f, -CardMetaTop));
+                    var md = medal.gameObject.AddComponent<Image>();
+                    md.sprite = ItemArt.Medal(true, 16f);
+                    md.preserveAspect = true; md.raycastTarget = false;
+                    md.enabled = md.sprite != null;
+                    factX = 28f;
+                }
+                var meta = NewText("Fact", rt, _shop, 8, TextAnchor.MiddleLeft, TileMetaInk);
+                Place(meta.rectTransform, new Vector2(0, 1), new Vector2(CardW - factX - 8f, 16f), new Vector2(factX, -CardMetaTop));
+                meta.horizontalOverflow = HorizontalWrapMode.Wrap;
+                meta.verticalOverflow = VerticalWrapMode.Truncate;
+                meta.text = UIText.Caps(fact);
+            }
 
             // ── the foot: the one control ──
             if (worn)

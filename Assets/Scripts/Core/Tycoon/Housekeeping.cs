@@ -33,7 +33,10 @@ namespace LastCall.Core
         public double Age { get; private set; }
 
         /// <summary>Whether this mess is costing the room right now: still dirty, and old
-        /// enough that the bar has had its moment to reach for the cloth.</summary>
+        /// enough that the bar has had its moment to reach for the cloth. Read against the
+        /// HOUSE DEFAULT grace; a counter whose room buys more time (<see cref="Housekeeping.Grace"/>,
+        /// 2026-09-23) counts its own spots in <see cref="Housekeeping.DirtySpots"/>, which is the
+        /// only reader there is.</summary>
         public bool IsCounting => !IsClean && Age >= Housekeeping.DirtGrace;
 
         internal CounterMess(string glasswareId, bool glass, bool smudge)
@@ -102,6 +105,12 @@ namespace LastCall.Core
         /// says otherwise. Set by the run when the room is dressed.</summary>
         public double SinkSeconds { get; set; } = WashSeconds;
 
+        /// <summary>How long a mess may stand before it costs the room — the house's
+        /// <see cref="DirtGrace"/> unless the installed room buys more (2026-09-23, CLEAN-UP TIME:
+        /// the floor and the counter's lacquer, "the kind that forgives everything"). Set by the
+        /// run when the room is dressed, like the basin beside it.</summary>
+        public double Grace { get; set; } = DirtGrace;
+
         private readonly List<CounterMess> _messes = new List<CounterMess>();
 
         /// <summary>Everything still on the counter that wants a hand — a glass, a smudge, or both.</summary>
@@ -167,7 +176,7 @@ namespace LastCall.Core
             get
             {
                 int n = 0;
-                foreach (var m in _messes) if (m.IsCounting) n++;
+                foreach (var m in _messes) if (!m.IsClean && m.Age >= Grace) n++;
                 return n;
             }
         }
@@ -299,7 +308,7 @@ namespace LastCall.Core
                 double before = mess.Age;
                 mess.Tick(seconds);
                 if (mess.IsClean) continue;
-                double counted = Math.Max(0.0, mess.Age - Math.Max(before, DirtGrace));
+                double counted = Math.Max(0.0, mess.Age - Math.Max(before, Grace));
                 DirtSpotSeconds += counted;
             }
             if (WashLeft > 0)

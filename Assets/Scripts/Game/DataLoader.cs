@@ -185,6 +185,8 @@ namespace LastCall.Game
                     prep: ParsePrep(recipe.prepMethod, recipe.id),
                     glassId: recipe.glassId,
                     garnish: recipe.garnish,
+                    trait: ParseTrait(recipe.trait, recipe.id),
+                    likes: ParseLikes(recipe.likes, recipe.id),
                     icon: recipe.icon,
                     unlock: UnlockCondition.All(
                         UnlockCondition.Stars(recipe.unlockStars),
@@ -312,7 +314,7 @@ namespace LastCall.Game
                         f.startsInTheRoom, f.tapLevel, f.level, f.drain, f.drainsFree,
                         f.screen, f.comfort, f.cellW, f.cellH, f.water, f.swatch, f.group,
                         f.washSeconds, f.hasX ? f.x : float.NaN, f.hasY ? f.y : float.NaN, f.order,
-                        f.workSpeed, f.lightDy));
+                        f.workSpeed, f.lightDy, f.buff, f.buffPct));
                 }
                 catch (Exception e) when (e is ArgumentException || e is ArgumentOutOfRangeException)
                 {
@@ -334,6 +336,12 @@ namespace LastCall.Game
                             $"The ladder in slot '{pair.Key}' runs {string.Join(", ", levels)} " +
                             "— it has to climb 1, 2, 3 with no rung missing.");
             }
+            // THE BUFFS, ACROSS ROWS (2026-09-23, the fitting buffs). A row's own figure was
+            // checked by its constructor above; what needs the whole slot is refused here, in
+            // Core's words so a bench test can ask the same question without this loader: one
+            // slot carries one kind, and every rung up a ladder carries more than the one below.
+            string buffFault = FittingBuffs.CatalogueFault(fixtures);
+            if (buffFault != null) throw new FormatException(buffFault);
             return new LoadedFixtures(fixtures, slots);
         }
 
@@ -577,6 +585,44 @@ namespace LastCall.Game
                 throw new FormatException(
                     $"Recipe '{context}' names no prepMethod — say Shaken, Stirred or Built.");
             return ParseEnum<PrepMethod>(raw, context, "prepMethod");
+        }
+
+        /// <summary>
+        /// The page's character (2026-09-22). Optional — thirteen of the fifty-four pages have
+        /// none — but a name nobody wrote is a content bug and not a shrug: a typo would read as
+        /// "no character", so the page would quietly lose the thing it was written to have. The
+        /// catalogue of legal names is <see cref="DrinkTraits.All"/>, in Core beside the rule.
+        /// </summary>
+        private static string ParseTrait(string raw, string context)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            if (!DrinkTraits.Known(raw))
+                throw new FormatException(
+                    $"Recipe '{context}' names a character '{raw}' the bar has never heard of — " +
+                    "the catalogue is DrinkTraits.All.");
+            return raw;
+        }
+
+        /// <summary>
+        /// How a page is usually taken (2026-09-23): preparation ids the order asks for most of
+        /// the time. Loud about a name nobody drew, and about a page listing its own signature —
+        /// the signature is asked for on EVERY order already, so a habit repeating it would be a
+        /// line of data that can only ever be a no-op.
+        /// </summary>
+        private static IReadOnlyList<string> ParseLikes(string[] raw, string context)
+        {
+            if (raw == null || raw.Length == 0) return null;
+            var likes = new List<string>(raw.Length);
+            foreach (var id in raw)
+            {
+                if (string.IsNullOrWhiteSpace(id)) continue;
+                if (Preparations.Find(id) == null)
+                    throw new FormatException(
+                        $"Recipe '{context}' is usually taken with '{id}', which is not a preparation — " +
+                        "the set is Preparations.All.");
+                if (!likes.Contains(id)) likes.Add(id);
+            }
+            return likes;
         }
 
         /// <summary>
@@ -827,6 +873,12 @@ namespace LastCall.Game
             public int cellW;
             public int cellH;
             public string water;
+
+            /// <summary>The one buff this piece carries — a kind id (FittingBuffs) — and its signed
+            /// figure (2026-09-23). Absent is null / 0: a row that names no buff, which older inline
+            /// test JSON does and which parses to a piece with no effects.</summary>
+            public string buff;
+            public int buffPct;
         }
 
         [Serializable]
@@ -1029,6 +1081,8 @@ namespace LastCall.Game
             public string prepMethod;
             public string glassId;
             public string garnish;      // the signature extra, a preparation id (2026-09-21)
+            public string trait;        // the page's character, a DrinkTraits id (2026-09-22)
+            public string[] likes;      // how the page is usually taken, preparation ids (2026-09-23)
             public string icon;
             // THE PAGE'S OWN LOCK (GDD 26 §12.2 step 4). Absent on every drink whose gate is
             // only its rank, which is all of them today; `unlockBeat` names the written night

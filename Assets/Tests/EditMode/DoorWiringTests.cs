@@ -163,19 +163,26 @@ namespace LastCall.Tests
             run.Tick(0.01);
             Assert.IsFalse(run.Floor.Seated.Contains(minor), "the stool is free at once");
             Assert.AreEqual(messes, run.Floor.Messes.Count, "a kicked visit leaves nothing on the counter");
-            Assert.IsFalse(run.Floor.FinishedCounted().Contains(minor), "off the books");
+            // A RIGHT KICK FILES A REVIEW NOW (2026-09-22): it is in the counted list — that is
+            // where "+ puan" lives — and still off the books, which is what keeps it out of the
+            // slip's SERVED and WALKED columns below.
+            Assert.IsTrue(run.Floor.FinishedCounted().Contains(minor), "it files a review");
+            Assert.IsTrue(minor.OffTheBooks, "and is still neither served nor walked");
+            Assert.AreEqual(CustomerVisit.RightKickSatisfaction, minor.Satisfaction, 1e-9);
             Assert.IsFalse(minor.DrinkServed);
 
             FinishTheNight(run, kickMinors: true);
             int rightKicks = run.RightKicks;
-            Assert.AreEqual(IdPapers.KickBonus * rightKicks, run.DayBonus, "a well drink per face");
+            int thanks = StarEconomy.PriceAt(IdPapers.KickBonus, run.Rating.Average);
+            Assert.AreEqual(thanks * rightKicks, run.DayBonus, "a well drink per face, at this stage");
             Assert.AreEqual(run.DaySales + run.DayTips + run.DayBonus, run.DayIncome);
             int counted = run.Floor.FinishedCounted().Count;
             var result = run.ContinueToNextDay();
             Assert.AreEqual(rightKicks, result.RightKicks);
-            Assert.AreEqual(IdPapers.KickBonus * rightKicks, result.Bonus);
+            Assert.AreEqual(thanks * rightKicks, result.Bonus);
             Assert.AreEqual(result.Sales + result.Tips + result.Bonus, result.Income);
-            Assert.AreEqual(counted, result.Served + result.WalkedOut, "neither served nor walked");
+            Assert.AreEqual(counted - rightKicks, result.Served + result.WalkedOut,
+                "neither served nor walked");
             Assert.AreEqual(0, result.Fines);
             Assert.AreEqual(0, run.DayBonus, "tomorrow starts clean");
         }
@@ -208,13 +215,19 @@ namespace LastCall.Tests
             Assert.IsTrue(run.Floor.FinishedCounted().Contains(adult), "on the books, as a walk-out");
 
             FinishTheNight(run, kickMinors: true);
+            // The right kicks are counted now but are still neither served nor walked, so the
+            // slip's own walked column skips them the way the run's split does.
             int walked = run.Floor.FinishedCounted()
-                .Count(v => v.State == VisitState.StormedOff || v.State == VisitState.Kicked);
+                .Count(v => !v.OffTheBooks
+                    && (v.State == VisitState.StormedOff || v.State == VisitState.Kicked));
+            // The thanks was priced at the stage the bar stood at when the night CLOSED, which is
+            // not where the standing sits once the night has been filed.
+            int thanks = StarEconomy.PriceAt(IdPapers.KickBonus, run.Rating.Average);
             var result = run.ContinueToNextDay();
             Assert.AreEqual(walked, result.WalkedOut);
             Assert.AreEqual(1, result.WrongKicks);
             // Whatever RIGHT kicks the rest of the night earned, the wrong one earned nothing.
-            Assert.AreEqual(IdPapers.KickBonus * result.RightKicks, result.Bonus,
+            Assert.AreEqual(thanks * result.RightKicks, result.Bonus,
                 "no thanks for refusing an adult");
         }
 
@@ -242,13 +255,15 @@ namespace LastCall.Tests
             Assert.AreEqual(fine, run.DayFines);
             int taken = run.DaySales + run.DayTips - salesBefore - tipsBefore;
             Assert.AreEqual(moneyBefore + taken - fine, run.Money, "paid first, then fined");
-            Assert.AreEqual(run.DayRent + run.DayStock + run.DayUpgrades + run.DayFines, run.DayExpenses);
+            Assert.AreEqual(run.DayRent + run.DayStock + run.DayUpgrades + run.DayFines + run.DayWalkOutFees,
+                run.DayExpenses);
 
             FinishTheNight(run, kickMinors: true);
             var result = run.ContinueToNextDay();
             Assert.AreEqual(fine, result.Fines);
             Assert.AreEqual(1, result.MinorsServed);
-            Assert.AreEqual(result.Rent + result.Stock + result.Upgrades + result.Fines, result.Expenses);
+            Assert.AreEqual(result.Rent + result.Stock + result.Upgrades + result.Fines + result.WalkOutFees,
+                result.Expenses);
             Assert.AreEqual(0, run.DayFines, "tomorrow starts clean");
         }
 

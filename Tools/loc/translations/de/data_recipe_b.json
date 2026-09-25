@@ -1,83 +1,272 @@
-{"strings": [
-{"key": "data.recipe.mojito.lore", "text": "Minze angedrückt, Limette gepresst, Rum belohnt. Drakes Crew soll den Rohentwurf getrunken haben."},
-{"key": "data.recipe.mojito.name", "text": "Mojito"},
-{"key": "data.recipe.mojito.origin", "text": "HAVANNA, SO ALT WIE DER HAFEN"},
-{"key": "data.recipe.moscow_mule.lore", "text": "Ein Wodkavertreter und ein Berg übriges Ginger Beer erfanden Russlands amerikanischsten Drink."},
-{"key": "data.recipe.moscow_mule.name", "text": "Moscow Mule"},
-{"key": "data.recipe.moscow_mule.origin", "text": "LOS ANGELES, 1941"},
-{"key": "data.recipe.neat_pour.lore", "text": "Eine Flasche, kein Shaker, keine Diskussion. Die Bestellung für Leute, die die Antwort schon kennen."},
-{"key": "data.recipe.neat_pour.name", "text": "Pur"},
-{"key": "data.recipe.neat_pour.origin", "text": "ÜBERALL, WO EIN REGAL STEHT"},
-{"key": "data.recipe.negroni.lore", "text": "Graf Negroni wollte einen stärkeren Americano. Gleiche Teile, keine Verhandlung."},
-{"key": "data.recipe.negroni.name", "text": "Negroni"},
-{"key": "data.recipe.negroni.origin", "text": "FLORENZ, 1919"},
-{"key": "data.recipe.old_fashioned.lore", "text": "Zucker, Bitter, Whiskey – der Drink, für den das Wort „Cocktail“ geprägt wurde."},
-{"key": "data.recipe.old_fashioned.name", "text": "Old Fashioned"},
-{"key": "data.recipe.old_fashioned.origin", "text": "LOUISVILLE, 1880ER"},
-{"key": "data.recipe.paloma.lore", "text": "Tequila und Grapefruitlimo. Mexikos eigentlicher Liebling; die Margarita hat nur die bessere Presse."},
-{"key": "data.recipe.paloma.name", "text": "Paloma"},
-{"key": "data.recipe.paloma.origin", "text": "MEXIKO, 1950ER"},
-{"key": "data.recipe.pink_lady.lore", "text": "Gin, errötet von Grenadine. Das seriöseste Alibi der Prohibition."},
-{"key": "data.recipe.pink_lady.name", "text": "Pink Lady"},
-{"key": "data.recipe.pink_lady.origin", "text": "NEW YORK, 1910ER"},
-{"key": "data.recipe.rosita.lore", "text": "Die Tequila-Cousine des Negroni, klein gedruckt und spät geliebt."},
-{"key": "data.recipe.rosita.name", "text": "Rosita"},
-{"key": "data.recipe.rosita.origin", "text": "DIE BARBÜCHER, 1974"},
-{"key": "data.recipe.rum_punch.lore", "text": "Eins sauer, zwei süß, drei stark, vier schwach. Älter als das Glas, in dem er steht."},
-{"key": "data.recipe.rum_punch.name", "text": "Rumpunsch"},
-{"key": "data.recipe.rum_punch.origin", "text": "DIE INSELN, 1600ER"},
-{"key": "data.recipe.screwdriver.lore", "text": "Benannt nach dem Werkzeug, mit dem er zuerst umgerührt wurde. In manchen Häfen gilt er als Frühstück."},
-{"key": "data.recipe.screwdriver.name", "text": "Screwdriver"},
-{"key": "data.recipe.screwdriver.origin", "text": "DIE ÖLFELDER, 1940ER"},
-{"key": "data.recipe.sea_breeze.lore", "text": "Cranberry und Grapefruit führen Wodka am Strand spazieren."},
-{"key": "data.recipe.sea_breeze.name", "text": "Sea Breeze"},
-{"key": "data.recipe.sea_breeze.origin", "text": "DIE AMERIKANISCHE KÜSTE"},
-{"key": "data.recipe.sex_on_beach.lore", "text": "Pfirsich, Orange und Cranberry über Wodka. Spring Break, dekantiert."},
-{"key": "data.recipe.sex_on_beach.name", "text": "Sex on the Beach"},
-{"key": "data.recipe.sex_on_beach.origin", "text": "FLORIDA, 1980ER"},
-{"key": "data.recipe.sidecar.lore", "text": "Das Ritz beansprucht ihn, London widerspricht. Unserer läuft mit Bourbon und entschuldigt sich nicht."},
-{"key": "data.recipe.sidecar.name", "text": "Bourbon Sidecar"},
-{"key": "data.recipe.sidecar.origin", "text": "PARIS, 1920ER"},
-{"key": "data.recipe.southside.lore", "text": "Gin, Limette und Minze. Die Gangster tranken ihn; die Minze übertünchte den Badewannen-Gin."},
-{"key": "data.recipe.southside.name", "text": "Southside"},
-{"key": "data.recipe.southside.origin", "text": "CHICAGO, 1920ER"},
-{"key": "data.recipe.tequila_mule.lore", "text": "Der Moscow Mule, nach Süden gezogen – Agave im Kupfersattel."},
-{"key": "data.recipe.tequila_mule.name", "text": "Tequila Mule"},
-{"key": "data.recipe.tequila_mule.origin", "text": "DAS GRENZLAND"},
-{"key": "data.recipe.tequila_sour.lore", "text": "Die Sour-Formel mit Staub an den Stiefeln. Die Agave antwortet der Zitrone."},
-{"key": "data.recipe.tequila_sour.name", "text": "Tequila Sour"},
-{"key": "data.recipe.tequila_sour.origin", "text": "DIE SOUR-FAMILIE"},
-{"key": "data.recipe.tequila_sunrise.lore", "text": "Grenadine sinkt, Orange schwimmt oben, und die Rolling Stones nahmen ihn mit auf Tour."},
-{"key": "data.recipe.tequila_sunrise.name", "text": "Tequila Sunrise"},
-{"key": "data.recipe.tequila_sunrise.origin", "text": "SAUSALITO, 1970ER"},
-{"key": "data.recipe.vesper.lore", "text": "Fleming schrieb ihn für Bond: Gin, Wodka und ein Name, den er nicht halten konnte."},
-{"key": "data.recipe.vesper.name", "text": "Vesper"},
-{"key": "data.recipe.vesper.origin", "text": "CASINO ROYALE, 1953"},
-{"key": "data.recipe.vodka_bull.lore", "text": "Wodka und Energydrink in einem Glas – ein Drink, der Tag- und Nachtschicht zugleich schiebt."},
-{"key": "data.recipe.vodka_bull.name", "text": "Wodka Bull"},
-{"key": "data.recipe.vodka_bull.origin", "text": "DIE BARS, DIE NIE SCHLIESSEN"},
-{"key": "data.recipe.vodka_soda.lore", "text": "Das Leichteste, was eine Bar legal einen Drink nennen darf. Sauber, kalt, weg."},
-{"key": "data.recipe.vodka_soda.name", "text": "Wodka Soda"},
-{"key": "data.recipe.vodka_soda.origin", "text": "NIRGENDWO BESTIMMTES, 1900ER"},
-{"key": "data.recipe.vodka_sour.lore", "text": "Der Gin Sour bei gedimmtem Licht. Sanfteres Publikum, dieselbe Zitrone."},
-{"key": "data.recipe.vodka_sour.name", "text": "Wodka Sour"},
-{"key": "data.recipe.vodka_sour.origin", "text": "DIE SOUR-FAMILIE"},
-{"key": "data.recipe.vodka_tonic.lore", "text": "Der stillere Bruder des Gin Tonic – das Tonic redet, der Wodka hält die Mäntel."},
-{"key": "data.recipe.vodka_tonic.name", "text": "Wodka Tonic"},
-{"key": "data.recipe.vodka_tonic.origin", "text": "DIE NACHKRIEGSJAHRE, 1950ER"},
-{"key": "data.recipe.whiskey_cola.lore", "text": "Bourbon mit einem Cola-Chaser, der aufgegeben hat und gleich ins Glas gestiegen ist."},
-{"key": "data.recipe.whiskey_cola.name", "text": "Whiskey-Cola"},
-{"key": "data.recipe.whiskey_cola.origin", "text": "DIE ROADHOUSES, 1930ER"},
-{"key": "data.recipe.whiskey_ginger.lore", "text": "Bourbon, mit Ginger verlängert – der Highball, der Whiskey unter die Leute brachte."},
-{"key": "data.recipe.whiskey_ginger.name", "text": "Whiskey Ginger"},
-{"key": "data.recipe.whiskey_ginger.origin", "text": "HIGHBALL-LAND, 1890ER"},
-{"key": "data.recipe.whiskey_smash.lore", "text": "Ein Julep, der den Silberbecher gegen Zitrone getauscht hat und dabei flotter wurde."},
-{"key": "data.recipe.whiskey_smash.name", "text": "Whiskey Smash"},
-{"key": "data.recipe.whiskey_smash.origin", "text": "DER STADTVETTER DES JULEP, 1880ER"},
-{"key": "data.recipe.whiskey_sour.lore", "text": "Der Sour, der Bourbon Manieren beibrachte. Das Rückgrat ist nicht verhandelbar."},
-{"key": "data.recipe.whiskey_sour.name", "text": "Whiskey Sour"},
-{"key": "data.recipe.whiskey_sour.origin", "text": "DIE DAMPFERZEIT, 1860ER"},
-{"key": "data.recipe.white_lady.lore", "text": "Gin, Triple Sec, Zitrone – Harry MacElhones Standard aus dem Silbershaker."},
-{"key": "data.recipe.white_lady.name", "text": "White Lady"},
-{"key": "data.recipe.white_lady.origin", "text": "LONDON, 1920ER"}
-]}
+{
+  "strings": [
+    {
+      "key": "data.recipe.mojito.lore",
+      "text": "Minze angedrückt, Limette gepresst, Rum belohnt. Drakes Crew soll den Rohentwurf getrunken haben."
+    },
+    {
+      "key": "data.recipe.mojito.name",
+      "text": "Mojito"
+    },
+    {
+      "key": "data.recipe.mojito.origin",
+      "text": "HAVANNA, SO ALT WIE DER HAFEN"
+    },
+    {
+      "key": "data.recipe.moscow_mule.lore",
+      "text": "Ein Wodkavertreter und ein Berg übriges Ginger Beer erfanden Russlands amerikanischsten Drink."
+    },
+    {
+      "key": "data.recipe.moscow_mule.name",
+      "text": "Moscow Mule"
+    },
+    {
+      "key": "data.recipe.moscow_mule.origin",
+      "text": "LOS ANGELES, 1941"
+    },
+    {
+      "key": "data.recipe.neat_pour.lore",
+      "text": "Eine Flasche, kein Shaker, keine Diskussion. Die Bestellung für Leute, die die Antwort schon kennen."
+    },
+    {
+      "key": "data.recipe.neat_pour.name",
+      "text": "Pur"
+    },
+    {
+      "key": "data.recipe.neat_pour.origin",
+      "text": "ÜBERALL, WO EIN REGAL STEHT"
+    },
+    {
+      "key": "data.recipe.negroni.lore",
+      "text": "Graf Negroni wollte einen stärkeren Americano. Gleiche Teile, keine Verhandlung."
+    },
+    {
+      "key": "data.recipe.negroni.name",
+      "text": "Negroni"
+    },
+    {
+      "key": "data.recipe.negroni.origin",
+      "text": "FLORENZ, 1919"
+    },
+    {
+      "key": "data.recipe.old_fashioned.lore",
+      "text": "Zucker, Bitter, Whiskey – der Drink, für den das Wort „Cocktail“ geprägt wurde."
+    },
+    {
+      "key": "data.recipe.old_fashioned.name",
+      "text": "Old Fashioned"
+    },
+    {
+      "key": "data.recipe.old_fashioned.origin",
+      "text": "LOUISVILLE, 1880ER"
+    },
+    {
+      "key": "data.recipe.pink_lady.lore",
+      "text": "Gin, errötet von Grenadine. Das seriöseste Alibi der Prohibition."
+    },
+    {
+      "key": "data.recipe.pink_lady.name",
+      "text": "Pink Lady"
+    },
+    {
+      "key": "data.recipe.pink_lady.origin",
+      "text": "NEW YORK, 1910ER"
+    },
+    {
+      "key": "data.recipe.rosita.lore",
+      "text": "Die Tequila-Cousine des Negroni, klein gedruckt und spät geliebt."
+    },
+    {
+      "key": "data.recipe.rosita.name",
+      "text": "Rosita"
+    },
+    {
+      "key": "data.recipe.rosita.origin",
+      "text": "DIE BARBÜCHER, 1974"
+    },
+    {
+      "key": "data.recipe.rum_punch.lore",
+      "text": "Eins sauer, zwei süß, drei stark, vier schwach. Älter als das Glas, in dem er steht."
+    },
+    {
+      "key": "data.recipe.rum_punch.name",
+      "text": "Rumpunsch"
+    },
+    {
+      "key": "data.recipe.rum_punch.origin",
+      "text": "DIE INSELN, 1600ER"
+    },
+    {
+      "key": "data.recipe.screwdriver.lore",
+      "text": "Benannt nach dem Werkzeug, mit dem er zuerst umgerührt wurde. In manchen Häfen gilt er als Frühstück."
+    },
+    {
+      "key": "data.recipe.screwdriver.name",
+      "text": "Screwdriver"
+    },
+    {
+      "key": "data.recipe.screwdriver.origin",
+      "text": "DIE ÖLFELDER, 1940ER"
+    },
+    {
+      "key": "data.recipe.sea_breeze.origin",
+      "text": "DIE AMERIKANISCHE KÜSTE"
+    },
+    {
+      "key": "data.recipe.sidecar.origin",
+      "text": "PARIS, 1920ER"
+    },
+    {
+      "key": "data.recipe.southside.lore",
+      "text": "Gin, Limette und Minze. Die Gangster tranken ihn; die Minze übertünchte den Badewannen-Gin."
+    },
+    {
+      "key": "data.recipe.southside.name",
+      "text": "Southside"
+    },
+    {
+      "key": "data.recipe.southside.origin",
+      "text": "CHICAGO, 1920ER"
+    },
+    {
+      "key": "data.recipe.tequila_mule.lore",
+      "text": "Der Moscow Mule, nach Süden gezogen – Agave im Kupfersattel."
+    },
+    {
+      "key": "data.recipe.tequila_mule.name",
+      "text": "Tequila Mule"
+    },
+    {
+      "key": "data.recipe.tequila_mule.origin",
+      "text": "DAS GRENZLAND"
+    },
+    {
+      "key": "data.recipe.tequila_sour.lore",
+      "text": "Die Sour-Formel mit Staub an den Stiefeln. Die Agave antwortet der Zitrone."
+    },
+    {
+      "key": "data.recipe.tequila_sour.name",
+      "text": "Tequila Sour"
+    },
+    {
+      "key": "data.recipe.tequila_sour.origin",
+      "text": "DIE SOUR-FAMILIE"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.lore",
+      "text": "Grenadine sinkt, Orange schwimmt oben, und die Rolling Stones nahmen ihn mit auf Tour."
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.name",
+      "text": "Tequila Sunrise"
+    },
+    {
+      "key": "data.recipe.tequila_sunrise.origin",
+      "text": "SAUSALITO, 1970ER"
+    },
+    {
+      "key": "data.recipe.vesper.lore",
+      "text": "Fleming schrieb ihn für Bond: Gin, Wodka und ein Name, den er nicht halten konnte."
+    },
+    {
+      "key": "data.recipe.vesper.name",
+      "text": "Vesper"
+    },
+    {
+      "key": "data.recipe.vesper.origin",
+      "text": "CASINO ROYALE, 1953"
+    },
+    {
+      "key": "data.recipe.vodka_bull.lore",
+      "text": "Wodka und Energydrink in einem Glas – ein Drink, der Tag- und Nachtschicht zugleich schiebt."
+    },
+    {
+      "key": "data.recipe.vodka_bull.origin",
+      "text": "DIE BARS, DIE NIE SCHLIESSEN"
+    },
+    {
+      "key": "data.recipe.vodka_soda.lore",
+      "text": "Das Leichteste, was eine Bar legal einen Drink nennen darf. Sauber, kalt, weg."
+    },
+    {
+      "key": "data.recipe.vodka_soda.origin",
+      "text": "NIRGENDWO BESTIMMTES, 1900ER"
+    },
+    {
+      "key": "data.recipe.vodka_sour.lore",
+      "text": "Der Gin Sour bei gedimmtem Licht. Sanfteres Publikum, dieselbe Zitrone."
+    },
+    {
+      "key": "data.recipe.vodka_sour.name",
+      "text": "Wodka Sour"
+    },
+    {
+      "key": "data.recipe.vodka_sour.origin",
+      "text": "DIE SOUR-FAMILIE"
+    },
+    {
+      "key": "data.recipe.vodka_tonic.lore",
+      "text": "Der stillere Bruder des Gin Tonic – das Tonic redet, der Wodka hält die Mäntel."
+    },
+    {
+      "key": "data.recipe.vodka_tonic.origin",
+      "text": "DIE NACHKRIEGSJAHRE, 1950ER"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.lore",
+      "text": "Bourbon mit einem Cola-Chaser, der aufgegeben hat und gleich ins Glas gestiegen ist."
+    },
+    {
+      "key": "data.recipe.whiskey_cola.name",
+      "text": "Whiskey-Cola"
+    },
+    {
+      "key": "data.recipe.whiskey_cola.origin",
+      "text": "DIE ROADHOUSES, 1930ER"
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.lore",
+      "text": "Bourbon, mit Ginger verlängert – der Highball, der Whiskey unter die Leute brachte."
+    },
+    {
+      "key": "data.recipe.whiskey_ginger.origin",
+      "text": "HIGHBALL-LAND, 1890ER"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.lore",
+      "text": "Ein Julep, der den Silberbecher gegen Zitrone getauscht hat und dabei flotter wurde."
+    },
+    {
+      "key": "data.recipe.whiskey_smash.name",
+      "text": "Whiskey Smash"
+    },
+    {
+      "key": "data.recipe.whiskey_smash.origin",
+      "text": "DER STADTVETTER DES JULEP, 1880ER"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.lore",
+      "text": "Der Sour, der Bourbon Manieren beibrachte. Das Rückgrat ist nicht verhandelbar."
+    },
+    {
+      "key": "data.recipe.whiskey_sour.name",
+      "text": "Whiskey Sour"
+    },
+    {
+      "key": "data.recipe.whiskey_sour.origin",
+      "text": "DIE DAMPFERZEIT, 1860ER"
+    },
+    {
+      "key": "data.recipe.white_lady.lore",
+      "text": "Gin, Triple Sec, Zitrone – Harry MacElhones Standard aus dem Silbershaker."
+    },
+    {
+      "key": "data.recipe.white_lady.name",
+      "text": "White Lady"
+    },
+    {
+      "key": "data.recipe.white_lady.origin",
+      "text": "LONDON, 1920ER"
+    }
+  ]
+}

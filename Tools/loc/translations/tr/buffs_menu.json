@@ -1,0 +1,19 @@
+{
+  "strings": [
+    { "key": "buff.pct.up", "text": "+%{pct}", "src": "+{pct}%" },
+    { "key": "buff.pct.down", "text": "-%{pct}", "src": "-{pct}%" },
+
+    { "key": "book.trait.stat.price", "text": "FİYAT", "src": "PRICE" },
+    { "key": "book.trait.stat.service", "text": "SERVİS", "src": "SERVICE" },
+    { "key": "book.trait.stat.arrivals", "text": "KALABALIK", "src": "CROWD" },
+    { "key": "book.trait.stat.comfort", "text": "KONFOR", "src": "COMFORT" },
+    { "key": "book.trait.stat.grace", "text": "TEMİZLİK PAYI", "src": "CLEAN-UP TIME" },
+    { "key": "book.trait.stat.shake_speed", "text": "ÇALKALAMA HIZI", "src": "SHAKE SPEED" },
+    { "key": "book.trait.stat.pour_speed", "text": "DÖKÜM HIZI", "src": "POUR SPEED" },
+    { "key": "book.trait.stat.wash", "text": "YIKAMA SÜRESİ", "src": "WASH TIME" },
+    { "key": "book.trait.stat.free_drain", "text": "BEDAVA GİDER", "src": "FREE DRAIN" },
+    { "key": "book.trait.stat.seats", "text": "TABURE", "src": "SEATS" },
+    { "key": "book.trait.stat.stock_premium", "text": "İÇKİ BAŞINA", "src": "PER DRINK" },
+    { "key": "book.trait.stat.glass_rung", "text": "BARDAK SEVİYESİ", "src": "GLASS RUNG" }
+  ]
+}
