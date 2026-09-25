@@ -74,11 +74,7 @@ namespace LastCall.UI
             }
 
             if (run == null) return y;
-            int pours = 0;
-            var peek = RecipeSpecRows(r, poursOnly: true, locked: false);
-            for (int k = 0; k < peek.Count; k++)
-                if (!(k == 0 && r.Id != "draught") && !peek[k].Hint) pours++;
-            y += BookPourRows(host, r, run, width, y, pours <= 3 ? 40f : 34f, locked: false);
+            y += BookPourRows(host, r, run, width, y, CardRowPitch, locked: false);   // the book's two lines, 2026-09-25
 
             if (r.MinFill > 0)
             {

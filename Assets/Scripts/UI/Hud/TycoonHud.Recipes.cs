@@ -1041,9 +1041,23 @@ namespace LastCall.UI
         private static readonly Color[] RowPlateGone =
             { new Color(0.66f, 0.12f, 0.16f, 0.36f), new Color(0.74f, 0.16f, 0.20f, 0.10f) };
 
+        /// <summary>
+        /// THE CARDS' ROWS AT THE BOOK'S FULL MEASURE (2026-09-25, the author on the pinned note: "sayfa düzenini
+        /// düzelt"). The licence's recipe tip and the pinned note printed their pours at 40 (34 past three pours),
+        /// which is under the 46 a name, the 18-tall dots and the plate's two rims need: the dots sat on the plate's
+        /// foot, the name up in the other corner. Beside the name instead, a long one (GRENADINE, TRIPLE SEC) ran
+        /// under them in a 256-wide note. The cards stand over the room, not on a page, and have the height to
+        /// spare - so they take the book's own 48 and the book's own two lines.
+        /// </summary>
+        private const float CardRowPitch = 48f;
+
         /// <summary>The height of the pour legend's dots: RatioDots at 2x.</summary>
         private static float BookLegendDotsH =>
             ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count).rect.height * 2f;
+
+        /// <summary>The width of the same dots: every row's run of five is this wide, lit or not.</summary>
+        private static float BookLegendDotsW =>
+            ChromeArt.RatioDots(RatioBox.Count - 1, BandBoxColors, RatioBox.Count).rect.width * 2f;
 
         /// <summary>
         /// THE GAUGE'S LEGEND: the caption (on a page with room for it), the same five dots the rows use all
@@ -1131,14 +1145,28 @@ namespace LastCall.UI
                 line.anchoredPosition = new Vector2(0, -y);
                 y += pitch;
 
-                const float RowLine1 = 20f, RowLine2 = 14f;
+                const float RowLine1 = 20f, RowLine2 = 14f, LockLine = 12f, PlateRim = 4f;
+                float slabH = pitch - 2f;
                 // ONE LINE WHEN TWO DO NOT FIT (2026-09-25, measured in play on the seven-pour Long Island): at the
                 // 30-unit floor a row's second line - the PERFECT tag, or the five dots - hung past its own plate onto
                 // the next row's frame. A row that cannot hold both lines centres its first and carries the tag or the
                 // dots on it, beside the figure.
-                bool oneLine = pitch - 2f < RowLine1 + RowLine2;
-                float rowTop = oneLine ? Mathf.Max(0f, ((pitch - 2f) - RowLine1) * 0.5f)
-                                       : Mathf.Max(0f, ((pitch - 2f) - (RowLine1 + RowLine2)) * 0.5f);
+                //
+                // AND THE DOTS BY THEIR OWN HEIGHT (the same day, the author on the pinned note: "sayfa düzenini
+                // düzelt"). The dots are 18 tall and line 2 was budgeted 14, so on the note's and the licence tip's
+                // 40-unit rows they overhung it by 4 and sat on the plate's foot rim - the name up in one corner, the
+                // dots down in the other. A dots row keeps two lines only where the name, the dots and the plate's rims
+                // all fit (the book's 48-unit rows, unchanged); anywhere tighter the dots stand beside the name, both
+                // centred in the slab.
+                bool dotsRow = spec.Amount.Length == 0 && spec.Box >= 0;
+                bool oneLine = dotsRow ? slabH < RowLine1 + BookLegendDotsH + PlateRim * 2f
+                                       : slabH < RowLine1 + RowLine2;
+                float rowTop = oneLine ? Mathf.Max(0f, (slabH - RowLine1) * 0.5f)
+                                       : Mathf.Max(0f, (slabH - (RowLine1 + RowLine2)) * 0.5f);
+                // A dots row on one line centres its whole left block - the name, and the LOCKED line under it for a
+                // bottle the bar does not have - rather than the name alone.
+                if (oneLine && dotsRow && ingredient && !InStock(spec.Style, spec.MinTier))
+                    rowTop = Mathf.Max(0f, (slabH - RowLine1 - LockLine) * 0.5f);
 
                 if (ingredient)
                 {
@@ -1195,11 +1223,18 @@ namespace LastCall.UI
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.raycastTarget = false;
                 label.text = SpecLabel(spec);
+                // Beside the dots, a name that would run under them steps down a face, as a card's title does
+                // (a crowded page's TRIPLE SEC / GRENADINE, 2026-09-25) - under the dots it was not readable at all.
+                if (oneLine && dotsRow && label.preferredWidth > width - textX - 8f - BookLegendDotsW - 12f)
+                {
+                    label.fontSize = LanguageFonts.Size(_body, 8);
+                    label.alignment = TextAnchor.MiddleLeft;
+                }
 
                 if (ingredient && !stocked)
                 {
                     var lockT = NewText("X", line, _body, 8, TextAnchor.UpperLeft, goneInk);
-                    Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, 12f),
+                    Place(lockT.rectTransform, new Vector2(0, 1), new Vector2(200f, LockLine),
                         new Vector2(textX, -(rowTop + RowLine1)));
                     lockT.horizontalOverflow = HorizontalWrapMode.Overflow;
                     lockT.verticalOverflow = VerticalWrapMode.Truncate;
@@ -1227,8 +1262,9 @@ namespace LastCall.UI
                     var dotsArt = ChromeArt.RatioDots(locked ? -1 : spec.Box, BandBoxColors, RatioBox.Count);
                     float dw = dotsArt.rect.width * 2f, dh = dotsArt.rect.height * 2f;
                     var dots = NewRect("Dots", line);
+                    // One line: in the middle of the slab, whatever stands on the left of it. Two: under the name.
                     Place(dots, new Vector2(1, 1), new Vector2(dw, dh),
-                        oneLine ? new Vector2(-6f, -(rowTop + (RowLine1 - dh) * 0.5f))
+                        oneLine ? new Vector2(-6f, -Mathf.Round((slabH - dh) * 0.5f))
                                 : new Vector2(-6f, -(rowTop + RowLine1 + (RowLine2 - dh) * 0.5f)));
                     var dimg = dots.gameObject.AddComponent<Image>();
                     dimg.sprite = dotsArt;
@@ -1307,12 +1343,7 @@ namespace LastCall.UI
             if (run == null) return y;
 
             y += BookLegend(host, width, y, caption: true);
-            int pours = 0;
-            var peek = RecipeSpecRows(r, poursOnly: true, locked: false);
-            for (int k = 0; k < peek.Count; k++)
-                if (!(k == 0 && r.Id != "draught") && !peek[k].Hint) pours++;
-            // Two lines to a row (20 + 14) is the floor; a short recipe gets the air the page gives it.
-            y += BookPourRows(host, r, run, width, y, pours <= 3 ? 40f : 34f, locked: false);
+            y += BookPourRows(host, r, run, width, y, CardRowPitch, locked: false);
 
             if (r.MinFill > 0)
             {

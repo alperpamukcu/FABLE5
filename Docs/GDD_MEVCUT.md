@@ -1826,12 +1826,16 @@ elindeydi. Plakalar repoya girdi, madde açıldı.
   gösteriyor, oysa tenekenin ağzı da bardağın ağzı da o yüzeyin üst kenarının üstünde. Ayrıca doku gövdenin
   durması gereken yerde, bardağın kesme cam sayfasının ve tenekenin altında duruyor.
 - **Akış kendi katmanında** (`MetaballFluid.PourInFront`): aynı shader, yalnız akış düğümleriyle, akışın kendi
-  sınırları kadar bir görüş alanında (doku yalnız büyür, her kare yeniden yaratılmaz), tezgâhtaki her şeyin
-  ÖNÜNDE: dökenin, bardağın sayfasının ve FRONT plakalarının. Gövde dokusu, görüş alanı ve yeri aynı kaldı;
-  sıçramalar da onunla birlikte bardağın içinde. İstemeyen akışkan eskisi gibi çiziliyor.
-  - **Serve:** tenekenin ağzından içkiye kadar, bardağın önünde.
-  - **Bira:** musluktan bardağa, kulenin ve bardağın önünde. PINT/HEAD göstergelerinin de önünde, çünkü
-    göstergeler bardağın ağzına biniyor; altlarında kalınca bira düşüşünün çoğunda görünmüyordu (r208).
+  sınırları kadar bir görüş alanında (doku yalnız büyür, her kare yeniden yaratılmaz). Dökenin ve bardağın
+  sayfasının ÖNÜNDE, bardağın **FRONT plakasının ARKASINDA** (yazar, aynı gün: “Bardakların FRONT'u dökülen
+  sıvının önünde olmalı”): akış bardağın yüzünden aşağı değil, içine iniyor. Gövde dokusu, görüş alanı ve yeri
+  aynı kaldı; sıçramalar da onunla birlikte bardağın içinde. İstemeyen akışkan eskisi gibi çiziliyor.
+  - **Serve:** tenekenin ağzından içkiye kadar. Tenekenin ve bardak sayfasının önünde, FRONT'un (`GlassLip`) ve
+    ağzın kabuk kavsinin arkasında (r217).
+  - **Bira:** musluktan bardağa, kulenin önünde. Bardağın FRONT'u bardağın kendi alt öğesi (`GlassArt.Lip`),
+    bu yüzden akış bütün bardak grubunun hemen arkasında. Bardak sayfası oyuk olduğu için bira içeride görünüyor,
+    FRONT önünden geçiyor. PINT/HEAD göstergeleri bardağın ağzına bindiği için eğik bir bardakta düşüşün çoğunu
+    örtüyorlar (r218).
   - **Shaker:** teneke çelik (2026-09-06, “artık shakerimiz şeffaf değil”). Önüne çizilen akış tenekenin
     dışından aşağı akardı. Bu yüzden akış tenekenin ön plakasının hemen ARKASINDA duruyor: şişenin ağzından,
     tezgâhın üst kenarının üstünde de görünüyor, tenekenin ön dudağında kayboluyor (r209).
@@ -1848,6 +1852,20 @@ elindeydi. Plakalar repoya girdi, madde açıldı.
   tezgâh çizgisinin ~45 px altında sönüyordu, yani önde çizilince tezgâhın içine giriyorlardı. Artık kabın
   bastığı çizgide bitiyorlar: serve'de bardağın ayağı, birada damlalık tepsisi, shaker'da tezgâh.
 
+
+### 9.116 · Tarif notunun ve kartlarının satırları (2026-09-25)
+
+Yazar, sabitlenen notun (Sofia Marchetti · GIN & TONIC) ekran görüntüsüyle: “sayfa düzenini düzelt.”
+
+- **Ölçüldü:** beş nokta 18 birim yüksek, satırın ikinci çizgisi 14 birime göre hesaplanmıştı. Notun ve lisansın
+  tarif kartının 40'lık (üç dökümden sonra 34'lük) satırlarında noktalar 4 birim taşıp kutunun alt çerçevesine
+  biniyordu. İsim bir köşede, noktalar öbür köşede kalıyordu.
+- **Kartlar menünün tam ölçüsünde** (`CardRowPitch = 48`): not ve lisans kartı menünün kendi iki satırını basıyor.
+  İsim üstte, noktalar altında, kutunun iki kenarının içinde. KİLİTLİ yazısı ismin altında. Menünün 48'lik
+  sayfaları değişmedi. Kartlar sayfa değil, odanın üstünde duruyor; yedi dökümlük Long Island notu bile ekrana
+  sığıyor (r220).
+- **Menünün sıkışık sayfaları** (46'nın altı): noktalar ismin yanında, ikisi de satırda ortalı. Noktaların yanına
+  sığmayan uzun bir isim (TRIPLE SEC, GRENADINE) bir boy küçülüyor, noktaların altına girmiyor.
 ### 9.110 · Dokuzuncu liste: tezgâh propları odada, eskimiş kepenk, ampulden çıkan ışık, bildirim işareti, sertifika (2026-09-22)
 
 - **Garnişler, menü ve bez artık sahnenin içinde** (`TycoonHud.LitProps.cs`): rect'ler olduğu yerde kalıyor (tıklama,
