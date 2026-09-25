@@ -2809,6 +2809,11 @@ namespace LastCall.UI
             coasterImg.sprite = BackBarArt.Coaster();
             coasterImg.raycastTarget = false;
             coaster.gameObject.SetActive(false);
+            // IN THE ROOM, UNDER WHAT STANDS ON IT (2026-09-25, the author: "Anasahnedeki bardak altlığı
+            // bardakların önünde gözükebiliyor"). On the HUD it was drawn over the whole room, so a drinker's
+            // glass set down at its x stood BEHIND a mat lying on the bar. It lies on the counter now, one
+            // order under the dishes (35), and takes the room's light like the counter it lies on.
+            IntoTheRoom("Coaster", coaster, coasterImg, 34);
             BuildShakerProp(root);
 
             // (The bin used to be built here, before the glass, so the carried drink passed

@@ -114,14 +114,19 @@ namespace LastCall.UI
         // cellar opens the whole bar rises by DrawerTravel, which lifts its foot off the bottom of
         // the screen. Three holes, one cause: the drawing stops before the window does.
         //
-        // Neither is fixed in the ART, which is the author's to draw: the bar is drawn six pixels
-        // WIDER at each end so its own opaque cap covers the window's edge, and a plinth - one row
-        // of the bar's own bottom band, stretched down behind it - means there is always bar under
-        // the bar, however far the drawer lifts it.
-        private const float CounterEdgeBleed = 6f;
+        // Neither is fixed in the ART, which is the author's to draw, and the BAR KEEPS ITS SIZE (the
+        // author, 2026-09-23: "Tezgah boyutunu değiştirme ... sadece arkaplana bir şeyler koyarak o
+        // kenardaki tezgah boşluklarını kapatacaktık" - the first answer drew the bar six pixels wider
+        // at each end, which moved its caps and everything hung on them). Everything that closes the
+        // holes stands BEHIND the bar instead: a side strip at each end - the drawing's own first and
+        // last full-height column, stretched out past the window's edge - and a plinth, one row of the
+        // bar's own bottom band stretched down, so there is always bar under the bar however far the
+        // drawer lifts it. The bar's own pixels stand exactly where they always did.
         private const float CounterPlinthArtRow = 238f;   // the last row the body fills edge to edge
         private const float CounterPlinthDrop = 48f;      // past DrawerTravel, so the foot never lifts off
-        private Transform _counterPlinth;
+        private const float CounterSideOverhang = 24f;    // how far past the bar's end the side strips run
+        private Transform _counterPlinth, _counterSideL, _counterSideR;
+        private int _counterSideColL = -1, _counterSideColR = -1;
         private float _counterScale;                // stage units per counter-art pixel
 
         // ── the cellar drawer (2026-08-22) ──────────────────────────────────────
@@ -1733,6 +1738,46 @@ namespace LastCall.UI
             var sr = WorldSprite("CounterPlinth", slice, order: 21);
             sr.transform.SetParent(counter.transform, false);
             _counterPlinth = sr.transform;
+
+            // THE SIDES. The drawing's first six columns and its last six carry only the slab's lip, so
+            // at the window's edge the bar is a lip over nothing. Its first and last columns that are
+            // opaque most of the way down are read off the texture (readable, like the bulb's), and a
+            // one-pixel slice of each, the full height, is stretched out past the window behind the bar.
+            FindCounterSides(src);
+            if (_counterSideColL >= 0) _counterSideL = CounterSide("CounterSideL", counter, src, _counterSideColL);
+            if (_counterSideColR >= 0) _counterSideR = CounterSide("CounterSideR", counter, src, _counterSideColR);
+        }
+
+        private Transform CounterSide(string name, SpriteRenderer counter, Sprite src, int col)
+        {
+            var r = src.rect;
+            var slice = Sprite.Create(src.texture, new Rect(r.x + col, r.y, 1f, r.height),
+                new Vector2(0.5f, 0.5f), src.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+            var sr = WorldSprite(name, slice, order: 21);
+            sr.transform.SetParent(counter.transform, false);
+            return sr.transform;
+        }
+
+        /// <summary>The drawing's first column from each end that is opaque over more than half its
+        /// height - the leg, rather than the lip that overhangs it.</summary>
+        private void FindCounterSides(Sprite src)
+        {
+            _counterSideColL = _counterSideColR = -1;
+            try
+            {
+                var px = src.texture.GetPixels32();
+                int tw = src.texture.width;
+                int x0 = (int)src.rect.x, y0 = (int)src.rect.y, w = (int)src.rect.width, h = (int)src.rect.height;
+                bool Full(int x)
+                {
+                    int n = 0;
+                    for (int y = 0; y < h; y++) if (px[(y0 + y) * tw + x0 + x].a > 128) n++;
+                    return n > h / 2;
+                }
+                for (int x = 0; x < w / 4; x++) if (Full(x)) { _counterSideColL = x; break; }
+                for (int x = w - 1; x > w * 3 / 4; x--) if (Full(x)) { _counterSideColR = x; break; }
+            }
+            catch (UnityException) { }                   // an unreadable counter keeps its holes, as before
         }
 
         /// <summary>
@@ -3147,8 +3192,7 @@ namespace LastCall.UI
                 // at exactly 16:9 that is 640 and the caps land pixel-for-pixel where they
                 // were drawn, while a wider window is covered without a hairline gap.
                 sr.size = new Vector2(
-                    Mathf.Max(_counterNative.x, Mathf.Ceil(visibleW) + CounterEdgeBleed * 2f),
-                    _counterNative.y);
+                    Mathf.Max(_counterNative.x, Mathf.Ceil(visibleW)), _counterNative.y);
                 _counterTr.localScale = Vector3.one;
                 _counterScale = 1f;                            // stage units per art px
                 // Hung from the rest line: the art's top is CounterSurfaceInset above it.
@@ -3160,6 +3204,20 @@ namespace LastCall.UI
                     // hung from the bar's own foot, as wide as the bar is drawn and stretched down
                     _counterPlinth.localScale = new Vector3(sr.size.x / _counterNative.x, CounterPlinthDrop, 1f);
                     _counterPlinth.localPosition = new Vector3(0f, -_counterNative.y * 0.5f, 0f);
+                }
+                // the side strips: from past the window's edge in to the drawing's first full column
+                float half = sr.size.x * 0.5f;
+                if (_counterSideL != null)
+                {
+                    float w = _counterSideColL + CounterSideOverhang;
+                    _counterSideL.localScale = new Vector3(w, 1f, 1f);
+                    _counterSideL.localPosition = new Vector3(-half - CounterSideOverhang + w * 0.5f, 0f, 0f);
+                }
+                if (_counterSideR != null)
+                {
+                    float w = (_counterNative.x - 1 - _counterSideColR) + CounterSideOverhang;
+                    _counterSideR.localScale = new Vector3(w, 1f, 1f);
+                    _counterSideR.localPosition = new Vector3(half + CounterSideOverhang - w * 0.5f, 0f, 0f);
                 }
                 if (_shutterTr != null)
                 {
