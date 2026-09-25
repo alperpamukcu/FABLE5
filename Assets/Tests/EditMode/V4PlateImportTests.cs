@@ -35,14 +35,26 @@ namespace LastCall.Tests
             }
         }
 
+        /// <summary>
+        /// ...WITHIN A FEW PIXELS (2026-09-25, the author: "o kadar küçük farklar problem olmaz"). The
+        /// author's own hand pass left v4_bourbon_hollow_oak_front_c at 32x66, and that is the author's
+        /// drawing, not a fault. What this still has to catch is a plate at the wrong SCALE - a master shipped as a cellar
+        /// copy, a cellar copy in the hand, a 2x take - so each side may miss the plan by a sixteenth of it
+        /// (2 and 4 px in the cellar, 6 and 12 in the hand) and no more.
+        /// </summary>
+        private const int CanvasSlack = 16;
+
         [Test]
         public void EveryPlate_HasThePlansCanvas()
         {
             foreach (var s in Plates())
             {
                 int w = Mathf.RoundToInt(s.rect.width), h = Mathf.RoundToInt(s.rect.height);
-                if (IsCellar(s.name)) Assert.AreEqual((32, 64), (w, h), s.name);
-                else Assert.AreEqual((96, 192), (w, h), s.name);
+                var (pw, ph) = IsCellar(s.name) ? (32, 64) : (96, 192);
+                Assert.That(Mathf.Abs(w - pw), Is.LessThanOrEqualTo(pw / CanvasSlack),
+                    $"{s.name}: {w}x{h}, the plan's canvas is {pw}x{ph}");
+                Assert.That(Mathf.Abs(h - ph), Is.LessThanOrEqualTo(ph / CanvasSlack),
+                    $"{s.name}: {w}x{h}, the plan's canvas is {pw}x{ph}");
             }
         }
 
