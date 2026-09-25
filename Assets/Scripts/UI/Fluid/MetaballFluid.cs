@@ -765,10 +765,12 @@ namespace LastCall.UI
         // left the tin's lip was behind the tin.
         //
         // So the stream is its own layer: the same shader, drawn from the stream's drops alone, on
-        // a viewport that is the stream's own bounds, in an image that stands IN FRONT of
-        // everything on the bench — the pourer, the vessel's sheet and its front plates — from the
-        // lip down to the drink. The body keeps its texture, its viewport and its place, and the
-        // splashes stay with it inside the glass. Opt-in per bench (PourInFront): a fluid that
+        // a viewport that is the stream's own bounds, in an image that stands in front of the
+        // pourer and the vessel's sheet, from the lip down to the drink — and BEHIND the vessel's
+        // FRONT plate (the author, the same day: "Bardakların FRONT'u dökülen sıvının önünde
+        // olmalı"), which is what makes it go into the glass rather than down its face. The bench
+        // names that plate (PourInFront's `under`). The body keeps its texture, its viewport and its
+        // place, and the splashes stay with it inside the glass. Opt-in per bench: a fluid that
         // never asks draws exactly as it did.
         private RectTransform _pourRt;
         private RawImage _pourImage;
@@ -787,10 +789,10 @@ namespace LastCall.UI
         private const int RopeMaxFill = 12;
 
         /// <summary>
-        /// Draws this fluid's STREAM in front of everything on its surface (see above), and returns the
-        /// image that does it. The fluid keeps it the surface's last child — or, given
-        /// <paramref name="under"/>, the child just behind that one: an OPAQUE vessel's front wall, which a
-        /// stream going into its mouth disappears behind (the steel tin, 2026-09-25).
+        /// Draws this fluid's STREAM in its own layer (see above), and returns the image that does it. The fluid
+        /// keeps it the surface's last child — or, given <paramref name="under"/>, the child just behind that
+        /// one: the vessel's FRONT (a glass's front plate, the steel tin's front wall), which a stream going
+        /// into the mouth passes behind. Called again with a plate built later, it moves under that one.
         /// </summary>
         public RectTransform PourInFront(Transform under = null)
         {

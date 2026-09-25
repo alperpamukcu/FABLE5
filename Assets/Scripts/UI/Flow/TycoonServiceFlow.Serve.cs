@@ -849,7 +849,7 @@ namespace LastCall.UI
 
             _serveFluid = new MetaballFluid(_serveSurface);
             // THE POUR IN FRONT (2026-09-25, MetaballFluid.PourInFront): what leaves the tin is drawn over the
-            // tin, the glass's sheet and its front plates, from the lip down to the drink.
+            // tin and the glass's sheet, from the lip down to the drink - under the glass's FRONT (see GlassLip).
             _serveFluid.PourInFront();
             _serveFluid.SetGround(CatchFootY + GlassFootLift);   // what falls past the glass ends on the bench
             // The serving glass stands still and never carries foam, and its tall glasses are
@@ -885,6 +885,10 @@ namespace LastCall.UI
             _serveGlassLip = _serveGlassLipRt.gameObject.AddComponent<Image>();
             _serveGlassLip.raycastTarget = false;
             _serveGlassLip.enabled = false;
+            // ...AND THE FRONT OVER THE POUR (2026-09-25, the author: "Bardakların FRONT'u dökülen sıvının önünde
+            // olmalı"): the stream stands in front of the tin and the glass's sheet, and behind this plate and the
+            // crust's near arc over it, so it goes INTO the glass rather than down its face.
+            _serveFluid.PourInFront(_serveGlassLipRt);
             // The rim's crust rides OVER the front (2026-09-14): salt and sugar are on the mouth, not
             // in the drink, so GlassDecor hangs its crust here — the glass rect's size and centre.
             _serveRimOver = NewRect("GlassRimOver", _serveSurface);

@@ -445,10 +445,11 @@ namespace LastCall.UI
 
             _tapFluid = new MetaballFluid(_tapSurface);
             // THE POUR IN FRONT (2026-09-25, MetaballFluid.PourInFront): the beer leaving the spout is drawn over
-            // the font and the pint, down to what is already in the glass. Over the PINT / HEAD pair too: it rides
-            // the glass's mouth (LayTheBars), so under it the beer vanished for most of its fall (r208) - a
-            // one-pixel line across the edge of a gauge reads, a stream that is not there does not.
-            _tapFluid.PourInFront();
+            // the font, down to what is already in the glass - and UNDER the pint (the author, the same day:
+            // "Bardakların FRONT'u dökülen sıvının önünde olmalı"). The pint's FRONT is a child of the pint's own
+            // rect (GlassArt.Lip), so the pour stands just behind the whole glass: its sheet is hollowed out, so the
+            // beer is seen falling inside it, and the FRONT crosses it on the way in.
+            _tapFluid.PourInFront(_tapGlass);
             _tapFluid.SetGround(CounterY + TowerPlinth);   // what falls past the pint ends on the drip tray
             // A pint glass: narrow foot opening steadily out to the mouth.
             _tapFluid.SetProfile(new[] { 0.82f, 0.88f, 0.93f, 0.97f, 1.00f, 1.00f });
