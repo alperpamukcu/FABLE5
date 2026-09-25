@@ -64,9 +64,13 @@ namespace LastCall.UI
         /// <param name="rimOver">Where the crust hangs instead of the decor (2026-09-14, the author:
         /// garnishes go between the drink and the front, "tuz ve şeker değil"): a rect laid over the
         /// glass's front crop with the glass rect's own size and centre, or null to keep it in the decor.</param>
+        /// <param name="underLiquid">Where the lemon wheel hangs instead of the decor (2026-09-18, the
+        /// author: "limon katman olarak sıvı katmanında arkasında olacak"): a rect between the glass's
+        /// sheet and the drink, again with the glass rect's own size and centre, so the level rises over
+        /// the slice. Null keeps the wheel in the decor, in front of the drink.</param>
         public static void Sync(RectTransform glassRect, GlassArt.Piece piece, GlassContents glass,
                                 TycoonRun run = null, float buildSalt = 0f, float buildSugar = 0f,
-                                RectTransform rimOver = null)
+                                RectTransform rimOver = null, RectTransform underLiquid = null)
         {
             var t = glassRect.Find("Decor");
             GlassDecor decor;
@@ -84,6 +88,7 @@ namespace LastCall.UI
             decor.BuildSalt = buildSalt;
             decor.BuildSugar = buildSugar;
             if (decor._rimOver != rimOver) { decor._rimOver = rimOver; decor._signature = null; }
+            if (decor._underLiquid != underLiquid) { decor._underLiquid = underLiquid; decor._signature = null; }
             decor.Refresh(piece, glass, run);
         }
 
@@ -118,6 +123,7 @@ namespace LastCall.UI
             if (BuildSalt > 0.004f) sig.Append("bs;");
             if (BuildSugar > 0.004f) sig.Append("bg;");
             string signature = sig.ToString();
+            _run = run;
             if (signature != _signature)
             {
                 _signature = signature;
@@ -141,6 +147,8 @@ namespace LastCall.UI
         private Image _crust;
         private Image _crustFront;   // the near arc of the crust over the front crop (the author's FRONT plates, 2026-09-21)
         private RectTransform _rimOver;   // the crust's host over the front crop, when given
+        private RectTransform _underLiquid;   // the wheel's host under the drink, when given
+        private TycoonRun _run;               // whose ice rolls the pile is drawn from
 
         private void Rebuild(GlassContents glass, bool mint, bool olive)
         {
@@ -149,6 +157,9 @@ namespace LastCall.UI
             if (_rimOver != null)
                 for (int i = _rimOver.childCount - 1; i >= 0; i--)
                     Destroy(_rimOver.GetChild(i).gameObject);
+            if (_underLiquid != null)
+                for (int i = _underLiquid.childCount - 1; i >= 0; i--)
+                    Destroy(_underLiquid.GetChild(i).gameObject);
             _crust = null;
             _crustFront = null;
             _ice.Clear();
@@ -258,23 +269,52 @@ namespace LastCall.UI
 
             // THE WEDGE STRADDLES THE GLASS (2026-08-26, the author: "bardagin camina
             // sokulan version bir limon uretmelisin, bir kismi bardagin icerisinde
-            // hissettirmeli"). glass_lemon_rim is cut with a slit so it sits ON the edge
-            // with its lower half inside the drink; it hangs at the RIM's own edge rather
-            // than half an interior in, and it is drawn as a CHILD of this decor — which
-            // is the whole of the author's other note about it, because this decor rides
-            // the glass rect and everything parented to it moves and leans with the drink.
+            // hissettirmeli"). It hangs at the RIM's own edge rather than half an interior
+            // in, and it is drawn as a CHILD of this decor — which is the whole of the
+            // author's other note about it, because this decor rides the glass rect and
+            // everything parented to it moves and leans with the drink.
             if (glass.HasPreparation("lemon_twist"))
             {
-                // A HALF SLICE ON THE RIM (2026-09-06, the author: "yarım limon dilimi"): a
-                // half wheel, cut side down, straddling the rim at its right-hand end —
-                // rind, pith, five segments — drawn at the size the glass is shown at.
-                float mouthHalf = _piece.InteriorWidthAt(_piece.RimY) * w * 0.5f;
-                if (mouthHalf < 2f) mouthHalf = interiorW * 0.5f;
-                int d = Mathf.Max(10, Mathf.RoundToInt(Mathf.Clamp(mouthW_(w), 20f, 200f) * 0.34f));
-                var wedge = NewChild("Wedge", new Vector2(d, d * 0.5f + 2f),
-                    new Vector2(mouthHalf - d * 0.30f, rimYLocal + d * 0.22f));
+                // A WHOLE WHEEL ON THE CORNER, UNDER THE DRINK (2026-09-18, the author:
+                // "limon katman olarak sıvı katmanında arkasında olacak ve limonun tam ortası
+                // bardağın köşe pixeline denk gelmeli"). Two things, and both of them are the
+                // reason it is drawn UNCUT.
+                //
+                // It hangs on `underLiquid` — a rect between the glass's own sheet and the
+                // liquid — so the drink is poured OVER it: the half of the wheel inside the
+                // mouth goes under the level as the glass fills, which is what a slice dropped
+                // into a drink does, and the front wall crosses it on top of that.
+                //
+                // And its CENTRE is the glass's corner pixel — where the mouth's ellipse meets
+                // the wall, measured off the sheet by Piece.RimCorner — so exactly half the
+                // wheel is out over the rim and half is in the glass, on every glass and every
+                // tier, without a per-glass number anywhere.
+                var slice = ItemArt.Load("glass_lemon");
+                int d = Mathf.Max(10, Mathf.RoundToInt(
+                    Mathf.Clamp(mouthW_(w), 20f, 200f) * (slice != null ? 0.42f : 0.34f)));
+                Vector2 seat;
+                if (!_piece.RimCorner(new Vector2(w, h), out seat))
+                {
+                    float mouthHalf = _piece.InteriorWidthAt(_piece.RimY) * w * 0.5f;
+                    if (mouthHalf < 2f) mouthHalf = interiorW * 0.5f;
+                    seat = new Vector2(mouthHalf, rimYLocal);
+                }
+                // The drawn wheel is square and centres on the corner; the fallback half-slice
+                // keeps its own box and its own seat, measured for a flat-topped cut.
+                var wedge = slice != null
+                    ? NewChild("Wedge", new Vector2(d, d), seat)
+                    : NewChild("Wedge", new Vector2(d, d * 0.5f + 2f),
+                        new Vector2(seat.x - d * 0.30f, seat.y + d * 0.22f));
+                // IN FRONT OF THE RING, BEHIND ITS NEAR ARC (2026-09-23, the author: "limon görseli salted/sugar
+                // front'un arkasında olacak normal salted/sugar.png nin önünde olacak"). When the glass wears a
+                // crust with the author's FRONT plate, the whole ring stands in this decor and only its near arc
+                // rides _rimOver over the glass - so the wheel stays HERE, built after the ring and therefore drawn
+                // over it, and under the near arc on the host above. A glass with no such crust keeps the wheel
+                // under the drink (2026-09-18).
+                if (_underLiquid != null && _crustFront == null) wedge.SetParent(_underLiquid, false);
                 var img = wedge.gameObject.AddComponent<Image>();
-                img.sprite = HalfSlice(d);
+                img.sprite = slice != null ? slice : HalfSlice(d);
+                img.preserveAspect = true;
                 img.raycastTarget = false;
                 wedge.localRotation = Quaternion.Euler(0, 0, -4f);
             }
@@ -285,10 +325,17 @@ namespace LastCall.UI
                 // atılabilecek ve bardağın içerisinde gözükecek"). The glass counts them
                 // (GlassContents.IceCubes); the lay table keeps each one where it landed.
                 int cubes = Mathf.Clamp(glass.IceCubes, 1, MaxDrawnCubes);
+                // AND NO TWO OF THEM ARE THE SAME CUBE (2026-09-18, the author drew ice-1,
+                // ice-2 and ice-3: "rastgele olarak 3ünden birisi"). The roll is the RUN's,
+                // one per cube, taken once when the cube went in — see TycoonRun.IceCubeRolls
+                // for why it cannot be rolled here: the bench and the hand that carries the
+                // glass out are two GlassDecors drawing one drink, and they have to agree.
+                var rolls = _run != null ? _run.IceCubeRolls() : null;
                 for (int n = 0; n < cubes; n++)
                 {
                     var lay = CubeLay[n];
-                    _ice.Add(IceCube("Ice" + n, lay.size, lay.x, lay.lean));
+                    int roll = rolls != null && n < rolls.Count ? rolls[n] : n;
+                    _ice.Add(IceCube("Ice" + n, lay.size, lay.x, lay.lean, roll));
                 }
             }
 
@@ -315,18 +362,30 @@ namespace LastCall.UI
             return piece;
         }
 
-        private RectTransform IceCube(string name, float size, float x, float lean)
+        /// <summary>The author's three drawings, in the order he shipped them. A cube that
+        /// is missing falls through to the next name down rather than to nothing.</summary>
+        private static readonly string[] IceArt = { "ice-1", "ice-2", "ice-3" };
+
+        /// <summary>The drawing a roll stands for — so the cube the hand drops into the drink
+        /// and the cube that then floats in it are the same cube (the counter's rail asks).</summary>
+        public static Sprite IceSprite(int roll) =>
+            ItemArt.Load(IceArt[((roll % IceArt.Length) + IceArt.Length) % IceArt.Length])
+            ?? ItemArt.Load("glass_ice") ?? PrefArt.Ice();
+
+        private RectTransform IceCube(string name, float size, float x, float lean, int roll)
         {
             var cube = NewChild(name, new Vector2(size, size), Vector2.zero);
             var img = cube.gameObject.AddComponent<Image>();
             // ITS OWN CUBE (2026-08-26, the author: "bardagin icerisindeki buz gorselini
             // tekrardan olustur"). It wore the LICENCE's pictogram, which is a mark drawn to
             // read at 12 px on a card - a flat white lozenge - and seven of them stacked in a
-            // glass read as a snowdrift. glass_ice is a drawn cube with facets and a
-            // highlight, struck at the size it floats at. The pictogram stays the fallback:
-            // the card and the glass agreeing was the old reason for it, and a missing
-            // drawing should still put something in the drink.
-            img.sprite = ItemArt.Load("glass_ice") ?? PrefArt.Ice();
+            // glass read as a snowdrift. The author's cubes are drawn with facets and a
+            // highlight, struck at the size they float at, and there are three of them so a
+            // pile is a pile and not one cube stamped seven times (2026-09-18). The old single
+            // drawing and then the pictogram stay the fallbacks: the card and the glass
+            // agreeing was the old reason for it, and a missing drawing should still put
+            // something in the drink.
+            img.sprite = IceSprite(roll);
             img.preserveAspect = true; img.raycastTarget = false;
             if (img.sprite == null) img.color = new Color(0.75f, 0.9f, 1f, 0.9f);
             img.color = new Color(img.color.r, img.color.g, img.color.b, 0.92f);

@@ -132,6 +132,35 @@ namespace LastCall.UI
                 LipOffsetPx = lipOffsetPx ?? new Vector2(-1f, -1f); FullY = fullY;
             }
 
+            /// <summary>THE GLASS'S CORNER PIXEL (2026-09-18, the author: "limonun tam ortası
+            /// bardağın köşe pixeline denk gelmeli") — where the mouth's ellipse meets the
+            /// wall on the right — given in the rect's own coordinates (centre pivot, y up)
+            /// for a sprite letterboxed inside <paramref name="box"/> by preserveAspect, which
+            /// is the same arithmetic <see cref="LipPlacement"/> does for the front crop.
+            ///
+            /// MEASURED, like everything else about the rim: the widest opaque row inside the
+            /// drawing's top band IS the rim (it reproduces <c>LipRowsPx</c> exactly on all five
+            /// sheets), and that row's last opaque column is the corner. Where the texture cannot
+            /// be read the cavity's own numbers stand in, a pixel or two inside the drawn corner.</summary>
+            public bool RimCorner(Vector2 box, out Vector2 at)
+            {
+                at = Vector2.zero;
+                if (Sprite == null || Sprite.rect.height < 1f || Sprite.rect.width < 1f) return false;
+                float k = Mathf.Min(box.x / Sprite.rect.width, box.y / Sprite.rect.height);
+                float drawnW = Sprite.rect.width * k, drawnH = Sprite.rect.height * k;
+                var px = CornerPx(Sprite);
+                if (px.x < 0f)
+                {
+                    at = new Vector2(InteriorWidthAt(RimY) * 0.5f * drawnW,
+                                     (RimY - 0.5f) * drawnH);
+                    return true;
+                }
+                // Sprite pixels are top-left; the rect is centre-pivoted with y up.
+                at = new Vector2((px.x + 0.5f) * k - drawnW * 0.5f,
+                                 drawnH * 0.5f - (px.y + 0.5f) * k);
+                return true;
+            }
+
             /// <summary>A crust's rect inside a box the SPRITE is drawn in with
             /// preserveAspect — the same arithmetic as <see cref="LipPlacement"/>, seated on
             /// the mouth's first row rather than on the rim's axis.</summary>
@@ -626,6 +655,44 @@ namespace LastCall.UI
                 return true;
             }
             return false;
+        }
+
+        /// <summary>How deep into the drawing the rim can be: the mouth band is the first few
+        /// rows of every sheet, and a taller search would find the widest row of the BODY on a
+        /// glass that flares (the pint) instead of its mouth.</summary>
+        private const int RimBandPx = 16;
+
+        private static readonly Dictionary<Sprite, Vector2> RimCorners = new Dictionary<Sprite, Vector2>();
+
+        /// <summary>The rim's right-hand corner in the sheet's own pixels, from its TOP-LEFT, or
+        /// (-1,-1) where the texture is unreadable. Measured once per sprite — see
+        /// <see cref="Piece.RimCorner"/> for what it is and why this is the row.</summary>
+        private static Vector2 CornerPx(Sprite sheet)
+        {
+            if (RimCorners.TryGetValue(sheet, out var got)) return got;
+            var miss = new Vector2(-1f, -1f);
+            if (sheet.texture == null || !sheet.texture.isReadable) return RimCorners[sheet] = miss;
+            var tex = sheet.texture; var r = sheet.rect;
+            int w = Mathf.RoundToInt(r.width), h = Mathf.RoundToInt(r.height);
+            if (w <= 0 || h <= 0) return RimCorners[sheet] = miss;
+            var p = tex.GetPixels32();
+            int x0 = Mathf.RoundToInt(r.x), y0 = Mathf.RoundToInt(r.y);
+            int top = -1;
+            for (int y = 0; y < h && top < 0; y++)
+                for (int x = 0; x < w; x++)
+                    if (p[(y0 + h - 1 - y) * tex.width + x0 + x].a > 8) { top = y; break; }
+            if (top < 0) return RimCorners[sheet] = miss;
+            int bestSpan = -1; var best = miss;
+            for (int y = top; y < Mathf.Min(h, top + RimBandPx); y++)
+            {
+                int left = -1, right = -1;
+                for (int x = 0; x < w; x++)
+                    if (p[(y0 + h - 1 - y) * tex.width + x0 + x].a > 8)
+                    { if (left < 0) left = x; right = x; }
+                if (left < 0 || right - left <= bestSpan) continue;
+                bestSpan = right - left; best = new Vector2(right, y);
+            }
+            return RimCorners[sheet] = best;
         }
 
         private static readonly Dictionary<Sprite, int[]> BottomEdges = new Dictionary<Sprite, int[]>();

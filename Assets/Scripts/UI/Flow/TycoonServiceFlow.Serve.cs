@@ -48,6 +48,7 @@ namespace LastCall.UI
         private LastCall.Core.GlasswareDefinition _serveGlassware;
         private int _serveGlassTier = 1;
         private RectTransform _serveGlassBackRt;
+        private RectTransform _serveGlassUnder;   // the lemon's host, under the drink (2026-09-18)
         private RectTransform _serveGlassShadow;
         private Image _serveGlassBack;
         private RectTransform _serveMixBar;
@@ -147,7 +148,7 @@ namespace LastCall.UI
             RefreshServeMixBar(run);
             _glassCatchX = ServeGlassRestX; _glassCatchV = 0f; _glassAx = 0f; _glassSway = 0f; _glassSwayV = 0f; _glassCatchLast = ServeGlassRestX;
             PushServePool(run);
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver, _serveGlassUnder);
             // Steel is steel whatever is in it. This used to multiply the tin sprite by the
             // drink's colour AND by its alpha — harmless while that alpha was a fixed 0.9, and
             // not harmless at all once it became the fill-derived 0.52-0.86: the serve stage's
@@ -274,6 +275,12 @@ namespace LastCall.UI
                 _serveGlassBackRt.anchoredPosition = _serveGlass.anchoredPosition;
                 _serveGlassBackRt.localRotation = rock;
                 _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
+            }
+            if (_serveGlassUnder != null)
+            {
+                _serveGlassUnder.anchoredPosition = _serveGlass.anchoredPosition;
+                _serveGlassUnder.localRotation = rock;
+                _serveGlassUnder.sizeDelta = _serveGlass.sizeDelta;
             }
             if (_serveGlassShadow != null)
                 _serveGlassShadow.anchoredPosition = new Vector2(_glassCatchX, _serveGlassShadow.anchoredPosition.y);
@@ -524,6 +531,11 @@ namespace LastCall.UI
             {
                 _serveGlassBackRt.sizeDelta = _serveGlass.sizeDelta;
                 _serveGlassBackRt.anchoredPosition = _serveGlass.anchoredPosition;
+                if (_serveGlassUnder != null)
+                {
+                    _serveGlassUnder.sizeDelta = _serveGlass.sizeDelta;
+                    _serveGlassUnder.anchoredPosition = _serveGlass.anchoredPosition;
+                }
             }
             if (_serveGlassShadow != null)
             {
@@ -664,7 +676,7 @@ namespace LastCall.UI
         {
             _serveShakerText.text = UIText.T("bench.serve.shaker_left", ("pct", run.Glass.FillFraction.ToString("P0")));
             _serveGlassText.text = UIText.T("bench.serve.glass_pct_full", ("pct", run.ServingGlass.FillFraction.ToString("P0")));
-            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver);
+            GlassDecor.Sync(_serveGlass, _serveGlassPiece, run.ServingGlass, run, 0f, 0f, _serveRimOver, _serveGlassUnder);
             RefreshServeMixBar(run);
             _aimText.text = accuracy > 0.8 ? UIText.T("bench.serve.aim.clean")
                 : accuracy > AimGate ? UIText.T("bench.serve.aim.steady") : UIText.T("bench.serve.aim.missing");
@@ -816,6 +828,13 @@ namespace LastCall.UI
             _serveGlassBack = _serveGlassBackRt.gameObject.AddComponent<Image>();
             _serveGlassBack.raycastTarget = false;
             _serveGlassBack.enabled = false;
+            // UNDER THE DRINK (2026-09-18, the author: "limon katman olarak sıvı katmanında
+            // arkasında olacak"): made here, between the glass's back sheet and the fluid, so
+            // anything GlassDecor hangs on it is poured over. It rides the glass exactly as
+            // GlassBack does — same size, same centre, same rock.
+            _serveGlassUnder = NewRect("GlassUnder", _serveSurface);
+            Place(_serveGlassUnder, new Vector2(0.5f, 0.5f), new Vector2(190, ServeGlassHeight),
+                glassRest);
 
             // shadows under the glass and the tin, first in the surface so every prop draws over them (2026-09-17)
             _serveTinShadow = AddContactShadow(_serveSurface, 158f * (TinW / 200f), new Vector2(150f, BenchFootY + 4f));

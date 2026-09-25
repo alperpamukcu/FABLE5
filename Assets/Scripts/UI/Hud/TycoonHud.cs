@@ -799,6 +799,7 @@ namespace LastCall.UI
         private float _drinkGlassFootPad, _drinkGlassFootDx;
         /// <summary>The carried glass's crust host, over its front crop (2026-09-14).</summary>
         private RectTransform _drinkGlassRimOver;
+        private RectTransform _drinkGlassUnder;   // the lemon's host, under the drink (2026-09-18)
 
         /// <summary>
         /// Half the glass that is actually standing there (2026-09-06, the author: "ana
