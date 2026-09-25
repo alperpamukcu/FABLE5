@@ -345,10 +345,10 @@ def vslant(d, xtop, xbot, y0, y1, w):
                ((xbot + w / 2) * S, y1 * S), ((xbot - w / 2) * S, y1 * S)], fill=255)
 
 
-def vice_letters():
-    """Every capital of OPEN BAR, each drawn into its own advance width.
+def vice_alphabet():
+    """Every capital this hand can set, as {letter: (advance width, painter)}.
 
-    Returned as (advance width, painter) so the word is laid out by ADDING WIDTHS - a
+    Returned as (advance width, painter) so a word is laid out by ADDING WIDTHS - a
     typeset line, not a set of hand-placed marks. The painter is handed the letter's own
     left edge and draws in absolute final pixels.
 
@@ -362,6 +362,12 @@ def vice_letters():
     never its counter - the R's leg is straight, the A has no spur, the E's arms are all
     the same length. That is what a 29 px capital can carry cleanly, and it is also what
     the show's own lettering does.
+
+    THE ALPHABET LEFT THE WORD (2026-09-10). The sign only ever needed the five letters of
+    STOCK, and the painters lived inside vice_letters() as closures. The Steam wordmark
+    (Tools/steam_kit/wordmark.py) sets other words in this same hand, so the letters are
+    a dictionary now and vice_letters() looks its word up in it. The sign's own pixels are
+    unchanged - Tools/steam_kit/wordmark.py --check compares them to the shipped file.
     """
     w = TAKE.get('weight', 1.0)
     tv, th = VUP * w, VARM * w
@@ -453,16 +459,101 @@ def vice_letters():
         vbowl(d, x, VMID - th / 2.0, x + 19.0, VBASE, tv, th)
         vbox(d, x - 1.0, VMID - th, x + tv, VMID + 4.0, fill=0)
 
-    # THE WORD (2026-08-26, the author: "Open bar yazısı ve boyutu değiştirilsin"). OPEN
-    # BAR was a sign for the people on the OTHER side of this counter; the roller it is
-    # painted on is the bartender's own under-bar cabinet, and rolling it down is how you
-    # reach the night's bottles. One word, five letters — a third of the width the two
-    # words took, which is most of the "boyutu" half of the note answered by the wording
-    # alone, and the chevron under it still says which way it travels.
-    return [(20.0, SS), (20.0, T), (22.0, O), (25.0, C), (19.0, K)]
+    # ── the letters the STEAM WORDMARK needed (2026-09-10) ──────────────────────
+    # Same four primitives, same rule: give up the flourish, never the counter. None of
+    # these is used by the sign, so the sign cannot change by their being here.
+
+    def I(d, x):
+        vbox(d, x, VCAP, x + tv, VBASE)
+
+    def L(d, x):
+        vbox(d, x, VCAP, x + tv, VBASE)                             # the stem
+        vbox(d, x, VBASE - th, x + 15.0, VBASE)                     # the foot
+
+    def H(d, x):
+        right = 17.0
+        vbox(d, x, VCAP, x + tv, VBASE)
+        vbox(d, x + right, VCAP, x + right + tv, VBASE)
+        vbox(d, x, VMID - th / 2.0, x + right + tv, VMID + th / 2.0)
+
+    def U(d, x):
+        # A bowl that runs off the top of the band: the ring's upper half is cut away
+        # above the cap line, which leaves two stems with flat tops and a rounded foot.
+        vbowl(d, x, VCAP - 12.0, x + 21.0, VBASE, tv, th, r=7.0)
+        vbox(d, x - 1.0, VCAP - 13.0, x + 22.0, VCAP, fill=0)
+
+    def D(d, x):
+        # The P's construction carried the full height: one bowl, cut, then the stem.
+        vbowl(d, x, VCAP, x + 20.0, VBASE, tv, th, r=7.0)
+        vbox(d, x - 1.0, VCAP - 1.0, x + tv, VBASE + 1.0, fill=0)
+        vbox(d, x, VCAP, x + tv, VBASE)
+
+    def G(d, x):
+        # A C that keeps its lower jaw, with the bar into the mouth. Only the upper bite
+        # is taken; the ring's right hip stays and carries the bar's end.
+        vring(d, x, VCAP, x + 21.0, VBASE, tv, th)
+        vbox(d, x + 11.5, VCAP - 1.0, x + 22.0, VCAP + th + 5.0, fill=0)
+        vbox(d, x + 10.5, VMID - th / 2.0, x + 21.0, VMID + th / 2.0)
+
+    def M(d, x):
+        right = 22.0
+        vbox(d, x, VCAP, x + tv, VBASE)
+        vbox(d, x + right, VCAP, x + right + tv, VBASE)
+        # The two diagonals meet under the middle, two thirds of the way down - a full-
+        # depth vertex reads as a W's, and a shallow one as an H with a scratch in it.
+        vslant(d, x + tv / 2.0, x + (right + tv) / 2.0, VCAP, VMID + 4.0, tv)
+        vslant(d, x + right + tv / 2.0, x + (right + tv) / 2.0, VCAP, VMID + 4.0, tv)
+
+    def F(d, x):
+        arm = 16.0
+        vbox(d, x, VCAP, x + tv, VBASE)                             # the stem
+        vbox(d, x, VCAP, x + arm, VCAP + th)                        # top arm
+        vbox(d, x, VMID - th / 2.0, x + arm - 2.0, VMID + th / 2.0)  # middle arm, a shade shorter
+
+    def V(d, x):
+        span = 20.0
+        vslant(d, x + tv / 2.0, x + span / 2.0, VCAP, VBASE, tv)          # left leg, down to the point
+        vslant(d, x + span - tv / 2.0, x + span / 2.0, VCAP, VBASE, tv)   # right leg
+
+    alphabet = {
+        'F': (16.0, F), 'V': (20.0, V),
+        'O': (22.0, O), 'P': (19.0, P), 'E': (16.0, E), 'N': (17.0 + tv, N),
+        'B': (19.0, B), 'A': (20.0, A), 'R': (19.0, R), 'T': (19.0, T),
+        'C': (25.0, C), 'K': (18.0 + tv, K), 'S': (20.0, SS),
+        'I': (tv + 1.0, I), 'L': (15.0, L), 'H': (17.0 + tv, H), 'U': (21.0, U),
+        'D': (20.0, D), 'G': (25.0, G), 'M': (22.0 + tv, M),
+        ' ': (VSPACE, None),
+    }
+    return alphabet
 
 
-def strike_vice():
+def vice_letters(text='STOCK'):
+    """The word, as (advance, painter) pairs, looked up letter by letter.
+
+    THE WORD (2026-08-26, the author: "Open bar yazısı ve boyutu değiştirilsin"). OPEN
+    BAR was a sign for the people on the OTHER side of this counter; the roller it is
+    painted on is the bartender's own under-bar cabinet, and rolling it down is how you
+    reach the night's bottles. One word, five letters — a third of the width the two
+    words took, which is most of the "boyutu" half of the note answered by the wording
+    alone, and the chevron under it still says which way it travels.
+
+    The sign's five advances are the ones it always had (S 20, T 20, O 22, C 25, K 19);
+    the dictionary carries every other letter's at the width it was drawn to.
+    """
+    alphabet = vice_alphabet()
+    sign = {'S': 20.0, 'T': 20.0, 'O': 22.0, 'C': 25.0, 'K': 19.0}
+    out = []
+    for ch in text.upper():
+        if ch not in alphabet:
+            raise SystemExit('the Vice hand has no %r (have %s)' % (ch, ''.join(sorted(alphabet))))
+        advance, paint = alphabet[ch]
+        if text == 'STOCK':
+            advance = sign[ch]
+        out.append((advance, paint))
+    return out
+
+
+def strike_vice(text='STOCK'):
     """OPEN BAR as a hard 1-bit mask: set at 8x from filled shapes, sheared, thresholded.
 
     The shear is applied to the STRUCK letters and not to their coordinates, exactly as
@@ -472,7 +563,7 @@ def strike_vice():
     any terminal turning into a bevel.
     """
     track = TAKE.get('track', 1.0)
-    letters = vice_letters()
+    letters = vice_letters(text)
     total = sum(a for a, _ in letters) + VGAP * track * (len(letters) - 1) + 4.0
     core = Image.new('L', (int(total * S), int((VBASE + 4) * S)), 0)
     d = ImageDraw.Draw(core)

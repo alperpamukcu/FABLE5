@@ -288,6 +288,7 @@ Single pieces:
 | Tide Rug | $35 | +0.2 | — |
 | Wall Television | $70 | +0.2 | — |
 | Drip Mat | ours | 0 | — |
+| Snack Mat | ours | 0 | — |
 
 Every top rung and every single together: **9.15** of comfort against the
 5 ceiling, before glass and stools — the player chooses.
