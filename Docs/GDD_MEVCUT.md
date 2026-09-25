@@ -1767,6 +1767,48 @@ salted/sugar front'un arkasında olacak normal salted/sugar.png nin önünde ola
   sonra kasa −$9, mikser reyonunda alınabilecek bir şey kalmıyor), bu turun dosyalarından değil.
   LookTests 3/3.
 
+### 9.114 · Menü kutucukları, ortalanmış buf plakası, dolu şişeler, kâğıt sipariş kartı, sabitlenen not, para işaretleri ve uçan banknotlar (2026-09-25)
+
+Yazar: "Menüde bu kutularda hepsi HARD yazısının boyutunda ve formatında yazsın. … Yeşil veya kırmızı buff/debuff'lar
+kutusunda yazıların kenarlara uzaklıkları eşit olmalı … Menüde tariflerde gösterilen alkol şişeleri dolu olsun … YENİ $
+İCONU OLUŞTUR … The glass kısmında menüde kullanılan bardaklar oyundaki bardakların iconu olmalı … Müşterilerin adının
+üstündeki balonların hoverini … oyundaki kullandığımız hover tasarımına uyduralım … sabitleme butonuna basarak ekranın
+sağına küçük postit gibi … x basarak kapatabilmeliyiz." Sonra: "Deste güzel … 1 tane üret onu deste haline getir …
+para harcandığında gittiğinde geldiğinde bu banknotlar animasyonla uçar tek tek" ve "fiyatlarda da D işaret'i kullanabiliriz".
+
+- **Üç kutucuk (THE WAY / THE GLASS / THE WORK):** değer artık üçünde de 16 px, HARD'ın biçiminde. İşaret başlık
+  satırına çıktı; kutu genişlikleri eşit üçte bir değil, içeriğe göre dağıtılıyor (ölçüm: en geniş İngilizce set
+  STIRRED 74 + HIGHBALL 86 + MEDIUM 68 = 228, sütunda 264 yer var). Yalnız sığmayan bir dilde en geniş değer 8'e iner.
+  Kutu 36 → 40.
+- **Bardak işareti oyunun kendi bardağı:** `ItemArt.GlassIcon(id)` bankodaki `glass3d_<id>` çizimini tam katla
+  küçültüyor (bloğun opak piksellerinin lineer ortalaması, çizimin kendi paletine oturtma) ve silüet kenarına çizimin
+  en koyu mürekkebini geri koyuyor; krem kâğıtta soluk kalmıyor. Coupe, highball, martini, pint, rocks ayrı okunuyor.
+- **Buf plakası ortada:** fact satırı kendi kutusunda kurulup plakanın ortasına konuyor; ad ve açıklama ortalı ve aynı
+  iç genişlikte kırılıyor; üstte ve altta eşit `StripPad` (4). Sayfa darsa (yedi dökümlü Long Island) sıkı plaka.
+  "USUALLY WITH" satırı yalnız sayfada yer kalıyorsa basılıyor — o sayfa zaten hikâye çizgisini aşıyordu.
+- **Dolu şişeler:** `ItemArt.BottleFull(card)` mahzen plakalarını (iç, boşluktan içki, cam) bir kez düzleştirip
+  önbelleğe alıyor; kitabın satırları ve not onu gösteriyor. Satırlar düz şerit değil, `ChromeArt.BuffPlate`
+  plakası (kâğıdın kahvesi; stokta olmayan kırmızı).
+- **Sipariş balonunun hover'ı kâğıt:** eski koyu panel yerine kimliğin tarif kartının kâğıdı, altın çerçevesi ve
+  dokusu; içerik `DrawWorkCard`: ad, kutucuklar, bu müşterinin istekleri ("HOW THEY WANT IT", sayfanın habit satırının
+  genelleşmiş hali `AsksRow`), dökümler, dolum. Okunmamış kartta hâlâ yalnız "önce kimliği oku".
+- **Sabitlenen not:** kimlik tarif hover'ının sağ üstündeki iğne artık tuş (22 px vuruş alanı); hover sabitlenince
+  tam, önce soluk. Basınca kartın yazdığı ad + içki + nasıl + bardak + istekler + dökümler ekranın sağına sarı bir not
+  olarak yapışıyor (kendi canvas'ı 28: tezgâhın, kitabın ve kimliğin üstünde, duraklatma ve perdenin altında). X ile
+  kapanıyor; gece bitince kendiliğinden kalkıyor. PlayMode kimlik testi iğneye basıp notu açıyor ve X ile kapatıyor.
+- **Para işaretleri (`Tools/money_icon.py`, altı adaydan yazarın seçimi):** tek bir banknot çiziliyor, **deste** o
+  banknotun üç kopyası (arkadaki ikisi yalnız gölgeli) — `Items/money[_24|_16].png`, hesabın/kasanın işareti
+  (`ItemArt.Money`, `Coin` da onu tercih ediyor). **Fiyatlar** kalın yeşil **$** işaretini takıyor — `price*.png`,
+  `ItemArt.Price`: menünün fiyat kutusu, pazar kartları, geliştirme kartları, sepet toplamı. `CoinFigure` yazılı $
+  yerine çizili işaret koyuyor: hesap figürleri (tablet kasası, "kasada kalan") desteyi, diğerleri $'ı. Üst çubuğun
+  yedi çizgili kasası (8. liste) olduğu gibi.
+- **Uçan banknotlar (`TycoonHud.MoneyFlight`):** kasa her kare izleniyor; para girince 1–6 banknot (`money_bill.png`,
+  2x) geldiği yerden — hesabı kapatan müşterinin taburesinden, yoksa odanın ortasından — kasaya tek tek uçuyor ve her
+  inişte kasa zıplıyor; para çıkınca kasadan çıkıp düşerek kayboluyor; pazarda ödemede sepete iniyor. Sayı miktardan
+  (≤5 → 1 … >300 → 6). Hareket azaltılmışsa uçuş yok.
+- Doğrulama: altı assembly çevrimdışı 0 hata. Oyunda henüz ölçülmedi; pazarın sepet ayağı look-test karesi yeni
+  işaretler yüzünden bilerek değişiyor (yazar görmeden yeniden onaylanmayacak).
+
 ### 9.115 · Dökülen sıvı önde ve tabanına kadar: akışın kendi katmanı (2026-09-25)
 
 Yazar (altıncı liste, 2026-09-22): “Dökülen sıvılar bira sahnesi de dahil bardakların ve shakerin png'sinin
