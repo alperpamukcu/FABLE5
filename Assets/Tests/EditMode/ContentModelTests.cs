@@ -77,9 +77,10 @@ namespace LastCall.Tests
         /// <summary>
         /// The other half of the same rule, and the one the ladder was missing (2026-08-15):
         /// a page that says Stirred holds the tin until the spoon goes in. Black Russian is
-        /// the one-star page that carries it (rank 9 since 2026-09-16 — the spoon is the first
-        /// star's lesson) — two heavy liquids, no fizz, nothing to shake —
-        /// so this is the verb a new bar actually meets rather than one it reads about.
+        /// the first page that carries it — two heavy liquids, no fizz, nothing to shake — so
+        /// this is the verb a bar actually meets rather than one it reads about. (Rank 9, one
+        /// star, from 2026-09-16; rank 12, two stars, since 2026-09-26, when it followed the
+        /// spoon to the ladder's third rung rather than be a page the bar could only shake.)
         /// </summary>
         [Test]
         public void TheFirstStirredPage_HoldsTheTinUntilTheSpoonGoesIn()
@@ -89,7 +90,7 @@ namespace LastCall.Tests
             // of the matcher until they are bought at a day's end), so it is poured here
             // through a copy that is open: same rank, same bands, same method.
             var shipped = RecipeCatalog.CreateDefault().Single(r => r.Id == "black_russian");
-            Assert.AreEqual(PrepMethod.Stirred, shipped.Prep, "the one-star page that carries the spoon");
+            Assert.AreEqual(PrepMethod.Stirred, shipped.Prep, "the first page that asks for the spoon");
 
             var open = new RecipeDefinition(shipped.Id, shipped.Name, shipped.Rank,
                 shipped.BaseFlavor, shipped.BaseMult, shipped.FlavorPerLevel, shipped.MultPerLevel,
@@ -362,12 +363,37 @@ namespace LastCall.Tests
                 if (card.Type == IngredientType.Bubbly)
                     Assert.IsTrue(card.Info.Carbonated,
                         $"{card.Id} is Bubbly — it must say carbonated");
-            var opening = new HashSet<string> { "vodka_astra", "gin_boothby", "soda_klara",
-                "lemon_fresh", "syrup_house", "beer_kestrel" };
             foreach (var card in deck.Cards.Concat(deck.LockedCards))
-                if (!opening.Contains(card.Id))
+                if (!deck.IsStarting(card))   // the opening shelf is data since 2026-09-26
                     Assert.Greater(card.Info.Price, 0,
                         $"{card.Id} reaches the market — it must name its own price");
+        }
+
+        /// <summary>
+        /// THE OPENING SHELF POURS THE OPENING BOOK (2026-09-26, the author: "Mevcut müşteriler ilk gün
+        /// siparişlerinde oyuncunun yapamayacağı siparişlerde bulunuyorlar"). Every page the bar opens its
+        /// doors owning must be answerable from the cards base_bar.json marks "starting": each band by a
+        /// bottle of its style at its tier, or of its type. Until this date the shelf had no tonic, no cola
+        /// and no bourbon, and the first written night asked for six drinks it could not make.
+        /// </summary>
+        [Test]
+        public void TheOpeningShelf_PoursEveryPageTheBarOpensWith()
+        {
+            var starting = OpeningBar.Deck().StartingCards;
+            foreach (var page in RecipeCatalog.CreateDefault().Where(r => !r.Locked && r.RatioRequirements.Count > 0))
+                foreach (var band in page.RatioRequirements)
+                {
+                    bool answered = starting.Any(c => band.IsStyleBand
+                        ? c.Info != null && c.Info.Style == band.Style && c.Info.Tier >= band.MinTier
+                        : c.Type == band.Type);
+                    Assert.IsTrue(answered, $"{page.Id} opens on the menu, and nothing on the opening shelf " +
+                                            $"pours its {(band.IsStyleBand ? band.Style : band.Type.ToString())}");
+                }
+
+            // ...and the run the game builds from that shelf agrees, clause for clause.
+            var run = OpeningBar.Run("opening-shelf");
+            foreach (var page in run.MenuRecipes)
+                Assert.IsTrue(run.CanServe(page), page.Id + " cannot be served on the opening night");
         }
 
         [Test]
@@ -377,9 +403,10 @@ namespace LastCall.Tests
             Assert.AreEqual(5, glasses.Count);
             Assert.IsTrue(glasses.Any(g => g.Id == "pint"), "the tap's glass is in the set");
 
-            const string bad = "{\"version\":1,\"glasses\":[{\"id\":\"x\",\"name\":\"X\",\"spriteKey\":\"x\",\"profile\":[0.5,1.4],\"tierPrices\":[10,20]}]}";
-            Assert.Throws<FormatException>(() => DataLoader.ParseGlassware(bad),
+            const string bad = "{\"version\":1,\"glasses\":[{\"id\":\"x\",\"name\":\"X\",\"spriteKey\":\"x\",\"profile\":[0.5,1.4],\"tierPrices\":[10,20,30,40,50],\"tierComfort\":[0.02,0.02,0.02,0.02,0.02]}]}";
+            var badEx = Assert.Throws<FormatException>(() => DataLoader.ParseGlassware(bad),
                 "a profile value over 1 is a silhouette wider than the glass");
+            StringAssert.Contains("profile", badEx.Message, "the line is refused for its silhouette, not for a missing field");
         }
 
         [Test]

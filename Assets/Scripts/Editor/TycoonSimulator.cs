@@ -26,8 +26,9 @@ namespace LastCall.EditorTools
     /// the market and the offer never existed to be afforded. It also opened with every
     /// unlocked tier-1 bottle already on the shelf — a richer bar than the game's own six.
     ///
-    /// Both are fixed: the bot opens with GameBootstrap's six and shops the same catalogue
-    /// the player does. The first report after it buys **999** upgrades. Every measurement
+    /// Both are fixed: the bot opens with GameBootstrap's shelf (six bottles then; the deck's
+    /// nine "starting" cards since 2026-09-26) and shops the same catalogue the player does.
+    /// The first report after it buys **999** upgrades. Every measurement
     /// taken before this — the star track's plateau included — was of a bar that could not
     /// pour anything well, and should be read again.
     ///
@@ -43,7 +44,11 @@ namespace LastCall.EditorTools
     /// </summary>
     public static class TycoonSimulator
     {
-        private const int DayCap = 30;                 // the endless game needs a horizon to report on
+        // The endless game needs a horizon to report on. NINETY since 2026-09-26: the house sums to exactly
+        // five and the room is bought over the whole game now (the author: "maksimum 5 konfor ... oyun
+        // sonlarına yakın"), so a thirty-night horizon stopped before the part of the run that decides it,
+        // and the projection's competent bar finishes the house on night 75 — seventy stopped short of it.
+        private const int DayCap = 90;
         private const double DrinkBuildSeconds = 9.0;  // roughly a competent player, not a machine
 
         [MenuItem("LastCall/Simulate Tycoon 200 Runs")]
@@ -683,8 +688,17 @@ namespace LastCall.EditorTools
         {
             if (f == null || f.Buff == null || !HouseBuffs.Enabled) return 0;
             var effects = run.FittingEffects(f);          // a tool's figure, derived off the tool
-            return effects.Count == 0 ? 0 : Math.Abs(effects[0].Percent) * WorthPerPoint(f.Buff.Id);
+            return effects.Count == 0 ? 0
+                : Math.Abs(effects[0].Percent) * WorthPerPoint(f.Buff.Id) * ComfortStarRescale;
         }
+
+        /// <summary>
+        /// THE WEIGHTS SHRANK WITH THE HOUSE (2026-09-26). The per-point table was written in comfort-star
+        /// units when the fittings summed to sixteen; they sum to 4.30 now (the whole house to exactly five),
+        /// so every piece adds about a quarter of what it did. Scaled by the same quarter, a buff keeps the
+        /// share of a piece's value it had — without it the bot would shop almost by buff alone.
+        /// </summary>
+        private const double ComfortStarRescale = 4.30 / 16.00;
 
         private static double WorthPerPoint(string kind)
         {
@@ -850,17 +864,14 @@ namespace LastCall.EditorTools
             // also why the star track came back saying the climb stops around three, on a bar
             // that was structurally incapable of pouring anything well.
             //
-            // GameBootstrap's own six, and everything else offered across the counter.
-            var startingIds = new HashSet<string>
-            {
-                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house",
-                "beer_kestrel",
-            };
+            // GameBootstrap's own shelf — the cards the deck marks "starting" (data since
+            // 2026-09-26, the same read the game makes) — and everything else offered across the
+            // counter.
             var starting = new List<IngredientCard>();
             var catalogue = new List<IngredientCard>();
             foreach (var card in deck.Cards)
             {
-                if (startingIds.Contains(card.Id)) starting.Add(card.Clone());
+                if (deck.IsStarting(card)) starting.Add(card.Clone());
                 else catalogue.Add(card);
             }
             if (starting.Count == 0)   // the same data-drift guard the game keeps
@@ -1026,10 +1037,14 @@ namespace LastCall.EditorTools
                         double firstValue = 0;
                         foreach (var f in run.FixtureCatalogue)
                         {
-                            if (f.IsTap || (f.Comfort <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
+                            // WHAT IT ADDS, AT THE SHOP'S OWN GATE (2026-09-26): a rung's comfort is absolute, so
+                            // the bot values what buying it ADDS (TycoonRun.ComfortGain) — it used to read the
+                            // absolute figure and priced the harlequin paper at 3.25 for the quarter it added —
+                            // and it reads the stars the shop reads (ShopStars), not the standing.
+                            if (f.IsTap || (run.ComfortGain(f) <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
                             if (f.Level > 0 && !run.CanBuyRung(f)) continue;
-                            if (run.Rating.Average < f.Stars) continue;
-                            double value = (f.Comfort + BuffWorth(run, f)) / run.FixturePrice(f);
+                            if (run.ShopStars < f.Stars) continue;
+                            double value = (run.ComfortGain(f) + BuffWorth(run, f)) / run.FixturePrice(f);
                             if (first == null || value > firstValue) { first = f; firstValue = value; }
                         }
                         if (first != null && run.Money >= run.FixturePrice(first) + 10)
@@ -1151,24 +1166,14 @@ namespace LastCall.EditorTools
                         run.BuyBrand(bestUpgrade);
                         stats.BrandsBought++;
                     }
-                    // ONE fitting a night (2026-08-07). The bot spends it the way a player
-                    // working the cap would: a stool first while the room is small — seats
-                    // are throughput and throughput is money — and the glass ladder with
-                    // whatever night is left over.
-                    bool fittingSpent = false;
-                    if (run.CanFitTonight && run.Seats < run.Config.MaxSeats &&
-                        run.Money >= run.Config.SeatPrice(run.Seats) + 40)
-                    { run.BuySeat(); fittingSpent = true; }
-
-                    // The star loop (2026-08-02): the standing is CAPPED by the fittings,
-                    // and glassware went per-LINE — so the bot buys the cheapest next step
-                    // across the lines, the way a player working the cap would.
-                    // The six-step ladder is front-loaded (TycoonRun.GlassStepCap): the
-                    // first two steps of a line carry most of its ceiling, the rest are
-                    // endgame prestige. The bot plays that shape — early steps on a small
-                    // cushion, deep steps only when genuinely flush — because a bot that
-                    // chases legendary sets while the rent climbs measures its own greed
-                    // (50% bankruptcies), not the design.
+                    // ONE fitting a night (2026-08-07), and since 2026-09-26 all three of the things
+                    // that share it are part of the room's five — a stool 0.05, a bar-top step 0.05, a
+                    // glass step its line's own 0.02 — so the bot spends it on the CHEAPEST of the three
+                    // that is next to buy. It used to buy a stool first and then the glass, and never the
+                    // bar top at all, which left a tenth of the house on the table for the whole run.
+                    // The glass keeps its old cushions: early steps on a small one, deep steps only when
+                    // genuinely flush — a bot that chases legendary sets while the rent climbs measures its
+                    // own greed (50% bankruptcies, 2026-08-02), not the design.
                     GlasswareDefinition bestGlass = null;
                     int bestPrice = int.MaxValue, bestStep = 0;
                     foreach (var g in run.Glassware)
@@ -1178,10 +1183,19 @@ namespace LastCall.EditorTools
                         int price = g.TierPrices[t - 1];
                         if (price < bestPrice) { bestPrice = price; bestGlass = g; bestStep = t - 1; }
                     }
-                    int cushion = bestStep < 2 ? 70 : 250;
-                    if (!fittingSpent && run.CanFitTonight && bestGlass != null
-                        && run.Money >= bestPrice + cushion)
-                        run.BuyGlassTier(bestGlass.Id);
+                    int fitKind = 0, fitPrice = int.MaxValue, fitCushion = 0;
+                    if (run.Seats < run.Config.MaxSeats && run.Config.SeatPrice(run.Seats) < fitPrice)
+                    { fitKind = 1; fitPrice = run.Config.SeatPrice(run.Seats); fitCushion = 40; }
+                    if (run.CounterTier < run.Config.MaxAmbienceTier && run.Config.CounterPrice(run.CounterTier) < fitPrice)
+                    { fitKind = 2; fitPrice = run.Config.CounterPrice(run.CounterTier); fitCushion = 40; }
+                    if (bestGlass != null && bestPrice < fitPrice)
+                    { fitKind = 3; fitPrice = bestPrice; fitCushion = bestStep < 2 ? 70 : 250; }
+                    if (fitKind != 0 && run.CanFitTonight && run.Money >= fitPrice + fitCushion)
+                    {
+                        if (fitKind == 1) run.BuySeat();
+                        else if (fitKind == 2) { run.BuyCounter(); stats.CountersBought++; }
+                        else run.BuyGlassTier(bestGlass.Id);
+                    }
 
                     // THE ROOM'S DRESSING (GDD 27 §3, 2026-09-05). Dressing never spends the
                     // night's fitting, so the bot buys one open rung a night it can afford
@@ -1195,25 +1209,34 @@ namespace LastCall.EditorTools
                     // valued by its comfort plus its buff in comfort-star units (BuffWorth), or the
                     // bot would never measure the buffs at all — and the refinish kit, worth no
                     // comfort and a fifth more clean-up time, would never be bought.
+                    // ...BY WHAT IT ADDS, WHILE THE ROOM IS SHORT OF THE SHOP (2026-09-26). The house sums to
+                    // exactly five now and every piece adds a little (TycoonRun.ComfortGain, +0.02 to +0.19), so
+                    // one piece a night could no longer keep the room ahead of the standing: the bot keeps buying
+                    // the best gain per dollar while the room is worth less than the shop's stars plus half a
+                    // star, and one piece a night past that — a floor that furnishes the way the market's START
+                    // HERE sign and "THE ROOM HELD THE NIGHT" note ask a player to.
                     if (hands.BuysDressing)
                     {
-                        FixtureDefinition bestPiece = null;
-                        double bestValue = 0;
-                        foreach (var f in run.FixtureCatalogue)
+                        for (int bought = 0; bought < 40; bought++)
                         {
-                            if (f.IsTap || (f.Comfort <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
-                            if (f.Level > 0 && !run.CanBuyRung(f)) continue;
-                            if (run.Rating.Average < f.Stars) continue;
-                            double value = (f.Comfort + BuffWorth(run, f)) / run.FixturePrice(f);
-                            if (bestPiece == null || value > bestValue) { bestPiece = f; bestValue = value; }
-                        }
-                        if (bestPiece != null && run.Money >= run.FixturePrice(bestPiece) + 60)
-                        {
+                            if (bought > 0 && run.ComfortBase >= run.ShopStars + 0.5) break;
+                            FixtureDefinition bestPiece = null;
+                            double bestValue = 0;
+                            foreach (var f in run.FixtureCatalogue)
+                            {
+                                if (f.IsTap || (run.ComfortGain(f) <= 0 && BuffWorth(run, f) <= 0) || run.OwnsFixture(f.Id)) continue;
+                                if (f.Level > 0 && !run.CanBuyRung(f)) continue;
+                                if (run.ShopStars < f.Stars) continue;
+                                double value = (run.ComfortGain(f) + BuffWorth(run, f)) / run.FixturePrice(f);
+                                if (bestPiece == null || value > bestValue) { bestPiece = f; bestValue = value; }
+                            }
+                            if (bestPiece == null || run.Money < run.FixturePrice(bestPiece) + 60) break;
                             run.BuyFixture(bestPiece.Id);
                             stats.RecordRung(bestPiece.Slot);
                             stats.RecordBuffKind(bestPiece);
                         }
                     }
+                    stats.RecordComfortFive(run.Day, run.ComfortBase);
 
                     stats.RecordHouse(run);
                     stats.RecordNight(run.Floor.Elapsed, run.Rating.LastNight);
@@ -1679,13 +1702,43 @@ namespace LastCall.EditorTools
                 ServiceSum += run.ServiceTonight;
                 CleanSum += run.CleanlinessTonight;
                 ComfortBaseSum += run.ComfortBase;
-                if (run.ComfortTonight < run.ServiceTonight - 1e-9) ComfortBoundNights++;
+                bool bound = run.ComfortTonight < run.ServiceTonight - 1e-9;
+                if (bound) ComfortBoundNights++;
+                BoundByWeek.TryGetValue(BandOf(run.Day), out var week);
+                BoundByWeek[BandOf(run.Day)] = (week.bound + (bound ? 1 : 0), week.nights + 1);
                 if (run.CrowdTomorrow == WealthTier.Broke) BrokeDrawn++;
                 if (run.CrowdTomorrow == WealthTier.HighRoller) HighRollersDrawn++;
                 if (!ComfortBaseByDay.TryGetValue(run.Day, out var list))
                     ComfortBaseByDay[run.Day] = list = new List<double>();
                 list.Add(run.ComfortBase);
             }
+
+            // THE HOUSE AT FIVE (2026-09-26): the night each run's room first reached 5.00 (after the day's
+            // shopping), the share of nights the room held the night week by week, and the bar tops bought.
+            public readonly List<int> ComfortFiveOn = new List<int>();
+            public readonly Dictionary<int, (int bound, int nights)> BoundByWeek = new Dictionary<int, (int, int)>();
+            public int CountersBought;
+            private bool _comfortFiveHit;
+
+            public void RecordComfortFive(int day, double comfortBase)
+            {
+                if (_comfortFiveHit || comfortBase < VenueComfort.MaxComfort - 1e-9) return;
+                _comfortFiveHit = true;
+                ComfortFiveOn.Add(day);
+            }
+
+            private string BoundByWeekLine()
+            {
+                if (BoundByWeek.Count == 0) return "—";
+                var parts = new List<string>();
+                foreach (var kv in BoundByWeek.OrderBy(p => p.Key))
+                    parts.Add($"w{kv.Key + 1} {100.0 * kv.Value.bound / Math.Max(1, kv.Value.nights):0}%");
+                return string.Join(" · ", parts);
+            }
+
+            private string QuantileLine(List<int> days) =>
+                days.Count == 0 ? $"**none of {Runs}**"
+                    : $"{Q(days, 0.25)} / {Q(days, 0.5)} / {Q(days, 0.75)} ({Pct(days.Count, Runs)} of runs)";
 
             public int RecipesBought;
             public int BrandsBought;   // upgrades only; new stock is not a choice the bot makes
@@ -1824,7 +1877,11 @@ namespace LastCall.EditorTools
 
             /// <summary>Starts a fresh run's rung memory. Without it the second run would
             /// think it had already climbed everything the first one did.</summary>
-            public void BeginRun() => _rungHit = new bool[Rungs];
+            public void BeginRun()
+            {
+                _rungHit = new bool[Rungs];
+                _comfortFiveHit = false;
+            }
 
             public void RecordStanding(int day, double stars)
             {
@@ -1949,9 +2006,11 @@ namespace LastCall.EditorTools
                 sb.AppendLine("Floor bot: aims each ingredient at the middle of its lit 20-point box");
                 sb.AppendLine("(the revealed perfect once a page is perfected), pulls a pint");
                 sb.AppendLine("leaned over then straightened, keeps the counter the instant a mess");
-                sb.AppendLine("lands (collect, wipe, wash), and shops — stock, recipes, stools, glass");
-                sb.AppendLine("steps, the cheapest open dressing rung, and one brand upgrade a night it");
-                sb.AppendLine("never once affords. Every survival figure is a floor.");
+                sb.AppendLine("lands (collect, wipe, wash), and shops — stock, recipes, the night's one");
+                sb.AppendLine("fitting (the cheapest of a stool, a bar-top step or a glass step), the room's");
+                sb.AppendLine("dressing by the comfort it ADDS per dollar while the room is short of the");
+                sb.AppendLine("shop's stars plus half a star, and one brand upgrade a night behind a fat");
+                sb.AppendLine("cushion. Every survival figure is a floor.");
                 sb.AppendLine();
                 sb.AppendLine("| Metric | Value |");
                 sb.AppendLine("|---|---|");
@@ -1985,7 +2044,11 @@ namespace LastCall.EditorTools
                 sb.AppendLine($"| Avg cleanliness | {CleanSum / Math.Max(1, NightsClosed):P0} |");
                 sb.AppendLine($"| Nights comfort-bound (room under service) | {Pct(ComfortBoundNights, NightsClosed)} |");
                 sb.AppendLine($"| Broke crowd drawn (of nights) | {Pct(BrokeDrawn, NightsClosed)} |");
-                sb.AppendLine($"| Comfort base by day 10 / 20 / 30 (median) | {BaseAt(10)} / {BaseAt(20)} / {BaseAt(30)} |");
+                sb.AppendLine($"| Comfort base by day 10 / 20 / 30 / 40 / 50 (median) | {BaseAt(10)} / {BaseAt(20)} / {BaseAt(30)} / {BaseAt(40)} / {BaseAt(50)} |");
+                sb.AppendLine($"| Night the room first reached 5.00, p25/median/p75 | {QuantileLine(ComfortFiveOn)} |");
+                sb.AppendLine($"| Night the standing first reached 5★, p25/median/p75 | {QuantileLine(ReachedOn[Rungs - 1])} |");
+                sb.AppendLine($"| Nights the room held the night, by week | {BoundByWeekLine()} |");
+                sb.AppendLine($"| Bar-top steps bought | {CountersBought} |");
                 sb.AppendLine($"| Dressing rungs bought (by slot) | {RungsLine()} |");
                 sb.AppendLine($"| Fitting buffs bought (by kind) | {BuffKindsLine()} |");
                 sb.AppendLine($"| High rollers drawn / nights at 4★+ (of nights) | {Pct(HighRollersDrawn, NightsClosed)} / {Pct(NightsAtFour, NightsClosed)} |");

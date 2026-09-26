@@ -146,6 +146,7 @@
 {"key": "decor.card.worn", "text": "Teraz w sali", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Teraz w sali · sala zachowuje wartość szczebla {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} komfortu", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} z {top} komfortu", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "BAR W PEŁNI WYPOSAŻONY — NIE MA CZEGO ULEPSZAĆ", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Lepszy blat baru uszczęśliwia każdego gościa. Nawet tych, którym pomylisz drinka.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 za każdą obsłużoną wizytę, maks. +0.06", "src": "+0.03 on every served visit, up to +0.06"},

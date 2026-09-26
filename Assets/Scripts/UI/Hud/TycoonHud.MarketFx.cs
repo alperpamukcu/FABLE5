@@ -164,7 +164,9 @@ namespace LastCall.UI
             Place(fig.rectTransform, new Vector2(0, 0.5f), new Vector2(80, 20), new Vector2(x, 0));
             fig.rectTransform.pivot = new Vector2(0, 0.5f);
             fig.horizontalOverflow = HorizontalWrapMode.Overflow;
-            fig.text = run.ComfortNow.ToString("0.0") + " / " + BarRating.MaxStars;
+            // TWO DECIMALS (2026-09-26): the house sums to five and a piece adds +0.02 to +0.19, so a one-decimal
+            // reading would not move when a +0.03 gold tin or a +0.04 refinish kit went in.
+            fig.text = run.ComfortNow.ToString("0.00") + " / " + BarRating.MaxStars;
             x += fig.preferredWidth + 14f;
             // IconStrip hands back the strip's FILL; its row is the fill's parent
             var fill = IconStrip(band, "Strip", ItemArt.Medal(false, 16f), ItemArt.Medal(true, 16f), 0f);

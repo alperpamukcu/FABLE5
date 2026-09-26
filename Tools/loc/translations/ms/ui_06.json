@@ -132,6 +132,7 @@
 {"key": "decor.card.worn", "text": "Di premis sekarang", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Di premis sekarang · nilai premis kekal tahap {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} keselesaan", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} daripada {top} keselesaan", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "BAR LENGKAP — TIADA LAGI UNTUK DINAIKKAN", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Permukaan bar yang lebih baik buat setiap pelanggan lebih gembira. Walaupun yang minumannya anda silap buat.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 setiap kunjungan yang dilayan, sehingga +0.06", "src": "+0.03 on every served visit, up to +0.06"},

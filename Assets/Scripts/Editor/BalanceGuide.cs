@@ -55,7 +55,7 @@ namespace LastCall.EditorTools
             Stars(sb);
             Shelf(sb, deck, config);
             Night(sb, config);
-            Room(sb, fixtures.Fixtures, config);
+            Room(sb, fixtures.Fixtures, glassware, config);
             Door(sb);
             Footer(sb);
 
@@ -317,8 +317,12 @@ namespace LastCall.EditorTools
         }
 
         private static void Room(StringBuilder sb, IReadOnlyList<FixtureDefinition> fixtures,
-            TycoonConfig config)
+            IReadOnlyList<GlasswareDefinition> glassware, TycoonConfig config)
         {
+            double glassTotal = 0;
+            foreach (var g in glassware)
+                foreach (var c in g.TierComfort) glassTotal += c;
+            int extraSeats = config.MaxSeats - config.StartingSeats, counterSteps = config.MaxAmbienceTier - 1;
             sb.AppendLine("## The room (GDD 27)");
             sb.AppendLine();
             sb.AppendLine("Two ratings share the stars: SERVICE is what the drinks were worth, COMFORT is");
@@ -327,8 +331,9 @@ namespace LastCall.EditorTools
             sb.AppendLine();
             sb.AppendLine($"- the room as it opens is worth **{F(VenueComfort.FreeBase)}** (the FreeBase — the");
             sb.AppendLine("  pieces the bar starts with carry no comfort of their own)");
-            sb.AppendLine($"- every glass step counts at **{P(VenueComfort.GlassComfortShare)}** of its star cap,");
-            sb.AppendLine($"  every stool past the first {config.StartingSeats} adds **+{F(VenueComfort.StoolComfort)}**");
+            sb.AppendLine($"- every glass step adds its line's own `tierComfort` (**{F(glassTotal)}** across every step of");
+            sb.AppendLine($"  every line), every stool past the first {config.StartingSeats} adds **+{F(VenueComfort.StoolComfort)}**");
+            sb.AppendLine($"  and every bar-top step past the first **+{F(VenueComfort.CounterComfort)}** (2026-09-26)");
             sb.AppendLine($"- a counter left dirty past **{F(Housekeeping.DirtGrace)} s** costs **−{F(VenueComfort.DirtPenalty)}**");
             sb.AppendLine($"  of comfort until it is wiped; the tap runs {F(Housekeeping.WashSeconds)} s");
             sb.AppendLine("  whatever went into it, and the brass basin halves that");
@@ -372,8 +377,12 @@ namespace LastCall.EditorTools
             double budget = VenueComfort.FreeBase;
             foreach (var pair in ladders) budget += pair.Value[pair.Value.Count - 1].Comfort;
             foreach (var f in singles) budget += f.Comfort;
-            sb.AppendLine($"Every top rung and every single together: **{F(budget)}** of comfort against the");
-            sb.AppendLine($"{F(VenueComfort.MaxComfort)} ceiling, before glass and stools — the player chooses.");
+            double house = budget + glassTotal + VenueComfort.StoolComfort * extraSeats
+                           + VenueComfort.CounterComfort * counterSteps;
+            sb.AppendLine($"Every top rung and every single together: **{F(budget)}** of comfort; with every glass step,");
+            sb.AppendLine($"both stools and the bar top the whole house is **{F(house)}** against the {F(VenueComfort.MaxComfort)}");
+            sb.AppendLine("ceiling — exactly five since 2026-09-26 (the author: \"maksimum 5 konfor\"), so the meter fills");
+            sb.AppendLine("with the last purchase and not in the first fortnight.");
             sb.AppendLine();
         }
 

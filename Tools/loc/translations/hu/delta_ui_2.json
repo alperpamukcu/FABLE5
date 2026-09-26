@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Vásárolj szűken. Egy új bárban a széles polc csak álló pénz.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Hat üveg és egy hordó. Technikailag ez egy bár.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Nyolc üveg és egy hordó. Technikailag ez egy bár.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Előbb nézd meg az igazolványt, csak aztán tölts — abból tudod, miért jöttek.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "A kassza nem fedezi a bérleti díjat. Egyszer minden bárral megesik.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "Kétszer már szokás. Háromszor egy másik bár, a te neveddel a cégéren.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

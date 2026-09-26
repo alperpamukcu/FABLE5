@@ -596,25 +596,49 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void Comfort_CushionsTheFiledNightAfterTheMess()
+        public void Comfort_CushionsTheMess_ButNeverLiftsTheRoomAboveItsWorth()
         {
+            // A CUSHION, NOT A LIFT (2026-09-26): the house sums to exactly five now, so a x1.10 on a clean
+            // night would file a 4.55 room as five. The cushion recovers what the mess took and never more.
             Assert.AreEqual(5.0, VenueComfort.Tonight(5.0, 0.7, 1.10), 1e-12, "the ceiling still holds");
             Assert.AreEqual(4.775, VenueComfort.Tonight(5.0, 0.7), 1e-12, "the mess comes off first");
-            Assert.AreEqual((4.0 - 0.225) * 1.10, VenueComfort.Tonight(4.0, 0.7, 1.10), 1e-12,
-                "then the cushion, on what the mess left");
-            Assert.AreEqual(2.2, VenueComfort.Tonight(2.0, 1.0, 1.10), 1e-12, "then the room's cushion");
+            Assert.AreEqual((4.0 - 0.6) * 1.10, VenueComfort.Tonight(4.0, 0.2, 1.10), 1e-12,
+                "then the cushion, on what the mess left, while it stays under the room's worth");
+            Assert.AreEqual(4.0, VenueComfort.Tonight(4.0, 0.7, 1.10), 1e-12,
+                "a cushion bigger than the mess stops at the room's worth (it filed 4.1525 before 2026-09-26)");
+            Assert.AreEqual(2.0, VenueComfort.Tonight(2.0, 1.0, 1.10), 1e-12, "a clean room files exactly its base");
             Assert.AreEqual(VenueComfort.Tonight(3.0, 0.4), VenueComfort.Tonight(3.0, 0.4, 1.0), "1 is the room as it was");
-            Assert.AreEqual((3.0 - VenueComfort.DirtPenalty * 0.25) * 1.10, VenueComfort.Now(3.0, 1, 4, 1.10), 1e-12);
+            Assert.AreEqual((3.0 - VenueComfort.DirtPenalty) * 1.10, VenueComfort.Now(3.0, 4, 4, 1.10), 1e-12);
+            Assert.AreEqual(3.0, VenueComfort.Now(3.0, 1, 4, 1.10), 1e-12, "one dirty seat of four: cushioned back to the base");
             Assert.AreEqual(VenueComfort.Now(3.0, 1, 4), VenueComfort.Now(3.0, 1, 4, 1.0));
-            Assert.AreEqual(2.2, VenueComfort.Now(2.0, 0, 0, 1.10), 1e-12, "no seats: the base, cushioned");
+            Assert.AreEqual(2.0, VenueComfort.Now(2.0, 0, 0, 1.10), 1e-12, "no seats: the base, never above it");
+            Assert.AreEqual(3.0, VenueComfort.Now(3.0, 0, 4, 1.10), 1e-12, "a clean counter: the base");
             Assert.AreEqual(5.0, VenueComfort.Base(4.0, 2.0, 2), 1e-12, "Base is untouched: it has no scale");
 
             var run = NewRun("comfort");
             double before = run.ComfortNow;
             run.DevFit("rwall_2");
             Assert.AreEqual(10, run.Buffs.Percent(FittingBuffs.Comfort));
-            Assert.AreEqual(run.ComfortBase * 1.10, run.ComfortNow, 1e-12, "the live reading, cushioned");
+            Assert.AreEqual(run.ComfortBase, run.ComfortNow, 1e-12, "a clean counter reads the room's own worth");
             Assert.AreEqual(0.0, before, 1e-12, "a bare room is worth nothing, and a tenth of nothing is nothing");
+        }
+
+        [Test]
+        public void TheMessCushion_IsTodaysDouble_WhereThereIsNoCushion()
+        {
+            // Bit for bit: at scale 1 the lower of the base and the messed reading IS the messed reading, so a
+            // bare room and an unbuffed one file exactly the double they filed before the cushion changed.
+            foreach (double b in new[] { 0.0, 0.37, 1.9, 3.14159, 5.0 })
+                foreach (double clean in new[] { 0.0, 0.25, 0.61803, 1.0 })
+                {
+                    double old = Math.Max(0.0, Math.Min(VenueComfort.MaxComfort,
+                        (b - VenueComfort.DirtPenalty * (1.0 - clean)) * 1.0));
+                    Assert.AreEqual(old, VenueComfort.Tonight(b, clean), 0.0, $"base {b}, clean {clean}");
+                    Assert.AreEqual(old, VenueComfort.Tonight(b, clean, 1.0), 0.0, $"base {b}, clean {clean}");
+                }
+            // ...and a full house on a spotless night files exactly five, with the cushion or without.
+            Assert.AreEqual(5.0, VenueComfort.Tonight(5.0, 1.0), 0.0);
+            Assert.AreEqual(5.0, VenueComfort.Tonight(5.0, 1.0, 1.10), 0.0);
         }
 
         [Test]

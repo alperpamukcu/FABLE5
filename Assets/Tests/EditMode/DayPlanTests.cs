@@ -216,6 +216,43 @@ namespace LastCall.Tests
                 .Select(r => r.Id).ToList();
             foreach (var id in FirstWeek.PagesNamed)
                 CollectionAssert.Contains(opening, id, "the written week names a page nobody owns");
+
+            // ...AND THE OPENING SHELF POURS (2026-09-26). Owning the page was never enough: the week named
+            // a gin and tonic and a whiskey and cola on every night from the first, and the shelf the bar
+            // opened with had no tonic, no cola and no bourbon.
+            var run = OpeningBar.Run("owns");
+            foreach (var id in FirstWeek.PagesNamed)
+                Assert.IsTrue(run.CanServe(run.MenuRecipes.Single(r => r.Id == id)),
+                    "the written week names " + id + ", which the opening shelf cannot pour");
+        }
+
+        [Test]
+        public void TheWrittenWeek_IsPourableFromTheOpeningShelf()
+        {
+            // The bar as GameBootstrap builds it, from the data, played through its first seven nights
+            // unserved: every cover the door is sent is one the shelf can make, and none of the written
+            // covers had to be handed to a stand-in. Measured on 2026-09-26 against the old six-bottle
+            // shelf, this was 35 of 75 covers the bar could not make — 6 of 9 on the opening night.
+            var run = OpeningBar.Run("written-week", new TycoonConfig(5000, weeklyJobs: false, lastCall: false));
+            var book = RecipeCatalog.CreateDefault().Where(r => !r.Locked).ToList();
+            int covers = 0;
+            for (int day = 1; day <= FirstWeek.Nights; day++)
+            {
+                Assert.AreEqual(day, run.Day);
+                var plan = run.Plan;
+                var written = FirstWeek.For(day, 0.0, book, TycoonConfig.Default).Select(r => r.Id).ToList();
+                CollectionAssert.AreEquivalent(written, plan.Queue.Select(r => r.Id).ToList(),
+                    "night " + day + " is the night that was written, cover for cover");
+                foreach (var page in plan.Queue)
+                {
+                    Assert.IsTrue(run.CanServe(page), $"night {day}: {page.Id} cannot be served");
+                    Assert.IsTrue(run.CanMake(new DrinkOrder(page, 1)), $"night {day}: {page.Id} cannot be made");
+                    covers++;
+                }
+                run.DevSkipToDayEnd();
+                run.ContinueToNextDay();
+            }
+            Assert.AreEqual(Enumerable.Range(1, FirstWeek.Nights).Sum(FirstWeek.CoversOn), covers);
         }
 
         [Test]
@@ -276,6 +313,14 @@ namespace LastCall.Tests
             Assert.AreEqual(FirstWeek.CoversOn(4), plan.Covers, "the night keeps its covers");
             CollectionAssert.IsSubsetOf(plan.Queue.Select(r => r.Id).Distinct().ToList(),
                 thin.Select(r => r.Id).ToList(), "and never asks for what is not there");
+
+            // THE DROPPED COVERS GO ROUND (2026-09-26). Night four names draught twice and vodka_soda once
+            // among eleven covers; the eight it cannot pour used to go to its first pourable page, every one
+            // of them — ten pints and one build. They take turns now, in the order the night names its pages
+            // (draught before vodka_soda), so each takes four of the eight.
+            var night = FirstWeek.For(4, 0.0, thin, TycoonConfig.Default).Select(r => r.Id).ToList();
+            Assert.AreEqual(6, night.Count(id => id == "draught"), "the pint: its own two, and four stand-ins");
+            Assert.AreEqual(5, night.Count(id => id == "vodka_soda"), "the build: its own one, and four stand-ins");
         }
 
         [Test]

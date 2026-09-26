@@ -79,7 +79,8 @@ namespace LastCall.Core
         /// <summary>The counter's tier (1–3). It is the ONE fitting left: the back bar and the
         /// musician were deleted outright on 2026-08-04, and the counter was kept on the
         /// condition that it stops touching the scene and pays in a number instead (the
-        /// author). Nothing reads it but <see cref="Ambience"/>.</summary>
+        /// author). <see cref="Ambience"/> reads it — and since 2026-09-26 the room's comfort too,
+        /// <see cref="VenueComfort.CounterComfort"/> a step, when the house was cut to sum to five.</summary>
         public int CounterTier { get; private set; } = 1;
 
         /// <summary>The satisfaction the bar adds to every served visit (GDD 23 §4's "plus
@@ -136,24 +137,25 @@ namespace LastCall.Core
         /// <see cref="ComfortTonight"/>, and drawn with a symbol of its own. Kept under its
         /// old name for the one reader that still asks the old question.
         /// </summary>
-        /// <remarks>FRONT-LOADED per step (measured, 2026-08-02): a flat 0.12/step made a
-        /// cap-star cost ~$383 against the ~$100 the healthy three-step economy paid, and
-        /// the sim went 13% → 83% bankruptcies on that arithmetic. The early steps of a
-        /// line carry most of its ceiling (0.20/0.15/0.12/0.08/0.05 — 0.60 a line, +3.0
-        /// across five); comfort counts half of that sum (GDD 27 D2), so the room's
-        /// fittings are a second road up and not an optional one. Counted from the
-        /// CONFIG's opening seats, not a literal (audit 2026-08-11).</remarks>
+        /// <remarks>~~FRONT-LOADED per step (measured, 2026-08-02): 0.20/0.15/0.12/0.08/0.05 a
+        /// line, counted at half (GDD 27 D2).~~ The step table left the code on 2026-09-26: a
+        /// glass step's comfort is its line's own data (<see cref="GlasswareDefinition.TierComfort"/>),
+        /// and the whole house — glass, stools, bar top and every fitting — sums to exactly five.
+        /// Counted from the CONFIG's opening seats, not a literal (audit 2026-08-11).</remarks>
         public double UpgradeStarCap => ComfortBase;
-
-        private static readonly double[] GlassStepCap = { 0.20, 0.15, 0.12, 0.08, 0.05 };
 
         /// <summary>The most stars tonight's MENU allows: a night that never served past
         /// the starter list caps low; only the stirred precision drinks open five.</summary>
-        public double MenuStarCap =>
-            _bestRankServedTonight <= 0 ? 2.0
-            : _bestRankServedTonight <= 8 ? 2.5
-            : _bestRankServedTonight <= 14 ? 3.5
-            : _bestRankServedTonight <= 21 ? 4.5 : 5.0;
+        public double MenuStarCap => MenuStarCapFor(_bestRankServedTonight);
+
+        /// <summary>The same ceiling for a night whose best Exact serve was <paramref name="bestRankServed"/>
+        /// (0 for none) — static so the economy projection's furnished walk files its nights under the rule
+        /// the run files them under, not a copy of it (2026-09-26).</summary>
+        public static double MenuStarCapFor(int bestRankServed) =>
+            bestRankServed <= 0 ? 2.0
+            : bestRankServed <= 8 ? 2.5
+            : bestRankServed <= 14 ? 3.5
+            : bestRankServed <= 21 ? 4.5 : 5.0;
 
         private int _bestRankServedTonight;
 
@@ -615,10 +617,15 @@ namespace LastCall.Core
         /// <summary>What a recipe costs to put on the menu, priced off its tier's rank —
         /// kept cheap enough that the menu can GROW at the pace the rent climbs, because the
         /// ladder of bought recipes is the income curve now (P16).</summary>
-        public int RecipePrice(RecipeDefinition recipe) =>
+        public int RecipePrice(RecipeDefinition recipe) => RecipePriceAt(recipe.Rank, RecipeStarGate(recipe));
+
+        /// <summary>A page of this rank at this star gate — the one price line, static so the economy
+        /// projection's furnished walk buys its pages at the shop's price rather than a copy of it
+        /// (2026-09-26).</summary>
+        public static int RecipePriceAt(int rank, double starGate) =>
             // ...times the stage its gate puts it on (StarEconomy, 2026-09-06): the one-star
             // pages cost twice the curve, the two-star pages three times.
-            StarEconomy.PriceAt(Math.Max(9, 5 + (5 * (recipe.Rank - 2)) / 2), RecipeStarGate(recipe));
+            StarEconomy.PriceAt(Math.Max(9, 5 + (5 * (rank - 2)) / 2), starGate);
 
         /// <summary>Stars the room must say about this bar before the recipe sells (C6).
         /// Lowered under the caps they unlock (2026-08-02): with the menu cap in play, a
@@ -679,7 +686,9 @@ namespace LastCall.Core
         /// <summary>
         /// Buys a locked recipe onto the menu (v5 P16). A day-end act, like every purchase:
         /// deliveries come when the doors are shut. Core refuses shortfalls of money and of
-        /// reputation — from tomorrow the drink can be ordered, rolled and matched.
+        /// reputation — from tomorrow the drink can be matched, and it is ordered from the first
+        /// night the shelf can pour it (<see cref="CanServe(RecipeDefinition)"/>, 2026-09-26): a
+        /// page bought without its bottle waits on the menu until the bottle arrives.
         /// </summary>
         public RecipeDefinition UnlockRecipe(string recipeId)
         {
@@ -975,27 +984,14 @@ namespace LastCall.Core
             // triple tap owns the single and the double too — it paid for them on the way up.
             // Taking only the top rung would leave the preset in a state the game cannot
             // reach, which is the one thing a preset must never do.
-            // ...and the MID room is half-fitted, not fully — measured twice, because the
-            // first answer was wrong. The star gate alone is no limit here: everything up to
-            // 2.6 stars is 32 of the 39 pieces and 12.05 raw comfort against a CEILING OF 5,
-            // so the mid bar clamped to 5.00 and read identically to the endgame on the half
-            // of the night comfort decides (GDD 27). Capping at rung 2 was still 6.55 — over
-            // the ceiling, still clamped, still indistinguishable. Rung 1 is 2.60, which
-            // lands under it, so the mid preset finally reads as a room worked on and not
-            // finished. The lesson is the ceiling: a preset that clamps is a preset that
-            // cannot be told from any other clamped preset.
-            int rungCap = late ? int.MaxValue : 1;
+            // ~~...and the MID room is half-fitted, capped at rung 1~~ — the cap existed only to
+            // keep the room under a ceiling it overshot (the house summed to eighteen, so a
+            // 2.6-star room read 5.00 like the endgame's). THE HOUSE SUMS TO FIVE (2026-09-26):
+            // everything the gate opens is 3.75 of fittings at 2.6 stars, a room worked on and
+            // not finished, and the preset buys it all — the tools and the decor alike.
             foreach (var f in _fixtureCatalogue)
             {
                 if (f.Stars > ShopStars + 1e-9) continue;      // the gate BuyFixture keeps
-                // THE TOOLS ARE NOT THE DECOR. A rung cap set for the room's LOOK also cut
-                // the things the player WORKS with — the second tap line, the brass basin,
-                // the gold shaker — and a mid preset that cannot pull two lines is a mid
-                // preset the draught mechanic cannot be tested in. They cost 0.9 comfort
-                // between them (measured), which leaves the mid room well under its ceiling,
-                // so they are exempt from the cap and the decor is not.
-                bool tool = f.IsTap || f.IsDrain || f.Slot == "shaker";
-                if (!tool && f.Level > 0 && f.Level > rungCap) continue;
                 _fixtures.Add(f.Id);
             }
             RoomChanged();
@@ -1059,12 +1055,14 @@ namespace LastCall.Core
                     { _brandCatalogue.Add(card); _lockedStock.RemoveAt(i); }
                 }
             }
-            foreach (var card in _brandCatalogue)
-            {
-                if (card.Info?.Style == null) continue;
-                bool missing = top ? _shelf.Find(card.Id) == null : Market.FindByStyle(_shelf, card.Info.Style) == null;
-                if (missing) _shelf.Add(new ShelfBottle(card.Clone()));
-            }
+            if (top)
+                foreach (var card in _brandCatalogue)
+                {
+                    if (card.Info?.Style == null) continue;
+                    if (_shelf.Find(card.Id) == null) _shelf.Add(new ShelfBottle(card.Clone()));
+                }
+            else
+                StockThePresetShelf(stars);
             if (top)
                 for (int i = _lockedStock.Count - 1; i >= 0; i--)
                 {
@@ -1076,15 +1074,19 @@ namespace LastCall.Core
             foreach (var r in _recipes)
                 if (r.HasAuthoredRatios) _perfectedRecipes.Add(r.Id);
 
-            // The fittings the shop would have sold by this standing, the decor ladders capped a rung below
-            // the top so the room's comfort stays under its ceiling (DevPreset's measured lesson), the tools whole.
-            int rungCap = stars < 1 ? 0 : stars < 3 ? 1 : stars < 4 ? 2 : stars < 5 ? 3 : int.MaxValue;
+            // THE FITTINGS THE SHOP WOULD HAVE SOLD BY THIS STANDING, all of them (2026-09-26). The decor
+            // ladders used to stop a rung or three below the top so the room stayed under a ceiling it
+            // overshot — the house summed to eighteen, and every preset from three stars up read 5.00.
+            // The house sums to five now, so the preset buys everything its gate opens and its comfort
+            // rises with the standing — 1.80 at half a star, 4.80 at four — reaching 5.00 only with the
+            // whole house at five. The 0★ preset stays the bar as it opens: the room's own pieces and
+            // the ungated tools, no decor (a new bar has bought nothing yet).
+            bool bare = stars < BarRank.Epsilon;
             foreach (var f in _fixtureCatalogue)
             {
                 if (f.Stars > ShopStars + 1e-9) continue;
                 bool tool = f.IsTap || f.IsDrain || f.Slot == "shaker";
-                if (!tool && f.Level > 0 && f.Level > rungCap) continue;
-                if (!tool && !f.StartsInTheRoom && rungCap == 0) continue;
+                if (bare && !tool && !f.StartsInTheRoom) continue;
                 _fixtures.Add(f.Id);
             }
             // A preset's room is a room like any other since 2026-09-23: the rungs it installs
@@ -1101,6 +1103,66 @@ namespace LastCall.Core
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             Phase = TycoonPhase.DayOpen;
+        }
+
+        /// <summary>
+        /// THE PRESET'S SHELF POURS ITS BOOK (2026-09-26). It used to stand one bottle of every style on the
+        /// shelf — the first card of that style in catalogue order, usually the well — whatever its gate said
+        /// and whatever tier the book demanded, so every preset under five stars held twenty-six bottles and
+        /// could not pour 2, 5, 9 and 14 of its own pages at one to four stars (a Vesper wants tier-four gin,
+        /// a Moscow Mule the second vodka). Now each style stands at the HIGHEST tier the open book demands of
+        /// it (a band's MinTier; a jar for a page whose extra is one) as the cheapest card at that tier, every
+        /// other style as its cheapest well, and nothing whose gate the preset's standing has not reached —
+        /// the shop would not have sold it by then. What the night then asks for is the whole book.
+        /// </summary>
+        private void StockThePresetShelf(double stars)
+        {
+            var demand = new Dictionary<string, int>(StringComparer.Ordinal);
+            void Want(string style, int tier)
+            {
+                if (string.IsNullOrEmpty(style)) return;
+                demand[style] = demand.TryGetValue(style, out int had) ? Math.Max(had, tier) : tier;
+            }
+            foreach (var r in _recipes)
+            {
+                foreach (var band in r.RatioRequirements)
+                    if (band.IsStyleBand) Want(band.Style, Math.Max(1, band.MinTier));
+                var extra = r.Garnish != null ? Preparations.Find(r.Garnish) : null;
+                if (extra != null) Want(JarFor(extra), 1);
+            }
+
+            var styles = new List<string>();
+            foreach (var card in _brandCatalogue)
+                if (card.Info?.Style != null && !styles.Contains(card.Info.Style)) styles.Add(card.Info.Style);
+            foreach (var style in styles)
+            {
+                int tier = demand.TryGetValue(style, out int wanted) ? wanted : 1;
+                bool stocked = false;
+                foreach (var bottle in _shelf.Bottles)
+                    if (bottle.Ingredient.Info?.Style == style && bottle.Ingredient.Info.Tier >= tier)
+                    { stocked = true; break; }
+                if (stocked) continue;
+                IngredientCard pick = null;
+                foreach (var card in _brandCatalogue)
+                {
+                    if (card.Info?.Style != style || card.Info.Tier < tier) continue;
+                    if (_shelf.Find(card.Id) != null || !OnSaleAtThePreset(card, stars)) continue;
+                    if (pick == null || card.Info.Tier < pick.Info.Tier
+                        || (card.Info.Tier == pick.Info.Tier && Market.StockPrice(card) < Market.StockPrice(pick)))
+                        pick = card;
+                }
+                if (pick != null) _shelf.Add(new ShelfBottle(pick.Clone()));
+            }
+        }
+
+        /// <summary>Whether the shop would sell <paramref name="card"/> to a bar standing at the preset's
+        /// stars: a star gate at or under them, or a lock that counts no star (a draught line, a person)
+        /// asked of the bar as the preset has already parked it.</summary>
+        private bool OnSaleAtThePreset(IngredientCard card, double stars)
+        {
+            double gate = Market.GateOf(card);
+            if (double.IsNaN(gate)) return card.Info.Unlock != null && card.Info.Unlock.MetBy(this);
+            return gate <= stars + BarRank.Epsilon;
         }
 
         public void DevSkipToDayEnd()
@@ -1680,11 +1742,22 @@ namespace LastCall.Core
         {
             if (_plan != null && ReferenceEquals(_planFloor, Floor)) return _plan;
             var open = PreparationsOpen;
-            // A page whose signature extra the bar cannot give tonight (the ladder's rung, the market's
-            // jar) is not ordered (2026-09-21): nobody asks for a Southside where there is no mint.
-            var menu = _recipes
-                .Where(r => r.Garnish == null || open == null || open.Any(g => g.Id == r.Garnish))
-                .ToList();
+            // THE NIGHT ASKS ONLY FOR WHAT THE BAR CAN MAKE (2026-09-26, the author: "Oyuncunun sahip
+            // olduğu yıldız seviyesindeki kokteyller ile sahip olduğu alkoller doğru orantılı olmalı").
+            // A page on the menu is a page the bar has BOUGHT; it is asked for once the shelf can pour it
+            // — its bottles, its extra on the rail (2026-09-21), its spoon (CanServe). A page bought
+            // without its bottle waits, and the night pays for the shelf the bar actually has.
+            var menu = _recipes.Where(r => CanServe(r, open)).ToList();
+            // Only a rig can pour nothing — the shipped well always answers the pint and the neat pour,
+            // and a bottle leaves the shelf only by a same-night refund of one that was bought. Such a
+            // rig is cut the way every night was before this rule, so it still has a night.
+            if (menu.Count == 0) menu = _recipes.Where(r => ExtraOnTheRail(r, open)).ToList();
+            // THE STREAMS (2026-09-26, stated honestly): the filter draws nothing, the covers come from
+            // the door's arithmetic or the written week whatever the pages, and the shuffle below draws
+            // covers - 1 on "plan" either way — so "plan", "arrivals", "patience", "decide", "customer",
+            // "read" and "papers" keep their places. "orders" does NOT: ServingSpec.Roll takes two draws
+            // for a pint and three or four for anything else, so once a cover changes between a pint and
+            // anything else the rest of the night spends that stream differently. Same seed, same run.
             _planFloor = Floor;
             // The room's CROWD shortens the door's gap, so the plan is cut for the covers that may
             // walk in — the upper bound, since the floor only reads it while the bar keeps up and
@@ -1739,7 +1812,13 @@ namespace LastCall.Core
         /// <summary>The premium a drink earns from the shelf's stock (GDD 23 §3, 2026-07-23):
         /// for each spirit/bitter the recipe needs, the best bottle above the base tier adds
         /// <see cref="TycoonConfig.StockPremiumPerTier"/> to the price. A basic bar adds nothing.</summary>
-        private int PremiumFor(RecipeDefinition recipe)
+        private int PremiumFor(RecipeDefinition recipe) =>
+            PremiumFrom(recipe, _shelf.Bottles.Select(b => b.Ingredient), _config.StockPremiumPerTier);
+
+        /// <summary>The same premium read off a shelf that is only a list of cards — static so the economy
+        /// projection's furnished walk prices a page from the bottles it has actually bought, by the run's own
+        /// rule (2026-09-26).</summary>
+        public static int PremiumFrom(RecipeDefinition recipe, IEnumerable<IngredientCard> shelf, int perTier)
         {
             // STYLE BANDS ARE THE RULE, NOT THE EXCEPTION (audit 2026-08-11). The old loop
             // read band.Type — which the style-band constructor leaves at its default, and
@@ -1760,25 +1839,25 @@ namespace LastCall.Core
                     // The best bottle OF THAT STYLE on the shelf — a T1 and a T3 gin can
                     // stand together (brands only ever join), and the drink pours the best.
                     int tier = 0; string category = null; var type = default(IngredientType);
-                    foreach (var b in _shelf.Bottles)
+                    foreach (var card in shelf)
                     {
-                        var inf = b.Ingredient.Info;
+                        var inf = card.Info;
                         if (inf == null || inf.Style != band.Style || inf.Tier <= tier) continue;
-                        tier = inf.Tier; category = inf.Category; type = b.Ingredient.Type;
+                        tier = inf.Tier; category = inf.Category; type = card.Type;
                     }
                     if (tier <= 1) continue;
                     if (!IngredientCategories.IsAlcoholic(category, type)) continue;
-                    premium += (tier - 1) * _config.StockPremiumPerTier;
+                    premium += (tier - 1) * perTier;
                 }
                 else
                 {
                     if (band.Type != IngredientType.Spirit && band.Type != IngredientType.Bitter) continue;
                     if (!countedTypes.Add(band.Type)) continue;   // one premium per alcohol type
                     int bestTier = 1;
-                    foreach (var bottle in _shelf.Bottles)
-                        if (bottle.Ingredient.Type == band.Type)
-                            bestTier = Math.Max(bestTier, bottle.Ingredient.Info?.Tier ?? 1);
-                    premium += (bestTier - 1) * _config.StockPremiumPerTier;
+                    foreach (var card in shelf)
+                        if (card.Type == band.Type)
+                            bestTier = Math.Max(bestTier, card.Info?.Tier ?? 1);
+                    premium += (bestTier - 1) * perTier;
                 }
             }
             return premium;
@@ -3351,29 +3430,118 @@ namespace LastCall.Core
             if (Job != null && Job.IsDone) JobDone = Job;
             // Rolled from the menu the bar can pour TODAY — the market ran between the
             // hand-over and here, so this reads the shelf as it is on the first morning of
-            // the week rather than as it was on Saturday night.
-            Job = WeeklyJobs.Roll(MenuRecipes, CanPourTonight, week, _rng, JobGiver);
+            // the week rather than as it was on Saturday night. Asked through CanServe, the same
+            // question the night's plan asks (2026-09-26), so a job never names a page whose extra
+            // or whose spoon the bar does not have either. That shrinks the pool the "job" stream
+            // indexes on some bars, so some seeds hand over a different week's job than before.
+            Job = WeeklyJobs.Roll(MenuRecipes, CanServe, week, _rng, JobGiver);
         }
 
-        /// <summary>Whether every band of a recipe has a bottle behind the bar to answer it.
-        /// Asked when a job is rolled, so nothing is ever set that cannot be made.</summary>
-        private bool CanPourTonight(RecipeDefinition recipe)
+        // ── what the bar can make (2026-09-26) ──────────────────────────────────
+        // The author: "Mevcut müşteriler ilk gün siparişlerinde oyuncunun yapamayacağı siparişlerde
+        // bulunuyorlar ... Oyuncunun sahip olduğu yıldız seviyesindeki kokteyller ile sahip olduğu
+        // alkoller doğru orantılı olmalı." The opening night asked for a gin and tonic and a whiskey
+        // and cola from a bar that owned no tonic, no cola and no bourbon — six covers of nine, and
+        // nothing the player could do about it, because the market only opens after the first night.
+        // The rules layer never trusts the UI: the order is refused HERE, not greyed out on a menu.
+
+        /// <summary>
+        /// CAN THE BAR MAKE THIS PAGE TONIGHT? True only when all three hold:
+        /// every band is answered by a bottle ON THE SHELF (its style at a tier at least the band's
+        /// <see cref="RatioRequirement.MinTier"/>, or the type for the type-banded draught and neat pour);
+        /// the page's signature extra, if it has one, is on tonight's rail (<see cref="PreparationsOpen"/>
+        /// — the ladder's rung and, for the jars, the jar); and a Stirred page has the spoon
+        /// (<see cref="SpoonUnlocked"/>). OWNERSHIP, NOT FILL: a bottle that has run dry still answers,
+        /// because running dry is the refill the player sees at the close, and the honest
+        /// <see cref="DeclineOrder"/> is the answer to it on the night (<see cref="CanMake"/> reads the fill).
+        /// The night's plan and the weekly job ask this; nothing draws a page that says no.
+        /// </summary>
+        public bool CanServe(RecipeDefinition recipe) => CanServe(recipe, PreparationsOpen);
+
+        private bool CanServe(RecipeDefinition recipe, IReadOnlyList<PreparationDefinition> open)
         {
             if (recipe == null) return false;
             foreach (var band in recipe.RatioRequirements)
+                if (!ShelfAnswers(band)) return false;
+            if (!ExtraOnTheRail(recipe, open)) return false;
+            // After 2026-09-26 no shipped page is stirred below the spoon's rung (black_russian went to
+            // rank 12); the clause is the guard against the next page somebody writes.
+            if (recipe.Prep == PrepMethod.Stirred && !SpoonUnlocked) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// The same three questions asked of a shelf that is only a list of cards, at a standing of
+        /// <paramref name="stars"/> (2026-09-26): every band answered (<see cref="CardAnswers"/>), the page's
+        /// extra on the rail the ladder opens there — a jar's extra only with the jar among the cards — and a
+        /// Stirred page only once the spoon's rung is reached. What the economy projection's furnished walk
+        /// asks of the bottles it has bought, so its nights are cut from the pages the bar could really pour.
+        /// </summary>
+        public static bool CanServeFrom(RecipeDefinition recipe, IReadOnlyCollection<IngredientCard> shelf, double stars)
+        {
+            if (recipe == null || shelf == null) return false;
+            foreach (var band in recipe.RatioRequirements)
             {
                 bool answered = false;
-                foreach (var bottle in _shelf.Bottles)
-                {
-                    var info = bottle.Ingredient.Info;
-                    bool hit = band.IsStyleBand
-                        ? info != null && info.Style == band.Style && info.Tier >= band.MinTier
-                        : bottle.Ingredient.Type == band.Type;
-                    if (hit) { answered = true; break; }
-                }
+                foreach (var card in shelf)
+                    if (CardAnswers(card, band)) { answered = true; break; }
                 if (!answered) return false;
             }
+            if (recipe.Garnish != null)
+            {
+                var open = new List<PreparationDefinition>(BarRank.PreparationsOpen(stars));
+                open.RemoveAll(p => JarFor(p) != null && !shelf.Any(c => c.Info?.Style == JarFor(p)));
+                if (!ExtraOnTheRail(recipe, open)) return false;
+            }
+            if (recipe.Prep == PrepMethod.Stirred && !BarRank.Has(stars, Feature.Spoon)) return false;
             return true;
+        }
+
+        /// <summary>
+        /// WHAT THE SHELF IS MISSING FOR A PAGE (2026-09-26): the bands no bottle on the shelf answers,
+        /// in the page's own order — empty when the shelf can pour it. Read-only, for the book and the
+        /// market to print ("not asked for until: COLA") rather than to work out for themselves. The
+        /// extra and the spoon are the rail's and the ladder's to say (<see cref="PreparationOpen"/>,
+        /// <see cref="SpoonUnlocked"/>); <see cref="CanServe(RecipeDefinition)"/> is the whole answer.
+        /// </summary>
+        public IReadOnlyList<RatioRequirement> MissingFor(RecipeDefinition recipe)
+        {
+            var missing = new List<RatioRequirement>();
+            if (recipe == null) return missing;
+            foreach (var band in recipe.RatioRequirements)
+                if (!ShelfAnswers(band)) missing.Add(band);
+            return missing;
+        }
+
+        /// <summary>Whether a bottle on the shelf answers a band — its style at the band's tier or
+        /// better, or its type for a type band. Owned, whatever is left in it.</summary>
+        private bool ShelfAnswers(RatioRequirement band)
+        {
+            foreach (var bottle in _shelf.Bottles)
+                if (CardAnswers(bottle.Ingredient, band)) return true;
+            return false;
+        }
+
+        /// <summary>Whether one card answers a band: its style at the band's tier or better, or its type for
+        /// a type band. Static and public so a shelf that is only a list of cards — the economy projection's,
+        /// a test's — asks the question the run asks, in the same words.</summary>
+        public static bool CardAnswers(IngredientCard card, RatioRequirement band)
+        {
+            if (card == null) return false;
+            var info = card.Info;
+            return band.IsStyleBand
+                ? info != null && info.Style == band.Style && info.Tier >= band.MinTier
+                : card.Type == band.Type;
+        }
+
+        /// <summary>A page whose signature extra the bar cannot give tonight (the ladder's rung, the
+        /// market's jar) is not ordered (2026-09-21): nobody asks for a Southside where there is no mint.</summary>
+        private static bool ExtraOnTheRail(RecipeDefinition recipe, IReadOnlyList<PreparationDefinition> open)
+        {
+            if (recipe.Garnish == null || open == null) return true;
+            foreach (var p in open)
+                if (p.Id == recipe.Garnish) return true;
+            return false;
         }
 
         // ── helpers ─────────────────────────────────────────────────────────────

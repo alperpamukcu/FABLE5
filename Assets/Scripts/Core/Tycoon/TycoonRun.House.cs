@@ -120,30 +120,66 @@ namespace LastCall.Core
             return floor;
         }
 
-        /// <summary>The glassware ladder's cap, as the old fittings ceiling summed it
-        /// (front-loaded per step, measured 2026-08-02 — see <see cref="GlassStepCap"/>).
-        /// Comfort counts half of it (<see cref="VenueComfort.GlassComfortShare"/>).</summary>
-        public double GlassStepsCap
+        /// <summary>What the glass steps bought are worth to the room: every step each line has
+        /// climbed, at the line's own <see cref="GlasswareDefinition.TierComfort"/> (2026-09-26).
+        /// It was half of a table of step caps Core kept private (0.20…0.05 a line), which the
+        /// glass card could not print and which made five lines worth 1.50 of a house that has to
+        /// sum to five; the five shipped lines are worth 0.50 together now, a fiftieth a step.</summary>
+        public double GlassComfort
         {
             get
             {
-                double cap = 0;
+                double sum = 0;
                 foreach (var g in _glassware)
                 {
                     int steps = GlassTier(g.Id) - 1;
-                    for (int s = 0; s < steps && s < GlassStepCap.Length; s++)
-                        cap += GlassStepCap[s];
+                    for (int s = 0; s < steps && s < g.TierComfort.Count; s++)
+                        sum += g.TierComfort[s];
                 }
-                return cap;
+                return sum;
             }
         }
 
         /// <summary>What the room is worth with nobody in it (GDD 27 §3): the free base, the
-        /// fittings, half the glass ladder, the extra stools. Changes at the market, never
-        /// during a night. A fresh bar is worth NOTHING (2026-09-06): the room is what has
-        /// been put into it, and the walls are the first and biggest thing to put in.</summary>
+        /// fittings, the glass steps, the extra stools and the bar-top steps (2026-09-26 — the
+        /// counter joined the room when the house was cut to sum to exactly five). Changes at
+        /// the market, never during a night. A fresh bar is worth NOTHING (2026-09-06): the room
+        /// is what has been put into it, and the walls are the first and biggest thing to put in.</summary>
         public double ComfortBase =>
-            VenueComfort.Base(FixtureComfort, GlassStepsCap, Math.Max(0, Seats - _config.StartingSeats));
+            VenueComfort.Base(FixtureComfort, GlassComfort, Math.Max(0, Seats - _config.StartingSeats),
+                Math.Max(0, CounterTier - 1));
+
+        /// <summary>
+        /// WHAT A PIECE ADDS (2026-09-26, the author: "Şu an sanki tüm gelişmeler +5 oluyormuş gibi
+        /// gözüküyor"): a rung's comfort less the comfort of the rung under it on the same ladder — 0
+        /// under the first rung — or a single piece's own comfort. Rungs carry ABSOLUTE values
+        /// (<see cref="FixtureComfort"/> reads the climbed rung), and the market printed them as if each
+        /// were added: the back wall's cards read +1.25, +2.25, +2.75, +3.00, +3.25 for a wall worth
+        /// 3.25. The market's pips and card lines print this, and the sim values a piece by it.
+        /// </summary>
+        public double ComfortGain(FixtureDefinition f) => ComfortGainIn(f, _fixtureCatalogue);
+
+        /// <summary><see cref="ComfortGain"/> against any catalogue — the economy projection's furnished
+        /// walk values a piece by the same increment the market prints.</summary>
+        public static double ComfortGainIn(FixtureDefinition f, IReadOnlyList<FixtureDefinition> catalogue)
+        {
+            if (f == null) return 0;
+            if (f.Level <= 1 || catalogue == null) return f.Comfort;
+            foreach (var below in catalogue)
+                if (below.Slot == f.Slot && below.Level == f.Level - 1)
+                    return f.Comfort - below.Comfort;
+            return f.Comfort;
+        }
+
+        /// <summary>The comfort of a ladder's top rung: what the whole ladder is worth once it is climbed
+        /// (the ladder head prints the climbed rung's comfort against it). A single piece is its own top.</summary>
+        public double LadderComfort(string slot)
+        {
+            double top = 0; int level = -1;
+            foreach (var f in _fixtureCatalogue)
+                if (f.Slot == slot && f.Level > level) { level = f.Level; top = f.Comfort; }
+            return top;
+        }
 
         /// <summary>The room as it stands THIS SECOND: the base less the messes past their
         /// grace (GDD 27 §2.2), cushioned by the installed COMFORT buff (2026-09-23). The shift's

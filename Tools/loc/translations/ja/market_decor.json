@@ -13,6 +13,7 @@
     {"key": "decor.card.worn", "text": "いま店内に設置中"},
     {"key": "decor.card.worn_stays", "text": "いま店内に設置中 · 店の評価は段階{mark}のまま"},
     {"key": "decor.comfort", "text": "居心地+{comfort}"},
+    {"key": "decor.comfort_of", "text": "居心地 {comfort}/{top}", "src": "{comfort} of {top} comfort"},
     {"key": "decor.fit.all_fitted", "text": "設備は最高 — もう上げるものはありません"},
     {"key": "decor.fit.bar.body", "text": "良いカウンターは、すべてのお客を少し幸せにします。ドリンクを間違えた相手でさえも。"},
     {"key": "decor.fit.bar.gain", "text": "提供ごとに+0.03、最大+0.06"},

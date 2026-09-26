@@ -32,8 +32,22 @@ namespace LastCall.Core
         /// base set is owned from day one (the author's six-step ladder, 2026-08-02).</summary>
         public IReadOnlyList<int> TierPrices { get; }
 
+        /// <summary>
+        /// What each of those five steps adds to the room's COMFORT, in the same order (2026-09-26, the
+        /// author: "Oyuncu oyunda maksimum 5 konfora ulaşmalı ve bu oyun sonlarına yakın gerçekleşmeli").
+        /// It was a table Core kept to itself (<c>TycoonRun.GlassStepCap</c>, 0.20…0.05 a line, counted at
+        /// half), so a glass card could not say what it added and the five lines were worth 1.50 of a house
+        /// that had to sum to five. It is data now, beside the prices it is bought with; a line built without
+        /// it (a test's rig) adds nothing to the room.
+        /// </summary>
+        public IReadOnlyList<double> TierComfort { get; }
+
+        /// <summary>The most one glass step may add: a step is a small thing, and the whole house is five.</summary>
+        public const double MaxStepComfort = 0.5;
+
         public GlasswareDefinition(string id, string name,
-            IReadOnlyList<double> profile, IReadOnlyList<int> tierPrices, double capacity)
+            IReadOnlyList<double> profile, IReadOnlyList<int> tierPrices, double capacity,
+            IReadOnlyList<double> tierComfort = null)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("Glass needs an id.", nameof(id));
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException($"Glass '{id}' needs a name.", nameof(name));
@@ -51,13 +65,27 @@ namespace LastCall.Core
             if (capacity <= 0 || capacity > 4)
                 throw new ArgumentException(
                     $"Glass '{id}' holds {capacity}; must be in (0, 4] pour units.", nameof(capacity));
+            if (tierComfort != null)
+            {
+                if (tierComfort.Count != tierPrices.Count)
+                    throw new ArgumentException(
+                        $"Glass '{id}' needs exactly {tierPrices.Count} comfort steps, one per upgrade price; it has {tierComfort.Count}.",
+                        nameof(tierComfort));
+                foreach (var c in tierComfort)
+                    if (double.IsNaN(c) || c < 0 || c > MaxStepComfort)
+                        throw new ArgumentException(
+                            $"Glass '{id}' has a comfort step of {c}; must be in [0, {MaxStepComfort}].", nameof(tierComfort));
+            }
 
             Id = id;
             Name = name;
             Profile = profile;
             TierPrices = tierPrices;
             Capacity = capacity;
+            TierComfort = tierComfort ?? NoComfort;
         }
+
+        private static readonly double[] NoComfort = { 0, 0, 0, 0, 0 };
 
         public override string ToString() => $"{Name} ({Id})";
     }

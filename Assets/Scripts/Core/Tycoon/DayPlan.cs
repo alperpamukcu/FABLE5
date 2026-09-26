@@ -132,7 +132,9 @@ namespace LastCall.Core
         /// <summary>
         /// Cuts the night. <paramref name="menu"/> is what the bar can actually pour tonight —
         /// unlocked, ratio-graded, and with the extras it owns — and the plan never invents a page
-        /// that is not on it.
+        /// that is not on it. (Kept true by the caller since 2026-09-26: TycoonRun hands over only
+        /// the pages its shelf answers, <see cref="TycoonRun.CanServe(RecipeDefinition)"/>; before
+        /// that the shelf was never asked and the contract was a hope.)
         /// </summary>
         public static DayPlan Roll(IReadOnlyList<RecipeDefinition> menu, int day, double stars,
             TycoonConfig config, SeededRng rng, double gapScale = 1.0)

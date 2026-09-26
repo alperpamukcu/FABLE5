@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Teď v lokále", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Teď v lokále · lokál má dál hodnotu stupně {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} pohodlí", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} z {top} pohodlí", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "BAR JE VYBAVENÝ — UŽ NENÍ CO VYLEPŠIT", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Lepší barová deska potěší každého hosta. I ty, kterým spleteš drink.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 za každou obslouženou návštěvu, nejvýš +0.06", "src": "+0.03 on every served visit, up to +0.06"},

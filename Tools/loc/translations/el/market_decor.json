@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Στον χώρο τώρα", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Στον χώρο τώρα · ο χώρος μετράει ως σκαλοπάτι {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} άνεση", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} από {top} άνεση", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "ΤΟ ΜΠΑΡ ΕΙΝΑΙ ΠΛΗΡΕΣ — ΤΙΠΟΤΑ ΓΙΑ ΑΝΑΒΑΘΜΙΣΗ", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Μια καλύτερη μπάρα κάνει κάθε πελάτη πιο χαρούμενο. Ακόμα κι όσους τους φτιάχνεις λάθος ποτό.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 σε κάθε επίσκεψη με σερβίρισμα, ως +0.06", "src": "+0.03 on every served visit, up to +0.06"},

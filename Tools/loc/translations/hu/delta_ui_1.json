@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "Az egész a habon múlik.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "A bárszékre kattints, ne az italra.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "Senki nem mondja meg, mit kér, amíg meg nem kérdezed.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "Amiből ma este nem volt, azt holnap valaki kérni fogja.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "Az az oldal, amit a polcról nem tudunk kitölteni, senkinek sem kell.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

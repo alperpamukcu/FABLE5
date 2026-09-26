@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "Bütün iş köpükte.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "İçkiye değil, tabureye tıkla.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "Sen sormadan kimse ne istediğini söylemez.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "Bu gece rafa koymadığımız ne varsa, yarın biri onu isteyecek.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "Rafın dökemediği sayfayı kimse sipariş etmez.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

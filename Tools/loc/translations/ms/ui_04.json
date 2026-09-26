@@ -562,8 +562,8 @@
     },
     {
       "key": "data.lesson.first_market.say.0",
-      "text": "Apa saja yang kita tak simpan malam ini, esok mesti ada orang minta.",
-      "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."
+      "text": "Halaman yang rak tak boleh tuang ialah halaman yang tiada siapa pesan.",
+      "src": "A page the shelf cannot pour is a page nobody orders."
     },
     {
       "key": "data.lesson.first_market.say.1",
@@ -572,8 +572,8 @@
     },
     {
       "key": "data.lesson.first_night.say.0",
-      "text": "Enam botol dan satu tong. Secara teknikal, itu sebuah bar.",
-      "src": "Six bottles and a keg. That is a bar, technically."
+      "text": "Lapan botol dan satu tong. Secara teknikal, itu sebuah bar.",
+      "src": "Eight bottles and a keg. That is a bar, technically."
     },
     {
       "key": "data.lesson.first_night.say.1",

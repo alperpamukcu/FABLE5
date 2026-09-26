@@ -121,9 +121,25 @@ symbol table, owned in §6: the slip's customer rows keep the STAR the author as
 
 ## 3. Comfort base — what the room is worth
 
-`ComfortBase = FreeBase + Σ fixture comfort + GlassComfortShare × Σ GlassStepCap + StoolComfort ×
-(Seats − StartingSeats)`, clamped to 5. Built: `VenueComfort.Base(fixtureComfort,
-glassStepCaps, extraStools)`.
+`ComfortBase = FreeBase + Σ fixture comfort + Σ glass steps' tierComfort + StoolComfort ×
+(Seats − StartingSeats) + CounterComfort × (CounterTier − 1)`, clamped to 5. Built:
+`VenueComfort.Base(fixtureComfort, glassComfort, extraStools, counterSteps)`.
+
+> **THE WHOLE HOUSE IS EXACTLY FIVE (2026-09-26 — the author's decision).** The author: *"Tüm
+> geliştirmeleri ekonomi dengesine dahil et, Oyuncu oyunda maksimum 5 konfora ulaşmalı ve bu oyun
+> sonlarına yakın gerçekleşmeli. Şu an sanki tüm gelişmeler +5 oluyormuş gibi gözüküyor."* The shipped
+> tree had grown to **18.00** raw against the ceiling of 5 (fixtures 16.00, glass 1.50, stools 0.50): the
+> meter read 5/5 by night ~14 with the standing under two stars, and every preset from 3★ opened full.
+> This reverses §3.1's *"11.25 → 5.0 … the player chooses"* overshoot on purpose: every fitting's top rung
+> and single piece **4.30**, every glass step **0.02** (0.50 across the five lines, `glassware.json`
+> `tierComfort`), each extra stool **0.05** (0.10) and each bar-top step **0.05** (0.10) sum to exactly
+> **5.00**, so the meter fills with the last purchase. Budgeted by the star band a piece opens in (0★ 1.10 ·
+> 0.5★ 0.70 · 1★ 0.60 · 1.5★ 0.55 · 2★ 0.45 · 2.5★ 0.35 · 3★ 0.45 · 3.5★ 0.05 · 4★ 0.05), shared in a band
+> by slot weight × √price; every piece adds +0.02…+0.19, the walls still carry the most (0.64), and every
+> gate opens at least the next gate + 0.5 once the ungated glass, stools and bar top are counted (the test
+> `ShippedHouse_OpensAheadOfTheStanding`). The glass `tierPrices` were **halved** the same day. The
+> shelf's own record is `ComfortEconomyTests`; the finish it buys is `LastCall → Economy Projection`'s
+> *The room, night by night* (§7).
 
 - `FreeBase = 0.0` — the room as it opens: **NOTHING** (2026-09-06, the author: *"oyuncu ilk
   başta yıkık dökük hiçbir şeyi olmayan bir barda konfor 0dan başlamalı"*). It opened at 2.0 —
@@ -136,11 +152,17 @@ glassStepCaps, extraStools)`.
   The pieces the room starts with carry **0** — they are the FreeBase. Summed over the STANDING rung
   of each ladder slot plus every owned single piece; a fitted-over rung counts nothing (rungs carry
   absolute values, not increments), which is the same filter the room uses to decide what to draw.
-- **Glassware** keeps counting, at half weight (`GlassComfortShare = 0.5` of the measured
+- ~~**Glassware** keeps counting, at half weight (`GlassComfortShare = 0.5` of the measured
   `GlassStepCap {0.20, 0.15, 0.12, 0.08, 0.05}` per line — up to +1.5 over five lines instead of
-  +3.0). It was the only route to the ceiling and it must stop being the only route; halving it
-  rather than removing it keeps the front-loaded shape the sim tuned against bankruptcies.
-- **Stools** keep +0.25 each (`StoolComfort`), two at most.
+  +3.0).~~ **Glassware is data (2026-09-26):** each line's `tierComfort` in `glassware.json` (five figures,
+  required, refused at load if the count is wrong or a figure is off the scale) — 0.02 a step, 0.50 over
+  the five lines. The step table and the half share left the code; the glass card prints the step it sells.
+- **Stools** add +0.05 each (`StoolComfort`, was +0.25), two at most; **the bar top** joined the room
+  the same day, +0.05 a step (`CounterComfort`), two steps.
+- **The COMFORT buff is a cushion, not a lift (2026-09-26).** The right wall's buff scales the filed
+  night after the mess — `min(base, (base − DirtPenalty × (1 − clean)) × scale)` — so it recovers what the
+  mess took and never files a room above its own worth (a ×1.10 on a clean 4.55 room would have filed
+  five). At scale 1 it is the old double bit for bit.
 - Five stars of comfort is a LONG purchase: fittings are one a night (`MaxUpgradesPerNight`), so
   the glass and stool part alone is about a month of nights, and dressing (which never spends the
   night's fitting) is what lets a bar get there sooner. That is the endgame shape, on purpose.
@@ -188,8 +210,10 @@ These are the **v1** numbers, twice the first draft's: measured against the glas
 bot buying the room by price went from 0% to 4% bankruptcies for a standing that went DOWN.
 Budget with every rung that has art today: 0 (the bare room, 2026-09-06) + 1.8 + 0.7 + 0.4 + 0.2 +
 0.4 + 0.4 + 1.0 + 1.5 + 0.5 + 3.25 (the walls, 2026-09-06) + 0.7 (the four given pieces) + 0.4
-(the gold tin) = **11.25 → 5.0**. Five stars of comfort is reachable without the two art-dependent ladders and
-without every rung; the player chooses. The sim keeps moving them (§7).
+(the gold tin) = **11.25 → 5.0**. ~~Five stars of comfort is reachable without the two art-dependent ladders and
+without every rung; the player chooses.~~ **Reversed 2026-09-26 by the author** (*"maksimum 5 konfor ... oyun
+sonlarına yakın"*, §3): the whole house is exactly 5.00, so five stars of comfort is the whole house — every
+rung, every glass step, both stools, both bar-top steps. The sim keeps moving the figures (§7).
 
 ### 3.2 Ladder rules (all existing, restated so the module is whole)
 
@@ -442,12 +466,26 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 | Constant | Value | Where (as built) |
 |---|---|---|
 | `FreeBase` | 0.0 (was 2.0 until 2026-09-06) | `VenueComfort` |
-| `GlassComfortShare` | 0.5 | `VenueComfort` |
-| `StoolComfort` | 0.25 per extra stool | `VenueComfort` |
+| ~~`GlassComfortShare`~~ | ~~0.5~~ — gone 2026-09-26; a step's comfort is `tierComfort` (0.02) | `glassware.json` |
+| `StoolComfort` | 0.05 per extra stool (0.25 until 2026-09-26) | `VenueComfort` |
+| `CounterComfort` | 0.05 per bar-top step past the first (2026-09-26) | `VenueComfort` |
+| the whole house | **exactly 5.00** (2026-09-26, the author) — fixtures 4.30 + glass 0.50 + stools 0.10 + bar top 0.10 | `ComfortEconomyTests` |
 | `DirtPenalty` | 0.75 (v1; 1.0 in v0) | `VenueComfort` |
 | `DirtGrace` | 10 s (v1; 6 s in v0) | `Housekeeping` |
 | `WashBaseSeconds` / `WashPerGlassSeconds` | 1.5 s / 0.5 s | `Housekeeping.WashSecondsFor` |
 | fixture `comfort` | §3.1 | `fixtures.json` |
+
+**The house at five, projected (2026-09-26).** `EconomyProjection.WalkFurnishing` walks a bar that buys its
+better bottles, its pages, the bottles they need and then the room out of its own till, priced from what it
+owns, filing the lower of the climb, the menu's ceiling and the room. The climb on the service side is the
+projection's assumption (`EconomyProjection.Climb`, 0.135 a night), not what a standard's drinks would file.
+Measured on the shipped data: the room reaches **5.00 on night 52** for a sharp bar (5★ the next night) and
+on **night 75** for a competent one (5★ on 76); with the old house it read 5/5 by night ~12–24 and the finish
+was ~40–42. A bar **still learning never buys the house**: at one star its rent doubles under a menu of 0★
+pages and it cannot afford the 1★ pages ($44–54) that would pay it — it stalls near 1.7★ with the till
+running down (the room is not the cause: with the old, nearly free room it stalls at 2★ the same way). The
+glass price halving is worth ~7 nights to a competent bar; the fixture prices barely move it (all ×0.75: 5
+nights). Tables: `LastCall → Economy Projection`, *The room, night by night*.
 
 **What the sim must show before the wiring ships** (`LastCall → Simulate Tycoon 200 Runs`;
 seeds TYC-0000..0199, 30 days). The BASELINE is the report regenerated on the phase's parent
@@ -477,7 +515,8 @@ ServiceTonight), `ComfortBase by day p25/p50/p75`, `rungs bought by slot`, `Brok
 
 - **D1 — comfort CAPS the night, it is not a second standing.** `StarCeiling = min(ComfortTonight,
   MenuStarCap)`; the standing stays one inertial number.
-- **D2 — glassware keeps half its old weight.** Removing it entirely would make five lines of
+- **D2 — glassware keeps half its old weight.** *(Superseded 2026-09-26: a glass step's comfort is its
+  line's own `tierComfort`, 0.02 a step, part of the house's exact five — §3.)* Removing it entirely would make five lines of
   bought glass worth nothing to the stars; keeping it whole would make the room's fittings
   optional. Half, and measure (shape 1, twice).
 - **D3 — the glass still takes the stool** while it stands there. Two currencies (throughput,

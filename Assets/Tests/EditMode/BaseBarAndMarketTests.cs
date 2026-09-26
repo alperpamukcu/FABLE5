@@ -75,9 +75,9 @@ namespace LastCall.Tests
         }
 
         /// <summary>
-        /// Everything a bar at zero stars can end up holding: the six it opens with, plus
-        /// every tier-1 bottle whose style is named by a page that also opens at zero stars.
-        /// This is the wall the tutorial happens on.
+        /// Everything a bar at zero stars can end up holding: the shelf it opens with (the deck's
+        /// "starting" cards, 2026-09-26), plus every tier-1 bottle whose style is named by a page
+        /// that also opens at zero stars. This is the wall the tutorial happens on.
         /// </summary>
         private static List<IngredientCard> ReachableAtFirstRung()
         {
@@ -90,10 +90,7 @@ namespace LastCall.Tests
                 foreach (var band in recipe.RatioRequirements)
                     if (!string.IsNullOrEmpty(band.Style)) styles.Add(band.Style);
             }
-            var opening = new HashSet<string>
-            {
-                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house", "beer_kestrel",
-            };
+            var opening = OpeningBar.StartingIds();
             return All().Concat(Locked())
                 .Where(c => c.Info != null && c.Info.Tier <= 1)
                 .Where(c => opening.Contains(c.Id) || styles.Contains(c.Info.Style))
@@ -122,10 +119,7 @@ namespace LastCall.Tests
         [Test]
         public void EveryBottle_OpensOnTheRungOfTheFirstPageThatWantsIt()
         {
-            var opening = new HashSet<string>
-            {
-                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house", "beer_kestrel",
-            };
+            var opening = OpeningBar.StartingIds();
             var book = RecipeCatalog.CreateDefault();
             var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
                 book, new RunRng("lineup"));
@@ -289,6 +283,11 @@ namespace LastCall.Tests
         ///
         /// This does not pin WHICH page teaches it — only that the opening rung teaches all
         /// three. Move Black Russian up and something stirred has to move down with it.
+        ///
+        /// (The spoon has since left the first rung twice over: to the first star on 2026-09-16,
+        /// to the ladder's third rung at two stars on 2026-09-21. What the opening rung teaches now
+        /// is the pour and the shake; the stir is the second star's, and the tail of this test
+        /// holds the book to that rung — 2026-09-26.)
         /// </summary>
         [Test]
         public void TheFirstRung_TeachesEveryVerbTheBenchAsksFor()
@@ -307,14 +306,165 @@ namespace LastCall.Tests
                         .Where(r => run.RecipeStarGate(r) <= 0.0)
                         .Select(r => $"{r.Id}({r.Prep})")));
 
-            // THE SPOON IS THE FIRST STAR'S LESSON (2026-09-16, the author: "kaşık oyunun ilk
+            // THE SPOON IS A LATER RUNG'S LESSON (2026-09-16, the author: "kaşık oyunun ilk
             // yıldızında açılan bir oynanış özelliği olmalı yani ilk yıldız kokteyllerinden
-            // sonra kaşık isteyen tarifler çıkmalı"): no zero-star page stirs, and the first
-            // rung holds one that does — the page that brings the spoon to the bench.
+            // sonra kaşık isteyen tarifler çıkmalı"): no zero-star page stirs.
             CollectionAssert.DoesNotContain(taught, PrepMethod.Stirred,
                 "a zero-star page is Stirred, so the spoon would be a night-one thing again");
-            Assert.IsTrue(book.Any(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) == 1.0),
-                "no one-star page is Stirred, so the first star teaches nothing new");
+            // ...AND NO PAGE STIRS BEFORE THE SPOON (2026-09-26). The spoon is the ladder's third
+            // rung (2026-09-21, "2. yıldızda kaşık ile karıştırma oyuna eklenecek"), and the Black
+            // Russian was left a rung below it: a one-star page that could only be shaken, which the
+            // judge scores as no method at all. It follows the spoon now, and the first stirred
+            // pages open ON the spoon's rung — the verb arrives with something to use it on.
+            double spoon = BarRank.Granting(Feature.Spoon).Stars;
+            var early = book.Where(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) < spoon - 1e-9)
+                .Select(r => r.Id).ToList();
+            CollectionAssert.IsEmpty(early, "a page is stirred before the bar has a spoon");
+            Assert.IsTrue(book.Any(r => r.Prep == PrepMethod.Stirred
+                                        && System.Math.Abs(run.RecipeStarGate(r) - spoon) < 1e-9),
+                "no page on the spoon's rung is Stirred, so the spoon arrives with nothing to stir");
+        }
+
+        /// <summary>
+        /// A PAGE OPENS NO EARLIER THAN WHAT MAKES IT (2026-09-26, the author: "Oyuncunun sahip olduğu
+        /// yıldız seviyesindeki kokteyller ile sahip olduğu alkoller doğru orantılı olmalı"). For every page
+        /// the book sells: each band has a bottle the shop sells at or under the page's rung (its style, at
+        /// the band's tier or better — or on the opening shelf); its signature extra's rung, and its jar, are
+        /// at or under it; and a Stirred page is not under the spoon's rung. The one page this caught was the
+        /// Black Russian, a one-star page stirred with a two-star spoon.
+        /// </summary>
+        [Test]
+        public void EveryPage_OpensNoEarlierThanTheBottlesExtrasAndToolsItNeeds()
+        {
+            var deck = OpeningBar.Deck();
+            var cards = deck.Cards.Concat(deck.LockedCards).Where(c => c.Info != null).ToList();
+            var book = RecipeCatalog.CreateDefault();
+            var run = new TycoonRun(new Shelf(new[] { new ShelfBottle(All().First()) }),
+                book, new RunRng("opens"));
+            double GateOfCard(IngredientCard c) => deck.IsStarting(c) ? 0.0 : Market.GateOf(c);
+            double spoon = BarRank.Granting(Feature.Spoon).Stars;
+
+            foreach (var page in book.Where(r => r.Locked))
+            {
+                double at = run.RecipeStarGate(page);
+                foreach (var band in page.RatioRequirements.Where(b => b.IsStyleBand))
+                {
+                    var gates = cards.Where(c => c.Info.Style == band.Style && c.Info.Tier >= band.MinTier)
+                        .Select(GateOfCard).Where(g => !double.IsNaN(g)).ToList();
+                    Assert.IsNotEmpty(gates, $"{page.Id}: nothing in the deck pours its {band.Style} " +
+                                             $"at tier {band.MinTier}");
+                    Assert.LessOrEqual(gates.Min(), at + 1e-9,
+                        $"{page.Id} opens at {at:0.0} stars but its {band.Style} (tier {band.MinTier}) " +
+                        $"is not sold before {gates.Min():0.0}");
+                }
+
+                if (page.Garnish != null)
+                {
+                    var extra = Preparations.Find(page.Garnish);
+                    Assert.IsNotNull(extra, $"{page.Id} names an extra that does not exist");
+                    var feature = BarRank.Gating(extra);
+                    if (feature != null)
+                        Assert.LessOrEqual(BarRank.Granting(feature.Value).Stars, at + 1e-9,
+                            $"{page.Id} opens before the rail can give its {extra.Id}");
+                    string jar = extra == Preparations.Olive ? "olive" : extra == Preparations.Mint ? "mint" : null;
+                    if (jar != null)
+                        Assert.LessOrEqual(cards.Where(c => c.Info.Style == jar).Select(GateOfCard).Min(),
+                            at + 1e-9, $"{page.Id} opens before the market sells its {jar} jar");
+                }
+
+                if (page.Prep == PrepMethod.Stirred)
+                    Assert.GreaterOrEqual(at, spoon - 1e-9,
+                        $"{page.Id} is Stirred and opens at {at:0.0}, under the spoon's {spoon:0.0}");
+            }
+        }
+
+        /// <summary>
+        /// THE WELL IS NEVER DEARER THAN ITS OWN UPGRADE ON THE SAME BOARD (2026-09-26). The market offers
+        /// the lowest tier of a style first, so a well bottle listed above the tier-2 bottle it opens beside
+        /// is money the player has to spend to be allowed to spend less: the well rum was $16 on the
+        /// one-star board against its own $14 upgrade.
+        /// </summary>
+        [Test]
+        public void TheWellBottle_IsNeverDearerThanItsUpgradeOnTheSameRung()
+        {
+            var cards = OpeningBar.Deck().Cards.Where(c => c.Info != null && c.Type != IngredientType.Beer).ToList();
+            foreach (var style in cards.Select(c => c.Info.Style).Distinct())
+            {
+                var ofStyle = cards.Where(c => c.Info.Style == style).ToList();
+                var well = ofStyle.Where(c => c.Info.Tier == ofStyle.Min(x => x.Info.Tier)).ToList();
+                foreach (var w in well)
+                    foreach (var up in ofStyle.Where(c => c.Info.Tier == w.Info.Tier + 1))
+                    {
+                        if (System.Math.Abs(Market.GateOf(up) - Market.GateOf(w)) > 1e-9) continue;
+                        Assert.LessOrEqual(Market.RungPrice(w), Market.RungPrice(up),
+                            $"{w.Id} lists at ${Market.RungPrice(w)} beside its own upgrade {up.Id} at " +
+                            $"${Market.RungPrice(up)}");
+                    }
+            }
+        }
+
+        /// <summary>
+        /// EVERY PRESET POURS ITS WHOLE BOOK (2026-09-26). The dev bench's star presets are how the author
+        /// playtests each rung, and they stocked one bottle per style whatever the book demanded: under five
+        /// stars they could not pour 2, 5, 9 and 14 of their own pages. Now the shelf is stocked at the tier
+        /// the book asks for, and never with a bottle the preset's standing could not have bought.
+        /// </summary>
+        [Test]
+        public void DevPresetStars_PoursItsWholeBook()
+        {
+            foreach (double stars in new[] { 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0 })
+            {
+                var run = OpeningBar.Run("preset-" + stars);
+                run.DevPresetStars(stars);
+                var cannot = run.MenuRecipes.Where(r => r.RatioRequirements.Count > 0 && !run.CanServe(r))
+                    .Select(r => r.Id + "[" + string.Join(",", run.MissingFor(r).Select(b => b.Style ?? b.Type.ToString())) + "]")
+                    .ToList();
+                CollectionAssert.IsEmpty(cannot, stars + " stars: the preset cannot pour its own pages");
+                if (stars >= BarRating.MaxStars) continue;
+                foreach (var bottle in run.Shelf.Bottles)
+                {
+                    var card = bottle.Ingredient;
+                    if (card.Info == null) continue;
+                    double gate = Market.GateOf(card);
+                    if (double.IsNaN(gate)) continue;
+                    Assert.LessOrEqual(gate, stars + 1e-9,
+                        $"{stars} stars: the preset stocked {card.Id}, which the shop sells at {gate:0.0}");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// THE BAR AS GAMEBOOTSTRAP OPENS IT (2026-09-26): the deck's "starting" cards on the shelf, every
+    /// other card on the market's board, the book from recipes.json and the room from fixtures.json. The
+    /// opening shelf used to be six ids copied into four places (the bootstrap, the sim and two suites);
+    /// the suites that ask about it read the data now, the way the game does.
+    /// </summary>
+    internal static class OpeningBar
+    {
+        private static string Read(string relativePath) =>
+            File.ReadAllText(Path.Combine(Application.dataPath, "Data", relativePath));
+
+        public static LoadedDeck Deck() => DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+
+        public static HashSet<string> StartingIds() =>
+            new HashSet<string>(Deck().StartingCards.Select(c => c.Id));
+
+        public static TycoonRun Run(string seed, TycoonConfig config = null)
+        {
+            var deck = Deck();
+            var shelf = new List<ShelfBottle>();
+            var catalogue = new List<IngredientCard>();
+            foreach (var card in deck.Cards)
+                if (deck.IsStarting(card)) shelf.Add(new ShelfBottle(card.Clone()));
+                else catalogue.Add(card);
+            return new TycoonRun(new Shelf(shelf), DataLoader.ParseRecipes(Read("recipes/recipes.json")),
+                new RunRng(seed),
+                config: config ?? TycoonConfig.ForTheScene,
+                brandCatalogue: catalogue,
+                glassware: DataLoader.ParseGlassware(Read("glassware/glassware.json")),
+                lockedStock: deck.LockedCards,
+                fixtures: DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures);
         }
     }
 

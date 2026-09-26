@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Salissa nyt", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Salissa nyt · sali pysyy tasolla {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} mukavuutta", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} / {top} mukavuutta", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "BAARI ON VALMIS — MITÄÄN EI VOI ENÄÄ NOSTAA", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Parempi tiskipinta ilahduttaa jokaista asiakasta. Myös niitä, joiden juoman teet väärin.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 jokaisesta palvellusta käynnistä, enintään +0.06", "src": "+0.03 on every served visit, up to +0.06"},

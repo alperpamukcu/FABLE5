@@ -27,14 +27,22 @@ namespace LastCall.Core
         /// first shelf, the second rung ungated.</summary>
         public const double FreeBase = 0.0;
 
-        /// <summary>How much of the glassware ladder's measured cap
-        /// (<c>TycoonRun.GlassStepCap</c>) still counts. Half: it was the only route to the
-        /// ceiling and must stop being the only one, but five lines of bought glass cannot
-        /// be worth nothing to the stars — that is a refund the shop never promised.</summary>
-        public const double GlassComfortShare = 0.5;
+        // THE WHOLE HOUSE IS FIVE (2026-09-26, the author: "Tüm geliştirmeleri ekonomi dengesine dahil et,
+        // Oyuncu oyunda maksimum 5 konfora ulaşmalı ve bu oyun sonlarına yakın gerçekleşmeli. Şu an sanki tüm
+        // gelişmeler +5 oluyormuş gibi gözüküyor."). Every fitting the market sells, every glass step, both
+        // stools and both bar-top steps add up to EXACTLY 5.00 — the fixtures 4.30 (fixtures.json), the glass
+        // 0.50 (glassware.json's tierComfort), the stools 0.10 and the bar top 0.10 — so the meter fills with
+        // the last purchase and not in the first fortnight. It summed to 18.00 against a ceiling of five, and
+        // read 5/5 by night fourteen with the standing under two stars. The glass half-share went with it:
+        // a glass step's comfort is the line's own data now (GlasswareDefinition.TierComfort).
 
-        /// <summary>Each stool past the four the bar opens with.</summary>
-        public const double StoolComfort = 0.25;
+        /// <summary>Each stool past the four the bar opens with: a twentieth of a star (2026-09-26; it was a
+        /// quarter, when the house summed to eighteen).</summary>
+        public const double StoolComfort = 0.05;
+
+        /// <summary>Each bar-top step past the first (2026-09-26). The counter was the one fitting that bought
+        /// satisfaction and nothing for the room; it is part of the room's five now, a twentieth a step.</summary>
+        public const double CounterComfort = 0.05;
 
         /// <summary>The most a filthy night can take off the room. A bar that wipes and
         /// collects as it goes loses nothing; one that never touches the counter loses all
@@ -61,16 +69,18 @@ namespace LastCall.Core
         /// <param name="fixtureComfort">Σ <c>FixtureDefinition.Comfort</c> over the standing
         /// rung of every ladder slot plus every owned single piece (a fitted-over rung counts
         /// nothing — rungs carry absolute values).</param>
-        /// <param name="glassStepCaps">Σ of the glassware ladder's step caps, as the old
-        /// ceiling summed them, BEFORE this class halves it.</param>
+        /// <param name="glassComfort">Σ of the glass steps bought, each at its line's own
+        /// <c>GlasswareDefinition.TierComfort</c> (2026-09-26; it was half a table of step caps).</param>
         /// <param name="extraStools">Stools past the opening four.</param>
-        public static double Base(double fixtureComfort, double glassStepCaps, int extraStools)
+        /// <param name="counterSteps">Bar-top steps past the first (2026-09-26).</param>
+        public static double Base(double fixtureComfort, double glassComfort, int extraStools, int counterSteps = 0)
         {
             if (fixtureComfort < 0) throw new ArgumentOutOfRangeException(nameof(fixtureComfort));
-            if (glassStepCaps < 0) throw new ArgumentOutOfRangeException(nameof(glassStepCaps));
+            if (glassComfort < 0) throw new ArgumentOutOfRangeException(nameof(glassComfort));
             double raw = FreeBase + fixtureComfort
-                         + GlassComfortShare * glassStepCaps
-                         + StoolComfort * Math.Max(0, extraStools);
+                         + glassComfort
+                         + StoolComfort * Math.Max(0, extraStools)
+                         + CounterComfort * Math.Max(0, counterSteps);
             return Clamp(raw);
         }
 
@@ -84,22 +94,32 @@ namespace LastCall.Core
         /// "konforu bufflar"): a CUSHION on the filed night, applied AFTER the mess and before
         /// the ceiling. Never on <see cref="Base"/>, where it would go dead the moment a room
         /// passed five raw. 1 is the room as it was.
+        ///
+        /// A CUSHION, NOT A LIFT (2026-09-26). Once the whole house sums to five, a ×1.10 on a clean
+        /// night would file a 4.55 room as five — the last half-star of the house bought by one wall.
+        /// So the cushion recovers what the mess took and never more: the filed night is the lower of
+        /// the room's own worth and the cushioned reading. What the buff's name always said — how much
+        /// of the room's comfort SURVIVES the night's mess. At <paramref name="scale"/> 1 the lower of
+        /// the two is the old double exactly, so a bare room and an unbuffed one are bit for bit today's.
         /// </summary>
-        public static double Tonight(double comfortBase, double cleanliness, double scale = 1.0) =>
-            Clamp((comfortBase - DirtPenalty * (1.0 - Clamp01(cleanliness))) * scale);
+        public static double Tonight(double comfortBase, double cleanliness, double scale = 1.0)
+        {
+            double messed = comfortBase - DirtPenalty * (1.0 - Clamp01(cleanliness));
+            return Clamp(Math.Min(comfortBase, messed * scale));
+        }
 
         /// <summary>
         /// The shift's live reading — the same rule read off the counter as it stands this
         /// second, so a gauge drops when a glass is left and recovers when it is carried away.
         /// <paramref name="dirtySpots"/> counts what is past its grace, exactly as the night's
         /// exposure does, so the two readings never disagree about what dirt is. The room's
-        /// COMFORT cushions it exactly as it cushions <see cref="Tonight"/>.
+        /// COMFORT cushions it exactly as it cushions <see cref="Tonight"/> — never above the base.
         /// </summary>
         public static double Now(double comfortBase, int dirtySpots, int seats, double scale = 1.0)
         {
-            if (seats <= 0) return Clamp(comfortBase * scale);
+            if (seats <= 0) return Clamp(Math.Min(comfortBase, comfortBase * scale));
             double share = Math.Min(1.0, Math.Max(0, dirtySpots) / (double)seats);
-            return Clamp((comfortBase - DirtPenalty * share) * scale);
+            return Clamp(Math.Min(comfortBase, (comfortBase - DirtPenalty * share) * scale));
         }
 
         /// <summary>

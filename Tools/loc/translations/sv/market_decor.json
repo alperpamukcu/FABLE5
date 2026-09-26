@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "I lokalen nu", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "I lokalen nu · lokalen är fortfarande värd steg {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} komfort", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} av {top} komfort", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "BAREN ÄR FULLT UTRUSTAD — INGET KVAR ATT HÖJA", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "En bättre bardisk gör varje gäst gladare. Även dem vars drink du blandar fel.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0,03 per serverat besök, upp till +0,06", "src": "+0.03 on every served visit, up to +0.06"},

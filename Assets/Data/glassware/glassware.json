@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "v5 P10 (PLAN_service_depth): the serving glasses. 'profile' is the half-width-per-height silhouette the fluid solver takes (floor to rim), so the data that defines a glass is the data that fills it. Six-tier ladder (2026-08-02): tier 1 is owned from day one and 'tierPrices' are the FIVE upgrade steps (1-star through the 5-star legendary set). Art keys off the glass id (glass3d_*); spriteKey is historical.",
+  "_comment": "v5 P10 (PLAN_service_depth): the serving glasses. 'profile' is the half-width-per-height silhouette the fluid solver takes (floor to rim), so the data that defines a glass is the data that fills it. Six-tier ladder (2026-08-02): tier 1 is owned from day one and 'tierPrices' are the FIVE upgrade steps (1-star through the 5-star legendary set), HALVED 2026-09-26 when the house was cut to sum to five (the glass was the only unmultiplied, ungated line and the dearest tail of the room). 'tierComfort' (2026-09-26, required) is what each step adds to the room's comfort: 0.02 a step, 0.50 across the five lines, part of the house's exact 5.00. Art keys off the glass id (glass3d_*); spriteKey is historical.",
   "glasses": [
     {
       "id": "pint",
@@ -8,7 +8,8 @@
       "name": "Pint",
       "spriteKey": "pint",
       "profile": [0.82, 0.88, 0.93, 0.97, 1.0, 1.0],
-      "tierPrices": [120, 300, 540, 780, 970]
+      "tierPrices": [60, 150, 270, 390, 485],
+      "tierComfort": [0.02, 0.02, 0.02, 0.02, 0.02]
     },
     {
       "id": "highball",
@@ -16,7 +17,8 @@
       "name": "Highball",
       "spriteKey": "glass_highball",
       "profile": [0.94, 0.96, 0.98, 1.0, 1.0, 1.0],
-      "tierPrices": [110, 280, 520, 760, 950]
+      "tierPrices": [55, 140, 260, 380, 475],
+      "tierComfort": [0.02, 0.02, 0.02, 0.02, 0.02]
     },
     {
       "id": "rocks",
@@ -24,7 +26,8 @@
       "name": "Rocks",
       "spriteKey": "glass_rocks",
       "profile": [0.9, 0.95, 1.0, 1.0, 1.0, 1.0],
-      "tierPrices": [110, 280, 520, 760, 950]
+      "tierPrices": [55, 140, 260, 380, 475],
+      "tierComfort": [0.02, 0.02, 0.02, 0.02, 0.02]
     },
     {
       "id": "martini",
@@ -32,7 +35,8 @@
       "name": "Martini",
       "spriteKey": "glass_martini",
       "profile": [0.12, 0.35, 0.58, 0.8, 1.0, 1.0],
-      "tierPrices": [130, 320, 560, 800, 1000]
+      "tierPrices": [65, 160, 280, 400, 500],
+      "tierComfort": [0.02, 0.02, 0.02, 0.02, 0.02]
     },
     {
       "id": "coupe",
@@ -40,7 +44,8 @@
       "name": "Coupe",
       "spriteKey": "glass_coupe",
       "profile": [0.3, 0.62, 0.85, 1.0, 1.0, 0.92],
-      "tierPrices": [130, 320, 560, 800, 1000]
+      "tierPrices": [65, 160, 280, 400, 500],
+      "tierComfort": [0.02, 0.02, 0.02, 0.02, 0.02]
     }
   ]
 }

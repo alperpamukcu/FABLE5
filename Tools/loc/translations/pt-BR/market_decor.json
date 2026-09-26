@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "No salão agora"},
 {"key": "decor.card.worn_stays", "text": "No salão agora · o salão segue valendo nível {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} de conforto"},
+{"key": "decor.comfort_of", "text": "{comfort} de {top} de conforto", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "O BAR ESTÁ COMPLETO — NADA MAIS A MELHORAR"},
 {"key": "decor.fit.bar.body", "text": "Um balcão melhor deixa todo cliente mais feliz. Até aqueles cujo drinque você erra."},
 {"key": "decor.fit.bar.gain", "text": "+0,03 a cada visita servida, até +0,06"},

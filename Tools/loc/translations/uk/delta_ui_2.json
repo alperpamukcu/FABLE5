@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Закуповуй вузько. Широка полиця в новому барі — це просто гроші, що стоять без діла.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Шість пляшок і кега. Формально — це вже бар.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Вісім пляшок і кега. Формально — це вже бар.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Спершу прочитай гостя, а тоді наливай — посвідчення підкаже, по що він прийшов.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "У касі менше, ніж треба на оренду. З кожним залом таке раз буває.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "Удруге — це вже звичка. Утретє — це зовсім інший бар, хоч і з твоїм ім’ям.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

@@ -93,6 +93,46 @@ namespace LastCall.Tests
             StringAssert.Contains("Umami", ex.Message);
         }
 
+        /// <summary>
+        /// THE OPENING SHELF IS READ FROM THE DECK (2026-09-26): nine cards marked "starting" — three well
+        /// spirits, three mixers, lemon, syrup and the lager keg — the same instances the live deck holds.
+        /// A starting card is the well by definition, so one that is locked, above tier 1, waiting on stars
+        /// or on a second draught line is a content bug and fails at load.
+        /// </summary>
+        [Test]
+        public void ParseDeck_ReadsTheStartingShelf()
+        {
+            var deck = DataLoader.ParseDeck(ReadDataFile("bottles/base_bar.json"));
+            CollectionAssert.AreEquivalent(new[]
+                {
+                    "vodka_astra", "gin_boothby", "bourbon_redline", "soda_klara", "tonic_quinbury",
+                    "cola_marlow", "lemon_fresh", "syrup_house", "beer_kestrel",
+                },
+                deck.StartingCards.Select(c => c.Id).ToList(), "the opening shelf");
+            foreach (var card in deck.StartingCards)
+            {
+                Assert.IsTrue(deck.Cards.Contains(card), card.Id + " is one of the live deck's own cards");
+                Assert.IsTrue(deck.IsStarting(card));
+            }
+            Assert.AreEqual(8, deck.StartingCards.Count(c => c.Type != IngredientType.Beer),
+                "eight bottles and a keg — what Ece says on the first night");
+            Assert.IsFalse(deck.Cards.Where(c => !deck.StartingCards.Contains(c)).Any(deck.IsStarting),
+                "and nothing else is");
+
+            string Card(int tier, string extra) =>
+                "{\"deckId\":\"x\",\"name\":\"X\",\"cards\":[{\"id\":\"w\",\"name\":\"W\",\"type\":\"Spirit\"," +
+                "\"flavor\":3,\"style\":\"vodka\",\"category\":\"vodka\",\"tier\":" + tier +
+                ",\"price\":4,\"starting\":true" + extra + "}]}";
+            Assert.AreEqual(1, DataLoader.ParseDeck(Card(1, "")).StartingCards.Count, "a plain well card opens the bar");
+            Assert.Throws<FormatException>(() => DataLoader.ParseDeck(Card(1, ",\"locked\":true")), "locked");
+            Assert.Throws<FormatException>(() => DataLoader.ParseDeck(Card(2, "")), "above the well");
+            Assert.Throws<FormatException>(() => DataLoader.ParseDeck(Card(1, ",\"unlockStars\":1.0")), "gated by stars");
+            const string keg = "{\"deckId\":\"x\",\"name\":\"X\",\"cards\":[{\"id\":\"k\",\"name\":\"K\",\"type\":\"Beer\"," +
+                "\"flavor\":3,\"style\":\"stout\",\"category\":\"beer\",\"tier\":1,\"price\":12,\"tapLevel\":2," +
+                "\"starting\":true}]}";
+            Assert.Throws<FormatException>(() => DataLoader.ParseDeck(keg), "a keg that needs a second line");
+        }
+
         [Test]
         public void ParseRecipes_EmptyRequirements_Throws()
         {

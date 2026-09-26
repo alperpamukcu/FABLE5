@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Az çeşit al. Yeni bir barda geniş raf, yerinde sayan paradır.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Altı şişe, bir fıçı. Teknik olarak bu bir bar.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Sekiz şişe, bir fıçı. Teknik olarak bu bir bar.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Dökmeden önce onları oku — ne için geldiklerini ruhsat söyler.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "Kasa kirayı çıkarmadı. Her mekânın başına bir kez gelir.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "İki kez olursa alışkanlık. Üç kez olursa, kapısında senin adın yazan başka bir bar.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

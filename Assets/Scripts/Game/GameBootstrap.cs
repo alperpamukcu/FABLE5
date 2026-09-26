@@ -99,10 +99,10 @@ namespace LastCall.Game
             // prevent. At the display's own rate the pacing is smooth and the machine idles.
             // Player builds only: the editor and the PlayMode suite keep their own pacing
             // (the suite counts on fast frames — CLAUDE.md, "Verifying changes").
-#if !UNITY_EDITOR
-            QualitySettings.vSyncCount = 1;
-            Application.targetFrameRate = -1;
-#endif
+            // THE PLAYER'S FRAME RATE (2026-09-26, the settings' DISPLAY page): MATCH SCREEN, the
+            // default, is exactly the two lines that stood here (vsync 1, no target); a cap of 60,
+            // 120 or 144 turns vsync off and targets it. DisplayOptions keeps the player-only guard.
+            DisplayOptions.ApplyPacing();
         }
 
         private void Start()
@@ -141,22 +141,17 @@ namespace LastCall.Game
             CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
 
             var bar = DataLoader.ParseDeck(deckJson.text);
-            // You open with a bare well — a couple of spirits and the essential mixers — and
-            // grow the shelf by buying new stock at the end of each night (2026-07-23). Every
-            // other bottle goes to the market catalogue.
-            var startingStock = new HashSet<string>
-            {
-                "vodka_astra", "gin_boothby", "soda_klara", "lemon_fresh", "syrup_house",
-                // One keg on from day one (GDD 21 §10): beer is the order you can always
-                // answer, and a bar with no tap would make the simple customer unservable.
-                // The other two kegs are stock to buy, like any other brand.
-                "beer_kestrel",
-            };
+            // You open with a bare well and grow the shelf by buying new stock at the end of each
+            // night (2026-07-23); every other bottle goes to the market catalogue. WHICH WELL IS DATA
+            // since 2026-09-26 — the cards base_bar.json marks "starting": three spirits, three
+            // mixers, lemon, syrup and one keg (GDD 21 §10: beer is the order you can always answer).
+            // It used to be six ids written here, which could not pour two of the six pages the bar
+            // opens with, so the first night asked for drinks the bar could not make.
             var startingBottles = new List<ShelfBottle>();
             var brandCatalogue = new List<IngredientCard>();
             foreach (var card in bar.Cards)
             {
-                if (startingStock.Contains(card.Id)) startingBottles.Add(new ShelfBottle(card.Clone()));
+                if (bar.IsStarting(card)) startingBottles.Add(new ShelfBottle(card.Clone()));
                 else brandCatalogue.Add(card);
             }
             if (startingBottles.Count == 0)   // data drift safety: never open with an empty shelf

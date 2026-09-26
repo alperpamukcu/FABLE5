@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "進貨要精不要多。新店擺滿一整架，只是讓錢站著不動。", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "六瓶酒加一個酒桶。嚴格說起來，這也算酒吧。", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "八瓶酒加一個酒桶。嚴格說起來，這也算酒吧。", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "倒酒之前先看人 — 酒客證上寫著他們來喝什麼。", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "收銀機裡的錢不夠付房租。每家店都會碰上一次。", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "兩次就是習慣了。三次，這裡就是另一間掛著你名字的酒吧。", "src": "Twice is a habit. Three times is a different bar with your name on it."},

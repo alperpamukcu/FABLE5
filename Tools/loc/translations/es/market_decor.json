@@ -13,6 +13,7 @@
     {"key": "decor.card.worn", "text": "Puesto en el local", "src": "In the room now"},
     {"key": "decor.card.worn_stays", "text": "Puesto en el local · el local sigue en nivel {mark}", "src": "In the room now · the room stays worth mark {mark}"},
     {"key": "decor.comfort", "text": "+{comfort} de confort", "src": "+{comfort} comfort"},
+    {"key": "decor.comfort_of", "text": "{comfort} de {top} de confort", "src": "{comfort} of {top} comfort"},
     {"key": "decor.fit.all_fitted", "text": "EL BAR ESTÁ EQUIPADO — NO QUEDA NADA QUE MEJORAR", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
     {"key": "decor.fit.bar.body", "text": "Una barra mejor contenta a todos los clientes. Incluso a quienes les sirves mal la bebida.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
     {"key": "decor.fit.bar.gain", "text": "+0.03 por cada visita servida, hasta +0.06", "src": "+0.03 on every served visit, up to +0.06"},

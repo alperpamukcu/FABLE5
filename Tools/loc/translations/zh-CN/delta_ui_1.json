@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "泡沫就是全部功夫。", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "点凳子，别点酒。", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "你不问，谁也不会告诉你想喝什么。", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "今晚没进的货，明天准有人点。", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "架上调不出的那一页，没人会点。", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

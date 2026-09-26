@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Køb smalt. En bred hylde i en ny bar er bare penge, der står stille.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Seks flasker og en fustage. Teknisk set er det en bar.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Otte flasker og en fustage. Teknisk set er det en bar.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Læs dem, før du hælder — ID-kortet siger, hvad de kom efter.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "Kassen er under huslejen. Det sker for alle barer én gang.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "To gange er en vane. Tre gange er en anden bar med dit navn på.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

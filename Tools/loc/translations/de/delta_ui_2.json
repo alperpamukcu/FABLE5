@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Kauf gezielt. Ein volles Regal in einer neuen Bar ist nur Geld, das rumsteht.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Sechs Flaschen und ein Fass. Technisch gesehen ist das eine Bar.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Acht Flaschen und ein Fass. Technisch gesehen ist das eine Bar.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Lies sie, bevor du einschenkst — der Ausweis sagt, weswegen sie da sind.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "Die Kasse liegt unter der Miete. Das passiert jedem Laden mal.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "Zweimal ist Gewohnheit. Dreimal ist eine andere Bar mit deinem Namen dran.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

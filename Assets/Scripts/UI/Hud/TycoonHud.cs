@@ -889,12 +889,38 @@ namespace LastCall.UI
         /// <summary>The five boxes' colours, box 0 to box 4 — the author's ladder (red,
         /// orange, yellow, green, dark green) mapped onto the palette's own ramps. Amber[3]
         /// is skipped on purpose: it is the Money colour, and a signal must never wear a
-        /// sacred number's coat (GDD 16).</summary>
-        internal static readonly Color[] BandBoxColors =
+        /// sacred number's coat (GDD 16).
+        ///
+        /// COLOUR CUES (2026-09-26, the settings' DISPLAY page): the ladder the player picked.
+        /// STANDARD is the author's and never changes — the bench's look baseline wears it on the
+        /// tin. Its closest pair under deuteranopia, orange against green, is 11.9 apart (ΔE76,
+        /// Machado 2009), and since the tin's bands wear the box they land in, colour is their
+        /// only cue. CLEAR is dark red, malt, pale lime, club blue and deep blue off the same
+        /// ramps — no second palette — at least 28.9 apart under normal, protan, deutan and tritan
+        /// sight, the empty dot's cream included; it still skips Amber[3]. Read wherever a ladder
+        /// is drawn, so the next tin, note or page the player opens wears the new one.</summary>
+        internal static Color[] BandBoxColors =>
+            PlayerOptions.Cues == PlayerOptions.ColourCues.Clear ? ClearBoxColors : StandardBoxColors;
+
+        private static readonly Color[] StandardBoxColors =
         {
             UITheme.ViceRed[3], UITheme.Amber[2], UITheme.Amber[4],
             UITheme.Lime[3], UITheme.Lime[1],
         };
+
+        private static readonly Color[] ClearBoxColors =
+        {
+            UITheme.ViceRed[2], UITheme.Malt[2], UITheme.Lime[4],
+            UITheme.ClubBlue[4], UITheme.ClubBlue[2],
+        };
+
+        /// <summary>The patience bar's colour for its band. STANDARD is green, amber, red; CLEAR
+        /// turns the green club blue — green against amber was 8.4 apart for a protan eye, the
+        /// CLEAR set is 39 (2026-09-26, COLOUR CUES).</summary>
+        internal static Color PatienceColour(ServiceBand band) =>
+            band == ServiceBand.Green
+                ? (PlayerOptions.Cues == PlayerOptions.ColourCues.Clear ? UITheme.ClubBlue[4] : UITheme.Lime[3])
+                : band == ServiceBand.Amber ? UITheme.Amber[3] : UITheme.ViceRed[3];
 
         /// <summary>The sight glass's own size. 72 wide so the five measures land on whole
         /// pixels (70 of interior, 14 to a measure) — a gauge whose scratches sit on

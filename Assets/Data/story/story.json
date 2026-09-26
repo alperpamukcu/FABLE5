@@ -52,7 +52,7 @@
       "id": "first_night",
       "when": "first_night",
       "say": [
-        "Six bottles and a keg. That is a bar, technically.",
+        "Eight bottles and a keg. That is a bar, technically.",
         "Read them before you pour — the licence says what they came for."
       ]
     },
@@ -84,7 +84,7 @@
       "id": "first_market",
       "when": "first_market",
       "say": [
-        "Whatever we did not stock tonight, somebody will ask for tomorrow.",
+        "A page the shelf cannot pour is a page nobody orders.",
         "Buy narrow. A wide shelf on a new bar is just money standing still."
       ]
     },

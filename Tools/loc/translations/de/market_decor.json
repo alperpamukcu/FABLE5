@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Jetzt im Raum"},
 {"key": "decor.card.worn_stays", "text": "Jetzt im Raum · der Raum zählt weiter als Stufe {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} Komfort"},
+{"key": "decor.comfort_of", "text": "{comfort} von {top} Komfort", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "DIE BAR IST VOLL AUSGESTATTET – MEHR GEHT NICHT"},
 {"key": "decor.fit.bar.body", "text": "Ein besserer Tresen macht jeden Gast zufriedener. Selbst die, deren Drink du vermasselst."},
 {"key": "decor.fit.bar.gain", "text": "+0,03 pro bedientem Besuch, bis zu +0,06"},

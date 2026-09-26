@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "Skummet är hela jobbet.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "Klicka på barstolen, inte på drinken.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "Ingen säger vad de vill ha förrän du frågar.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "Det vi inte hade hemma i kväll är det någon som frågar efter i morgon.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "En sida som hyllan inte kan hälla upp är en sida ingen beställer.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "좁게 사요. 새 바의 넓은 선반은 가만히 서 있는 돈일 뿐이에요.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "병 여섯 개에 맥주통 하나. 엄밀히 따지면 바는 바죠.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "병 여덟 개에 맥주통 하나. 엄밀히 따지면 바는 바죠.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "따르기 전에 손님을 읽어요 — 뭘 마시러 왔는지 신분증에 다 있어요.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "금고가 임대료에 못 미쳤어요. 어느 가게든 한 번은 겪어요.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "두 번이면 버릇이고요. 세 번이면 간판에 이름만 남은 딴 가게예요.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

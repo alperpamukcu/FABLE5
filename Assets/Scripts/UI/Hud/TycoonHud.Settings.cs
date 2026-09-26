@@ -19,7 +19,8 @@ namespace LastCall.UI
     ///   CONTROLS  every bound action with THE CAP OF THE KEY IT IS ON (KeyCaps, the author's Classic set at 2x, its
     ///             pressed frame while the real key is held); click the cap and the row listens for the next key,
     ///             the cap blinking meanwhile
-    ///   DISPLAY   motion, and the run's own verbs (tonight's book, a new run)
+    ///   DISPLAY   the screen (window, its size, the frame rate), what moves and flashes, the pointer, the colour
+    ///             cues and the pause when away (2026-09-26), and the run's own verbs (tonight's book, a new run)
     ///   LANGUAGE  the flags of every shipped language in a grid (the author: "Dil seçiminde çerçeveye olan dillerin
     ///             bayrakları gözüksün bayrağa tıklanarak dil seçilsin"); the chosen one stands on the green plate,
     ///             its name under the grid and, in that language, the note that it speaks at the next start
@@ -32,7 +33,15 @@ namespace LastCall.UI
     /// </summary>
     public sealed partial class TycoonHud
     {
-        private const float SetW = 800f, SetH = 540f, SetPad = 44f, SetRow = 56f, CapH = 32f;
+        // 590, not 540 (2026-09-26, more options - the author: "Ayarlara daha fazla seçenek ekleyelim hem erişebilirlik
+        // hem display kısmında çözünürlük ters mouse vs vs"): every page is 360 tall now, which the DISPLAY page's ten
+        // rows of 36 fill. No fifth tab: an ACCESSIBILITY tab beside the four brass-iconed ones stepped the row down to
+        // the 8 size in 25 of the 29 languages and ran Greek off the plate even there (measured with the real tables).
+        private const float SetW = 800f, SetH = 590f, SetPad = 44f, SetRow = 56f, CapH = 32f;
+        /// <summary>The DISPLAY page's pitch: ten rows of 32-tall keys in the page's 360.</summary>
+        private const float DisplayRow = 36f;
+        /// <summary>Air between the top bar's foot and the window's top.</summary>
+        private const float SettingsPlateAir = 4f;
         // The audio page's rows are 50, not 56: six of them (three meters, the switch, the player, the track) have to
         // stand between the tabs and the foot, and a 32 key on a 50 row is still a key with room around it.
         private const float AudioRow = 50f, SeekW = 300f, SongRowH = 22f;
@@ -52,6 +61,31 @@ namespace LastCall.UI
         private readonly Dictionary<KeyAction, bool> _capDown = new Dictionary<KeyAction, bool>();
         private KeyAction? _bindListening;
         private readonly Dictionary<string, RectTransform> _flagKeys = new Dictionary<string, RectTransform>();
+
+        /// <summary>A SWITCH (2026-09-26): one pack key that says the option's state and steps it on a click - green
+        /// while an ON/OFF option is on, grey for a choice between two ways (the window, the pointer, the colours).</summary>
+        private sealed class SettingSwitch
+        {
+            public RectTransform Key;
+            public Text Label;
+            public Func<string> Word;
+            public Func<bool> Lit;
+        }
+
+        /// <summary>A CYCLE (2026-09-26): the pack's prev and next keys either side of the value, on a well. Greyed,
+        /// with its keys asleep, while it has nothing to choose (the window's size in fullscreen).</summary>
+        private sealed class SettingCycle
+        {
+            public RectTransform Prev, Next;
+            public Text Value, Note;
+            public Func<string> Word, NoteWord;
+            public Func<bool> Live;
+        }
+
+        private readonly List<SettingSwitch> _settingSwitches = new List<SettingSwitch>();
+        private readonly List<SettingCycle> _settingCycles = new List<SettingCycle>();
+        /// <summary>The window mode the DISPLAY page last drew, so Alt+Enter redraws it.</summary>
+        private bool _shownWindowed;
 
         /// <summary>One flag a language (Tools/flags.py draws them, LANGUAGE_ISOS): English flies half the Union flag
         /// and half the Stars and Stripes (fl_en, 2026-09-25 - the author: "yarısı ingiltere yarısı amerika bayrağı
@@ -204,6 +238,12 @@ namespace LastCall.UI
             var header = MenuPack.Art("menu_header");
             _settingsDrop = header != null ? HeaderDrop : 0f;
             var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH + _settingsDrop));   // the ESC family's plate (2026-09-21)
+            // UNDER THE TOP BAR (2026-09-26): 590 and the marquee's 42 make a plate 632 tall, which centred on the
+            // 720 field would reach 44 from its top - over the top bar's 54. It stands just low enough to clear the
+            // bar by SettingsPlateAir (14 down with the marquee, 30 from the field's foot); a plate that fits is
+            // left centred.
+            float overTop = (SetH + _settingsDrop) * 0.5f - (DesignFrame.StageHeight * StageToHud * 0.5f - TopBarH - SettingsPlateAir);
+            if (overTop > 0f) plate.anchoredPosition = new Vector2(0f, -Mathf.Ceil(overTop));
             if (header != null) HangTheMarquee(plate, header);
             else
             {
@@ -233,7 +273,11 @@ namespace LastCall.UI
             var reset = PackWordKey(plate, "RESET", UIText.T("chrome.settings.reset"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0), new Vector2(250, 46), new Vector2(SetPad, 26), () =>
             {
                 Sound.Volume = 0.8f; Sound.MusicVolume = 1f; Sound.EffectsVolume = 1f; Sound.Muted = false;
-                Motion.Reduced = false;
+                // Every option of the DISPLAY page and INVERT POUR back to its default, motion with them
+                // (PlayerOptions) - but NOT the window or its size (2026-09-26): a reset must never throw a
+                // windowed player into fullscreen.
+                PlayerOptions.ResetDefaults();
+                DisplayOptions.ApplyPacing();
                 Keys.ResetAll();
                 Sfx.Play("click");
                 RefreshSettings();
@@ -452,8 +496,104 @@ namespace LastCall.UI
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.raycastTarget = false;
             t.text = name;
+            // A name longer than its box would run under the control at 300 (2026-09-26, ten new names in 29
+            // languages): it steps down to the 8 size instead, as the tabs do.
+            if (t.preferredWidth > 266f) t.fontSize = LanguageFonts.Size(t.font, 8);
             y -= rowH;
             return row;
+        }
+
+        /// <summary>
+        /// A SWITCH on a row (2026-09-26): a pack key, 32 tall, that shows <paramref name="word"/> and runs
+        /// <paramref name="flip"/> on a click. It is fitted to the widest of <paramref name="words"/> once, so it never
+        /// jumps when its word changes; RefreshSettings writes the word and the tone.
+        /// </summary>
+        private SettingSwitch SwitchKey(RectTransform row, string id, string[] words, Vector2 anchor, Vector2 pos,
+            Func<string> word, Func<bool> lit, Action flip)
+        {
+            var key = PackWordKey(row, id, words[0], null, MenuPack.Tone.Grey, anchor, new Vector2(140f, CapH), pos,
+                () => { flip(); Sfx.Play("click"); RefreshSettings(); }, 100f, 32f);
+            var label = key.Find("Face/Label").GetComponent<Text>();
+            foreach (var w in words) { label.text = w; FitKey(key, 100f, 32f); }
+            var sw = new SettingSwitch { Key = key, Label = label, Word = word, Lit = lit };
+            _settingSwitches.Add(sw);
+            return sw;
+        }
+
+        /// <summary>An ON / OFF switch at x 300 on a DISPLAY row, lit while on, with its note after it.</summary>
+        private void OnOffRow(RectTransform page, string id, string nameKey, string mark, string noteKey, ref float y,
+            Func<bool> get, Action<bool> set)
+        {
+            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
+            string on = UIText.T("chrome.settings.on"), off = UIText.T("chrome.settings.off");
+            var sw = SwitchKey(row, id, new[] { on, off }, new Vector2(0, 0.5f), new Vector2(300f, 0),
+                () => get() ? on : off, get, () => set(!get()));
+            RowNote(row, noteKey != null ? UIText.T(noteKey) : null, 300f + sw.Key.sizeDelta.x + 12f);
+        }
+
+        /// <summary>A choice between two ways at x 300 on a DISPLAY row (grey either way), with its note after it.</summary>
+        private void ChoiceRow(RectTransform page, string id, string nameKey, string mark, string noteKey, ref float y,
+            string firstKey, string secondKey, Func<bool> second, Action<bool> set)
+        {
+            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
+            string a = UIText.T(firstKey), b = UIText.T(secondKey);
+            var sw = SwitchKey(row, id, new[] { a, b }, new Vector2(0, 0.5f), new Vector2(300f, 0),
+                () => second() ? b : a, () => false, () => set(!second()));
+            RowNote(row, noteKey != null ? UIText.T(noteKey) : null, 300f + sw.Key.sizeDelta.x + 12f);
+        }
+
+        /// <summary>
+        /// A CYCLE on a DISPLAY row (2026-09-26): prev, the value on a well as wide as the widest of
+        /// <paramref name="words"/>, next; a click steps <paramref name="step"/> by -1 or +1. The note after it can
+        /// change with the value (<paramref name="note"/>).
+        /// </summary>
+        private void CycleRow(RectTransform page, string id, string nameKey, string mark, ref float y,
+            IEnumerable<string> words, Func<string> word, Func<bool> live, Action<int> step, Func<string> note)
+        {
+            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
+            float x = 300f;
+            var prev = PackIconKey(row, "PREV", "prev", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0),
+                () => { step(-1); Sfx.Play("click"); RefreshSettings(); });
+            x += 32f + 6f;
+            var well = NewRect("Well", row);
+            well.anchorMin = well.anchorMax = well.pivot = new Vector2(0, 0.5f);
+            well.anchoredPosition = new Vector2(x, 0);
+            var wi = well.gameObject.AddComponent<Image>();
+            wi.sprite = ChromeArt.Well(); wi.type = Image.Type.Sliced; wi.color = Color.white; wi.raycastTarget = false;
+            var value = NewText("Value", well, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
+            Stretch(value.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            value.horizontalOverflow = HorizontalWrapMode.Overflow;
+            value.raycastTarget = false;
+            float vw = 144f;
+            foreach (var w in words)
+            {
+                value.text = w;
+                vw = Mathf.Max(vw, Mathf.Ceil((value.preferredWidth + 20f) / 4f) * 4f);
+            }
+            well.sizeDelta = new Vector2(vw, CapH);
+            x += vw + 6f;
+            var next = PackIconKey(row, "NEXT", "next", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0),
+                () => { step(+1); Sfx.Play("click"); RefreshSettings(); });
+            x += 32f + 12f;
+            var cycle = new SettingCycle { Prev = prev, Next = next, Value = value, Word = word, Live = live, NoteWord = note };
+            cycle.Note = RowNote(row, "", x);
+            _settingCycles.Add(cycle);
+        }
+
+        /// <summary>A row's small print after its control, from <paramref name="x"/> to the row's end, on two lines
+        /// when it must (a long translation wraps rather than running off the plate).</summary>
+        private Text RowNote(RectTransform row, string text, float x)
+        {
+            float room = SetW - SetPad * 2f - x;
+            if (text == null || room < 60f) return null;
+            var note = NewText("Note", row, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
+            Place(note.rectTransform, new Vector2(0, 0.5f), new Vector2(room, 28f), new Vector2(x, 0));
+            note.rectTransform.pivot = new Vector2(0, 0.5f);
+            note.horizontalOverflow = HorizontalWrapMode.Wrap;
+            note.verticalOverflow = VerticalWrapMode.Overflow;
+            note.raycastTarget = false;
+            note.text = text;
+            return note;
         }
 
         /// <summary>A level on a ten-cell meter between the pack's - and + keys, its percentage after it. The cells
@@ -505,7 +645,8 @@ namespace LastCall.UI
                 (KeyAction.MusicToggle, "chrome.bind.music_toggle", "speaker") })
             {
                 string name = UIText.T(key) + (action == KeyAction.PageBack ? " ←" : action == KeyAction.PageForward ? " →" : "");
-                // 40 a row, not 56: seven actions and the hint under them have to stand between the tabs and the foot.
+                // 40 a row, not 56: seven actions, INVERT POUR and the hint under them have to stand between the tabs
+                // and the foot (8 x 40 + the hint's 20 = 340 of the page's 360, 2026-09-26).
                 var row = SettingsRow(page, action.ToString(), name, mark, ref y, 40f);
                 var a = action;
                 // THE CAP (2026-09-15, KeyCaps): the author's drawing of the key the action is on, at 2x, against the
@@ -541,6 +682,26 @@ namespace LastCall.UI
                 _bindWords[action] = word;
                 _bindHints[action] = hint;
             }
+
+            // INVERT POUR (2026-09-26, the author's "ters mouse"): the one axis the mouse has in this game is the
+            // pour's lean, read off how far the hand has risen (PourHand) - every other verb follows the pointer
+            // where it is, and an inverted pointer would put the bottle on one side of the screen and the hand on
+            // the other. Inverted, the bottle is lifted over the glass upright and LOWERED to tip. Its switch
+            // stands where the caps stand, at the row's right, under the seven keys (the page's new 50 took it).
+            var inv = SettingsRow(page, "INVERT", UIText.T("chrome.settings.invert_pour"), "bottle", ref y, 40f);
+            string invOn = UIText.T("chrome.settings.on"), invOff = UIText.T("chrome.settings.off");
+            var invKey = SwitchKey(inv, "INVERT", new[] { invOff, invOn }, new Vector2(1, 0.5f), Vector2.zero,
+                () => PlayerOptions.InvertPour ? invOn : invOff, () => PlayerOptions.InvertPour,
+                () => PlayerOptions.InvertPour = !PlayerOptions.InvertPour);
+            var invNote = NewText("Note", inv, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
+            float invRoom = SetW - SetPad * 2f - 300f - invKey.Key.sizeDelta.x - 12f;
+            Place(invNote.rectTransform, new Vector2(1, 0.5f), new Vector2(invRoom, 28f), new Vector2(-(invKey.Key.sizeDelta.x + 12f), 0));
+            invNote.rectTransform.pivot = new Vector2(1, 0.5f);
+            invNote.horizontalOverflow = HorizontalWrapMode.Wrap;
+            invNote.verticalOverflow = VerticalWrapMode.Overflow;
+            invNote.raycastTarget = false;
+            invNote.text = UIText.T("chrome.settings.invert_pour_note");
+
             var foot = NewText("Hint", page, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
             Place(foot.rectTransform, new Vector2(0, 0), new Vector2(640, 12), new Vector2(0, 8f));
             foot.rectTransform.pivot = new Vector2(0, 0);
@@ -586,6 +747,8 @@ namespace LastCall.UI
         {
             if (_settingsPanel == null || !_settingsPanel.gameObject.activeSelf) return;
             StepSeek();
+            // Alt+Enter with the window up (2026-09-26): the WINDOW and RESOLUTION rows follow the screen.
+            if (_settingsPage == "DISPLAY" && _shownWindowed != DisplayOptions.Windowed) RefreshSettings();
             var kb = Keyboard.current;
             bool blink = ((int)(Time.unscaledTime * 4f) & 1) == 0;
             foreach (var pair in _bindCaps)
@@ -620,32 +783,122 @@ namespace LastCall.UI
             var page = NewRect("Page_DISPLAY", plate);
             Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
             float y = 0f;
-            var mot = SettingsRow(page, "MOTION", UIText.T("chrome.settings.motion"), "redo", ref y);
-            _settingsMotionKey = PackWordKey(mot, "MOTION", UIText.T("chrome.settings.full"), null, MenuPack.Tone.Green, new Vector2(0, 0.5f), new Vector2(140, 40), new Vector2(300f, 0), () =>
-            {
-                Motion.Reduced = !Motion.Reduced; Sfx.Play("click"); RefreshSettings();
-            }, 100f, 32f);
-            _settingsMotion = _settingsMotionKey.Find("Face/Label").GetComponent<Text>();
-            var motNote = NewText("Note", mot, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(motNote.rectTransform, new Vector2(0, 0.5f), new Vector2(360, 12), new Vector2(300f + _settingsMotionKey.sizeDelta.x + 12f, 0));
-            motNote.rectTransform.pivot = new Vector2(0, 0.5f);
-            motNote.horizontalOverflow = HorizontalWrapMode.Overflow;
-            motNote.text = UIText.T("chrome.settings.motion_note");
 
-            var book = SettingsRow(page, "BOOK", UIText.T("chrome.settings.book"), "cash", ref y);
-            PackWordKey(book, "OPEN", UIText.T("chrome.settings.open"), "menu", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, 40), new Vector2(300f, 0),
+            // THE SCREEN (2026-09-26, the author: "display kısmında çözünürlük"). FULLSCREEN is the borderless
+            // window at the desktop's size; WINDOWED opens at the largest whole multiple of 640x360 the desktop holds,
+            // and those are the only sizes offered - at a whole multiple every stage pixel stays square
+            // (DisplayOptions). Applied in a player's build only; the editor remembers the choice and leaves the
+            // Game view the suites pin at 1280x720 alone.
+            ChoiceRow(page, "WINDOW", "chrome.settings.window", "win_max", "chrome.settings.window_note", ref y,
+                "chrome.settings.window_full", "chrome.settings.window_windowed",
+                () => DisplayOptions.Windowed, windowed => DisplayOptions.SetWindowed(windowed));
+            var desk = DisplayOptions.Desktop;
+            var sizeWords = new List<string> { SizeWord(desk) };
+            foreach (var s in WindowChoices()) sizeWords.Add(SizeWord(s));
+            CycleRow(page, "RESOLUTION", "chrome.settings.resolution", "room", ref y, sizeWords,
+                () => SizeWord(DisplayOptions.Windowed ? DisplayOptions.WindowSize : DisplayOptions.Desktop),
+                () => DisplayOptions.Windowed && WindowChoices().Count > 1, StepWindowSize,
+                () => UIText.T(DisplayOptions.Windowed ? "chrome.settings.resolution_note" : "chrome.settings.resolution_desktop"));
+            var rateWords = new List<string>();
+            foreach (int cap in DisplayOptions.FrameCaps) rateWords.Add(FrameWord(cap));
+            CycleRow(page, "FRAME RATE", "chrome.settings.frame_rate", "clock", ref y, rateWords,
+                () => FrameWord(PlayerOptions.FrameCap), () => true, StepFrameCap,
+                () => UIText.T("chrome.settings.frame_note"));
+
+            // WHAT MOVES AND WHAT FLASHES. MOTION is the switch the page always had (FULL lit, REDUCED grey).
+            var mot = SettingsRow(page, "MOTION", UIText.T("chrome.settings.motion"), "redo", ref y, DisplayRow);
+            string full = UIText.T("chrome.settings.full"), reduced = UIText.T("chrome.settings.reduced");
+            var motion = SwitchKey(mot, "MOTION", new[] { full, reduced }, new Vector2(0, 0.5f), new Vector2(300f, 0),
+                () => Motion.Reduced ? reduced : full, () => !Motion.Reduced, () => Motion.Reduced = !Motion.Reduced);
+            _settingsMotionKey = motion.Key;
+            _settingsMotion = motion.Label;
+            RowNote(mot, UIText.T("chrome.settings.motion_note"), 300f + motion.Key.sizeDelta.x + 12f);
+            OnOffRow(page, "FLASHES", "chrome.settings.flashes", "flash", "chrome.settings.flashes_note", ref y,
+                () => PlayerOptions.Flashes, on => PlayerOptions.Flashes = on);
+
+            // THE HAND, THE COLOURS, THE FOCUS.
+            ChoiceRow(page, "POINTER", "chrome.settings.pointer", "rise", "chrome.settings.pointer_note", ref y,
+                "chrome.settings.normal", "chrome.settings.large",
+                () => PlayerOptions.Pointer == PlayerOptions.PointerSize.Large,
+                large => PlayerOptions.Pointer = large ? PlayerOptions.PointerSize.Large : PlayerOptions.PointerSize.Normal);
+            ChoiceRow(page, "COLOURS", "chrome.settings.colours", "mix", "chrome.settings.colours_note", ref y,
+                "chrome.settings.colours_standard", "chrome.settings.colours_clear",
+                () => PlayerOptions.Cues == PlayerOptions.ColourCues.Clear,
+                clear => PlayerOptions.Cues = clear ? PlayerOptions.ColourCues.Clear : PlayerOptions.ColourCues.Standard);
+            OnOffRow(page, "PAUSE AWAY", "chrome.settings.pause_away", "pause", "chrome.settings.pause_away_note", ref y,
+                () => PlayerOptions.PauseWhenAway, on => PlayerOptions.PauseWhenAway = on);
+
+            // THE RUN'S OWN VERBS, as before, on the page's pitch.
+            var book = SettingsRow(page, "BOOK", UIText.T("chrome.settings.book"), "cash", ref y, DisplayRow);
+            PackWordKey(book, "OPEN", UIText.T("chrome.settings.open"), "menu", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, CapH), new Vector2(300f, 0),
                 () => { ToggleSettings(); if (Showing(_pausePanel)) TogglePause(); ToggleLedger(); }, 100f, 48f + 16f);
-            var fresh = SettingsRow(page, "START OVER", UIText.T("chrome.settings.start_over"), "moon", ref y);
-            var newRun = PackWordKey(fresh, "NEW RUN", UIText.T("chrome.settings.new_run"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, 40), new Vector2(300f, 0), () =>
+            var fresh = SettingsRow(page, "START OVER", UIText.T("chrome.settings.start_over"), "moon", ref y, DisplayRow);
+            var newRun = PackWordKey(fresh, "NEW RUN", UIText.T("chrome.settings.new_run"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, CapH), new Vector2(300f, 0), () =>
             {
                 ToggleSettings(); if (Showing(_pausePanel)) TogglePause(); _bootstrap.StartNewRun(null);
             }, 100f, 48f + 16f);
-            var freshNote = NewText("Note", fresh, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(freshNote.rectTransform, new Vector2(0, 0.5f), new Vector2(360, 12), new Vector2(300f + newRun.sizeDelta.x + 12f, 0));
-            freshNote.rectTransform.pivot = new Vector2(0, 0.5f);
-            freshNote.horizontalOverflow = HorizontalWrapMode.Overflow;
-            freshNote.text = UIText.T("chrome.settings.start_over_note");
+            RowNote(fresh, UIText.T("chrome.settings.start_over_note"), 300f + newRun.sizeDelta.x + 12f);
             return page;
+        }
+
+        /// <summary>The window sizes the RESOLUTION row steps through: the whole multiples the desktop holds, or - on
+        /// a desktop too small for any - the one size WINDOWED opens at.</summary>
+        private static List<Vector2Int> WindowChoices()
+        {
+            var desk = DisplayOptions.Desktop;
+            var sizes = DisplayOptions.WholeSizes(desk.x, desk.y);
+            if (sizes.Count == 0) sizes.Add(DisplayOptions.WindowFor(desk.x, desk.y));
+            return sizes;
+        }
+
+        private static string SizeWord(Vector2Int size) =>
+            UIText.T("chrome.settings.resolution_value", ("w", size.x), ("h", size.y));
+
+        private static string FrameWord(int cap) =>
+            cap <= 0 ? UIText.T("chrome.settings.frame_match") : UIText.T("chrome.settings.frame_cap", ("fps", cap));
+
+        /// <summary>The next or the previous whole size, round the ends; a window at a size of its own (a player's
+        /// build started with -screen-width) steps to the nearest one first.</summary>
+        private static void StepWindowSize(int step)
+        {
+            if (!DisplayOptions.Windowed) return;
+            var sizes = WindowChoices();
+            if (sizes.Count < 2) return;
+            int at = sizes.IndexOf(DisplayOptions.WindowSize);
+            if (at < 0)
+            {
+                at = 0;
+                for (int i = 1; i < sizes.Count; i++)
+                    if (Mathf.Abs(sizes[i].y - DisplayOptions.WindowSize.y) < Mathf.Abs(sizes[at].y - DisplayOptions.WindowSize.y)) at = i;
+            }
+            else at = (at + step + sizes.Count) % sizes.Count;
+            DisplayOptions.SetWindowSize(sizes[at]);
+        }
+
+        /// <summary>MATCH SCREEN, 60, 120, 144, round the ends; applied at once (in a player's build).</summary>
+        private static void StepFrameCap(int step)
+        {
+            var caps = DisplayOptions.FrameCaps;
+            int at = Array.IndexOf(caps, PlayerOptions.FrameCap);
+            if (at < 0) at = 0;
+            PlayerOptions.FrameCap = caps[(at + step + caps.Length) % caps.Length];
+            DisplayOptions.ApplyPacing();
+        }
+
+        /// <summary>
+        /// PAUSE WHEN AWAY (2026-09-26): another window comes up over the game and the night is held behind the pause
+        /// menu, the way Escape holds it - the bar went on serving while the player was alt-tabbed (runInBackground
+        /// keeps the room alive, and it should: the music, the rain). Only an open night with nothing already holding
+        /// the clock; the menu stays up when the game comes back, and RESUME lets it go. Never in the editor
+        /// (PlayerOptions.PausesWhenAway): the author drives it from the IDE, and the suite ignores focus.
+        /// </summary>
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (hasFocus || !PlayerOptions.PausesWhenAway) return;
+            if (_pausePanel == null || Showing(_pausePanel) || Paused || _bindListening != null) return;
+            var run = Run;
+            if (run == null || run.Phase != TycoonPhase.DayOpen) return;
+            TogglePause();
         }
 
         // ── LANGUAGE ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -741,11 +994,28 @@ namespace LastCall.UI
             _settingsMute.text = Sound.Muted ? UIText.T("chrome.settings.off") : UIText.T("chrome.settings.on");
             if (_settingsMuteKey != null)
                 ReiconKey(_settingsMuteKey, Sound.Muted ? MenuPack.Tone.Grey : MenuPack.Tone.Green, Sound.Muted ? "sound_off" : "sound_on");
-            _settingsMotion.text = Motion.Reduced ? UIText.T("chrome.settings.reduced") : UIText.T("chrome.settings.full");
-            if (_settingsMotionKey != null)
+            // The switches and the cycles (2026-09-26): each says its option's state, a switch lit while its option
+            // is on; a cycle with nothing to choose (the window's size in fullscreen) greys, and its keys sleep.
+            _shownWindowed = DisplayOptions.Windowed;
+            foreach (var sw in _settingSwitches)
             {
-                RetoneWordKey(_settingsMotionKey, Motion.Reduced ? MenuPack.Tone.Grey : MenuPack.Tone.Green);
-                FitKey(_settingsMotionKey, 100f, 32f);
+                sw.Label.text = sw.Word();
+                RetoneWordKey(sw.Key, sw.Lit() ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
+            }
+            foreach (var cycle in _settingCycles)
+            {
+                bool live = cycle.Live();
+                cycle.Value.text = cycle.Word();
+                cycle.Value.color = live ? UITheme.Cream[4] : UITheme.Cream[2];
+                if (cycle.Note != null) cycle.Note.text = cycle.NoteWord != null ? cycle.NoteWord() : "";
+                foreach (var key in new[] { cycle.Prev, cycle.Next })
+                {
+                    var group = key.GetComponent<CanvasGroup>();          // (not ??: Unity's missing component is a fake null)
+                    if (group == null) group = key.gameObject.AddComponent<CanvasGroup>();
+                    group.alpha = live ? 1f : 0.35f;
+                    group.blocksRaycasts = live;
+                    group.interactable = live;
+                }
             }
             if (_settingsNowTitle != null)
             {

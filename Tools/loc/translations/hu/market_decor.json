@@ -12,6 +12,7 @@
   {"key": "decor.card.worn", "text": "Most a vendégtérben", "src": "In the room now"},
   {"key": "decor.card.worn_stays", "text": "Most a vendégtérben · a vendégtér {mark}. fokozatot ér", "src": "In the room now · the room stays worth mark {mark}"},
   {"key": "decor.comfort", "text": "+{comfort} kényelem", "src": "+{comfort} comfort"},
+  {"key": "decor.comfort_of", "text": "{comfort} / {top} kényelem", "src": "{comfort} of {top} comfort"},
   {"key": "decor.fit.all_fitted", "text": "A BÁR KÉSZ — NINCS MIT FEJLESZTENI", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
   {"key": "decor.fit.bar.body", "text": "Egy jobb pultlap minden vendéget boldogabbá tesz. Még azokat is, akiknek rossz italt töltesz.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
   {"key": "decor.fit.bar.gain", "text": "+0.03 minden kiszolgált vendégnél, legfeljebb +0.06", "src": "+0.03 on every served visit, up to +0.06"},

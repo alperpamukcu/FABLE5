@@ -79,6 +79,8 @@ namespace LastCall.PlayTests
             LastCall.Game.Ceremony.Pace = SuitePace;
             // The captions these tests read are English; a Turkish desktop must not translate them away.
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
+            // ...and the presses are the default hand's (2026-09-26): every setting at its default, nothing saved.
+            LastCall.Game.PlayerOptions.UseDefaultsForSession();
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");

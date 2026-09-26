@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Achète serré. Une grande étagère dans un bar neuf, c'est de l'argent qui dort.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Six bouteilles et un fût. Techniquement, c'est un bar.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Huit bouteilles et un fût. Techniquement, c'est un bar.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Lis-les avant de verser — la carte dit ce qu'ils sont venus chercher.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "La caisse ne couvre pas le loyer. Ça arrive une fois à chaque bar.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "Deux fois, c'est une habitude. Trois fois, c'est un tout autre bar, avec ton nom dessus.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

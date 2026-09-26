@@ -759,6 +759,27 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // FLASH — a bolt (2026-09-26): the settings' FLASHES row. The row marks come from these sets, and the
+            // star is ItemArt's alone (CLAUDE.md, "One star and one heart"), so the row needed a mark of its own.
+            ["flash"] = new[]
+            {
+                "................",
+                ".........#####..",
+                "........#####...",
+                ".......#####....",
+                "......#####.....",
+                ".....#####......",
+                "....##########..",
+                "...##########...",
+                "........####....",
+                ".......####.....",
+                "......####......",
+                ".....###........",
+                "....###.........",
+                "...##...........",
+                "................",
+                "................",
+            },
             // CLOSE — the X. Two units thick: at 10 units a one-unit X is a smudge.
             ["win_close"] = new[]
             {
@@ -2046,7 +2067,7 @@ namespace LastCall.UI
         /// colours. Drawn as a filled image, so the level cuts it on a measure line exactly.</summary>
         public static Sprite GaugeLadder(Color[] bands)
         {
-            string key = "gauge:ladder";
+            string key = "gauge:ladder:" + ColoursKey(bands);
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             var px = new Color32[bands.Length];
             for (int i = 0; i < bands.Length; i++) px[i] = bands[i];
@@ -3714,6 +3735,24 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
+        /// <summary>The colours a drawing was made in, as a word for its cache key (2026-09-26): the ladder and the
+        /// dots are drawn in the COLOUR CUES the player picked, and a key without them handed a switched player the
+        /// sprite drawn in the other ladder.</summary>
+        private static string ColoursKey(Color[] colours)
+        {
+            if (colours == null) return "-";
+            unchecked
+            {
+                int h = 17;
+                foreach (var c in colours)
+                {
+                    Color32 k = c;
+                    h = h * 31 + ((k.r << 24) | (k.g << 16) | (k.b << 8) | k.a);
+                }
+                return h.ToString("x8");
+            }
+        }
+
         /// <summary>
         /// THE POUR, AS FIVE DOTS (2026-09-06, the author: "tariflerde kullanılan doluluk
         /// göstergesinin barını görseldeki tarzda değiştirmek istiyorum. 5 noktadan oluşuyor
@@ -3726,7 +3765,8 @@ namespace LastCall.UI
         /// </summary>
         public static Sprite RatioDots(int lit, Color[] colours, int count = 5, int radius = 4, int gap = 6)
         {
-            string key = "dots:" + lit + ":" + count + (radius != 4 || gap != 6 ? ":" + radius + ":" + gap : "");
+            string key = "dots:" + lit + ":" + count + (radius != 4 || gap != 6 ? ":" + radius + ":" + gap : "")
+                + ":" + ColoursKey(colours);
             if (Cache.TryGetValue(key, out var got) && got != null) return got;
             // dot radius, and the run between them. The page's dots are 4 and 6 at 2x; the tin's measure is drawn at
             // 1x and its foot is narrow, so it wears 4 and 2 - 50 wide (2026-09-25).

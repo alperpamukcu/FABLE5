@@ -6,6 +6,9 @@ dendiğinde tüm seçenekler desen png si ile gözükmeli").
 NOTE (2026-09-23): fixtures.json is HAND-OWNED now: its prices were re-set by hand and every row
 carries a "buff"/"buffPct" pair (the fitting buffs) that this script does not write — re-running
 it would drop both, so carry any new rung into fixtures.json by hand.
+NOTE (2026-09-26): the SPEC comfort figures below are the OLD absolute scale (the house summed to
+about 18). fixtures.json now sums the whole house to exactly five (GDD 27 section 3, GDD_MEVCUT 7);
+its comfort column is hand-owned too and must never be overwritten from SPEC.
 
 The upgrade tree is where the author sets each ladder's tiers and leaves out what they do not
 want (Tools/upgrade_tree/decisions.json, read back from the tree page's own database). This

@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Nu in de zaal", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Nu in de zaal · de zaal blijft niveau {mark} waard", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} comfort", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} van {top} comfort", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "DE BAR IS AF — NIETS MEER TE VERBETEREN", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Een beter barblad maakt elke gast blijer. Zelfs als je hun drankje verknoeit.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0,03 per bediend bezoek, tot +0,06", "src": "+0.03 on every served visit, up to +0.06"},

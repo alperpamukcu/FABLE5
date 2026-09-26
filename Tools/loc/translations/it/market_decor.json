@@ -13,6 +13,7 @@
     {"key": "decor.card.worn", "text": "Ora nella sala"},
     {"key": "decor.card.worn_stays", "text": "Ora nella sala · la sala resta al livello {mark}"},
     {"key": "decor.comfort", "text": "+{comfort} comfort"},
+    {"key": "decor.comfort_of", "text": "{comfort} su {top} di comfort", "src": "{comfort} of {top} comfort"},
     {"key": "decor.fit.all_fitted", "text": "IL BAR È COMPLETO — NIENTE DA MIGLIORARE"},
     {"key": "decor.fit.bar.body", "text": "Un bancone migliore rende più contento ogni cliente. Anche quelli a cui sbagli il drink."},
     {"key": "decor.fit.bar.gain", "text": "+0,03 per ogni cliente servito, fino a +0,06"},

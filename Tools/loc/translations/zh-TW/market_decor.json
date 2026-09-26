@@ -66,6 +66,11 @@
    "src": "+{comfort} comfort"
   },
   {
+   "key": "decor.comfort_of",
+   "text": "舒適 {comfort}/{top}",
+   "src": "{comfort} of {top} comfort"
+  },
+  {
    "key": "decor.fit.all_fitted",
    "text": "酒吧設備已全數升滿 — 沒有能再升的了",
    "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"

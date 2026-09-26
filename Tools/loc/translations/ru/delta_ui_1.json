@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "Вся работа — в пене.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "Щёлкай по стулу, а не по напитку.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "Никто не скажет, чего хочет, пока не спросишь.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "Чего сегодня не завезли, то завтра кто-нибудь да попросит.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "Страницу, которую полка не может налить, никто не закажет.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

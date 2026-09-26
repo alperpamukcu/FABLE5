@@ -7,7 +7,8 @@ namespace LastCall.UI
     /// A NEON TITLE (2026-09-25, the menus' effects): the word holds its lit colour and, every few seconds, stutters
     /// two or three times to the step under it on the same ramp - a tube catching, never going dark. A fixed table on
     /// the unscaled clock (the menus are up while the night's clock is held), no random numbers, low contrast (one
-    /// ramp step) and never fast, so nothing strobes; steady under reduced motion.
+    /// ramp step) and never fast, so nothing strobes; steady under reduced motion, and with FLASHES off
+    /// (Motion.NoFlashes, 2026-09-26).
     /// </summary>
     [RequireComponent(typeof(Text))]
     public sealed class NeonFlicker : MonoBehaviour
@@ -34,7 +35,7 @@ namespace LastCall.UI
         private void Update()
         {
             if (_text == null) return;
-            if (Motion.Reduced) { if (_text.color != Lit) _text.color = Lit; return; }
+            if (Motion.NoFlashes) { if (_text.color != Lit) _text.color = Lit; return; }
             int i = (int)(Time.unscaledTime / Step) % Table.Length;
             var want = Table[i] == 1 ? Lit : Dim;
             if (_text.color != want) _text.color = want;

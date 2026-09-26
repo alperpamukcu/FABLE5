@@ -36,6 +36,10 @@ namespace LastCall.EditorTools
                 File.ReadAllText(Path.Combine(Application.dataPath, "Data/recipes/recipes.json")));
             var fixtures = DataLoader.ParseFixtures(
                 File.ReadAllText(Path.Combine(Application.dataPath, "Data/fixtures/fixtures.json"))).Fixtures;
+            var glassware = DataLoader.ParseGlassware(
+                File.ReadAllText(Path.Combine(Application.dataPath, "Data/glassware/glassware.json")));
+            var deck = DataLoader.ParseDeck(
+                File.ReadAllText(Path.Combine(Application.dataPath, "Data/bottles/base_bar.json")));
             var config = TycoonConfig.Default;
 
             var sb = new StringBuilder();
@@ -51,6 +55,7 @@ namespace LastCall.EditorTools
                 Standard(sb, recipes, config, name, q);
                 Fitted(sb, recipes, config, name, q, fixtures);
             }
+            Room(sb, recipes, config, fixtures, glassware, deck);
             Bands(sb, recipes);
             Mix(sb);
             sb.Append(End);
@@ -140,6 +145,86 @@ namespace LastCall.EditorTools
                 sb.AppendLine(string.Format(Inv,
                     "| {0} | {1:0.0} | {2} | {3} | ${4} | ${5} | **${6}** | ${7} | {8} |",
                     n.Day, n.Stars, RoomLine(room), n.Covers, n.Gross, n.Tips, n.Net, n.Till, lift));
+            }
+        }
+
+        /// <summary>How far the furnished walk runs: long enough for a competent bar to finish the house.</summary>
+        private const int RoomNights = 120;
+
+        /// <summary>
+        /// THE ROOM, NIGHT BY NIGHT (2026-09-26, the author: "Tüm geliştirmeleri ekonomi dengesine dahil et,
+        /// Oyuncu oyunda maksimum 5 konfora ulaşmalı ve bu oyun sonlarına yakın gerçekleşmeli"): the furnished
+        /// walk (<see cref="EconomyProjection.WalkFurnishing"/>) at the three standards — a bar that buys its
+        /// pages, its bottles and its room out of its own till, from the opening shelf and the bare room — and
+        /// the night the house reaches five. The caption says what the walk assumes, because the finish it
+        /// prints is only as good as that assumption.
+        /// </summary>
+        private static void Room(StringBuilder sb,
+            System.Collections.Generic.IReadOnlyList<RecipeDefinition> book, TycoonConfig config,
+            System.Collections.Generic.IReadOnlyList<FixtureDefinition> fixtures,
+            System.Collections.Generic.IReadOnlyList<GlasswareDefinition> glassware, LoadedDeck deck)
+        {
+            var shelf = deck.StartingCards;
+            var catalogue = deck.Cards.Where(c => !deck.IsStarting(c)).Concat(deck.LockedCards).ToList();
+            var standards = new[]
+            {
+                ("Still learning", EconomyProjection.Learning),
+                ("Competent", EconomyProjection.Competent),
+                ("Knows the book", EconomyProjection.Sharp),
+            };
+            var walks = standards.Select(s => EconomyProjection.WalkFurnishing(book, config, fixtures, glassware,
+                RoomNights, s.Item2, shelf, catalogue)).ToList();
+
+            sb.AppendLine().AppendLine("### The room, night by night").AppendLine();
+            sb.AppendLine("A bar that buys its own way: the rung's better bottles, every page its gate opens, the bottles");
+            sb.AppendLine("those pages need, then the room — the most comfort per dollar while the room is under the");
+            sb.AppendLine("standing plus half a star, the night's one fitting, then the rest cheapest first — keeping");
+            sb.AppendLine("tomorrow's rent less what tonight cleared. Each night is priced from the pages and bottles it");
+            sb.AppendLine("owns and files the lower of the climb, the menu's ceiling and the room (a clean counter).");
+            sb.AppendLine();
+            sb.AppendLine("**The climb is the projection's assumption, not a result:** the service side of every night is the");
+            sb.AppendLine(string.Format(Inv,
+                "standing plus {0:0.000} (`StarsOn`'s slope). A competent night's drinks are worth about {1:0.0} stars",
+                EconomyProjection.Climb,
+                BarRating.ExactStarsFor(EconomyProjection.SatisfactionFor(EconomyProjection.Competent))));
+            sb.AppendLine("of service, so in play the drinks bind before the room does; what these tables answer is when the");
+            sb.AppendLine("MONEY buys the house for a bar that climbs at the projection's pace.");
+            sb.AppendLine();
+            sb.AppendLine("| standard | comfort 5.00 | 5★ standing | 1★ / 2★ / 3★ / 4★ | nights the room held |");
+            sb.AppendLine("|---|--:|--:|--:|--:|");
+            for (int i = 0; i < standards.Length; i++)
+            {
+                var w = walks[i];
+                int five = EconomyProjection.ComfortFiveNight(w), top = EconomyProjection.FiveStarNight(w);
+                string Reach(double s)
+                {
+                    foreach (var n in w) if (n.Best + BarRank.Epsilon >= s) return n.Night.Day.ToString(Inv);
+                    return "—";
+                }
+                sb.AppendLine(string.Format(Inv, "| {0} | {1} | {2} | {3} / {4} / {5} / {6} | {7} of {8} |",
+                    standards[i].Item1,
+                    five > 0 ? "night " + five : "not in " + RoomNights,
+                    top > 0 ? "night " + top : "not in " + RoomNights,
+                    Reach(1), Reach(2), Reach(3), Reach(4), w.Count(n => n.RoomBound), w.Count));
+            }
+
+            for (int i = 0; i < standards.Length; i++)
+            {
+                var w = walks[i];
+                int top = EconomyProjection.FiveStarNight(w);
+                sb.AppendLine().AppendLine(string.Format(Inv, "#### {0}, furnishing as it goes", standards[i].Item1)).AppendLine();
+                sb.AppendLine("| night | standing | comfort | net | spent: room · pages · bottles | till | held by the room |");
+                sb.AppendLine("|--:|--:|--:|--:|--:|--:|:-:|");
+                foreach (var n in w)
+                {
+                    int d = n.Night.Day;
+                    if (d > 8 && d % 6 != 0) continue;
+                    if (top > 0 && d > top + 6) break;
+                    sb.AppendLine(string.Format(Inv,
+                        "| {0} | {1:0.00} | {2:0.00} | ${3} | ${4} · ${5} · ${6} | ${7} | {8} |",
+                        d, n.Standing, n.ComfortAfter, n.Night.Net, n.Room, n.Pages, n.Bottles, n.Till,
+                        n.RoomBound ? "yes" : ""));
+                }
             }
         }
 

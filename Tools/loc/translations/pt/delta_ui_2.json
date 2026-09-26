@@ -1,6 +1,6 @@
 {"strings": [
 {"key": "data.lesson.first_market.say.1", "text": "Compra pouco e certo. Prateleira cheia num bar novo é só dinheiro parado.", "src": "Buy narrow. A wide shelf on a new bar is just money standing still."},
-{"key": "data.lesson.first_night.say.0", "text": "Seis garrafas e um barril. Tecnicamente, é um bar.", "src": "Six bottles and a keg. That is a bar, technically."},
+{"key": "data.lesson.first_night.say.0", "text": "Oito garrafas e um barril. Tecnicamente, é um bar.", "src": "Eight bottles and a keg. That is a bar, technically."},
 {"key": "data.lesson.first_night.say.1", "text": "Lê-os antes de verteres — o cartão diz ao que vêm.", "src": "Read them before you pour — the licence says what they came for."},
 {"key": "data.lesson.red_night.say.0", "text": "A caixa ficou abaixo da renda. Acontece a qualquer sala, uma vez.", "src": "The till is under the rent. It happens to every room once."},
 {"key": "data.lesson.red_night.say.1", "text": "Duas vezes é hábito. Três é outro bar com o teu nome na porta.", "src": "Twice is a habit. Three times is a different bar with your name on it."},

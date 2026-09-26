@@ -1,3 +1,4 @@
+using LastCall.Game;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -22,6 +23,14 @@ namespace LastCall.UI
     /// follows its target on a softer one, and a sharp sideways move swings the body under the
     /// hand like the pendulum it is. Let go and the vessel goes home, and when it gets there it
     /// is put EXACTLY back where it stood — the look tests compare the bench byte for byte.
+    ///
+    /// INVERTED (2026-09-26, the author: "ters mouse", the settings' INVERT POUR): the vessel still
+    /// stays under the pointer — nothing in this game can put the bottle on one side of the screen
+    /// and the hand on the other — but the lean is read off how far the hand has come DOWN from the
+    /// highest it was lifted. Taken upright it stays upright while it is lifted over the glass; once
+    /// the hand has been as high as the whole lean needs, lowering it tips, and raising it again
+    /// stands it back up. The mouth-over-the-rim rule is kept the other way round: the hand is not
+    /// let below the height where the mouth, at the fullest lean, would drop under the rim.
     /// </summary>
     internal sealed class PourHand
     {
@@ -49,6 +58,12 @@ namespace LastCall.UI
         private float _liftBase, _liftRange;      // pointer height where the lift starts, and its travel
         private float _ax;                        // low-passed horizontal acceleration of the hand
         private Vector2 _lastV;
+        // INVERTED (PlayerOptions.InvertPour, read at the press so a grab never changes its mind):
+        private bool _invert;                     // this grab tips as the hand comes down
+        private bool _armed;                      // …once the hand has been lifted to _armAt
+        private float _armAt;                     // the height that arms it: the top of the lean's window
+        private float _peak;                      // the highest the hand has been since it was armed
+        private float _floor = float.NegativeInfinity;   // the lowest the hand may go, armed (the mouth over the rim)
 
         public bool Held { get; private set; }
         /// <summary>Standing exactly on its rest, upright and still.</summary>
@@ -66,7 +81,7 @@ namespace LastCall.UI
             get
             {
                 if (!Held || _liftRange <= 0f) return 0f;
-                float lift01 = (_p.y - _liftBase) / _liftRange;
+                float lift01 = Lift01(_p.y);
                 if (MaxTilt <= KneeTilt) return Mathf.Clamp01(lift01);
                 return Mathf.Clamp01((lift01 - KneeLift) / (1f - KneeLift));
             }
@@ -82,6 +97,12 @@ namespace LastCall.UI
         /// <summary>The least lift a full tilt is spread over, however near the top it was taken.</summary>
         public const float MinLiftRange = 110f;
         private const float MaxReleaseSpeed = 1600f;                 // what a let-go carries into the walk home
+        /// <summary>The longest frame the hand catches up in full (2026-09-26): past it a hitch is dropped rather
+        /// than flinging the vessel. The frame itself is stepped at most 1/60 s at a time (SpringStep).</summary>
+        private const float MaxFrame = 0.1f;
+        /// <summary>How close under the ceiling the hand has to come to arm an inverted lean: it follows a pointer
+        /// held at the ceiling on a spring, so it only ever nears it.</summary>
+        private const float ArmSlack = 2f;
 
         /// <summary>The grip reference, vessel-relative: the spout less the grip depth along the vessel.</summary>
         private Vector2 G => new Vector2(Spout.x, Spout.y - GripDepth);
@@ -127,6 +148,16 @@ namespace LastCall.UI
             _liftRange = RangeUnder(ceiling, pointer.y, squeeze: false);
             // A vessel caught mid-lean keeps its lean: the lift starts where that lean already is.
             _liftBase = pointer.y - Unlean(_tilt, MaxTilt) * _liftRange;
+            _invert = PlayerOptions.InvertPour;
+            _floor = float.NegativeInfinity;
+            if (_invert)
+            {
+                // Inverted with no rim to clear, or caught mid-lean: armed at once, the lean it kept standing
+                // where the hand is, and more of it the lower the hand goes.
+                _armed = true;
+                _peak = pointer.y + Unlean(_tilt, MaxTilt) * _liftRange;
+                _armAt = _peak;
+            }
 
             // UPRIGHT UNTIL IT CLEARS THE TOP (2026-09-14, the author: "şişenin eğilmesi bardağın veya
             // shakerin tepe noktasını geçmeye başladıktan sonra olmalı" — a bottle lifted toward a tall
@@ -138,6 +169,7 @@ namespace LastCall.UI
             // vessel it is poured into.
             if (!float.IsNaN(clearY) && Mathf.Abs(_tilt) < 1f)
             {
+                if (_invert) { PressInverted(pointer, ceiling, clearY); return; }
                 float start = Mathf.Max(pointer.y, pointer.y + (clearY - SpoutNow.y));
                 for (int i = 0; i < 5; i++)   // the start and the room under the ceiling settle together
                 {
@@ -168,6 +200,52 @@ namespace LastCall.UI
                 if (over < lowest) lowest = over;
             }
             return float.IsInfinity(lowest) ? KneeLift * range : lowest;
+        }
+
+        /// <summary>
+        /// INVERTED, TAKEN UPRIGHT (2026-09-26): the lean's window is laid from the top down. Its foot — the
+        /// <see cref="_floor"/> — is the lowest the hand may stand once it pours: high enough that the mouth clears
+        /// the rim at EVERY pouring lean, whatever height that lean is reached at, so lowering the hand can never
+        /// take the mouth under the rim. Its top is a full lift over the foot (never more than LiftRange, so the
+        /// climb before the first tip stays short), or just under the ceiling if that is lower. The vessel stays
+        /// upright until the hand has been up there.
+        /// </summary>
+        private void PressInverted(Vector2 pointer, float ceiling, float clearY)
+        {
+            float floor = clearY - LowestMouthOverHand();
+            if (float.IsInfinity(ceiling)) _liftRange = LiftRange;
+            else
+            {
+                float room = ceiling - floor;
+                float least = Mathf.Min(MinLiftRange, LiftRange);
+                _liftRange = room >= LiftRange ? LiftRange : Mathf.Max(least, room);
+            }
+            _floor = floor;
+            _armAt = Mathf.Min(floor + _liftRange, ceiling - ArmSlack);
+            _armed = false;
+            _peak = pointer.y;
+        }
+
+        /// <summary>Over every pouring lean (level to MaxTilt), the lowest the mouth stands over the HAND: under it
+        /// past level, by the whole hold-to-mouth lever at neck-down — half the drawing for a bottle held by its
+        /// middle, the neck for the tin.</summary>
+        private float LowestMouthOverHand()
+        {
+            Vector2 lever = new Vector2(0f, GripDepth) - PourHold;   // hold to spout, unrotated
+            float lowest = float.PositiveInfinity;
+            float top = Mathf.Max(KneeTilt, MaxTilt);
+            for (float t = KneeTilt; t <= top + 0.01f; t += 2f)
+                lowest = Mathf.Min(lowest, Rotate(lever, t).y);
+            return float.IsInfinity(lowest) ? 0f : lowest;
+        }
+
+        /// <summary>Inverted: arms the lean once the hand has been up to its top, and keeps the highest it has been
+        /// since, which is where the lean is measured down from.</summary>
+        private void TrackPeak()
+        {
+            if (!_invert) return;
+            if (!_armed && _p.y >= _armAt) { _armed = true; _peak = _p.y; }
+            if (_armed && _p.y > _peak) _peak = _p.y;
         }
 
         /// <summary>The lift a full tilt is spread over, from <paramref name="from"/> up to the ceiling:
@@ -208,7 +286,13 @@ namespace LastCall.UI
         {
             if (AtRest && !Held) return;
             if (dt <= 0f) return;
-            if (dt > 1f / 30f) dt = 1f / 30f;
+            // IN STEPS OF A SIXTIETH (2026-09-26, SpringStep): the follow spring's single step went unstable
+            // under 32 fps — a vsync halved to 30 flung the grip — so a long frame is walked in steps of at most
+            // 1/60 s. At 60 fps and faster that is one step, the same arithmetic as before; the old 1/30 clamp
+            // slowed the hand at low rates instead, and only a real hitch is still cut short (MaxFrame).
+            if (dt > MaxFrame) dt = MaxFrame;
+            int steps = SpringStep.Substeps(dt);
+            float h = dt / steps;
 
             if (Held)
             {
@@ -216,28 +300,35 @@ namespace LastCall.UI
                     ? new Vector2(Mathf.Clamp(pointer.Value.x, bounds.xMin, bounds.xMax),
                                   Mathf.Clamp(pointer.Value.y, bounds.yMin, bounds.yMax))
                     : _p;
+                // Inverted and pouring: the hand goes no lower than the height that keeps the mouth over the
+                // rim (PressInverted), the way the ceiling stops it at the full lean the right way up.
+                if (_invert && _armed && target.y < _floor)
+                    target.y = Mathf.Min(_floor, bounds.yMax);
                 if (Motion.Reduced)
                 {
                     // No springs for a player who asked for less motion: the vessel is where the
                     // hand is, at the angle the lift says.
                     _p = target; _pv = Vector2.zero;
+                    TrackPeak();
                     _tilt = LeanAt(_p.y); _tiltV = 0f;
                 }
                 else
                 {
-                    _pv += (FollowOmega * FollowOmega * (target - _p) - 2f * FollowZeta * FollowOmega * _pv) * dt;
-                    _p += _pv * dt;
+                    for (int i = 0; i < steps; i++)
+                    {
+                        SpringStep.Damped(ref _p, ref _pv, target, FollowOmega, FollowZeta, h);
+                        TrackPeak();
 
-                    // The body hangs from the hand, so a push sideways swings it: accelerate left
-                    // and the foot lags right, which leans the vessel left — toward the glass.
-                    Vector2 acc = (_pv - _lastV) / dt;
-                    _lastV = _pv;
-                    _ax = Mathf.Lerp(_ax, acc.x, 1f - Mathf.Exp(-AccelSmoothing * dt));
-                    float swing = Mathf.Clamp(-SwingPerAccel * _ax, -MaxSwing, MaxSwing);
+                        // The body hangs from the hand, so a push sideways swings it: accelerate left
+                        // and the foot lags right, which leans the vessel left — toward the glass.
+                        Vector2 acc = (_pv - _lastV) / h;
+                        _lastV = _pv;
+                        _ax = Mathf.Lerp(_ax, acc.x, 1f - Mathf.Exp(-AccelSmoothing * h));
+                        float swing = Mathf.Clamp(-SwingPerAccel * _ax, -MaxSwing, MaxSwing);
 
-                    float tt = LeanAt(_p.y) + swing;
-                    _tiltV += (TiltOmega * TiltOmega * (tt - _tilt) - 2f * TiltZeta * TiltOmega * _tiltV) * dt;
-                    _tilt += _tiltV * dt;
+                        float tt = LeanAt(_p.y) + swing;
+                        SpringStep.Damped(ref _tilt, ref _tiltV, tt, TiltOmega, TiltZeta, h);
+                    }
                 }
                 // CARRIED BY WHERE IT WAS TAKEN, POURED FROM THE HAND (2026-09-13, second measure).
                 // Upright, the pressed point stays on the hand. As the vessel tips toward level the
@@ -263,10 +354,11 @@ namespace LastCall.UI
             }
             else
             {
-                _wv += (HomeOmega * HomeOmega * (GripRest - _w) - 2f * HomeZeta * HomeOmega * _wv) * dt;
-                _w += _wv * dt;
-                _tiltV += (HomeOmega * HomeOmega * (0f - _tilt) - 2f * HomeZeta * HomeOmega * _tiltV) * dt;
-                _tilt += _tiltV * dt;
+                for (int i = 0; i < steps; i++)
+                {
+                    SpringStep.Damped(ref _w, ref _wv, GripRest, HomeOmega, HomeZeta, h);
+                    SpringStep.Damped(ref _tilt, ref _tiltV, 0f, HomeOmega, HomeZeta, h);
+                }
             }
 
             if ((_w - GripRest).sqrMagnitude < 0.0025f && _wv.sqrMagnitude < 0.25f
@@ -274,9 +366,17 @@ namespace LastCall.UI
                 SnapHome();
         }
 
-        /// <summary>The lean the pointer's height asks for — GDD 24 §2.2: higher tips further.</summary>
-        private float LeanAt(float pointerY) =>
-            Lean(Mathf.Clamp01((pointerY - _liftBase) / Mathf.Max(1f, _liftRange)), MaxTilt);
+        /// <summary>The lean the pointer's height asks for — GDD 24 §2.2: higher tips further (lower, inverted).</summary>
+        private float LeanAt(float pointerY) => Lean(Mathf.Clamp01(Lift01(pointerY)), MaxTilt);
+
+        /// <summary>How far through the lift a hand at <paramref name="y"/> stands, unclamped: up from the lift's
+        /// start, or — inverted — down from the highest the hand has been once armed (nothing before).</summary>
+        private float Lift01(float y)
+        {
+            float range = Mathf.Max(1f, _liftRange);
+            if (!_invert) return (y - _liftBase) / range;
+            return _armed ? (_peak - y) / range : 0f;
+        }
 
         /// <summary>
         /// THE FIRST PART OF THE LIFT LAYS THE VESSEL LEVEL (2026-09-13). The pour runs only past

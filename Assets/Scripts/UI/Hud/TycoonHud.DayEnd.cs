@@ -949,7 +949,7 @@ namespace LastCall.UI
             Place(cmf.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(120, H), Vector2.zero);
             cmf.rectTransform.pivot = new Vector2(0, 0.5f);
             cmf.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", comfort.ToString("0.0"))));
+            cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", comfort.ToString("0.00"))));
 
             float svcW = svc.preferredWidth, cmfW = cmf.preferredWidth;
             float total = Icon + Gap + svcW + Between + Icon + Gap + cmfW;
@@ -972,7 +972,7 @@ namespace LastCall.UI
             _billCounts.Add(t =>
             {
                 svc.text = BillWords(UIText.T("dayend.house.service", ("rating", (service * t).ToString("0.0"))));
-                cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", (comfort * t).ToString("0.0"))));
+                cmf.text = BillWords(UIText.T("dayend.house.comfort", ("rating", (comfort * t).ToString("0.00"))));
             });
             return y + H + 2f;
         }
@@ -1587,7 +1587,8 @@ namespace LastCall.UI
             bool roomBound = run.ComfortTonight < run.ServiceTonight - 1e-9;
             y = StandRow(y, "SERVICE", UIText.T("dayend.stand.service"), run.ServiceTonight.ToString("0.0"),
                 roomBound ? UITheme.Cream[3] : UITheme.Amber[4], true, ItemArt.Heart(true, 13f));
-            y = StandRow(y, "COMFORT", UIText.T("dayend.stand.comfort"), run.ComfortTonight.ToString("0.0"),
+            // Two decimals (2026-09-26): the house sums to five, and a night's purchase can be +0.02.
+            y = StandRow(y, "COMFORT", UIText.T("dayend.stand.comfort"), run.ComfortTonight.ToString("0.00"),
                 roomBound ? UITheme.Amber[4] : UITheme.Cream[3], true, ItemArt.Medal(true, 13f));
             y = StandRow(y, "TONIGHT", UIText.T("dayend.stand.tonight"), run.TonightStars.ToString("0.0"), UITheme.Amber[4], true);
             double ceiling = run.StarCeiling;

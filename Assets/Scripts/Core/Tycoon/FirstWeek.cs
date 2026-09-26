@@ -10,9 +10,12 @@ namespace LastCall.Core
     ///
     /// <see cref="DayPlan"/> cuts every other night from weights, and it is right to: a menu of
     /// forty pages has a shape worth computing. The opening week has no such shape. A new bar owns
-    /// SIX pages — a pint, a neat pour and four two-part builds — so a plan cut from weights is
-    /// six drinks in a bag whatever the arithmetic says, and the first thing the player meets is
-    /// noise. Which is exactly the night that decides whether there is a second one.
+    /// SIX pages — a pint, a neat pour and four two-part builds — and the nine bottles that pour
+    /// them (base_bar.json's "starting" cards, 2026-09-26: until then the shelf had no tonic, no
+    /// cola and no bourbon, and two of the six were written into every night the bar could not
+    /// make), so a plan cut from weights is six drinks in a bag whatever the arithmetic says, and
+    /// the first thing the player meets is noise. Which is exactly the night that decides whether
+    /// there is a second one.
     ///
     /// So the week is authored, and it is authored as a LESSON rather than as a balance curve.
     /// Each night adds one thing and nothing else changes:
@@ -46,9 +49,11 @@ namespace LastCall.Core
         /// What each night asks for, as a list of page ids with one entry per COVER. Read down a
         /// column and you can see the lesson: night one is four ids, night seven is the book.
         ///
-        /// A page the bar does not own tonight is dropped and its cover given to the night's first
-        /// page that IS owned, so the week survives a player who sold something, a bench fixture
-        /// with three recipes, and the market's own gates.
+        /// A page the bar cannot pour tonight is dropped and its cover handed round the night's own
+        /// pages that it CAN pour, in written order (2026-09-26 — it used to go to the first of them
+        /// every time), so the week survives a player who sold something, a bench fixture with three
+        /// recipes, and the market's own gates. The pool it is handed is already the pourable one
+        /// (<see cref="TycoonRun.CanServe(RecipeDefinition)"/>), so "owned" here means "the shelf can make it".
         /// </summary>
         private static readonly string[][] Nightly =
         {
@@ -126,12 +131,22 @@ namespace LastCall.Core
             foreach (var r in pool) owned[r.Id] = r;
 
             var written = Nightly[day - 1];
-            var fallback = written.Select(id => owned.TryGetValue(id, out var r) ? r : null)
-                .FirstOrDefault(r => r != null) ?? pool[0];
+            // A DROPPED COVER GOES ROUND THE NIGHT'S OWN PAGES (2026-09-26). It used to go to the night's
+            // first page the bar could pour, every time — so a bar without a tonic was asked for six
+            // vodka sodas on its opening night and nothing else. The stand-ins now take turns, in the
+            // order the night names them; a night that names nothing pourable takes turns through the
+            // pool. Arithmetic, like everything above the shuffle: no die is thrown here.
+            var standIns = new List<RecipeDefinition>();
+            foreach (var id in written)
+                if (owned.TryGetValue(id, out var r) && !standIns.Contains(r)) standIns.Add(r);
+            if (standIns.Count == 0) standIns.AddRange(pool);
 
             var covers = new RecipeDefinition[written.Length];
+            int dropped = 0;
             for (int i = 0; i < written.Length; i++)
-                covers[i] = owned.TryGetValue(written[i], out var page) ? page : fallback;
+                covers[i] = owned.TryGetValue(written[i], out var page)
+                    ? page
+                    : standIns[dropped++ % standIns.Count];
             return covers;
         }
     }

@@ -562,8 +562,8 @@
     },
     {
       "key": "data.lesson.first_market.say.0",
-      "text": "Каквото не сме заредили тази вечер, утре някой ще го поиска.",
-      "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."
+      "text": "Страница, която рафтът не може да налее, е страница, която никой не поръчва.",
+      "src": "A page the shelf cannot pour is a page nobody orders."
     },
     {
       "key": "data.lesson.first_market.say.1",
@@ -572,8 +572,8 @@
     },
     {
       "key": "data.lesson.first_night.say.0",
-      "text": "Шест бутилки и един кег. Технически погледнато, това е бар.",
-      "src": "Six bottles and a keg. That is a bar, technically."
+      "text": "Осем бутилки и един кег. Технически погледнато, това е бар.",
+      "src": "Eight bottles and a keg. That is a bar, technically."
     },
     {
       "key": "data.lesson.first_night.say.1",

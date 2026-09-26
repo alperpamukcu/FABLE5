@@ -4423,11 +4423,12 @@ namespace LastCall.UI
                 if (view.Gauge != null && view.Gauge.gameObject.activeSelf != clockRunning)
                     view.Gauge.gameObject.SetActive(clockRunning);
                 var band = visit.Band;
-                var lit = band == ServiceBand.Green ? UITheme.Lime[3]
-                    : band == ServiceBand.Amber ? UITheme.Amber[3] : UITheme.ViceRed[3];
+                // The band's colour from the one table the COLOUR CUES option swaps (2026-09-26).
+                var lit = PatienceColour(band);
                 // The last third breathes. Nothing else on the head moves, so a bar that is
                 // about to lose somebody is visible from across the screen without a word.
-                float pulse = band == ServiceBand.Red && !Motion.Reduced
+                // Still with FLASHES off as well as under reduced motion (Motion.NoFlashes).
+                float pulse = band == ServiceBand.Red && !Motion.NoFlashes
                     ? 0.74f + 0.26f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 4.2f))
                     : 1f;
                 view.PatienceFill.fillAmount = patience;

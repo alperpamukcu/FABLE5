@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "正摆在店里"},
 {"key": "decor.card.worn_stays", "text": "正摆在店里 · 店面仍按第 {mark} 档计算"},
 {"key": "decor.comfort", "text": "+{comfort} 舒适"},
+{"key": "decor.comfort_of", "text": "舒适 {comfort}/{top}", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "酒吧已装配齐全 — 没有可以再升级的了"},
 {"key": "decor.fit.bar.body", "text": "更好的吧台面让每位客人都更开心。连你调错酒的那些也一样。"},
 {"key": "decor.fit.bar.gain", "text": "每服务一位客人 +0.03，最多 +0.06"},

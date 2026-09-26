@@ -74,6 +74,7 @@
 {"key": "decor.card.worn", "text": "지금 홀에 있음"},
 {"key": "decor.card.worn_stays", "text": "지금 홀에 있음 · 홀 가치는 {mark}단계 유지"},
 {"key": "decor.comfort", "text": "편안함 +{comfort}"},
+{"key": "decor.comfort_of", "text": "편안함 {comfort}/{top}", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "설비 완비 — 더 올릴 것이 없습니다"},
 {"key": "decor.fit.bar.body", "text": "더 좋은 바 상판은 모든 손님을 더 즐겁게 합니다. 음료를 잘못 내준 손님까지도."},
 {"key": "decor.fit.bar.gain", "text": "서빙할 때마다 +0.03, 최대 +0.06"},

@@ -13,6 +13,7 @@
     {"key": "decor.card.worn", "text": "Acum în local", "src": "In the room now"},
     {"key": "decor.card.worn_stays", "text": "Acum în local · localul rămâne la nivelul {mark}", "src": "In the room now · the room stays worth mark {mark}"},
     {"key": "decor.comfort", "text": "+{comfort} confort", "src": "+{comfort} comfort"},
+    {"key": "decor.comfort_of", "text": "{comfort} din {top} confort", "src": "{comfort} of {top} comfort"},
     {"key": "decor.fit.all_fitted", "text": "BARUL E COMPLET DOTAT — NIMIC DE ÎMBUNĂTĂȚIT", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
     {"key": "decor.fit.bar.body", "text": "Un blat de bar mai bun îi face pe toți clienții mai fericiți. Chiar și pe cei cărora le greșești băutura.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
     {"key": "decor.fit.bar.gain", "text": "+0.03 la fiecare vizită servită, până la +0.06", "src": "+0.03 on every served visit, up to +0.06"},

@@ -254,7 +254,8 @@ namespace LastCall.UI
                 {
                     var r = Run;
                     return r == null ? UIText.T("build.house.comfort.tip_idle")
-                        : UIText.T("build.house.comfort.tip", ("rating", r.ComfortNow.ToString("0.0")));
+                        // Two decimals (2026-09-26): a piece adds +0.02 to +0.19 of a house that sums to five.
+                        : UIText.T("build.house.comfort.tip", ("rating", r.ComfortNow.ToString("0.00")));
                 });
             string[] standingTip = UIText.T("build.standing.tip").Split(new[] { '\n' }, 2);
             HoverTip(starsRow, ItemArt.Star(true, 16f), standingTip[0], () =>
@@ -264,7 +265,7 @@ namespace LastCall.UI
                 double lower = System.Math.Min(r.ServiceTonight, r.ComfortNow);
                 return UIText.T("build.standing.tip_reading",
                     ("service", r.ServiceTonight.ToString("0.0")),
-                    ("comfort", r.ComfortNow.ToString("0.0")),
+                    ("comfort", r.ComfortNow.ToString("0.00")),
                     ("tonight", lower.ToString("0.0")));
             });
         }

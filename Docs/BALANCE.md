@@ -50,60 +50,60 @@ shaking or stirring is worth 16% of the tip; on the rest the method is scored 1.
 
 | drink | rank | glass | base | best | method graded | the pour |
 |---|---:|---|---:|---:|:---:|---|
-| Draught | 1 | Pint | $4 | $8 | — | any beer 100% · fill 75%+ |
-| Neat Pour | 1 | Rocks | $4 | $8 | — | any spirit 100% |
-| Vodka Soda | 2 | Highball | $4 | $8 | — | VODKA 40% · SODA 60% |
-| Gin Sour | 3 | Rocks | $5 | $10 | SHAKEN | GIN 53% · LEMON 28% · SYRUP 18% |
-| Gin & Tonic | 4 | Highball | $5 | $10 | — | GIN 40% · TONIC 60% |
-| Whiskey & Cola | 5 | Highball | $6 | $12 | — | BOURBON 40% · COLA 60% |
-| Screwdriver | 6 | Highball | $6 | $12 | — | VODKA 40% · ORANGE 60% |
-| Vodka Bull | 7 | Highball | $7 | $14 | — | VODKA 43% · ENERGY 58% |
-| Black Russian | 8 | Rocks | $7 | $14 | STIRRED | VODKA 65% · COFFEE LIQUEUR 35% |
-| Cape Codder | 8 | Highball | $7 | $14 | — | VODKA 40% · CRANBERRY 60% |
-| Vodka Tonic | 8 | Highball | $7 | $14 | — | VODKA 40% · TONIC 60% |
+| Draught | 1 | Pint | $3 | $6 | — | any beer 100% · fill 75%+ |
+| Neat Pour | 1 | Rocks | $3 | $6 | — | any spirit 100% |
+| Vodka & Soda | 2 | Highball | $3 | $6 | — | VODKA 40% · SODA 60% |
+| Gin Sour | 3 | Rocks | $8 | $16 | SHAKEN | GIN 53% · LEMON 28% · SYRUP 18% |
+| Gin & Tonic | 4 | Highball | $4 | $8 | — | GIN 40% · TONIC 60% |
+| Whiskey & Cola | 5 | Highball | $5 | $10 | — | BOURBON 40% · COLA 60% |
+| Screwdriver | 6 | Highball | $5 | $10 | — | VODKA 40% · ORANGE 60% |
+| Night Shift | 7 | Highball | $6 | $12 | — | VODKA 43% · ENERGY 58% |
+| Cape Codder | 8 | Highball | $6 | $12 | — | VODKA 40% · CRANBERRY 60% |
+| Vodka & Tonic | 8 | Highball | $6 | $12 | — | VODKA 40% · TONIC 60% |
 | Cuba Libre | 9 | Highball | $8 | $16 | — | RUM 35% · COLA 57% · LIME 8% |
-| Whiskey Ginger | 10 | Highball | $8 | $16 | — | BOURBON (tier 2+) 40% · GINGER 60% |
-| Moscow Mule | 11 | Highball | $9 | $18 | — | VODKA (tier 2+) 39% · GINGER 49% · LIME 12% |
-| Gimlet | 12 | Coupe | $9 | $18 | SHAKEN | GIN (tier 2+) 63% · LIME 23% · SYRUP 15% |
-| Sex on the Beach | 13 | Highball | $10 | $20 | — | VODKA 33% · ORANGE 33% · CRANBERRY 33% |
-| Tequila Sunrise | 13 | Highball | $10 | $20 | — | TEQUILA 39% · ORANGE 49% · GRENADINE 12% |
-| Dark 'n' Stormy | 14 | Highball | $10 | $20 | — | RUM (tier 2+) 39% · GINGER 49% · LIME 12% |
-| Paloma | 14 | Highball | $10 | $20 | — | TEQUILA 36% · LIME 13% · SODA 51% |
-| Sea Breeze | 14 | Highball | $10 | $20 | — | VODKA 33% · CRANBERRY 33% · PINEAPPLE 33% |
-| Tequila Mule | 14 | Highball | $10 | $20 | — | TEQUILA 39% · GINGER 49% · LIME 12% |
-| Tequila Sour | 14 | Rocks | $10 | $20 | SHAKEN | TEQUILA (tier 2+) 53% · LEMON 28% · SYRUP 18% |
-| Vodka Sour | 14 | Rocks | $10 | $20 | SHAKEN | VODKA 53% · LEMON 28% · SYRUP 18% |
-| Rum Punch | 15 | Highball | $11 | $22 | SHAKEN | RUM 44% · ORANGE 29% · LIME 16% · SYRUP 12% |
-| Whiskey Sour | 15 | Rocks | $11 | $22 | SHAKEN | BOURBON (tier 3+) 53% · LEMON 28% · SYRUP 18% |
-| Daiquiri | 16 | Coupe | $11 | $22 | SHAKEN | RUM (tier 3+) 55% · LIME 25% · SYRUP 20% |
-| Gin Fizz | 17 | Highball | $12 | $24 | SHAKEN | GIN 43% · LEMON 23% · SYRUP 13% · SODA 23% |
-| Kamikaze | 18 | Rocks | $12 | $24 | SHAKEN | VODKA 50% · TRIPLE SEC 25% · LIME 25% |
-| Cosmopolitan | 19 | Martini | $13 | $26 | SHAKEN | VODKA 44% · TRIPLE SEC 19% · LIME 14% · CRANBERRY 24% |
-| Margarita | 19 | Coupe | $13 | $26 | SHAKEN | TEQUILA (tier 3+) 50% · TRIPLE SEC 25% · LIME 25% |
-| Bourbon Sidecar | 20 | Coupe | $13 | $26 | SHAKEN | BOURBON 48% · TRIPLE SEC 28% · LEMON 23% |
-| White Lady | 20 | Coupe | $13 | $26 | SHAKEN | GIN (tier 3+) 48% · TRIPLE SEC 28% · LEMON 23% |
-| Bahama Mama | 21 | Highball | $14 | $28 | SHAKEN | RUM 39% · PINEAPPLE 34% · COFFEE LIQUEUR 17% · LEMON 11% |
-| Lemon Drop | 21 | Martini | $14 | $28 | SHAKEN | VODKA 48% · LEMON 25% · TRIPLE SEC 16% · SYRUP 10% |
-| Matador | 21 | Coupe | $14 | $28 | SHAKEN | TEQUILA 45% · PINEAPPLE 40% · LIME 15% |
-| Mint Julep | 21 | Rocks | $14 | $28 | STIRRED | BOURBON 77% · SYRUP 15% · MINT 8% |
-| Pink Lady | 21 | Coupe | $14 | $28 | SHAKEN | GIN 60% · LEMON 24% · GRENADINE 17% |
-| Southside | 21 | Coupe | $14 | $28 | SHAKEN | GIN 53% · LIME 23% · SYRUP 15% · MINT 8% |
-| Whiskey Smash | 21 | Rocks | $14 | $28 | SHAKEN | BOURBON 53% · LEMON 23% · SYRUP 15% · MINT 8% |
-| Dry Martini | 22 | Martini | $14 | $28 | STIRRED | GIN 80% · VERMOUTH 20% |
-| Dirty Martini | 23 | Martini | $15 | $30 | STIRRED | GIN 71% · VERMOUTH 17% · OLIVE 12% |
-| Espresso Martini | 23 | Martini | $15 | $30 | SHAKEN | VODKA 52% · COFFEE LIQUEUR 34% · SYRUP 13% |
-| Mai Tai | 24 | Highball | $15 | $30 | SHAKEN | RUM 39% · TRIPLE SEC 14% · LIME 14% · PINEAPPLE 24% · SYRUP 8% |
-| Manhattan | 24 | Coupe | $15 | $30 | STIRRED | BOURBON 64% · VERMOUTH 29% · AMARO 7% |
-| Negroni | 25 | Rocks | $16 | $32 | STIRRED | GIN 33% · VERMOUTH 33% · AMARO 33% |
-| Old Fashioned | 26 | Rocks | $16 | $32 | STIRRED | BOURBON 79% · SYRUP 13% · AMARO 8% |
-| Mojito | 27 | Highball | $17 | $34 | — | RUM 35% · LIME 17% · SYRUP 12% · SODA 29% · MINT 7% |
-| Boulevardier | 28 | Rocks | $17 | $34 | STIRRED | BOURBON (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
-| El Presidente | 28 | Coupe | $17 | $34 | STIRRED | RUM (tier 4+) 54% · VERMOUTH 28% · TRIPLE SEC 11% · GRENADINE 7% |
-| Long Island | 28 | Highball | $17 | $34 | SHAKEN | VODKA 13% · GIN 13% · RUM 13% · TEQUILA 13% · TRIPLE SEC 13% · LEMON 14% · COLA 22% |
-| Martinez | 28 | Martini | $17 | $34 | STIRRED | GIN (tier 4+) 59% · VERMOUTH 31% · TRIPLE SEC 11% |
-| Rosita | 28 | Rocks | $17 | $34 | STIRRED | TEQUILA (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
-| Vesper | 29 | Martini | $18 | $36 | STIRRED | GIN (tier 4+) 62% · VODKA (tier 4+) 25% · VERMOUTH 13% |
-| Last Call | 30 | Rocks | $18 | $36 | STIRRED | BOURBON (tier 4+) 44% · AMARO 21% · VERMOUTH 19% · COFFEE LIQUEUR 10% · SYRUP 7% |
+| Whiskey & Ginger | 10 | Highball | $10 | $20 | — | BOURBON (tier 2+) 40% · GINGER 60% |
+| Moscow Mule | 11 | Highball | $11 | $22 | — | VODKA (tier 2+) 39% · GINGER 49% · LIME 12% |
+| Black Russian | 12 | Rocks | $15 | $30 | STIRRED | VODKA 65% · COFFEE LIQUEUR 35% |
+| Gimlet | 12 | Coupe | $18 | $36 | SHAKEN | GIN (tier 2+) 63% · LIME 23% · SYRUP 15% |
+| Madras | 13 | Highball | $15 | $30 | — | VODKA 33% · ORANGE 33% · CRANBERRY 33% |
+| Tequila Sunrise | 13 | Highball | $17 | $34 | — | TEQUILA 39% · ORANGE 49% · GRENADINE 12% |
+| Bay Breeze | 14 | Highball | $18 | $36 | — | VODKA 33% · CRANBERRY 33% · PINEAPPLE 33% |
+| Black Squall | 14 | Highball | $19 | $38 | — | RUM (tier 2+) 39% · GINGER 49% · LIME 12% |
+| Mint Julep | 14 | Highball | $17 | $34 | STIRRED | BOURBON 81% · SYRUP 19% |
+| Olive Martini | 14 | Martini | $19 | $38 | STIRRED | GIN 78% · VERMOUTH 22% |
+| Ranch Water | 14 | Highball | $17 | $34 | — | TEQUILA 36% · LIME 13% · SODA 51% |
+| Tequila Mule | 14 | Highball | $18 | $36 | — | TEQUILA 39% · GINGER 49% · LIME 12% |
+| Tequila Sour | 14 | Rocks | $23 | $46 | SHAKEN | TEQUILA (tier 2+) 53% · LEMON 28% · SYRUP 18% |
+| Vodka Sour | 14 | Rocks | $27 | $54 | SHAKEN | VODKA 53% · LEMON 28% · SYRUP 18% |
+| Rum Punch | 15 | Highball | $36 | $72 | SHAKEN | RUM 32% · ORANGE 40% · LIME 16% · SYRUP 12% |
+| Whiskey Sour | 15 | Rocks | $31 | $62 | SHAKEN | BOURBON (tier 3+) 53% · LEMON 28% · SYRUP 18% |
+| Daiquiri | 16 | Coupe | $28 | $56 | SHAKEN | RUM (tier 3+) 55% · LIME 25% · SYRUP 20% |
+| Gin Fizz | 17 | Highball | $45 | $90 | SHAKEN | GIN 43% · LEMON 23% · SYRUP 13% · SODA 23% |
+| Kamikaze | 18 | Martini | $31 | $62 | SHAKEN | VODKA 50% · TRIPLE SEC 25% · LIME 25% |
+| Cosmopolitan | 19 | Martini | $42 | $84 | SHAKEN | VODKA 44% · TRIPLE SEC 19% · LIME 14% · CRANBERRY 24% |
+| Margarita | 19 | Rocks | $32 | $64 | SHAKEN | TEQUILA (tier 3+) 50% · TRIPLE SEC 25% · LIME 25% |
+| Whiskey Sidecar | 20 | Coupe | $33 | $66 | SHAKEN | BOURBON 48% · TRIPLE SEC 28% · LEMON 23% |
+| White Lady | 20 | Coupe | $36 | $72 | SHAKEN | GIN (tier 3+) 48% · TRIPLE SEC 28% · LEMON 23% |
+| Bahama Mama | 21 | Highball | $51 | $102 | SHAKEN | RUM 39% · PINEAPPLE 34% · COFFEE LIQUEUR 17% · LEMON 11% |
+| Lemon Drop | 21 | Martini | $45 | $90 | SHAKEN | VODKA 48% · LEMON 25% · TRIPLE SEC 16% · SYRUP 10% |
+| Matador | 21 | Highball | $37 | $74 | SHAKEN | TEQUILA 45% · PINEAPPLE 40% · LIME 15% |
+| Pink Lady | 21 | Coupe | $37 | $74 | SHAKEN | GIN 60% · LEMON 24% · GRENADINE 17% |
+| Southside | 21 | Coupe | $37 | $74 | SHAKEN | GIN 56% · LIME 26% · SYRUP 18% |
+| Whiskey Smash | 21 | Rocks | $40 | $80 | SHAKEN | BOURBON 56% · LEMON 26% · SYRUP 18% |
+| Dry Martini | 22 | Martini | $34 | $68 | STIRRED | GIN 80% · VERMOUTH 20% |
+| Espresso Martini | 23 | Martini | $49 | $98 | SHAKEN | VODKA 52% · COFFEE LIQUEUR 34% · SYRUP 13% |
+| Mai Tai | 24 | Rocks | $66 | $132 | SHAKEN | RUM 39% · TRIPLE SEC 14% · LIME 14% · PINEAPPLE 24% · SYRUP 8% |
+| Manhattan | 24 | Coupe | $44 | $88 | STIRRED | BOURBON 64% · VERMOUTH 29% · AMARO 7% |
+| Negroni | 25 | Rocks | $46 | $92 | STIRRED | GIN 33% · VERMOUTH 33% · AMARO 33% |
+| Old Fashioned | 26 | Rocks | $46 | $92 | STIRRED | BOURBON 79% · SYRUP 13% · AMARO 8% |
+| Mojito | 27 | Highball | $56 | $112 | — | RUM 37% · LIME 18% · SYRUP 13% · SODA 31% |
+| Boulevardier | 28 | Rocks | $49 | $98 | STIRRED | BOURBON (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
+| El Presidente | 28 | Coupe | $65 | $130 | STIRRED | RUM (tier 4+) 54% · VERMOUTH 28% · TRIPLE SEC 11% · GRENADINE 7% |
+| Long Island Iced Tea | 28 | Highball | $75 | $150 | SHAKEN | VODKA 9% · GIN 9% · RUM 9% · TEQUILA 9% · TRIPLE SEC 9% · LEMON 11% · COLA 43% |
+| Martinez | 28 | Martini | $49 | $98 | STIRRED | GIN (tier 4+) 59% · VERMOUTH 31% · TRIPLE SEC 11% |
+| Rosita | 28 | Rocks | $57 | $114 | STIRRED | TEQUILA (tier 4+) 33% · VERMOUTH 33% · AMARO 33% |
+| Vesper | 29 | Coupe | $51 | $102 | STIRRED | GIN (tier 4+) 62% · VODKA (tier 4+) 25% · VERMOUTH 13% |
+| Last Call | 30 | Rocks | $86 | $172 | STIRRED | BOURBON (tier 4+) 44% · AMARO 21% · VERMOUTH 19% · COFFEE LIQUEUR 10% · SYRUP 7% |
 
 ## What a garnish is worth
 
@@ -125,8 +125,8 @@ What they can ask for, and what it costs you to hold it:
 
 | ask | shelf price | restock | notes |
 |---|---:|---:|---|
-| Fresh Mint | $4 | $18 | garnish |
-| Luca Olives | $4 | $18 | garnish |
+| Fresh Mint | $4 | $6 | garnish |
+| Luca Olives | $4 | $6 | garnish |
 
 Ice and the rims are free of the shelf entirely — they are preparations, not
 stock, so they cost only the seconds spent adding them.
@@ -179,51 +179,51 @@ one costs double what it would have earned. What the standing then buys:
 
 ## The shelf
 
-A bottle holds **6 glasses** and a keg holds **24**. Refilling costs **$3 per glass of capacity**, plus **$2 per tier above the well** — so what a
+A bottle holds **6 glasses** and a keg holds **24**. Refilling costs **$1–$4 per glass of capacity, by the bottle's tier**, plus **$2 per tier above the well** — so what a
 bottle costs to *keep* is usually the number that matters, not what it cost
 to buy. `cost/pour` is that refill spread over the bottle.
 
 | bottle | style | tier | buy | refill | cost/pour |
 |---|---|---:|---:|---:|---:|
-| Smirkoff Vodka | vodka | 1 | — | $18 | $3.00 |
-| Garden's Gin | gin | 1 | — | $18 | $3.00 |
-| White Bat Rum | rum | 1 | $8 | $18 | $3.00 |
-| John Wanderer Whiskey | bourbon | 1 | $8 | $18 | $3.00 |
-| Cumpari Amaro | amaro | 1 | $10 | $18 | $3.00 |
-| Canzone Vermouth | vermouth | 1 | $10 | $18 | $3.00 |
-| House Syrup | syrup | 1 | $2 | $18 | $3.00 |
-| Lemonade | lemon | 1 | $3 | $18 | $3.00 |
-| Kicker Ginger | ginger | 1 | $3 | $18 | $3.00 |
-| Klara Soda | soda | 1 | $2 | $18 | $3.00 |
-| Krona Lager | lager | 1 | — | $72 | $3.00 |
-| Goodness Stout | stout | 1 | $12 | $72 | $3.00 |
-| Brass Pale Ale | pale_ale | 1 | $12 | $72 | $3.00 |
-| Absolve Vodka | vodka | 2 | $6 | $20 | $3.33 |
-| Leafeater Gin | gin | 2 | $6 | $20 | $3.33 |
-| Jack Spaniel's Whiskey | bourbon | 2 | $7 | $20 | $3.33 |
-| Jose Cuerdo Tequila | tequila | 1 | $8 | $18 | $3.00 |
-| Grand Mariner Triple Sec | triple_sec | 1 | $10 | $18 | $3.00 |
-| Loca Cola | cola | 1 | $3 | $18 | $3.00 |
-| Quinn's Tonic | tonic | 1 | $3 | $18 | $3.00 |
-| Blue Ox | energy | 1 | $4 | $18 | $3.00 |
-| Orange Juice | orange | 1 | $4 | $18 | $3.00 |
-| Limeade | lime | 1 | $3 | $18 | $3.00 |
-| Admiral Morgan Rum | rum | 2 | $7 | $20 | $3.33 |
-| 1810 Tequila | tequila | 2 | $15 | $20 | $3.33 |
-| Cranberry | cranberry | 1 | $4 | $18 | $3.00 |
-| Koala Coffee Liqueur | coffee_liqueur | 1 | $11 | $18 | $3.00 |
-| Isla Piña | pineapple | 1 | $4 | $18 | $3.00 |
-| Rubis Grenadine | grenadine | 1 | $3 | $18 | $3.00 |
+| Smirkoff Vodka | vodka | 1 | — | $6 | $1.00 |
+| Garden's Gin | gin | 1 | — | $6 | $1.00 |
+| White Bat Rum | rum | 1 | $6 | $6 | $1.00 |
+| John Wanderer Whiskey | bourbon | 1 | $8 | $6 | $1.00 |
+| Cumpari Amaro | amaro | 1 | $10 | $6 | $1.00 |
+| Canzone Vermouth | vermouth | 1 | $10 | $6 | $1.00 |
+| House Syrup | syrup | 1 | $2 | $6 | $1.00 |
+| Simple Lemonade | lemon | 1 | $3 | $6 | $1.00 |
+| Kicker Ginger | ginger | 1 | $3 | $6 | $1.00 |
+| Klara Soda | soda | 1 | $2 | $6 | $1.00 |
+| Krona Lager | lager | 1 | — | $24 | $1.00 |
+| Goodness Stout | stout | 1 | $12 | $24 | $1.00 |
+| Brass Pale Ale | pale_ale | 1 | $12 | $24 | $1.00 |
+| Absolve Vodka | vodka | 2 | $6 | $14 | $2.33 |
+| Leafeater Gin | gin | 2 | $6 | $14 | $2.33 |
+| Jack Spaniel's Whiskey | bourbon | 2 | $7 | $14 | $2.33 |
+| Jose Cuerdo Tequila | tequila | 1 | $8 | $6 | $1.00 |
+| Grand Mariner Triple Sec | triple_sec | 1 | $10 | $6 | $1.00 |
+| Loca Cola | cola | 1 | $3 | $6 | $1.00 |
+| Quinn's Tonic | tonic | 1 | $3 | $6 | $1.00 |
+| Blue Ox | energy | 1 | $4 | $6 | $1.00 |
+| Kappy Orange Juice | orange | 1 | $4 | $6 | $1.00 |
+| Simple Limeade | lime | 1 | $3 | $6 | $1.00 |
+| Admiral Morgan Rum | rum | 2 | $7 | $14 | $2.33 |
+| 1810 Tequila | tequila | 2 | $15 | $14 | $2.33 |
+| Sea Spray Cranberry | cranberry | 1 | $4 | $6 | $1.00 |
+| Koala Coffee Liqueur | coffee_liqueur | 1 | $11 | $6 | $1.00 |
+| Dola Pineapple | pineapple | 1 | $4 | $6 | $1.00 |
+| Rubis Grenadine | grenadine | 1 | $3 | $6 | $1.00 |
 | Grey Gander Vodka | vodka | 3 | $22 | $22 | $3.67 |
 | Hendrake's Gin | gin | 3 | $24 | $22 | $3.67 |
 | Mason's Mark Whiskey | bourbon | 3 | $28 | $22 | $3.67 |
 | Krakatoa Rum | rum | 3 | $25 | $22 | $3.67 |
 | Don Julep Añejo Tequila | tequila | 3 | $30 | $22 | $3.67 |
-| White Whale Vodka | vodka | 4 | $48 | $24 | $4.00 |
-| Gibbon 48 Gin | gin | 4 | $52 | $24 | $4.00 |
-| Van Wrinkle 23 Whiskey | bourbon | 4 | $58 | $24 | $4.00 |
-| Maliboo Rum | rum | 4 | $55 | $24 | $4.00 |
-| Azulejo Tequila | tequila | 4 | $60 | $24 | $4.00 |
+| White Whale Vodka | vodka | 4 | $48 | $30 | $5.00 |
+| Gibbon 48 Gin | gin | 4 | $52 | $30 | $5.00 |
+| Van Wrinkle 23 Whiskey | bourbon | 4 | $58 | $30 | $5.00 |
+| Maliboo Rum | rum | 4 | $55 | $30 | $5.00 |
+| Azulejo Tequila | tequila | 4 | $60 | $30 | $5.00 |
 
 Read the last column against the menu table: a drink whose cost per pour
 approaches its base price is one the bar loses money serving carelessly, and
@@ -231,7 +231,7 @@ earns on only when the tip lands.
 
 ## The night
 
-- starting money **$20**, 4 seats (max 6)
+- starting money **$50**, 4 seats (max 6)
 - a night runs **95 seconds**
 - a customer balks if **3** are already waiting
 - at most **1** upgrade a night
@@ -252,8 +252,9 @@ bar builds, drained while the counter is a mess.
 
 - the room as it opens is worth **0** (the FreeBase — the
   pieces the bar starts with carry no comfort of their own)
-- every glass step counts at **50%** of its star cap,
-  every stool past the first 4 adds **+0.25**
+- every glass step adds its line's own `tierComfort` (**0.5** across every step of
+  every line), every stool past the first 4 adds **+0.05**
+  and every bar-top step past the first **+0.05** (2026-09-26)
 - a counter left dirty past **10 s** costs **−0.75**
   of comfort until it is wiped; the tap runs 5 s
   whatever went into it, and the brass basin halves that
@@ -264,41 +265,45 @@ rung replaces its value, it does not add):
 
 | slot | rungs |
 |---|---|
-| `plant_left` | Areca Palm $20 · +0.1 → Fiddle-Leaf Fig $55 · +0.2 (1.5★) → Trailing Pothos $95 · +0.4 (3★) |
-| `plant_right` | Snake Plant $25 · +0.1 → Agave Bowl $70 · +0.2 (1.5★) → Monstera $95 · +0.4 (3★) |
-| `shaker` | Steel Shaker (ours) · 0 → Gold Shaker $140 · +0.4 (2★) |
-| `sink` | Steel Sink (ours) · 0 → Brass Sink $85 · +0.4 (1.5★) |
-| `table_left` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
-| `table_mid` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
-| `table_right` | Rustic Bar Table $40 · +0.2 → Brass Pedestal Table $85 · +0.4 (1.5★) → Steel Gaslift Set $120 · +0.6 (3★) |
-| `taps` | Single Draught Tower (ours) · 0 → Arched Draught Bridge $65 · +0.1 (1.5★) → Triple Draught Tower $100 · +0.2 (3★) |
-| `wall_center` | Flamingo Triptych $45 · +0.2 |
-| `wall_lamps` | Glass Tube Lamps $30 · +0.1 → Sunset Panels $55 · +0.3 (1.5★) → Palm Lamps $90 · +0.7 (3★) |
-| `walls` | Cracked Plaster (ours) · 0 → Fresh Plaster $45 · +1.25 → Panelled Wall $130 · +2.25 (1★) → Harlequin Paper $200 · +3.25 (2★) |
+| `ceiling` | Beamed Ceiling $27 · +0.15 → Deco Ceiling $34 · +0.23 (0.5★) → Palm Ceiling $72 · +0.29 (1★) → Stucco Ceiling $93 · +0.35 (1.5★) → Rosette Panels $135 · +0.4 (2★) → Sunray Ceiling $157 · +0.44 (2.5★) → Star Ceiling $193 · +0.47 (3★) → Dusk Ceiling $211 · +0.49 (3★) |
+| `counter_lamps` | Counter Pendants (ours) · 0 → Chrome Bell Pendants $83 · +0.04 (1.5★) → Opal Globe Pendants $183 · +0.06 (3★) |
+| `floor` | Terracotta $28 · +0.15 → Carpet $36 · +0.23 (0.5★) → Marble Floor $75 · +0.29 (1★) → Checker Floor $97 · +0.35 (1.5★) → Neon Grid $140 · +0.4 (2★) → Miami Terrazzo $159 · +0.44 (2.5★) → Wave Tiles $197 · +0.47 (3★) → Pink Marble $215 · +0.49 (3★) |
+| `floor_rug` | Tide Rug $25 · +0.12 → Leopard Rug $32 · +0.19 (0.5★) → Wave Rug $66 · +0.23 (1★) → Memphis Rug $83 · +0.27 (1.5★) → Sunset Bands $115 · +0.31 (2★) → Palm Leaf Rug $143 · +0.34 (2.5★) |
+| `plant_left` | Areca Palm $21 · +0.06 → Yucca $55 · +0.08 (1.5★) → Trailing Pothos $129 · +0.09 (3★) |
+| `plant_right` | Agave Bowl $28 · +0.07 |
+| `shaker` | Steel Shaker (ours) · 0 → Gold Shaker $140 · +0.03 (2★) |
+| `sink` | Old Steel Sink (ours) · 0 → Steel Sink $27 · +0.1 → Brass Sink $76 · +0.13 (1.5★) |
+| `table_left` | Bistro Table (ours) · 0 → Cocktail High-Top $34 · +0.05 (0.5★) → Teal Pedestal Set $79 · +0.08 (1.5★) → Steel Gaslift Set $147 · +0.1 (3★) |
+| `table_right` | Bistro Table (ours) · 0 → Cocktail High-Top $34 · +0.05 (0.5★) → Teal Pedestal Set $79 · +0.08 (1.5★) → Steel Gaslift Set $147 · +0.1 (3★) |
+| `taps` | Single Draught Tower (ours) · 0 |
+| `wall_center` | City Triptych $28 · +0.12 → Pop Trio $62 · +0.16 (1★) → Cocktail Trio $83 · +0.2 (1.5★) → Vinyl Trio $135 · +0.23 (2.5★) → Flamingo Triptych $168 · +0.25 (3★) |
+| `wall_lamps` | Glass Tube Lamps $24 · +0.12 → Sunset Panels $55 · +0.15 (1.5★) → Palm Lamps $125 · +0.17 (3★) → Scallop Sconces $139 · +0.19 (3★) → Neon Tube Sconces $150 · +0.22 (3.5★) → Shell Lamps $170 · +0.27 (4★) |
+| `wall_right` | Neon Martini $50 · +0.04 (1★) → Neon Flamingo $69 · +0.08 (1.5★) → Neon Sunset $100 · +0.11 (2★) → Neon Glass $138 · +0.14 (2.5★) → Neon Pelican $168 · +0.16 (3★) |
+| `wall_right_art` | Pelican $27 · +0.1 → Ocean Sunset $56 · +0.13 (1★) → Coast Road $85 · +0.15 (2★) → Memphis Shapes $139 · +0.17 (3★) |
+| `wall_tv` | Wall Television $35 · +0.11 → Malibu Poster $40 · +0.17 (0.5★) → Surf Poster $75 · +0.21 (1★) → Pier Poster $86 · +0.24 (1.5★) → Coast Poster $110 · +0.27 (2★) → Neon Avenue Poster $135 · +0.29 (2.5★) → Convertible Poster $154 · +0.31 (3★) → Diver Poster $200 · +0.33 (3.5★) |
+| `walls` | Cracked Plaster (ours) · 0 → Fresh Plaster $30 · +0.19 (0.5★) → Panelled Wall $100 · +0.35 (1★) → Chevron Wall $165 · +0.47 (2★) → Wave Mural $170 · +0.57 (2.5★) → Harlequin Paper $204 · +0.64 (3★) |
+| `walls_right` | Peeling Purple (ours) · 0 → Plum Coat $25 · +0.12 (0.5★) → Bubble Paper $66 · +0.21 (1★) → Sunset Panelling $100 · +0.31 (1.5★) → Flamingo Stripes $140 · +0.39 (2★) → Turquoise Diamonds $157 · +0.45 (2.5★) → Sunray Wall $190 · +0.49 (3★) → Deco Fans $208 · +0.54 (3★) |
 
 Single pieces:
 
 | piece | price | comfort | needs |
 |---|---:|---:|---:|
-| Counter Candle | $30 | +0.2 | — |
-| Brass Sconce | $45 | +0.2 | 1.5★ |
-| Hanging Lantern | $60 | +0.2 | 1.5★ |
-| Paper Lantern | $60 | +0.2 | 2.5★ |
-| Neon Martini | $75 | +0.2 | 2.5★ |
-| Tide Rug | $35 | +0.2 | — |
-| Wall Television | $70 | +0.2 | — |
+| Refinish Kit | $94 | +0.04 | 1★ |
 | Drip Mat | ours | 0 | — |
 | Snack Mat | ours | 0 | — |
 
-Every top rung and every single together: **9.15** of comfort against the
-5 ceiling, before glass and stools — the player chooses.
+Every top rung and every single together: **4.3** of comfort; with every glass step,
+both stools and the bar top the whole house is **5** against the 5
+ceiling — exactly five since 2026-09-26 (the author: "maksimum 5 konfor"), so the meter fills
+with the last purchase and not in the first fortnight.
 
 ## The door (GDD 28)
 
 - the drinking age is **20**; a minor's card is a forgery
-  **50%** of the time, and of those **50%**
-  are the minor's own card altered (the year bumped, a flag that is not their
-  country's) rather than borrowed
+  **50%** of the time, and the lie is one of 4, each
+  **25%** of them: a stranger's card (borrowed), their own with the year
+  bumped and a flag that is not their country's (altered), a cheap reprint (copied) or a
+  hand-drawn card (drawn)
 - **25%** of adults look young enough to be asked
 - serving a minor is fined when they leave: **$20 + $20**
   per whole star of the bar's standing at that moment

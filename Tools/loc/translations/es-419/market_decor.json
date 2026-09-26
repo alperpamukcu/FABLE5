@@ -66,6 +66,11 @@
       "src": "+{comfort} comfort"
     },
     {
+      "key": "decor.comfort_of",
+      "text": "{comfort} de {top} de comodidad",
+      "src": "{comfort} of {top} comfort"
+    },
+    {
       "key": "decor.fit.all_fitted",
       "text": "EL BAR ESTÁ EQUIPADO — NO QUEDA NADA POR MEJORAR",
       "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"

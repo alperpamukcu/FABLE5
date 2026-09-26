@@ -169,8 +169,13 @@ namespace LastCall.UI
                 if (e.Kind.WhileKeepingUp && !e.IsBase) b.Note = UIText.T("buff.state.keeping_up");
                 list.Add(b);
             }
-            if (f.Comfort > 0)
-                list.Add(ComfortShopBuff(f.Comfort,
+            // WHAT BUYING IT ADDS, NOT WHAT THE RUNG IS WORTH (2026-09-26, the author: "Şu an sanki tüm
+            // gelişmeler +5 oluyormuş gibi gözüküyor"). A rung's comfort is absolute, and printing it as a
+            // "+" made the back wall's five cards read +1.25 … +3.25 for a wall worth 3.25: the pip says the
+            // increment over the rung below (TycoonRun.ComfortGain) now, which is what the room gains.
+            double gain = run.ComfortGain(f);
+            if (gain > 0)
+                list.Add(ComfortShopBuff(gain,
                     UIText.T(f.Level > 0 ? "decor.buff.comfort_ladder" : "decor.buff.comfort_kept"),
                     locked ? 0.55f : 1f));
             return list;
@@ -206,6 +211,8 @@ namespace LastCall.UI
         /// stool: one more seat, and <see cref="VenueComfort.StoolComfort"/> to the room. The bar top: +3 points of
         /// satisfaction on every served visit (SERVICE +3%). A glass step: +0.6. The old stool line promised
         /// "+0.25 stars", which Core never paid - it was the comfort, and it is said as comfort now.
+        /// Since 2026-09-26 the bar top and a glass step say their comfort too (VenueComfort.CounterComfort, the
+        /// line's own GlasswareDefinition.TierComfort): all three are part of the house's five.
         /// </summary>
         private List<ShopBuff> AlwaysShopBuffs(string key, string figure, double comfort)
         {

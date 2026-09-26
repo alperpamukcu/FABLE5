@@ -31,7 +31,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Geliş:** aralık `max(6, 12 − 0.5×gün) × yıldız çarpanı × (1±0.30)`; ≥3 bekleyen varsa gelen **vazgeçer** (balk). Ayrılanın (içki SERVİS EDİLENİN) boş bardağı tezgâhta kalır ve toplanana dek taburesini kilitler — kendiliğinden temizlenmez (7 sn'lik saat 2026-09-05'te emekli, §9.23); tıkla = topla (elde birikir, lavaboda yıkanır).
 - **Tek saat (2026-09-04, §9.22):** sabır `max(22, 50−2.5g)` sn, müşteri kararını verdiği an işlemeye başlar ve içki gelene dek işler; sorulmayı beklemek de aynı barı harcar (dolarsa fırtına gibi gider). **Kimlik okumak** barı sıfırlamaz, kalanın üstüne üç kutudan birini (`PatienceMax/3`) ekler, tavan dolu bar. (İki ayrı saat 2026-08-02 → 2026-09-04 arasında vardı.)
 - **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza.
-- **Sipariş havuzu:** açık menüden, en düşük ranktan `3+gün` tarif; stok bakılmaz (kuru şişe = `DeclineOrder`).
+- **Sipariş havuzu (2026-09-26):** gecenin planı (`DayPlan`, §6.3) menünün yalnız barın YAPABİLDİĞİ sayfalarından kesilir — `TycoonRun.CanServe`: her bandı raftaki bir şişe karşılar (stil + `MinTier`, draught/neat_pour için tip; SAHİPLİK, doluluk değil), imza ekstrası bu gece rayda (basamak + kavanoz), Stirred sayfa için kaşık var. Şişesi alınmadan satın alınan sayfa menüde durur ama sorulmaz; şişe gelince sorulur. Hiçbir sayfa yapılamıyorsa (yalnız test düzeneği) eski menüye düşülür. Kuru şişe hâlâ sorulur — dolum kapanıştaki karar, gece içinde dürüst cevap `DeclineOrder` (`CanMake` dolumu okur). Haftalık iş aynı yüklemi kullanır. (Eski satır: "en düşük ranktan `3+gün` tarif; stok bakılmaz" — ikisi de artık doğru değil.)
 - **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
 - **Müdavimler opt-in:** kayıt (registry) verilmezse anonim kalabalık. Müdavim: isim/yaş/şehir/arketip/ziyaret/ilişki taşır; duygu katmanı 2026-08-02'de söküldü — kokteyle verilen tepki tek gerçek.
@@ -198,7 +198,8 @@ ve ilk 1 hafta için kesinlikle özel sipariş listesi olmalı."*
 - **`FirstWeek`** ilk yedi geceyi DERS olarak yazar: build'ler → fıçı → sek → shaker → tüm menü;
   her gecenin cirosu bir öncekinden büyük (test tutar), açılış gecesi yetkin elde ~$63. Bar ilk
   haftada yerden kalkarsa yazılı hafta çekilir.
-- **Açılış menüsü altı sayfa:** `gin_tonic` ve `whiskey_cola` kilitli değil (json + katalog).
+- **Açılış menüsü altı sayfa:** `gin_tonic` ve `whiskey_cola` kilitli değil (json + katalog). **2026-09-26: ve açılış rafı altısını da döker** — dokuz kart (`base_bar.json` `"starting": true`: votka, cin, burbon, soda, tonik, kola, limon, şurup, lager fıçısı). Eski altılı rafta tonik, kola ve burbon yoktu: 1. gecenin 9 kişisinden 6'sı, yazılı haftanın 75 kişisinden 35'i yapılamayan içki istiyordu ve market ancak ilk geceden sonra açıldığı için oyuncunun elinden hiçbir şey gelmiyordu. Yazılı haftanın düşen kişisi artık gecenin kendi dökülebilen sayfaları arasında SIRAYLA dağıtılır (önceden hepsi ilk sayfaya gidiyordu).
+- **Sipariş = raf (2026-09-26, yazar: "Oyuncunun sahip olduğu yıldız seviyesindeki kokteyller ile sahip olduğu alkoller doğru orantılı olmalı"):** plan `CanServe` ile süzülür (§3 sipariş havuzu); gece yalnız rafın dökebildiğini ister, yani gecenin cirosu barın gerçekten sahip olduğu rafa bağlıdır. Rastgelelik: süzgeç zar atmaz, kişi sayısı sayfalardan bağımsız, karıştırma her durumda `covers − 1` çeker — "plan", "arrivals", "patience", "decide", "customer", "read", "papers" akışları yerinde kalır; **"orders" kalmaz** (`ServingSpec.Roll` bira için 2, diğerleri için 3–4 çekiş), "job" havuzu da daralabilir. Aynı tohum yine aynı koşu.
 - **Başlangıç kasası $50** (`TycoonConfig.DefaultStartingMoney`, eskiden $20): hiç servis yapılmayan
   ilk gece kira + kaçanların cezasıyla $25–29 tutuyor; $20'de yeni bar daha bir içki dökmeden borca
   giriyordu (PlayMode market testi kasayı −$9'da buldu). Şimdi en kötü ilk gece $21–25 bırakır.
@@ -224,6 +225,11 @@ aktif olacak, konfor gibi değil."*
 - **Yalnız TAKILI parça sayılır** (`TycoonRun.IsActive`): merdivende giyilen basamak (`WornRung`),
   tekil parça sahip olundukça. Konfor hâlâ tırmanılan basamağı okur. Kapılar açıkken giyilen
   değiştirilemez (Core reddeder), satın alınan basamak kendiliğinden giyilir — gecenin odası sabit.
+- **Sağ duvarın COMFORT'u bir YASTIK, kaldıraç değil (2026-09-26):** dosyalanan gece
+  `min(taban, (taban − 0.75 × (1 − temizlik)) × ölçek)` — kirin aldığını geri verir, odayı KENDİ DEĞERİNİN
+  ÜSTÜNE asla çıkarmaz (ev tam 5.00 toplayınca temiz bir gecede ×1.10, 4.55'lik odayı beş dosyalardı).
+  Canlı okuma (`Now`) da aynı kural. Ölçek 1'de eski double bit bit aynı; buff verisi değişmedi. Kelimenin
+  her zaman söylediği şey: odanın konforunun gecenin kirinden ne kadarı KURTULUR.
 - **Aletler de takılı parçayı okur** (Option A): `WorkSpeed`, `TapSpeed`, `WasteIsFree`. Bu,
   2026-09-13'teki "çelik kap takılıyken de altın kabın hızında çalkalar" kuralını TERSİNE çevirir;
   gerekçesi yazarın bu günkü "hangi geliştirme takılıysa o buff aktif olacak" sözü. Yolda
@@ -245,7 +251,8 @@ aktif olacak, konfor gibi değil."*
 ## 7 · Yıldız / itibar omurgası
 
 - `BarRating`: 0★ başlar; gece yıldızı `5×memnuniyet` (2026-08-11'den beri; `1+4×` eski ölçek), **iki tavanla** kırpılır; ilerleme ataletli (+0.10 çıkış, −0.20 iniş, gecelik en çok +0.25). Fırtına gidenler de puan yazar.
-- **İKİ PUAN, ORTAK YILDIZ (2026-09-05, GDD 27; §9.23):** gecenin yıldızı `min(servis, konfor)`. **Servis** = `min(5×ortalama memnuniyet, MenuStarCap)`; **konfor** = `ComfortBase − 1.0 × (1 − temizlik)`, `ComfortBase = 0 + Σ fikstür `comfort` (yalnız ayakta duran basamak) + 0.5 × bardak adımı tavanı + 0.25 × ek tabure` (**taban 2026-09-06'da 2.0'dan 0'a indi — çıplak oda hiçbir şey etmez, gece 0 yıldız dosyalar; §9.35**; eski `UpgradeStarCap` bu tabana dönüştü; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0 aynen). Yarının kalabalığı SERVİS tarafını okur (kir tek başına kalabalığı yoksullaştıramaz).
+- **İKİ PUAN, ORTAK YILDIZ (2026-09-05, GDD 27; §9.23):** gecenin yıldızı `min(servis, konfor)`. **Servis** = `min(5×ortalama memnuniyet, MenuStarCap)`; **konfor** = `ComfortBase − 1.0 × (1 − temizlik)`, ~~`ComfortBase = 0 + Σ fikstür `comfort` (yalnız ayakta duran basamak) + 0.5 × bardak adımı tavanı + 0.25 × ek tabure`~~ (**2026-09-26'dan beri geçersiz — bir alttaki madde; ev tam 5.00**) (**taban 2026-09-06'da 2.0'dan 0'a indi — çıplak oda hiçbir şey etmez, gece 0 yıldız dosyalar; §9.35**; eski `UpgradeStarCap` bu tabana dönüştü; `MenuStarCap` gece servis edilen en iyi Exact ranka göre 2.0→5.0 aynen). Yarının kalabalığı SERVİS tarafını okur (kir tek başına kalabalığı yoksullaştıramaz).
+- **EVİN TAMAMI TAM 5.00 (2026-09-26, yazarın kararı: *"Tüm geliştirmeleri ekonomi dengesine dahil et, Oyuncu oyunda maksimum 5 konfora ulaşmalı ve bu oyun sonlarına yakın gerçekleşmeli. Şu an sanki tüm gelişmeler +5 oluyormuş gibi gözüküyor."*):** yukarıdaki formül artık `ComfortBase = Σ fikstür comfort + Σ bardak adımı tierComfort + 0.05 × ek tabure + 0.05 × (CounterTier − 1)`, kıskaç 5. Sevkedilen ağaç 18.00 topluyordu (fikstür 16.00, bardak 1.50, tabure 0.50): gösterge ~14. gecede 5/5 okuyordu, duruş 2★ altındayken; 3★ üstü her preset dolu açılıyordu. Şimdi: her fikstürün tepe basamağı + tekiller **4.30** (yıldız bandına göre bütçe 0★ 1.10 · 0.5★ 0.70 · 1★ 0.60 · 1.5★ 0.55 · 2★ 0.45 · 2.5★ 0.35 · 3★ 0.45 · 3.5★ 0.05 · 4★ 0.05; her parça +0.02…+0.19 ekler, duvarlar en çok: 0.64), bardak adımı **0.02** (`glassware.json` `tierComfort`, zorunlu, yükleyici yanlış sayıyı/ölçek dışını reddeder; beş hat 0.50), tabure **0.05** (0.10), bar tezgâhı adımı **0.05** (`VenueComfort.CounterComfort`, 0.10) — tam **5.00**. GDD 27 §3.1'in "11.25 → 5.0, oyuncu seçer" taşması bilerek tersine çevrildi. `GlassComfortShare` ve `TycoonRun.GlassStepCap` silindi; bardak `tierPrices` YARIYA indi. Market artık basamağın MUTLAK değerini değil EKLEDİĞİNİ basar (`TycoonRun.ComfortGain`; merdiven başı "0.35 OF 0.64 COMFORT", yeni `decor.comfort_of`), bar tezgâhı ve bardak kartı konforlarını gösterir, konfor okumaları iki ondalık. Dev preset'leri (`DevPresetStars`, `DevPreset(1)`) basamak tavanı olmadan kapının açtığı her şeyi alır: 0.5★ 1.80 · 1★ 2.55 · 1.5★ 3.10 · 2★ 3.64 · 2.5★ 3.99 · 3★ 4.60 · 3.5★ 4.65 · 4★/4.5★ 4.80 · 5★ **5.00**; 0★ preset çıplak (yalnız odanın parçaları ve aletler). **Projeksiyon (`EconomyProjection.WalkFurnishing`, sahip olunan sayfa ve şişeden fiyatlanır, tırmanış varsayımdır):** keskin el 5.00'e 52. gece (5★ 53), yetkin el 75. gece (5★ 76); öğrenen el evi hiç tamamlayamıyor — 1★'da kira ikiye katlanır, 0★ sayfalarıyla 1★ sayfalarını ($44–54) alamaz, ~1.7★'da takılır (eski bedava odayla da 2★'da aynı şekilde takılıyordu). Sim botu parçayı `ComfortGain`/$ ile ve `ShopStars` kapısıyla değerlendirir, oda `ShopStars + 0.5`'in altındayken almaya devam eder, gecenin tek fitting'ini tabure / bar tezgâhı / bardak adımının en ucuzuna harcar; ufuk 70 gece.
 - **ODA ORTADAN DOLAR (2026-08-25, yazar: "başlangıçtaki koltuklar 2-3-4-5 sırası olacak geliştirme ile alınan koltuklar 1 ve 6 olmalı"):** tezgâh boyunca altı tabure çizilir, yeni bar dördüne sahiptir — eskiden İLK dördüne, yani açılış gecesinin bütün kalabalığı sol duvara yaslanıyor ve kasayla arasında iki tabure boşluk kalıyordu (yeni açılan bir bar terk edilmiş gibi okunuyordu), üstelik yükseltme kimsenin oturmadığı sıranın UZAK ucuna bir tabure daha ekliyordu. Şimdi sahip olunan dördü ORTADAKİ dört (2-3-4-5), yükseltmenin aldığı ikisi ise iki UÇ: önce kasa tarafı (6), sonra uzak duvar (1). Sıra `SeatFillOrder(slots, StartingSeats)` ile TÜRETİLİR (açılış bloğu satırın ortasına yerleşir, artanı kasa ucundan geri doğru eklenir), yani başka bir tabure sayısıyla açılan bir bar da ortalanır. Evin misafiri hâlâ kasaya en yakın taburede oturur ama artık `TillEndward` ile — sırayı TERS gezmek yanlış cevabı verir, çünkü yükseltmenin aldığı SON tabure uzak duvardakidir.
 - Kalabalık yarını seçer: ortalama ≥4.2 HighRoller · ≥1.5 Regular · altı Broke. Ambience: bardak+tezgahtan en çok +0.21 düz bonus.
 
@@ -254,9 +261,9 @@ aktif olacak, konfor gibi değil."*
 | Küme | Sayı | Not |
 |---|---|---|
 | Şişe kartı | **41** (30 canlı / 11 kilitli) | T1 26 · T2 5 · T3 5 · T4 5; markalar parodi (Smirkoff, John Wanderer, Maliboo…) |
-| Başlangıç rafı | 6 | vodka_astra, gin_boothby, soda_klara, lemon_fresh, syrup_house, beer_kestrel (+bootstrap'ta sabit) |
+| Başlangıç rafı | **9** | **2026-09-26'dan beri veri:** `base_bar.json` `"starting": true` — vodka_astra, gin_boothby, bourbon_redline, soda_klara, tonic_quinbury, cola_marlow, lemon_fresh, syrup_house, beer_kestrel (8 şişe + 1 fıçı; `DataLoader` kilitli / T2+ / `unlockStars` / 2+ hat isteyen başlangıç kartını reddeder; `LoadedDeck.StartingCards`). Önceden 6 id bootstrap, sim ve iki testte elle kopyalıydı ve açılış menüsünün iki sayfasını dökemiyordu. Kuyu romu $8 → **$6** (1★ tahtasında $16'ya kendi $14'lük T2'sinin üstünde listeleniyordu). Dev preset'leri (`DevPresetStars`) her stili açık kitabın istediği EN YÜKSEK tier'da, preset'in yıldızının açmadığı hiçbir şişe olmadan stoklar — her preset kendi kitabının tamamını döker |
 | Gazlı bayrağı | **5** | cola, tonic, energy + **soda_klara, ginger_kicker (2026-08-11'de çevrildi** — §12 borcu kapandı). **2026-08-13:** gazlılar arka bar duvarına GERİ döndü; Serve dolabı kaldırıldı (aşağı) |
-| Tarif | **54** | Built 19 · Shaken 22 · Stirred 13; pint 1 / rocks 14 / highball 22 / coupe 10 / martini 7. **2026-08-15:** black_russian (rank 8, 0★) ve mint_julep (rank 21) Built→**Stirred** — kaşık artık ilk basamakta öğreniliyor; en erken karıştırılan tarif rank 22 (4★) idi ve `MixRequired` yöntemi okuduğundan tezgâhın yarısı görünmüyordu. **2026-09-16:** black_russian rank **9 (1★)** — kaşık ilk yıldızın dersi; sayfa alınınca kaşık tezgâha gelir (`TycoonRun.SpoonUnlocked`, §9.75); `liqueur_kafa` unlockStars 1.0 |
+| Tarif | **54** | Built 19 · Shaken 22 · Stirred 13; pint 1 / rocks 14 / highball 22 / coupe 10 / martini 7. **2026-08-15:** black_russian (rank 8, 0★) ve mint_julep (rank 21) Built→**Stirred** — kaşık artık ilk basamakta öğreniliyor; en erken karıştırılan tarif rank 22 (4★) idi ve `MixRequired` yöntemi okuduğundan tezgâhın yarısı görünmüyordu. **2026-09-16:** black_russian rank **9 (1★)** — kaşık ilk yıldızın dersi; sayfa alınınca kaşık tezgâha gelir (`TycoonRun.SpoonUnlocked`, §9.75); `liqueur_kafa` unlockStars 1.0. **2026-09-26:** black_russian rank **12 (2★)**, Stirred kalır — kaşık 2026-09-21'de merdivenin 3. basamağına (2★) taşınmıştı ve 1★ sayfası yalnız çalkalanabiliyordu (yöntem puanı 0); kaşığı izler, `liqueur_kafa` unlockStars **2.0**. 1★ basamağı artık üç sayfa (cuba_libre, whiskey_ginger, moscow_mule); ilk karıştırılan sayfalar kaşığın basamağında açılır |
 | Bardak | 5 | 6'şar kademe (T1 + 5 satın alım) |
 | Arketip | 8 | ağırlık toplamı 24, Easygoing/Particular 12–12 dengeli |
 | Çizili müşteri | **9** | 2026-08-19 rig'i; hepsinin yıldız kapısı 0 — yani *şimdiki kadronun tamamı başlangıç müşterisi*, kilit açma ileride eklenecekler için. **spanishsuit 2026-08-25'te kesildi** (yazar: görseli ve animasyonları bozuk); 200 karesi silindi, üretim kaydı `Tools/patron_trial_state.json`'da kaldı ve o kareler yeniden gönderilmemeli |
@@ -1887,6 +1894,108 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
   musluk ile ağzın sağında, 18 birim payla duruyor (r224).
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
+
+### 9.122 · On ikinci liste (3/3): açılış rafı, yapılabilir siparişler, evin tamamı 5.00 (2026-09-26)
+
+Yazar: “Mevcut müşteriler ilk gün siparişlerinde oyuncunun yapamayacağı siparişlerde bulunuyorlar, başlangıç
+alkollerini, alkol geliştirmelerini detaylıca düzenle. Oyuncunun sahip olduğu yıldız seviyesindeki kokteyller ile
+sahip olduğu alkoller doğru orantılı olmalı.” / “Tüm geliştirmeleri ekonomi dengesine dahil et, Oyuncu oyunda
+maksimum 5 konfora ulaşmalı ve bu oyun sonlarına yakın gerçekleşmeli. Şu an sanki tüm gelişmeler +5 oluyormuş gibi
+gözüküyor.”
+
+- **Açılış rafı veride** (§3, §8): `base_bar.json`'da `"starting": true` taşıyan dokuz kart — vodka_astra,
+  gin_boothby, bourbon_redline, syrup_house, lemon_fresh, soda_klara, cola_marlow, tonic_quinbury ve beer_kestrel
+  fıçısı. `DataLoader` kilitli, tier 1 üstü, `unlockStars`'lı ya da ikinci hat isteyen bir başlangıç kartını
+  reddeder; `GameBootstrap` ve sim rafı veriden kurar. Açılış menüsünün altı sayfasının her bandını karşılar.
+  Ece'nin ilk gece sözü "Eight bottles and a keg.", ilk marketteki "A page the shelf cannot pour is a page nobody
+  orders." oldu (28 dil).
+- **Gece yalnız yapılabilen sayfayı ister** (§3, §6.3): `TycoonRun.CanServe` — her bandı raftaki bir şişe
+  karşılar, imza ekstrası rayda, stirred sayfanın kaşığı var. Planı, haftalık işi ve ilk haftanın yazılı
+  gecelerini süzer; yapılamayan yazılı kapak o gecenin yapılabilen sayfaları arasında yazılı sırayla döner.
+  `orders` akışı içkiye göre 2–4 çekiliş yapar, yani aynı tohum eski siparişleri vermez; diğer akışlar yerinde.
+  Satın alınmış ama şişesi olmayan sayfa sipariş edilmez; kitap o satırı zaten kırmızı zemin ve sözcükle
+  gösteriyor, markette ise tarifin içeriği satın alınana kadar kapalı kalır (§9, 2026-09-13).
+- **Sayfa ↔ şişe orantısı:** black_russian rank 9 → 12 (2★, hâlâ stirred — kaşıkla aynı basamak, ilk stirred
+  sayfalar 2★'da açılır), liqueur_kafa 1.0 → 2.0★, rum_cane_coral $8 → $6 (1★ panosunda $12, $14'lük
+  yükseltmesinin altında). 54 sayfanın hiçbiri istediği şişeden, garnitürden, kavanozdan ya da kaşıktan önce
+  açılmıyor (betikle sayıldı). `DevPresetStars` kitabının istediği şişeleri en ucuzundan stoklar.
+- **Evin tamamı tam 5.00** (§6.4, §7, GDD 27 §3): fikstürlerin tepe basamakları 4.30 + bardak adımları
+  5 × 5 × 0.02 = 0.50 + iki ek tabure 0.10 + bar üstünün iki adımı 0.10. Market pip'i artık parçanın ODAYA
+  KATTIĞINI yazar (`ComfortGain`); eskiden basamağın mutlak değerini yazıyordu ve arka duvarın beş kartı
+  +1.25 … +3.25 okuyordu — yazarın "+5" dediği buydu. Merdiven başı "0.47 OF 0.64 COMFORT", odanın konforu iki
+  ondalık. Bardak adımlarının fiyatı yarıya indi. COMFORT buff'ı bir yastık: pisliği karşılar, odayı kendi
+  değerinin üstüne çıkaramaz. `Tools/upgrade_tree/ship.py`'ın SPEC konforları eski ölçekte; dosyası uyarıyor.
+- **Bedeli: koşu uzadı.** Gece `min(servis, konfor)` dosyaladığı için 5★ artık evin tamamını ister.
+  `EconomyProjection.WalkFurnishing` (şişeyi, sayfayı ve odayı kendi kasasından alan bar): konfor 5.00 keskin
+  oyuncuda 52., orta oyuncuda 75. gece, 5★ ertesi gece (eski evle 40 / 42). Öğrenen bar 1.69★'da takılıyor —
+  eski odayla da 2★'da takılıyordu (sayfa parası). Oda fiyatları ×0.35 olsa orta 53 / keskin 39 olur, ama bu
+  yazarın fiyat bandını (2–3★ $400–500, 4–5★ en çok $1000; ECONOMY §4) bozar — karar yazarın.
+- **Sim** (ufuk 30 → 90 gece, taban bot): 200 koşunun 200'ü batıyor (eskisi de 21. günde 200/200); 0.5★ 7.
+  günden 11.'ye kaydı, 1★'a ulaşan koşu %99.5'ten %38'e indi — taban bot odayı erken dolduramıyor.
+- Testler: EditMode 785/785, PlayMode 14/14 (bakış testleri değişmedi). Loc 28 dil, 0 hata.
+
+### 9.121 · On ikinci liste (2/…): ayarlar — ekran, erişilebilirlik, ters döküş (2026-09-26)
+
+Yazar: “Ayarlara daha fazla seçenek ekleyelim hem erişebilirlik hem display kısmında çözünürlük ters mouse vs vs.”
+
+- **Beşinci sekme yok.** ERİŞİLEBİLİRLİK sekmesi pirinç ikonlu dört sekmenin satırına sığmıyordu (gerçek tablolarla
+  ölçüldü: 29 dilin 25'inde satır 8'lik boya iniyor, Yunanca orada bile taşıyordu). Plaka 540'tan 590'a uzadı, her
+  sayfa 310 yerine 360. Marki ile 632 birimlik plaka ortada durunca üst barın (54) üstüne biniyordu; üst barın 4 birim
+  altına iniyor (1280×720'de 14 birim aşağı, alttan 30 birim pay). Sığan bir plaka ortada kalır (`SettingsPlateAir`).
+- **Tek seçenek deposu** (`LastCall.Game.PlayerOptions`): her seçenek bir `lastcall.*` PlayerPrefs anahtarında,
+  bir kez okunup tutuluyor, oynatma başında unutuluyor (`ForgetOnPlay`, domain reload yok). `Motion.Reduced` artık
+  buradan okuyor, anahtarı aynı (`lastcall.reducedMotion`). PlayMode'un iki fikstürü `UseDefaultsForSession()` ile
+  her seçeneği varsayılanına sabitliyor, hiçbir şey yazmadan (`Localization.UseForSession`'ın yanında). Hiçbiri
+  Core'a, RunRng'ye ya da veriye dokunmuyor; simülasyon ve projeksiyon okumaz.
+- **Her varsayılan bugünkü oyun**, tek yazılı istisna: oyuncu build'inde PENCERE DEĞİŞİNCE DURAKLAT açık.
+- **GÖRÜNTÜ sayfası** (36'lık on satır, 32 boyunda tuşlar):
+  - PENCERE: TAM EKRAN (masaüstü boyunda kenarsız pencere, ProjectSettings'in FullScreenWindow'u) / PENCEREDE.
+    Not: Alt+Enter de değiştirir. Sayfa canlı ekranı okur, ikisi hiç çelişmez.
+  - ÇÖZÜNÜRLÜK: yalnız pencerede; masaüstünün sığdırdığı 640k×360k tam katlar (k ≥ 2, yükseklik masaüstü − 80).
+    1920×1080 → 1280×720; 2560×1440 → +1920×1080; 1366×768 → hiçbiri (pencere 1280×720 açılır). Tam ekranda
+    masaüstü boyu gri yazılır.
+  - KARE HIZI: EKRANA GÖRE (vsync 1, hedef −1 — `GameBootstrap`'ın eski iki satırı) / 60 / 120 / 144. Sınırsız
+    yok, 60'ın altı yok.
+  - HAREKET: eski anahtar, bu sayfaya taşındı.
+  - YANIP SÖNME: neonun takılması, odanın şebeke titremesi, televizyonun kendini kapatıp açması, sabır çubuğunun
+    kırmızı nabzı. Azaltılmış hareket de bunları kapatır (`Motion.NoFlashes`). Hepsi zaten saniyede 3'ün altındaydı:
+    bu bir konfor ayarı (migren, ışığa duyarlılık). Oda titremesi ve televizyon artık her kurulumda başlıyor ve
+    kapıyı her karede soruyor. Gece ortasında çevrilen ayar anında ulaşıyor. Eskiden yalnız kurulumda seçiliyordu.
+    Satırın işareti yeni bir şimşek (`ChromeArt.Mark("flash")`); yıldız yalnız `ItemArt.Star`'ın.
+  - İMLEÇ: NORMAL / BÜYÜK. Büyük el aynı üç karenin 2x'i (64×64, her teksel ikiye), yazılımsal imleç
+    (`CursorMode.ForceSoftware`). Windows 64'lük donanım imlecini küçültür. Yaklaşık bir kare geride koşar ve
+    ekran görüntülerine girer.
+  - RENK İPUÇLARI: STANDART / NET. Beş ölçünün merdiveni (kitap, not, tin bantları) ve sabır çubuğu. STANDART
+    yazarınki, hiç değişmedi; tezgâh görüntü testi onu taşıyor. En yakın çifti döteranopide 11,9 (ΔE76, Machado 2009).
+    NET aynı rampalardan kuruldu, ikinci palet yok: ViceRed[2], Malt[2], Lime[4], ClubBlue[4], ClubBlue[2]. Normal,
+    protan, deutan ve tritan gözde, boş noktanın kreması dahil, en az 28,9. Amber[3]'ten (para rengi) kaçınmaya devam
+    ediyor. Sabırda yeşil ClubBlue[4] olur (8,4 → 39). Merdiven ve nokta sprite önbellekleri renkle anahtarlandı
+    (`ChromeArt.ColoursKey`). Bir sonraki çizilen tin, not ya da sayfa yeni merdiveni giyer.
+  - PENCERE DEĞİŞİNCE DURAKLAT: başka pencere öne gelince açık gece, ESC gibi duraklatma menüsünün arkasında
+    tutulur. Saati zaten tutan bir şey varsa dokunmaz. Oyun dönünce menü açık kalır. Editörde asla çalışmaz
+    (`PausesWhenAway`): yazar editörü IDE'den sürüyor, test takımı odağı bilerek yok sayıyor.
+  - Ardından eskisi gibi BU GECENİN DEFTERİ ve BAŞTAN BAŞLA.
+- **KONTROLLER sayfası: TERS DÖKÜŞ** (yedi tuş satırının altında, sekizinci 40'lık satır, tuşu kapakların hizasında).
+  Bu oyunda farenin tek ekseni döküşün eğimi. Öbür fiillerin hepsi imleci olduğu yerde izliyor. Ters bir imleç
+  şişeyi ekranın bir yanına, eli öbür yanına koyardı. Açıkken şişe dik halde bardağın üstüne kaldırılıyor. El
+  eğimin tepesine bir kez varınca indirmek eğiyor. Eğim, elin çıktığı en yüksek noktadan ne kadar indiğiyle ölçülür;
+  geri kaldırmak şişeyi doğrultur. Ağız-kenar kuralı ters yönden korunuyor: el, en dolu eğimde bile ağzın kenarın
+  altına düşmeyeceği yükseklikten aşağı inmiyor (`PourHand.PressInverted`, `LowestMouthOverHand`). Tavan da düz
+  döküşte eli aynı şekilde durduruyor.
+- **Yay alt adımları** (`LastCall.Game.SpringStep`): şişe ve tenekeyi tutan elin takip yayı (ω 30, ζ 0,85) tek
+  yarı-örtük adımla 32 fps'in altında kararsızdı (30'da spektral yarıçap 1,26). Vsync'in 30'a düştüğü bir makinede
+  tutuş fırlıyordu. Kare artık en çok 1/60'lık adımlara bölünüyor. 60 fps ve üstünde tek adım, eskisiyle bit bit
+  aynı; 30'da iki, 20'de üç adım. Yalnız 0,1 s'yi aşan bir takılma kısaltılıyor.
+- **VARSAYILANLARA DÖN** yeni seçeneklerin hepsini de sıfırlıyor, PENCERE ve ÇÖZÜNÜRLÜK hariç: sıfırlama pencereyi
+  tam ekrana atmaz.
+- **Editörde ekran hiç değişmiyor:** pencere, boyut ve kare hızı yalnız oyuncu build'inde uygulanıyor
+  (`#if !UNITY_EDITOR`, `DisplayOptions`). Takımın 1280×720'ye sabitlediği Game view'a dokunulmuyor. Editörde
+  seçimler oturum boyunca hatırlanıyor, hiçbir yere uygulanmıyor.
+- **Yazarın kararını bekleyenler (bu listede yapılmadı):** TAŞIMA (tıkla-taşı, 15 `leftButton` yoklaması ve
+  bırakma tıklamasının yutulması), KÜÇÜK YAZI (8'lik satırları 16'ya, 96 yer ve Audit UI), SOL EL (önce bir
+  build'de Windows'un düğme takasını Input System'in izleyip izlemediği ölçülmeli), KeyArtCapture'ın imleci NORMAL'e
+  zorlaması. Oyuncu build'inde de ölçülecek: Unity'nin pencere/çözünürlük anahtarlarını kalıcı yazması, Alt+Enter,
+  30 fps'te tutuşun oturması.
 
 ### 9.120 · On ikinci liste (1/…): menülerin resimleri girdi, ESC'nin arka planı ve enstrüman ayağı, küçük post-it, derece renkli tin, rafta duran şişeler (2026-09-26)
 

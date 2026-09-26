@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "Die Schaumkrone ist das ganze Handwerk.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "Klick auf den Hocker, nicht auf den Drink.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "Keiner sagt dir, was er will, bevor du fragst.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "Was wir heute nicht dahatten, will morgen garantiert jemand.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "Eine Seite, die das Regal nicht ausschenken kann, bestellt niemand.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

@@ -101,7 +101,10 @@ namespace LastCall.Core
             // content silently reseeds every later customer's night, and a page's habit is content.
             // (The old shape already had that fault in miniature: it removed the signature from the
             // bag, so a signed page drew its index against a smaller number than a plain one. It
-            // does not any more.)
+            // does not any more.) ONE EXCEPTION, written down 2026-09-26: a pint skips the extras bag
+            // below, so a draught page takes two draws and every other page three or four. The count
+            // depends on WHETHER the page is draught, which is why the night's plan, once it filters to
+            // what the shelf can pour, cannot promise this stream keeps its place (TycoonRun.TonightsPlan).
             bool wantsSomething = rng.NextInt(100) >= 50;
             bool wantsTheUsual = rng.NextInt(100) < UsualChance;
 

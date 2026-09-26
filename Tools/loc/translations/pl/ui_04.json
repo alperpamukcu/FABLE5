@@ -562,8 +562,8 @@
     },
     {
       "key": "data.lesson.first_market.say.0",
-      "text": "Czego dziś zabrakło na półce, o to ktoś zapyta jutro.",
-      "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."
+      "text": "Strona, której półka nie naleje, to strona, której nikt nie zamówi.",
+      "src": "A page the shelf cannot pour is a page nobody orders."
     },
     {
       "key": "data.lesson.first_market.say.1",
@@ -572,8 +572,8 @@
     },
     {
       "key": "data.lesson.first_night.say.0",
-      "text": "Sześć butelek i beczka. Technicznie rzecz biorąc, to już bar.",
-      "src": "Six bottles and a keg. That is a bar, technically."
+      "text": "Osiem butelek i beczka. Technicznie rzecz biorąc, to już bar.",
+      "src": "Eight bottles and a keg. That is a bar, technically."
     },
     {
       "key": "data.lesson.first_night.say.1",

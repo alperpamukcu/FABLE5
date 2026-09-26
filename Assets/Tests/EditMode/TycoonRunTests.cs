@@ -1086,7 +1086,10 @@ namespace LastCall.Tests
             // A BOOK WITH AN OPEN STIRRED PAGE BRINGS NOTHING BY ITSELF any more (the 2026-09-16 rule this
             // test used to state): below the rung a stirred page is a drink the bar can only shake, and Core
             // says so - the bench draws no spoon and the sim shakes the Martini.
-            var stirred = sealedBook.First(r => r.Prep == PrepMethod.Stirred && run.RecipeStarGate(r) == 1.0);
+            // The book's first stirred page, opened by hand below its rung. (It was "the one-star stirred page"
+            // until 2026-09-26, when the Black Russian followed the spoon to two stars and there stopped being one.)
+            var stirred = sealedBook.Where(r => r.Prep == PrepMethod.Stirred)
+                .OrderBy(r => r.Rank).ThenBy(r => r.Id, StringComparer.Ordinal).First();
             var open = new RecipeDefinition(stirred.Id, stirred.Name, stirred.Rank,
                 stirred.BaseFlavor, stirred.BaseMult, stirred.FlavorPerLevel, stirred.MultPerLevel,
                 stirred.Requirements, ratioRequirements: stirred.RatioRequirements,
@@ -1264,6 +1267,168 @@ namespace LastCall.Tests
             foreach (var m in run.Floor.Messes) if (m.HasGlass) { left = m; break; }
             Assert.IsNotNull(left);
             Assert.IsNull(left.GlasswareId, "a run with no glassware knows no line, and leaves one anyway");
+        }
+
+        // ── the night asks only for what the shelf can make (2026-09-26) ────────
+        // The author: "Mevcut müşteriler ilk gün siparişlerinde oyuncunun yapamayacağı siparişlerde
+        // bulunuyorlar". The rules layer never trusts the UI, so the refusal is Core's: a page the
+        // shelf cannot pour is on the menu and in the book, and nobody orders it.
+
+        private static TycoonConfig LongPurse() =>
+            new TycoonConfig(5000, weeklyJobs: false, lastCall: false);
+
+        private static void CloseTheNight(TycoonRun run)
+        {
+            run.DevSkipToDayEnd();
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase, "the night closed");
+        }
+
+        [Test]
+        public void TheNight_NeverAsksForAPageTheShelfCannotAnswer()
+        {
+            var run = OpeningBar.Run("pourable", LongPurse());
+            var screwdriver = run.AllRecipes.Single(r => r.Id == "screwdriver");
+
+            // A page bought without its bottle is on the menu, and not asked for.
+            CloseTheNight(run);
+            run.UnlockRecipe("screwdriver");
+            run.ContinueToNextDay();
+            run.Rating.DevSet(1.0);   // off the written week, so the night is cut by the weights
+            CollectionAssert.Contains(run.MenuRecipes.Select(r => r.Id).ToList(), "screwdriver");
+            Assert.IsFalse(run.CanServe(screwdriver), "no orange juice on the shelf");
+            CollectionAssert.AreEqual(new[] { "orange" }, run.MissingFor(screwdriver).Select(b => b.Style).ToList(),
+                "and the shelf can say what it is missing");
+            CollectionAssert.DoesNotContain(run.Plan.Queue.Select(r => r.Id).ToList(), "screwdriver",
+                "the night does not ask for a drink the bar cannot make");
+
+            // The bottle arrives; the page is asked for.
+            CloseTheNight(run);
+            int orange = run.MarketOffers.ToList().FindIndex(o => o.Bottle.Id == "orange_grove");
+            Assert.GreaterOrEqual(orange, 0, "the first board sells the orange juice");
+            run.BuyBrand(orange);
+            run.ContinueToNextDay();
+            run.Rating.DevSet(1.0);
+            Assert.IsTrue(run.CanServe(screwdriver));
+            CollectionAssert.IsEmpty(run.MissingFor(screwdriver));
+            CollectionAssert.Contains(run.Plan.Queue.Select(r => r.Id).ToList(), "screwdriver",
+                "with the bottle on the shelf the room asks for it");
+
+            // Two more pages without their bottles, and ten nights: nothing unpourable is ever planned.
+            CloseTheNight(run);
+            run.UnlockRecipe("cape_codder");
+            run.UnlockRecipe("vodka_bull");
+            run.ContinueToNextDay();
+            for (int night = 0; night < 10; night++)
+            {
+                foreach (var page in run.Plan.Queue)
+                    Assert.IsTrue(run.CanServe(page), $"day {run.Day}: {page.Id} was planned and cannot be made");
+                CollectionAssert.DoesNotContain(run.Plan.Queue.Select(r => r.Id).ToList(), "cape_codder");
+                CollectionAssert.DoesNotContain(run.Plan.Queue.Select(r => r.Id).ToList(), "vodka_bull");
+                CloseTheNight(run);
+                run.ContinueToNextDay();
+            }
+        }
+
+        private static IngredientCard Stock(string id, IngredientType type, string style) =>
+            new IngredientCard(id, id, type, 3, info: new IngredientInfo(style, tier: 1, price: 4));
+
+        private static Shelf FullWell() => new Shelf(new[]
+        {
+            new ShelfBottle(Stock("vodka_w", IngredientType.Spirit, "vodka"), capacity: 20),
+            new ShelfBottle(Stock("gin_w", IngredientType.Spirit, "gin"), capacity: 20),
+            new ShelfBottle(Stock("bourbon_w", IngredientType.Spirit, "bourbon"), capacity: 20),
+            new ShelfBottle(Stock("soda_w", IngredientType.Bubbly, "soda"), capacity: 20),
+            new ShelfBottle(Stock("tonic_w", IngredientType.Bubbly, "tonic"), capacity: 20),
+            new ShelfBottle(Stock("cola_w", IngredientType.Bubbly, "cola"), capacity: 20),
+            new ShelfBottle(Stock("lemon_w", IngredientType.Sour, "lemon"), capacity: 20),
+            new ShelfBottle(Stock("syrup_w", IngredientType.Sweet, "syrup"), capacity: 20),
+            new ShelfBottle(Stock("lager_w", IngredientType.Beer, "lager"), capacity: 20),
+        });
+
+        private static Shelf ThinWell() => new Shelf(new[]
+        {
+            new ShelfBottle(Stock("vodka_w", IngredientType.Spirit, "vodka"), capacity: 20),
+            new ShelfBottle(Stock("soda_w", IngredientType.Bubbly, "soda"), capacity: 20),
+            new ShelfBottle(Stock("lager_w", IngredientType.Beer, "lager"), capacity: 20),
+        });
+
+        /// <summary>Plays unserved nights and writes down everything the door decides about each drinker as
+        /// they sit: when, how patient, how long they think, who they are, and whether they look young.</summary>
+        private static List<string> DoorLog(TycoonRun run, int nights, List<int> covers)
+        {
+            var log = new List<string>();
+            var seen = new HashSet<CustomerVisit>();
+            for (int n = 0; n < nights; n++)
+            {
+                covers.Add(run.Plan.Covers);
+                int guard = 0;
+                while (run.Phase == TycoonPhase.DayOpen)
+                {
+                    Assert.Less(guard++, 4000, "the night must end");
+                    run.Tick(0.25);
+                    foreach (var v in run.Floor.Seated)
+                        if (seen.Add(v))
+                            log.Add($"d{run.Day} t{run.Floor.Elapsed:0.00} patience {v.PatienceMax:0.0000} " +
+                                    $"decide {v.DecideLeft:0.0000} {v.Regular?.Name}/{v.Regular?.Age}/" +
+                                    $"{v.Regular?.Hometown}/{v.Regular?.LooksYoung}");
+                }
+                run.ContinueToNextDay();
+            }
+            return log;
+        }
+
+        [Test]
+        public void APlanCutFromAThinShelf_KeepsItsCoversAndItsStreams()
+        {
+            // THE FILTER DRAWS NOTHING. The same seed on a full well and on a thin one plans the same number
+            // of covers, and the door seats the same people at the same moments with the same patience, the
+            // same thinking time and the same papers — "arrivals", "patience", "decide", "customer", "read"
+            // and "papers" keep their places. Only WHICH pages the night asks for moves (and with it the
+            // "orders" stream, which is not claimed here: a pint takes fewer draws than a cocktail).
+            var registry = new Func<RegularsRegistry>(() => new RegularsRegistry(new[]
+            {
+                new ArchetypeDefinition("a", "A", new[] { "Sam", "Kit", "Lou", "Ada" },
+                    hometowns: new[] { "Eastport", "Milltown" }),
+            }, 55));
+            var full = new TycoonRun(FullWell(), RecipeCatalog.CreateDefault(), new RunRng("streams"),
+                config: LongPurse(), regulars: registry());
+            var thin = new TycoonRun(ThinWell(), RecipeCatalog.CreateDefault(), new RunRng("streams"),
+                config: LongPurse(), regulars: registry());
+
+            var fullPages = full.Plan.Queue.Select(r => r.Id).ToList();
+            var thinPages = thin.Plan.Queue.Select(r => r.Id).ToList();
+            Assert.IsTrue(thin.Plan.Queue.All(thin.CanServe), "the thin well is asked only for what it pours");
+            CollectionAssert.AreNotEquivalent(fullPages, thinPages, "and that is not what the full well is asked for");
+
+            var fullCovers = new List<int>();
+            var thinCovers = new List<int>();
+            var fullLog = DoorLog(full, 3, fullCovers);
+            var thinLog = DoorLog(thin, 3, thinCovers);
+            CollectionAssert.AreEqual(fullCovers, thinCovers, "the same covers, night by night");
+            Assert.Greater(fullLog.Count, 10, "the door really did seat people");
+            CollectionAssert.AreEqual(fullLog, thinLog, "the same people, at the same moments");
+        }
+
+        [Test]
+        public void ARigThatPoursNothing_FallsBackRatherThanThrowing()
+        {
+            // Only a rig reaches this — the shipped well always answers the pint and the neat pour — and a rig
+            // still gets a night: the menu as it was cut before the shelf was asked (2026-09-26).
+            var shelf = new Shelf(new[]
+            {
+                new ShelfBottle(Stock("grenadine_w", IngredientType.Sweet, "grenadine"), capacity: 20),
+            });
+            var run = new TycoonRun(shelf, RecipeCatalog.CreateDefault(), new RunRng("nothing"),
+                config: LongPurse());
+            Assert.IsFalse(run.MenuRecipes.Any(run.CanServe), "the rig can pour nothing on its menu");
+
+            DayPlan plan = null;
+            Assert.DoesNotThrow(() => plan = run.Plan, "a rig that pours nothing still has a night");
+            Assert.AreEqual(FirstWeek.CoversOn(1), plan.Covers, "the written night's covers");
+            CollectionAssert.IsSubsetOf(plan.Queue.Select(r => r.Id).Distinct().ToList(),
+                run.MenuRecipes.Select(r => r.Id).ToList(), "and it asks only for its own menu");
+            Assert.DoesNotThrow(() => run.DevSkipToDayEnd());
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase);
         }
     }
 }

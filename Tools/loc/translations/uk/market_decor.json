@@ -12,6 +12,7 @@
 {"key": "decor.card.worn", "text": "Зараз у залі", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "Зараз у залі · зал зберігає щабель {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} затишку", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} з {top} затишку", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "БАР ОБЛАШТОВАНО — БІЛЬШЕ НІЧОГО ПОКРАЩУВАТИ", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "Краща стільниця — щасливіші гості. Навіть ті, чий напій не вдався.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 за кожного обслуженого гостя, до +0.06", "src": "+0.03 on every served visit, up to +0.06"},

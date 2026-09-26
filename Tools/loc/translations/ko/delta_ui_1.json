@@ -108,5 +108,5 @@
 {"key": "data.lesson.first_keg.say.1", "text": "거품이 일의 전부예요.", "src": "The head is the whole job."},
 {"key": "data.lesson.first_licence.say.0", "text": "음료 말고 스툴을 클릭하세요.", "src": "Click the stool, not the drink."},
 {"key": "data.lesson.first_licence.say.1", "text": "물어보기 전엔 아무도 뭘 원하는지 말 안 해요.", "src": "Nobody tells you what they want until you ask."},
-{"key": "data.lesson.first_market.say.0", "text": "오늘 밤 안 들여놓은 건, 내일 꼭 누군가 찾아요.", "src": "Whatever we did not stock tonight, somebody will ask for tomorrow."}
+{"key": "data.lesson.first_market.say.0", "text": "선반으로 못 따르는 페이지는 아무도 주문하지 않는 페이지예요.", "src": "A page the shelf cannot pour is a page nobody orders."}
 ]}

@@ -139,6 +139,7 @@
 {"key": "decor.card.worn", "text": "В залата сега", "src": "In the room now"},
 {"key": "decor.card.worn_stays", "text": "В залата сега · залата остава на ниво {mark}", "src": "In the room now · the room stays worth mark {mark}"},
 {"key": "decor.comfort", "text": "+{comfort} уют", "src": "+{comfort} comfort"},
+{"key": "decor.comfort_of", "text": "{comfort} от {top} уют", "src": "{comfort} of {top} comfort"},
 {"key": "decor.fit.all_fitted", "text": "БАРЪТ Е ОБЗАВЕДЕН — НЯМА КАКВО ДА СЕ ВДИГА", "src": "THE BAR IS FITTED — NOTHING LEFT TO RAISE"},
 {"key": "decor.fit.bar.body", "text": "По-добър плот на бара прави всеки гост по-доволен. Дори онези, чието питие объркаш.", "src": "A better bar top makes every customer happier. Even the ones whose drink you get wrong."},
 {"key": "decor.fit.bar.gain", "text": "+0.03 за всяко обслужено посещение, до +0.06", "src": "+0.03 on every served visit, up to +0.06"},

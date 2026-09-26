@@ -22,7 +22,7 @@
 
     { "key": "dayend.score.counts", "text": "{served} SERVED  ·  {walked} WALKED", "note": "Quiet line beside tonight's star score under the five stars on the day-end slip. {served} = customers served, {walked} = customers who walked out or were thrown out (whole numbers, often two digits). Body face 16 px, one line; the score and a star share the 384 px sheet, ~26 characters." },
     { "key": "dayend.house.service", "text": "SERVICE {rating}", "note": "House row on the day-end slip, beside a heart icon: tonight's drinks rating. {rating} is a one-decimal number like 3.5. Body face 16 px, ~14 characters." },
-    { "key": "dayend.house.comfort", "text": "COMFORT {rating}", "note": "House row on the day-end slip, beside a medallion icon: tonight's room rating. {rating} is a one-decimal number like 3.5. Body face 16 px, ~14 characters." },
+    { "key": "dayend.house.comfort", "text": "COMFORT {rating}", "note": "House row on the day-end slip, beside a medallion icon: tonight's room rating. {rating} is a two-decimal number like 3.52 (since 2026-09-26). Body face 16 px, ~15 characters." },
 
     { "key": "dayend.week.head", "text": "THE WEEK", "note": "Caption on the head of the left board beside the day-end slip; the week number sits at its right. Body face 16 px, ~16 characters." },
     { "key": "dayend.stand.head", "text": "AFTER TONIGHT", "note": "Caption on the head of the right board beside the day-end slip, which shows the bar's star standing once tonight is filed. The night number sits at its right. Body face 16 px, ~16 characters." },

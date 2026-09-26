@@ -3040,7 +3040,10 @@ namespace LastCall.UI
             // is looking hardest.
             SetSkyFraction(_tau);
 
-            if (!Motion.Reduced) StartCoroutine(Ambient());
+            // Started whatever the settings say (2026-09-26): the loop asks Motion.NoFlashes every frame, so FLASHES
+            // or MOTION switched mid-night reaches the room — started only when motion was full, it never stopped
+            // for a later REDUCED and never came back after one.
+            StartCoroutine(Ambient());
         }
 
         /// <summary>
@@ -3812,8 +3815,9 @@ namespace LastCall.UI
             // glow is hung a few lines above and the player drives both together.
             // Motion.Reduced silences it the way it silences the ambient flicker — a screen
             // cutting itself off every few seconds is exactly what that setting is for; the
-            // first advert stays on the wall as a still.
-            if (_tvSr != null && _tvFrames != null && !Motion.Reduced)
+            // first advert stays on the wall as a still. So does FLASHES off (2026-09-26), and
+            // the player asks both every beat (Motion.NoFlashes), so it is started either way.
+            if (_tvSr != null && _tvFrames != null)
                 _tvPlayer = StartCoroutine(PlayTelevision());
             else if (_tvSr != null) SetTvGlow(1f);
             PlaceFixtures();
@@ -4327,36 +4331,55 @@ namespace LastCall.UI
             {
                 if (_tvSr == null || _tvFrames == null) yield break;
 
+                // PARKED (2026-09-26): with FLASHES off or motion reduced the set stands lit on
+                // this advert's still — the picture it had when it was built still, if the room was
+                // dressed that way. Asked at every beat below as well, so a switch thrown mid-night
+                // parks it within a frame step, and the set comes back where it was parked.
+                if (Motion.NoFlashes)
+                {
+                    SetTvFrame(ad, 0);
+                    SetTvGlow(1f);
+                    yield return new WaitForSecondsRealtime(0.25f);
+                    continue;
+                }
+
                 // the advert, PLAYING: its own six frames, round and round for as long as
                 // the spot runs (2026-09-09)
                 SetTvGlow(1f);
                 float until = Time.realtimeSinceStartup + TvAdHold;
                 int frame = 0;
-                while (Time.realtimeSinceStartup < until)
+                while (Time.realtimeSinceStartup < until && !Motion.NoFlashes)
                 {
                     if (_tvSr == null || _tvFrames == null) yield break;
                     SetTvFrame(ad, frame % TvAdFrames);
                     frame++;
                     yield return new WaitForSecondsRealtime(TvAdStep);
                 }
+                if (Motion.NoFlashes) continue;
 
                 // it switches itself off
-                for (int i = 0; i < _tvCols; i++)
+                for (int i = 0; i < _tvCols && !Motion.NoFlashes; i++)
                 {
+                    if (_tvFrames == null) yield break;
                     if (_tvFrames[TvOffRow, i] == null) break;
                     SetTvFrame(TvOffRow, i);
                     // The spill dies with the picture rather than after it.
                     SetTvGlow(1f - (i + 1) / (float)_tvCols);
                     yield return new WaitForSecondsRealtime(TvFrameStep);
                 }
+                if (Motion.NoFlashes) continue;
                 SetTvGlow(0f);
-                yield return new WaitForSecondsRealtime(TvDarkHold);
+                float dark = Time.realtimeSinceStartup + TvDarkHold;
+                while (Time.realtimeSinceStartup < dark && !Motion.NoFlashes)
+                    yield return new WaitForSecondsRealtime(0.25f);
+                if (Motion.NoFlashes) continue;
 
                 // ...and comes back on the NEXT advert, which is why the warm-up plays
                 // before the still rather than after it.
                 ad = (ad + 1) % TvAdCount;
-                for (int i = 0; i < _tvCols; i++)
+                for (int i = 0; i < _tvCols && !Motion.NoFlashes; i++)
                 {
+                    if (_tvFrames == null) yield break;
                     if (_tvFrames[TvOnRow, i] == null) break;
                     SetTvFrame(TvOnRow, i);
                     SetTvGlow((i + 1) / (float)_tvCols);
@@ -4624,6 +4647,9 @@ namespace LastCall.UI
             float nextFlicker = Random.Range(3f, 7f);
             while (true)
             {
+                // FLASHES OFF, OR MOTION REDUCED (2026-09-26): asked every frame, so the switch reaches a
+                // room already standing; the count waits with it.
+                if (Motion.NoFlashes) { yield return null; continue; }
                 nextFlicker -= Time.unscaledDeltaTime * AmbientScale;
                 if (nextFlicker <= 0f && _globalLight != null)
                 {

@@ -90,7 +90,13 @@ namespace LastCall.Core
                 // tarifler çıkmalı"): the page opens at ONE star, after the zero-star drinks,
                 // and it BRINGS the spoon with it (TycoonRun.SpoonUnlocked) — a bar that has not
                 // bought a stirred page has no spoon on its bench and cannot stir.
-                Cocktail("black_russian", "Black Russian", 9, 20, 2, 15, 1, PrepMethod.Stirred, "rocks", null, "no_place_to_hide",
+                // RANK 12 SINCE 2026-09-26: the spoon moved to the ladder's third rung at TWO stars
+                // (2026-09-21, "2. yıldızda kaşık ile karıştırma oyuna eklenecek") and left this page
+                // behind it — a one-star Black Russian could only be shaken, which the judge scores as
+                // no method at all. It follows the spoon to two stars and stays stirred, the verb it
+                // was put here to teach; its coffee liqueur follows it (liqueur_kafa unlockStars 2.0).
+                // Kept in this block rather than moved, so the file's order still tells the history.
+                Cocktail("black_russian", "Black Russian", 12, 20, 2, 15, 1, PrepMethod.Stirred, "rocks", null, "no_place_to_hide",
                     new[] { new PatternRequirement(1, s), new PatternRequirement(1, sw) },
                     locked: true,
                     Band("vodka", .55, .75), Band("coffee_liqueur", .25, .45)),

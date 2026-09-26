@@ -1,10 +1,11 @@
 {
  "deckId": "base_bar",
  "name": "The Base Bar",
- "_comment": "GDD 22: the branded catalogue (41 bottles; the opening shelf is 6, the other 35 are bought across the counter). Tier 1 is the well; tier 2+ are brand upgrades sold on the end-of-night market. A bottle opens on the rung of the FIRST RECIPE that names its style (2026-08-14): tier 2+ climb the tier/price ladder, tier-1 mixers and juices say their rung out loud in unlockStars. Nothing is quarantined any more - held back is fine, hidden is not, because a bottle the market cannot see is one the shop cannot mention. Charges are per full glass (GDD 21 s4). SOFT DRINKS ARE SMALL AND CHEAP (2026-09-04): every mixer and juice is a half-size bottle on the shelf (ShelfBottle.MixerCapacity) and priced 2-4 rather than off the spirit ladder - a cola used to cost what the well rum costs and hold as much as it. ABV and origin are display/dialogue only and must never feed scoring.",
+ "_comment": "GDD 22: the branded catalogue (41 bottles; the opening shelf is the 9 marked \"starting\" - three well spirits, three mixers, lemon, syrup and the lager keg, enough to pour every page the bar opens with (2026-09-26) - and the other 32 are bought across the counter). Tier 1 is the well; tier 2+ are brand upgrades sold on the end-of-night market. A bottle opens on the rung of the FIRST RECIPE that names its style (2026-08-14): tier 2+ climb the tier/price ladder, tier-1 mixers and juices say their rung out loud in unlockStars. Nothing is quarantined any more - held back is fine, hidden is not, because a bottle the market cannot see is one the shop cannot mention. Charges are per full glass (GDD 21 s4). SOFT DRINKS ARE SMALL AND CHEAP (2026-09-04): every mixer and juice is a half-size bottle on the shelf (ShelfBottle.MixerCapacity) and priced 2-4 rather than off the spirit ladder - a cola used to cost what the well rum costs and hold as much as it. THE WELL RUM IS 6 (2026-09-26): at 8 it listed at $16 on the one-star board, above its own $14 tier-2 upgrade, and the board offers the well first. ABV and origin are display/dialogue only and must never feed scoring.",
  "cards": [
   {
    "id": "vodka_astra",
+   "starting": true,
    "name": "Smirkoff Vodka",
    "type": "Spirit",
    "flavor": 4,
@@ -18,6 +19,7 @@
   },
   {
    "id": "gin_boothby",
+   "starting": true,
    "name": "Garden's Gin",
    "type": "Spirit",
    "flavor": 6,
@@ -37,7 +39,7 @@
    "style": "rum",
    "category": "rum",
    "tier": 1,
-   "price": 8,
+   "price": 6,
    "origin": "Bridgetown, Barbados",
    "abv": 37.5,
    "blurb": "Sunlight in a bottle. Wakes people up and warms them through.",
@@ -47,6 +49,7 @@
   },
   {
    "id": "bourbon_redline",
+   "starting": true,
    "name": "John Wanderer Whiskey",
    "type": "Spirit",
    "flavor": 7,
@@ -94,6 +97,7 @@
   },
   {
    "id": "syrup_house",
+   "starting": true,
    "name": "House Syrup",
    "type": "Sweet",
    "flavor": 2,
@@ -108,6 +112,7 @@
   },
   {
    "id": "lemon_fresh",
+   "starting": true,
    "name": "Simple Lemonade",
    "type": "Sour",
    "flavor": 3,
@@ -139,6 +144,7 @@
   },
   {
    "id": "soda_klara",
+   "starting": true,
    "name": "Klara Soda",
    "type": "Bubbly",
    "flavor": 1,
@@ -186,6 +192,7 @@
   },
   {
    "id": "beer_kestrel",
+   "starting": true,
    "name": "Krona Lager",
    "type": "Beer",
    "flavor": 3,
@@ -304,6 +311,7 @@
   },
   {
    "id": "cola_marlow",
+   "starting": true,
    "name": "Loca Cola",
    "type": "Bubbly",
    "flavor": 2,
@@ -320,6 +328,7 @@
   },
   {
    "id": "tonic_quinbury",
+   "starting": true,
    "name": "Quinn's Tonic",
    "type": "Bubbly",
    "flavor": 2,
@@ -433,7 +442,7 @@
    "category": "liqueur",
    "tier": 1,
    "price": 11,
-   "unlockStars": 1.0,
+   "unlockStars": 2.0,
    "locked": false,
    "origin": "Addis Ababa, Ethiopia",
    "abv": 20,

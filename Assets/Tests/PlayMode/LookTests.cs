@@ -57,6 +57,8 @@ namespace LastCall.PlayTests
             LastCall.Game.Ceremony.Pace = SuitePace;
             // The baselines were drawn in English; a Turkish desktop must not repaint them.
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
+            // ...nor in the author's own options (2026-09-26): every setting at its default, nothing saved.
+            LastCall.Game.PlayerOptions.UseDefaultsForSession();
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");

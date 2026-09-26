@@ -20,14 +20,32 @@ namespace LastCall.Game
         /// </summary>
         public IReadOnlyList<IngredientCard> LockedCards { get; }
 
+        /// <summary>
+        /// THE OPENING SHELF, READ FROM THE FILE (2026-09-26, the author: "başlangıç alkollerini, alkol
+        /// geliştirmelerini detaylıca düzenle. Oyuncunun sahip olduğu yıldız seviyesindeki kokteyller ile sahip
+        /// olduğu alkoller doğru orantılı olmalı"). The cards marked <c>starting</c>, in file order — a subset of
+        /// <see cref="Cards"/>, the same instances. It was a list of six ids copied into four places (the
+        /// bootstrap, the sim, two test suites), and the six could not pour two of the six pages the bar opens
+        /// with: nobody had a tonic, a cola or a bourbon, and the first night asked for all three.
+        /// </summary>
+        public IReadOnlyList<IngredientCard> StartingCards { get; }
+
+        private readonly HashSet<string> _startingIds = new HashSet<string>(StringComparer.Ordinal);
+
         public LoadedDeck(string deckId, string name, IReadOnlyList<IngredientCard> cards,
-            IReadOnlyList<IngredientCard> lockedCards = null)
+            IReadOnlyList<IngredientCard> lockedCards = null,
+            IReadOnlyList<IngredientCard> startingCards = null)
         {
             DeckId = deckId;
             Name = name;
             Cards = cards;
             LockedCards = lockedCards ?? System.Array.Empty<IngredientCard>();
+            StartingCards = startingCards ?? System.Array.Empty<IngredientCard>();
+            foreach (var card in StartingCards) _startingIds.Add(card.Id);
         }
+
+        /// <summary>Whether the bar opens with this card on its shelf rather than on the market's board.</summary>
+        public bool IsStarting(IngredientCard card) => card != null && _startingIds.Contains(card.Id);
     }
 
     /// <summary>A parsed fixtures file: what the room can be dressed with, and where.</summary>
@@ -60,12 +78,34 @@ namespace LastCall.Game
 
             var cards = new List<IngredientCard>(dto.cards.Count);
             var locked = new List<IngredientCard>();
+            var starting = new List<IngredientCard>();
             foreach (var card in dto.cards)
             {
                 if (string.IsNullOrWhiteSpace(card.id))
                     throw new FormatException("Deck file has a card with an empty id.");
                 if (card.flavor < 0)
                     throw new FormatException($"Card '{card.id}' has negative flavor.");
+                // THE OPENING SHELF IS THE WELL (2026-09-26). A card the bar opens with is on the shelf
+                // before any gate is asked, so a gate written on one would be a lie the market prints and
+                // nothing keeps: refused here, loudly, rather than quietly handed to a new bar.
+                if (card.starting)
+                {
+                    if (card.locked)
+                        throw new FormatException(
+                            $"Card '{card.id}' is marked starting and locked — the bar cannot open with " +
+                            "a bottle it has not found yet.");
+                    if (card.tier > 1)
+                        throw new FormatException(
+                            $"Card '{card.id}' is marked starting at tier {card.tier} — the opening shelf " +
+                            "is the well; upgrades are bought.");
+                    if (card.unlockStars > 0)
+                        throw new FormatException(
+                            $"Card '{card.id}' is marked starting but waits for {card.unlockStars} stars.");
+                    if (card.tapLevel > 1)
+                        throw new FormatException(
+                            $"Card '{card.id}' is marked starting but needs {card.tapLevel} draught lines — " +
+                            "the bar opens with one.");
+                }
                 // Branded bottles (GDD 22) carry their identity papers; older files without
                 // a style are plain cards and load as before.
                 IngredientInfo info = null;
@@ -116,8 +156,9 @@ namespace LastCall.Game
                     card.flavor, info: info);
                 if (card.locked) locked.Add(parsed);
                 else cards.Add(parsed);
+                if (card.starting) starting.Add(parsed);
             }
-            return new LoadedDeck(dto.deckId, dto.name, cards, locked);
+            return new LoadedDeck(dto.deckId, dto.name, cards, locked, starting);
         }
 
         public static IReadOnlyList<RecipeDefinition> ParseRecipes(string json)
@@ -211,10 +252,18 @@ namespace LastCall.Game
             {
                 if (!seen.Add(glass.id ?? ""))
                     throw new FormatException($"Glassware file lists '{glass.id}' twice.");
+                // THE STEP'S COMFORT IS DATA (2026-09-26): five figures beside the five prices, what each
+                // step adds to the room. REQUIRED in the file — a line that forgot them would be worth
+                // nothing to the room without a word, and the house would no longer sum to five. The
+                // constructor refuses a wrong count or a figure off the scale; this refuses none at all.
+                if (glass.tierComfort == null || glass.tierComfort.Count == 0)
+                    throw new FormatException(
+                        $"Glassware '{glass.id}' has no 'tierComfort': five figures, one per upgrade step.");
                 try
                 {
                     glasses.Add(new GlasswareDefinition(glass.id, glass.name,
-                        glass.profile?.ToArray(), glass.tierPrices?.ToArray(), glass.capacity));
+                        glass.profile?.ToArray(), glass.tierPrices?.ToArray(), glass.capacity,
+                        glass.tierComfort.ToArray()));
                 }
                 catch (ArgumentException e)
                 {
@@ -777,6 +826,11 @@ namespace LastCall.Game
             public bool carbonated;
             public bool locked;
 
+            /// <summary>On the shelf the night the bar opens (2026-09-26). Absent = false = a market
+            /// bottle. Refused on a locked card, a tier above the well, a card with unlockStars and a
+            /// keg that needs a second line.</summary>
+            public bool starting;
+
             /// <summary>
             /// The standing this bottle waits for (2026-08-14, the author: "bazı
             /// meşrubatlarda alkoller gibi sonra açılabilir, örneğin başka yıldız
@@ -1117,6 +1171,8 @@ namespace LastCall.Game
             public string name;
             public List<double> profile;
             public List<int> tierPrices;
+            /// <summary>What each of the five steps adds to the room's comfort (2026-09-26).</summary>
+            public List<double> tierComfort;
             public double capacity;
         }
 

@@ -39,19 +39,22 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void TheGlassLadder_CountsAtHalfItsOldWeight()
+        public void TheGlass_CountsWhatItsLinesSay()
         {
-            // One full glass line used to lift the ceiling by 0.60; it lifts comfort by 0.30.
-            Assert.AreEqual(0.30, VenueComfort.Base(0, 0.60, 0), Eps);
-            Assert.AreEqual(0.5, VenueComfort.GlassComfortShare, Eps);
+            // 2026-09-26: a glass step's comfort is its line's own data (GlasswareDefinition.TierComfort), summed
+            // by the run and handed in whole — the half-share of a private step-cap table is gone.
+            Assert.AreEqual(0.10, VenueComfort.Base(0, 0.10, 0), Eps, "five steps at 0.02, counted as they are");
+            Assert.AreEqual(0.50, VenueComfort.Base(0, 0.50, 0), Eps, "every step of every shipped line");
         }
 
         [Test]
         public void StoolsAndFittings_AddWhatTheySay()
         {
-            Assert.AreEqual(0.50, VenueComfort.Base(0, 0, 2), Eps, "two extra stools, a quarter each");
+            Assert.AreEqual(0.10, VenueComfort.Base(0, 0, 2), Eps, "two extra stools, a twentieth each (2026-09-26)");
+            Assert.AreEqual(0.10, VenueComfort.Base(0, 0, 0, 2), Eps, "two bar-top steps, a twentieth each");
             Assert.AreEqual(0.90, VenueComfort.Base(0.9, 0, 0), Eps, "three steel tables");
             Assert.AreEqual(0.0, VenueComfort.Base(0, 0, -3), Eps, "a bar cannot lose stools it never had");
+            Assert.AreEqual(0.0, VenueComfort.Base(0, 0, 0, -1), Eps, "nor bar-top steps");
         }
 
         [Test]

@@ -270,7 +270,8 @@ namespace LastCall.UI
             };
             // SERVICE +3%, ALWAYS (2026-09-23): the same points a picture on the wall gives while it hangs, and
             // the same heart, so the two read as one number from two places.
-            SetShopBuffs(bar, AlwaysShopBuffs("service", Pct(BarTopServicePct), 0));
+            // ...and its comfort since 2026-09-26: a bar-top step is part of the house's five.
+            SetShopBuffs(bar, AlwaysShopBuffs("service", Pct(BarTopServicePct), VenueComfort.CounterComfort));
             if (run.CounterTier < cfg.MaxAmbienceTier)
             {
                 DressBuyable(bar, cfg.CounterPrice(run.CounterTier), "counter", true,
@@ -301,9 +302,11 @@ namespace LastCall.UI
                 };
                 // A STEP OF GLASS IS SERVICE ON EVERY SERVE (2026-09-23): TycoonRun.Ambience counts the steps of
                 // every line together, so a step lifts every drink the bar serves - not only the ones poured into
-                // this glass, as decor.fit.glass.gain said. Its comfort is half a step cap Core keeps private
-                // (TycoonRun.GlassStepCap), so it is not printed rather than printed from a copy of the table.
-                SetShopBuffs(spec, AlwaysShopBuffs("service", GlassStepServiceFigure(), 0));
+                // this glass, as decor.fit.glass.gain said. ~~Its comfort is half a step cap Core keeps private~~
+                // - it is the line's own data since 2026-09-26 (GlasswareDefinition.TierComfort), so the card
+                // prints the step it sells.
+                double stepComfort = tier - 1 < glass.TierComfort.Count ? glass.TierComfort[tier - 1] : 0;
+                SetShopBuffs(spec, AlwaysShopBuffs("service", GlassStepServiceFigure(), stepComfort));
                 DressBuyable(spec, stepPrice, "glass:" + glass.Id, true,
                     () => run.BuyGlassTier(glass.Id));
                 AddTile(spec); raised++;
@@ -354,8 +357,13 @@ namespace LastCall.UI
             var wornNow = climbed > 0 ? run.WornRung(slot) : null;
             bool typed = wornNow != null && wornNow.Buff != null;
             string does = typed ? LadderBuffWords(run, wornNow) : null;
+            // THE CLIMBED TOTAL AGAINST THE LADDER'S TOP (2026-09-26): "0.35 OF 0.64 COMFORT" - how much of
+            // this ladder's comfort the room already has, beside the cards that now print what each rung ADDS.
+            double ladderTop = run.LadderComfort(slot);
             string worth = top == null ? "" : (typed ? null : ToolWords(run, top, brief: true)) ?? (top.Comfort > 0
-                ? UIText.T("decor.comfort", ("comfort", top.Comfort.ToString("0.0#", CultureInfo.InvariantCulture))) : "");
+                ? UIText.T("decor.comfort_of",
+                    ("comfort", top.Comfort.ToString("0.00", CultureInfo.InvariantCulture)),
+                    ("top", ladderTop.ToString("0.00", CultureInfo.InvariantCulture))) : "");
             if (does != null) worth = worth.Length > 0 ? worth + "  ·  " + does : does;
             status.text = total > 0
                 ? (climbed == 0 ? UIText.T("decor.ladder.nothing_fitted")
@@ -496,8 +504,10 @@ namespace LastCall.UI
                          : where != null && where.OnCounter ? UIText.T("decor.card.place_counter")
                          : UIText.T("decor.card.place_room");
             string tool = ToolWords(run, f);
-            string comfort = f.Comfort > 0
-                ? UIText.T("decor.comfort", ("comfort", f.Comfort.ToString("0.0#", CultureInfo.InvariantCulture))) : null;
+            // What this rung ADDS to the room (2026-09-26), not the absolute figure it carries.
+            double gain = run.ComfortGain(f);
+            string comfort = gain > 0
+                ? UIText.T("decor.comfort", ("comfort", gain.ToString("0.0#", CultureInfo.InvariantCulture))) : null;
             string fixtureName = UIText.Data("fixture", f.Id, "name", f.Name);
             var spec = new TileSpec
             {
