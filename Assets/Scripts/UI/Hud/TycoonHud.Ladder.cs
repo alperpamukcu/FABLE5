@@ -131,13 +131,18 @@ namespace LastCall.UI
             public readonly float Seal;         // the seal's scale
             public readonly float Wear;         // how used the stock is: foxing, a ring, the folds (1 = a docket in a drawer)
             public readonly int Ornament;       // 0 plain, 1 a chain of diamonds along the gilt, 2 the chain with rosettes
+            public readonly int Stock;          // which drawn sheet: 0 the worn docket, 1 the clean stock, 2 the ivory laid
+            public readonly Color Tint;         // the drawn sheet's grade tint (white = as it was painted)
+            public readonly float DrawnWear;    // code wear laid OVER the drawn sheet, whose own wear is baked in
 
             public CertLook(Color paper, Color rule, float ruleW, bool innerRule, bool brackets, Color trim,
-                            float pattern, bool gilt, bool ribbons, float seal, float wear = 0f, int ornament = 0)
+                            float pattern, bool gilt, bool ribbons, float seal, float wear = 0f, int ornament = 0,
+                            int stock = 0, Color? tint = null, float drawnWear = 0f)
             {
                 Paper = paper; Rule = rule; RuleW = ruleW; InnerRule = innerRule; Brackets = brackets;
                 Trim = trim; Pattern = pattern; Gilt = gilt; Ribbons = ribbons; Seal = seal;
                 Wear = wear; Ornament = ornament;
+                Stock = stock; Tint = tint ?? Color.white; DrawnWear = drawnWear;
             }
         }
 
@@ -152,23 +157,35 @@ namespace LastCall.UI
             // düzelecek ve daha premium bir sertifikaya dönüşecek"). The grey Cream ramp is gone from the sheet: it is the
             // slip's own warm white now (TycoonHud.BillPaper), yellowed and handled at the bottom of the ladder and
             // cleaner, then ivory, then ornamented as the bar climbs.
+            // ...AND THE STOCK IS PAINTED NOW (2026-09-26, the author: "sertifika arkaplanı için pixellabden
+            // üretim yapabilirsin"): three drawn sheets carry the same ramp — cert_paper_worn (its foxing and
+            // blotches baked in) for the docket rungs, cert_paper_clean for the slip's white, cert_paper_ivory
+            // (laid lines) for the top of the ladder. Stock picks the sheet, Tint steps the grade inside a
+            // sheet, DrawnWear lays the code ring-and-folds over only the handled grades. The flat colours
+            // stay what they were, as the fallback of a project without the drawings.
             var slip = BillPaper;
             var yellowed = new Color(slip.r * 0.93f, slip.g * 0.90f, slip.b * 0.80f, 1f);
             var ivory = new Color(0.985f, 0.965f, 0.9f, 1f);
             switch (Mathf.Clamp(rung, 0, 6))
             {
                 // 0 stars: a docket out of a drawer. Yellowed, handled, one thin rule, no trim, no seal tails.
-                case 0: return new CertLook(yellowed, UITheme.Night[3], 1f, false, false, UITheme.Night[2], 0.10f, false, false, 0.75f, 1f, 0);
+                case 0: return new CertLook(yellowed, UITheme.Night[3], 1f, false, false, UITheme.Night[2], 0.10f, false, false, 0.75f, 1f, 0,
+                                            0, new Color(0.94f, 0.92f, 0.86f, 1f), 0.5f);
                 // 0.5: still worn, but the corners are cut and the title gets its line.
-                case 1: return new CertLook(Color.Lerp(yellowed, slip, 0.35f), UITheme.Night[3], 2f, false, true, UITheme.Amber[1], 0.14f, false, false, 0.85f, 0.75f, 0);
+                case 1: return new CertLook(Color.Lerp(yellowed, slip, 0.35f), UITheme.Night[3], 2f, false, true, UITheme.Amber[1], 0.14f, false, false, 0.85f, 0.75f, 0,
+                                            0, null, 0.2f);
                 // 1: a second rule inside the first, and the stock is nearly clean.
-                case 2: return new CertLook(Color.Lerp(yellowed, slip, 0.75f), UITheme.Night[3], 2f, true, true, UITheme.Amber[2], 0.18f, false, true, 1f, 0.35f, 0);
+                case 2: return new CertLook(Color.Lerp(yellowed, slip, 0.75f), UITheme.Night[3], 2f, true, true, UITheme.Amber[2], 0.18f, false, true, 1f, 0.35f, 0,
+                                            1, new Color(0.985f, 0.975f, 0.94f, 1f), 0.08f);
                 // 2: the slip's own clean white; the trim brightens to the accent proper.
-                case 3: return new CertLook(slip, UITheme.Night[3], 2f, true, true, UITheme.Amber[3], 0.22f, false, true, 1f, 0.1f, 1);
+                case 3: return new CertLook(slip, UITheme.Night[3], 2f, true, true, UITheme.Amber[3], 0.22f, false, true, 1f, 0.1f, 1,
+                                            1);
                 // 3 stars: a gilt band just inside the edge, a chain of diamonds along it.
-                case 4: return new CertLook(Color.Lerp(slip, ivory, 0.5f), UITheme.Night[2], 3f, true, true, UITheme.Amber[3], 0.26f, true, true, 1.1f, 0f, 1);
+                case 4: return new CertLook(Color.Lerp(slip, ivory, 0.5f), UITheme.Night[2], 3f, true, true, UITheme.Amber[3], 0.26f, true, true, 1.1f, 0f, 1,
+                                            2);
                 // 4 and 5 stars: ivory, gilt, a heavy rule, the chain with rosettes at its corners.
-                default: return new CertLook(ivory, UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.30f, true, true, 1.2f, 0f, 2);
+                default: return new CertLook(ivory, UITheme.Amber[1], 3f, true, true, UITheme.Amber[4], 0.30f, true, true, 1.2f, 0f, 2,
+                                             2);
             }
         }
 
@@ -241,19 +258,42 @@ namespace LastCall.UI
             _ladderPaperImg = _ladderPaper.gameObject.AddComponent<Image>();
             _ladderPaperImg.color = UITheme.Cream[4];
             _ladderPaperImg.raycastTarget = false;
-            // the grain: a speckle tile laid over the cream, faint
-            var grain = NewRect("Grain", _ladderPaper);
-            Place(grain, new Vector2(0.5f, 1f), new Vector2(PaperW - 40f, 640f - 40f), new Vector2(0f, -20f));
-            grain.pivot = new Vector2(0.5f, 1f);
-            var gi = grain.gameObject.AddComponent<Image>();
-            // ONE SHEET, NOT A TILE (2026-09-22). Tiled over the paper this painted BLOTCHES - measured on three
-            // captures: with the grain on, more than half the sheet came back a shade darker in hard-edged blocks
-            // a couple of hundred units wide; with it off the paper was flat. A code-made sprite with no border,
-            // tiled across a thousand units, is not a road this file needs to walk: the flecks are scattered over
-            // one sheet-sized drawing instead, exactly as the lattice of glasses is, and shown at the house's 2x.
-            gi.sprite = PaperGrain(PatternW, PatternH); gi.type = Image.Type.Simple;
-            gi.color = new Color(1f, 1f, 1f, 0.10f); gi.raycastTarget = false;
-            UiAuditExempt.Mark(grain, "paper grain, a speckle tile at 2x under a tenth of alpha");
+            // THE STOCK IS A DRAWING NOW (2026-09-26, the author: "sertifika arkaplanı için pixellabden üretim
+            // yapabilirsin"): the three sheets derived from the PixelLab take - worn, clean, ivory - live on
+            // their OWN exempt child under the paper, never on the Paper root (marking the root would blind the
+            // audit to every heading, star and tile on the sheet). Sliced on a 12px border so the sheet grows
+            // tall without stretching its deckle, at the house's 2x; Regrade swaps the sheet and tints it. A
+            // project without the drawings keeps the flat cream, its code grain and the old ramp, as before.
+            _certStocks = new[] { ItemArt.Load("cert_paper_worn"), ItemArt.Load("cert_paper_clean"), ItemArt.Load("cert_paper_ivory") };
+            bool drawnStock = _certStocks[0] != null && _certStocks[1] != null && _certStocks[2] != null;
+            if (drawnStock)
+            {
+                _ladderPaperImg.enabled = false;   // the drawn sheet is the body; the flat fill is its fallback
+                var stockRt = NewRect("Stock", _ladderPaper);
+                Stretch(stockRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                _ladderStockImg = stockRt.gameObject.AddComponent<Image>();
+                _ladderStockImg.sprite = _certStocks[1];
+                _ladderStockImg.type = Image.Type.Sliced;
+                _ladderStockImg.pixelsPerUnitMultiplier = 0.5f;   // the deckle at exactly 2x
+                _ladderStockImg.raycastTarget = false;
+                UiAuditExempt.Mark(stockRt, "the certificate's stock: PixelLab paper sliced on its deckle at 2x, tinted by the grade");
+            }
+            if (!drawnStock)
+            {
+                // the grain: a speckle tile laid over the cream, faint
+                var grain = NewRect("Grain", _ladderPaper);
+                Place(grain, new Vector2(0.5f, 1f), new Vector2(PaperW - 40f, 640f - 40f), new Vector2(0f, -20f));
+                grain.pivot = new Vector2(0.5f, 1f);
+                var gi = grain.gameObject.AddComponent<Image>();
+                // ONE SHEET, NOT A TILE (2026-09-22). Tiled over the paper this painted BLOTCHES - measured on three
+                // captures: with the grain on, more than half the sheet came back a shade darker in hard-edged blocks
+                // a couple of hundred units wide; with it off the paper was flat. A code-made sprite with no border,
+                // tiled across a thousand units, is not a road this file needs to walk: the flecks are scattered over
+                // one sheet-sized drawing instead, exactly as the lattice of glasses is, and shown at the house's 2x.
+                gi.sprite = PaperGrain(PatternW, PatternH); gi.type = Image.Type.Simple;
+                gi.color = new Color(1f, 1f, 1f, 0.10f); gi.raycastTarget = false;
+                UiAuditExempt.Mark(grain, "paper grain, a speckle tile at 2x under a tenth of alpha");
+            }
             // the watermark: the house's star, large and almost not there, behind the writing
             // THE PATTERN (2026-09-21, the author: "kağıdın arkasında bir desen olsun, kağıdın rengine yakın kokteyl bardağı
             // iconu desenleri"): a lattice of small martini glasses drawn in code, tiled at 2x inside the rules, a step
@@ -635,6 +675,10 @@ namespace LastCall.UI
         private const int PatternW = 492, PatternH = 300;
 
         private Image _ladderWearImg;
+        /// <summary>The drawn stocks (worn, clean, ivory) and the Image that wears them; null when the
+        /// project has no drawings and the flat cream carries the sheet as it used to.</summary>
+        private Sprite[] _certStocks;
+        private Image _ladderStockImg;
         private RectTransform _ladderOrnament;
         private RectTransform _ladderHeadCard;
         private Color _ladderTrim = UITheme.Amber[3], _ladderGiltTrim = UITheme.Amber[3];
@@ -984,7 +1028,13 @@ namespace LastCall.UI
         private void Regrade(int rung)
         {
             var look = LookFor(rung);
-            if (_ladderPaperImg != null) _ladderPaperImg.color = look.Paper;
+            if (_ladderStockImg != null)
+            {
+                // the drawn sheet: the rung's own stock, stepped inside it by the grade's tint
+                _ladderStockImg.sprite = _certStocks[look.Stock];
+                _ladderStockImg.color = look.Tint;
+            }
+            else if (_ladderPaperImg != null) _ladderPaperImg.color = look.Paper;
             if (_ladderPatternImg != null)
                 _ladderPatternImg.color = new Color(UITheme.Cream[2].r, UITheme.Cream[2].g, UITheme.Cream[2].b, look.Pattern);
             foreach (var e in _ladderRuleOuterEdges)
@@ -1017,7 +1067,8 @@ namespace LastCall.UI
             if (_ladderComfortLabel != null) _ladderComfortLabel.color = UITheme.Amber[4];
             if (_ladderServiceLabel != null) _ladderServiceLabel.color = UITheme.Amber[4];
             if (_ladderSeal != null) _ladderSealGrade = look.Seal;
-            if (_ladderWearImg != null) _ladderWearImg.color = new Color(1f, 1f, 1f, look.Wear);
+            if (_ladderWearImg != null)
+                _ladderWearImg.color = new Color(1f, 1f, 1f, _ladderStockImg != null ? look.DrawnWear : look.Wear);
             _ladderTrim = inkTrim;   // the group heads are words too
             _ladderGiltTrim = look.Trim;   // ...and the worked border is gilt, so it keeps the light accent
             _ladderOrnamentGrade = look.Ornament;

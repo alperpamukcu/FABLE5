@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Sertifika Kağıdı</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#241830; --panel:#1A1023; --ink:#F2E8D5; --quiet:#C9BCA8; --accent:#E8A33D; --line:#362447; }
+  body { background:var(--bg); color:var(--ink); font-family:Segoe UI, sans-serif; margin:0; padding:24px 16px 64px; }
+  main { max-width:980px; margin:0 auto; }
+  h1 { color:var(--accent); font-size:28px; margin:8px 0 4px; }
+  h2 { color:var(--accent); font-size:19px; margin:40px 0 8px; border-bottom:1px solid var(--line); padding-bottom:6px; }
+  p, li { line-height:1.55; color:var(--ink); }
+  .quiet { color:var(--quiet); font-size:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; margin:12px 0; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  .row .card { flex:1 1 280px; }
+  img { image-rendering:pixelated; max-width:100%; height:auto; display:block; }
+  .paper { background:#0D0813; padding:10px; border-radius:6px; }
+  figcaption { color:var(--quiet); font-size:13px; margin-top:8px; }
+  figure { margin:0; }
+  code { background:#0D0813; color:#F5C97B; padding:1px 5px; border-radius:4px; font-size:13px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  td, th { border:1px solid var(--line); padding:6px 10px; text-align:left; }
+  th { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Sertifika kağıdı — PixelLab stoğu</h1>
+  <p class="quiet">2026-09-26 · "Sertifika tasarımlarının görsellerini en baştan tekrar oluştur; arkaplan için pixellabden üretim yapabilirsin." · 3 çağrı × 20 = 60 üretim harcandı, iş başına tek aday.</p>
+
+  <h2>Ne değişti</h2>
+  <p>Sertifikanın kağıdı artık düz renk + kod grain değil: faturanın (<code>bill_sheet</code>) ailesinden,
+  PixelLab'den üretilmiş ÜÇ stok. Kademe tablosu (<code>CertLook</code>) aynı kaldı — çerçeveler, yaldız,
+  rozetler, mühür, tipografi hiç dokunulmadı; yalnız kağıdın kendisi çizime döndü. Çizimler yoksa eski düz
+  kağıt aynen geri gelir (fallback korunuyor).</p>
+  <table>
+    <tr><th>Basamak</th><th>Stok</th><th>Üstüne</th></tr>
+    <tr><td>0★ ve 0.5★</td><td><code>cert_paper_worn</code> — sararmış, benekli, kenarı esmer</td><td>0★'da bir ton kirli tint + kod yıprnaması (halka, katlar) 0.5; 0.5★'da 0.2</td></tr>
+    <tr><td>1★ ve 2★</td><td><code>cert_paper_clean</code> — fişin sıcak beyazı, seyrek elyaf beneği</td><td>1★'da hafif sıcak tint + 0.08 yıpranma; 2★ temiz</td></tr>
+    <tr><td>3★ / 4★ / 5★</td><td><code>cert_paper_ivory</code> — fildişi, yatık (laid) çizgili</td><td>Yaldız bandı, elmas zinciri, rozetler kademeden geliyor</td></tr>
+  </table>
+
+  <h2>Üç stok (512×269, 12px dilim kenarı, ekranda 2x)</h2>
+  <div class="row">
+    <div class="card"><figure><div class="paper"><img src="img/cert_paper_worn.png" alt="worn"></div><figcaption><b>worn</b> — sararmış ton, pişmiş beneklenme + foxing (mürekkepleri worn take'inden örneklendi), esmer kenar. 24 ton.</figcaption></figure></div>
+    <div class="card"><figure><div class="paper"><img src="img/cert_paper_clean.png" alt="clean"></div><figcaption><b>clean</b> — fişin sıcak beyazı, seyrek elyaf beneği. 16 ton.</figcaption></figure></div>
+    <div class="card"><figure><div class="paper"><img src="img/cert_paper_ivory.png" alt="ivory"></div><figcaption><b>ivory</b> — donörün kendi fildişisi + 7 satırda bir yatık çizgi. 15 ton.</figcaption></figure></div>
+  </div>
+
+  <h2>Oyunda, yedi basamak</h2>
+  <div class="row">
+    <div class="card"><figure><img src="img/rung0.png" alt="0 yıldız"><figcaption>0★ — çekmeceden çıkmış ruhsat: en kirli hâl</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung1.png" alt="0.5 yıldız"><figcaption>0.5★ — hâlâ yıpranık, köşeler kesildi</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung2.png" alt="1 yıldız"><figcaption>1★ — temiz stoğa geçiş, ikinci çizgi</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung3.png" alt="2 yıldız"><figcaption>2★ — fişin beyazı, vurgu parladı</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung4.png" alt="3 yıldız"><figcaption>3★ — fildişi + yaldız bandı + elmas zinciri</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung5.png" alt="4 yıldız"><figcaption>4★ — rozetli köşeler</figcaption></figure></div>
+    <div class="card"><figure><img src="img/rung6.png" alt="5 yıldız"><figcaption>5★ — merdivenin tepesi</figcaption></figure></div>
+  </div>
+
+  <h2>Üretimin hikâyesi (kayıt)</h2>
+  <div class="card">
+    <p>Üç ayrı full-bleed kağıt istendi (512×304, <code>create_image_pro</code>, fatura referanslı).
+    Alfa kesici soluk kağıdı arkaplan sanıp yedi: worn %4 opak döndü (yalnız benekler), clean %0.
+    Yalnız fildişi take sağlam geldi — o da içi TEK düz renk, faturanın kendi dili (düz stok + tırtıklı kenar).</p>
+    <p>Reçete zaten "jeneratör STOĞU boyar, silueti KOD keser" dediği için ek üretim yapılmadı:
+    fildişi take donör oldu — tırtığı ayna-tekrarla 512 genişliğe döşendi (ekranda tam 2x kalsın diye),
+    üç stok ondan türedi (<code>Tools/cert_paper/derive.py</code>): clean çarpım, worn çarpım + tohumlu
+    beneklenme + worn take'in kendi leke mürekkepleri + esmer kenar, ivory + yatık çizgiler.
+    Kenar bandı 12px dilimli; sayfa uzarken tırtık esnemiyor.</p>
+    <div class="row">
+      <div class="card"><figure><div class="paper"><img src="img/raw_ivory_take.png" alt="ivory take"></div><figcaption>Donör: fildişi take (tek sağlam gelen)</figcaption></figure></div>
+      <div class="card"><figure><div class="paper"><img src="img/raw_worn_take.png" alt="worn take"></div><figcaption>Worn take: gövde şeffaf döndü; lekeleri mürekkep paleti olarak kullanıldı</figcaption></figure></div>
+    </div>
+    <p class="quiet">Tekrar üretmek: <code>Tools/cert_paper/gen.py queue|fetch</code> → <code>derive.py</code> → <code>ship.py write</code>.
+    Beğenilmezse tek yeni aday üretilir (yazar kuralı).</p>
+  </div>
+</main>
+</body>
+</html>
