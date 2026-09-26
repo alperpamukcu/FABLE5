@@ -1031,6 +1031,14 @@ SONGS = {
                        form=[('intro', 4, 'pad ep', (0.4, 0.6)), ('verse', 16, 'pad ep bass drums'),
                              ('chorus', 16, 'pad ep bass drums lead'), ('verse2', 8, 'ep bass drums'),
                              ('outro', 8, 'pad ep', (0.6, 0.3))]),
+    # menu_1: the front door (2026-09-27, the title screen) - a warm I-vi-IV-V in G at a stroll,
+    # pads and a sixteenth arp under a soft lead, brushes-soft drums only in the chorus: inviting,
+    # unhurried, and it loops all evening on the menu without asking for attention.
+    'menu_1': dict(seed=2106, bpm=88, key=55, mode='major', prog=[0, 5, 3, 4], drums='soft', bass='long',
+                   arp=16, lead='soft', ep='comp', duck=0.0,
+                   form=[('intro', 8, 'pad arp', (0.25, 0.7)), ('verse', 16, 'pad arp ep bass'),
+                         ('chorus', 16, 'pad arp ep bass drums lead'), ('break', 8, 'pad ep', (0.55, 0.55)),
+                         ('chorus2', 16, 'pad arp ep bass drums lead'), ('outro', 8, 'pad arp', (0.7, 0.25))]),
     # dayend_3: counting the tips - I-vi-ii-V in A on a lighter disco, strings in the chorus
     'dayend_3': dict(seed=2005, bpm=112, key=57, mode='major', prog=[0, 5, 1, 4], swing=(0.25, 0.53), drums='nudisco',
                      bass='funk', arp=8, lead='soft', ep='disco', pad_size=5,

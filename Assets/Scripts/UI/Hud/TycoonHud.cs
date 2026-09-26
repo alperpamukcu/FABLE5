@@ -1681,6 +1681,7 @@ namespace LastCall.UI
             StepCurtain();
             StepMarketKeyLamp();
             StepPatronPrewarm();     // one person's clips a frame (2026-09-26, the weight pass)
+            StepMenuFade();          // the title comes up out of the dark (2026-09-27)
 
             var run = Run;
             if (run == null) return;

@@ -1895,6 +1895,28 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.125 · Giriş ekranı boyandı: sokaktan bar, alt başlık, kapı teması, karanlıktan açılış (2026-09-27)
+
+Yazar: “Oyuna AAA bir oyun giriş ekranı koy ayarlar müzikler vs. giriş ekranını doldur bir pixelart
+arkaplan üstünde oyunun ismi vs.”
+
+- **Boyalı cephe** (`menu_title_bg`, 320×180, tek PixelLab pro çağrısı = 20 üretim, 55 renge snap,
+  22 renk): karşı kaldırımdan barın önü, alacakaranlık — pembe-krem bina alt üçlükte, kapının
+  üstünde BOŞ tabela (adı oyun yazar), erguvani-magenta-amber bantlı koca gökyüzü, iki palmiye,
+  kaldırımda üstü açık bir '80'ler arabası, sağda okyanus parıltısı, tek erken yıldız. Oyunda
+  TAM 4x (tasarım karesi 1280×720); resim tüm tıklamaları yakalar. Resimsiz derlemede eski
+  perde+oda geri gelir. Markiz gökyüzüne, tuşlar binaya düşer.
+- **Ad + alt başlık:** markizdeki MALIBU CLUB'ın altına 8px "COCKTAIL BAR SIMULATOR"
+  (NAME_CLEARANCE'ın kuyruğu; özel ad gibi çevrilmez, her dilde aynı).
+- **Kapının kendi plağı:** `music_menu_1` (Tools/music_synth.py, 'menu_1': Sol majör I-vi-IV-V,
+  88 bpm, ped+16'lık arp+EP, nakaratta yumuşak davul ve lead; 200 sn, −18 LUFS). Seats'in müzik
+  satırı menü yukarıdayken "menu" mood'unu çalar; Sfx'in ödünç zinciri bilinmeyen mood'u geceye
+  verdiği için temasız derleme barın kendi listesiyle kalır. Ana menü teması eksiği
+  (GELISTIRME §0.0-C4) kapandı.
+- **Karanlıktan açılış:** menü paneli CanvasGroup ile 0.6 sn'de (ölçeksiz saat) ağarır;
+  `Motion.Reduced` açıkken anında. `StepMenuFade` koşulsuz bölgede, ısınmanın yanında.
+- Bakış testi `menu.png` yeni cepheyle yeniden kutsandı; iki takım yeşil.
+
 ### 9.124 · Yük geçişi: kadro tembelleşti, ölü sanat gitti, şablon artıkları söküldü (2026-09-26)
 
 Yazar: “projeyi optimize ettikten ve gereksiz yükleri atıp” — 4. adım. Kanıt tabanı

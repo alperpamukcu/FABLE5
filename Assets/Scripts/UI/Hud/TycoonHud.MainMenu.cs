@@ -25,6 +25,8 @@ namespace LastCall.UI
     {
         private RectTransform _menuPanel;
         private RectTransform _menuColumn;
+        private CanvasGroup _menuFade;
+        private float _menuFadeT = 1f;
         private bool _menuOffered;          // one offer per HUD life: the cold boot's
         private bool _settingsFromMenu;     // the window came from the menu, so BACK returns there
 
@@ -42,12 +44,37 @@ namespace LastCall.UI
             _menuPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_menuPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // The room stays, darkened — the pause family's scrim, catching every click.
-            var dim = NewRect("Dim", _menuPanel);
-            Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var dimImg = dim.gameObject.AddComponent<Image>();
-            dimImg.color = MenuScrim;
-            dimImg.raycastTarget = true;
+            // THE PAINTED FRONT (2026-09-27, the author: "AAA bir oyun giriş ekranı ... bir
+            // pixelart arkaplan üstünde oyunun ismi"): the whole field is one generated dusk —
+            // the bar from across the street, the sunset the marquee hangs in — 320x180 shown
+            // at exactly 4x (the design frame). It catches every click, so the scrim is only
+            // the fallback for a build without the picture, where the dimmed live room stands
+            // in as it did before.
+            var titleArt = MenuPack.Art("menu_title_bg");
+            if (titleArt != null)
+            {
+                var back = NewRect("Backdrop", _menuPanel);
+                Stretch(back, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var backImg = back.gameObject.AddComponent<Image>();
+                backImg.sprite = titleArt;
+                backImg.type = Image.Type.Simple;
+                backImg.raycastTarget = true;
+                UiAuditExempt.Mark(back, "the title screen's generated picture, "
+                    + titleArt.rect.width + "x" + titleArt.rect.height + " shown at exactly 4x");
+            }
+            else
+            {
+                // The room stays, darkened — the pause family's scrim, catching every click.
+                var dim = NewRect("Dim", _menuPanel);
+                Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var dimImg = dim.gameObject.AddComponent<Image>();
+                dimImg.color = MenuScrim;
+                dimImg.raycastTarget = true;
+            }
+
+            // The title comes up out of the dark rather than snapping on (0.6 s, unscaled) —
+            // and instantly under reduced motion, which is that setting's whole promise.
+            _menuFade = _menuPanel.gameObject.AddComponent<CanvasGroup>();
 
             // The build's number, small and out of the way — the one place the game says
             // which build it is without a dev panel.
@@ -91,7 +118,14 @@ namespace LastCall.UI
                 }
                 if (title != null) title.gameObject.AddComponent<NeonFlicker>();
                 SunsetRules(_menuColumn, y - win.y - 8f, MenuColW - 60f);
-                y -= win.y + 34f;
+                // The store's own subtitle, small under the board (NAME_CLEARANCE: "Malibu
+                // Club: Cocktail Bar Simulator") — a proper noun's tail, the same in every
+                // language, like the name over it.
+                var subtitle = NewText("Subtitle", _menuColumn, _body, 8, TextAnchor.UpperCenter, UITheme.Cream[3]);
+                Place(subtitle.rectTransform, new Vector2(0.5f, 1), new Vector2(MenuColW, 12), new Vector2(0, y - win.y - 22f));
+                subtitle.rectTransform.pivot = new Vector2(0.5f, 1);
+                subtitle.text = "COCKTAIL BAR SIMULATOR";
+                y -= win.y + 48f;
             }
             else
             {
@@ -169,6 +203,16 @@ namespace LastCall.UI
             RebuildMenuColumn();
             _menuPanel.gameObject.SetActive(true);
             SetPaused(true);
+            _menuFadeT = Motion.Reduced ? 1f : 0f;
+            if (_menuFade != null) _menuFade.alpha = Motion.Reduced ? 1f : 0f;
+        }
+
+        /// <summary>The title's fade, on the unscaled clock — the menu holds the game's own.</summary>
+        private void StepMenuFade()
+        {
+            if (_menuFade == null || _menuFadeT >= 1f || !MenuUp) return;
+            _menuFadeT = Mathf.Min(1f, _menuFadeT + Time.unscaledDeltaTime / 0.6f);
+            _menuFade.alpha = _menuFadeT;
         }
 
         private void HideMainMenu()

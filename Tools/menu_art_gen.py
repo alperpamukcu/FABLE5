@@ -93,6 +93,17 @@ SETTINGS_BG = ('A pixel-art background panel, wider than tall, for the settings 
                'text, letters, numbers, logo, people or buttons; the panel fills the whole canvas edge to edge. Use '
                'only the colours of the palette reference.')
 
+TITLE_BG = ('A wide pixel-art scene, much wider than tall: the front of a small 1980s Miami cocktail bar at '
+            'dusk, seen straight on from across the empty street. The low pink-and-cream building runs along the '
+            'bottom third with warm amber light spilling from its door and window; a dark blank sign board with a '
+            'thin unlit neon tube around it hangs over the door, left empty for a title. Above the building a huge '
+            'calm gradient sunset sky fills the picture in deep plum, magenta and amber bands, with two thin dark '
+            'clouds and one early star. Two tall dark palm silhouettes lean in from the left and right edges; a '
+            'strip of dark ocean glints behind the building on the right; a 1980s convertible is parked at the '
+            'kerb. The sky and the street are calm, even areas - a game title and a column of menu buttons are '
+            'laid over them. ' + FLAT + ' No text, letters, numbers, logo or people; the scene fills the whole '
+            'canvas edge to edge. Use only the colours of the palette reference.')
+
 ICON_TAIL = ('single chunky game menu icon, pixel art, a polished brass and gold metal object seen straight on, '
              'bevelled, light from the upper left and darker on the lower right, one pixel dark outline, centred, '
              'filling most of the canvas, transparent background, no text, no letters, no glow.')
@@ -226,6 +237,11 @@ def take(families):
         # 800x590..604 plate), one candidate (the one-alternative rule)
         _queue('settings_bg', 'create_image_pro', {'description': SETTINGS_BG, 'width': 400, 'height': 304,
                                                    'no_background': False, 'seed': 5304, 'reference_images': refs})
+    if 'title_bg' in families:
+        # 2026-09-27, the author: "AAA bir oyun giris ekrani ... bir pixelart arkaplan ustunde oyunun ismi" - the
+        # title screen's whole backdrop, 320x180 shown at exactly 4x (the design frame, 1280x720), one candidate
+        _queue('title_bg', 'create_image_pro', {'description': TITLE_BG, 'width': 320, 'height': 180,
+                                                'no_background': False, 'seed': 5305, 'reference_images': refs})
     if 'header' in families:
         _queue('header', 'create_image_pro', {'description': HEADER, 'width': 168, 'height': 44,
                                               'no_background': False, 'seed': 5302, 'reference_images': refs})

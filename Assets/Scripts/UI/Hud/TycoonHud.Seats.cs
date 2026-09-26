@@ -4141,7 +4141,10 @@ namespace LastCall.UI
             // The bar bed (P17): always on, muffled while a stage or the licence is open — and, since 2026-09-15, the
             // music over it, which follows the night (MusicMood). The mood goes first: the bed is chosen by it.
             bool attention = (_flow != null && _flow.IsOpen) || (_idRoot != null && _idRoot.gameObject.activeSelf);
-            Sfx.Music(MusicMood(run), attention);
+            // The front door has its own record on (2026-09-27): the title screen plays the
+            // "menu" mood — music_menu_1 — and Sfx's borrow chain hands any missing mood to
+            // the night's list, so a build without the theme simply keeps the bar's own.
+            Sfx.Music(MenuUp ? "menu" : MusicMood(run), attention);
             Sfx.Ambience(ducked: attention);
 
             // 3) Render each stool from its assigned patron.

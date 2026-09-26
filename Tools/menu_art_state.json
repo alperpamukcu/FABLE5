@@ -142,5 +142,12 @@
   "pngs": [
    "AssetPipeline/staging/menu_art/raw/settings_bg_0.png"
   ]
+ },
+ "title_bg": {
+  "job_id": "1901a5f1-25c3-4189-9150-6a9343045ded",
+  "tool": "create_image_pro",
+  "pngs": [
+   "AssetPipeline/staging/menu_art/raw/title_bg_0.png"
+  ]
  }
 }
