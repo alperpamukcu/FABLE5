@@ -1610,6 +1610,7 @@ namespace LastCall.UI
             _lastFixtureCount = -1;   // force the dressing to re-sync against the new run
             _lastShelfMark = 0;       // ...and the stock, which keeps its own signal now
             ApplyBarLook();
+            OfferMainMenuAtBoot();    // the front door, once, at the cold boot (2026-09-26)
         }
 
         private string _appliedFinish;
@@ -2952,7 +2953,11 @@ namespace LastCall.UI
         {
             var run = Run;
             int leaving = run.Day;             // read BEFORE the roll: the curtain names both
-            run.ContinueToNextDay();
+            // THE GAME SAVES ITSELF HERE (2026-09-26, SaveStore): the market's purchases are
+            // in, the night is filed, and Core hands the dawn out before dealing tomorrow.
+            // Only this call passes the door — the sim and the tests save nothing.
+            run.ContinueToNextDay(LastCall.Game.SaveStore.Autosave);
+            if (run.Phase == TycoonPhase.Closed) LastCall.Game.SaveStore.Clear();
             _dayEndPanel.gameObject.SetActive(false);
             // The market is a sheet like any other and the next night must not open behind
             // one — nor behind a cellar somebody left open while they were shopping.

@@ -41,6 +41,19 @@ namespace LastCall.Core
             PourRate = pourRate > 0 ? pourRate : (keg ? KegPourRate : BottlePourRate);
         }
 
+        /// <summary>The save layer's door (2026-09-26): a bottle put back exactly as it
+        /// stood — its tier, its stretched capacity and what was left in it — without
+        /// replaying the upgrades that got it there.</summary>
+        internal ShelfBottle(IngredientCard ingredient, double capacity, double pourRate,
+            int tier, double remaining)
+        {
+            Ingredient = ingredient ?? throw new ArgumentNullException(nameof(ingredient));
+            Capacity = capacity;
+            PourRate = pourRate;
+            Tier = tier;
+            Remaining = Math.Max(0, Math.Min(remaining, capacity));
+        }
+
         /// <summary>
         /// What a vessel of this holds when nobody says otherwise: a keg, a small mixer
         /// bottle, or a bottle. Public because the SHOP has to say the same number the shelf

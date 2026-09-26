@@ -132,6 +132,7 @@ namespace LastCall.UI
             BuildSettings(root);
             BuildLadderWindow(root); // the rank's window (2026-09-21), under the pause menu
             BuildPauseMenu(root);    // Escape with nothing open (2026-09-15)
+            BuildMainMenu(root);     // the front door, over everything (2026-09-26)
             BuildOrderTip(root);
             BuildNote(root);         // the pinned recipe note, over the benches (2026-09-25)
 

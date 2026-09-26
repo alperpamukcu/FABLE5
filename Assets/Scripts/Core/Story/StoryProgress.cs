@@ -174,6 +174,33 @@ namespace LastCall.Core
             DueDay = Math.Max(Current.Day, back);
         }
 
+        /// <summary>The save layer reads the arc's position out (2026-09-26).</summary>
+        internal void CaptureInto(out int at, out int dueDay, out int kept, out int missed,
+            out int turnedAway, out bool currentAsked, out List<StoryCue> taught,
+            out List<string> keptIds, out Dictionary<string, RegularState> people)
+        {
+            at = _at; dueDay = DueDay; kept = Kept; missed = Missed;
+            turnedAway = TurnedAway; currentAsked = CurrentAsked;
+            taught = new List<StoryCue>(_taught);
+            keptIds = new List<string>(_keptIds);
+            people = new Dictionary<string, RegularState>(_people, StringComparer.Ordinal);
+        }
+
+        /// <summary>…and writes it back on a fresh instance over the same arc (2026-09-26).</summary>
+        internal void RestoreFrom(int at, int dueDay, int kept, int missed, int turnedAway,
+            bool currentAsked, IEnumerable<StoryCue> taught, IEnumerable<string> keptIds,
+            IEnumerable<KeyValuePair<string, RegularState>> people)
+        {
+            _at = at; DueDay = dueDay; Kept = kept; Missed = missed;
+            TurnedAway = turnedAway; CurrentAsked = currentAsked;
+            _taught.Clear();
+            if (taught != null) foreach (var cue in taught) _taught.Add(cue);
+            _keptIds.Clear();
+            if (keptIds != null) foreach (var id in keptIds) _keptIds.Add(id);
+            _people.Clear();
+            if (people != null) foreach (var pair in people) _people[pair.Key] = pair.Value;
+        }
+
         /// <summary>
         /// The run's memory of a story person. One <see cref="RegularState"/> per character,
         /// made the first night they come in and kept afterwards — so a collector on his

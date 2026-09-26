@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "HOVEDMENU",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "AFTEN {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "DETTE GEMTE SPIL ER FRA EN ÆLDRE BAR",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

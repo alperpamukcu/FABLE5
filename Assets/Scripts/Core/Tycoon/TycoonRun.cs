@@ -508,8 +508,9 @@ namespace LastCall.Core
         // ── the perfect pour: what this run has LEARNED (2026-08-20) ────────────
         // Run-lifetime like _boughtRecipes, and deliberately never reset by the day flip or
         // by a refund: a refund takes the PAGE back, not the night you spent learning the
-        // pour. Nothing here survives the run — there is no save layer, and knowledge that
-        // outlived a seed would make two identical seeds play differently.
+        // pour. Run-lifetime and SAVED with the run (2026-09-26, TycoonRun.Save.cs): a resumed
+        // bar remembers what its hands learned, and two identical seeds still play identically
+        // because the snapshot carries the streams along with the knowledge.
 
         private readonly HashSet<string> _perfectedRecipes = new HashSet<string>();
         private readonly Dictionary<string, RecipeBestMake> _bestMakes =
@@ -3311,7 +3312,15 @@ namespace LastCall.Core
         /// Closes the books on today and opens tomorrow — or the doors for good: three
         /// consecutive red days end the run (GDD 23 §6).
         /// </summary>
-        public DayResult ContinueToNextDay()
+        public DayResult ContinueToNextDay() => ContinueToNextDay(null);
+
+        /// <summary>
+        /// As above, with the save layer's door (2026-09-26, TycoonRun.Save.cs): at the one
+        /// quiescent instant of the loop — books closed, counters reset, job settled, the new
+        /// floor NOT yet dealt — <paramref name="atDawn"/> is handed the run written down.
+        /// Only the scene's own call passes it; the sim and the tests save nothing.
+        /// </summary>
+        public DayResult ContinueToNextDay(Action<RunSnapshot> atDawn)
         {
             EnsurePhase(TycoonPhase.DayEnd);
             // Every one of tonight's leavers files a rating on the way out -- storm-offs
@@ -3406,6 +3415,10 @@ namespace LastCall.Core
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             SettleTheJob();
             ResetVessels();
+            // THE SAVE POINT. Everything after this line is re-derived by a restore — the
+            // floor from the streams, the market from the shelf — so the snapshot is taken
+            // exactly here and nowhere else.
+            atDawn?.Invoke(BuildSnapshot());
             Floor = NewFloor(Rating.Average);
             Phase = TycoonPhase.DayOpen;
             TeachAtOpen();

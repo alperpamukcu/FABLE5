@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "MENIU PRINCIPAL",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "SEARA {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "SALVAREA E DINTR-UN BAR MAI VECHI",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

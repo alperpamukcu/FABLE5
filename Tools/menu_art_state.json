@@ -135,5 +135,12 @@
   "pngs": [
    "AssetPipeline/staging/menu_art/raw/mi_settings_0.png"
   ]
+ },
+ "settings_bg": {
+  "job_id": "79c04182-102d-47b5-a4c7-d84c54238c20",
+  "tool": "create_image_pro",
+  "pngs": [
+   "AssetPipeline/staging/menu_art/raw/settings_bg_0.png"
+  ]
  }
 }

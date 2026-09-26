@@ -73,8 +73,17 @@ namespace LastCall.UI
             float y = -96f;
             var keys = new System.Collections.Generic.List<RectTransform>();
             keys.Add(PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", MenuPack.Tone.Orange, ref y, TogglePause));
-            keys.Add(PauseKey(plate, "SAVE", UIText.T("chrome.pause.save"), "save", MenuPack.Tone.Grey, ref y, null));
-            keys.Add(PauseKey(plate, "CONTINUE", UIText.T("chrome.pause.continue"), "lock", MenuPack.Tone.Grey, ref y, null));
+            // SAVE and CONTINUE stood here greyed SOON since 2026-09-15. The game saves itself
+            // at every dawn now (SaveStore) and the menu's CONTINUE reads it back, so the two
+            // promised keys are kept by the system rather than by keys — MAIN MENU is the way
+            // to it, and tonight is lost the way START OVER always said it would be.
+            keys.Add(PauseKey(plate, "MAIN MENU", UIText.T("chrome.pause.main_menu"), "home", MenuPack.Tone.Grey, ref y, () =>
+            {
+                _pausePanel.gameObject.SetActive(false);
+                _settingsFromPause = false;
+                Sfx.Play("menu_close", 0.6f);
+                ShowMainMenu();      // the night stays held; the save on disk is last dawn's
+            }));
             keys.Add(PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", MenuPack.Tone.Grey, ref y, () =>
             {
                 Sfx.Play("click");
@@ -521,7 +530,7 @@ namespace LastCall.UI
         /// close; nothing here runs while the settings window listens for a binding.</summary>
         private void UpdateHotkeys()
         {
-            if (_bindListening != null || AnySheetOpen() || Showing(_pausePanel)) return;
+            if (_bindListening != null || AnySheetOpen() || Showing(_pausePanel) || MenuUp) return;
             var run = Run;
             if (run == null) return;
             if (Keys.Pressed(KeyAction.NextTrack)) { Sfx.SkipTrack(+1); Sfx.Play("click"); }

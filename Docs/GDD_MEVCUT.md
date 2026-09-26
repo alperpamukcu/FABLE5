@@ -1895,6 +1895,57 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.123 · On üçüncü liste: ESC'nin neon çerçevesi, ayarların duvarı, kayıt sistemi, ana menü (2026-09-26)
+
+Yazar: “ESC menüsünün alt ve üst kenarları da diğer kenarlar gibi neon şeritle kaplansın. ESC menüsü ile
+tasarım olarak arkaplan olarak ayarlar menüsü benzer olmalı, oyuna kayıt sistemi getirilsin artık, oyuna
+bir ana menü yapılsın.”
+
+- **ESC'nin çerçevesi tamam:** `menu_esc_bg`'nin üst (0–2) ve alt (249–251) satırlarına yanlardaki 3
+  piksellik bant işlendi (magenta / krem çekirdek / magenta), köşelerde çekirdek köprü pikseliyle döner.
+  `Tools/menu_art_gen.py frame` — idempotent (çerçeveli resme ikinci koşu dokunmaz, hash yazdırır).
+- **Ayarların duvarı** (`menu_settings_bg`, 400×304, tek PixelLab pro çağrısı = 20 üretim, 55 renge
+  snap): ESC panelinin geniş kardeşi — aynı erguvani Art Deco duvar, dört kenarda aynı neon çerçeve
+  (`frame` komutu kenarları olmayan resme dikeyleri de çizer), tepede teal yelpaze, köşelerde palmiye,
+  ortası bir ayar sayfası taşıyacak kadar sakin. Plaka geometrisi DEĞİŞMEDİ: `BluePlate` rect'i durur,
+  resim içinde `RectMask2D` altında tam 2x (800×608) — markiz düşüşü (0–14) yalnız kırpmayı oynatır,
+  resim ölçeği asla. Resim yoksa mavi plaka birebir eski hâli.
+- **KAYIT SİSTEMİ** (`TycoonRun.Save.cs`, `SaveStore`): koşu ŞAFAKTA yazılır — `ContinueToNextDay`'in
+  içindeki tek sessiz an: gece dosyalanmış, sayaçlar sıfır, haftanın işi devredilmiş, yeni kat HENÜZ
+  dağıtılmamış. `RunSnapshot` yalnız kimlik ve sayı taşır (içerik kaydedilmez, aynı dosyalardan yeniden
+  yüklenir): defter satırları, duruş (BarRating içi), raf şişeleri (doluluk/kademe), menü + öğrenilen
+  sayfalar + en iyi yapımlar, ev (fikstürler, giyilenler, bardak adımları, tabure, tezgâh), haftanın işi,
+  hikâyenin yeri + dersler + kişiler (kâğıtlarıyla), müdavimler, buz zarları ve TÜM PCG akış durumları.
+  İki taşıma kuralı ölçülerek kondu: akış durumları HEX metin (double'a uğrayan 64 bit yuvarlanır) ve
+  HER double IEEE bitleri olarak long (JsonUtility ~15 basamakta yazar; altın test 2. gecede 0.0999…9'un
+  0.1 dönüşünü yakaladı). Geri yükleme kimlik uyuşmazlığında BÜTÜN olarak reddeder, asla yamamaz.
+  Otokayıt market kapanışında (`OnOpenTomorrow` → `SaveStore.Autosave`); iflas ve YENİ KOŞU siler
+  (`StartFreshRun`); soğuk açılıştaki otomatik dağıtım HİÇBİR ZAMAN silmez. Dosya:
+  `persistentDataPath/saves/run.json`, atomik yazım + `run.prev.json` yedeği. Gece ortasında çıkan o
+  geceyi kaybeder: devam aynı sabahtan, aynı planla oynar (determinizm sözü kazanır).
+  **Altın test** (`SaveTests`, EditMode): 4 tohum × 8 gece, ikiz B her şafakta JSON'dan yeniden doğar;
+  iki ikizin şafak anlık görüntüleri bayt bayt eşit + defter/para/raf gece gece eşit. Ayrıca giyinmiş
+  bar (preset) turu, sürüm/kimlik reddi ve “anlık görüntü okuduğu koşuyu bozmaz” testi. 789/789.
+- **ANA MENÜ** (`TycoonHud.MainMenu.cs`): soğuk açılış artık gecenin ortasına değil kapıya açılır —
+  canlı odanın üstünde pause ailesinin perdesi, markizde **MALIBU CLUB** (NAME_CLEARANCE, 2026-09-11;
+  özel isim, çevrilmez), altında CONTINUE (yalnız kayıt varken; notu “NIGHT {n} · ${money}”),
+  NEW RUN, SETTINGS (pencere menünün üstüne açılır, BACK menüye döner), QUIT; sağ altta sürüm.
+  Menü yukarıdayken gece pause gibi tutulur, ESC hiçbir şey yapmaz, ders plakası kuyruğunda bekler
+  (r242: Ece menünün üstünden konuşuyordu). Dil reload'unda (`ResumedAcrossReload`) ve START OVER'da
+  yeniden görünmez. **Tohum artık gerçekten yeni:** `SeedPolicy.Next()` "MC-XXXXXX" üretir (ekrandan
+  okunup sim'e yazılabilir); menünün NEW RUN'ı ve ayarların START OVER'ı buradan geçer — her oyuncu
+  aynı "LASTCALL-DEV" koşusunu oynuyordu. Oturum iğneleri (`UseForSession`/`DisableForSession`)
+  `SubsystemRegistration`'da sıfırlanır: domain reload kapalıyken test iğnesi yazarın play'ine
+  sarkıyordu (r242'de otokayıt bu yüzden bir kez hiç yazmadı).
+- **ESC tuşları:** SOON'lu SAVE ve CONTINUE gitti (sözlerini sistem tutuyor: oyun kendini kaydediyor,
+  menü devam ettiriyor); yerlerine MAIN MENU (home glifi). `productName` "My project (2)" → "Malibu
+  Club" (kayıt klasörü yerleşmeden; companyName yazarın seçimine kaldı — sonra değişirse klasör taşınır,
+  Windows'ta PlayerPrefs de sıfırlanır — bu değişiklikle bir kez oldu).
+- **PlayMode:** iki fikstür de kapıdan GERÇEK tıkla girer (`WalkThroughTheFrontDoor`), tohum ve kayıt
+  iğnelenir; menünün kendi bakış testi eklendi (`menu.png`, sütun bölgesi — perde kenarları canlı oda).
+  15/15; eski üç kutsal ekran değişmedi. Loc: 3 yeni anahtar × 28 dil (`chrome_menu.json` parçaları),
+  tablolar 0 hatayla derlendi (2225 anahtar).
+
 ### 9.122 · On ikinci liste (3/3): açılış rafı, yapılabilir siparişler, evin tamamı 5.00 (2026-09-26)
 
 Yazar: “Mevcut müşteriler ilk gün siparişlerinde oyuncunun yapamayacağı siparişlerde bulunuyorlar, başlangıç

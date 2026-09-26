@@ -59,6 +59,11 @@ namespace LastCall.PlayTests
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
             // ...nor in the author's own options (2026-09-26): every setting at its default, nothing saved.
             LastCall.Game.PlayerOptions.UseDefaultsForSession();
+            // ...and the run's seed and the save on disk are the suite's, never the player's
+            // (2026-09-26, the front door): NEW RUN would otherwise draw a fresh seed under
+            // every baseline, and a fixture must never read or clear a real save.
+            LastCall.Game.SeedPolicy.UseForSession("LASTCALL-DEV");
+            LastCall.Game.SaveStore.DisableForSession();
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");
@@ -135,6 +140,37 @@ namespace LastCall.PlayTests
             // on it. Same rule as always: compare the instrument, not the room around it.
             // fromY 0.60 of the panel puts the band's top edge at screen row 288.
             yield return LooksTheSame("bench", new RectInt(40, 300, 1200, 400));
+        }
+
+        [UnityTest]
+        public IEnumerator The_front_door_stands_over_the_room()
+        {
+            // THE MENU IS A BLESSED SCREEN TOO (2026-09-26): the marquee wearing the game's
+            // name, the pack's keys and their brass — the first thing every player sees.
+            // Booted by hand rather than through OpenTheBar, which now walks THROUGH the very
+            // door this test photographs. The column region only: the scrim's edges show the
+            // live room, and the room is an evening.
+            for (int i = 0; i < 180 && (Screen.width != DesignW || Screen.height != DesignH); i++)
+                yield return null;
+            Assert.That(Screen.width, Is.EqualTo(DesignW),
+                "the Game view never became the design width — the picture would not match anything");
+            yield return SceneManager.LoadSceneAsync("Main", LoadSceneMode.Single);
+            float waited = 0f;
+            while (waited < 20f)
+            {
+                _boot = Object.FindFirstObjectByType<GameBootstrap>();
+                if (_boot != null && _boot.Tycoon != null) break;
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+            Assert.That(_boot != null && _boot.Tycoon != null, "the run never started");
+            float offered = Time.realtimeSinceStartup + 10f;
+            while (GameObject.Find("MainMenu/Column") == null && Time.realtimeSinceStartup < offered)
+                yield return null;
+            Assert.That(GameObject.Find("MainMenu/Column"), Is.Not.Null, "the door never opened");
+            // the curtain under the scrim lifts on its own paced clock; let it finish first
+            yield return new WaitForSecondsRealtime(1.2f);
+            yield return LooksTheSame("menu", new RectInt(410, 120, 460, 500));
         }
 
         [UnityTest]
@@ -622,6 +658,8 @@ namespace LastCall.PlayTests
             Assert.That(_boot.Tycoon, Is.Not.Null, "the run never started");
             SuiteClock.Mark("dealt");
 
+            yield return WalkThroughTheFrontDoor();
+
             // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13, and the same fix is in
             // the smoke suite). The room opens behind a CURTAIN on a canvas above everything,
             // and the HUD holds the night's clock until it lifts — so a press before that is
@@ -744,6 +782,32 @@ namespace LastCall.PlayTests
             yield return null;
             Release(_mouse.leftButton);
             yield return new WaitForSecondsRealtime(SettleSeconds);
+        }
+
+
+        /// <summary>
+        /// THE FRONT DOOR (2026-09-26): a cold boot opens on the main menu with the night
+        /// held (TycoonHud.MainMenu). The suite walks in the way the player does — the real
+        /// NEW RUN key under the real pointer — and the fixture pins SeedPolicy, so the run
+        /// behind the door is the same "LASTCALL-DEV" night every baseline was blessed on.
+        /// </summary>
+        private IEnumerator WalkThroughTheFrontDoor()
+        {
+            float offered = Time.realtimeSinceStartup + 10f;
+            GameObject door = null;
+            while (Time.realtimeSinceStartup < offered)
+            {
+                door = GameObject.Find("MainMenu/Column/NEW RUN");
+                if (door != null) break;
+                yield return null;
+            }
+            Assert.That(door, Is.Not.Null, "the front door never offered NEW RUN");
+            for (int attempt = 0; attempt < 6 && door.activeInHierarchy; attempt++)
+            {
+                yield return ClickOn((RectTransform)door.transform);
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            Assert.That(door.activeInHierarchy, Is.False, "six presses never closed the front door");
         }
 
         private IEnumerator ClickOn(RectTransform target)

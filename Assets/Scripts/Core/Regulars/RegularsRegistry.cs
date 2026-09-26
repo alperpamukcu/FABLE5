@@ -39,6 +39,24 @@ namespace LastCall.Core
 
         public RegularState Get(string id) => _byId.TryGetValue(id, out var state) ? state : null;
 
+        /// <summary>The save layer (2026-09-26): everyone the run has met, put back in the
+        /// order they first walked in, and the serial the next stranger takes.</summary>
+        internal void RestoreFrom(IEnumerable<RegularState> people, int nextSerial)
+        {
+            _byId.Clear();
+            _order.Clear();
+            if (people != null)
+                foreach (var person in people)
+                {
+                    _byId[person.Id] = person;
+                    _order.Add(person);
+                }
+            _nextSerial = nextSerial;
+        }
+
+        /// <summary>The serial the next stranger takes, for the save layer.</summary>
+        internal int NextSerial => _nextSerial;
+
         /// <summary>
         /// Who is at the bar next. Early in a run everyone is a stranger; later, most nights
         /// are people you have met — which is what makes the persistent stats mean anything.

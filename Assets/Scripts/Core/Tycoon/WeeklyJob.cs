@@ -92,6 +92,9 @@ namespace LastCall.Core
         /// <summary>Whose job it is when nobody was named — the host, who works the shift.</summary>
         public const string DefaultGiver = "ECE";
 
+        /// <summary>The save layer (2026-09-26): the count put back without replaying the serves.</summary>
+        internal void RestoreServed(int served) => Served = Math.Max(0, served);
+
         /// <summary>Counts one serve towards this job, if it is the drink and there is room
         /// left. Returns true when this serve is the one that finished it.</summary>
         public bool Count(string recipeId) => CountServe(recipeId, false);

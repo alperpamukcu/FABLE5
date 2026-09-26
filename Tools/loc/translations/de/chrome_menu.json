@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "HAUPTMENÜ",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "NACHT {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "DER SPIELSTAND IST AUS EINER ÄLTEREN BAR",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

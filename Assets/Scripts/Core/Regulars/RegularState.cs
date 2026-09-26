@@ -81,6 +81,20 @@ namespace LastCall.Core
             ArchetypeId = archetypeId ?? string.Empty;
         }
 
+        /// <summary>The save layer's door (2026-09-26): the run's memory of this person put
+        /// back — visits, the week's tally, their papers if the question was ever asked, and
+        /// whether the door was shut on them. The relationship is re-derived, not stored.</summary>
+        internal void RestoreVisits(int visits, int satisfiedCount, int satisfactionEarned,
+            IdPapers papers, bool barred)
+        {
+            Visits = visits;
+            SatisfiedCount = satisfiedCount;
+            SatisfactionEarned = satisfactionEarned;
+            Relationship = Relationships.ForSatisfiedVisits(SatisfiedCount);
+            Papers = papers;
+            Barred = barred;
+        }
+
         /// <summary>Closes out a visit. Satisfaction is what the serve earned (GDD 19 §10).</summary>
         public void RecordVisit(int satisfaction)
         {

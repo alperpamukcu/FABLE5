@@ -81,6 +81,11 @@ namespace LastCall.PlayTests
             LastCall.Game.Localization.UseForSession(LastCall.Core.Languages.Source);
             // ...and the presses are the default hand's (2026-09-26): every setting at its default, nothing saved.
             LastCall.Game.PlayerOptions.UseDefaultsForSession();
+            // ...and the run's seed and the save on disk are the suite's, never the player's
+            // (2026-09-26, the front door): NEW RUN would otherwise draw a fresh seed under
+            // every baseline, and a fixture must never read or clear a real save.
+            LastCall.Game.SeedPolicy.UseForSession("LASTCALL-DEV");
+            LastCall.Game.SaveStore.DisableForSession();
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");
@@ -946,6 +951,8 @@ namespace LastCall.PlayTests
                 $"the run never started within {BootTimeout}s — the boot is half-loaded");
             SuiteClock.Mark("dealt");
 
+            yield return WalkThroughTheFrontDoor();
+
             // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13). A quarter of a second
             // was the wait, and the suite's first test kept failing on a press that landed
             // on nothing: the room opens behind a CURTAIN on its own canvas above everything,
@@ -1068,6 +1075,32 @@ namespace LastCall.PlayTests
             door.GetWorldCorners(c);
             var top = RectTransformUtility.WorldToScreenPoint(null, (c[1] + c[2]) * 0.5f);
             return top + new Vector2(0f, -60f);
+        }
+
+
+        /// <summary>
+        /// THE FRONT DOOR (2026-09-26): a cold boot opens on the main menu with the night
+        /// held (TycoonHud.MainMenu). The suite walks in the way the player does — the real
+        /// NEW RUN key under the real pointer — and the fixture pins SeedPolicy, so the run
+        /// behind the door is the same "LASTCALL-DEV" night every baseline was blessed on.
+        /// </summary>
+        private IEnumerator WalkThroughTheFrontDoor()
+        {
+            float offered = Time.realtimeSinceStartup + 10f;
+            GameObject door = null;
+            while (Time.realtimeSinceStartup < offered)
+            {
+                door = GameObject.Find("MainMenu/Column/NEW RUN");
+                if (door != null) break;
+                yield return null;
+            }
+            Assert.That(door, Is.Not.Null, "the front door never offered NEW RUN");
+            for (int attempt = 0; attempt < 6 && door.activeInHierarchy; attempt++)
+            {
+                yield return ClickOn((RectTransform)door.transform);
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            Assert.That(door.activeInHierarchy, Is.False, "six presses never closed the front door");
         }
 
         private IEnumerator ClickOn(RectTransform target) => ClickOn(target, Vector2.zero);

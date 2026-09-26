@@ -160,6 +160,17 @@ namespace LastCall.Core
 
         public WealthTier TomorrowsCrowd { get; private set; } = WealthTier.Regular;
 
+        /// <summary>The save layer refills the book (2026-09-26): the rows exactly as they
+        /// were filed, the strike count and tomorrow's crowd with them — CloseDay is not
+        /// re-run, because re-filing a day would be a second set of books.</summary>
+        internal void RestoreFrom(IEnumerable<DayResult> history, int debtStrikes, WealthTier crowd)
+        {
+            _history.Clear();
+            if (history != null) _history.AddRange(history);
+            DebtStrikes = debtStrikes;
+            TomorrowsCrowd = crowd;
+        }
+
         /// <summary>Closes a day: books it, advances the strike count, sets the crowd.
         /// <paramref name="tillAfter"/> is the money left once everything is paid — the
         /// strike watches the till, not the day's net.</summary>

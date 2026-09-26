@@ -31,6 +31,7 @@ namespace LastCall.UI
         private void UpdateEscape()
         {
             if (_bindListening != null) return;             // the settings' listening row owns the keyboard
+            if (MenuUp) return;                              // the front door's keys are its only doors (2026-09-26)
             if (!Keys.Pressed(KeyAction.Pause)) return;      // on whatever key the player put it (Keys)
             if (Showing(_pausePanel)) { TogglePause(); return; }
             if (_bookOpen) { ToggleRecipeBook(); return; }
@@ -2878,7 +2879,9 @@ namespace LastCall.UI
                 // the closing's lessons are said on the market (SyncHostNote).
                 // Never over the open cellar: the plate sits exactly where the bottles are
                 // picked up, so while the drawer is out the lesson waits, queued.
-                var lesson = run.Phase == TycoonPhase.DayOpen && !CellarOpen ? run.LessonDue : null;
+                // ...nor over the front door (2026-09-26): the host would speak across the
+                // main menu's scrim. The lesson stays queued until the menu is down.
+                var lesson = run.Phase == TycoonPhase.DayOpen && !CellarOpen && !MenuUp ? run.LessonDue : null;
                 if (lesson != null && _plate != null) { SyncLesson(run, lesson); return; }
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
                 if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);

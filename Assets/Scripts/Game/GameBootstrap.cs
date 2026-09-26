@@ -105,8 +105,13 @@ namespace LastCall.Game
             DisplayOptions.ApplyPacing();
         }
 
+        /// <summary>The scene came up around a run that was already going (a language
+        /// reload) — the front door must not reappear over a night in progress.</summary>
+        public bool ResumedAcrossReload { get; private set; }
+
         private void Start()
         {
+            ResumedAcrossReload = s_handoff != null;
             StartNewRun(seed);
             if (s_handoff != null)
             {
@@ -135,29 +140,20 @@ namespace LastCall.Game
             UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);
         }
 
-        /// <summary>Starts a fresh run. Null/empty seed keeps the inspector default.</summary>
-        public void StartNewRun(string newSeed)
+        /// <summary>Everything a run is built FROM, loaded in one place so a fresh run and a
+        /// restored one read the very same files (the save carries ids and numbers only —
+        /// TycoonRun.Save.cs).</summary>
+        private sealed class Content
         {
-            CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
+            public LoadedDeck Bar;
+            public IReadOnlyList<RecipeDefinition> Recipes;
+            public IReadOnlyList<ArchetypeDefinition> Archetypes;
+            public LoadedFixtures Dressing;
+        }
 
+        private Content LoadContent()
+        {
             var bar = DataLoader.ParseDeck(deckJson.text);
-            // You open with a bare well and grow the shelf by buying new stock at the end of each
-            // night (2026-07-23); every other bottle goes to the market catalogue. WHICH WELL IS DATA
-            // since 2026-09-26 — the cards base_bar.json marks "starting": three spirits, three
-            // mixers, lemon, syrup and one keg (GDD 21 §10: beer is the order you can always answer).
-            // It used to be six ids written here, which could not pour two of the six pages the bar
-            // opens with, so the first night asked for drinks the bar could not make.
-            var startingBottles = new List<ShelfBottle>();
-            var brandCatalogue = new List<IngredientCard>();
-            foreach (var card in bar.Cards)
-            {
-                if (bar.IsStarting(card)) startingBottles.Add(new ShelfBottle(card.Clone()));
-                else brandCatalogue.Add(card);
-            }
-            if (startingBottles.Count == 0)   // data drift safety: never open with an empty shelf
-                foreach (var card in bar.Cards)
-                    if (card.Info == null || card.Info.Tier <= 1)
-                        startingBottles.Add(new ShelfBottle(card.Clone()));
             var recipes = DataLoader.ParseRecipes(recipesJson.text);
             var archetypes = archetypesJson != null ? DataLoader.ParseArchetypes(archetypesJson.text) : null;
 
@@ -192,19 +188,92 @@ namespace LastCall.Game
                         throw new System.FormatException(
                             $"Recipe '{recipe.Id}' names unknown glass '{recipe.GlassId}'.");
             }
+            return new Content { Bar = bar, Recipes = recipes, Archetypes = archetypes, Dressing = dressing };
+        }
 
-            Tycoon = new TycoonRun(new Shelf(startingBottles), recipes, new RunRng(CurrentSeed),
+        /// <summary>
+        /// The player's own fresh start — the menu's NEW RUN and the settings' START OVER.
+        /// Clears the save FIRST: a bar on its opening night has nothing worth continuing,
+        /// and CONTINUE must never bring back the run the player just walked away from.
+        /// The cold-boot deal in <see cref="Start"/> calls <see cref="StartNewRun"/> directly
+        /// and clears nothing — booting the game must never eat the save.
+        /// </summary>
+        public void StartFreshRun(string newSeed)
+        {
+            SaveStore.Clear();
+            StartNewRun(newSeed);
+        }
+
+        /// <summary>
+        /// The menu's CONTINUE: the run stood back up from its dawn snapshot, over freshly
+        /// loaded content. False — with the reason logged, and the save left in place — when
+        /// the snapshot cannot be honoured exactly (drifted data, wrong version): a save is
+        /// restored whole or not at all.
+        /// </summary>
+        public bool TryStartSavedRun(RunSnapshot snap)
+        {
+            if (snap == null) return false;
+            try
+            {
+                var content = LoadContent();
+                var allCards = new List<IngredientCard>(content.Bar.Cards);
+                allCards.AddRange(content.Bar.LockedCards);
+                var run = TycoonRun.Restore(snap, content.Recipes, allCards,
+                    config: TycoonConfig.ForTheScene,
+                    regulars: content.Archetypes != null ? new RegularsRegistry(content.Archetypes) : null,
+                    glassware: Glassware,
+                    fixtures: content.Dressing.Fixtures,
+                    story: storyInPlay ? Story : null);
+                Tycoon = run;
+                CurrentSeed = snap.seed;
+                Debug.Log($"[LastCall] Run resumed — seed '{CurrentSeed}', night {run.Day}, " +
+                          $"wallet ${run.Money}, standing {run.Rating.Average:0.00}.");
+                RunStarted?.Invoke();
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[LastCall] The save could not be honoured: {e.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>Starts a fresh run. Null/empty seed keeps the inspector default.</summary>
+        public void StartNewRun(string newSeed)
+        {
+            CurrentSeed = string.IsNullOrWhiteSpace(newSeed) ? seed : newSeed.Trim();
+
+            var content = LoadContent();
+            var bar = content.Bar;
+            // You open with a bare well and grow the shelf by buying new stock at the end of each
+            // night (2026-07-23); every other bottle goes to the market catalogue. WHICH WELL IS DATA
+            // since 2026-09-26 — the cards base_bar.json marks "starting": three spirits, three
+            // mixers, lemon, syrup and one keg (GDD 21 §10: beer is the order you can always answer).
+            // It used to be six ids written here, which could not pour two of the six pages the bar
+            // opens with, so the first night asked for drinks the bar could not make.
+            var startingBottles = new List<ShelfBottle>();
+            var brandCatalogue = new List<IngredientCard>();
+            foreach (var card in bar.Cards)
+            {
+                if (bar.IsStarting(card)) startingBottles.Add(new ShelfBottle(card.Clone()));
+                else brandCatalogue.Add(card);
+            }
+            if (startingBottles.Count == 0)   // data drift safety: never open with an empty shelf
+                foreach (var card in bar.Cards)
+                    if (card.Info == null || card.Info.Tier <= 1)
+                        startingBottles.Add(new ShelfBottle(card.Clone()));
+            Tycoon = new TycoonRun(new Shelf(startingBottles), content.Recipes, new RunRng(CurrentSeed),
                 config: TycoonConfig.ForTheScene,
-                regulars: archetypes != null ? new RegularsRegistry(archetypes) : null,
+                regulars: content.Archetypes != null ? new RegularsRegistry(content.Archetypes) : null,
                 brandCatalogue: brandCatalogue,
                 glassware: Glassware,
                 lockedStock: LockedStock,
-                fixtures: dressing.Fixtures,
+                fixtures: content.Dressing.Fixtures,
                 story: storyInPlay ? Story : null);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +
-                      $"{(archetypes != null ? $"{archetypes.Count} archetypes" : "no emotion layer")}.");
+                      $"{(content.Archetypes != null ? $"{content.Archetypes.Count} archetypes" : "no emotion layer")}.");
             RunStarted?.Invoke();
         }
     }

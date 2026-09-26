@@ -49,6 +49,13 @@ namespace LastCall.Core
             minInclusive + NextInt(maxExclusive - minInclusive);
 
         public double NextDouble() => NextUInt() / 4294967296.0;
+
+        /// <summary>The generator's whole state, for the save layer (2026-09-26). The
+        /// increment is derived from the stream's name, so the word below is everything a
+        /// stream is beyond its name.</summary>
+        internal ulong StateWord => _state;
+
+        internal void RestoreState(ulong state) => _state = state;
     }
 
     /// <summary>
@@ -77,6 +84,11 @@ namespace LastCall.Core
             }
             return rng;
         }
+
+        /// <summary>Every stream that has been asked for so far, by name — the save layer
+        /// walks this (2026-09-26). A stream never yet created needs nothing saved: its birth
+        /// depends only on the seed and its name, so it is the same born now or born later.</summary>
+        internal IReadOnlyDictionary<string, SeededRng> LiveStreams => _streams;
 
         private static ulong Fnv1a64(string text)
         {

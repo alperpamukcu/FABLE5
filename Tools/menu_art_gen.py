@@ -18,6 +18,7 @@ images): the neon is a flat colour, the rain a line, nothing glows.
   py -3 -X utf8 Tools/menu_art_gen.py snap
   py -3 -X utf8 Tools/menu_art_gen.py sheet
   py -3 -X utf8 Tools/menu_art_gen.py report <the probe's capture folder>   -> Docs/reports/menu_art
+  py -3 -X utf8 Tools/menu_art_gen.py frame [menu_esc_bg]   draw the top/bottom neon band on a shipped picture
 
 Nothing enters Assets from here. The picks are shipped by hand into Assets/Resources/Menu after the author has chosen
 on the report page (Docs/reports/menu_art).
@@ -82,6 +83,15 @@ ESC_BG = ('A pixel-art background panel, taller than wide, for the pause menu of
           'it; a calm dark band across the bottom for a line of small text. ' + FLAT + ' No text, letters, numbers, '
           'logo, people or buttons; the panel fills the whole canvas edge to edge. Use only the colours of the palette '
           'reference.')
+
+SETTINGS_BG = ('A pixel-art background panel, wider than tall, for the settings menu of a 1980s Miami cocktail '
+               'bar at night, a wide sibling of the pause panel. An Art Deco wall panel in deep plum and night blue, '
+               'framed along all four edges by one thin hot-pink neon tube with rounded corners. High in the middle a '
+               'small teal Art Deco sunburst fan, behind where a sign will hang. In each bottom corner a few dark plum '
+               'palm leaves. The whole middle is one very calm, even, dark plum-blue surface with faint vertical Art '
+               'Deco reeding lines, left empty because a full page of settings text is laid over it. ' + FLAT + ' No '
+               'text, letters, numbers, logo, people or buttons; the panel fills the whole canvas edge to edge. Use '
+               'only the colours of the palette reference.')
 
 ICON_TAIL = ('single chunky game menu icon, pixel art, a polished brass and gold metal object seen straight on, '
              'bevelled, light from the upper left and darker on the lower right, one pixel dark outline, centred, '
@@ -210,6 +220,12 @@ def take(families):
         # plate itself as a picture, at exactly 2x (440x504), one candidate (the one-alternative rule)
         _queue('esc_bg', 'create_image_pro', {'description': ESC_BG, 'width': 220, 'height': 252,
                                               'no_background': False, 'seed': 5303, 'reference_images': refs})
+    if 'settings_bg' in families:
+        # 2026-09-26, the author: "ESC menusu ile tasarim olarak arkaplan olarak ayarlar menusu benzer olmali" - the
+        # settings plate as the pause panel's wide sibling, at exactly 2x under a RectMask2D (800x608 over the
+        # 800x590..604 plate), one candidate (the one-alternative rule)
+        _queue('settings_bg', 'create_image_pro', {'description': SETTINGS_BG, 'width': 400, 'height': 304,
+                                                   'no_background': False, 'seed': 5304, 'reference_images': refs})
     if 'header' in families:
         _queue('header', 'create_image_pro', {'description': HEADER, 'width': 168, 'height': 44,
                                               'no_background': False, 'seed': 5302, 'reference_images': refs})
@@ -410,6 +426,44 @@ def report(captures):
     print('report ->', os.path.join(REPORT, 'index.html'))
 
 
+MAGENTA, CREAM = (232, 77, 166, 255), (242, 232, 213, 255)
+
+
+def frame(name='menu_esc_bg'):
+    """Draw the 3px neon band along the top and bottom edges of a shipped menu picture, between its full-height
+    side tubes: magenta / cream core / magenta, with the core bridged through the corner so the tube reads as one
+    frame. Idempotent: a picture whose top band is already lit is left untouched (the sprite-pipeline rule)."""
+    import hashlib
+    p = os.path.join(MENU, name + '.png')
+    im = Image.open(p).convert('RGBA')
+    w, h = im.size
+    before = hashlib.sha1(im.tobytes()).hexdigest()[:12]
+    if im.getpixel((w // 2, 1))[:3] == CREAM[:3]:
+        print('  %s already framed (%s)' % (name, before))
+        return
+    px = im.load()
+    # a picture born without side tubes (the settings panel) gets the family's: cream core
+    # on the left like the pause panel's, pink on the right
+    PINK = (255, 125, 198, 255)
+    if im.getpixel((1, h // 2))[:3] not in (CREAM[:3], PINK[:3]):
+        for y in range(h):
+            for col, colour in ((0, MAGENTA), (1, CREAM), (2, MAGENTA)):
+                px[col, y] = colour
+            for col, colour in ((w - 3, MAGENTA), (w - 2, PINK), (w - 1, MAGENTA)):
+                px[col, y] = colour
+    for x in range(3, w - 3):
+        for row, colour in ((0, MAGENTA), (1, CREAM), (2, MAGENTA)):
+            px[x, row] = colour
+            px[x, h - 1 - row] = colour
+    # the lit core turns the corner: one bridge pixel between the horizontal core and each side tube's own core
+    for bx in (2, w - 3):
+        px[bx, 1] = CREAM
+        px[bx, h - 2] = CREAM
+    im.save(p)
+    after = hashlib.sha1(Image.open(p).convert('RGBA').tobytes()).hexdigest()[:12]
+    print('  %s framed  %s -> %s  (%dx%d, rows 0-2 and %d-%d)' % (name, before, after, w, h, h - 3, h - 1))
+
+
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
     rest = sys.argv[2:] or ['door', 'header', 'icons']
@@ -421,6 +475,8 @@ if __name__ == '__main__':
         snap()
     elif cmd == 'sheet':
         sheet()
+    elif cmd == 'frame':
+        frame(*sys.argv[2:3])
     elif cmd == 'report':
         report(sys.argv[2])
     else:

@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "HLAVNÍ NABÍDKA",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "NOC {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "TATO ULOŽENÁ HRA JE ZE STARŠÍHO BARU",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

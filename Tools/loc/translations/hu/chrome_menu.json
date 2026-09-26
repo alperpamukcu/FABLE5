@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "FŐMENÜ",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "ESTE {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "EZ A MENTÉS EGY RÉGEBBI BÁRBÓL VALÓ",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

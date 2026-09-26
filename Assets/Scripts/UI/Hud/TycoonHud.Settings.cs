@@ -121,7 +121,7 @@ namespace LastCall.UI
             {
                 CloseId();
                 RefreshSettings();
-                if (!_settingsFromPause) Sfx.Play("menu_open", 0.7f);   // from the pause menu the wall is already down
+                if (!_settingsFromPause && !_settingsFromMenu) Sfx.Play("menu_open", 0.7f);   // from a menu the wall is already down
                 // THE NIGHT STOPS FOR THE SETTINGS TOO (2026-09-25, the author: "Settings açıldığında oyun durmalı").
                 // From the pause menu it is already held; from the top bar's cog it ran on at full speed behind the
                 // window, patience and all. It holds the clock the way the ladder's window does, and lets go of only
@@ -139,8 +139,14 @@ namespace LastCall.UI
                     _pausePanel.gameObject.SetActive(true);
                     RefreshPauseFoot();
                 }
+                else if (_settingsFromMenu && _menuPanel != null)
+                {
+                    RebuildMenuColumn();
+                    _menuPanel.gameObject.SetActive(true);
+                }
                 else Sfx.Play("menu_close", 0.6f);
                 _settingsFromPause = false;
+                _settingsFromMenu = false;
                 if (_settingsHeldClock) { _settingsHeldClock = false; SetPaused(false); }
             }
             _settingsPanel.gameObject.SetActive(show);
@@ -238,6 +244,29 @@ namespace LastCall.UI
             var header = MenuPack.Art("menu_header");
             _settingsDrop = header != null ? HeaderDrop : 0f;
             var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH + _settingsDrop));   // the ESC family's plate (2026-09-21)
+            // THE PAUSE PANEL'S WIDE SIBLING (2026-09-26, the author: "ESC menüsü ile tasarım olarak
+            // arkaplan olarak ayarlar menüsü benzer olmalı"): the same generated Art Deco wall, at
+            // exactly 2x like every menu picture (800x608 over a plate 590..604 tall). The plate keeps
+            // its size and its anchors — every row below still hangs off it — and the picture lies
+            // INSIDE under a mask, so the marquee drop only changes what the frame crops, never the
+            // drawing's scale. No picture shipped → the blue plate exactly as before.
+            var settingsArt = MenuPack.Art("menu_settings_bg");
+            if (settingsArt != null)
+            {
+                var plateImg = plate.GetComponent<Image>();
+                plateImg.sprite = null;
+                plateImg.color = UITheme.Night[3];              // the wall's own plum where the crop runs out
+                plate.gameObject.AddComponent<RectMask2D>();
+                var picture = NewRect("Picture", plate);
+                Place(picture, new Vector2(0.5f, 0.5f),
+                    new Vector2(settingsArt.rect.width * 2f, settingsArt.rect.height * 2f), Vector2.zero);
+                var pictureImg = picture.gameObject.AddComponent<Image>();
+                pictureImg.sprite = settingsArt;
+                pictureImg.type = Image.Type.Simple;
+                pictureImg.raycastTarget = false;
+                UiAuditExempt.Mark(picture, "the menu's generated picture, "
+                    + settingsArt.rect.width + "x" + settingsArt.rect.height + " shown at exactly 2x");
+            }
             // UNDER THE TOP BAR (2026-09-26): 590 and the marquee's 42 make a plate 632 tall, which centred on the
             // 720 field would reach 44 from its top - over the top bar's 54. It stands just low enough to clear the
             // bar by SettingsPlateAir (14 down with the marquee, 30 from the field's foot); a plate that fits is
@@ -835,7 +864,10 @@ namespace LastCall.UI
             var fresh = SettingsRow(page, "START OVER", UIText.T("chrome.settings.start_over"), "moon", ref y, DisplayRow);
             var newRun = PackWordKey(fresh, "NEW RUN", UIText.T("chrome.settings.new_run"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, CapH), new Vector2(300f, 0), () =>
             {
-                ToggleSettings(); if (Showing(_pausePanel)) TogglePause(); _bootstrap.StartNewRun(null);
+                ToggleSettings(); if (Showing(_pausePanel)) TogglePause();
+                // A fresh seed and a cleared save (2026-09-26): every player used to restart
+                // into the inspector's one run, and the old save would have outlived the bar.
+                _bootstrap.StartFreshRun(LastCall.Game.SeedPolicy.Next());
             }, 100f, 48f + 16f);
             RowNote(fresh, UIText.T("chrome.settings.start_over_note"), 300f + newRun.sizeDelta.x + 12f);
             return page;

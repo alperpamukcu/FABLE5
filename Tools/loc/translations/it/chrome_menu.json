@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "MENU PRINCIPALE",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "SERA {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "QUESTO SALVATAGGIO VIENE DA UN BAR PIÙ VECCHIO",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "메인 메뉴",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "{n}번째 밤 · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "이 저장은 예전 바의 것입니다",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}

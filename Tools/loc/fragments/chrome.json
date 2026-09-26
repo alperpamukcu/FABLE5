@@ -1,6 +1,9 @@
 {
   "group": "chrome",
   "strings": [
+    { "key": "chrome.pause.main_menu", "text": "MAIN MENU", "note": "The pause menu's key back to the game's front door (the main menu). Capitals. Tonight is lost the way START OVER's note says; what CONTINUE reads back is the autosave from the last market close." },
+    { "key": "chrome.menu.continue_note", "text": "NIGHT {n} · ${money}", "note": "The small line under the main menu's CONTINUE key: which night the save opens on and what is in the till. {n} is the night number, {money} the till figure without a sign. Capitals, 8px." },
+    { "key": "chrome.menu.stale_save", "text": "THAT SAVE IS FROM AN OLDER BAR", "note": "The main menu's toast when the save on disk cannot be honoured (a version or a bottle the data no longer has). One line, capitals, no full stop." },
     { "key": "chrome.toast.perfect_pour", "text": "PERFECT POUR · {recipe} — IN THE BOOK NOW", "note": "Gold toast under the top bar the first time a recipe is poured perfectly. {recipe} = the drink's name in capitals. One line, ~60 characters at display 14." },
     { "key": "chrome.cellar.never_shaken", "text": "NEVER SHAKEN · BUILT AT THE GLASS", "note": "Red warning row on the cellar's bottle card for a fizzy bottle, beside a no-shake icon. One line, 16px body face, ~34 characters." },
     { "key": "chrome.garnish.meta_rim", "text": "RIM  ·  {word}", "note": "Second row of the garnish card over a rim dish on the counter (salt/sugar rim). {word} = the dish's short verb caption from the counter rail, already in capitals. One line, 16px body face, ~30 characters. Keep the two spaces either side of the dot." },

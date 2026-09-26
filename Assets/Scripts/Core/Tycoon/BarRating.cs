@@ -188,6 +188,28 @@ namespace LastCall.Core
             return Math.Max(0.0, Math.Min(MaxStars, _standing + move));
         }
 
+        /// <summary>The save layer reads the books out (2026-09-26). Everything mutable, in
+        /// declaration order; the nights list is copied so the caller cannot write the books.</summary>
+        internal void CaptureInto(out List<double> nights, out double standing, out double best,
+            out double previousBest, out double previous, out int ratings, out double sum)
+        {
+            nights = new List<double>(_nights);
+            standing = _standing; best = BestStanding;
+            previousBest = PreviousBestStanding; previous = PreviousStanding;
+            ratings = Ratings; sum = _sum;
+        }
+
+        /// <summary>…and writes them back on a fresh instance (2026-09-26).</summary>
+        internal void RestoreFrom(IReadOnlyList<double> nights, double standing, double best,
+            double previousBest, double previous, int ratings, double sum)
+        {
+            _nights.Clear();
+            if (nights != null) _nights.AddRange(nights);
+            _standing = standing; BestStanding = best;
+            PreviousBestStanding = previousBest; PreviousStanding = previous;
+            Ratings = ratings; _sum = sum;
+        }
+
         /// <summary>Dev tooling only: parks the standing for the game-mode presets — and the high-water mark
         /// with it, so a parked five-star bar is a five-star bar on the ladder too.</summary>
         public void DevSet(double stars)

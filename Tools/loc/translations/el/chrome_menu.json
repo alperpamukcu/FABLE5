@@ -1,0 +1,19 @@
+{
+  "strings": [
+    {
+      "key": "chrome.pause.main_menu",
+      "text": "ΚΥΡΙΟ ΜΕΝΟΥ",
+      "src": "MAIN MENU"
+    },
+    {
+      "key": "chrome.menu.continue_note",
+      "text": "ΒΡΑΔΙΑ {n} · ${money}",
+      "src": "NIGHT {n} · ${money}"
+    },
+    {
+      "key": "chrome.menu.stale_save",
+      "text": "Η ΑΠΟΘΗΚΕΥΣΗ ΕΙΝΑΙ ΑΠΟ ΠΑΛΑΙΟΤΕΡΟ ΜΠΑΡ",
+      "src": "THAT SAVE IS FROM AN OLDER BAR"
+    }
+  ]
+}
