@@ -88,6 +88,12 @@ bölüm kazanır (483 test → bugün 789+15; kayıt sistemi §9.123 ile geldi).
 
 ### D · OPTİMİZASYON / GEREKSİZ YÜK (demo öncesi "yük atma" listesi)
 
+*2026-09-26 akşamı inenler (GDD §9.124): kadro tembel yüklemeye geçti (4.384 kare → 41 +
+ısınma; açılış 36 ms), 3'teki ölü sanat silindi (steam_kit'in okuduğu üçlü hariç),
+window_cycle Tools'a taşındı, 6'daki şablon artıkları + collab-proxy söküldü, pencere
+varsayılanı 1280×720. Kalanlar: fontlar/loc bölme, isReadable taraması, unity-mcp'nin
+demo derlemesinden çıkarılması, ambience/story ses kararları.*
+
 1. Resources ~139 MB'ın tamamı sevk ediliyor: Audio 56.6 + Patron 39.1 (4.384 gevşek PNG,
    SpriteAtlas yok, açılışta HEPSİ yüklenir) + Fonts 35 (CJK 3×7 MB her sürüme biner) + loc 7.
 2. 5.193 PNG'de `isReadable: 1` (CPU kopyası) — patronlarda bilerek (alfa isabeti), kalanında gözden geçir.

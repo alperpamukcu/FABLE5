@@ -4057,7 +4057,7 @@ namespace LastCall.UI
                         ? PatronClip.Cheer : PatronClip.Upset;
                     var reactLook = v.Look ?? (_looks.Count > 0 ? _looks[0] : null);
                     v.ReactLeft = !kicked && reactLook != null
-                        && reactLook.Clips.TryGetValue(v.ReactClip, out var rf) && rf.Length > 0
+                        && reactLook.ClipFor(v.ReactClip).Length > 0
                         ? ReactSeconds : 0f;
                     // …then up off the stool and turned to the door (LEAVE, 2026-09-15), kicked
                     // or not: a kicked customer still has to stand up before walking out.
@@ -4657,7 +4657,8 @@ namespace LastCall.UI
             bool useRight = view.Greeting ? view.GreetRight
                           : Mathf.FloorToInt((view.AnimClock + view.Index * 1.7f) / GlanceEvery) % 2 == 0;
             var want = useRight ? PatronClip.LookRight : PatronClip.LookLeft;
-            if (!look.Clips.TryGetValue(want, out var frames) || frames.Length == 0)
+            var frames = look.ClipFor(want);
+            if (frames.Length == 0)
             {
                 view.Greeting = false;
                 return;
@@ -4713,8 +4714,9 @@ namespace LastCall.UI
             int exactFrame = -1)
         {
             var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
-            if (look == null || !look.Clips.TryGetValue(clip, out var frames) || frames.Length == 0) return;
-            if (view.Body == null) return;
+            if (look == null) return;
+            var frames = look.ClipFor(clip);
+            if (frames.Length == 0 || view.Body == null) return;
             view.Body.sprite = frames[exactFrame >= 0
                 ? Mathf.Clamp(exactFrame, 0, frames.Length - 1)
                 : PatronFrameIndex(clip, t, frames.Length)];
@@ -4730,8 +4732,8 @@ namespace LastCall.UI
         private float OneShotSeconds(SeatView view, PatronClip clip)
         {
             var look = view.Look ?? (_looks.Count > 0 ? _looks[0] : null);
-            return look != null && look.Clips.TryGetValue(clip, out var frames) && frames.Length > 0
-                ? frames.Length / PatronFps : 0f;
+            int n = look != null ? look.ClipFor(clip).Length : 0;
+            return n > 0 ? n / PatronFps : 0f;
         }
 
         /// <summary>
@@ -4809,32 +4811,55 @@ namespace LastCall.UI
 
         private void LoadPatronFrames()
         {
+            // ONLY THE IDLE AND THE LICENCE PHOTO AT BOOT (2026-09-26, the weight pass): the
+            // whole cast's ~4,400 frames used to load here, on the boot's critical path, for
+            // a night that seats a dozen people. The idle is what the head rows are measured
+            // off and what a seated body shows first; everything else comes through
+            // PatronLook.ClipFor — warmed one person a frame by StepPatronPrewarm. Measured
+            // in the editor: the log line below said 41 looks and ~450 frames where it used
+            // to be ten times that.
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            int frames = 0;
             _looks.Clear();
+            _patronWarmAt = 0;
             foreach (var entry in PatronCast)
             {
-                var clips = new Dictionary<PatronClip, Sprite[]>
-                {
-                    [PatronClip.Idle]  = LoadPatronClip(entry.Slug, "idle"),
-                    [PatronClip.Order] = LoadPatronClip(entry.Slug, "order"),
-                    [PatronClip.Drink] = LoadPatronClip(entry.Slug, "drink"),
-                    [PatronClip.Walk]  = LoadPatronClip(entry.Slug, "walk"),
-                    [PatronClip.Cheer] = LoadPatronClip(entry.Slug, "cheer"),
-                    [PatronClip.Upset] = LoadPatronClip(entry.Slug, "upset"),
-                    [PatronClip.LookRight] = LoadPatronClip(entry.Slug, "look_right"),
-                    [PatronClip.LookLeft]  = LoadPatronClip(entry.Slug, "look_left"),
-                    [PatronClip.Arrive]    = LoadPatronClip(entry.Slug, "arrive"),
-                    [PatronClip.Leave]     = LoadPatronClip(entry.Slug, "leave"),
-                };
+                var idle = LoadPatronClip(entry.Slug, "idle");
                 // A look with no idle has no art on disk. Skip it instead of seating a
                 // customer who renders as nothing.
-                if (clips[PatronClip.Idle].Length == 0) continue;
+                if (idle.Length == 0) continue;
+                frames += idle.Length;
                 var face = Resources.Load<Sprite>($"Patron/{entry.Slug}/face");
                 _looks.Add(new PatronLook
-                { Slug = entry.Slug, Clips = clips, HeadY = entry.HeadY, Face = face,
+                { Slug = entry.Slug,
+                  Clips = new Dictionary<PatronClip, Sprite[]> { [PatronClip.Idle] = idle },
+                  HeadY = entry.HeadY, Face = face,
                   Stars = entry.Stars,
                   HoldRight = entry.HoldRight, HoldLeft = entry.HoldLeft,
-                  HeadX = MeasureHeadX(clips[PatronClip.Idle][0], entry.HeadY) });
+                  HeadX = MeasureHeadX(idle[0], entry.HeadY) });
             }
+            Debug.Log($"[LastCall] Patron cast: {_looks.Count} looks, {frames} idle frames " +
+                      $"in {watch.ElapsedMilliseconds} ms; the rest warms one person a frame.");
+        }
+
+        /// <summary>How far the warm-up has got through the cast (an index into _looks).</summary>
+        private int _patronWarmAt;
+
+        /// <summary>
+        /// THE WARM-UP (2026-09-26): one person's remaining clips a frame, starting behind
+        /// the boot's curtain — the whole cast is warm in under a second of frames, long
+        /// before the first walk-in, and nothing ever hitches on a clip's first draw. Runs
+        /// off the unscaled ticker, so the main menu's held clock warms the room too.
+        /// </summary>
+        private void StepPatronPrewarm()
+        {
+            if (_patronWarmAt >= _looks.Count) return;
+            var look = _looks[_patronWarmAt++];
+            look.ClipFor(PatronClip.Order); look.ClipFor(PatronClip.Drink);
+            look.ClipFor(PatronClip.Walk); look.ClipFor(PatronClip.Cheer);
+            look.ClipFor(PatronClip.Upset); look.ClipFor(PatronClip.LookRight);
+            look.ClipFor(PatronClip.LookLeft); look.ClipFor(PatronClip.Arrive);
+            look.ClipFor(PatronClip.Leave);
         }
 
         /// <summary>

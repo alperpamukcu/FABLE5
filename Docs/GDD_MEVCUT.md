@@ -1895,6 +1895,39 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.124 · Yük geçişi: kadro tembelleşti, ölü sanat gitti, şablon artıkları söküldü (2026-09-26)
+
+Yazar: “projeyi optimize ettikten ve gereksiz yükleri atıp” — 4. adım. Kanıt tabanı
+`GELISTIRME_RAPORU §0.0-D` ve `PROJE_HARITASI §6`.
+
+- **Kadro TEMBEL yüklenir** (`TycoonHud.Seats.cs LoadPatronFrames`, `PatronLook.ClipFor`):
+  açılış eskiden 41 yüzün 10'ar klibini (~4.384 kare) HUD kurulurken çekiyordu; şimdi yalnız
+  idle + ehliyet fotoğrafı iner (ölçüldü, log satırı kalıcı: **41 look, 41 idle karesi, 36 ms**)
+  ve kalan dokuz klip `ClipFor`'dan geçer — perde arkasında kare başına bir kişi ısıtılır
+  (`StepPatronPrewarm`, ~0.7 sn'de kadro sıcak; ana menü beklerken de ısınır). Boş klasör boş
+  cevabını önbelleğe alır; hiçbir çizim karesi ilk kullanımda takılmaz (PlayMode 15/15).
+- **Ölü sanat silindi** (39 dosya, GUID + metin taramasıyla iki kez doğrulandı):
+  `Fixtures/{gold,silver}_sink_animation/` (28 kare — `fx_sink_water` TABAKALARININ bayt-aynı
+  kopyalarıydı; su tabakaları yerinde), `fx_candle`, `fx_tap_single`, `fx_tap_tee`,
+  `fx_plant_fiddle`, `fx_plant_snake`, `Items/{key_back,key_next,sh_wifi,licence_shell2,
+  glass3d_martini_t5_Front1,sign_shut_arrow,bench_tap_arch,bench_tap_single,bench_tap_tee}`.
+  Steam kitinin referans betiklerinin okuduğu üçlü (`fx_tap_arch`, `licence_shell3`,
+  `sign_open_arrow`) BİLEREK kaldı. `Scene/window_cycle.png` silinmedi, TAŞINDI:
+  `Tools/AssetPipeline/sources/window_cycle.png` — `window_sky.py` şehir plakalarını ondan
+  türetiyor; iki betiğin yolu güncellendi, 432 KB sevkiyattan çıktı.
+- **Şablon artıkları söküldü:** `PC_Renderer/Mobile_Renderer/SampleSceneProfile.asset`
+  (referanssız URP şablonu), `InputSystem_Actions.inputactions` (project-wide actions kaydı
+  `EditorBuildSettings`'ten çözülerek — kod fareyi/klavyeyi doğrudan okur, uGUI modülü kendi
+  varsayılanını kurar; iki takım da bunun kanıtı), `com.unity.collab-proxy` paketi.
+  `defaultScreenWidth/Height` 1024×768 → **1280×720** (tasarım karesi).
+- **Yerel çöp:** `_Recovery/` (11 sahne), `InitTestScene*` ×7, kök ölü csproj'lar, `dev/null/`,
+  `patron_sheet_frames/` (20.5 MB) silindi (hepsi ignore'daydı). `room7_ship.py`'nin okuduğu
+  dört sevk girdisi (`room_variants7/{ceil_dusk,back_wave,floor_marble,rwall_deco}.png`) git'e alındı.
+- Dokunulmayanlar (bilerek): `unity-mcp` paketi (bu masanın köprüsü; OYUNCU derlemesine runtime
+  asm soktuğu not edildi — demo derlemesinden önce çıkarılacak), Mobile kalite seviyesi (ileride
+  düşük-ayar seçeneği olabilir), `Emotes/em_*`, fontlar/`isReadable` (ayrı karar), ölü loc
+  anahtarları. Testler: EditMode 789/789, PlayMode 15/15; bakış ekranları kıpırdamadı.
+
 ### 9.123 · On üçüncü liste: ESC'nin neon çerçevesi, ayarların duvarı, kayıt sistemi, ana menü (2026-09-26)
 
 Yazar: “ESC menüsünün alt ve üst kenarları da diğer kenarlar gibi neon şeritle kaplansın. ESC menüsü ile

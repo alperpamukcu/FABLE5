@@ -444,6 +444,43 @@ namespace LastCall.UI
             /// the sprite is drawn CharSize tall off the rig canvas and pushed down by
             /// CharFootDrop so the counter takes the legs.</summary>
             public float HeadTop => (CharCanvas - HeadY) * (CharSize / CharCanvas) - CharFootDrop;
+
+            /// <summary>
+            /// A clip's frames, loaded the FIRST time anyone asks (2026-09-26, the weight
+            /// pass): the boot used to pull the whole cast's ~4,400 frames while the HUD was
+            /// built, and forty of the forty-one people might never walk in tonight. Now the
+            /// boot loads each face's IDLE (the head row is measured off it) and the other
+            /// nine clips come through here — from the warm-up behind the curtain
+            /// (StepPatronPrewarm, one person a frame) or, at worst, the frame a clip is
+            /// first drawn. A folder with no art caches its empty answer, exactly as the
+            /// eager loader kept it.
+            /// </summary>
+            public Sprite[] ClipFor(PatronClip clip)
+            {
+                if (Clips.TryGetValue(clip, out var frames)) return frames;
+                frames = LoadPatronClip(Slug, PatronClipFolder(clip));
+                Clips[clip] = frames;
+                return frames;
+            }
+        }
+
+        /// <summary>The folder each clip lives in under Patron/&lt;slug&gt;/ — the one place
+        /// the enum meets the disk, shared by the eager idle load and the lazy door.</summary>
+        private static string PatronClipFolder(PatronClip clip)
+        {
+            switch (clip)
+            {
+                case PatronClip.Order: return "order";
+                case PatronClip.Drink: return "drink";
+                case PatronClip.Walk: return "walk";
+                case PatronClip.Cheer: return "cheer";
+                case PatronClip.Upset: return "upset";
+                case PatronClip.LookRight: return "look_right";
+                case PatronClip.LookLeft: return "look_left";
+                case PatronClip.Arrive: return "arrive";
+                case PatronClip.Leave: return "leave";
+                default: return "idle";
+            }
         }
 
         /// <summary>
@@ -1643,6 +1680,7 @@ namespace LastCall.UI
             // or on the first frames of one — would leave it up with nothing to lift it.
             StepCurtain();
             StepMarketKeyLamp();
+            StepPatronPrewarm();     // one person's clips a frame (2026-09-26, the weight pass)
 
             var run = Run;
             if (run == null) return;

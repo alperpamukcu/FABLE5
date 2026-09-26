@@ -34,7 +34,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-SHEET = os.path.join(ROOT, 'Assets', 'Resources', 'Scene', 'window_cycle.png')
+SHEET = os.path.join(ROOT, 'Tools', 'AssetPipeline', 'sources', 'window_cycle.png')   # moved out of the build 2026-09-26 (the weight pass)
 CITY_OUT = os.path.join(ROOT, 'Assets', 'Resources', 'Scene', 'window_city.bytes')
 MODEL = os.path.join(ROOT, 'Assets', 'Resources', 'Data', 'sky_cycle.json')
 PREVIEW = os.path.join(HERE, 'window_sky_preview.png')

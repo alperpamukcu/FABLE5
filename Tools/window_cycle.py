@@ -43,7 +43,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 RAW = os.path.join(HERE, 'window_raw')
 ROOM = os.path.join(ROOT, 'Assets', 'Art', 'Backgrounds', 'club_room.png')
-OUT = os.path.join(ROOT, 'Assets', 'Resources', 'Scene', 'window_cycle.png')
+OUT = os.path.join(ROOT, 'Tools', 'AssetPipeline', 'sources', 'window_cycle.png')   # a tool source, not a shipped sheet, since 2026-09-26
 LOG = os.path.join(HERE, 'AssetPipeline', 'generation_log.jsonl')
 
 # The PixelLab animation sheets: 17 frames of 193x150 on a 5x4 grid, the last three cells
