@@ -16,8 +16,8 @@ namespace LastCall.UI
     ///
     /// THE KEYS ARE THE AUTHOR'S PACK (the same message: "Butonlar içinde bu dosya yolundaki butonları kullan" —
     /// MenuPack): a worded key stands on the pack's blank cell 9-sliced at 2x and carries one of its glyphs; RESUME is
-    /// the one orange key; SAVE and CONTINUE stand greyed with a SOON tag until a save layer exists (there is none —
-    /// TycoonRun.cs:310); SETTINGS opens the window over this; NEW RUN and QUIT do what they say.
+    /// the one orange key; SETTINGS opens the window over this; MAIN MENU goes back to the front door (2026-09-26 —
+    /// the SOON keys SAVE and CONTINUE became the save layer and the menu's CONTINUE); NEW RUN and QUIT do what they say.
     ///
     /// THE KEYS FIT THEIR WORDS (the author: "butonlar hoverlar dillere göre cümle uzun veya kısa olduğunda flexible
     /// olmalı kesinlikle"): every key here is sized from its label's measured width (FitKey), never from a number.

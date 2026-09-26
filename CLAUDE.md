@@ -83,8 +83,8 @@ The scene can be rebuilt with the **LastCall → Create Debug Scene** menu item.
 **The UI has a floor now** (2026-08-12): `run_tests` with `assembly_names: "LastCall.PlayTests",
 mode: "PlayMode", init_timeout: 180000` plays the real scene with a virtual mouse — the bar
 opens, a stool is clicked and gives up its licence, a bottle is clicked and lands on the
-bench, and the bench pours. It is a floor and not coverage: 28k lines of UI still ride on
-four tests, and the rest is still caught by entering play mode and LOOKING. Measure the thing
+bench, and the bench pours. It is a floor and not coverage: ~59k lines of UI still ride on
+fifteen tests, and the rest is still caught by entering play mode and LOOKING. Measure the thing
 you changed in play (`execute_code` reads live rects and fields) rather than trusting that it
 compiles. Run both suites before a push; PlayMode needs the editor OUT of play mode first.
 
@@ -154,8 +154,8 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   peeled first, palette-snapped, label found on the master and re-drawn crisp, one 1px ring) —
   never mode-sampled, never regenerated (both were tried and looked worse, GDD_MEVCUT §9.18). `BottleArt` draws the hand
   bottle with a world-level liquid line (§12 tier 1); the cellar is three SpriteRenderers
-  under a SpriteMask. Cards without v4 art fall back to `v3_{id}_flat` / `bot_{id}` and the
-  old `BottleFill`. Masters are generated EMPTY, OPEN and LABEL-LESS; the label is pressed by
+  under a SpriteMask. Cards without v4 art fall back to the
+  old `BottleFill` (the v3 flat plates themselves were deleted 2026-09-07; see ItemArt). Masters are generated EMPTY, OPEN and LABEL-LESS; the label is pressed by
   `Tools/v4_bottles/process.py`; nothing enters `Assets` except through `ship.py` + `picks.json`.
 - **One star and one heart** (2026-09-04): every star and heart in the game comes from
   `ItemArt.Star(lit, px)` / `ItemArt.Heart(lit, px)` — two states, two sizes (16 and 32; the

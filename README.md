@@ -124,9 +124,9 @@ burns if you miss too often. Story is opt-in data (`story/story.json`); a run wi
 1. Open the project in Unity **6000.3.10f1** (or a compatible 6000.3.x editor).
 2. Open [Main.unity](Assets/Scenes/Main.unity) and press **Play**.
 3. **Click a stool** to read the ID — this takes the order.
-4. Open the **MENU** (the back bar) and click a bottle — it routes itself: beer to the
-   tap, carbonated to the serving glass, everything else to the shaker, garnish straight
-   into the tin.
+4. Open the **cellar under the counter** (the C key, or click the counter's doors) and pick
+   a bottle — it routes itself: beer to the tap, carbonated to the serving glass, everything
+   else to the shaker, garnish straight into the tin.
 5. Build the drink, pour it out, dress it (ice / lemon / salt / sugar at the serve bench),
    then **drag the glass onto the customer's stool**.
 
@@ -146,14 +146,14 @@ If the scene ever breaks, rebuild it from the **LastCall → Create Debug Scene*
 
 Two suites, both green before any push:
 
-- **EditMode** (`LastCall.Tests`) — 300+ tests across 15 suites: recipe matching and
+- **EditMode** (`LastCall.Tests`) — ~790 tests across 50+ suites: recipe matching and
   parity, pour/tap physics, scoring, economy, star track, determinism, data validation,
   the hidden-information boundary, and the last-customer trial.
 - **PlayMode** (`LastCall.PlayTests`) — a **virtual mouse plays the real scene**: the bar
   opens and deals a night, a stool answers the pointer, a bottle takes the bench, the
   bottle pours into the tin. On top of that, `LookTests` compares whole screens **pixel
   for pixel** against blessed baselines in `Assets/Tests/PlayMode/Baselines~/` (the back
-  bar, the bench, the market's basket foot, the closing beat). When a screen is *meant* to
+  bar, the bench, the market's basket foot, the main menu). When a screen is *meant* to
   change: **LastCall → Re-bless UI Baselines**, then run twice. Baselines are
   machine-local by design and stay out of CI.
 

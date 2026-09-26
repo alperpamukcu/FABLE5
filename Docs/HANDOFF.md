@@ -13,7 +13,7 @@ Everything here is deliberately gitignored. The clone will look complete and wil
 | Missing | What it means | What to do |
 |---|---|---|
 | **`Tools/pixellab_token.txt`** | The PixelLab Bearer token (36 bytes). Every art generator reads it. Without it `Tools/pixellab.py` fails on auth, not on a clear message. | Copy the file across by hand, or paste a fresh token from the PixelLab account. **It is a secret — it does not belong in a commit.** |
-| **`Library/`** (~3 GB) | Unity's import cache. | Do not copy it. Unity rebuilds it on first open — that import is LONG (5,000+ sprites). Start it and leave it alone. |
+| **`Library/`** (~4.3 GB) | Unity's import cache. | Do not copy it. Unity rebuilds it on first open — that import is LONG (5,000+ sprites). Start it and leave it alone. |
 | `Temp/`, `obj/`, `Logs/`, `UserSettings/` | Per-machine scratch. | Nothing. |
 | `Tools/*_raw/`, `Tools/AssetPipeline/staging/` | Raw generator output, ~2 MB, already processed into `Assets/`. Untracked on 2026-08-20. | Nothing. Re-generate if a pipeline is ever re-run. |
 | `.agents/` | IDE agent rules for another tool. | Nothing. |
@@ -134,8 +134,10 @@ real time:
    editor but does NOT reach the file, even through `SaveAssets`, `File/Save Project` or a
    `SerializedObject` write, and Unity rewrites the file back after play. The author turned it
    off in the Editor UI instead (Edit → Project Settings → Editor → Enter Play Mode Settings)
-   and it now holds: the file reads `0 / 0`, survives a play cycle, and no longer has to be
-   hand-corrected before every commit. **If you ever need to change it, use the UI** — a
+   and it then held at `0 / 0` — but as of 2026-09-26 the file reads `1 / 1` again (domain
+   reload OFF), and the code now leans on that: session pins (SaveStore, SeedPolicy,
+   PlayerOptions) reset themselves at play start precisely because statics survive plays.
+   Treat 1/1 as the current truth and do not hand-correct the file. **If you ever need to change it, use the UI** — a
    scripted write will look like it worked and will not have.
 
 **A test-side fix went in with this**: both suites' `OpenTheBar()` now waits for

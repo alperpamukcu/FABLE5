@@ -1,6 +1,6 @@
 ﻿# LAST CALL — GELİŞTİRME RAPORU
 
-**Denetim tarihi:** 2026-08-07 · **Günlük son güncelleme:** 2026-08-10
+**Denetim tarihi:** 2026-08-07 · **Günlük son güncelleme:** 2026-09-26 (eksik listesi §0.0)
 **Yöntem:** 8 kollu kod denetimi (dosya:satır kanıtlı) + sim raporu + doküman-kod karşılaştırması
 **Eş belge:** `Docs/GDD_MEVCUT.md` (oyunun bugünkü kuralları)
 
@@ -9,6 +9,95 @@
 > yazıldı; günlük ondan sonrasını sürüyor ve denetimin bayatlayan satırlarını §0.5'te
 > tek tek işaretliyor. Bir sayı iki yerde çelişirse **günlük doğrudur** — o ölçülmüş,
 > denetim hatırlanmış olabilir.
+
+---
+
+## 0.0 · EKSİK LİSTESİ — 2026-09-26 (yazar: "teknik, donanım ve içerik olarak tamamlayalım")
+
+*İki okuma ajanının dosya:satır kanıtlı taramasından (HEAD `32d2bf56`). Eş belge:
+`Docs/PROJE_HARITASI.md` (dosya yollarıyla proje düzeni). Sıralama kabaca demo yoluna göre;
+"KARAR" = yazarın seçimi gerekiyor. Aşağıdaki 08-07 denetiminin bayatlamış satırları için bu
+bölüm kazanır (483 test → bugün 789+15; kayıt sistemi §9.123 ile geldi).*
+
+### A · TEKNİK
+
+1. **Derleme hattı yok:** `BuildPipeline` kullanımı yok, `.github/` yok, derleme betiği yok.
+   Demo öncesi: Windows build betiği (Editor menüsü ya da `-batchmode`), sürüm damgası, çıktı klasörü.
+2. **Demo yapılandırması yok:** demo define'ı, gece sınırı, teşekkür/istek-listesi ekranı yok
+   (plan: `Docs/marketing/LAUNCH_READINESS.md:35-50`). `FirstWeek` yalnız içerik (`FirstWeek.cs:43`).
+3. **Dev yüzeyleri Development Build'de görünür:** DEV TOOLS + dev tezgâh `#if UNITY_EDITOR ||
+   DEVELOPMENT_BUILD` (`TycoonHud.Settings.cs:314`, `TycoonHud.Chrome.cs:2192`); `Dev*` fiilleri
+   Core API'sinde kalıyor (preset/skip/jump/forcelastcall/fit). İnceleme/demoya dev build verme.
+4. **Çökme/telemetri kancası yok** (`enableCrashReportAPI: 0`, log yakalayıcı yok).
+5. **Steam entegrasyonu yok:** Steamworks paketi yok, `steam_appid.txt` yok, başarım yok, Steam
+   Cloud işareti yok; dil OS'ten (`Languages.FromSteam` beslenmiyor, `Localization.cs:44`).
+   Kayıt `persistentDataPath/saves/run.json` — Auto-Cloud yolu EA'den önce yazılmalı.
+6. **Yazılı son müşteri sahnede KAPALI:** `TycoonConfig.ForTheScene` `lastCall: false`
+   (`TycoonConfig.cs:51-58`); ark yalnız `DevForceLastCall` ile oynuyor. `storyInPlay` alanı
+   "S3 ile sil" notuna rağmen duruyor (`GameBootstrap.cs:35-44`). KARAR: demoda açık mı?
+7. **Denge:** 200-koşu simi hâlâ 200/200 iflas (medyan 22. gün, `tycoon_sim_report.md:13-19`);
+   projeksiyonda öğrenen bar 1.7★'da takılı; oda fiyatı ×0.35 kolu KARAR bekliyor
+   (`GDD_MEVCUT` 9.122). P18'in dört kutusu açık (`PLAN_service_depth.md:756-813`), döküm
+   hassasiyeti neredeyse fark yaratmıyor (%18 hata → %99.9 Exact, `imperfect_hands_report.md`).
+8. **Kayıt sınırları (bilerek):** tek yuva, yalnız şafakta; sürüm/veri kayması TÜM kaydı reddeder
+   (göç yok); `companyName` hâlâ DefaultCompany — EA'den önce BİR KEZ "LasGen Interactive"e
+   çevrilmeli (kayıt klasörü + PlayerPrefs taşınır).
+9. **PlayMode ilk-koşu yalancı kırmızısı** hâlâ teşhissiz (§0.5); UI 59k satıra 15 PlayMode testi.
+10. **Depo hijyeni:** mağaza/pazarlama hattı git dışı (PROJE_HARITASI §6.1 — kayıp riski),
+    ~1.300 aday/çıktı `??` sızıntısı (§6.2), sevk girdisi 4 dosya izlenmiyor (`room7_ship.py`).
+
+### B · DONANIM / PLATFORM
+
+1. **Gamepad/kumanda kodu SIFIR:** 14 dosyada 46 `Mouse.current/Keyboard.current`; şablon
+   `InputSystem_Actions.inputactions` kayıtlı ama kullanılmıyor. Steam Deck incelemesi kumanda
+   ister (`steamworks-rules_2026-09-26.json:136`); EA cevabı "planlanıyor" diyor.
+2. **Steam Deck:** 1280×800'de en küçük yazı ~8.9 px (sınır 9); doğrulama koşusu yok.
+3. **En-boy:** 16:10/ultrawide/Deck ölçülmedi (kırpma kuralı `DesignFrame.cs:21-31`);
+   1366×768 masaüstü HİÇBİR pencere boyu alamıyor (`DisplayOptions.cs:40-55`); yalnız borderless.
+4. **Standalone iskeleti:** backend MONO (IL2CPP yok → stripEngineCode etkisiz), grafik API
+   otomatik, `defaultScreenWidth 1024×768`, exe ikonu boş, Unity splash açık, Mac ikonu TODO.
+5. **Min-spec ölçülmedi:** sayfa taslağı "Win10 64-bit, 4 GB, DX11" — ölçümle doğrulanacak
+   (`PAGE_SETUP.md:26`). Düşük donanım testi kaydı yok.
+6. **Erişilebilirlik — var:** MOTION, FLASHES, POINTER (2x), COLOUR CUES, PAUSE WHEN AWAY,
+   INVERT POUR, 7 tuş yeniden bağlama, ses×3. **Yok (KARAR):** CARRYING (tıkla-taşı),
+   SMALL PRINT (8→16), LEFT-HANDED; UI ölçeği; bas-tut hareketlerine alternatif.
+
+### C · İÇERİK
+
+1. **Kadro:** 41 yüz çizili / kadroda 90 (49 "planned"); EA metni "yüz kişi" diyor. Yüz kilidi
+   ilerlemesi yok (her yıldız kapısı 0). Eski rig listesi yeniden çizim bekliyor.
+2. **Hikâye:** Ece'nin kendi yüzü yok (`placeholderLook: silkwoman`); S6'nın üç konuğu yüzsüz
+   (~90 üretim/yüz, `PLAN_last_call.md:376-387`); yazılı arkın ilk `unlockBeat`'i yazılmadı.
+3. **Oda sanatı:** lavabo 3. basamak (mermer reddedildi) yeni çizim bekliyor; "+20 ONLY" tabelası
+   sağ duvar örtüsünün altında; kola/votka gri-mor okunuyor; TV reklam 2. seti üretilmedi
+   (`tv_ads2/` boş); ana menüde logo yok (yalnız yazı — logo `steam_kit/deliver/logos/`ta).
+4. **Ses:** 14 şarkı var; ana menü teması YOK; 5 sfx eksik (`SES_LISTESI.md:217`: till_open,
+   neon_buzz, fixture_install, paper_stamp_fail, ui_error); OST albümü bestelenmedi
+   (master ~13 Eki, `DLC_PLAN.md:52`).
+5. **Lokalizasyon:** dil başına 224 çevrilmemiş anahtar (tr: 39) — en büyük öbekler rank (51),
+   id (35), data (27), book.trait (26); L2 taşma taraması (9 Eki), L3 font, L4 ekran kontrolü
+   (16 Eki) açık; "host→bartender" mağaza düzeltmesi 8 dilde bekliyor; ölü anahtarlar
+   (`data.snack.*` ×4 + 2 kural + `chrome.pause.save`) 29 tabloda taşınıyor.
+6. **Mağaza varlıkları:** kapsüller/ikonlar/29 dil metni HAZIR; **oyun içi ekran görüntüsü (≥5),
+   fragman, GIF'ler, demo kapsülleri YOK** — mağaza sayfası incelemesinin blokajı
+   (`PAGE_SETUP.md:81`). Content Survey + AI beyanı YALNIZ YAZAR.
+7. **Takvim** (`LAUNCH_READINESS.md:95-108`): 26-28 Eyl app oluştur + INDIE Live Expo başvurusu
+   (paket hazır: `marketing/events/INDIE_LIVE_EXPO.md`, son gün 29 Eyl); 29 Eyl-3 Eki ekran
+   görüntüleri; ~3-6 Eki sayfa incelemeye; 9 Eki Kapı 1; 22 Eki Kapı 2 (sürüm+demo+fragman);
+   5 Kas EA.
+
+### D · OPTİMİZASYON / GEREKSİZ YÜK (demo öncesi "yük atma" listesi)
+
+1. Resources ~139 MB'ın tamamı sevk ediliyor: Audio 56.6 + Patron 39.1 (4.384 gevşek PNG,
+   SpriteAtlas yok, açılışta HEPSİ yüklenir) + Fonts 35 (CJK 3×7 MB her sürüme biner) + loc 7.
+2. 5.193 PNG'de `isReadable: 1` (CPU kopyası) — patronlarda bilerek (alfa isabeti), kalanında gözden geçir.
+3. Ölü sanat adayları (GUID taramalı liste: PROJE_HARITASI §6.3) ≈ 600 KB + 39 dosya.
+4. Paketler: `com.coplaydev.unity-mcp` OYUNCU derlemesine runtime asm sokuyor; `collab-proxy`
+   gereksiz; modül seti (terrain/vehicles/xr…) Mono'da traşlanmıyor.
+5. Nadir/ölü ses: `ambience_loop.wav` (2.8 MB, yalnız yedek), `music_story_1.ogg` (lastCall
+   kapalıyken erişilmez).
+6. Şablon artıkları + `_Recovery`/`InitTestScene*` + kök ölü csproj'lar + `dev/null/` +
+   `patron_sheet_frames/` (20.5 MB kopya).
 
 ---
 
