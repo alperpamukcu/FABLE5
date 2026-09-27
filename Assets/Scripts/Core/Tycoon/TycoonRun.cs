@@ -1289,6 +1289,8 @@ namespace LastCall.Core
         public IReadOnlyList<CustomerVisit> Tick(double seconds)
         {
             EnsurePhase(TycoonPhase.DayOpen);
+            // THE NIGHT WAITS WHILE SHE TALKS (2026-09-27; TycoonRun.Talk). Before anything reads the seconds.
+            if (Talking) return System.Array.Empty<CustomerVisit>();
             var seated = Floor.Tick(seconds, NextArrival);
             FadeTheRoom(seconds);     // what the room is still talking about, running down
             SettleDepartures();
@@ -3421,6 +3423,7 @@ namespace LastCall.Core
             atDawn?.Invoke(BuildSnapshot());
             Floor = NewFloor(Rating.Average);
             Phase = TycoonPhase.DayOpen;
+            Talking = false;          // a new night never opens held (TycoonRun.Talk)
             TeachAtOpen();
             return result;
         }
