@@ -1895,6 +1895,22 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.131 · Ev sahibi konuşurken gece durur (2026-09-27)
+
+Yazar: “Konuşmalar yaşanırken zaman ilerlememeli, yeni insanlar gelmemeli.” Ders plakası açıkken gece
+ilerliyordu: içeri müşteri giriyor, bekleyenlerin sabrı azalıyordu. Tek tutma HUD'daydı (kitap ve menüler
+saati ölçekliyordu).
+
+- **Core fiili** (`TycoonRun.Talk`, e12079ef): `BeginTalk` yalnız açık bir gecede tutar, `EndTalk` bırakır;
+  tutuluyken `Tick` hiçbir şeyi ilerletmez — saat, kapı, sabır, dağınıklık, deneme sayacı. Kapalı gece
+  tutulamaz, yeni gece tutuklu açılmaz. Simülasyon botu hiç istemediği için geceleri değişmedi.
+- **Ekran**: ev sahibinin plakası (`LastCallPlate`) açık olduğu sürece HUD geceyi tutar; odadaki içiciler de
+  durur, penceredeki hava ve neon canlı kalır (oda donmuş değil, bekliyor görünsün diye).
+- **Takım**: açılışta ilk gecenin dersi saati tuttuğu için iki fikstürün açılış beklemesi ve elle ilerletilen
+  üç gece döngüsü artık ev sahibini dinliyor (`LetTheHostFinish`), bir oyuncunun yapacağı gibi.
+- Doğrulama: EditMode 791/791; PlayMode 14/15 — tek kırmızı `bench` görsel testi, başka bir oturumun commit
+  edilmemiş şişe plakalarından (el şişesinin bölgesi), bu değişiklikle ilgisiz.
+
 ### 9.130 · Ana menü giyindi: vinyet, nefes alan logo, 1-bit tuş ikonları, süzülerek gelen tuşlar, CREDITS (2026-09-27)
 
 Yazar: “Evet ekle, aynı zamanda ana menüyü geliştir tasarımını ve butonların üstündeki iconları güncelle.”

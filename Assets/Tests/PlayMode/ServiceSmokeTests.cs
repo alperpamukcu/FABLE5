@@ -971,7 +971,13 @@ namespace LastCall.PlayTests
             while ((_boot.Tycoon.Floor.Elapsed <= 0
                     || _boot.Tycoon.Phase != TycoonPhase.DayOpen)
                    && Time.realtimeSinceStartup < open)
+            {
+                // SHE SPEAKS BEFORE THE DOOR OPENS (2026-09-27): the host's first-night lesson now holds the
+                // night's clock until it is heard (TycoonRun.Talk; the author: "Konuşmalar yaşanırken zaman
+                // ilerlememeli, yeni insanlar gelmemeli"), so this mouse hears her out, as a player must.
+                if (_boot.Tycoon.Talking) yield return LetTheHostFinish();
                 yield return null;
+            }
             Assert.That(_boot.Tycoon.Floor.Elapsed, Is.GreaterThan(0),
                 "the curtain never lifted — the night's clock never started");
             Assert.That(_boot.Tycoon.Phase, Is.EqualTo(TycoonPhase.DayOpen),
@@ -988,6 +994,7 @@ namespace LastCall.PlayTests
             var run = _boot.Tycoon;
             for (int i = 0; i < 600 && FirstSeated() == null; i++)
             {
+                if (run.Talking) yield return LetTheHostFinish();   // (a lesson up mid-night holds the run's clock until she is heard: TycoonRun.Talk, 2026-09-27)
                 run.Tick(0.5);
                 if (i % 20 == 0) yield return null;   // let the HUD see what the floor did
             }

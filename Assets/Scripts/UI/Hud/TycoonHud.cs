@@ -1801,7 +1801,13 @@ namespace LastCall.UI
                 // hold while the working menus keep their 0.3 — and the clock still
                 // moves, because the night keeps its one-way arrow.
                 // ...and the PAUSE MENU holds it outright (2026-09-15): nothing moves behind the palm wall.
-                float clock = Paused ? 0f : _bookOpen ? (float)TycoonConfig.BookTimeScale
+                // SHE TALKS, THE NIGHT WAITS (2026-09-27, the author: "Konuşmalar yaşanırken zaman ilerlememeli,
+                // yeni insanlar gelmemeli"): the host's plate being up IS the conversation, and Core holds the
+                // floor for as long as it is (TycoonRun.Talk) - the clock, the door, everybody's patience.
+                bool talking = _plate != null && _plate.gameObject.activeInHierarchy;
+                if (talking) run.BeginTalk();
+                else if (run.Talking) run.EndTalk();
+                float clock = Paused || run.Talking ? 0f : _bookOpen ? (float)TycoonConfig.BookTimeScale
                     : menuOpen ? (float)TycoonConfig.MenuTimeScale : 1f;
                 // THE ROOM RUNS ON THE SAME CLOCK AS THE NIGHT (2026-09-08, the author:
                 // "menüye bakmak zamanı ve oyunu durdursun"). The sim was scaled here and the
@@ -1813,7 +1819,8 @@ namespace LastCall.UI
                 // ...and the room's AMBIENT animation (window wind, tap water, flicker)
                 // follows the same clock, so the book stops the whole picture (2026-09-08).
                 // Not gated on the doors: a closed bar still has weather in its window.
-                if (stage != null) stage.AmbientScale = clock;
+                // (While she talks the weather in the window keeps moving: the room is WAITING, not frozen.)
+                if (stage != null) stage.AmbientScale = run.Talking && !Paused ? 1f : clock;
                 if (!DoorsClosed)
                     run.Tick(Time.deltaTime * clock);
             }
