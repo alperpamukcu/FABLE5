@@ -115,6 +115,8 @@ LEGEND = {
     'M': MAGENTA[4], 'm': MAGENTA[3], 'n': MAGENTA[2], # the drink, the grip - the site's lit accent
     'L': LIME[4], 'l': LIME[3], 'g': LIME[2], 'o': LIME[0],   # the up-arrow badge (and the olive)
     'G': GRAPHITE[4],                                  # steel: the stool, the crate's strap, the bottle's screw cap
+    # up_* construction (the restock tile, D): its Graphite[1] ink and the Amber wood of up_bar's counter
+    'K': GRAPHITE[1], 'S': GRAPHITE[3], 'H': AMBER[1], 'E': AMBER[0],
     '#': WHITE,                                        # the marks: white, for the caller to tint
 }
 
@@ -491,6 +493,64 @@ BATT = [
 ]
 
 # name -> (map, size, kind, one line on why)
+# ── D. THE RESTOCK TILE, 48x48, in the up_* rail's own construction ────────────────────────────────────────────
+#
+# The author (2026-09-27, pointing at the upgrade rail: "Restock görseli, paylaştığım görseldeki iconlar. Tekrardan
+# tasarlansın anlattığım tarza göre"): the RESTOCK THE WELL tile wore sh_p_crate, a 24x20 crate blown to 48x40 and
+# stood at 3x - a picture in another hand beside the upgrade tab's pictograms. It is redrawn in theirs: a 24 grid at
+# 2x (upgrade_icons.py's K = 2), the Graphite[1] keyline one cell wide, up_bar's Amber wood lit from the upper left
+# with a lit left edge, sh_p_crate's steel strap down the middle, two capped bottles coming up cap - neck -
+# shoulder (a third stood behind the badge and showed only as a sliver), and the house's green up-arrow badge in the top-right corner. The badge is not redrawn: it is lifted
+# pixel for pixel out of up_bar.png, which carries the author's own 09-23 pass, so the two can never drift apart.
+# 48 in the tile's 118 art box stands at a whole 2x, the same 96 the upgrade tiles stand at.
+UP_RESTOCK = [
+    "........................",
+    "........................",
+    "...KKKK.KKKK............",
+    "...KrrK.KrrK............",
+    "...KrrK.KrrK............",
+    "...KCcK.KCcK............",
+    "...KCcK.KCcK............",
+    "...KCcK.KCcK............",
+    "..KCCccKCCccK...........",
+    "..KCCccKCCccK...........",
+    ".KKKKKKKKKKKKKKKKKK.....",
+    ".KAAAAAAAGSAAAAAAaK.....",
+    ".KAaaaaaaGSaaaaaabK.....",
+    ".KAbbbbbbGSbbbbbbHK.....",
+    ".KEEEEEEEGSEEEEEEEK.....",
+    ".KAaaaaaaGSaaaaaabK.....",
+    ".KAbbbbbbGSbbbbbbHK.....",
+    ".KAHHHHHHGSHHHHHHEK.....",
+    ".KEEEEEEEGSEEEEEEEK.....",
+    ".KAbbbbbbGSbbbbbbHK.....",
+    ".KAHHHHHHGSHHHHHHEK.....",
+    ".KAHHHHHHGSHHHHHHEK.....",
+    ".KKKKKKKKKKKKKKKKKK.....",
+    "........................",
+]
+
+
+def up_badge():
+    """The house's green up-arrow badge exactly as up_bar.png carries it (the author's pass): its Lime pixels in the
+    top-right quarter, everything else clear."""
+    src = Image.open(os.path.join(ITEMS, 'up_bar.png')).convert('RGBA')
+    out = Image.new('RGBA', src.size, (0, 0, 0, 0))
+    sp, op = src.load(), out.load()
+    for y in range(src.height // 2 + 2):
+        for x in range(src.width // 2 - 2, src.width):
+            p = sp[x, y]
+            if p[3] == 255 and p[:3] in (LIME[0], LIME[3], LIME[4]):
+                op[x, y] = p
+    return out
+
+
+def build_up_restock():
+    im = from_map(UP_RESTOCK, (24, 24)).resize((48, 48), Image.NEAREST)
+    im.alpha_composite(up_badge())
+    return im
+
+
 ICONS = {
     'mk_tab_restock': (TAB_RESTOCK, (24, 24), 'tab', "a Malt crate on sh_p_crate's posts and strap, three capped bottles"),
     'mk_tab_liquor': (TAB_LIQUOR, (24, 24), 'tab', "a whisky bottle with a cream label in front of a clear Cyan one"),
@@ -576,6 +636,9 @@ def build_all():
         im = from_map(rows, size)
         im.save(os.path.join(OUT, name + '.png'))
         made[name] = im
+    up = build_up_restock()
+    up.save(os.path.join(OUT, 'up_restock.png'))
+    made['up_restock'] = up
     # a name the set no longer draws must not linger beside it, or --ship's reader would think it current
     for stale in glob.glob(os.path.join(OUT, 'mk_*.png')):
         if os.path.splitext(os.path.basename(stale))[0] not in ICONS:
@@ -673,6 +736,19 @@ def check(made):
             note = mark_note(name)
         rows.append((name, '%dx%d' % im.size, '%d,%d-%d,%d' % (bb[0], bb[1], bb[2] - 1, bb[3] - 1),
                      '%+.1f,%+.1f' % (dx, dy), len(cols), note))
+    # D: the restock tile in the up_* construction
+    up = made['up_restock']
+    if up.size != (48, 48):
+        fails.append('up_restock is %s, wants 48x48' % (up.size,))
+    if not {p[3] for p in pixels(up)} <= {0, 255}:
+        fails.append('up_restock has a partial alpha')
+    ucols = colours_of(up)
+    uoff = [c for c in ucols if c not in PALETTE]
+    if uoff:
+        fails.append('up_restock has off-palette %s' % ['#%02X%02X%02X' % c for c in uoff])
+    ubb, udx, udy = centre_off(up)
+    rows.append(('up_restock', '48x48', '%d,%d-%d,%d' % (ubb[0], ubb[1], ubb[2] - 1, ubb[3] - 1),
+                 '%+.1f,%+.1f' % (udx, udy), len(ucols), 'tile window (Night[2]) at 2x'))
     # the house marks the market now wears: drawn by ChromeArt, reported here so the table covers every slot
     for n in HOUSE:
         im = from_map(house_rows(n), (16, 16))
@@ -1020,7 +1096,7 @@ def ship():
     """The author's pick goes in: every finished PNG into Resources/Items, where PatronArtPostprocessor imports it
     as a Point-filtered, uncompressed sprite. Run only once the preview has been chosen - and only with the slot
     changes in the module header made, or the head and buff marks land at 1.125x / 0.875x."""
-    for name in ICONS:
+    for name in list(ICONS) + ['up_restock']:
         shutil.copyfile(os.path.join(OUT, name + '.png'), os.path.join(ITEMS, name + '.png'))
         print('shipped', name)
 

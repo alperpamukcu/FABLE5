@@ -2386,7 +2386,11 @@ namespace LastCall.UI
                     Meta = UIText.T("dayend.restock.well.meta"),
                     // A CRATE, not the department icon it was borrowing — the errand
                     // and the tab it lives under were drawing the same thing.
-                    Art = ItemArt.Load("sh_p_crate") ?? ItemArt.Load("sh_i_restock"),
+                    // IN THE RAIL'S OWN HAND (2026-09-27, the author, pointing at the upgrade rail: "Restock
+                    // görseli, paylaştığım görseldeki iconlar. Tekrardan tasarlansın anlattığım tarza göre"):
+                    // up_restock is the crate as an up_* pictogram with the house's green badge, 48 at a whole
+                    // 2x in the tile like every upgrade tile (Tools/market_icons.py, D).
+                    Art = ItemArt.Load("up_restock") ?? ItemArt.Load("sh_p_crate"),
                     Identity = UIText.T("dayend.restock.well.identity"),
                     MetaLine = UIText.T("dayend.restock.well.meta_line"),
                     Body = UIText.T("dayend.restock.well.body",
