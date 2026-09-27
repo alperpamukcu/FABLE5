@@ -1895,6 +1895,34 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.126 · Giriş ekranı yeniden: düz zemin, süzülen bardaklar, mağazanın logosu, LOAD + küçük sıra (2026-09-27)
+
+Yazar, boyalı cepheye ikinci bakışta: “Ana menüyü sevmedim kalitesi düşük düz arkaplan ve hareketli
+iconlar olabilir. New Run'un yanına load, müzik ayarları, dil ayarı, steam sayfasına gönderen bir
+buton ... Ve oyunda kullandığımız logo giriş sayfasında olmalı. Malibu Club yazısı.”
+
+- **Düz zemin:** boyalı cephe (`menu_title_bg`) Resources'tan emekli edildi (staging'de duruyor);
+  alan tek renk — paletin koyu erguvanı (`UITheme.Night[1]`).
+- **Süzülen bardaklar:** beş boş bardak silüeti (`glass3d_{martini,rocks,highball,coupe,pint}`)
+  ×10 kopya, alfa 0.13, hafif eğik, yavaş çapraz şeritlerde sarmalanarak akar + küçük salınım.
+  Konumlar indeksten ARİTMETİK (ölçeksiz saat üzerinde) — hiçbir RNG akışına dokunmaz; REDUCED
+  MOTION hepsini olduğu yerde durdurur. `StepMenuFade` hem ağarmayı hem akışı sürer.
+- **Logo başlıktır:** mağazanın kendi lockup'ı (`Tools/steam_kit/deliver/logos/lockup_2rows_2000`)
+  LANCZOS ile tam çizim boyuna (560×210) indirilip `Menu/menu_logo.png` olarak sevk edildi —
+  point filtresi 1:1 çizimde hiç örnekleme yapmaz. Markiz + NightTitle + alt başlık metni gitti;
+  logosuz derleme eski neon yazıya düşer.
+- **Tuşlar:** CONTINUE artık HEP tahtada — kayıt yokken pause'un SOON giysisiyle (etiketsiz) gri
+  ve basılamaz, kayıt varken turuncu + gece/kasa notu. NEW RUN (kayıtsızken turuncu), SETTINGS,
+  QUIT. Altında küçük sıra (36'lık): **AUDIO** ve **LANGUAGE** doğrudan o sayfalara
+  (`OpenSettingsFromMenu(sayfa)` — BACK menüye döner), **STEAM** yalnız `StoreLink.Page`
+  doluyken durur (Game/StoreLink.cs — uygulama Steam'de henüz yok, adres tek satır, yazar
+  doldurunca tuş kendiliğinden çıkar). Sıra sözcük genişliğine göre kendini ortalar; AUDIO ve
+  LANGUAGE etiketleri ayarların kendi sekme anahtarlarını kullanır (28 dil bedava).
+- Kapı teması (`music_menu_1`), 0.6 sn ağarma ve tek-teklif kuralları 9.125'ten aynen sürer.
+  Süzülme her gösterimde AYNI dizilişten başlar (`_menuShownAt`); REDUCED MOTION o dizilişte
+  parklar — bakış testi bu yüzden kendi süresince reduced-motion iğneler (oturum deposu
+  fikstürün, gerçek tercihe dokunmaz) ve `menu.png` parklı yüzle yeniden kutsandı.
+
 ### 9.125 · Giriş ekranı boyandı: sokaktan bar, alt başlık, kapı teması, karanlıktan açılış (2026-09-27)
 
 Yazar: “Oyuna AAA bir oyun giriş ekranı koy ayarlar müzikler vs. giriş ekranını doldur bir pixelart

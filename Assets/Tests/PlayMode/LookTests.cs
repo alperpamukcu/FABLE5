@@ -145,11 +145,16 @@ namespace LastCall.PlayTests
         [UnityTest]
         public IEnumerator The_front_door_stands_over_the_room()
         {
-            // THE MENU IS A BLESSED SCREEN TOO (2026-09-26): the marquee wearing the game's
-            // name, the pack's keys and their brass — the first thing every player sees.
-            // Booted by hand rather than through OpenTheBar, which now walks THROUGH the very
-            // door this test photographs. The column region only: the scrim's edges show the
-            // live room, and the room is an evening.
+            // THE MENU IS A BLESSED SCREEN TOO (2026-09-26): the lockup, the pack's keys and
+            // their brass — the first thing every player sees. Booted by hand rather than
+            // through OpenTheBar, which now walks THROUGH the very door this test photographs.
+            // UNDER REDUCED MOTION, pinned for this test only (2026-09-27): the title's
+            // glassware DRIFTS by design, and a screen that moves every frame can never give
+            // the settle guard its two identical captures — parked, the scatter is the same
+            // arranged frame every boot (TycoonHud.ShowMainMenu), which is exactly what a
+            // blessed picture needs. The session store is already the fixture's, so the pin
+            // never touches a real preference.
+            LastCall.Game.PlayerOptions.ReducedMotion = true;
             for (int i = 0; i < 180 && (Screen.width != DesignW || Screen.height != DesignH); i++)
                 yield return null;
             Assert.That(Screen.width, Is.EqualTo(DesignW),
@@ -168,9 +173,10 @@ namespace LastCall.PlayTests
             while (GameObject.Find("MainMenu/Column") == null && Time.realtimeSinceStartup < offered)
                 yield return null;
             Assert.That(GameObject.Find("MainMenu/Column"), Is.Not.Null, "the door never opened");
-            // the curtain under the scrim lifts on its own paced clock; let it finish first
+            // the curtain under the field lifts on its own paced clock; let it finish first
             yield return new WaitForSecondsRealtime(1.2f);
-            yield return LooksTheSame("menu", new RectInt(410, 120, 460, 500));
+            try { yield return LooksTheSame("menu", new RectInt(410, 120, 460, 500)); }
+            finally { LastCall.Game.PlayerOptions.ReducedMotion = false; }
         }
 
         [UnityTest]
