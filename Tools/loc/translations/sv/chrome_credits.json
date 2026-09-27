@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "MEDVERKANDE",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "ETT SPEL AV",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "IKONER",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "TYPSNITT",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "LJUD",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "MUSIK",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "ORIGINALMUSIK, SKRIVEN FÖR DEN HÄR BAREN",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LICENSER",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "TACK FÖR ATT DU SPELADE",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

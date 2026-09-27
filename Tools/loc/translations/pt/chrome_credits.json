@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "CRÉDITOS",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "UM JOGO DE",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "ÍCONES",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "TIPOS DE LETRA",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "SOM",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "MÚSICA",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "MÚSICA ORIGINAL, COMPOSTA PARA ESTE BAR",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LICENÇAS",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "OBRIGADO POR JOGAR",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

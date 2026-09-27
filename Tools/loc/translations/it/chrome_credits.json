@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "RICONOSCIMENTI",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "UN GIOCO DI",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "ICONE",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "CARATTERI",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "SUONO",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "MUSICA",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "MUSICA ORIGINALE, SCRITTA PER QUESTO BAR",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LICENZE",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "GRAZIE PER AVER GIOCATO",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "KREDIT",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "GAME OLEH",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "IKON",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "FON",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "SUARA",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "MUSIK",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "MUSIK ORISINAL, DIBUAT UNTUK BAR INI",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LISENSI",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "TERIMA KASIH SUDAH BERMAIN",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "TEKIJÄT",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "PELIN TEKIJÄ",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "KUVAKKEET",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "FONTIT",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "ÄÄNI",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "MUSIIKKI",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "ALKUPERÄINEN MUSIIKKI, SÄVELLETTY TÄLLE BAARILLE",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LISENSSIT",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "KIITOS PELAAMISESTA",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

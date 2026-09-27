@@ -1895,6 +1895,60 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.130 · Ana menü giyindi: vinyet, nefes alan logo, 1-bit tuş ikonları, süzülerek gelen tuşlar, CREDITS (2026-09-27)
+
+Yazar: “Evet ekle, aynı zamanda ana menüyü geliştir tasarımını ve butonların üstündeki iconları güncelle.”
+
+- **CREDITS ekranı** (`TycoonHud.Credits.cs`, ilk açılışta kurulur): ana menünün küçük sırasında yeni tuş;
+  menünün kendi düz alanında (oyun dışı, oda görünmez), ayarların sessiz plakasında (`Night[2]` +
+  `NeonEdge`), fare tekerleğiyle kayar, BACK menüye döner. İçerik VERİ: `Resources/Data/credits.json` +
+  `licenses.txt`, `Tools/credits_build.py` tek kaynaklardan yazar (yazı tiplerinin kendi OFL dosyaları,
+  ses defteri `SES_KAYNAKLARI.md`, `KREDILER.md`'nin görsel satırları). Bölümler: A GAME BY → LASGEN
+  INTERACTIVE; ICONS → "1-bit Pixel Icons" by Nikoichu (CC0, atıf verildi); FONTS → Silkscreen, Malibu
+  Arcade (Press Start 2P'den türetilmiş — OFL'nin ayrılmış adı değiştirilerek, telif satırı korunarak),
+  Jersey 15, Indie Flower, Galmuri, Fusion Pixel 12 + telif sahipleri; SOUND → freesound.org · Kenney ·
+  CC0 + 48 kayıtçı; MUSIC → özgün beste. Ardından **LICENCES**: her fontun telif notu ve SIL OFL 1.1'in
+  tam metni BİR KEZ (altı dosya aynı lisans; tek kopya hem standart hem UGUI'nin metin başına tepe
+  sınırının altında, paragraf başına bir Text). OFL'nin "lisans metni fontla birlikte gitsin" şartı
+  artık oyunun içinde karşılanıyor. 9 yeni metin anahtarı × 28 dil (`chrome_credits.json` parçaları).
+- **Tasarım:** alanın kenarları yumuşak bir vinyetle (paletin gecesi, alfa) kararır — süzülen bardaklar
+  karanlığa düşer, logo ve tuşlar öne çıkar; logo bir neon tüpü gibi nefes alır (`NeonPulse`, yavaş, düşük
+  kontrast, FLASHES kapalı / REDUCED MOTION'da sabit); tuşlar başlık ağarırken sırayla 14 birim aşağıdan
+  yükselip belirir (0.06 sn arayla); farenin üstündeki tuşun soluna neon bir ok gelir (`ib_m_pointer`,
+  Magenta[4], hafif salınım); ana dört tuşla küçük sıra arasında bir neon kural; sol altta LASGEN
+  INTERACTIVE, sağ altta sürüm. Her hareket ölçeksiz saat üzerinde aritmetik — hiçbir RNG akışına dokunmaz.
+- **Tuş ikonları 1-bit:** CONTINUE disket, NEW RUN oynat üçgeni, SETTINGS dişli, QUIT güç düğmesi, AUDIO
+  dalgalı hoparlör, LANGUAGE dünya küresi, CREDITS jenerik belgesi, STEAM Steam logosu (tuş yalnız
+  `StoreLink.Page` doluyken). Aynı sevk hattı (`Tools/icons_1bit_ship.py`, `ib_m_*`), tuşun 32'lik glif
+  yuvasında TAM 2x; `PackKey` hover'ı pişmiş mürekkebi yeniden boyamasın diye iki rengi beyaz.
+- Bakış testi `menu.png` yeni menüyle yeniden kutsandı (test REDUCED MOTION iğner → bitmiş kare, ok yok).
+
+### 9.129 · Buff işaretleri 1-bit pakete geçti (Nikoichu, CC0) (2026-09-27)
+
+Yazar: “Oyun dosyasına 1-bit_Pixel_Icons klasörü ekledim ... buff, debuff veya metinlerdeki açıklamalar için
+kullanılabilir” — değerlendirme sayfasında (A/B/C, gerçek plakada): “Önerilenleri uygula.”
+
+- **Kaynak ve lisans:** "1-bit Pixel Icons" — Nikoichu, https://nikoichu.itch.io/pixel-icons, **CC0 1.0**
+  ("absolutely no restrictions"); atıf zorunlu değil ama sahibi rica ediyor → verildi: `Docs/KREDILER.md`
+  (yeni; üçüncü taraf görsel/yazı tipi/ses kaydı). Paket proje KÖKÜNDE (`1-bit_Pixel_Icons/`, Assets dışı —
+  derlemeye girmez); yalnız seçilen 20 ikon sevk edilir.
+- **Sevk:** `Tools/icons_1bit_ship.py` (idempotent) — 16×16 iki renk, mürekkep PİŞİRİLİR: dolgu `Cream[4]`,
+  halka `Night[0]` (buff satırının maskeye verdiği renk birebir) → `Items/ib_<anahtar>.png`, Items içe
+  aktarma kuralı (point, sıkıştırmasız), meta `heart3d_16`'dan yeni guid'le. 20 anahtar: price (fiyat
+  etiketi), patience (kum saati), lateness (çalar saat), late_tip (para kesesi), refill (döngü okları), round
+  (zeytinli martini), arrivals (kapı), grace (kalkan), window (hedef), shake_speed (şimşek), pour_speed (su
+  damlası), wash (sabun köpüğü), free_drain (çöp kutusu), pay_floor (banka kesesi), refusal (yasak işareti),
+  mess (süpürge), room (gülen yüz), stock_premium (deste banknot), glass_rung (kadeh), kegs (varil).
+- **Bağlantı:** `TycoonHud.BuffIcon` — oyunun TEK buff ikon tablosu — önce `OneBitMark(key)` okur (takma
+  adlar premium→stock_premium, drains_free→free_drain), bulunursa BOYAMADAN döner (mürekkep pişmiş, iki kez
+  boyanmaz); yoksa eski yol: evin bozuk parası (tip), madalyonu (comfort), kalbi (service), tabure (pakette
+  sandalye yok) ve ChromeArt çizimleri aynen. Böylece market kartları, tarif defterinin karakter şeritleri,
+  ehliyet ve yükseltme merdiveni aynı ikonu söyler.
+- **Bilerek dokunulmayanlar:** paketin yıldız/kalp ikonları (tek yıldız / tek kalp kuralı); tezgâhtaki araç
+  işaretleri (çalkalama adımı, döküm, çöp, bardak adımı ChromeArt'ta kalır — buff'ın işareti artık araçtan
+  farklı; istenirse tezgâh da aynı ikonlara geçer); metin içi ikonlar (kilit, uyarı, oklar, yüz ifadeleri —
+  sayfada aday olarak duruyor, ayrı karar).
+
 ### 9.128 · Ayarlar sessizleşti, lambalar yükseldi, ışık camın kendisinden çıkıyor (2026-09-27)
 
 Yazar: “Ana menüde settings vs. basıldığında arkada ana sahne gözüküyor, oyunda değilken gözükmemesi

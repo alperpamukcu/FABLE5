@@ -29,6 +29,9 @@ bölüm kazanır (483 test → bugün 789+15; kayıt sistemi §9.123 ile geldi).
    DEVELOPMENT_BUILD` (`TycoonHud.Settings.cs:314`, `TycoonHud.Chrome.cs:2192`); `Dev*` fiilleri
    Core API'sinde kalıyor (preset/skip/jump/forcelastcall/fit). İnceleme/demoya dev build verme.
 4. **Çökme/telemetri kancası yok** (`enableCrashReportAPI: 0`, log yakalayıcı yok).
+4b. ~~**Jenerik / lisanslar ekranı yok**~~ **KAPANDI 2026-09-27** (ana menü → CREDITS, GDD §9.130): OFL yazı tiplerinin lisans metni oyunla birlikte
+   dağıtılmalı (`Assets/Fonts/OFL-*.txt` derlemeye girmiyor) ve CC0 ikon paketinin atfı verilecek —
+   kayıt `Docs/KREDILER.md`'de hazır; ana menüye CREDITS ya da derleme klasörüne `LICENSES` dosyası gerek.
 5. **Steam entegrasyonu yok:** Steamworks paketi yok, `steam_appid.txt` yok, başarım yok, Steam
    Cloud işareti yok; dil OS'ten (`Languages.FromSteam` beslenmiyor, `Localization.cs:44`).
    Kayıt `persistentDataPath/saves/run.json` — Auto-Cloud yolu EA'den önce yazılmalı.

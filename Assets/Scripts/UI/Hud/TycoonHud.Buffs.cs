@@ -50,6 +50,14 @@ namespace LastCall.UI
         {
             tinted = true;
             Sprite art = null;
+            // THE 1-BIT MARKS (2026-09-27, the author, on the evaluation page: "Önerilenleri uygula"): Nikoichu's
+            // CC0 "1-bit Pixel Icons", 16x16, shipped by Tools/icons_1bit_ship.py into Items/ib_<key> with the ink
+            // BAKED IN (the fill is Cream[4], the ring Night[0] - exactly what this row gives a mask), so they are
+            // returned untinted and never inked twice. They win for every key that has one; a key without one -
+            // the house's own coin, medallion and heart, the stool - falls through to the drawings below, and so
+            // does any key whose file is missing. Credit: Docs/KREDILER.md.
+            var bit = OneBitMark(key);
+            if (bit != null) { tinted = false; return bit; }
             switch (key ?? "")
             {
                 // The house's own drawings, at their own 16 (the service heart is 12x12: draw it at 1x).
@@ -82,6 +90,19 @@ namespace LastCall.UI
             if (art == null) art = fallback;
             // The last resort is the market's own rising mark: it says "this helps" without claiming a what.
             return art != null ? art : ChromeArt.Mark("rise");
+        }
+
+        /// <summary>The shipped 1-bit mark for a buff key (Items/ib_&lt;key&gt;), or null. The two aliases the
+        /// table already knows resolve to their key's one file.</summary>
+        private static Sprite OneBitMark(string key)
+        {
+            switch (key ?? "")
+            {
+                case "": return null;
+                case "premium": key = "stock_premium"; break;
+                case "drains_free": key = "free_drain"; break;
+            }
+            return ItemArt.Load("ib_" + key);
         }
 
         /// <summary>

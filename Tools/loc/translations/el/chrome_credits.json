@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "ΣΥΝΤΕΛΕΣΤΕΣ",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "ΕΝΑ ΠΑΙΧΝΙΔΙ ΤΗΣ",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "ΕΙΚΟΝΙΔΙΑ",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "ΓΡΑΜΜΑΤΟΣΕΙΡΕΣ",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "ΗΧΟΣ",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "ΜΟΥΣΙΚΗ",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "ΠΡΩΤΟΤΥΠΗ ΜΟΥΣΙΚΗ ΓΙΑ ΑΥΤΟ ΤΟ ΜΠΑΡ",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "ΑΔΕΙΕΣ",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "ΕΥΧΑΡΙΣΤΟΥΜΕ ΠΟΥ ΠΑΙΞΑΤΕ",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

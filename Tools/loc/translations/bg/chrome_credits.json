@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "СЪЗДАТЕЛИ",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "ИГРА НА",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "ИКОНИ",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "ШРИФТОВЕ",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "ЗВУК",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "МУЗИКА",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "ОРИГИНАЛНА МУЗИКА, СЪЗДАДЕНА ЗА ТОЗИ БАР",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "ЛИЦЕНЗИ",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "БЛАГОДАРИМ, ЧЕ ИГРАХТЕ",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

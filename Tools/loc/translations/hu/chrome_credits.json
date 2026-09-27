@@ -1,0 +1,49 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.credits",
+      "text": "STÁB",
+      "src": "CREDITS"
+    },
+    {
+      "key": "chrome.credits.by",
+      "text": "KÉSZÍTETTE",
+      "src": "A GAME BY"
+    },
+    {
+      "key": "chrome.credits.icons",
+      "text": "IKONOK",
+      "src": "ICONS"
+    },
+    {
+      "key": "chrome.credits.fonts",
+      "text": "BETŰTÍPUSOK",
+      "src": "FONTS"
+    },
+    {
+      "key": "chrome.credits.sound",
+      "text": "HANG",
+      "src": "SOUND"
+    },
+    {
+      "key": "chrome.credits.music",
+      "text": "ZENE",
+      "src": "MUSIC"
+    },
+    {
+      "key": "chrome.credits.music_line",
+      "text": "EREDETI ZENE, EHHEZ A BÁRHOZ KÉSZÜLT",
+      "src": "AN ORIGINAL SCORE, MADE FOR THIS BAR"
+    },
+    {
+      "key": "chrome.credits.licences",
+      "text": "LICENCEK",
+      "src": "LICENCES"
+    },
+    {
+      "key": "chrome.credits.thanks",
+      "text": "KÖSZÖNJÜK, HOGY JÁTSZOTTÁL",
+      "src": "THANK YOU FOR PLAYING"
+    }
+  ]
+}

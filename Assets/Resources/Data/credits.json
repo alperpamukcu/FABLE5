@@ -1,0 +1,64 @@
+{
+  "game": "MALIBU CLUB: COCKTAIL BAR SIMULATOR",
+  "sections": [
+    {
+      "head": "chrome.credits.by",
+      "lines": [
+        "LASGEN INTERACTIVE"
+      ]
+    },
+    {
+      "head": "chrome.credits.icons",
+      "lines": [
+        "\"1-BIT PIXEL ICONS\" BY NIKOICHU",
+        "NIKOICHU.ITCH.IO/PIXEL-ICONS",
+        "CC0 1.0"
+      ]
+    },
+    {
+      "head": "chrome.credits.fonts",
+      "lines": [
+        "SILKSCREEN",
+        "2001 THE SILKSCREEN PROJECT AUTHORS",
+        "MALIBU ARCADE, BASED ON PRESS START 2P",
+        "2012 THE PRESS START 2P PROJECT AUTHORS",
+        "JERSEY 15",
+        "2023 THE SOFT TYPE PROJECT AUTHORS",
+        "INDIE FLOWER",
+        "2010 THE INDIE FLOWER AUTHORS",
+        "GALMURI",
+        "2019–2025 LEE MINSEO",
+        "FUSION PIXEL 12",
+        "2022, TAKWOLF",
+        "SIL OPEN FONT LICENSE 1.1"
+      ]
+    },
+    {
+      "head": "chrome.credits.sound",
+      "lines": [
+        "FREESOUND.ORG · KENNEY.NL · CC0 1.0",
+        "13GPANSKA_STANEK_VOJTECH · 3BAGBREW",
+        "ARETI18 · BMACZERO · CAITLIN_100",
+        "CLUBMYDIA+ · DURAL77 · ELLIOTT.KLEIN",
+        "ERICLICHTENBERG · FISSION9 · FTPALAD · FUPI",
+        "HENKONEN · I.FEKRY · JMDH · KASTENFROSCH",
+        "KATLEHO21 · KAYDINHAMBY · KENNEY (KENNEY.NL)",
+        "KENRT · KRIS-B.05+03 · LOLAMADEUS · LPA134",
+        "MAREYESLO · MARTINIMENISCUS · MRFOSSY",
+        "NIGELCOOP · O_CIZ · PAUALM · PHILBERTS",
+        "RANDBSOUNDBITES · REALSQUINK · ROYALROSE",
+        "RUDMER_ROTTEVEEL · SHEYVAN · SIMEONRADIVOEV",
+        "SOJAN · SPANRUCKER · SSIERRA1202 · TAIRBLENN",
+        "TBSOUNDDESIGNS · TREXLASSO · TRP",
+        "VALENTINPETITEAU · VENTOUSAWINS · WAHEEGLE",
+        "XKERIL · ZEMBACRAFTWORKS"
+      ]
+    },
+    {
+      "head": "chrome.credits.music",
+      "lines": [
+        "@chrome.credits.music_line"
+      ]
+    }
+  ]
+}
