@@ -11,7 +11,8 @@ taraf varlık oyuna girdiği gün buraya satırı düşer — lisansı okunmadan
 | Buff / debuff işaretleri `Assets/Resources/Items/ib_*.png` (20 ikon, `Tools/icons_1bit_ship.py`) | [1-bit Pixel Icons](https://nikoichu.itch.io/pixel-icons) | Nikoichu | CC0 1.0 — "you have absolutely no restrictions on how you can use them" | Zorunlu değil; sahibi rica ediyor, veriyoruz |
 
 Kaynak paket proje kökünde, `1-bit_Pixel_Icons/` (Assets dışında; yalnız seçilen ikonlar sevk edilir,
-palete oturtularak: beyaz → `Cream[4]`, siyah → `Night[0]`).
+palete oturtularak: beyaz → `Cream[4]`, siyah → `Night[0]`). Paketin kendisi git'e girmez (`.gitignore`,
+yazar 2026-09-28): repoda yalnız kullanılan ikonlar durur; yeni seçim için paket itch.io'dan köke indirilir.
 
 **Jeneriğe girecek satır:**
 > Icons: "1-bit Pixel Icons" by Nikoichu — https://nikoichu.itch.io/pixel-icons (CC0)

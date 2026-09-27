@@ -4,7 +4,8 @@ metinlerdeki açıklamalar için kullanılabilir" and, on the evaluation page, "
 
 Source: the author's copy of "1-bit Pixel Icons" by Nikoichu (https://nikoichu.itch.io/pixel-icons),
 CC0 1.0 - no restrictions; the author asks for credit and it is given in Docs/KREDILER.md. The pack sits
-at the project root (outside Assets, so it never enters a build); only the picks below are shipped.
+at the project root (outside Assets, so it never enters a build) and stays out of git (.gitignore, the
+author 2026-09-28: "sadece kullandığımız görselleri gönder"); only the picks below are shipped and kept.
 
 Each pick is a 16x16 two-colour icon (white fill, 1px black ring). It is snapped onto the palette - the
 fill to Cream[4], the ring to Night[0], exactly the ink the buff row gives a mask - and written to
@@ -86,6 +87,10 @@ def digest(im):
 
 
 def main(check):
+    if not os.path.isdir(PACK):
+        sys.exit("1-bit pack not found at %s - it stays out of git (only the shipped ib_*.png are kept); "
+                 "put a copy from https://nikoichu.itch.io/pixel-icons at the project root to add or redo a pick"
+                 % PACK)
     meta_src = io.open(META_FROM, encoding="utf-8", newline="").read()
     wrote = kept = 0
     for key, name in PICKS.items():

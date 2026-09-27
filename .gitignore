@@ -163,3 +163,7 @@ Tools/AssetPipeline/sources/patron_raw/
 # social publishing: tokens and the run log never leave this machine
 Tools/social/.secrets/
 Tools/social/state/
+
+# the author's copy of Nikoichu's "1-bit Pixel Icons" (CC0) stays on this machine: only the picks
+# Tools/icons_1bit_ship.py ships (Assets/Resources/Items/ib_*) are kept (the author, 2026-09-28)
+/1-bit_Pixel_Icons/
