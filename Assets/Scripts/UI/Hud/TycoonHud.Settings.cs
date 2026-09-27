@@ -120,6 +120,7 @@ namespace LastCall.UI
             if (show)
             {
                 CloseId();
+                if (_settingsBackdrop != null) _settingsBackdrop.gameObject.SetActive(_settingsFromMenu);
                 RefreshSettings();
                 if (!_settingsFromPause && !_settingsFromMenu) Sfx.Play("menu_open", 0.7f);   // from a menu the wall is already down
                 // THE NIGHT STOPS FOR THE SETTINGS TOO (2026-09-25, the author: "Settings açıldığında oyun durmalı").
@@ -147,6 +148,7 @@ namespace LastCall.UI
                 else Sfx.Play("menu_close", 0.6f);
                 _settingsFromPause = false;
                 _settingsFromMenu = false;
+                if (_settingsBackdrop != null) _settingsBackdrop.gameObject.SetActive(false);
                 if (_settingsHeldClock) { _settingsHeldClock = false; SetPaused(false); }
             }
             _settingsPanel.gameObject.SetActive(show);
@@ -154,6 +156,37 @@ namespace LastCall.UI
 
         /// <summary>The settings window took the clock when it opened (from the cog, not from the pause menu).</summary>
         private bool _settingsHeldClock;
+
+        /// <summary>The menu's flat field behind the window, shown only when the window came
+        /// from the front door — out of game, the room is nobody's backdrop.</summary>
+        private RectTransform _settingsBackdrop;
+
+        /// <summary>The family's neon frame, drawn from the palette's own tubes: a 6-unit band
+        /// on each edge — magenta, the cream core, magenta — the same three lines the pause
+        /// picture carries, here procedural so the plate can be any size.</summary>
+        private void NeonEdge(RectTransform plate)
+        {
+            var tubes = new[] { UITheme.Magenta[3], UITheme.Cream[4], UITheme.Magenta[3] };
+            for (int line = 0; line < tubes.Length; line++)
+            {
+                float inset = line * 2f;
+                foreach (var (name, min, max, offMin, offMax) in new (string, Vector2, Vector2, Vector2, Vector2)[]
+                {
+                    ("Top" + line, new Vector2(0, 1), new Vector2(1, 1), new Vector2(inset, -inset - 2f), new Vector2(-inset, -inset)),
+                    ("Bottom" + line, new Vector2(0, 0), new Vector2(1, 0), new Vector2(inset, inset), new Vector2(-inset, inset + 2f)),
+                    ("Left" + line, new Vector2(0, 0), new Vector2(0, 1), new Vector2(inset, inset), new Vector2(inset + 2f, -inset)),
+                    ("Right" + line, new Vector2(1, 0), new Vector2(1, 1), new Vector2(-inset - 2f, inset), new Vector2(-inset, -inset)),
+                })
+                {
+                    var strip = NewRect("Neon" + name, plate);
+                    strip.anchorMin = min; strip.anchorMax = max;
+                    strip.offsetMin = offMin; strip.offsetMax = offMax;
+                    var img = strip.gameObject.AddComponent<Image>();
+                    img.color = tubes[line];
+                    img.raycastTarget = false;
+                }
+            }
+        }
 
         /// <summary>How far the marquee pushes the window's contents down (0 without it), and by how much it grows.</summary>
         private float _settingsDrop;
@@ -221,6 +254,18 @@ namespace LastCall.UI
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
+            // NOT IN GAME, NOT THE ROOM (2026-09-27, the author: "Ana menüde settings vs.
+            // basıldığında arkada ana sahne gözüküyor, oyunda değilken gözükmemesi gerekiyor"):
+            // opened from the front door, the window stands on the menu's own flat field, wall
+            // to wall, and the live room never shows behind it. From the cog or the pause menu
+            // the room stays — the player is IN the bar then, and the held night behind the
+            // window is the truth.
+            _settingsBackdrop = NewRect("MenuField", _settingsPanel);
+            Stretch(_settingsBackdrop, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var backdropImg = _settingsBackdrop.gameObject.AddComponent<Image>();
+            backdropImg.color = UITheme.Night[1];
+            backdropImg.raycastTarget = true;
+            _settingsBackdrop.gameObject.SetActive(false);
             var canvas = _settingsPanel.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 29;                 // with the pause menu, over the book; the market (22) never shows it
@@ -244,28 +289,18 @@ namespace LastCall.UI
             var header = MenuPack.Art("menu_header");
             _settingsDrop = header != null ? HeaderDrop : 0f;
             var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH + _settingsDrop));   // the ESC family's plate (2026-09-21)
-            // THE PAUSE PANEL'S WIDE SIBLING (2026-09-26, the author: "ESC menüsü ile tasarım olarak
-            // arkaplan olarak ayarlar menüsü benzer olmalı"): the same generated Art Deco wall, at
-            // exactly 2x like every menu picture (800x608 over a plate 590..604 tall). The plate keeps
-            // its size and its anchors — every row below still hangs off it — and the picture lies
-            // INSIDE under a mask, so the marquee drop only changes what the frame crops, never the
-            // drawing's scale. No picture shipped → the blue plate exactly as before.
-            var settingsArt = MenuPack.Art("menu_settings_bg");
-            if (settingsArt != null)
+            // QUIET, LIKE THE FRONT DOOR (2026-09-27, the author: "Settings ekranının arkaplanı
+            // çok karmaşık butonlar anlaşılmıyor, ana sahneye benzer bir arkaplan tasarımı yap").
+            // The generated wall lasted a day: rows of 8px notes on reeding and palm leaves read
+            // badly, and the title screen had meanwhile gone flat. The plate is the menu's own
+            // two plums now — a panel one step lighter than the field — with the family's 3px
+            // neon frame drawn from the palette's own tubes (the same magenta/cream band the
+            // pause picture wears on its edges).
             {
                 var plateImg = plate.GetComponent<Image>();
                 plateImg.sprite = null;
-                plateImg.color = UITheme.Night[3];              // the wall's own plum where the crop runs out
-                plate.gameObject.AddComponent<RectMask2D>();
-                var picture = NewRect("Picture", plate);
-                Place(picture, new Vector2(0.5f, 0.5f),
-                    new Vector2(settingsArt.rect.width * 2f, settingsArt.rect.height * 2f), Vector2.zero);
-                var pictureImg = picture.gameObject.AddComponent<Image>();
-                pictureImg.sprite = settingsArt;
-                pictureImg.type = Image.Type.Simple;
-                pictureImg.raycastTarget = false;
-                UiAuditExempt.Mark(picture, "the menu's generated picture, "
-                    + settingsArt.rect.width + "x" + settingsArt.rect.height + " shown at exactly 2x");
+                plateImg.color = UITheme.Night[2];
+                NeonEdge(plate);
             }
             // UNDER THE TOP BAR (2026-09-26): 590 and the marquee's 42 make a plate 632 tall, which centred on the
             // 720 field would reach 44 from its top - over the top bar's 54. It stands just low enough to clear the

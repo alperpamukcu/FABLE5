@@ -1895,6 +1895,35 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.128 · Ayarlar sessizleşti, lambalar yükseldi, ışık camın kendisinden çıkıyor (2026-09-27)
+
+Yazar: “Ana menüde settings vs. basıldığında arkada ana sahne gözüküyor, oyunda değilken gözükmemesi
+gerekiyor. Settings ekranının arkaplanı çok karmaşık butonlar anlaşılmıyor, ana sahneye benzer bir
+arkaplan tasarımı yap. Tavan lambaları biraz daha yukarı çekilsin. Tavan lambası görsellerinde bulunan
+ampulün yayacağı ışığı hesaplayıp sahnedeki lamba ışığını ona göre ayarla. Lamba noktasal bir ışık
+kaynağı değil daha dairesel bir ışık kaynağı ampule göre ayarla.”
+
+- **Oyunda değilken oda yok:** ayarlar penceresi ana menüden açıldığında `_settingsBackdrop` — menünün
+  kendi düz alanı (`Night[1]`), duvardan duvara, tıklama yutar — plakanın altına iner; çarktan ya da
+  ESC'den açıldığında oda durur (oyuncu o an barın İÇİNDE, tutulan gece arkada gerçektir). Bayrak
+  `_settingsFromMenu`; kapanışta söner.
+- **Ayarların zemini sessiz:** bir gün yaşayan üretilmiş Art Deco duvar (`menu_settings_bg`)
+  Resources'tan emekli (staging'de). Plaka artık menünün iki erguvanı — alandan bir basamak açık
+  `Night[2]` panel — ve ailenin 3px neon çerçevesi PROSEDÜREL (`NeonEdge`): paletin kendi tüpleri
+  `Magenta[3]` / `Cream[4]` / `Magenta[3]`, ESC resminin kenarındaki bandın birebir renkleri, plaka
+  hangi boyda olursa olsun. 8px notlar dümdüz zeminde okunur.
+- **Lambalar on satır yukarı:** `counter_lamps` slotu y 261 → 271 (`fixtures.json`).
+- **IŞIK CAMDAN ÇIKAR** (`PendantBulb`): koni + kaldırılmış tepe (9.35 dönemi, ApexLift) emekli.
+  Sarkıtın ışığı artık TAM DAİRE bir nokta kaynağı: merkezi `BulbOf`'un resimden ölçtüğü camın
+  kendisi (Cx, Cy), iç yarıçapı ampulün ölçülen yarıçapı — tam ışık diski CAMDIR — dışı verinin
+  `lightRadius`'u, düşüşü yuvarlak. Katmanlar daireyi dürüst tutar (yalnız tezgâh + insanlar; abajur
+  üstünden duvara taşma yok). Görünür HUZME hava ışığının konisi olarak kalır; ebeveyn artık dönmediği
+  için yarım turu kendi taşır ve `DropBelowSpot = 0` — huzme camın kendisinden başlar. Ölü kalan
+  `ApexLift`/`ShadeTopOf` söküldü. Çalar satırı için `music.menu_1` = "OPEN SIGN" anahtarı eklendi
+  (çalar ham anahtar gösteriyordu); tablolar 2226 anahtarla 0 hata.
+- Ölçüldü (r248): menüden ayarlar — oda yok, satırlar net; odada üç cam yuvarlak halesiyle, huzme
+  altında, orta gölgelik altı havuz luma 157. İki takım yeşil (bakış ekranları kıpırdamadı).
+
 ### 9.127 · Marketin ikonları kendi boylarında yeniden, damgalar koyu plakada okunuyor, tablet geçişleri (2026-09-27)
 
 Yazar: “Oyundaki market için önceden ürettiğin iconlarını tekrardan oluştur market iconlarını markette

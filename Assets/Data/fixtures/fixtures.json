@@ -70,7 +70,7 @@
     {
       "id": "counter_lamps",
       "x": 320,
-      "y": 261,
+      "y": 271,
       "pairSpreadPx": 160,
       "copies": 3,
       "hangs": true,

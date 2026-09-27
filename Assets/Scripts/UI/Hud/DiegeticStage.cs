@@ -2150,61 +2150,23 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// WHERE THE CABLE ENDS, in art pixels ABOVE the lamp's widest row (2026-09-23, the author's tenth list:
-        /// "tavan aydınlatmasında çıkan ışığın başlangıç noktası lambanın kablosunun en alt kısmından itibaren
-        /// olacak"). Read off the drawing the same way the bulb is: the flex is the narrow run at the top, so the
-        /// shade begins at the first row from the top that is wider than twice it. Zero for a lamp with no flex
-        /// drawn, which then behaves exactly as it did before.
+        /// The pendant's own light since 2026-09-27: a FULL-CIRCLE point source centred on the
+        /// glass, its inner radius the bulb's measured own — the disc of full light IS the
+        /// bulb, and the falloff leaves it round, the way light leaves a globe. It replaced
+        /// the cone-with-a-lifted-apex (2026-09-22..25), whose pool was right but whose beam
+        /// still read as leaving a point. The cone survives only as the visible shaft of lit
+        /// air (<see cref="HangPendantAir"/>), and the layers keep the circle honest: it
+        /// reaches the counter and the people only, never the wall over the shade.
         /// </summary>
-        private readonly Dictionary<string, float> _shadeTop = new Dictionary<string, float>();
-
-        private float ShadeTopOf(Sprite s)
-        {
-            if (s == null || s.texture == null) return 0f;
-            string key = s.name + ":" + s.rect;
-            if (_shadeTop.TryGetValue(key, out var had)) return had;
-            float up = 0f;
-            try
-            {
-                var px = s.texture.GetPixels32();
-                int tw = s.texture.width;
-                int x0 = (int)s.rect.x, y0 = (int)s.rect.y, w = (int)s.rect.width, h = (int)s.rect.height;
-                var wide = new int[h];
-                for (int y = 0; y < h; y++)
-                {
-                    int n = 0;
-                    for (int x = 0; x < w; x++)
-                        if (px[(y0 + y) * tw + x0 + x].a > 128) n++;
-                    wide[y] = n;
-                }
-                int mouth = 0;
-                for (int y = 0; y < h; y++) if (wide[y] > wide[mouth]) mouth = y;
-                int flex = 0;                                   // the topmost drawn row: the cable
-                for (int y = h - 1; y >= 0; y--) if (wide[y] > 0) { flex = wide[y]; break; }
-                int shade = mouth;                              // ...and the first row under it that is the shade
-                for (int y = h - 1; y >= 0; y--)
-                    if (wide[y] > Mathf.Max(2, flex * 2)) { shade = y; break; }
-                up = Mathf.Max(0f, shade - mouth);
-            }
-            catch (UnityException) { up = 0f; }                 // a sprite nobody made readable: as it was
-            return _shadeTop[key] = up;
-        }
-
-        /// <summary>How far above the bulb a cone of <see cref="PendantOuterAngle"/> is exactly the bulb's width.</summary>
-        private static float ApexLift(float bulbRadius) =>
-            bulbRadius <= 0f ? 0f : bulbRadius / Mathf.Tan(PendantOuterAngle * 0.5f * Mathf.Deg2Rad);
-
-        /// <summary>
-        /// Makes a hung light a spot looking at the floor. URP 2D measures a point light's angles from the light's
-        /// own UP, so an unturned cone looks at the ceiling - which is why the 46/84 cone tried on 2026-09-22
-        /// "changed not one pixel" (r105-r108) and the cone was painted as a cookie instead. Turned half a circle,
-        /// the same light pools on the bar top and shows its shaft.
-        /// </summary>
-        private static void PendantSpot(Light2D l, float radius)
+        private static void PendantBulb(Light2D l, float radius, float bulbRadius)
         {
             l.lightType = Light2D.LightType.Point;
-            l.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
-            ShapeCone(l, radius);
+            l.transform.localRotation = Quaternion.identity;
+            l.pointLightInnerAngle = 360f;
+            l.pointLightOuterAngle = 360f;
+            l.pointLightInnerRadius = Mathf.Max(1f, bulbRadius);
+            l.pointLightOuterRadius = radius;
+            l.falloffIntensity = PendantFalloff;
         }
 
         private static void ShapeCone(Light2D l, float radius)
@@ -2231,7 +2193,10 @@ namespace LastCall.UI
         private static PendantAir HangPendantAir(Light2D spot, float radius, float bulbRadius)
         {
             var air = new GameObject("PendantAir").AddComponent<Light2D>();
-            air.transform.SetParent(spot.transform, false);          // already turned to the floor
+            air.transform.SetParent(spot.transform, false);
+            // the shaft aims at the floor itself: its parent is the round bulb now and no
+            // longer carries the half-turn (URP 2D reads cone angles from the light's UP)
+            air.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
             air.lightType = Light2D.LightType.Point;
             ShapeCone(air, radius);
             if (bulbRadius > 0f) air.pointLightInnerRadius = Mathf.Max(air.pointLightInnerRadius, bulbRadius);
@@ -3737,12 +3702,16 @@ namespace LastCall.UI
                             // drawn sprite of the same cone, which the author called bad lighting - a shape laid
                             // over the room rather than light falling through it.
                             LightLayers(glow, LayerCounter, LayerPatrons);
-                            // the apex sits inside the shade, a bulb's width above the glass (ApexLift), and the
-                            // throw grows by the same so the pool on the bar is unmoved
+                            // A ROUND SOURCE AT THE GLASS (2026-09-27, the author: "lamba noktasal bir
+                            // ışık kaynağı değil daha dairesel bir ışık kaynağı, ampule göre ayarla"):
+                            // the cone with its lifted apex gave way to a FULL CIRCLE centred on the
+                            // measured bulb, its inner radius the glass's own — a disc of full light the
+                            // size of the bulb, falling off round the way a bare globe does. The layers
+                            // keep it honest (counter and people only), so nothing round spills over the
+                            // shade onto the wall; the visible SHAFT below stays the air light's cone.
                             float bulbR = BulbRadiusOf(sr.sprite);
-                            float lift = ApexLift(bulbR);
-                            PendantSpot(glow, def.LightRadius + lift);
-                            HangPendantAir(glow, def.LightRadius + lift, bulbR);
+                            PendantBulb(glow, def.LightRadius, bulbR);
+                            HangPendantAir(glow, def.LightRadius, bulbR);
                         }
                         else if (onCounter) LightLayers(glow, LayerCounter, LayerPatrons);
                         else LightLayers(glow, LayerBackground, LayerPatrons);
@@ -3988,17 +3957,16 @@ namespace LastCall.UI
                 // the shade — which for every launch fixture is about ⅔ up the sprite.
                 if (placed.Glow != null)
                 {
-                    // a pendant's light hangs a bulb's lift above its glass, so its cone is the glass's width where
-                    // it leaves the lamp (ApexLift); everything else hangs at its own light line
+                    // a pendant's round source hangs on its measured glass; everything else
+                    // hangs at its own light line
                     var lampArt = placed.Body.GetComponent<SpriteRenderer>()?.sprite;
-                    float lift = placed.Def.LightDy != 0f ? ApexLift(BulbRadiusOf(lampArt)) : 0f;
                     var bulb = placed.Def.LightDy != 0f ? BulbOf(lampArt) : default;
-                    // FROM THE GLASS (2026-09-25, see BulbOf): a pendant whose bulb is found hangs its spot a lift
-                    // above the bulb's own centre - x and y - so the cone is the glass's width where it leaves it;
-                    // one with no cream drawn keeps the data's light line.
+                    // AT THE GLASS ITSELF (2026-09-27): the round source sits ON the bulb's
+                    // measured centre — no apex, no lift — and a lamp with no cream drawn
+                    // keeps the data's own light line.
                     placed.Glow.transform.position = bulb.Found
-                        ? basePos + new Vector3(bulb.Cx * k, (bulb.Cy + lift) * k, 0f)
-                        : basePos + new Vector3(0f, h * 0.66f + (placed.Def.LightDy + lift) * k, 0f);
+                        ? basePos + new Vector3(bulb.Cx * k, bulb.Cy * k, 0f)
+                        : basePos + new Vector3(0f, h * 0.66f + placed.Def.LightDy * k, 0f);
                     // ...and the SHAFT hangs back down to WHERE THE CABLE ENDS (2026-09-23, the author:
                     // "ışığın başlangıç noktası lambanın kablosunun en alt kısmından itibaren olacak").
                     // It hung at the shade's MOUTH until today, which is the bottom of the glass; the
@@ -4006,12 +3974,7 @@ namespace LastCall.UI
                     // shows is a shaft that starts inside the lamp the way a lit shade does.
                     var air = placed.Glow.GetComponentInChildren<PendantAir>();
                     if (air != null)
-                    {
-                        // ...and the lit air starts AT the glass (2026-09-25): its core is the bulb's own radius,
-                        // at the bulb's centre, and the lamp is drawn over it - no shaft out of the shade's top.
-                        float shadeUp = ShadeTopOf(lampArt);
-                        air.DropBelowSpot = bulb.Found ? lift * k : Mathf.Max(0f, lift - shadeUp) * k;
-                    }
+                        air.DropBelowSpot = 0f;   // the source IS the glass now; the shaft starts right there
                 }
             }
 

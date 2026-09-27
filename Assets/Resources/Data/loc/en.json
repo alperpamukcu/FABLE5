@@ -1968,6 +1968,7 @@
     { "key": "music.dayend_3", "text": "COUNTING TIPS", "note": "Title of the third day's-end song, a light disco tune (player and hover tip). ~16 characters." },
     { "key": "music.lastcall_1", "text": "CLOSING TAB", "note": "Title of the last-call song, heard over the last stretch of the night (player and hover tip). ~16 characters." },
     { "key": "music.lastcall_2", "text": "BOOTH IN THE BACK", "note": "Title of the second last-call song, a slow jazz ballad (player and hover tip). ~18 characters." },
+    { "key": "music.menu_1", "text": "OPEN SIGN", "note": "Title of the main menu's own theme (the record the front door has on), in the settings' NOW PLAYING row and the top bar's player. Capitals like the other track names; ~10 characters." },
     { "key": "music.night_1", "text": "NEON POUR", "note": "Title of the first night song, shown in the top bar's music player and in its hover tip. Song titles stay in capitals; ~16 characters." },
     { "key": "music.night_2", "text": "OCEAN DRIVE DISCO", "note": "Title of the second night song (player and hover tip). ~18 characters." },
     { "key": "music.night_3", "text": "VELVET ROPE", "note": "Title of the third night song (player and hover tip). ~16 characters." },

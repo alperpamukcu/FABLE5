@@ -2,6 +2,11 @@
   "group": "music",
   "strings": [
     {
+      "key": "music.menu_1",
+      "text": "OPEN SIGN",
+      "note": "Title of the main menu's own theme (the record the front door has on), in the settings' NOW PLAYING row and the top bar's player. Capitals like the other track names; ~10 characters."
+    },
+    {
       "key": "music.night_1",
       "text": "NEON POUR",
       "note": "Title of the first night song, shown in the top bar's music player and in its hover tip. Song titles stay in capitals; ~16 characters."
