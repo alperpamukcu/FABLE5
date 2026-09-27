@@ -996,8 +996,21 @@ namespace LastCall.UI
         // Recut on ONE 24x24 canvas (2026-08-09). The old four were 16x26, 24x26,
         // 25x24 and 20x19, so in a single 20x20 preserveAspect rect they drew between
         // 12.3 and 20 units wide: the rects lined up and the pictures did not.
+        // REDRAWN FOR THIS SITE (2026-09-27, the author: "market iconlarını markette kullanılacak
+        // boyutlarına göre özel olarak üret ... marketin stiline uygun olduğunu emin ol"). The sh_i2 set
+        // was the green storefront's: a near-black green outline that vanished on the open navy key, and
+        // a colour picture tinted like a mark on the resting one. The mk_tab set is drawn pixel by pixel
+        // at the 24 it is shown at (Tools/market_icons.py), in the up_* family's construction, keyed in
+        // the site's own navy, every body light enough to hold on the navy key without its keyline.
+        // Each has a 16 twin (ShopHeadMarks) for the reading card's head bar.
         private static readonly string[] ShopTabIcons =
-            { "sh_i2_restock", "sh_i2_bottles", "sh_i2_mixers", "sh_i2_recipes", "sh_i2_upgrades" };
+            { "mk_tab_restock", "mk_tab_liquor", "mk_tab_mixers", "mk_tab_recipes", "mk_tab_upgrades" };
+
+        /// <summary>The same five subjects redrawn at 16 for the reading card's navy head bar, where
+        /// the product itself used to be squeezed into 18 units (a bottle at 0.28x, a stool at 0.375x).
+        /// Same order as ShopTabIcons.</summary>
+        private static readonly string[] ShopHeadMarks =
+            { "mk_head_restock", "mk_head_liquor", "mk_head_mixers", "mk_head_recipes", "mk_head_upgrades" };
 
         // Sized off the ICONS, never off the captions (localization L1, 2026-09-14): these
         // initialisers run inside the MonoBehaviour's constructor, off the main thread, where
@@ -1020,6 +1033,71 @@ namespace LastCall.UI
         /// <summary>The upgrade screen's rail of shelves, left of the aisle; built on first
         /// use and shown only while that department is open.</summary>
         private RectTransform _decorRail;
+
+        // ── the aisle turns (2026-09-27) ────────────────────────────────────────
+        //
+        // The author: "Markette(tablette) ekran geçişleri, tab geçişleri için bir animasyon
+        // ayarla." A department change is a PUSH now — the flow's own dialect ("ileri sağdan,
+        // geri soldan") one level down: the old shelf is lifted out of the scroll into a ghost
+        // that slides away and fades, the new one arrives from the other side, and which side
+        // is the tab bar's own order. Every piece of it lives on something no rebuild destroys
+        // (the content rect, the viewport's group, the ghost, the keys, the rail), because a
+        // pick in the middle of the push rebuilds the shelf that is arriving, and a movement
+        // the rebuild could restart would snap on every click. The steps are in MarketFx.
+
+        /// <summary>Which way the NEXT rebuild turns the aisle (+1: the new shelf in from the
+        /// right, -1: from the left), or 0 for a rebuild that is not a turn. Set by the tab and
+        /// shelf keys, spent by the rebuild the moment it would have destroyed the old shelf.</summary>
+        private int _aisleSwapDir;
+
+        private int _aisleSwapSide;              // the running push's direction
+        private float _aisleSwapT = -1f;         // < 0: at rest
+        private RectTransform _aisleGhost, _aisleGhostContent;
+        private CanvasGroup _aisleGhostGroup, _aisleGroup;
+        // Where the ghost set off from: home and whole, or - a turn on a turn - wherever the
+        // shelf still arriving was drawn when it was lifted.
+        private float _aisleGhostX0, _aisleGhostA0 = 1f;
+
+        /// <summary>
+        /// How long a turn takes and how far it carries. 0.24 is the flow's stage push (0.16)
+        /// plus a little, because this page carries forty things instead of one bench and the
+        /// eye needs a beat longer to see which way they went. 96 is well under one card's
+        /// width (176 on the shelves, 152 on the upgrade cards): nothing arrives in a
+        /// neighbour's slot, so it reads as the page turning in a direction rather than the
+        /// shelf scrolling sideways, and it is about half the tablet's own 180 — the page
+        /// inside moves less than the device carrying it. The flow pushes a whole field
+        /// because it changes ROOM; this changes department on the same page. The market
+        /// "brightens, never lifts": a push this short is a direction, not a ride.
+        /// </summary>
+        private const float AislePush = 96f;
+        // A FIELD, NOT A CONST, on purpose (the house's probe rule, TycoonServiceFlow.BenchSlideDur): an
+        // execute_code round trip is about a second, so a 0.24 s movement is over before a probe's first
+        // look. The probe stretches this by reflection, records, and puts it back; nothing else writes it.
+        private static float AisleSwapDur = 0.24f;
+
+        // THE KEYS RISE WITH IT. How far each tab is open as DRAWN (0 resting, 1 the open
+        // file), where the ease started from, and which tab the keys were last aimed at (-1:
+        // never dressed, so the first dressing is a snap, not a rise out of nothing).
+        private readonly float[] _tabKeyV = new float[ShopTabIcons.Length];
+
+        private readonly float[] _tabKeyFrom = new float[ShopTabIcons.Length];
+
+        private float _tabKeyT = -1f;
+
+        private int _tabKeysFor = -1;
+
+        // THE UPGRADE RAIL COMES AND GOES WITH ITS DEPARTMENT. Whether it belongs on screen
+        // (the logical answer — never activeSelf, which stays true while it fades out), and
+        // how far up it is as drawn.
+        private bool _railUp;
+
+        private float _railV, _railFrom, _railT = -1f;
+
+        private CanvasGroup _railGroup;
+
+        /// <summary>How far in from the left the rail slides as it fades up: a few units, a
+        /// piece of furniture settling, not a panel flying in.</summary>
+        private const float RailSlide = 8f;
 
         private Text _tabletTill;
         /// <summary>The carried glass's rim strip, over the liquid (2026-09-08).</summary>
@@ -1330,6 +1408,13 @@ namespace LastCall.UI
 
         private Image _cardBuffAIcon, _cardBuffBIcon, _fittingLamp, _cardMarkImg;
 
+        // THE THING ITSELF on the reading card (2026-09-27): a window under the head bar for the listings whose
+        // tile wears an upgrade ICON - the glass lines and the bar top - so the card still shows WHICH glass a step
+        // buys now that its head carries the department's 16. See CardPicture.
+        private RectTransform _cardPicWin;
+        private Image _cardPicImg;
+        private const float CardPicMaxH = 96f;
+
         private Text _billNextLabel;
 
         private RectTransform _marketKey, _billNext;
@@ -1367,6 +1452,7 @@ namespace LastCall.UI
             public bool IsFitting;      // stools/glassware/counter — one a night
             public Action Buy;
             public Sprite Art;          // what it looks like, for its chip in the basket
+            public Sprite Head;         // its department's 16 mark, for the reading card over its chip
         }
 
         /// <summary>
@@ -1437,6 +1523,10 @@ namespace LastCall.UI
             /// tile wears an upgrade ICON (2026-09-06): the thing itself — the wall's swatch,
             /// the glass — for the pointer that wants to see what it is buying.</summary>
             public Sprite CardArt;
+            /// <summary>The 16 mark the reading card's head bar carries for this listing (2026-09-27).
+            /// Null = the open department's (ShopHeadMarks); a basket chip names the department it was
+            /// picked in, which need not be the one open now.</summary>
+            public Sprite Head;
             /// <summary>The bottle behind the tile, when there is one (2026-09-08, the
             /// author: "ürünlerin şişeleri dolu gözüksün"): drawn as the cellar's own
             /// sandwich, filled to the top, instead of the flat empty front plate.</summary>
@@ -1689,6 +1779,7 @@ namespace LastCall.UI
             WatchFixtures();
             WatchCellar();
             FadeShopTabs();
+            StepMarketMotion();      // the aisle's push, the keys' rise, the rail, the boxes' scrims (2026-09-27)
             StepSlide();
             RunTheTill(run);
             PushCellarFills(run);       // the cellar levels follow the night's pours (PLAN §4c)
@@ -2297,6 +2388,21 @@ namespace LastCall.UI
         private bool _slideFade = true;         // paper does not fade in; a tablet does
         private bool _slideSteady;              // paper is extruded, not thrown
         private CanvasGroup _slideGroup;
+
+        // THE SECOND SLOT (2026-09-27, the author: "Markette(tablette) ekran geçişleri ...
+        // için bir animasyon ayarla"). The slot above brings a panel IN; this one takes the
+        // night's slip OUT — to the left, fading, the two boards going back off their own
+        // edges — on the same Pace clock, so the market arriving from the right and the paper
+        // leaving to the left are one movement through the evening. The flow's stage push is
+        // the precedent (TycoonServiceFlow._slideOutRt/_slideInRt): two rects, one timer.
+        private float _billOutT = -1f;          // < 0: the slip is not leaving
+
+        private CanvasGroup _billOutGroup;
+
+        /// <summary>The market's crossing: the tablet in from the right and the slip out to
+        /// the left, over the same span and the same distance, mirrored.</summary>
+        private const float MarketCrossBy = 180f;
+        private static float MarketCross = 0.34f;   // a field for the probe, as AisleSwapDur
 
         // A basket chip: wide enough to show what the thing IS, narrow enough that a night's
         // shopping fits on one row. The row shrinks its chips toward the floor as it fills;
@@ -2990,6 +3096,9 @@ namespace LastCall.UI
 
         private void OnOpenTomorrow()
         {
+            // Whatever the market was still moving ends where it was going before the panel
+            // goes: a ghost aisle or a half-faded rail must not wait under tomorrow's curtain.
+            SettleMarketMotion();
             var run = Run;
             int leaving = run.Day;             // read BEFORE the roll: the curtain names both
             // THE GAME SAVES ITSELF HERE (2026-09-26, SaveStore): the market's purchases are
@@ -3063,6 +3172,21 @@ namespace LastCall.UI
         private int _hostNoteAt;
 
         private Text _closingAskLine;
+
+        // BOTH OF THE TABLET'S MESSAGE BOXES OPEN (2026-09-27): the scrim dims in and the
+        // box pops the way the hover card does. Leaving stays instant — the house's rule for
+        // its screens (GDD_MEVCUT: "açılış fade, kapanış anlık"). The scrims' resting alphas
+        // are named here because the fade has to land exactly on them.
+        private float _askScrimT = -1f, _noteScrimT = -1f;
+
+        private const float AskScrimA = 0.78f, NoteScrimA = 0.62f;
+        // A scrim fading in starts HERE, not at 0 (review, 2026-09-27): a Graphic whose vertex alpha is 0 is culled
+        // (CanvasRenderer.cullTransparentMesh), and a culled graphic takes no raycast - for its first frame the "wall"
+        // would let a click through to the tile or the foot key under it. 1% of the scrim is invisible and still drawn.
+        private const float ScrimFloor = 0.01f;
+
+        private const float DialogPop = 0.18f, DialogPopFrom = 0.88f;
+        private static float DialogFade = 0.15f;   // a field for the probe, as AisleSwapDur
 
         /// <summary>Make a control answer the pointer. One component per control, living on
         /// the control, so a rebuilt tile takes its highlight to the grave with it — a list
@@ -3218,14 +3342,20 @@ namespace LastCall.UI
         /// this row is type on a near-white plate. Measured: the picked amber lands at 1.9:1
         /// and the held grey at 2.5:1, so half the states would have shipped as a word nobody
         /// could read. Each state keeps its own hue and takes the dark step of it.
+        ///
+        /// THE LIGHT STEP NOW (2026-09-27): the row became a STAMP in the window's dark corner on
+        /// 2026-09-08 (a Night[0] plate at 82% over Night[2]) and kept the inks mixed for the white
+        /// plate, so every stamp was dark on dark - the van measured 1.15:1, SHELF FULL 2.26:1. Each
+        /// state keeps its hue and goes UP its ramp instead, to the inks the upgrade cards' stamps on
+        /// the same plate already wear (Decor.cs CardStamp: Lime[3], Amber[3], #DBDEEB).
         /// </summary>
         private static Color StateInk(TileState s) =>
-            s == TileState.Picked ? UITheme.Amber[1]
-            : s == TileState.Ordered ? ShopViceDeep
-            : s == TileState.Sealed ? StripSealed
-            : s == TileState.Refundable ? UITheme.ClubBlue[2]
-            : s == TileState.NoFitting || s == TileState.Unaffordable ? ShopCost
-            : TileMetaInk;                     // Held, and anything unlisted
+            s == TileState.Picked ? UITheme.Amber[3]
+            : s == TileState.Ordered ? UITheme.Cyan[4]
+            : s == TileState.Sealed ? UITheme.Cream[3]
+            : s == TileState.Refundable ? UITheme.ClubBlue[4]
+            : s == TileState.NoFitting || s == TileState.Unaffordable ? UITheme.ViceRed[4]
+            : UITheme.Cream[3];                // Held, and anything unlisted
 
         /// <summary>
         /// The drawing beside the word. Two drawers answer here and that is fine: the market
@@ -3239,17 +3369,23 @@ namespace LastCall.UI
         {
             string art = GlyphSpriteOf(s);
             if (art != null) return ItemArt.Load(art);
-            return s == TileState.Unaffordable ? ChromeArt.Mark("tips")
+            // The tick is the house's own (2026-09-27): sh_g_tick was a second drawing of it, cruder, and one
+            // mark should have one drawer. (It sits 1.5 units above its box's middle, as it does on the bench;
+            // centring it is ChromeArt's change to make, for every tick at once.)
+            return s == TileState.Picked ? ChromeArt.Mark("tick")
+                : s == TileState.Unaffordable ? ChromeArt.Mark("tips")
                 : s == TileState.Held ? ChromeArt.Mark("stock")
                 : null;
         }
 
+        // The van and the lock are the market's own, redrawn at the stamp's 16 (Tools/market_icons.py,
+        // 2026-09-27). The van used to be the 60x30 painted sh_van squeezed into this 16 box - 16x8,
+        // 0.27x - and multiplied by the navy ink on the black plate, so ON THE VAN had no picture at all.
         private static string GlyphSpriteOf(TileState s) =>
-            s == TileState.Picked ? "sh_g_tick"
-            : s == TileState.Ordered ? "sh_van"
+            s == TileState.Ordered ? "mk_van"
             : s == TileState.Sealed ? "sh_lock"
             : s == TileState.Refundable ? "sh_g_back"
-            : s == TileState.NoFitting ? "sh_b_lock"
+            : s == TileState.NoFitting ? "mk_lock"
             : null;                            // the rest are ChromeArt marks (StateMark)
 
         private static Color PillOf(TileState s) =>

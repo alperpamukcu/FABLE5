@@ -1765,8 +1765,10 @@ namespace LastCall.UI
         {
             if (board == null) return;
             board.Group.alpha = e;
+            // Whole units (2026-09-27): the boards are all pixel face, and their exit now runs beside the slip's,
+            // which moves in whole units. Both ends are whole, so the rest pose is unchanged.
             board.Root.anchoredPosition = new Vector2(
-                home + Mathf.Sign(home) * 54f * (1f - e), BoardY);
+                home + Mathf.Sign(home) * Mathf.Round(54f * (1f - e)), BoardY);
         }
 
         private void StartStandingClimb()
@@ -1821,6 +1823,10 @@ namespace LastCall.UI
 
         private void ShowDayEnd()
         {
+            // Nothing of the last market is still moving when the books come up (2026-09-27) — above
+            // all the slip's own way out, because _billHome is read back off the slip below, and a
+            // slip left mid-exit would print every night after this one off to the left.
+            SettleMarketMotion();
             // Nothing of the shift survives into the books.
             CloseEverySheet();
             var run = Run;
@@ -1882,15 +1888,26 @@ namespace LastCall.UI
 
         private void OnDayEndAdvance()
         {
+            // THE MARKET IS ALREADY LEAVING (review, 2026-09-27). The pull-away drops the pointer, but Escape still
+            // walked in here through it: with nothing to lose it ran PlayTabletOut again, whose SettleSlide put the
+            // tablet back home and whole before it left a second time; after OPEN ANYWAY it raised the question again
+            // over a market that was closing. The door has been shut - every way to it waits for tomorrow.
+            if (_slideOut && _slideRt != null && _slideRt == _dayEndTablet) return;
             if (_dayEndStep == 0)
             {
                 _dayEndStep = 1;
                 Sfx.Play("key_press", 0.6f);
-                RebuildDayEnd();
                 // THE SLIP GOES AND THE VAN ARRIVES: the bill leaves to the left, the
                 // market comes in from the right, so the two read as one movement through
                 // the evening rather than as two screens that happened to follow.
-                PlayPanel(_dayEndTablet, new Vector2(180f, 0f), 0.34f);
+                // ...which, until 2026-09-27, was half true: the rebuild switched the slip and
+                // the boards off in the frame of the press and only the tablet moved. The exit
+                // is claimed BEFORE the rebuild, so the rebuild keeps them up while they go —
+                // and the tablet is still switched on in this same frame, under the press,
+                // because the suite reads "CONTINUE gone, basket up" as the press landing.
+                StartBillOut();
+                RebuildDayEnd();
+                PlayPanel(_dayEndTablet, new Vector2(MarketCrossBy, 0f), MarketCross);
             }
             else
             {
@@ -1956,11 +1973,20 @@ namespace LastCall.UI
         /// <summary>The market pulls away, and the night begins from black behind it.</summary>
         private void PlayTabletOut()
         {
+            // The market's own movements end first (2026-09-27): a ghost aisle, a fading rail or
+            // a slip still leaving would otherwise be carried off under the curtain half-done.
+            SettleMarketMotion();
             SettleSlide();
             if (_dayEndTablet == null || Motion.Reduced) { OnOpenTomorrow(); return; }
             _slideRt = _dayEndTablet;
             _slideGroup = _dayEndTablet.GetComponent<CanvasGroup>();
             if (_slideGroup == null) _slideGroup = _dayEndTablet.gameObject.AddComponent<CanvasGroup>();
+            // A TABLET ON ITS WAY OUT TAKES NO PRESSES (2026-09-27). It used to: a tile, OPEN
+            // TOMORROW or the question could all still be pressed through the pull-away, on a
+            // market that had already been closed. What is LEAVING may drop the pointer; the
+            // panel is switched off at the end, so no glow is left holding it. SettleSlide
+            // gives it back. (The keyboard's way in, Escape, is turned away in OnDayEndAdvance.)
+            _slideGroup.blocksRaycasts = false;
             _slideHome = _dayEndTablet.anchoredPosition;
             _slideFrom = new Vector2(0f, -220f);
             _slideDur = 0.3f;
@@ -1975,8 +2001,67 @@ namespace LastCall.UI
         {
             if (_slideRt == null) return;
             _slideRt.anchoredPosition = _slideHome;
-            if (_slideGroup != null) _slideGroup.alpha = 1f;
+            if (_slideGroup != null) { _slideGroup.alpha = 1f; _slideGroup.blocksRaycasts = true; }
             _slideRt = null; _slideGroup = null;
+        }
+
+        /// <summary>
+        /// The slip's way out (2026-09-27), claimed in the frame of the press and before the rebuild, which reads
+        /// <see cref="_billOutT"/> to keep the slip and the boards switched on while they go. They take no pointer on
+        /// the way — the market is live over them from its first frame. Reduced motion claims nothing, and the rebuild
+        /// switches them off exactly as it always did.
+        /// </summary>
+        private void StartBillOut()
+        {
+            SettleBillOut();
+            if (Motion.Reduced || _dayEndBill == null || !_dayEndBill.gameObject.activeSelf) return;
+            _billOutGroup = _dayEndBill.GetComponent<CanvasGroup>();
+            if (_billOutGroup == null) _billOutGroup = _dayEndBill.gameObject.AddComponent<CanvasGroup>();   // not ??: the fake null
+            _billOutGroup.blocksRaycasts = false;   // (the boards never take the pointer at all — BuildNightBoards)
+            _dayEndBill.anchoredPosition = _billHome;   // at rest already — the beats are over when CONTINUE is up
+            _billOutT = 0f;
+        }
+
+        /// <summary>The second slot's frame, on the first slot's clock: the slip pushed left by the distance the tablet
+        /// comes in from the right, on the same out-cubic, fading as the tablet brightens; the boards back off their own
+        /// edges on the same curve.</summary>
+        private void StepBillOut()
+        {
+            if (_billOutT < 0f) return;
+            _billOutT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
+            float k = Motion.Reduced ? 1f : Mathf.Clamp01(_billOutT / MarketCross);
+            if (k >= 1f) { SettleBillOut(); return; }
+            float e = Tweening.OutCubic(k);
+            if (_dayEndBill != null)   // on whole units: the slip is all pixel face
+                _dayEndBill.anchoredPosition = _billHome + new Vector2(-Mathf.Round(MarketCrossBy * e), 0f);
+            if (_billOutGroup != null) _billOutGroup.alpha = 1f - Mathf.Clamp01(k * 1.8f);   // the tablet's k*1.8, mirrored
+            SetBoardIn(_weekBoard, -BoardX, 1f - e);
+            SetBoardIn(_standBoard, BoardX, 1f - e);
+        }
+
+        /// <summary>
+        /// The slip and the boards back AT HOME, whole and pressable, and only then switched off — at the end and on
+        /// every interruption (a quick close, tomorrow, the next night's books). Home first because the next
+        /// <see cref="ShowDayEnd"/> reads <see cref="_billHome"/> back off the slip where it stands.
+        /// </summary>
+        private void SettleBillOut()
+        {
+            if (_billOutT < 0f) return;
+            _billOutT = -1f;
+            bool slipStep = _dayEndStep == 0;
+            if (_dayEndBill != null)
+            {
+                _dayEndBill.anchoredPosition = _billHome;
+                if (_billOutGroup != null) { _billOutGroup.alpha = 1f; _billOutGroup.blocksRaycasts = true; }
+                if (!slipStep) _dayEndBill.gameObject.SetActive(false);
+            }
+            foreach (var board in new[] { _weekBoard, _standBoard })
+            {
+                if (board == null) continue;
+                SetBoardIn(board, board == _weekBoard ? -BoardX : BoardX, 1f);
+                if (!slipStep) board.Root.gameObject.SetActive(false);
+            }
+            _billOutGroup = null;
         }
 
         /// <summary>
@@ -1999,6 +2084,7 @@ namespace LastCall.UI
 
         private void StepSlide()
         {
+            StepBillOut();   // the second slot, on this same clock (2026-09-27)
             if (_slideRt == null) return;
             _slideT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             float k = _slideDur <= 0f ? 1f : Mathf.Clamp01(_slideT / _slideDur);
@@ -2052,12 +2138,15 @@ namespace LastCall.UI
         private void RebuildDayEnd()
         {
             var run = Run;
-            _dayEndBill.gameObject.SetActive(_dayEndStep == 0);
+            // ...and while they are LEAVING (2026-09-27) they are still on the screen: the slip and
+            // the boards go out under the arriving market and are switched off by SettleBillOut.
+            bool slipUp = _dayEndStep == 0 || _billOutT >= 0f;
+            _dayEndBill.gameObject.SetActive(slipUp);
             _dayEndTablet.gameObject.SetActive(_dayEndStep == 1);
             // The books have three objects on them; the market has one, and it covers the
             // room. The instruments belong to the night's own page.
-            if (_weekBoard != null) _weekBoard.Root.gameObject.SetActive(_dayEndStep == 0);
-            if (_standBoard != null) _standBoard.Root.gameObject.SetActive(_dayEndStep == 0);
+            if (_weekBoard != null) _weekBoard.Root.gameObject.SetActive(slipUp);
+            if (_standBoard != null) _standBoard.Root.gameObject.SetActive(slipUp);
             if (_dayEndStep == 0) { FillWeekBoard(run); FillStandBoard(run); }
             // NOT UNTIL THE LAST STAR HAS LANDED (2026-08-11, the author). A way out
             // offered while the night is still being counted is a way out taken: the whole
@@ -2197,6 +2286,17 @@ namespace LastCall.UI
             // Printed at nothing, until the counting beat reaches each figure - unless that beat has run already.
             if (_endBeat >= 1 && _endBeat <= 2 && !Motion.Reduced)
                 foreach (var count in _billCounts) count(0f);
+            // A SLIP ON ITS WAY OUT KEEPS ITS INK (2026-09-27). The rows above are printed again on
+            // the press that opens the market, and BillStars parks a fresh stamp hidden — so the
+            // DISGRACE or RECORD the night was struck with would lift off the paper on the frame it
+            // starts to leave. Put back at its rest pose, as StepStamp left it.
+            if (_billOutT >= 0f && _stampArmed && _stampT < 0f && _stampKind != StampKind.None && _billStamp != null)
+            {
+                SetStampFace(_stampKind);
+                _billStamp.localScale = Vector3.one;
+                _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+                _billStamp.gameObject.SetActive(true);
+            }
 
             // The sheet is the ROLL's size; the print is the night's. What varies is how
             // much blank stock is left above the foot tear — which is how receipts work.
@@ -2205,8 +2305,10 @@ namespace LastCall.UI
                 // stood on the screen's last two rows and read as cut off).
                 _billNext.anchoredPosition = new Vector2(0, -(BillH * 0.5f + 4f + BillKeyH * 0.5f));
 
-            // The tablet.
-            foreach (Transform child in _offerRow) Destroy(child.gameObject);
+            // The tablet. A department change lifts the old shelf out into a ghost that slides away
+            // (MarketFx, 2026-09-27) — here, while the viewport still has the old department's width.
+            if (!LiftAisleIntoGhost())
+                foreach (Transform child in _offerRow) Destroy(child.gameObject);
             // (the account line counts too — see RunTheTill)
             // Tonight's fitting, said ONCE. It used to appear in five places — a band, a
             // rail note, the stool's tip, the glassware tip and a toast — and the author
@@ -2219,15 +2321,12 @@ namespace LastCall.UI
                 _fittingNote.color = room ? ShopViceDeep : ShopCost;
             }
             if (_fittingLamp != null) _fittingLamp.color = room ? ShopViceLit : ShopCost;
+            // The keys are AIMED here, not drawn (2026-09-27): this runs on every pick, and a height
+            // or a colour written here would snap a key that is still rising. StepShopTabKeys draws
+            // them — through HoverWarm, so the one under the pointer keeps its open colour.
             for (int i = 0; i < _shopTabKeys.Length; i++)
-            {
-                bool on = i == _shopTab;
-                _shopTabKeys[i].sprite = null;
-                _shopTabKeys[i].color = on ? ShopViceDeep : ShopPaper;
-                var key = (RectTransform)_shopTabKeys[i].transform;
-                key.sizeDelta = new Vector2(TabKeyW, on ? TabLiveH : TabRestH);
-                if (_shopTabLits[i] != null) _shopTabLits[i].enabled = on;
-            }
+                if (_shopTabKeys[i] != null) _shopTabKeys[i].sprite = null;
+            AimShopTabKeys();
 
             // The basket SHOWS what is in it (2026-08-11, the author: "sepetteki font
             // okunmuyor ... ürünlerin ikonu da gözükmeli ... üstüne basınca çıkarılabilmeli").
@@ -2653,11 +2752,17 @@ namespace LastCall.UI
         /// across a 190 card, printing straight through the name underneath it; the tile
         /// says "sold" with a strip, a plate and a van, so the stamp only has to land.
         /// </summary>
+        /// <remarks>ITS TILE CAN GO FIRST (2026-09-27). This runs on the HUD, not on the tile, and the
+        /// tile is the market's to tear down: a pick or an order inside the 0.22 s rebuilds the aisle,
+        /// and a department change carries it off in the ghost and destroys it there. Writing to it
+        /// after that is a MissingReferenceException, which the test runner fails a test on — so every
+        /// frame asks first.</remarks>
         private System.Collections.IEnumerator StampDrop(RectTransform rt)
         {
             const float dur = 0.16f;
             for (float t = 0; t < dur; t += Time.unscaledDeltaTime)
             {
+                if (rt == null) yield break;
                 float k = t / dur;
                 float s = Mathf.Lerp(2.6f, 0.94f, k * k);      // slams down
                 rt.localScale = new Vector3(s, s, 1f);
@@ -2665,12 +2770,13 @@ namespace LastCall.UI
             }
             for (float t = 0; t < 0.06f; t += Time.unscaledDeltaTime)
             {
+                if (rt == null) yield break;
                 float k = t / 0.06f;
                 float s = Mathf.Lerp(0.94f, 1f, k);            // and settles
                 rt.localScale = new Vector3(s, s, 1f);
                 yield return null;
             }
-            rt.localScale = Vector3.one;
+            if (rt != null) rt.localScale = Vector3.one;
         }
 
         /// <summary>
@@ -2684,7 +2790,7 @@ namespace LastCall.UI
             _closingAsk = NewRect("ClosingAsk", tablet);
             Stretch(_closingAsk, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _closingAsk.gameObject.AddComponent<Image>();
-            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, 0.78f);
+            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, AskScrimA);
             scrim.raycastTarget = true;   // a wall: nothing behind it may be clicked
 
             // THE 98 MESSAGE BOX (2026-08-19, the author: '"Close the Order?" kısmını da
@@ -2694,6 +2800,7 @@ namespace LastCall.UI
             // now rather than floating on the paper — a dialog names itself on its chrome.
             var card = NewRect("Card", _closingAsk);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(620, 220), Vector2.zero);
+            AddDialogPop(card);
             var cardImg = card.gameObject.AddComponent<Image>();
             cardImg.sprite = ChromeArt.Win98Key();
             cardImg.type = Image.Type.Sliced;
@@ -2781,11 +2888,12 @@ namespace LastCall.UI
             _hostNote = NewRect("HostNote", tablet);
             Stretch(_hostNote, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var scrim = _hostNote.gameObject.AddComponent<Image>();
-            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, 0.62f);
+            scrim.color = new Color(UITheme.ClubBlue[0].r, UITheme.ClubBlue[0].g, UITheme.ClubBlue[0].b, NoteScrimA);
             scrim.raycastTarget = true;   // a wall, like the question's: read it, then shop
 
             var card = NewRect("Card", _hostNote);
             Place(card, new Vector2(0.5f, 0.5f), new Vector2(620, 200), Vector2.zero);
+            AddDialogPop(card);
             var cardImg = card.gameObject.AddComponent<Image>();
             cardImg.sprite = ChromeArt.Win98Key();
             cardImg.type = Image.Type.Sliced;
@@ -2847,8 +2955,10 @@ namespace LastCall.UI
             var lesson = run != null && run.Phase == TycoonPhase.DayEnd && MarketIsUp
                          && !Showing(_closingAsk) ? run.LessonDue : null;
             bool show = lesson != null;
+            bool wasUp = _hostNote.gameObject.activeSelf, fresh = false;
             if (show && lesson.Id != _hostNoteLesson)
             {
+                fresh = true;
                 _hostNoteLesson = lesson.Id;
                 _hostNoteAt = 0;
                 var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
@@ -2867,6 +2977,9 @@ namespace LastCall.UI
             }
             else _hostNoteLesson = "";
             if (_hostNote.gameObject.activeSelf != show) _hostNote.gameObject.SetActive(show);
+            // A NEW LESSON OPENS (2026-09-27): the box pops; the scrim dims in only when the note was
+            // not already up — a lesson following a lesson must not flash the room back to bright.
+            if (fresh) OpenDialog(_hostNote, NoteScrimA, ref _noteScrimT, fadeScrim: !wasUp);
         }
 
         private void OnHostNoteKey()
@@ -2887,7 +3000,78 @@ namespace LastCall.UI
             Sfx.Play("screen_on", 0.7f);
             _closingAsk.gameObject.SetActive(true);
             _closingAsk.SetAsLastSibling();
+            OpenDialog(_closingAsk, AskScrimA, ref _askScrimT, fadeScrim: true);
             Sfx.Play("key_press", 0.5f);
+        }
+
+        // ── the message boxes open (2026-09-27) ─────────────────────────────────
+        //
+        // The author's eighth list asked for "pop-up açılmaları" to move, and the tablet's two
+        // boxes were the last pop-ups on it that simply appeared. They open the way the hover card
+        // does — a quick scale up out of their own middle — over a scrim that dims in. Both stay
+        // SWITCHED ON from the first frame (Showing() and the suite read activeSelf, and the scrim
+        // is a wall from that frame whatever its alpha), and both still close in one frame — the
+        // house's rule for its screens (GDD_MEVCUT): "açılış fade, kapanış anlık".
+
+        /// <summary>The box's opening, on its card: the hover card's own pop, from a little nearer
+        /// full size — a message box is a window arriving, not a label unrolling.</summary>
+        private static void AddDialogPop(RectTransform card)
+        {
+            var pop = card.gameObject.AddComponent<PopIn>();
+            pop.Seconds = DialogPop;
+            pop.From = DialogPopFrom;
+            pop.Overshoot = 0.05f;
+        }
+
+        /// <summary>Opens a box that has just been switched on: its card pops, and its scrim — the Image
+        /// on the box's root — dims in from nothing to <paramref name="scrimA"/>. Reduced motion gives
+        /// the scrim at once (PopIn snaps itself).</summary>
+        private static void OpenDialog(RectTransform box, float scrimA, ref float scrimT, bool fadeScrim)
+        {
+            if (box == null) return;
+            var card = box.Find("Card");
+            var pop = card != null ? card.GetComponent<PopIn>() : null;
+            if (pop != null) pop.Play();
+            var scrim = box.GetComponent<Image>();
+            if (scrim == null) return;
+            if (!fadeScrim || Motion.Reduced)
+            {
+                if (scrimT >= 0f) { scrimT = -1f; SetScrim(scrim, scrimA); }
+                return;
+            }
+            scrimT = 0f;
+            SetScrim(scrim, ScrimFloor);
+        }
+
+        private static void SetScrim(Graphic scrim, float a)
+        {
+            var c = scrim.color;
+            if (c.a != a) scrim.color = new Color(c.r, c.g, c.b, a);
+        }
+
+        private void StepDialogScrims()
+        {
+            StepScrim(_closingAsk, AskScrimA, ref _askScrimT);
+            StepScrim(_hostNote, NoteScrimA, ref _noteScrimT);
+        }
+
+        /// <summary>One frame of a scrim dimming in. It lands on exactly its resting alpha, and a box
+        /// closed halfway (or reduced motion switched on) puts it there at once, so a box that is not
+        /// fading always carries its full scrim.</summary>
+        private static void StepScrim(RectTransform box, float scrimA, ref float t)
+        {
+            if (t < 0f) return;
+            var scrim = box != null ? box.GetComponent<Image>() : null;
+            if (scrim == null) { t = -1f; return; }
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / DialogFade);
+            if (k >= 1f || Motion.Reduced || !box.gameObject.activeSelf)
+            {
+                t = -1f;
+                SetScrim(scrim, scrimA);
+                return;
+            }
+            SetScrim(scrim, Mathf.Max(ScrimFloor, scrimA * Tweening.OutCubic(k)));
         }
     }
 }

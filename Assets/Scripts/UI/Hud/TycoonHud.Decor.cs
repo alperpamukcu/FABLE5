@@ -56,27 +56,78 @@ namespace LastCall.UI
         /// its left side while the upgrade screen is open and takes it back after, so the other
         /// departments keep the five-across shelf they were measured for.
         /// </summary>
+        /// <remarks>
+        /// IT COMES AND GOES WITH THE TURN (2026-09-27): it used to pop in and out on the frame of the press. When the
+        /// department changes by a TURN (a tab key, not the market opening on it) the rail fades in sliding a few units
+        /// from the left, or fades out and is switched off only when it has gone. The viewport still gives up or takes
+        /// back its side at once - the new shelf is laid for the width it will have, and the old one leaves in a ghost
+        /// of the old width. Called on every rebuild, so it only STARTS a fade when the department changes, and it
+        /// places the rail from how far up it is: a pick mid-fade does not snap it. A rail on its way out takes no
+        /// pointer; one on its way in is live at once, like the shelf beside it.
+        /// </remarks>
         private void LayOutDecorRail(bool on)
         {
             var view = _shopScroll != null ? _shopScroll.viewport : null;
             if (view == null) return;
             view.offsetMin = new Vector2(on ? 8f + RailW + RailGap : 8f, view.offsetMin.y);
+            bool turning = _aisleSwapT >= 0f && !Motion.Reduced;   // the rebuild just lifted the old shelf into a ghost
             if (!on)
             {
-                if (_decorRail != null) _decorRail.gameObject.SetActive(false);
+                if (_decorRail == null) return;
+                if (_railUp)
+                {
+                    _railUp = false;
+                    _railFrom = _railV;
+                    _railT = turning && _decorRail.gameObject.activeSelf ? 0f : -1f;
+                    OutOfNavigation(_decorRail);   // its keys are done: coming back rebuilds them (BuildDecorRail)
+                }
+                if (_railT < 0f)
+                {
+                    _railV = 0f;
+                    _decorRail.gameObject.SetActive(false);
+                }
+                PlaceDecorRail();
                 return;
             }
             if (_decorRail == null)
             {
                 _decorRail = NewRect("DecorRail", view.parent);
                 _decorRail.gameObject.AddComponent<Image>().color = ShopAisle;
+                _railGroup = _decorRail.gameObject.AddComponent<CanvasGroup>();
+                _railV = 0f;
+            }
+            if (!_railUp)
+            {
+                _railUp = true;
+                _railFrom = _railV;
+                _railT = turning ? 0f : -1f;
+                if (_railT < 0f) _railV = 1f;   // the market opening ON the upgrades: it is simply there
             }
             _decorRail.gameObject.SetActive(true);
             _decorRail.anchorMin = new Vector2(0, 0);
             _decorRail.anchorMax = new Vector2(0, 1);
             _decorRail.pivot = new Vector2(0, 1);
-            _decorRail.offsetMin = new Vector2(8f, view.offsetMin.y);
-            _decorRail.offsetMax = new Vector2(8f + RailW, view.offsetMax.y);
+            PlaceDecorRail();
+        }
+
+        /// <summary>The rail's place and weight from how far up it is (0 away, 1 up): at 1 it stands exactly where it
+        /// always stood, 8 in from the page, fully drawn.</summary>
+        private void PlaceDecorRail()
+        {
+            if (_decorRail == null) return;
+            var view = _shopScroll != null ? _shopScroll.viewport : null;
+            if (view == null) return;
+            float slide = Mathf.Round(RailSlide * (1f - _railV));   // whole units: its words are the pixel face
+            _decorRail.offsetMin = new Vector2(8f - slide, view.offsetMin.y);
+            _decorRail.offsetMax = new Vector2(8f + RailW - slide, view.offsetMax.y);
+            if (_railGroup == null) _railGroup = _decorRail.GetComponent<CanvasGroup>();
+            if (_railGroup == null) _railGroup = _decorRail.gameObject.AddComponent<CanvasGroup>();   // not ??: the fake null
+            _railGroup.alpha = _railV;
+            _railGroup.blocksRaycasts = _railUp;
+            // Never switched off (review, 2026-09-27): a group that is not interactable sends every key on the rail to
+            // the default disabled tint, so a rail on its way out went grey under its own fade. blocksRaycasts keeps
+            // the pointer off it and LayOutDecorRail takes its keys off the arrows; a rail that comes back is rebuilt.
+            _railGroup.interactable = true;
         }
 
         /// <summary>The department itself: the rail's keys, then the open shelf.</summary>
@@ -177,6 +228,10 @@ namespace LastCall.UI
                 btn.onClick.AddListener(() =>
                 {
                     if (_decorSection == target) return;
+                    // THE SHELF TURNS LIKE A TAB (2026-09-27): further down the rail comes in from
+                    // the right, back up it from the left - the tab bar's rule, read down the rail.
+                    QueueAisleSwap(Array.IndexOf(DecorShelves, target)
+                                   > Array.IndexOf(DecorShelves, _decorSection) ? 1 : -1);
                     _decorSection = target;
                     _justOrdered.Clear(); _shopScrollAt = 1f; _shopScrollPx = -1f;
                     Sfx.Play("key_press", 0.55f);
@@ -624,9 +679,10 @@ namespace LastCall.UI
                 mt.text = f.Level.ToString(CultureInfo.InvariantCulture);
             }
 
-            if (worn) CardStamp(win, UIText.T("decor.stamp.worn"), ItemArt.Load("sh_g_tick"), UITheme.Lime[3]);
-            else if (spec.State == TileState.Picked) CardStamp(win, UIText.T("decor.stamp.in_basket"), ItemArt.Load("sh_g_tick"), UITheme.Amber[3]);
-            else if (locked) CardStamp(win, UIText.T("decor.stamp.locked"), ItemArt.Load("sh_b_lock"), new Color(0.86f, 0.87f, 0.92f, 1f));
+            // The house tick and the market's own 16 lock, centred in its box (2026-09-27; sh_b_lock sat a unit high).
+            if (worn) CardStamp(win, UIText.T("decor.stamp.worn"), ChromeArt.Mark("tick"), UITheme.Lime[3]);
+            else if (spec.State == TileState.Picked) CardStamp(win, UIText.T("decor.stamp.in_basket"), ChromeArt.Mark("tick"), UITheme.Amber[3]);
+            else if (locked) CardStamp(win, UIText.T("decor.stamp.locked"), ItemArt.Load("mk_lock"), new Color(0.86f, 0.87f, 0.92f, 1f));
 
             // ── the name, and the one thing it does ──
             var name = NewText("Name", rt, _shop, 16, TextAnchor.UpperLeft, locked ? ShopInkSoft : ShopInk);
@@ -671,7 +727,7 @@ namespace LastCall.UI
             // ── the foot: the one control ──
             if (worn)
                 CardFootWord(rt, f.Level > 0 ? UIText.T("decor.foot.on_show") : UIText.T("decor.foot.in_room"),
-                    ItemArt.Load("sh_g_tick"), StripStock);
+                    ChromeArt.Mark("tick"), StripStock);
             else if (owned)
             {
                 var key = NewRect("Wear", rt);
@@ -690,10 +746,10 @@ namespace LastCall.UI
                 press.Caption = kt.rectTransform;
             }
             else if (rungLock)
-                CardFootWord(rt, UIText.T("decor.foot.mark_first", ("mark", climbed + 1)), ItemArt.Load("sh_b_lock"), StripSealed);
+                CardFootWord(rt, UIText.T("decor.foot.mark_first", ("mark", climbed + 1)), ItemArt.Load("mk_lock"), StripSealed);
             else if (starLock)
             {
-                StarRow(rt, new Vector2(0, 1), new Vector2(8f, -(CardFootTop + 7f)), 12f,
+                StarRow(rt, new Vector2(0, 1), new Vector2(8f, -(CardFootTop + 6f)), 14f,   // the star's own 14 (2026-09-27)
                     f.Stars, UITheme.Amber[3], new Color(0.3f, 0.28f, 0.34f, 0.25f));
             }
             else

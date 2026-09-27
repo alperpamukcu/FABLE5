@@ -783,9 +783,13 @@ namespace LastCall.UI
             wifiImg.raycastTarget = false;
             wifiImg.color = ShopInk;
             var osBatt = NewRect("OsBatt", osBar);
-            Place(osBatt, new Vector2(1, 0.5f), new Vector2(23, 9), new Vector2(-14, 0));
+            // Half a unit down (2026-09-27): a 9-tall mark centred in the 20 bar lands on 5.5, and a one-texel
+            // outline drawn off the grid loses or doubles its top row.
+            Place(osBatt, new Vector2(1, 0.5f), new Vector2(23, 9), new Vector2(-14, -0.5f));
             var battImg = osBatt.gameObject.AddComponent<Image>();
-            battImg.sprite = ItemArt.Load("sh_batt"); battImg.preserveAspect = true;
+            // Flat navy like the wifi beside it (2026-09-27): sh_batt was a shaded 3D battery with a green
+            // charge - a rendered object next to a printed mark, and green is the site's money signal.
+            battImg.sprite = ItemArt.Load("mk_batt"); battImg.preserveAspect = true;
             battImg.raycastTarget = false;
             if (battImg.sprite == null) battImg.color = ShopInkSoft;
 
@@ -939,7 +943,8 @@ namespace LastCall.UI
                 // off the page, and the whole storefront speaks that button now. The lit
                 // magenta edge stays — the bevel says "pressable", the edge says "open".
                 Bevel(key, 2f, raised: true);
-                // The lit top edge, shown only on the open tab (RefreshDayEnd switches it).
+                // The lit top edge, shown only on the open tab (StepShopTabKeys grows it out
+                // from the middle as the tab rises, and draws it in again as it falls).
                 var lit = NewRect("Lit", key);
                 lit.anchorMin = new Vector2(0, 1); lit.anchorMax = new Vector2(1, 1);
                 lit.pivot = new Vector2(0.5f, 1);
@@ -962,10 +967,12 @@ namespace LastCall.UI
                         _justOrdered.Clear(); _shopScrollAt = 1f; _shopScrollPx = -1f;
                         Sfx.Play("key_press", 0.55f);
                     }
-                    bool moved = _shopTab != tab;
+                    // THE AISLE TURNS (2026-09-27): read which way BEFORE the tab changes — a
+                    // department to the right comes in from the right, the flow's own dialect.
+                    // The rebuild spends it where it would have destroyed the old shelf (MarketFx).
+                    if (_shopTab != tab) QueueAisleSwap(tab > _shopTab ? 1 : -1);
                     _shopTab = tab;
                     RebuildDayEnd();
-                    if (moved) FadeInAisle();           // the aisle comes up into its place (MarketFx)
                 });
                 // AT ITS OWN SIZE. The icons are cut on a 24 canvas and were drawn into a
                 // 20 box: 0.833x, a fractional shrink of pixel art, which rounds some rows
@@ -993,7 +1000,7 @@ namespace LastCall.UI
             var lamp = NewRect("Lamp", tabBar);
             Place(lamp, new Vector2(1, 0.5f), new Vector2(16, 16), new Vector2(-152, 0));
             var lampImg = lamp.gameObject.AddComponent<Image>();
-            lampImg.sprite = ItemArt.Load("sh_b_lock");
+            lampImg.sprite = ItemArt.Load("mk_lock");   // centred in its 16 (sh_b_lock sat a unit high)
             lampImg.preserveAspect = true; lampImg.raycastTarget = false;
             _fittingLamp = lampImg;
             _fittingNote = NewText("Fitting", tabBar, _body, 8, TextAnchor.MiddleRight, ShopInk);
@@ -1108,12 +1115,27 @@ namespace LastCall.UI
             headImg.raycastTarget = false;
 
             // The product's own mark, in the bar, and its name beside it in the shop's face.
+            // AT ITS OWN 16 (2026-09-27): the mark was the product's own picture squeezed into 18 - a
+            // 32x64 bottle at 0.28x, a 48 stool at 0.375x, every one a fractional shrink of pixel art.
+            // It is its department's mark now, drawn at 16 for this bar (ShopHeadMarks); the tile under
+            // the pointer is already showing the product itself, whole.
             var cardMark = NewRect("Mark", cardHead);
-            Place(cardMark, new Vector2(0, 0.5f), new Vector2(18, 18), new Vector2(8, 0));
+            Place(cardMark, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(8, 0));
             cardMark.pivot = new Vector2(0, 0.5f);
             _cardMarkImg = cardMark.gameObject.AddComponent<Image>();
             _cardMarkImg.preserveAspect = true;
             _cardMarkImg.raycastTarget = false;
+
+            // The thing itself, for a tile that wears an icon (placed and sized by CardPicture).
+            _cardPicWin = NewRect("PicWin", _shopCard);
+            _cardPicWin.anchorMin = _cardPicWin.anchorMax = _cardPicWin.pivot = new Vector2(0, 1);
+            var picWinImg = _cardPicWin.gameObject.AddComponent<Image>();
+            picWinImg.color = UITheme.Night[2];            // the tile window's own dark
+            picWinImg.raycastTarget = false;
+            var picRt = NewRect("Pic", _cardPicWin);
+            _cardPicImg = picRt.gameObject.AddComponent<Image>();
+            _cardPicImg.raycastTarget = false;
+            _cardPicWin.gameObject.SetActive(false);
 
             _cardIdentity = NewText("Identity", cardHead, _shop, 16, TextAnchor.MiddleLeft, ShopPage);
             Place(_cardIdentity.rectTransform, new Vector2(0, 0.5f),
@@ -1149,7 +1171,8 @@ namespace LastCall.UI
             for (int i = 0; i < 2; i++)
             {
                 var icon = NewRect("BuffI" + i, _shopCard);
-                Place(icon, new Vector2(0, 1), new Vector2(14, 14), new Vector2(ShopCardGutter, -100f));
+                // 16, the marks' own size (2026-09-27): a 16 mark in this 14 box drew at 0.875x.
+                Place(icon, new Vector2(0, 1), new Vector2(16, 16), new Vector2(ShopCardGutter, -100f));
                 var ii = icon.gameObject.AddComponent<Image>();
                 ii.preserveAspect = true; ii.raycastTarget = false;
                 var line = NewText("Buff" + i, _shopCard, _body, 10, TextAnchor.UpperLeft, ShopInk);
@@ -1210,9 +1233,11 @@ namespace LastCall.UI
             Place(orderHead, new Vector2(0, 1), new Vector2(BasketW, 30), Vector2.zero);
             orderHead.gameObject.AddComponent<Image>().color = ShopViceDeep;
             var orderIcon = NewRect("BasketI", orderHead);
-            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(23, 20), new Vector2(10, 0));   // the cart's own 23x20, not 0.87 of it
+            // The cart's own 24x20 (2026-09-27): cream on the navy band at 7.2:1. sh_i_cart was a dark
+            // green blot there at 2.0:1, and green is the money signal on this site.
+            Place(orderIcon, new Vector2(0, 0.5f), new Vector2(24, 20), new Vector2(10, 0));
             var orderIconImg = orderIcon.gameObject.AddComponent<Image>();
-            orderIconImg.sprite = ItemArt.Load("sh_i_cart");
+            orderIconImg.sprite = ItemArt.Load("mk_cart");
             orderIconImg.preserveAspect = true; orderIconImg.raycastTarget = false;
             _cartHeadLabel = NewText("BasketHL", orderHead, _shop, 16, TextAnchor.MiddleLeft, Color.white);
             Place(_cartHeadLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(220, 20),

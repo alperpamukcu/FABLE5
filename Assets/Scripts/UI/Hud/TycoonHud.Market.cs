@@ -37,21 +37,29 @@ namespace LastCall.UI
         /// The open tab's title comes UP to white rather than being swapped to it (the
         /// author, 2026-08-10). One frame of green and the next of white reads as a redraw;
         /// a fifth of a second of travel reads as the tab lighting up. The icons ride the
-        /// same curve, so the whole key brightens as one object.
+        /// same curve, so the whole key brightens as one object. (Since 2026-09-27 only the title does: the
+        /// icons are coloured pictures now and stay untinted in both states - see the note in the body.)
         /// </summary>
         private void FadeShopTabs()
         {
             if (_shopTabLabels == null) return;
-            float step = Time.unscaledDeltaTime / TabFade;
+            // The same curve at any frame rate (2026-09-27): a per-frame fraction of dt/TabFade
+            // drifted with the frame rate (and past 1 on a hitch); the exponential is what it meant.
+            float step = 1f - Mathf.Exp(-Time.unscaledDeltaTime / TabFade);
             for (int i = 0; i < _shopTabLabels.Length; i++)
             {
                 if (_shopTabLabels[i] == null) continue;
                 bool on = i == _shopTab;
                 var want = on ? Color.white : ShopViceDeep;
                 _shopTabLabels[i].color = Color.Lerp(_shopTabLabels[i].color, want, step);
-                if (_shopTabIcons[i] != null)
-                    _shopTabIcons[i].color = Color.Lerp(_shopTabIcons[i].color,
-                        on ? Color.white : new Color(0.494f, 0.529f, 0.635f, 1f), step);
+                // UNTINTED IN BOTH STATES (2026-09-27): the resting key multiplied its icon by a grey-blue,
+                // which was right for a white mark and turned the mk_tab set's cream to grey and its amber
+                // to brown - every resting department looked disabled. The key already says which file is
+                // open (the navy face, the magenta edge, the white title), so the picture keeps its colours.
+                // (An icon whose art never loaded stays hidden - Build.cs clears it - never a white square.)
+                if (_shopTabIcons[i] != null && _shopTabIcons[i].sprite != null
+                    && _shopTabIcons[i].color != Color.white)
+                    _shopTabIcons[i].color = Color.white;
             }
         }
 
@@ -328,7 +336,19 @@ namespace LastCall.UI
             // takes the whole chip above the price now (2026-08-11, the author: the X went,
             // the picture grew into the corner it was using).
             var art = NewRect("Art", chip);
-            VesselArt.StandOn(art, new Vector2(0.5f, 0f), entry.Art, rowH - 28f, new Vector2(0, 22f));
+            // AT A WHOLE STEP (2026-09-27): standing every product to the chip's 62 put a bottle at 1.02x, an
+            // upgrade icon at 1.38x and a drink at 2.8x - pixel art at fractional scales. The largest whole
+            // step that fits the chip's height AND width wins; only a drawing too big for 1x keeps the fit.
+            float chipK = 0f;
+            if (entry.Art != null)
+            {
+                var dm = VesselArt.Of(entry.Art).Drawing;
+                if (dm.width > 0f && dm.height > 0f)
+                    chipK = Mathf.Floor(Mathf.Min((rowH - 28f) / dm.height, (box - 6f) / dm.width));
+                if (chipK < 1f) chipK = 0f;
+            }
+            VesselArt.StandOn(art, new Vector2(0.5f, 0f), entry.Art, rowH - 28f, new Vector2(0, 22f),
+                fixedScale: chipK);
             var ai = art.gameObject.AddComponent<Image>();
             ai.sprite = entry.Art;
             ai.preserveAspect = true;
@@ -363,6 +383,7 @@ namespace LastCall.UI
                 MetaLine = UIText.T("market.basket.chip_meta", ("price", "$" + e.Price)),
                 Body = UIText.T("market.basket.chip_body"),
                 Art = e.Art,
+                Head = e.Head,
             });
             hover.Exited = () => ShowShopCard(null);
         }
@@ -435,7 +456,8 @@ namespace LastCall.UI
             if (CartTotal() + price > Run.Money) { Sfx.Play("deny", 0.7f); Toast(UIText.T("market.toast.not_enough_money")); return; }
 
             _cart.Add(new CartEntry { Key = key, Label = label, Price = price,
-                                      IsFitting = isFitting, Buy = buy, Art = art });
+                                      IsFitting = isFitting, Buy = buy, Art = art,
+                                      Head = ShopHeadMark(_shopTab) });   // picked here, so it is this department's
             Sfx.Play("click", 0.7f);
             var mouse = UnityEngine.InputSystem.Mouse.current;
             Vector2 from = mouse != null ? mouse.position.ReadValue() : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
@@ -618,7 +640,14 @@ namespace LastCall.UI
             }
             if (_cardMarkImg != null)
             {
-                var mark = spec.CardArt ?? spec.Art;
+                // A listing with a picture wears its department's 16 in the head (2026-09-27; Build.cs has
+                // why). A badge-only card (a buff, a "+3 more" chip) still has none.
+                Sprite mark = null;
+                if (spec.CardArt != null || spec.Art != null || spec.Head != null)
+                {
+                    mark = spec.Head;                              // not ??: a Unity object's fake null
+                    if (mark == null) mark = ShopHeadMark(_shopTab);
+                }
                 _cardMarkImg.enabled = mark != null;
                 _cardMarkImg.sprite = mark;
             }
@@ -645,6 +674,7 @@ namespace LastCall.UI
             // The head bar is the card's first row and it is a fixed height: the name sits IN it now
             // (2026-09-23), so the stack under it starts at its foot rather than under a wrapped title.
             float y = ShopCardHead + 4f;
+            y += CardPicture(spec, y);
             if (_cardMeta.text.Length > 0) y += RowAt(_cardMeta, y, 4f);
             else y += 2f;
             _shopCardRule.anchoredPosition = new Vector2(10f, -(y + 4f));
@@ -671,9 +701,42 @@ namespace LastCall.UI
         {
             float h = RowAt(row, y, 2f);
             var irt = (RectTransform)icon.transform;
-            irt.anchoredPosition = new Vector2(irt.anchoredPosition.x, -(y + 3f));
+            // 16 tall now, a unit higher, so its middle stays on the line's (it was 14 at y+3).
+            irt.anchoredPosition = new Vector2(irt.anchoredPosition.x, -(y + 2f));
             return h;
         }
+
+        /// <summary>
+        /// THE THING ITSELF (2026-09-27, review): a glass line's tile wears the up_glass ICON and its CardArt is the
+        /// glass that step buys; the bar top's is the counter. The head used to squeeze that picture into 18 units,
+        /// the only place it was shown - so when the head took the department's 16, the card lost which glass it
+        /// was selling. It gets its own window under the head instead, on the tile window's dark, at the largest
+        /// WHOLE step that fits (a 36x96 highball at 1x, the 48x40 bar top at 2x). Listings whose tile already shows
+        /// the thing (Art == CardArt: bottles, recipes, fixtures) get no second copy. Returns the height it took.
+        /// </summary>
+        private float CardPicture(TileSpec spec, float y)
+        {
+            if (_cardPicWin == null || _cardPicImg == null) return 0f;
+            var pic = spec.CardArt != null && spec.CardArt != spec.Art ? spec.CardArt : null;
+            _cardPicWin.gameObject.SetActive(pic != null);
+            if (pic == null) return 0f;
+            float winW = ShopCardW - 2f * ShopCardGutter;
+            var r = pic.rect;
+            float k = Mathf.Max(1f, Mathf.Floor(Mathf.Min((winW - 8f) / r.width, CardPicMaxH / r.height)));
+            float w = r.width * k, h = r.height * k;
+            _cardPicWin.sizeDelta = new Vector2(winW, h + 8f);
+            _cardPicWin.anchoredPosition = new Vector2(ShopCardGutter, -(y + 2f));
+            var prt = _cardPicImg.rectTransform;
+            prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0.5f, 0.5f);
+            prt.sizeDelta = new Vector2(w, h);
+            // Centred on a whole unit: an odd width in the even window would otherwise sit on a half.
+            prt.anchoredPosition = new Vector2(Mathf.Abs(winW - w) % 2f > 0.5f ? 0.5f : 0f, 0f);
+            _cardPicImg.sprite = pic;
+            return h + 8f + 6f;
+        }
+
+        private static Sprite ShopHeadMark(int tab) =>
+            tab >= 0 && tab < ShopHeadMarks.Length ? ItemArt.Load(ShopHeadMarks[tab]) : null;
 
         /// <summary>
         /// Whether the pointer's two reading panels are allowed up at all. They describe
@@ -742,10 +805,14 @@ namespace LastCall.UI
                 : buff.Kind == BuffKind.Bad ? UITheme.ViceRed[2] : ShopInk;
             icon.enabled = true;
             icon.color = line.color;
-            icon.sprite = ItemArt.Load(
-                buff.Kind == BuffKind.Gain ? "sh_b_star"
-                : buff.Kind == BuffKind.Cost ? "sh_b_coin"
-                : buff.Kind == BuffKind.Bad ? "sh_b_lock" : "sh_b_pour");
+            // THE HOUSE'S MARKS WHERE IT HAS ONE (2026-09-27): a gain is the house's rise and a cost its
+            // cash sign, both already 16 and centred. The sh_b_ star, coin, lock and drop were 8x7
+            // drawings doubled, top-aligned, and drawn into a 14 box at 0.875x - and a STAR here was a
+            // second meaning for the one star the game keeps for the bar's standing. The lock and the
+            // drop are the market's own, redrawn at 16 (Tools/market_icons.py).
+            icon.sprite = buff.Kind == BuffKind.Gain ? ChromeArt.Mark("rise")
+                : buff.Kind == BuffKind.Cost ? ChromeArt.Mark("cash")
+                : ItemArt.Load(buff.Kind == BuffKind.Bad ? "mk_lock" : "mk_pour");
         }
 
         /// <summary>
@@ -1203,6 +1270,13 @@ namespace LastCall.UI
             // THE STATE IS A STAMP (2026-09-08): the mark and its word in the window's
             // top-right corner, where the old state row used to take a line of the foot.
             string stateWord = spec.StateWord ?? StateWordOf(state);
+            // BESIDE THE NEW MARK, NOT UNDER IT (2026-09-27, seen in play): both stood in the window's top-right
+            // corner, so a listing that was new AND picked printed IN BASKET under the magenta notice. It was
+            // always there and read as nothing while the stamp's ink was dark on the dark plate; with the light
+            // ink it read as a collision. The stamp now stands to the notice's left, and the word gives way to
+            // the lead badge on the narrower run exactly as it already did beside the badge alone.
+            bool isNew = !sealedTile && run != null && run.OpenedLastNight(spec.RungStars);
+            float stampRight = isNew ? 6f + 32f + 4f : 4f;
             if (!sealedTile && !string.IsNullOrEmpty(stateWord))
             {
                 var stamp = NewRect("Stamp", win);
@@ -1221,13 +1295,13 @@ namespace LastCall.UI
                 bool saidElsewhere = state == TileState.Picked || state == TileState.Ordered
                                   || state == TileState.NoFitting;
                 if (leadBadge != null && markArt != null && saidElsewhere
-                    && leadRight + 4f > (TileW - 8f) - 4f - stampW)
+                    && leadRight + 4f > (TileW - 8f) - stampRight - stampW)
                 {
                     stampText.enabled = false;
                     textW = 0f;
                     stampW = markW + 8f;
                 }
-                Place(stamp, new Vector2(1, 1), new Vector2(stampW, 20f), new Vector2(-4f, -4f));
+                Place(stamp, new Vector2(1, 1), new Vector2(stampW, 20f), new Vector2(-stampRight, -4f));
                 var stampBg = stamp.gameObject.AddComponent<Image>();
                 stampBg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.82f);
                 stampBg.raycastTarget = false;
@@ -1254,7 +1328,7 @@ namespace LastCall.UI
 
             // THE NEW MARK (2026-09-08, redrawn 2026-09-22): a listing whose star gate the rating crossed last
             // night wears the house's notification mark in the window's top-right corner.
-            if (!sealedTile && run != null && run.OpenedLastNight(spec.RungStars))
+            if (isNew)
             {
                 var band = NewRect("New", win);
                 // THE HOUSE'S NOTIFICATION MARK (2026-09-22, the author: "Bildirim gibi iconlarda bu tarz bir
@@ -1274,7 +1348,7 @@ namespace LastCall.UI
             {
                 bool drawnGate = !double.IsNaN(spec.GateStars);
                 var tag = NewRect("Tag", rt);
-                Place(tag, new Vector2(0.5f, 1), new Vector2(TileW - 24f, drawnGate ? 58 : 44),
+                Place(tag, new Vector2(0.5f, 1), new Vector2(TileW - 24f, drawnGate ? 60 : 44),
                     new Vector2(0, -(TileNameTop + 4f)));
                 var tagImg = tag.gameObject.AddComponent<Image>();
                 tagImg.color = new Color(ShopInk.r, ShopInk.g, ShopInk.b, 0.92f);
@@ -1292,9 +1366,10 @@ namespace LastCall.UI
                 what.text = string.IsNullOrEmpty(spec.GateNote) ? UIText.T("market.tile.stars_to_open") : spec.GateNote;
                 if (drawnGate)
                 {
-                    StarRow(tag, new Vector2(0.5f, 1), new Vector2(0, -30f), 12f,
+                    // At the star's own 14 (2026-09-27): a 12 cell drew the 14x12 star at 0.857x.
+                    StarRow(tag, new Vector2(0.5f, 1), new Vector2(0, -30f), 14f,
                         spec.GateStars, UITheme.Amber[3], new Color(1f, 1f, 1f, 0.16f));
-                    what.rectTransform.anchoredPosition = new Vector2(0, -44);
+                    what.rectTransform.anchoredPosition = new Vector2(0, -46);
                 }
                 return rt;
             }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LastCall.Core;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,11 +16,15 @@ namespace LastCall.UI
         //   picked      the product flies from the pointer into its chip, and the chip bursts in as it lands
         //   put back    the chip's picture drops and fades where the chip stood
         //   bought      every chip flies up into the account, one after another, and the account swells as it takes them
-        //   a tab       the aisle fades up from a few units under its place
+        //   a tab       the aisle is PUSHED: the old shelf slides away as a ghost, the new one arrives from the other
+        //               side, the key rises into the open file and its lit edge grows out of the middle (2026-09-27)
+        //   a shelf     the upgrade rail's shelves turn the same way, down the rail from the right; the rail itself
+        //               fades in with its department and out with it
         //   the card    the hover card opens like the drinkers' balloons (PopIn, on the card itself)
         //
-        // The tablet's own way in and out - the slip leaving left, the van arriving from the right, the tablet pulling
-        // away into the curtain - is the day end's slide and is left as it was.
+        // The tablet's own way in and out is the day end's slide: the slip leaving left while the van arrives from the
+        // right (a second slot since 2026-09-27 - until then only the tablet moved and the slip simply vanished), and
+        // the tablet pulling away into the curtain.
 
         private RectTransform _shopFx;
 
@@ -118,14 +123,263 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>A tab opened: the aisle fades up into its place.</summary>
-        private void FadeInAisle()
+        // ── the aisle turns (2026-09-27; the fields and the why are in TycoonHud.cs) ──────────────────────────────────
+        //
+        // It replaced FadeInAisle, which faded the VIEWPORT up ten units. Moving the viewport was the wrong rect: the
+        // upgrade rail re-writes that rect's left edge when its department opens or shuts, and read off the code, two
+        // clicks across the upgrade tab inside one fade would have left it holding a home 104 units off - the mask run
+        // over the scroll track or over the rail, with nothing to ever put it back. The push moves only the content's X
+        // (a vertical ScrollRect never writes it) and the viewport's group alpha, and leaves the viewport to the rail.
+
+        /// <summary>The market's own clock: real seconds, shortened by the ceremony pace the suite runs at. Only a
+        /// DURATION is ever divided by it - where a movement ends is the same at any pace, and nothing that decides
+        /// anything reads it.</summary>
+        private static float MarketSpan(float seconds) =>
+            seconds / Mathf.Max(1f, LastCall.Game.Ceremony.Pace);
+
+        /// <summary>Takes every control under a LEAVING thing (the ghost shelf, a rail on its way out) off the keyboard's
+        /// arrows, without the disabled tint a non-interactable group would paint over it. The pointer is kept off by
+        /// the thing's own blocksRaycasts; nothing leaving is ever used again, so nothing puts this back.</summary>
+        private static void OutOfNavigation(Transform root)
         {
-            if (_shopScroll == null) return;
-            var fade = _shopScroll.GetComponent<UiFadeIn>();
-            if (fade == null) fade = _shopScroll.gameObject.AddComponent<UiFadeIn>();
-            fade.Offset = new Vector2(0f, -10f);
-            fade.Play();
+            if (root == null) return;
+            foreach (var s in root.GetComponentsInChildren<Selectable>(true))
+            {
+                var nav = s.navigation;
+                if (nav.mode == Navigation.Mode.None) continue;
+                nav.mode = Navigation.Mode.None;
+                s.navigation = nav;
+            }
+        }
+
+        private static void SetX(RectTransform rt, float x)
+        {
+            if (rt == null) return;
+            var p = rt.anchoredPosition;
+            if (p.x != x) rt.anchoredPosition = new Vector2(x, p.y);
+        }
+
+        /// <summary>One frame of every market movement that is not a flight: the keys, the aisle, the rail and the two
+        /// message boxes' scrims. Each reads its own target, so a rebuild in the middle of any of them changes what it
+        /// is going TO, never where it is.</summary>
+        private void StepMarketMotion()
+        {
+            StepShopTabKeys();
+            StepAisleSwap();
+            StepDecorRail();
+            StepDialogScrims();
+        }
+
+        /// <summary>Everything the market is moving, put where it was going, now: the tablet is leaving, the next night
+        /// is being dealt, or a new night's books are coming up over a market left mid-turn.</summary>
+        private void SettleMarketMotion()
+        {
+            SettleAisleSwap();
+            SettleDecorRail();
+            if (_tabKeyT >= 0f) SettleShopTabKeys();
+            SettleBillOut();
+        }
+
+        /// <summary>Asks the next rebuild to turn the aisle: +1 brings the new shelf in from the right. Reduced motion
+        /// asks for nothing, and the rebuild destroys the old shelf as it always did.</summary>
+        private void QueueAisleSwap(int dir)
+        {
+            _aisleSwapDir = Motion.Reduced ? 0 : dir;
+        }
+
+        /// <summary>
+        /// Called where the rebuild used to destroy the old shelf. When a turn is queued the shelf is LIFTED OUT of the
+        /// scroll content instead, into a ghost standing exactly where it stood: a masked rect over the OLD viewport
+        /// (the upgrade rail may be about to move the real one), holding a copy of the content rect at its old scroll,
+        /// so not a pixel of it moves on the frame of the press. Returns false when there is no turn.
+        ///
+        /// The ghost takes no raycasts and answers to no name the suite looks for: every "Tile" and "Name" in it is
+        /// renamed, because NthTile and TileNamed find listings by exactly those names, and a ghost tile found first is
+        /// a press on a shelf that is sliding away. It sits right over the aisle and under the scroll track, the foot
+        /// and the rail, so it can only ever paint over the page it is leaving.
+        /// </summary>
+        private bool LiftAisleIntoGhost()
+        {
+            int dir = _aisleSwapDir;
+            _aisleSwapDir = 0;
+            if (dir == 0 || Motion.Reduced || _offerRow == null || _shopScroll == null || _dayEndStep != 1) return false;
+            var view = _shopScroll.viewport;
+            if (view == null || view.parent == null) return false;
+            // A TURN ON A TURN (2026-09-27, review): the shelf still arriving is lifted from where it is DRAWN - its X
+            // and its brightness - instead of being snapped home first, which was a one-frame jump in both. The real
+            // rects still start from rest (content at 0, the viewport whole, then sent to the side), and only the
+            // ghost of the turn before goes at once: by the time a hand clicks again it is most of the way faded.
+            bool midTurn = _aisleSwapT >= 0f;
+            float fromX = midTurn ? _offerRow.anchoredPosition.x : 0f;
+            float fromA = midTurn && _aisleGroup != null ? _aisleGroup.alpha : 1f;
+            SettleAisleSwap();   // the last ghost goes, the shelf is home
+
+            var ghost = NewRect("AisleGhost", view.parent);
+            ghost.SetSiblingIndex(view.GetSiblingIndex() + 1);
+            ghost.anchorMin = view.anchorMin;
+            ghost.anchorMax = view.anchorMax;
+            ghost.pivot = view.pivot;
+            ghost.offsetMin = view.offsetMin;
+            ghost.offsetMax = view.offsetMax;
+            ghost.gameObject.AddComponent<RectMask2D>();
+            var group = ghost.gameObject.AddComponent<CanvasGroup>();
+            group.blocksRaycasts = false;
+            group.alpha = fromA;
+            // NOT interactable = false (review, 2026-09-27): a group that turns it off sends every Button under it to
+            // the default disabled tint over 0.1 s, so the plates went half-transparent grey before their captions had
+            // begun to fade. blocksRaycasts keeps the pointer off, and each Selectable's navigation is set to None below
+            // so the keyboard's arrows cannot walk onto a leaving tile either - a change that repaints nothing.
+            var content = NewRect("GhostContent", ghost);
+            content.anchorMin = _offerRow.anchorMin;
+            content.anchorMax = _offerRow.anchorMax;
+            content.pivot = _offerRow.pivot;
+            content.sizeDelta = _offerRow.sizeDelta;
+            content.anchoredPosition = new Vector2(fromX, _offerRow.anchoredPosition.y);
+            // Collected first: a Transform's own enumerator breaks when its children are taken away under it.
+            var old = new List<Transform>(_offerRow.childCount);
+            foreach (Transform child in _offerRow) old.Add(child);
+            foreach (var child in old) child.SetParent(content, false);
+            foreach (var t in content.GetComponentsInChildren<Transform>(true))
+                if (t.name == "Tile" || t.name == "Name") t.name = "Ghost" + t.name;
+            OutOfNavigation(content);
+
+            _aisleGhost = ghost;
+            _aisleGhostContent = content;
+            _aisleGhostGroup = group;
+            _aisleGhostX0 = fromX;
+            _aisleGhostA0 = fromA;
+            _aisleGroup = view.GetComponent<CanvasGroup>();
+            if (_aisleGroup == null) _aisleGroup = view.gameObject.AddComponent<CanvasGroup>();   // not ??: the editor's fake null
+            _aisleSwapSide = dir;
+            _aisleSwapT = 0f;
+            // The new shelf starts off to its side and unseen - but LIVE: its tiles take the pointer from the first
+            // frame, exactly where they are drawn, so a quick hand never presses into a wall.
+            _aisleGroup.alpha = 0f;
+            SetX(_offerRow, dir * AislePush);
+            return true;
+        }
+
+        private void StepAisleSwap()
+        {
+            if (_aisleSwapT < 0f) return;
+            _aisleSwapT += Time.unscaledDeltaTime;
+            float k = Motion.Reduced ? 1f : Mathf.Clamp01(_aisleSwapT / MarketSpan(AisleSwapDur));
+            if (k >= 1f) { SettleAisleSwap(); return; }
+            float e = Tweening.OutCubic(k);
+            // Content X only. The ScrollRect owns Y (it clamps it back every LateUpdate) and never writes X on a
+            // vertical-only scroll, so the push and the player's wheel can share the rect without meeting.
+            // On whole units (review, 2026-09-27): the tiles' names are the pixel face.
+            SetX(_offerRow, Mathf.Round(_aisleSwapSide * AislePush * (1f - e)));
+            if (_aisleGroup != null) _aisleGroup.alpha = e;
+            SetX(_aisleGhostContent, _aisleGhostX0 - Mathf.Round(_aisleSwapSide * AislePush * e));
+            if (_aisleGhostGroup != null) _aisleGhostGroup.alpha = _aisleGhostA0 * (1f - e);
+        }
+
+        /// <summary>The shelf home at exactly 0 and fully drawn, the ghost gone. Safe to call at rest.</summary>
+        private void SettleAisleSwap()
+        {
+            _aisleSwapT = -1f;
+            SetX(_offerRow, 0f);
+            if (_aisleGroup != null) _aisleGroup.alpha = 1f;
+            if (_aisleGhost != null) Destroy(_aisleGhost.gameObject);
+            _aisleGhost = null;
+            _aisleGhostContent = null;
+            _aisleGhostGroup = null;
+        }
+
+        // ── the keys rise (2026-09-27) ───────────────────────────────────────────────────────────────────────────────
+        //
+        // The rebuild used to write every key's height, colour and lit edge outright, on EVERY rebuild - every pick,
+        // wear and order - so a key could not ease without being snapped by the next click. It only AIMS now; this
+        // step draws. The face colour goes through HoverWarm.Repaint: the key just clicked is always under the pointer,
+        // its HoverWarm had captured the paper colour on enter, and behind its back the old direct write was undone -
+        // read off the code, the open tab went back to paper under its white title the moment the pointer left it.
+
+        /// <summary>Points the keys at the open tab; starts their ease if that changed since they were last aimed. The
+        /// first dressing, a hidden market and reduced motion snap.</summary>
+        private void AimShopTabKeys()
+        {
+            if (_tabKeysFor == _shopTab || _shopTabKeys[0] == null) return;
+            bool first = _tabKeysFor < 0;
+            _tabKeysFor = _shopTab;
+            for (int i = 0; i < _tabKeyV.Length; i++) _tabKeyFrom[i] = _tabKeyV[i];
+            _tabKeyT = 0f;
+            if (first || Motion.Reduced || !MarketIsUp) SettleShopTabKeys();
+        }
+
+        private void SettleShopTabKeys()
+        {
+            _tabKeyT = -1f;
+            for (int i = 0; i < _tabKeyV.Length; i++)
+            {
+                _tabKeyV[i] = i == _shopTab ? 1f : 0f;
+                PaintTabKey(i, _tabKeyV[i]);
+            }
+        }
+
+        private void StepShopTabKeys()
+        {
+            AimShopTabKeys();
+            if (_tabKeyT < 0f) return;
+            _tabKeyT += Time.unscaledDeltaTime;
+            float k = Motion.Reduced ? 1f : Mathf.Clamp01(_tabKeyT / MarketSpan(AisleSwapDur));
+            if (k >= 1f) { SettleShopTabKeys(); return; }
+            float e = Tweening.OutCubic(k);
+            for (int i = 0; i < _tabKeyV.Length; i++)
+            {
+                _tabKeyV[i] = Mathf.Lerp(_tabKeyFrom[i], i == _shopTab ? 1f : 0f, e);
+                PaintTabKey(i, _tabKeyV[i]);
+            }
+        }
+
+        /// <summary>
+        /// One key at a given openness. It grows UPWARD only: the key's pivot is its bottom-left corner, which is where
+        /// the suite presses it (ScreenPointOf is the pivot) and where it stands on the page's border, so the corner never
+        /// moves and nothing moves in X. The lit edge hangs from the top and opens out of its middle.
+        /// </summary>
+        private void PaintTabKey(int i, float v)
+        {
+            var face = _shopTabKeys[i];
+            if (face == null) return;
+            // On EVEN units while it moves (review, 2026-09-27): the caption and the icon are centred on the key, so a
+            // height like 33.4 put the pixel face between two rows for the quarter second of the rise. An even height
+            // keeps their centre on a whole unit, and an even lit width keeps both its ends on one. Every end value
+            // (30 and 38, -160 and -6) is even, so nothing at rest changes.
+            float h = 2f * Mathf.Round(Mathf.Lerp(TabRestH, TabLiveH, v) * 0.5f);
+            ((RectTransform)face.transform).sizeDelta = new Vector2(TabKeyW, h);
+            // The two ends are the constants themselves, not a lerp's float arithmetic landing a hair off them.
+            var colour = v >= 1f ? ShopViceDeep : v <= 0f ? ShopPaper : Color.Lerp(ShopPaper, ShopViceDeep, v);
+            var warm = face.GetComponent<HoverWarm>();
+            if (warm != null) warm.Repaint(colour);
+            else face.color = colour;
+            var lit = _shopTabLits[i];
+            if (lit == null) return;
+            lit.enabled = v > 0.001f;
+            lit.rectTransform.sizeDelta = new Vector2(2f * Mathf.Round(Mathf.Lerp(-TabKeyW, -6f, v) * 0.5f), 3f);
+        }
+
+        // ── the upgrade rail comes and goes (2026-09-27) ────────────────────────────────────────────────────────────
+
+        private void StepDecorRail()
+        {
+            if (_railT < 0f || _decorRail == null) return;
+            _railT += Time.unscaledDeltaTime;
+            float k = Motion.Reduced ? 1f : Mathf.Clamp01(_railT / MarketSpan(AisleSwapDur));
+            if (k >= 1f) { SettleDecorRail(); return; }
+            _railV = Mathf.Lerp(_railFrom, _railUp ? 1f : 0f, Tweening.OutCubic(k));
+            PlaceDecorRail();
+        }
+
+        /// <summary>The rail where its department says it belongs: up and whole, or away and switched off. Only
+        /// switched off HERE, at the end of its fade - never in the frame the department changes.</summary>
+        private void SettleDecorRail()
+        {
+            if (_railT < 0f) return;
+            _railT = -1f;
+            _railV = _railUp ? 1f : 0f;
+            if (_decorRail == null) return;
+            PlaceDecorRail();
+            if (!_railUp) _decorRail.gameObject.SetActive(false);
         }
 
         // ── the room's comfort, on the upgrade screen ───────────────────────────────────────────────────────────────
@@ -148,7 +402,9 @@ namespace LastCall.UI
             bi.color = UITheme.Night[1];
             bi.raycastTarget = false;
             var medal = NewRect("Medal", band);
-            Place(medal, new Vector2(0, 0.5f), new Vector2(24, 24), new Vector2(10, 0));
+            // At the medallion's own 32 (2026-09-27): the 32 drawn into 24 was a 0.75x shrink. Its drawing is
+            // 22 wide in the canvas, so it still clears the caption at 42.
+            Place(medal, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(8, 0));
             medal.pivot = new Vector2(0, 0.5f);
             var mi = medal.gameObject.AddComponent<Image>();
             mi.sprite = ItemArt.Medal(true, 32f);

@@ -1895,6 +1895,55 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.127 · Marketin ikonları kendi boylarında yeniden, damgalar koyu plakada okunuyor, tablet geçişleri (2026-09-27)
+
+Yazar: “Oyundaki market için önceden ürettiğin iconlarını tekrardan oluştur market iconlarını markette
+kullanılacak boyutlarına göre özel olarak üret. Oluştururken marketin stiline uygun olduğunu emin ol.
+Markette(tablette) ekran geçişleri, tab geçişleri için bir animasyon ayarla.”
+
+- **Envanter önce ölçüldü:** tabletin çizdiği her küçük resmin yuvası, çizildiği ölçek, boyası ve oturduğu yüzey.
+  Kesirli olanlar: kart satırlarındaki dört işaret (16'lık çizim 14'lük kutuda, 0,875×), sipariş damgasının
+  kamyoneti (60×30 boyalı resim 16'lık kutuda 16×8, 0,27× ve lacivertle çarpılıp siyah plakada 1,15:1 — yani
+  hiç görünmüyordu), kart başlığındaki ürün (18'lik kutuya şişe 0,28×, tabure 0,375×), karşılaştırma bandının
+  madalyası (32'lik çizim 24'e, 0,75×), mühürlü etiketle yükseltme kartındaki 12'lik yıldız sırası (0,857×),
+  sepet çipindeki ürün (62'ye "boy verilip" 1,02×–2,8×). Sekme ikonları, sepet arabası, kamyonet ve pil yeşil
+  vitrin döneminden kalma, palet dışıydı; sekme ikonunun koyu yeşil konturu açık (lacivert) sekmede 1,07:1.
+- **Yeni set** `Tools/market_icons.py` ile PİKSEL HARİTASI olarak, gösterildiği boyda çizildi (üretici yok;
+  `--check` boy/alfa/palet/ortalama kapısı, `--preview` bağlam maketleri, `--ship` Items'a kopyalar):
+  `mk_tab_{restock,liquor,mixers,recipes,upgrades}` 24×24 — up_* ailesinin kuruluşu, sitenin lacivert konturu,
+  her gövde lacivert tuşta konturu olmadan da ≥3:1 (kasa+şişe boyunları, amber viski+camgöbeği şişe, karton+
+  portakal dilimi, magenta martini+zeytin, tabure+yeşil ok); `mk_head_*` aynı beş konu 16'da, kart başlığı için;
+  `mk_lock`, `mk_pour`, `mk_van` 16×16 beyaz işaret (çağıran boyar, içerik 16'nın tam ortasında — sh_ işaretleri
+  üstten hizalı 16×14'tü); `mk_cart` 24×20 krem araba (lacivert bantta 7,2:1); `mk_batt` 23×9 wifi gibi düz lacivert.
+- **Evin kendi işareti olan yerde ikinci çizim yok:** kazanç satırı `ChromeArt.Mark("rise")`, maliyet satırı
+  `Mark("cash")`, tik `Mark("tick")` — sh_b_star bir de yıldızı "kazanç" diye kullanıyordu, oysa oyunda yıldız
+  barın itibarı. Asma kilit (`sh_lock`) olduğu gibi kaldı: zinciriyle eşli arduvaz tonu, paletin merdiveniyle
+  eşlenince oyuncak maviye döndü. up_* setine dokunulmadı (yazarın 09-23 geçişi; rayda 1:1, karoda 2×).
+- **Kod tarafı:** buff satırı ikonu 16 (hattın ortası aynı), kart başlığı 16 ve bölümün işareti (sepet çipinin
+  kartı, çipin seçildiği bölümün işaretini taşır — `CartEntry.Head`), sepet 24×20, mühürlü etiket ve kilitli
+  yükseltme kartında yıldız 14 (etiket 60), karşılaştırma bandının madalyası 32, sepet çipinde ürün tam adımda
+  (`VesselArt.StandOn(fixedScale)`, yüksekliğe ve genişliğe sığan en büyük tam kat). Dinlenen sekmenin ikonu artık
+  boyanmıyor (grinin çarpımı kremi griye, amberi kahveye çeviriyordu; hangi sekmenin açık olduğunu tuşun
+  kendisi söylüyor).
+- **Damga mürekkepleri açık basamakta** (`StateInk`): damga 09-08'de koyu köşeye taşınmış ama beyaz plaka için
+  karılan koyu mürekkepleri tutmuştu. Sepette Amber[3], yolda Cyan[4], yer yok ViceRed[4], raf dolu Cream[3] —
+  yükseltme kartlarının aynı plakadaki damgalarıyla tek aile. Okunur olunca bir çakışma göründü: yeni VE sepette
+  olan karoda damga YENİ işaretinin altında kalıyordu; damga artık işaretin solunda duruyor, sözcük yer yoksa
+  rozetin yanında olduğu gibi çekiliyor.
+- **Geçişler:** 9.108'in "Geçişler" maddesinde (sekme itmesi, tuşların yükselişi, ray, fişin çıkışı, kapanışta
+  tıklamanın kapanması, mesaj kutularının açılışı). Süreler probun uzatabilmesi için `static` alan
+  (`AisleSwapDur`, `MarketCross`, `DialogFade` — `BenchSlideDur` emsali). Ölçüldü: hızlı 0→4→0 tıklamadan sonra
+  koridor x=0, alfa=1, hayalet yok, görünümün sol kenarı 8 (eski `FadeInAisle` ×`LayOutDecorRail` 104 birimlik
+  kaymasını üretemez); fiş→market geçişinin sonunda fiş kendi evinde, tablet alfa 1 ve tıklamaya açık.
+- **Son incelemenin düzeltmeleri:** bardak serisi ve bar tezgâhı karoları pencerelerinde yükseltme İKONU taşıyor,
+  satın alınan şeyin kendisi (hangi bardak, hangi basamak) yalnız kartın başlığındaydı — başlık bölüm işaretine
+  geçince kart onu kaybediyordu. Artık başlığın altında karonun karanlığında kendi penceresi var, sığan en büyük
+  tam katta (`CardPicture`: highball 1×, bar tezgâhı 2×); `Art == CardArt` olanlara ikinci kopya yok. Açılan
+  pencerenin perdesi 0'dan değil %1'den başlıyor (alfası 0 olan grafik çizilmez ve tıklama almaz — ilk karede
+  duvar tıklama geçiriyordu). Pil yarım birimden tam birime indi; panoların çıkışı da fiş gibi tam birimlerde.
+- Doğrulama: EditMode 789/789, PlayMode 15/15 (sepet ayağı görünüm testi yeni arabayla bakılıp yeniden
+  kutsandı; ilk koşu bilerek düştü).
+
 ### 9.126 · Giriş ekranı yeniden: düz zemin, süzülen bardaklar, mağazanın logosu, LOAD + küçük sıra (2026-09-27)
 
 Yazar, boyalı cepheye ikinci bakışta: “Ana menüyü sevmedim kalitesi düşük düz arkaplan ve hareketli
@@ -2380,11 +2429,21 @@ yok olarak ekrandan postit kalksın. Fatura ekranındaki go to the order butonun
   yeniden çizildi (`ChromeArt.Wifi`, 28×20'lik dosya 0,7'ye küçülüp çizgilerinin yarısını kaybediyordu).
 - **Yükseltme ekranında odanın konforu:** fikstürlerin üstünde bir bant — madalya, "ODANIN KONFORU 5.0 / 5", beş madalyalık
   şerit ve "HER BASAMAK ARTIRIR · TEZGÂHIN DAĞINIKLIĞI AZALTIR".
-- **Hareket** (`TycoonHud.MarketFx`, `UiFlight/UiFadeIn/UiPunch`): market her değişiklikte baştan kurulduğu için hareket
+- **Hareket** (`TycoonHud.MarketFx`, `UiFlight/UiPunch/PopIn`): market her değişiklikte baştan kurulduğu için hareket
   kurulumun üstündeki bir efekt katmanında — seçilen ürün imleçten çipine uçuyor ve çip o varınca baloncuk gibi
   açılıyor; geri konan çipin resmi olduğu yerde düşüp soluyor; sipariş verilince her çip sırayla hesaba uçuyor ve hesap
-  her birinde şişiyor; sekme değişince koridor yerine doğru soluklanarak geliyor; üzerine gelinen kart açılarak
-  beliriyor. Tabletin geliş ve gidişi (günün sonunun kaydırması) olduğu gibi.
+  her birinde şişiyor; üzerine gelinen kart açılarak beliriyor.
+- **Geçişler (2026-09-27, yazar: "Markette(tablette) ekran geçişleri, tab geçişleri için bir animasyon ayarla"):** sekme değişince
+  koridor artık İTİLİYOR — eski raf işaretçi almayan bir hayalete (`AisleGhost`) kaldırılıp kayarak soluyor, yenisi
+  sekme sırasındaki yönden geliyor (sağdaki sekme sağdan); 0,24 sn, out-cubic, 96 birim. Yükseltme rayındaki raflar
+  da aynı itişle dönüyor (rayda aşağısı sağdan). Açık sekmenin tuşu 30'dan 38'e yükseliyor (sol alt köşesi yerinden
+  oynamadan) ve parlak kenarı ortadan açılıyor; ray kendi bölümüyle 8 birim soldan kayarak beliriyor ve gidişte
+  ancak solunca kapanıyor. Fişten markete geçişte fiş ve iki pano sola/kenarlarına çekiliyor (0,34 sn, 180 birim)
+  ve tablet sağdan geliyor — bu tarihe kadar fiş basıldığı karede kayboluyor, yalnız tablet hareket ediyordu;
+  kapanışta tablet aşağı çekiliyor ve çekilirken ne tıklama ne Escape alıyor. Kapanış sorusu ile ev sahibinin
+  notunun perdesi 0,15 sn'de koyulaşıyor, kartı 0,18 sn'de 0,88'den açılıyor. Süreler `Ceremony.Pace`'e bölünür
+  (mesaj kutuları hariç), her hareket tam değerinde biter, hareket azaltma açıkken hepsi anında. (Eskiden sekmede
+  koridor yerine doğru soluklanarak geliyordu — `UiFadeIn`, artık çağıranı yok.)
 - Editörde `GetComponent<T>() ?? AddComponent<T>()` çalışmıyor (editör eksik bileşen için sahte null döndürüyor, `??`
   onu dolu sanıyor): uçuşlar ilk denemede CanvasGroup'suz kaldı ve konmadı; açık `== null` ile düzeldi.
 - Doğrulama: EditMode 625/626, PlayMode 13/13 (sepet ayağı görünüm testi bakılıp yeniden kutsandı).
