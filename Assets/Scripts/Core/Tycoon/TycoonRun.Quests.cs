@@ -179,6 +179,25 @@ namespace LastCall.Core
         private bool QuestOpen => QuestsLive && Quest != null && !Quest.IsDone;
 
         /// <summary>
+        /// WILL THE DAWN PAY HER JOB (2026-09-28, the night's TOMORROW board)? A preview asked of the rule, the way
+        /// <see cref="StandingAfterTonight"/> is: a state goal still open that <see cref="CountQuestStateGoal"/> would
+        /// find met if the books closed now. The rung is read where the dawn reads it - after tonight is filed, so
+        /// <see cref="RankAfterTonight"/> - and the room and the ladder as they stand. False for every other job: a
+        /// count pays on the spot, and a job already done has been paid. The market comes between the two: a fitting
+        /// bought there can still meet a goal this read as open, which is why the board only ever says "at dawn" for a
+        /// goal already met.
+        /// </summary>
+        public bool QuestPaysAtDawn
+        {
+            get
+            {
+                if (!QuestOpen || !Quest.Definition.IsStateGoal) return false;
+                var def = Quest.Definition;
+                return def.Kind == QuestKind.Rank ? RankAfterTonight.Index >= def.GoalRung : StateGoalMet(def);
+            }
+        }
+
+        /// <summary>
         /// SHE SETTLES UP ON THE SPOT, out of her own pocket: income on the night it lands, in the night's bonus line
         /// beside the state's thanks — money that came from doing something rather than selling something. And she will
         /// be in at the close of the next night to say so.
@@ -291,8 +310,9 @@ namespace LastCall.Core
         }
 
         /// <summary>How tonight's counted leavers split: those who drank, and those who walked (a wrong kick is a walk).
-        /// The faces rightly shown the door are neither. One count for the close's clean night and the books.</summary>
-        private (int served, int walked) NightTally()
+        /// The faces rightly shown the door are neither. One count for the close's clean night, the books - and the
+        /// night's tape (2026-09-28), which prints these two numbers rather than counting the floor itself.</summary>
+        public (int served, int walked) NightTally()
         {
             int served = 0, walked = 0;
             foreach (var visit in Floor.FinishedCounted())

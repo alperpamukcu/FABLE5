@@ -420,6 +420,54 @@ namespace LastCall.Tests
             Assert.AreEqual("then", visit.Offered?.Id);
         }
 
+        /// <summary>
+        /// THE DAWN'S PAY, ASKED BEFORE THE DAWN (2026-09-28, the night's TOMORROW board): QuestPaysAtDawn is a preview
+        /// of CountQuestStateGoal, the way StandingAfterTonight is of the close - so the board that says "PAYS AT DAWN"
+        /// can never promise what the dawn then refuses, or stay silent over what it pays.
+        /// </summary>
+        [Test]
+        public void TheDawnsPayIsAskedBeforeTheDawn()
+        {
+            // A fitting goal: open all night, met once the picture goes up - and the preview says so before the dawn.
+            var fixtures = new[] { Picture(1, 0.0), Picture(2, 1.0) };
+            var fit = NewRun(Book(Q("hang_one", QuestKind.Fit, reward: 24, slot: "wall_center", level: 1, fixtureId: "pic_1"),
+                Q("then", QuestKind.Perfect)), "dawn-preview-fit", fixtures: fixtures);
+            Assert.IsFalse(fit.QuestPaysAtDawn, "nothing is on the bar before she has been");
+            PlayNight(fit);
+            Assert.AreEqual("hang_one", fit.Quest?.Id);
+            int guard = 0;
+            while (fit.Phase == TycoonPhase.DayOpen) { Assert.Less(guard++, 5000); Step(fit, serve: true); }
+            Assert.IsFalse(fit.QuestPaysAtDawn, "the wall is bare: the dawn will not pay");
+            fit.DevFit("pic_1");
+            Assert.IsTrue(fit.QuestPaysAtDawn, "the picture is up: the dawn will pay");
+            Assert.AreEqual(0, fit.DayQuestPaid, "and a state goal is on no tape");
+            Assert.AreEqual(24, fit.ContinueToNextDay().QuestPaid, "the dawn paid what the preview said it would");
+            Assert.IsFalse(fit.QuestPaysAtDawn, "a paid job owes nothing at the next dawn");
+
+            // A rung goal, read where the dawn reads it: the rung tonight files, not the one the bar stands on now.
+            // Nobody is served, so no night climbs by itself; one bar is lifted to the rung before its close.
+            foreach (bool lifted in new[] { false, true })
+            {
+                var rank = NewRun(Book(Q("half_a_star", QuestKind.Rank, reward: 18, goalRung: 1), Q("then", QuestKind.Perfect)),
+                    "dawn-preview-rank");
+                PlayNight(rank, serve: false);
+                Assert.AreEqual("half_a_star", rank.Quest?.Id, "the rung goal is on the bar");
+                guard = 0;
+                while (rank.Phase == TycoonPhase.DayOpen) { Assert.Less(guard++, 5000); Step(rank, serve: false); }
+                if (lifted) rank.Rating.DevSet(0.5);
+                bool said = rank.QuestPaysAtDawn;
+                Assert.AreEqual(lifted, said, lifted ? "the rung is reached tonight" : "the bar has not climbed");
+                Assert.AreEqual(rank.RankAfterTonight.Index >= 1, said, "the preview reads the rung tonight files");
+                Assert.AreEqual(said ? 18 : 0, rank.ContinueToNextDay().QuestPaid, "the dawn did what the preview said");
+            }
+
+            // A count job is paid on the spot or not at all: never at the dawn.
+            var serve = NewRun(Book(Q("serve_one", QuestKind.Serve, target: 3), Q("then", QuestKind.Perfect)), "dawn-preview-serve");
+            PlayNight(serve, serve: false);
+            Assert.AreEqual("serve_one", serve.Quest?.Id);
+            Assert.IsFalse(serve.QuestPaysAtDawn, "a serve job is never the dawn's to pay");
+        }
+
         // ── 7. the rung gate ────────────────────────────────────────────────────────
 
         [Test]

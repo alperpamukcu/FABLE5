@@ -1174,6 +1174,47 @@ namespace LastCall.UI
                 "................",
                 "................",
             },
+            // WALK-OUTS (2026-09-28, the night's tape): somebody leaving by the door they came in at - the one row the
+            // tape prints for drinks paid for that never came. One-unit stroke, drawn for the tape's red row.
+            ["walkout"] = new[]
+            {
+                "................",
+                "........######..",
+                "........#....#..",
+                "...##...#....#..",
+                "...##...#....#..",
+                "..####..#....#..",
+                ".#.##.#.#....#..",
+                "...##...#..#.#..",
+                "...##...#....#..",
+                "..#..#..#....#..",
+                "..#..#..#....#..",
+                ".#....#.#....#..",
+                ".#....#.#....#..",
+                "........######..",
+                "................",
+                "................",
+            },
+            // HER JOB (2026-09-28, the night's tape): her message, ticked - the row of money the hostess paid tonight.
+            ["job"] = new[]
+            {
+                "................",
+                "..############..",
+                ".#............#.",
+                ".#.........##.#.",
+                ".#........##..#.",
+                ".#..##...##...#.",
+                ".#...##.##....#.",
+                ".#....###.....#.",
+                ".#.....#......#.",
+                ".#............#.",
+                "..#####..#####..",
+                "......#.#.......",
+                "......##........",
+                "......#.........",
+                "................",
+                "................",
+            },
         };
 
         /// <summary>One 16x16 mark, white, for the caller to tint. Null for a name that has
@@ -4261,6 +4302,224 @@ namespace LastCall.UI
                     px[y * S + x] = c == 'R' ? rim : c == 'F' ? fill : clear;
                 }
             return Cache[key] = Make(px, S, S, new Vector4(3, 3, 3, 3));
+        }
+
+        // ── the night's tape (2026-09-28, the day-end rebuilt) ─────────────────────────
+        //
+        // NO NEW PAPER IS DRAWN. The tape, its counterfoil and the tickets on the week's hook are all cut at load from
+        // the author's approved stock (Items/bill_sheet.png, 152x200, PixelLab, silhouette authored 2026-08-10): its
+        // torn top is rows 0-3, its torn foot rows 196-199 (measured, counting from the top of the picture), and the
+        // band between tiles. Paper drawn in code is what 2026-08-10 rejected ("the drawn sheet and its marks read as
+        // filler"), so a cut is only ever a rearrangement of the stock's own pixels. Every cut is drawn at a whole 3x
+        // (456 = the stock's width at 3x). Null when the stock is missing or unreadable: the caller falls back to a flat
+        // Cream fill, as the slip always did.
+
+        /// <summary>The stock's pixels as rows top-down, or null. Read once per call and cut straight away - the cut
+        /// sprites are cached, the read is not needed again.</summary>
+        private static Color32[] StockRows(out int w, out int h)
+        {
+            w = h = 0;
+            var s = ItemArt.Load("bill_sheet");
+            if (s == null || s.texture == null || !s.texture.isReadable) return null;
+            var r = s.rect;
+            w = (int)r.width; h = (int)r.height;
+            Color[] block;
+            try { block = s.texture.GetPixels((int)r.x, (int)r.y, w, h); }
+            catch (UnityException) { return null; }
+            // The texture counts up; the stock is measured top-down, the way the picture reads.
+            var rows = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    rows[y * w + x] = block[(h - 1 - y) * w + x];
+            return rows;
+        }
+
+        /// <summary>A cut of the stock: the picture's own rows and columns, in the order given (top-down, left to
+        /// right), laid into a new sheet. The rows and columns are named as the picture reads them.</summary>
+        private static Sprite StockCut(string key, int[] rows, int[] cols, Vector4 border)
+        {
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            var stock = StockRows(out int sw, out int sh);
+            if (stock == null) return null;
+            int w = cols.Length, h = rows.Length;
+            var px = new Color32[w * h];
+            for (int j = 0; j < h; j++)
+            {
+                int src = Mathf.Clamp(rows[j], 0, sh - 1);
+                for (int i = 0; i < w; i++)
+                    // row j of the cut, top-down, is texture row h-1-j
+                    px[(h - 1 - j) * w + i] = stock[src * sw + Mathf.Clamp(cols[i], 0, sw - 1)];
+            }
+            return Cache[key] = Make(px, w, h, border);
+        }
+
+        private static int[] Span(int from, int to)
+        {
+            var a = new int[to - from + 1];
+            for (int i = 0; i < a.Length; i++) a[i] = from + i;
+            return a;
+        }
+
+        private static int[] Join(int[] a, int[] b)
+        {
+            var c = new int[a.Length + b.Length];
+            a.CopyTo(c, 0);
+            b.CopyTo(c, a.Length);
+            return c;
+        }
+
+        /// <summary>
+        /// THE TAPE'S BODY: the stock's torn top and its band (rows 0-195, 152x196), the top four rows a border so they
+        /// print once and the band below tiles - drawn <see cref="UnityEngine.UI.Image.Type.Tiled"/> at a whole 3x
+        /// (pixelsPerUnitMultiplier 1/3), as long as the night is. <paramref name="torn"/>: the whole stock, its own foot
+        /// the bottom border - the body once its counterfoil has been torn off along the perforation.
+        /// </summary>
+        public static Sprite TapeBody(bool torn = false) => torn
+            ? StockCut("tape:body:torn", Span(0, 199), Span(0, 151), new Vector4(0, 4, 0, 4))
+            : StockCut("tape:body", Span(0, 195), Span(0, 151), new Vector4(0, 0, 0, 4));
+
+        /// <summary>The stock's own torn foot (rows 196-199, 152x4): the edge that rides the tape as it unrolls.</summary>
+        public static Sprite TapeFoot() => StockCut("tape:foot", Span(196, 199), Span(0, 151), Vector4.zero);
+
+        /// <summary>
+        /// THE COUNTERFOIL: the tape's last piece, 152x22 of the stock's own pixels - whole (band rows 4-21 over the
+        /// torn foot, the perforation is drawn over its top by the caller) or torn off (the torn top, rows 0-17, over
+        /// the foot). 456x66 at 3x.
+        /// </summary>
+        public static Sprite TapeCounterfoil(bool torn) => torn
+            ? StockCut("tape:foil:torn", Join(Span(0, 17), Span(196, 199)), Span(0, 151), Vector4.zero)
+            : StockCut("tape:foil", Join(Span(4, 21), Span(196, 199)), Span(0, 151), Vector4.zero);
+
+        /// <summary>One half of the torn counterfoil (76 columns), for its fold: the left half stays, the right folds
+        /// behind it on the way to the hook.</summary>
+        public static Sprite TapeCounterfoilHalf(bool right) =>
+            StockCut(right ? "tape:foil:right" : "tape:foil:left", Join(Span(0, 17), Span(196, 199)),
+                right ? Span(76, 151) : Span(0, 75), Vector4.zero);
+
+        /// <summary>
+        /// A TICKET ON THE HOOK: the counterfoil folded - the stock's left 74 columns and its right edge's 2 (the roll's
+        /// shaded side), rows 0-17 over the foot. 76x22, 228x66 at 3x. The same pixels the hung counterfoil shows.
+        /// </summary>
+        public static Sprite TapeStub() =>
+            StockCut("tape:stub", Join(Span(0, 17), Span(196, 199)), Join(Span(0, 73), Span(150, 151)), Vector4.zero);
+
+        /// <summary>The perforation across the counterfoil's top: a 2x2 hole every six, white for the caller to ink
+        /// (Night[0]), drawn Tiled at 1x.</summary>
+        public static Sprite Perforation()
+        {
+            const string Key = "tape:perf";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            var px = new Color32[6 * 2];
+            for (int y = 0; y < 2; y++)
+                for (int x = 0; x < 6; x++)
+                    px[y * 6 + x] = x < 2 ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+            return Cache[Key] = Make(px, 6, 2, Vector4.zero);
+        }
+
+        /// <summary>A printed rule, dashed two on and four off, one unit tall, white for the caller to ink; Tiled at 1x.</summary>
+        public static Sprite DashRule()
+        {
+            const string Key = "tape:dash";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            var px = new Color32[6];
+            for (int x = 0; x < 6; x++)
+                px[x] = x < 2 ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+            return Cache[Key] = Make(px, 6, 1, Vector4.zero);
+        }
+
+        /// <summary>
+        /// THE BILL HOOK'S BRACKET (the week column): a small plate screwed to nothing, the shaft hanging from its
+        /// middle. 16x6, drawn at 2x; the Graphite ramp, baked - a fitting, not a mark.
+        /// </summary>
+        public static Sprite HookBracket()
+        {
+            const string Key = "hook:bracket";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            string[] rows =
+            {
+                ".LLLLLLLLLLLLLL.",
+                "BBBBBBBBBBBBBBBB",
+                "BBBLBBBBBBBBLBBB",
+                "BBBBBBBBBBBBBBBB",
+                "BBBBBBBBBBBBBBBB",
+                ".DDDDDDDDDDDDDD.",
+            };
+            Color32 lit = UITheme.Graphite[4], body = UITheme.Graphite[3], dark = UITheme.Graphite[1];
+            return Cache[Key] = Paint(rows, c => c == 'L' ? lit : c == 'B' ? body : c == 'D' ? dark : (Color32?)null);
+        }
+
+        /// <summary>The hook's point, 2x4, drawn point UP (the caller flips it to hang point down): the lit side and
+        /// the shade, the shaft's own two strips.</summary>
+        public static Sprite SpikeTip()
+        {
+            const string Key = "hook:tip";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            string[] rows = { "L.", "LD", "LD", "LD" };
+            Color32 lit = UITheme.Graphite[4], dark = UITheme.Graphite[2];
+            return Cache[Key] = Paint(rows, c => c == 'L' ? lit : c == 'D' ? dark : (Color32?)null);
+        }
+
+        /// <summary>
+        /// THE PEN'S RING (the tape's grade): the filed row circled by hand - a two-pixel loop, uneven on purpose (the
+        /// right side a pixel heavier, the stroke overshooting where the pen started at the top-left), white for the
+        /// caller's red. 24x16, 9-sliced 8/6/8/6, so it rings any row at 1x with its corners as drawn.
+        /// </summary>
+        public static Sprite PenRing()
+        {
+            const string Key = "pen:ring";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            string[] rows =
+            {
+                "........................",
+                ".....###############....",
+                "#####################...",
+                "..###...............###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..##................###.",
+                "..###..............###..",
+                "...##################...",
+                ".....##############.....",
+                "........................",
+            };
+            var white = new Color32(255, 255, 255, 255);
+            return Cache[Key] = Paint(rows, c => c == '#' ? white : (Color32?)null, new Vector4(8, 6, 8, 6));
+        }
+
+        /// <summary>The pen's arrowhead, 8x8, pointing LEFT at the figure it was run down to; white for the caller's red.</summary>
+        public static Sprite PenArrowHead()
+        {
+            const string Key = "pen:arrow";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            string[] rows =
+            {
+                "..##....",
+                ".##.....",
+                "##......",
+                "########",
+                "########",
+                "##......",
+                ".##.....",
+                "..##....",
+            };
+            var white = new Color32(255, 255, 255, 255);
+            return Cache[Key] = Paint(rows, c => c == '#' ? white : (Color32?)null);
+        }
+
+        /// <summary>A small authored drawing: rows top-down as they read in source, one colour per character.</summary>
+        private static Sprite Paint(string[] rows, System.Func<char, Color32?> ink, Vector4 border = default)
+        {
+            int h = rows.Length, w = rows[0].Length;
+            var px = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    px[y * w + x] = ink(rows[h - 1 - y][x]) ?? new Color32(0, 0, 0, 0);
+            return Make(px, w, h, border);
         }
 
         private static Sprite Make(Color32[] px, int w, int h, Vector4 border)
