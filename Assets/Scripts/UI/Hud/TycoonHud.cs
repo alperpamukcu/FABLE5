@@ -584,7 +584,18 @@ namespace LastCall.UI
             ("driftgirl", 10f, 0.0f, 5, 4),   // the eleventh list, 2026-09-07
             ("salaryman", 6f, 0.0f, 6, 7),   // the eleventh list, 2026-09-07
             ("guard", 7f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            // THE HOSTESS (2026-09-28): the game's lead, drawn for the quest chain and the lessons. She sits in this
+            // table so her clips load the way everybody's do, and she is a HOUSE FACE (HouseFaces): never seated,
+            // never lent to a borrowed licence, never on the guide. Last in the table, so no fallback that takes
+            // the first face can take hers. Head row measured off her shipped idle; she has no glances to hold.
+            ("hostess", 4f, 0.0f, 0, 0),
         };
+
+        /// <summary>Faces that belong to the house and not to the crowd (2026-09-28): drawn and loaded like the
+        /// cast, but no arrival wears one, no borrowed licence is lent from one, and the guide lists none.</summary>
+        private static readonly HashSet<string> HouseFaces = new HashSet<string> { "hostess" };
+
+        private static bool IsHouseFace(PatronLook look) => look != null && HouseFaces.Contains(look.Slug);
 
         private readonly List<PatronLook> _looks = new List<PatronLook>();
 

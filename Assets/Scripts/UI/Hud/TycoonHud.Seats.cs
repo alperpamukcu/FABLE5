@@ -4938,7 +4938,7 @@ namespace LastCall.UI
             float standing = run != null ? (float)run.Rating.Average : 0f;
             var open = new List<PatronLook>();
             foreach (var look in _looks)
-                if (look.Stars <= standing + 0.001f) open.Add(look);
+                if (look.Stars <= standing + 0.001f && !IsHouseFace(look)) open.Add(look);   // the hostess is never a drinker
             if (open.Count == 0) open.Add(_looks[0]);
 
             // A FACE THAT COULD PASS FOR NINETEEN (GDD 28 §3.1, 2026-09-05): a visit the room

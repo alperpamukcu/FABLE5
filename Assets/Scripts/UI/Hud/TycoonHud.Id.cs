@@ -370,7 +370,7 @@ namespace LastCall.UI
             var pool = new List<PatronLook>();
             foreach (var look in _looks)
             {
-                if (look == own || PapersFor(look) == null) continue;
+                if (look == own || PapersFor(look) == null || IsHouseFace(look)) continue;   // nobody borrows her card
                 bool seated = false;
                 foreach (var seat in _seats)
                     if (seat.Visit != null && seat.Visit != visit && seat.Look == look) { seated = true; break; }

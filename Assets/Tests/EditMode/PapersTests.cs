@@ -88,6 +88,7 @@ namespace LastCall.Tests
         [TestCase("shaved")]
         [TestCase("eastasianman")]
         [TestCase("leopard")]
+        [TestCase("hostess")]   // drawn since 2026-09-28; a house face, but her card is still read
         public void Every_face_the_bar_draws_today_carries_its_own_papers(string slug)
         {
             var papers = Load().For(slug);

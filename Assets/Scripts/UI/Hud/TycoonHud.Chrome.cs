@@ -2498,6 +2498,7 @@ namespace LastCall.UI
             // than a hope: a batch of characters gated alike still reads as the batch it
             // was drawn in.
             var roster = new List<PatronLook>(_looks);
+            roster.RemoveAll(IsHouseFace);   // the hostess runs the room; she does not drink in it
             var drawnOrder = new Dictionary<PatronLook, int>();
             for (int i = 0; i < _looks.Count; i++) drawnOrder[_looks[i]] = i;
             roster.Sort((a, b) =>

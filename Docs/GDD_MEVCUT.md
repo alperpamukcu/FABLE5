@@ -2180,6 +2180,19 @@ haftalık işin silinmesi (2026-09-28).
   geliyor, plaka onun adıyla konuşuyor, gece duruyor, ON IT işi veriyor ve çıkıp gidiyor; balon kapalıyken tek
   satır (266×30, sol üst 16/60), üstüne gelince 380×156 açılıyor. Oyunda görülen "Make me 3 Gin Sour" satırı
   düzeltildi: içki adı çoğul almadığı için sayılan satırlar artık tur sayıyor ("3 rounds of Gin Sour").
+- **Kendi sanatı oyunda (2026-09-28 akşamı):** yer tutucu silkwoman gitti; ev sahibesi `Resources/Patron/hostess/`
+  altında kendi kareleriyle geliyor. Yazarın seçimi: kadronun kendi üreticisiyle (v3, evin çizim kuralları) çizilen
+  kumral-kızıl adayın "Neon Bar" kıyafeti (magenta barmen yeleği, turkuaz papyon ve pantolon — arayüzün iki rengi);
+  yazar "oyunumuzun yüzlerinden birisi olacak" dedi. Stil kopyalayan üretici (pro_flash) yüzleri eğri çizdiği için iki
+  kez reddedildi; kıyafet değiştirme adımı yüzü bulanıklaştırdığı için kendi başı pozu birebir tutan resme geri taşındı
+  (baş %99 örtüşüyor). Klipler: `walk` (iki yarım adım, sonuncusu ilkine sabitli, 15 kare), `arrive` (yürüyüşten
+  odaya dönüş, son karesi duruşu), `idle` (tek kare — kadronun kuralı, "sabit durmalı"), `talk_1`/`talk_2`/`talk`
+  (iki ucu da duruşa sabitli konuşma; ikincisi tersten), `leave` (duruştan kapıya), `face.png` (64×64, duruştan birebir
+  kesit). Her klip onun düzeltilmiş duruş karesinden başlatıldı; iki ucu sabitlenmeyen denemelerde gözler kapanıp yüz
+  bulanıklaştığı için gönderilmedi. Kadro tablosunun (`PatronCast`) SONUNDA ve bir **ev yüzü** (`HouseFaces`):
+  hiçbir müşteri onun yüzüyle gelmez, ödünç kimlik ondan alınmaz, kılavuzda görünmez. Renk kodla değiştirilebilir
+  (yelek/papyon/pantolon/ayakkabı bölgeleri, gölge basamakları korunur); her gelişte başka renk yazarın kararı.
+  Doğrulama: EditMode 859/859, PlayMode 19/19; oyunda yürüyerek giriyor, yerinde konuşuyor, plakada kendi yüzü.
 
 ### 9.133 · Steam entegrasyonu: 48 başarım, yaşam boyu sayaçlar, durum satırı, Steam dili (2026-09-28)
 
