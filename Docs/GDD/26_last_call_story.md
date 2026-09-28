@@ -28,7 +28,23 @@ arrival that comes through a shut door.
 
 ---
 
-## 1b. Ece, and whose bar this is
+## 1b. The hostess, and whose bar this is (reworked 2026-09-27, the author)
+
+**The host is the hostess now (2026-09-27).** Ece is gone. The host is the game's lead: an American hostess
+who ran rooms on Ocean Drive and who comes by only for the jobs and the teaching. Her name is written ONCE —
+the `hostess` row of `Data/customers/papers.json` (today "Roxy Vale", 28, United States) — and everything reads
+it from there: the plate's name, and `StoryCharacter.ShortName` ("Roxy") on the toast, the bill and the message.
+None of her lines and no translator note spells it, so renaming her is one field. The story's character is
+`hostess` (role host); the first beat keeps its id `ece_1` so its string keys stay valid.
+
+She has a third job now, and it is the one the loop leans on: **the book.** A written chain of jobs
+(`Resources/Data/quests.json`, the same every run, up the ladder) that she hands over at the CLOSE of a night —
+the first at the close of night one, each next one at the close of the night after the last was done — on the
+plate everybody talks on, while the night stands still. Core decides when she comes and what she brings; a run
+nobody watches is handed the same jobs, because Core hands over by itself after four unheld floor-seconds. It
+replaced the weekly job (2026-09-04 to 2026-09-28). The as-built rules are GDD_MEVCUT §9.134.
+
+The rest of this section was written for Ece (2026-08-13) and holds for the hostess: read "she" as her.
 
 **The bar opened this week.** That is the premise, and it is the one the game already tells:
 six bottles in the well, no reputation, nobody who knows you, and three red days from being
@@ -39,12 +55,12 @@ one that does not fight the screens: this game hands the player the till, the re
 shopping list and the star rating, and those are an owner's decisions. A story in which
 somebody else owns the room would be arguing with every button.
 
-**Ece is the bartender who works the shift.** Turkish, thirty-one, and has done this before —
-in rooms that did not make it. She is the player's second pair of hands and the arc's voice:
+**She works the room with the owner, not for them.** She has done this before — in rooms that
+did not make it. She is the player's second pair of hands and the arc's voice:
 the owner has the money and the licence to sign, she has the trade. That balance is what lets
 her teach without being the boss and comment without being a customer.
 
-She has **two jobs**, and they are different content:
+In the story she has **two jobs** besides the book, and they are different content:
 
 | | **The teacher** | **The frame** |
 |---|---|---|
@@ -62,25 +78,30 @@ guest this week who needs a style, since the armed beat may be her own quiet nig
 
 The teaching half matters more than it sounds. Everything this game explains today, it explains
 in system voice — "SHAKER EMPTY — TAP A BOTTLE", "IT WANTS A MIX — BACK TO THE SHAKER". Those
-lines are good and they stay; they are the bar talking to itself. Ece is the first time anyone
+lines are good and they stay; they are the bar talking to itself. She is the first time anyone
 says it to *you*, and the tutorial module this project deleted in the 2026-08-07 sweep comes
 back through her rather than as a mode.
 
 **She is never in the CROWD** — her look is reserved out of the arrivals pool forever, so she
-can never walk in as a stranger with someone else's order. But she is not sealed behind the
+can never walk in as a stranger with someone else's order. (Her own look leaves the arrivals, lender and guide
+pools the day her art ships; until then she is drawn with the stand-in `silkwoman`, which is a live crowd face,
+so a silkwoman drinker and the stand-in hostess can share a room.) But she is not sealed behind the
 bar either: **the first last call is hers.** When the door shuts on night one she crosses to
 the other side of it, sits down, and asks the player for a drink — which is exactly what a
 bartender does when the shift ends, and it teaches the whole beat on a night where nothing can
 be lost. She takes the stool as a `guest` for that beat and goes back to being the host after
-it; the role decides the arrivals pool, not the furniture.
+it; the role decides the arrivals pool, not the furniture. (The scene has not scheduled the written last
+call since 2026-09-06 — `TycoonConfig.LastCall` is off there; the beat and its suites stand.)
 
 That first beat is also where the arc is introduced: after the drink she says, in her own
 words, that people will start coming in asking for things the shelf does not have, and that
 this is how a room gets a name. Every later beat then arrives already framed (`hostBefore`).
 
-**What she costs in art:** one 72×72 face to speak with — the author is drawing her
-specially, and until it lands the data names a stand-in face (`placeholderLook`) so the plate
-is never blank and never borrows a face that means somebody else. The field is deleted the day
+**What she costs in art:** a whole figure now (2026-09-27) — she walks in from the door like a
+drinker, a world sprite the room lights and the bar crops, plays ARRIVE, IDLE and LEAVE, and plays a TALK
+clip once as each line comes up (the stand-in's ORDER beat until hers land). The author is drawing her specially, and
+until it lands the data names a stand-in (`placeholderLook: silkwoman`) so the plate and the floor are
+never blank. The field is deleted the day
 the portrait ships, which is the whole point of it being a field.
 
 The dependency, precisely: — every look in `Resources/Patron`

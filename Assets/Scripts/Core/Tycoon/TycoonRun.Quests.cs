@@ -9,8 +9,8 @@ namespace LastCall.Core
     // nobody watches (the sim, the tests) is handed the same jobs: the hand-over is a verb, HearHostess, and Core calls
     // it itself once she has stood unheard for QuestRules.HostessGraceSeconds of floor time.
     //
-    // It replaces the weekly job (WeeklyJob.cs). Until that is deleted (C2) the two never both pay: SettleTheJob stands
-    // down for any run that carries a book.
+    // It replaced the weekly job (2026-09-04 to 2026-09-28), which is deleted: the book is the only job in town, and a
+    // run built without one has no job at all.
     public sealed partial class TycoonRun
     {
         /// <summary>The hostess's book, or null for a run built without one — opt-in like the story and the regulars.</summary>
@@ -189,6 +189,7 @@ namespace LastCall.Core
             QuestJustDone = Quest;
             _doneUnsaid = true;
             _visitFrom = Day + 1;
+            Feat(Stats.JobsDone, 1);   // the achievements' count (TycoonRun.Feats), moved here from the weekly job
         }
 
         /// <summary>The serve kinds (spec B.6), asked in <see cref="ServeTo"/> once the papers are known: nothing served to

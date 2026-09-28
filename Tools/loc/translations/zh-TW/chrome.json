@@ -191,21 +191,6 @@
    "src": "TURN THE GLASS IN THE DISH"
   },
   {
-   "key": "chrome.job.clean_nights",
-   "text": "整潔打烊",
-   "src": "CLEAN NIGHTS"
-  },
-  {
-   "key": "chrome.job.done",
-   "text": "{who} · {target}/{target} · 完成 · +${reward}",
-   "src": "{who} · {target}/{target} · DONE · +${reward}"
-  },
-  {
-   "key": "chrome.job.perfect_pours",
-   "text": "完美出杯",
-   "src": "PERFECT POURS"
-  },
-  {
    "key": "chrome.ledger.drinks",
    "text": "酒水 ${amount}",
    "src": "drinks ${amount}"
@@ -289,11 +274,6 @@
    "key": "chrome.ledger.walked_out#other",
    "text": "{n} 位沒等到酒就走了",
    "src": "{n} left without one"
-  },
-  {
-   "key": "chrome.log.job_done",
-   "text": "<color=#6FCC4B>{who} 的任務</color>完成 · +${reward}",
-   "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"
   },
   {
    "key": "chrome.log.key",
@@ -624,11 +604,6 @@
    "key": "chrome.story.pour_it",
    "text": "開始調",
    "src": "POUR IT"
-  },
-  {
-   "key": "chrome.toast.job_paid",
-   "text": "{who} 付清了 · +${reward}",
-   "src": "{who} PAYS UP · +${reward}"
   },
   {
    "key": "chrome.toast.perfect_pour",

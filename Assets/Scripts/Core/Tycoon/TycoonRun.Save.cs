@@ -12,7 +12,7 @@ namespace LastCall.Core
     ///
     /// THE SAVE POINT IS THE NIGHT'S EDGE. The one quiescent instant in the loop is inside
     /// <see cref="TycoonRun.ContinueToNextDay(Action{RunSnapshot})"/>: the old night is filed,
-    /// the counters are reset, the week's job is settled — and the new floor is NOT yet dealt.
+    /// the counters are reset, the hostess's night is settled — and the new floor is NOT yet dealt.
     /// A snapshot taken there, restored, deals the same floor from the same stream states and
     /// plays the rest of the run BIT FOR BIT as if it had never stopped (SaveTests pins it).
     /// Quitting mid-night therefore loses only that night: the resume replays it from its own
@@ -38,11 +38,6 @@ namespace LastCall.Core
         [Serializable] public sealed class GlassTierState { public string glassId; public int tier; }
         [Serializable] public sealed class WornState { public string slot; public string fixtureId; }
         [Serializable] public sealed class BestMakeState { public string recipeId; public long accuracyBits; public List<long> shareBits; }
-        [Serializable] public sealed class JobState
-        {
-            public bool has; public int kind; public string recipeId; public string recipeName;
-            public int target; public int served; public int week; public string who; public int reward;
-        }
         [Serializable] public sealed class PersonState
         {
             public string id; public string name; public string archetypeId; public int age; public string hometown;
@@ -85,7 +80,6 @@ namespace LastCall.Core
         public int brandsBought;
         public int fittingsBought;
         public bool anyLicenceRead;
-        public string jobGiver;
 
         public List<long> ratingNightBits;
         public long ratingStandingBits, ratingBestBits, ratingPreviousBestBits, ratingPreviousBits, ratingSumBits;
@@ -117,16 +111,13 @@ namespace LastCall.Core
         public List<WornState> worn;
         public List<GlassTierState> glassTiers;
 
-        public JobState job;
-        public JobState jobDone;
-        /// <summary>The unread "job finished" flash: 0 none, 1 it is <see cref="job"/>, 2 it is <see cref="jobDone"/>.</summary>
-        public int jobJustDone;
-
         /// <summary>
         /// THE HOSTESS'S BOOK (2026-09-27, TycoonRun.Quests), added without a version bump: 0 is a save written before
         /// the chain existed (JsonUtility leaves a missing field at its default), 1 is this layout. An old save starts
-        /// the chain from its own dawn; its weekly job is dropped, since a weekly job was paid the moment it finished.
-        /// There is never a visit at dawn — the night cannot close under her — so none is carried.
+        /// the chain from its own dawn. The weekly job such a file may carry (job, jobDone, jobJustDone, jobGiver) has
+        /// no field here since the job was deleted (2026-09-28), so JsonUtility skips those keys: a weekly job was paid
+        /// the moment it finished, and nothing owed is lost. There is never a visit at dawn — the night cannot close
+        /// under her — so none is carried.
         /// </summary>
         public int questFormat;
         public bool hasQuests;
@@ -175,7 +166,6 @@ namespace LastCall.Core
                 brandsBought = _brandsBought,
                 fittingsBought = _fittingsBought,
                 anyLicenceRead = _anyLicenceRead,
-                jobGiver = JobGiver,
                 debtStrikes = Ledger.DebtStrikes,
                 tomorrowsCrowd = (int)Ledger.TomorrowsCrowd,
                 menu = new List<string>(),
@@ -249,10 +239,6 @@ namespace LastCall.Core
             foreach (var pair in _glassTiers)
                 snap.glassTiers.Add(new RunSnapshot.GlassTierState { glassId = pair.Key, tier = pair.Value });
 
-            snap.job = JobStateOf(Job);
-            snap.jobDone = JobStateOf(JobDone);
-            snap.jobJustDone = JobJustDone == null ? 0 : ReferenceEquals(JobJustDone, Job) ? 1 : 2;
-
             snap.questFormat = 1;
             snap.hasQuests = Quests != null;
             snap.questNext = _questNext;
@@ -297,14 +283,6 @@ namespace LastCall.Core
 
             return snap;
         }
-
-        private static RunSnapshot.JobState JobStateOf(WeeklyJob job) => job == null
-            ? new RunSnapshot.JobState()
-            : new RunSnapshot.JobState
-            {
-                has = true, kind = (int)job.Kind, recipeId = job.RecipeId, recipeName = job.RecipeName,
-                target = job.Target, served = job.Served, week = job.Week, who = job.Who, reward = job.Reward,
-            };
 
         private static RunSnapshot.QuestState QuestStateOf(ActiveQuest quest) => quest == null
             ? new RunSnapshot.QuestState()
@@ -411,7 +389,6 @@ namespace LastCall.Core
             _brandsBought = snap.brandsBought;
             _fittingsBought = snap.fittingsBought;
             _anyLicenceRead = snap.anyLicenceRead;
-            JobGiver = string.IsNullOrEmpty(snap.jobGiver) ? JobGiver : snap.jobGiver;
 
             var ratingNights = new List<double>(snap.ratingNightBits != null ? snap.ratingNightBits.Count : 0);
             if (snap.ratingNightBits != null)
@@ -462,13 +439,6 @@ namespace LastCall.Core
             foreach (var tier in snap.glassTiers ?? new List<RunSnapshot.GlassTierState>())
                 _glassTiers[tier.glassId] = tier.tier;
             RoomChanged();
-
-            Job = JobFrom(snap.job);
-            JobDone = JobFrom(snap.jobDone);
-            JobJustDone = snap.jobJustDone == 1 ? Job : snap.jobJustDone == 2 ? JobDone : null;
-            // A run with the hostess's book has no weekly job, and an old save's is dropped rather than carried into
-            // a run that pays her instead: it was paid the moment it finished, so nothing owed is lost.
-            if (Quests != null) Job = JobDone = JobJustDone = null;
 
             if (snap.questFormat >= 1)
             {
@@ -559,15 +529,6 @@ namespace LastCall.Core
             Floor = NewFloor(Rating.Average);
             Phase = TycoonPhase.DayOpen;
             TeachAtOpen();
-        }
-
-        private static WeeklyJob JobFrom(RunSnapshot.JobState state)
-        {
-            if (state == null || !state.has) return null;
-            var job = new WeeklyJob(state.recipeId, state.recipeName, state.target, state.week,
-                state.who, (JobKind)state.kind, state.reward);
-            job.RestoreServed(state.served);
-            return job;
         }
 
         private static RegularState PersonFrom(RunSnapshot.PersonState state)

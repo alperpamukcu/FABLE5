@@ -49,7 +49,7 @@ namespace LastCall.Tests
             new ShelfBottle(Soda.Clone(), capacity: 4000),
         });
 
-        /// <summary>The shipped switches (the weekly job on, too); only the purse and the two waits are the bench's.</summary>
+        /// <summary>The shipped switches; only the purse and the two waits are the bench's.</summary>
         private static TycoonConfig Config(int money = 5000) =>
             new TycoonConfig(startingMoney: money, orderDecisionSeconds: 0, savorSeconds: 0);
 
@@ -581,7 +581,6 @@ namespace LastCall.Tests
                 }
                 Assert.IsTrue(run.QuestChainOver, seed + ": the whole book was walked");
                 Assert.AreEqual(0, run.QuestsSkipped, seed);
-                Assert.IsNull(run.Job, seed + ": a run with her book never has a weekly job");
                 seen.Add(string.Join(" ", handed));
             }
             Assert.AreEqual("a_serve b_clean c_rank d_serve e_rank", seen[0], "the book's order, row by row");

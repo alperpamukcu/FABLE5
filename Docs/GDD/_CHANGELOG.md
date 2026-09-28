@@ -2,6 +2,19 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The hostess and her book (2026-09-27/28):** the host Ece is replaced by the game's lead, an American hostess
+  whose name lives once, in `papers.json` ("Roxy Vale"), and who comes by only for the jobs and the teaching. Her
+  jobs are a written chain, the same every run, up the ladder (`Resources/Data/quests.json`: 18 jobs of nine kinds
+  Core already measured - serve, perfect, pints, garnish, clean, door, rank, comfort, fit). She walks in at the
+  close of night one and at the close of the night after each job is done, talks on the plate while the night stands
+  still, waits when the next job's rung is not open yet, and passes over a job already met or one with nothing to
+  pour; unheard, Core hands the job over itself after four floor-seconds, so the sim and the tests get the same jobs.
+  Serves count after the papers, right kicks at the door, clean nights at the close, state goals at dawn; her pay
+  rides the night's bonus line and has its own row on the bill and in the ledger. The job is a message at the top
+  left - one line, opening on hover - where the week's job tab hung. The save carries the chain (an old save starts
+  it at its own dawn), one new stream ("quest"). The weekly job is deleted, with its save fields, its switch
+  (`TycoonConfig.WeeklyJobs` is `Quests` now) and its 18 string keys in every table. GDD_MEVCUT §9.134, GDD 26 §1b.
+
 - **The ninth list (2026-09-22):** the counter's props stand IN the room - the six dishes, the menu and the cloth
   keep their rects (hit target, hover, drag) and their pictures are stage sprites the lamps reach, so the hand-made
   "lit" tints are gone; the bar opens with a shutter nobody has painted since the last owner (the author's turquoise

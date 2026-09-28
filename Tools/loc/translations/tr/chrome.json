@@ -38,9 +38,6 @@
 {"key": "chrome.garnish.tell_garnish", "text": "KENARA YA DA İÇKİNİN İÇİNE", "src": "ON THE RIM OR IN THE DRINK"},
 {"key": "chrome.garnish.tell_ice", "text": "DÖKMEDEN ÖNCE İÇİNE AT", "src": "DROP IT IN BEFORE THE POUR"},
 {"key": "chrome.garnish.tell_rim", "text": "BARDAĞI TABAKTA ÇEVİR", "src": "TURN THE GLASS IN THE DISH"},
-{"key": "chrome.job.clean_nights", "text": "TEMİZ GECE", "src": "CLEAN NIGHTS"},
-{"key": "chrome.job.done", "text": "{who} · {target}/{target} · BİTTİ · +${reward}", "src": "{who} · {target}/{target} · DONE · +${reward}"},
-{"key": "chrome.job.perfect_pours", "text": "KUSURSUZ DÖKÜM", "src": "PERFECT POURS"},
 {"key": "chrome.ledger.drinks", "text": "içkiler ${amount}", "src": "drinks ${amount}"},
 {"key": "chrome.ledger.empty", "text": "Henüz gün yok. Önce bir geceyi kapat.", "src": "No days yet. Close a night first."},
 {"key": "chrome.ledger.fines", "text": "cezalar ${amount}", "src": "fines ${amount}"},
@@ -61,7 +58,6 @@
 {"key": "chrome.ledger.title", "text": "KASA DEFTERİ — GEÇEN GÜNLER", "src": "THE REGISTER — DAYS SO FAR"},
 {"key": "chrome.ledger.walked_out#one", "text": "{n} kişi eli boş gitti", "src": "{n} left without one"},
 {"key": "chrome.ledger.walked_out#other", "text": "{n} kişi eli boş gitti", "src": "{n} left without one"},
-{"key": "chrome.log.job_done", "text": "<color=#6FCC4B>İŞ · {who}</color> bitti · +${reward}", "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"},
 {"key": "chrome.log.key", "text": "KAYIT", "src": "LOG"},
 {"key": "chrome.log.match_close", "text": "YAKIN", "src": "CLOSE"},
 {"key": "chrome.log.match_exact", "text": "TAM", "src": "EXACT"},
@@ -129,7 +125,6 @@
 {"key": "chrome.story.got_it", "text": "ANLADIM", "src": "GOT IT"},
 {"key": "chrome.story.missing", "text": "RAFTA {styles} YOK", "src": "NO {styles} ON THE SHELF"},
 {"key": "chrome.story.pour_it", "text": "HAZIRLA", "src": "POUR IT"},
-{"key": "chrome.toast.job_paid", "text": "{who} ÖDEDİ · +${reward}", "src": "{who} PAYS UP · +${reward}"},
 {"key": "chrome.toast.perfect_pour", "text": "KUSURSUZ DÖKÜM · {recipe} — ARTIK KİTAPTA", "src": "PERFECT POUR · {recipe} — IN THE BOOK NOW"},
 {"key": "chrome.toast.said_no", "text": "HAYIR DEDİN — YİNE GELECEK", "src": "YOU TOLD THEM NO — THEY WILL BE BACK"}
 ]}

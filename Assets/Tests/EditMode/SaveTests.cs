@@ -285,8 +285,9 @@ namespace LastCall.Tests
 
         /// <summary>
         /// A SAVE FROM BEFORE THE BOOK (2026-09-27). Its file has no quest fields at all — JsonUtility reads each as
-        /// its default — and may carry a weekly job. The job is dropped (it was paid the moment it finished; nothing
-        /// owed is lost) and the chain starts at the save's own dawn: she comes at the close of the night it resumes.
+        /// its default — and may carry a weekly job. The job's keys have had no field since it was deleted
+        /// (2026-09-28), so they are skipped (it was paid the moment it finished; nothing owed is lost), and the chain
+        /// starts at the save's own dawn: she comes at the close of the night it resumes.
         /// </summary>
         [Test]
         public void AnOldSaveStartsTheChain()
@@ -307,19 +308,23 @@ namespace LastCall.Tests
             snap.questNext = snap.questVisitFrom = snap.questsSkipped = 0;
             snap.questDoneUnsaid = snap.questJustDone = false;
             snap.quest = new RunSnapshot.QuestState();
+            // ...with the weekly job it carried, in the keys and the shape the old writer gave it (its signer's name
+            // included). The snapshot has no field for any of them now, so they go in as text.
             var page = content.Recipes.First(r => r.HasAuthoredRatios && !r.Locked);
-            snap.job = new RunSnapshot.JobState
-            {
-                has = true, kind = (int)JobKind.Serve, recipeId = page.Id, recipeName = page.Name,
-                target = 3, served = 1, week = BarCalendar.WeekOf(snap.day), who = "ECE", reward = 12,
-            };
-            snap.jobJustDone = 1;
+            string Quoted(string text) => "\"" + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            string json = JsonUtility.ToJson(snap);
+            json = json.Substring(0, json.LastIndexOf('}'))
+                   + ",\"jobGiver\":\"ECE\""
+                   + ",\"job\":{\"has\":true,\"kind\":0,\"recipeId\":" + Quoted(page.Id)
+                   + ",\"recipeName\":" + Quoted(page.Name) + ",\"target\":3,\"served\":1,\"week\":"
+                   + BarCalendar.WeekOf(snap.day) + ",\"who\":\"ECE\",\"reward\":12}"
+                   + ",\"jobDone\":{\"has\":false},\"jobJustDone\":1}";
+            StringAssert.Contains("\"job\":{\"has\":true", json, "the old file's weekly job is in the text");
 
-            var back = Reborn(content, JsonUtility.FromJson<RunSnapshot>(JsonUtility.ToJson(snap)));
+            var back = Reborn(content, JsonUtility.FromJson<RunSnapshot>(json));
             Assert.IsNull(back.Quest, "nothing is on the bar yet");
             Assert.AreEqual(snap.day, back.HostessComesOn, "she comes at the close of the night it resumes");
-            Assert.IsNull(back.Job, "the weekly job is dropped: the book pays instead, never both");
-            Assert.IsNull(back.TakeJobJustDone());
+            Assert.IsNull(back.TakeQuestJustDone(), "the weekly job's unread flash is not hers to show");
             Assert.AreEqual("first_wage", back.QuestNextUp?.Id, "and the book starts at its first row");
 
             int guard = 0;

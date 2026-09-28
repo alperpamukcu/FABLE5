@@ -52,7 +52,7 @@ namespace LastCall.Tests
 
         private static TycoonRun NewRun(params FixtureDefinition[] fixtures) =>
             new TycoonRun(NewShelf(), new[] { Page("spritz", 2) }, new RunRng("stage"),
-                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0, weeklyJobs: false),
+                config: new TycoonConfig(500, orderDecisionSeconds: 0, savorSeconds: 0, quests: false),
                 fixtures: fixtures);
 
         [Test]

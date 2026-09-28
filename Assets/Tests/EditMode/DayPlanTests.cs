@@ -233,7 +233,7 @@ namespace LastCall.Tests
             // unserved: every cover the door is sent is one the shelf can make, and none of the written
             // covers had to be handed to a stand-in. Measured on 2026-09-26 against the old six-bottle
             // shelf, this was 35 of 75 covers the bar could not make — 6 of 9 on the opening night.
-            var run = OpeningBar.Run("written-week", new TycoonConfig(5000, weeklyJobs: false, lastCall: false));
+            var run = OpeningBar.Run("written-week", new TycoonConfig(5000, quests: false, lastCall: false));
             var book = RecipeCatalog.CreateDefault().Where(r => !r.Locked).ToList();
             int covers = 0;
             for (int day = 1; day <= FirstWeek.Nights; day++)

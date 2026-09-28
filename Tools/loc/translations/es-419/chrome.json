@@ -196,21 +196,6 @@
       "src": "TURN THE GLASS IN THE DISH"
     },
     {
-      "key": "chrome.job.clean_nights",
-      "text": "NOCHES LIMPIAS",
-      "src": "CLEAN NIGHTS"
-    },
-    {
-      "key": "chrome.job.done",
-      "text": "{who} · {target}/{target} · LISTO · +${reward}",
-      "src": "{who} · {target}/{target} · DONE · +${reward}"
-    },
-    {
-      "key": "chrome.job.perfect_pours",
-      "text": "TRAGOS PERFECTOS",
-      "src": "PERFECT POURS"
-    },
-    {
       "key": "chrome.ledger.drinks",
       "text": "tragos ${amount}",
       "src": "drinks ${amount}"
@@ -309,11 +294,6 @@
       "key": "chrome.ledger.walked_out#other",
       "text": "{n} se fueron sin nada",
       "src": "{n} left without one"
-    },
-    {
-      "key": "chrome.log.job_done",
-      "text": "<color=#6FCC4B>ENCARGO DE {who}</color> listo · +${reward}",
-      "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"
     },
     {
       "key": "chrome.log.key",
@@ -649,11 +629,6 @@
       "key": "chrome.story.pour_it",
       "text": "SÍRVELO",
       "src": "POUR IT"
-    },
-    {
-      "key": "chrome.toast.job_paid",
-      "text": "{who} TE PAGA · +${reward}",
-      "src": "{who} PAYS UP · +${reward}"
     },
     {
       "key": "chrome.toast.perfect_pour",

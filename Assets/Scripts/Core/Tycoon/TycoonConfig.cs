@@ -36,7 +36,7 @@ namespace LastCall.Core
         // and at 4s the short rolls were over before the dots read as thinking.
         public TycoonConfig(int startingMoney = DefaultStartingMoney,
             double orderDecisionSeconds = 5.0, double savorSeconds = 6.0,
-            bool counterSmudges = true, bool weeklyJobs = true, bool lastCall = true, bool quests = true)
+            bool counterSmudges = true, bool quests = true, bool lastCall = true)
         {
             if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
             if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
@@ -44,33 +44,26 @@ namespace LastCall.Core
             OrderDecisionSeconds = orderDecisionSeconds;
             SavorSeconds = savorSeconds;
             CounterSmudges = counterSmudges;
-            WeeklyJobs = weeklyJobs;
-            LastCall = lastCall;
             Quests = quests;
+            LastCall = lastCall;
         }
 
         /// <summary>
         /// WHETHER THE WRITTEN LAST CALL PLAYS (2026-09-06, the author: "gün sonu müşterisi
         /// olan eceyi kaldıralım, eceyi sadece haftalık görevler veren bir müşteri haline
-        /// getireceğiz"). Ece has one job in the loop now and it is the WEEK'S job; the
+        /// getireceğiz"). The host's one place in the loop is the job she hands over — the
+        /// week's job then, her written book since 2026-09-27 (TycoonRun.Quests); the
         /// scripted guest who arrives after closing is switched off rather than deleted (GDD
         /// 26 is still in the tree, and its suites still play it with this on).
         /// </summary>
         public bool LastCall { get; }
 
         /// <summary>
-        /// WHETHER ECE LEAVES A JOB ON THE BAR (2026-09-06). On for the game and for the sim,
-        /// because a week's job is money the bar really earns; off for the economy suites,
-        /// which were written to measure what SELLING DRINKS pays and would otherwise be
-        /// measuring a bonus as well.
-        /// </summary>
-        public bool WeeklyJobs { get; }
-
-        /// <summary>
-        /// WHETHER THE HOSTESS'S BOOK PLAYS (2026-09-27, TycoonRun.Quests). On for the game and for the sim; a run
-        /// built without a book has no chain whatever this says. It stands beside <see cref="WeeklyJobs"/> until
-        /// the weekly job is deleted and takes that switch's place (spec F.3, C2); a run with a book never pays a
-        /// weekly job either way.
+        /// WHETHER THE HOSTESS'S BOOK PLAYS (2026-09-27, TycoonRun.Quests). On for the game and for the sim, because
+        /// her pay is money the bar really earns; off for the economy suites, which were written to measure what
+        /// SELLING DRINKS pays and would otherwise be measuring a bonus as well. A run built without a book has no
+        /// chain whatever this says. It took the place of the weekly job's switch when that job was deleted
+        /// (2026-09-28): the book is the only job in town.
         /// </summary>
         public bool Quests { get; }
 

@@ -1,13 +1,5 @@
 {"strings": [
 {"key": "common.close", "text": "FERMER", "src": "CLOSE"},
-{"key": "job.name.clean", "text": "SOIRÉES PROPRES", "src": "CLEAN NIGHTS"},
-{"key": "job.name.perfect", "text": "DOSAGES PARFAITS", "src": "PERFECT POURS"},
-{"key": "job.owed.clean#one", "text": "ENCORE {n} SOIRÉE PROPRE", "src": "{n} MORE CLEAN NIGHT"},
-{"key": "job.owed.clean#other", "text": "ENCORE {n} SOIRÉES PROPRES", "src": "{n} MORE CLEAN NIGHTS"},
-{"key": "job.owed.perfect#one", "text": "ENCORE {n} DOSAGE PARFAIT", "src": "{n} MORE PERFECT POUR"},
-{"key": "job.owed.perfect#other", "text": "ENCORE {n} DOSAGES PARFAITS", "src": "{n} MORE PERFECT POURS"},
-{"key": "job.owed.serve#one", "text": "ENCORE {n} {drink}", "src": "{n} MORE {drink}"},
-{"key": "job.owed.serve#other", "text": "ENCORE {n} {drink}", "src": "{n} MORE {drink}"},
 {"key": "night.count#one", "text": "{n} soirée", "src": "{n} night"},
 {"key": "night.count#other", "text": "{n} soirées", "src": "{n} nights"},
 {"key": "papers.hometown.named", "text": "{town}", "src": "{town}"},

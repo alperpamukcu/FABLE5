@@ -37,9 +37,6 @@
 {"key": "chrome.garnish.tell_garnish", "text": "放在杯边或酒里"},
 {"key": "chrome.garnish.tell_ice", "text": "倒酒之前先放进去"},
 {"key": "chrome.garnish.tell_rim", "text": "把杯口在碟里转一圈"},
-{"key": "chrome.job.clean_nights", "text": "整洁收工"},
-{"key": "chrome.job.done", "text": "{who} · {target}/{target} · 完成 · +${reward}"},
-{"key": "chrome.job.perfect_pours", "text": "完美调制"},
 {"key": "chrome.ledger.drinks", "text": "酒水 ${amount}"},
 {"key": "chrome.ledger.empty", "text": "还没有记录。先打烊一晚吧。"},
 {"key": "chrome.ledger.fines", "text": "罚款 ${amount}"},
@@ -57,7 +54,6 @@
 {"key": "chrome.ledger.tips", "text": "小费 ${amount}"},
 {"key": "chrome.ledger.title", "text": "收银账本 — 迄今每一天"},
 {"key": "chrome.ledger.walked_out#other", "text": "{n} 人空手离开"},
-{"key": "chrome.log.job_done", "text": "<color=#6FCC4B>{who} 的任务</color>完成 · +${reward}"},
 {"key": "chrome.log.key", "text": "日志"},
 {"key": "chrome.log.match_close", "text": "接近"},
 {"key": "chrome.log.match_exact", "text": "精准"},
@@ -124,7 +120,6 @@
 {"key": "chrome.story.got_it", "text": "明白了"},
 {"key": "chrome.story.missing", "text": "架上没有{styles}"},
 {"key": "chrome.story.pour_it", "text": "开始调制"},
-{"key": "chrome.toast.job_paid", "text": "{who} 付清了 · +${reward}"},
 {"key": "chrome.toast.perfect_pour", "text": "完美调制 · {recipe} — 已记入酒谱"},
 {"key": "chrome.toast.said_no", "text": "你婉拒了 — 对方还会再来"}
 ]}

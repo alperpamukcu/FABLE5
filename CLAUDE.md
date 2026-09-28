@@ -62,7 +62,7 @@ Hard rules:
   `DataLoader` with loud validation. New content = new data, not new code. `RecipeCatalog`
   (code) and `recipes.json` are kept in sync by a parity test — change both.
 - **Determinism.** All randomness flows through `RunRng` named streams ("arrivals", "orders",
-  "patience", "customer", "read", "decide", "papers", "mess", "voice", "ice", "round", "plan"). Never use `System.Random`/`UnityEngine.Random`
+  "patience", "customer", "read", "decide", "papers", "mess", "voice", "ice", "round", "plan", "quest"). Never use `System.Random`/`UnityEngine.Random`
   in game logic; string seeds must reproduce identical runs across platforms (custom PCG32).
 - **Hidden information stays hidden.** The order lives behind the ID card: `CustomerVisit.Order`
   throws until `InspectId()`, and only Core's `OrderTruth` sees past it. Drawing the drink, its
@@ -143,6 +143,12 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
 - **Beer is not a cocktail** (GDD 21 §10). It comes from a keg, never enters the shaker, and
   is poured by the angle of the glass; its craft is the head, and `Preparations.Draught` on
   the delivered glass is what tells `ServiceJudge` to grade it.
+- **The hostess's book is the only job in town** (2026-09-27, GDD_MEVCUT §9.134): her chain of jobs is DATA in
+  `Resources/Data/quests.json`, in order, the same every run. She comes at the CLOSE of a night (the first, and the
+  one after each job is done), the night cannot close while she is in, and Core hands the job over by itself after 4
+  unheld floor-seconds (`QuestRules.HostessGraceSeconds`) - which is how the sim and the tests get the same jobs.
+  Her name lives only in `papers.json` (the `hostess` row); no line, note or string spells it. A run built without
+  a book has no job at all - the weekly job is deleted.
 - Regulars are **opt-in**: a `TycoonRun` built without `archetypes` has no named customers,
   so bench setups and older tests stay valid. They carry a name, an age, a hometown, visits
   and a relationship — the emotion machinery (stats, charges, reads, `DemandLevel`, mood

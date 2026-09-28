@@ -381,46 +381,6 @@
       "src": "READY TO ORDER"
     },
     {
-      "key": "job.name.clean",
-      "text": "NOCHES LIMPIAS",
-      "src": "CLEAN NIGHTS"
-    },
-    {
-      "key": "job.name.perfect",
-      "text": "TRAGOS PERFECTOS",
-      "src": "PERFECT POURS"
-    },
-    {
-      "key": "job.owed.clean#one",
-      "text": "FALTA {n} NOCHE LIMPIA",
-      "src": "{n} MORE CLEAN NIGHT"
-    },
-    {
-      "key": "job.owed.clean#other",
-      "text": "FALTAN {n} NOCHES LIMPIAS",
-      "src": "{n} MORE CLEAN NIGHTS"
-    },
-    {
-      "key": "job.owed.perfect#one",
-      "text": "FALTA {n} TRAGO PERFECTO",
-      "src": "{n} MORE PERFECT POUR"
-    },
-    {
-      "key": "job.owed.perfect#other",
-      "text": "FALTAN {n} TRAGOS PERFECTOS",
-      "src": "{n} MORE PERFECT POURS"
-    },
-    {
-      "key": "job.owed.serve#one",
-      "text": "FALTA {n} {drink}",
-      "src": "{n} MORE {drink}"
-    },
-    {
-      "key": "job.owed.serve#other",
-      "text": "FALTAN {n} {drink}",
-      "src": "{n} MORE {drink}"
-    },
-    {
       "key": "night.count#one",
       "text": "{n} noche",
       "src": "{n} night"

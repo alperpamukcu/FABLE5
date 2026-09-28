@@ -87,10 +87,5 @@
 {"key": "id.standing.stranger", "text": "陌生人"},
 {"key": "id.tip.click_to_read", "text": "点击客人查看证件"},
 {"key": "id.tip.how_they_want_it", "text": "客人的要求"},
-{"key": "id.tip.ready", "text": "准备点单"},
-{"key": "job.name.clean", "text": "整洁收工"},
-{"key": "job.name.perfect", "text": "完美调制"},
-{"key": "job.owed.clean#other", "text": "还差 {n} 晚整洁收工"},
-{"key": "job.owed.perfect#other", "text": "还差 {n} 杯完美调制"},
-{"key": "job.owed.serve#other", "text": "还差 {n} 杯{drink}"}
+{"key": "id.tip.ready", "text": "准备点单"}
 ]}

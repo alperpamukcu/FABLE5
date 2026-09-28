@@ -39,9 +39,6 @@
 {"key": "chrome.garnish.tell_garnish", "text": "НА КРАЙ КЕЛИХА АБО В НАПІЙ", "src": "ON THE RIM OR IN THE DRINK"},
 {"key": "chrome.garnish.tell_ice", "text": "КИНЬ У КЕЛИХ ПЕРЕД НАЛИВОМ", "src": "DROP IT IN BEFORE THE POUR"},
 {"key": "chrome.garnish.tell_rim", "text": "ПРОКРУТИ КЕЛИХ У МИСЦІ", "src": "TURN THE GLASS IN THE DISH"},
-{"key": "chrome.job.clean_nights", "text": "ЧИСТІ НОЧІ", "src": "CLEAN NIGHTS"},
-{"key": "chrome.job.done", "text": "{who} · {target}/{target} · ГОТОВО · +${reward}", "src": "{who} · {target}/{target} · DONE · +${reward}"},
-{"key": "chrome.job.perfect_pours", "text": "ІДЕАЛЬНІ НАЛИВИ", "src": "PERFECT POURS"},
 {"key": "chrome.ledger.drinks", "text": "напої ${amount}", "src": "drinks ${amount}"},
 {"key": "chrome.ledger.empty", "text": "Днів ще немає. Спершу закрий ніч.", "src": "No days yet. Close a night first."},
 {"key": "chrome.ledger.fines", "text": "штрафи ${amount}", "src": "fines ${amount}"},
@@ -65,7 +62,6 @@
 {"key": "chrome.ledger.walked_out#one", "text": "{n} пішов без напою", "src": "{n} left without one"},
 {"key": "chrome.ledger.walked_out#few", "text": "{n} пішли без напою", "src": "{n} left without one"},
 {"key": "chrome.ledger.walked_out#many", "text": "{n} пішли без напою", "src": "{n} left without one"},
-{"key": "chrome.log.job_done", "text": "<color=#6FCC4B>ЗАВДАННЯ: {who}</color> виконано · +${reward}", "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"},
 {"key": "chrome.log.key", "text": "ЛОГ", "src": "LOG"},
 {"key": "chrome.log.match_close", "text": "МАЙЖЕ", "src": "CLOSE"},
 {"key": "chrome.log.match_exact", "text": "ТОЧНО", "src": "EXACT"},
@@ -134,7 +130,6 @@
 {"key": "chrome.story.got_it", "text": "ЗРОЗУМІЛО", "src": "GOT IT"},
 {"key": "chrome.story.missing", "text": "НА ПОЛИЦІ НЕМАЄ: {styles}", "src": "NO {styles} ON THE SHELF"},
 {"key": "chrome.story.pour_it", "text": "НАЛИВАЙ", "src": "POUR IT"},
-{"key": "chrome.toast.job_paid", "text": "{who} ПЛАТИТЬ · +${reward}", "src": "{who} PAYS UP · +${reward}"},
 {"key": "chrome.toast.perfect_pour", "text": "ІДЕАЛЬНИЙ НАЛИВ · {recipe} — ТЕПЕР У КНИЗІ", "src": "PERFECT POUR · {recipe} — IN THE BOOK NOW"},
 {"key": "chrome.toast.said_no", "text": "ВІДМОВА — ГІСТЬ ЩЕ ПОВЕРНЕТЬСЯ", "src": "YOU TOLD THEM NO — THEY WILL BE BACK"}
 ]}

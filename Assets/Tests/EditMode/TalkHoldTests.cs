@@ -32,7 +32,7 @@ namespace LastCall.Tests
                 new ShelfBottle(new IngredientCard("soda", "Soda", IngredientType.Bubbly, 1), capacity: 20),
             }),
             Book, new RunRng("talk-hold"),
-            config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0, weeklyJobs: false));
+            config: new TycoonConfig(20, orderDecisionSeconds: 0, savorSeconds: 0, quests: false));
 
         [Test]
         public void While_she_talks_nothing_on_the_floor_moves()

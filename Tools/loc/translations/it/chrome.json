@@ -39,9 +39,6 @@
     {"key": "chrome.garnish.tell_garnish", "text": "SUL BORDO O NEL DRINK"},
     {"key": "chrome.garnish.tell_ice", "text": "METTILO PRIMA DI VERSARE"},
     {"key": "chrome.garnish.tell_rim", "text": "GIRA IL BICCHIERE NEL PIATTINO"},
-    {"key": "chrome.job.clean_nights", "text": "SERATE PULITE"},
-    {"key": "chrome.job.done", "text": "{who} · {target}/{target} · FATTO · +${reward}"},
-    {"key": "chrome.job.perfect_pours", "text": "DRINK PERFETTI"},
     {"key": "chrome.ledger.drinks", "text": "drink ${amount}"},
     {"key": "chrome.ledger.empty", "text": "Nessun giorno ancora. Chiudi una serata."},
     {"key": "chrome.ledger.fines", "text": "multe ${amount}"},
@@ -62,7 +59,6 @@
     {"key": "chrome.ledger.title", "text": "IL REGISTRO — I GIORNI FIN QUI"},
     {"key": "chrome.ledger.walked_out#one", "text": "{n} andato via a secco"},
     {"key": "chrome.ledger.walked_out#other", "text": "{n} andati via a secco"},
-    {"key": "chrome.log.job_done", "text": "<color=#6FCC4B>INCARICO DI {who}</color> fatto · +${reward}"},
     {"key": "chrome.log.key", "text": "LOG"},
     {"key": "chrome.log.match_close", "text": "QUASI"},
     {"key": "chrome.log.match_exact", "text": "ESATTO"},
@@ -130,7 +126,6 @@
     {"key": "chrome.story.got_it", "text": "CAPITO"},
     {"key": "chrome.story.missing", "text": "NIENTE {styles} IN CANTINA"},
     {"key": "chrome.story.pour_it", "text": "PREPARALO"},
-    {"key": "chrome.toast.job_paid", "text": "{who} PAGA · +${reward}"},
     {"key": "chrome.toast.perfect_pour", "text": "DRINK PERFETTO · {recipe} — ORA È NEL RICETTARIO"},
     {"key": "chrome.toast.said_no", "text": "HAI DETTO DI NO — TORNERÀ"}
   ]

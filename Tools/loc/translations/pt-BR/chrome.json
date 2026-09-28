@@ -38,9 +38,6 @@
 {"key": "chrome.garnish.tell_garnish", "text": "NA BORDA OU DENTRO DO DRINQUE"},
 {"key": "chrome.garnish.tell_ice", "text": "COLOQUE ANTES DE DESPEJAR"},
 {"key": "chrome.garnish.tell_rim", "text": "GIRE O COPO NO PRATINHO"},
-{"key": "chrome.job.clean_nights", "text": "NOITES LIMPAS"},
-{"key": "chrome.job.done", "text": "{who} · {target}/{target} · FEITO · +${reward}"},
-{"key": "chrome.job.perfect_pours", "text": "DOSES PERFEITAS"},
 {"key": "chrome.ledger.drinks", "text": "drinques ${amount}"},
 {"key": "chrome.ledger.empty", "text": "Nada ainda. Feche uma noite primeiro."},
 {"key": "chrome.ledger.fines", "text": "multas ${amount}"},
@@ -61,7 +58,6 @@
 {"key": "chrome.ledger.title", "text": "O LIVRO-CAIXA — DIAS ATÉ AGORA"},
 {"key": "chrome.ledger.walked_out#one", "text": "{n} saiu sem drinque"},
 {"key": "chrome.ledger.walked_out#other", "text": "{n} saíram sem drinque"},
-{"key": "chrome.log.job_done", "text": "<color=#6FCC4B>TAREFA DE {who}</color> feita · +${reward}"},
 {"key": "chrome.log.key", "text": "LOG"},
 {"key": "chrome.log.match_close", "text": "QUASE"},
 {"key": "chrome.log.match_exact", "text": "EXATO"},
@@ -129,7 +125,6 @@
 {"key": "chrome.story.got_it", "text": "ENTENDI"},
 {"key": "chrome.story.missing", "text": "SEM {styles} NA ADEGA"},
 {"key": "chrome.story.pour_it", "text": "MÃOS À OBRA"},
-{"key": "chrome.toast.job_paid", "text": "{who} PAGOU · +${reward}"},
 {"key": "chrome.toast.perfect_pour", "text": "DOSE PERFEITA · {recipe} — AGORA NO LIVRO"},
 {"key": "chrome.toast.said_no", "text": "VOCÊ DISSE NÃO — ATÉ A PRÓXIMA"}
 ]}

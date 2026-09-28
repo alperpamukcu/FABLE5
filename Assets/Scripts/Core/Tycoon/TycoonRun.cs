@@ -1461,65 +1461,10 @@ namespace LastCall.Core
         /// came but did not order (see <see cref="LastCallWithheld"/>).</summary>
         public StoryTrialRun Trial { get; private set; }
 
-        /// <summary>
-        /// THE WEEK'S JOB (2026-09-04) — a drink and a count, handed over as the week closes
-        /// and owed by the end of the next one. Null before the first hand-over, and rolled
-        /// again whenever the calendar's week changes.
-        ///
-        /// It is the loop's long unit: everything else in this run is settled inside one
-        /// night. See <see cref="WeeklyJob"/> for why it stands in for the written arc.
-        /// </summary>
-        public WeeklyJob Job { get; private set; }
-
-        /// <summary>The last job that was finished, kept past its week so the night's slip
-        /// can say it landed. Null until one is.</summary>
-        public WeeklyJob JobDone { get; private set; }
-
-        /// <summary>
-        /// The job that was finished THIS INSTANT, for the room to say so — read once and
-        /// cleared, like every other one-shot signal on this run (2026-09-06).
-        /// </summary>
-        public WeeklyJob JobJustDone { get; private set; }
-
-        /// <summary>Takes the "it just landed" signal, if there is one.</summary>
-        public WeeklyJob TakeJobJustDone()
-        {
-            var got = JobJustDone;
-            JobJustDone = null;
-            return got;
-        }
-
         /// <summary>Something went wrong tonight: a wrong drink over the bar, or somebody who
-        /// walked out. Read at the close by a CLEAN job (2026-09-06).</summary>
+        /// walked out. Read at the close by the hostess's CLEAN job (2026-09-06; the weekly
+        /// job that first read it left 2026-09-28, TycoonRun.Quests).</summary>
         public bool NightHadAMistake { get; private set; }
-
-        /// <summary>
-        /// One serve, counted towards the week and paid for if it finishes it. Ece settles up
-        /// on the spot — the money is hers, not the till's, so it arrives as income on the
-        /// night the job lands rather than as a discount on anything.
-        /// </summary>
-        private void CountJobServe(string recipeId, bool perfect)
-        {
-            if (Job == null || !Job.RunsOn(Day)) return;
-            if (!Job.CountServe(recipeId, perfect)) return;
-            PayForTheJob();
-        }
-
-        private void PayForTheJob()
-        {
-            // The weekly job and the hostess's book never both pay (2026-09-27): a run with a book pays hers.
-            if (Job == null || Job.Reward <= 0 || Quests != null) return;
-            Money += Job.Reward;
-            // It rides in the night's BONUS line, beside the state's thanks — money that came
-            // from doing something rather than from selling something (GDD 28 §7's own box).
-            DayBonus += Job.Reward;
-            JobJustDone = Job;
-            Feat(Stats.JobsDone, 1);
-        }
-
-        /// <summary>Who signs the week's jobs. Presentation only — nothing is graded by
-        /// whom, and the default is the host who works the shift.</summary>
-        public string JobGiver { get; set; } = WeeklyJob.DefaultGiver;
 
         /// <summary>
         /// Tonight's guest came in, but the bar has not reached the standing they came for
@@ -1578,8 +1523,9 @@ namespace LastCall.Core
             // THE HOSTESS FIRST (2026-09-27): the story's guest waits for the floor to empty after her.
             if (HostessVisit != null) return seated;
 
-            // SWITCHED OFF FOR THE SCENE (2026-09-06): Ece's place in the loop is the
-            // week's job now, not a guest after closing. The beat is intact and its own
+            // SWITCHED OFF FOR THE SCENE (2026-09-06): the host's place in the loop is the
+            // job she hands over at the close now (her book since 2026-09-27, TycoonRun.Quests),
+            // not a guest after closing. The beat is intact and its own
             // suites still play it — this is a config, not a deletion, and the dev bench and
             // the light-rig test reach it through DevForceLastCall.
             if (!_config.LastCall && !DevForceLastCall) return seated;
@@ -2654,11 +2600,9 @@ namespace LastCall.Core
 
             var match = RatioRecipeMatcher.Match(delivered, _recipes, IngredientOf);
             var matchKind = ServiceJudge.Compare(visit.OrderTruth, match, delivered, IngredientOf);
-            // THE WEEK'S JOB IS COUNTED ON THE DRINK THAT WAS ASKED FOR AND GOT MADE
-            // (2026-09-04). Exact only, and against the ORDERED recipe: a job for five
-            // Negronis is not filled by a Negroni nobody ordered, nor by five near misses.
-            // The story's guest never reaches here (they return above), which is right —
-            // nothing they drink touches the books either.
+            // A WRONG DRINK OVER THE BAR marks the night (2026-09-06): the hostess's clean-night
+            // job reads it at the close. The story's guest never reaches here (they return
+            // above), which is right — nothing they drink touches the books either.
             if (matchKind == OrderMatch.Wrong) NightHadAMistake = true;
             // The verdict is priced off the DRINK — the recipe matched, the garnishes asked
             // for, the fill (the 2026-07-22 pivot, made total 2026-08-02: the emotion layer
@@ -2675,15 +2619,6 @@ namespace LastCall.Core
             var verdict = ServiceJudge.Judge(visit, matchKind, delivered, CrowdToday,
                 Ambience + RoomAura + house.ServiceBonus, served: match, lookup: IngredientOf,
                 house: house);
-
-            // THE WEEK'S JOB IS COUNTED ON THE DRINK THAT WAS ASKED FOR AND GOT MADE
-            // (2026-09-04, kinds 2026-09-06). Exact only, and against the ORDERED recipe: a
-            // job for five Negronis is not filled by a Negroni nobody ordered, nor by five
-            // near misses — and a PERFECT week counts this serve only if the judge says every
-            // band landed. The story's guest never reaches here, which is right: nothing they
-            // drink touches the books either.
-            if (matchKind == OrderMatch.Exact)
-                CountJobServe(visit.OrderTruth.Wanted.Id, verdict.PerfectMake);
 
             // The night remembers its best EXACT serve (2026-08-02): the menu cap reads it.
             if (matchKind == OrderMatch.Exact && match?.Recipe != null
@@ -3366,7 +3301,7 @@ namespace LastCall.Core
 
         /// <summary>
         /// As above, with the save layer's door (2026-09-26, TycoonRun.Save.cs): at the one
-        /// quiescent instant of the loop — books closed, counters reset, job settled, the new
+        /// quiescent instant of the loop — books closed, counters reset, her visit settled, the new
         /// floor NOT yet dealt — <paramref name="atDawn"/> is handed the run written down.
         /// Only the scene's own call passes it; the sim and the tests save nothing.
         /// </summary>
@@ -3410,12 +3345,6 @@ namespace LastCall.Core
             // the stars. RightKicks is the count that speaks for them. A wrong kick is on the
             // books as the walk-out it is. (NightTally, shared with the close's clean night.)
             var (served, walked) = NightTally();
-            // A CLEAN NIGHT: nobody walked out, nothing wrong went over the bar (2026-09-06).
-            // Counted here because this is the moment the night becomes a fact, and paid on
-            // the spot like every other job — the money lands on the night that earned it.
-            if (Job != null && Job.RunsOn(Day) && Job.Kind == JobKind.Clean
-                && Job.CountNight(walked == 0 && !NightHadAMistake))
-                PayForTheJob();
             // THE HOSTESS'S STATE GOALS (2026-09-27, TycoonRun.Quests): the rung, the room, the ladder, read now
             // that CloseNight has filed the high-water mark — paid into THIS night's row, before the books close.
             CountQuestStateGoal();
@@ -3465,7 +3394,6 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
-            SettleTheJob();
             SettleQuestAtDawn();       // a new night for the hostess (TycoonRun.Quests)
             ResetVessels();
             // THE SAVE POINT. Everything after this line is re-derived by a restore — the
@@ -3477,34 +3405,6 @@ namespace LastCall.Core
             Talking = false;          // a new night never opens held (TycoonRun.Talk)
             TeachAtOpen();
             return result;
-        }
-
-        /// <summary>
-        /// THE HAND-OVER, read off the calendar rather than off a counter (2026-09-04). Day
-        /// has just been incremented, so "the week changed" is the question — and asking it
-        /// that way means a run that skipped nights (DevJumpToNight) lands on exactly one
-        /// job for the week it arrives in, instead of owing a stack of them.
-        ///
-        /// A job that was not finished simply lapses. There is no penalty and that is the
-        /// author's shape for now: the week is a thing to aim at, not a debt.
-        /// </summary>
-        private void SettleTheJob()
-        {
-            if (!_config.WeeklyJobs) return;
-            // A RUN WITH THE HOSTESS'S BOOK HAS NO WEEKLY JOB (2026-09-27): the book replaces it, and the two
-            // must never both pay. This whole method leaves with WeeklyJob (spec F.3, C2).
-            if (Quests != null) return;
-            int week = BarCalendar.WeekOf(Day);
-            if (Job != null && Job.Week == week) return;      // still this week's
-
-            if (Job != null && Job.IsDone) JobDone = Job;
-            // Rolled from the menu the bar can pour TODAY — the market ran between the
-            // hand-over and here, so this reads the shelf as it is on the first morning of
-            // the week rather than as it was on Saturday night. Asked through CanServe, the same
-            // question the night's plan asks (2026-09-26), so a job never names a page whose extra
-            // or whose spoon the bar does not have either. That shrinks the pool the "job" stream
-            // indexes on some bars, so some seeds hand over a different week's job than before.
-            Job = WeeklyJobs.Roll(MenuRecipes, CanServe, week, _rng, JobGiver);
         }
 
         // ── what the bar can make (2026-09-26) ──────────────────────────────────
@@ -3524,7 +3424,7 @@ namespace LastCall.Core
         /// (<see cref="SpoonUnlocked"/>). OWNERSHIP, NOT FILL: a bottle that has run dry still answers,
         /// because running dry is the refill the player sees at the close, and the honest
         /// <see cref="DeclineOrder"/> is the answer to it on the night (<see cref="CanMake"/> reads the fill).
-        /// The night's plan and the weekly job ask this; nothing draws a page that says no.
+        /// The night's plan and the hostess's serve jobs ask this; nothing draws a page that says no.
         /// </summary>
         public bool CanServe(RecipeDefinition recipe) => CanServe(recipe, PreparationsOpen);
 

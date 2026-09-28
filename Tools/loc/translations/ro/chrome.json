@@ -40,9 +40,6 @@
     {"key": "chrome.garnish.tell_garnish", "text": "PE MARGINE SAU ÎN BĂUTURĂ", "src": "ON THE RIM OR IN THE DRINK"},
     {"key": "chrome.garnish.tell_ice", "text": "PUNE-O ÎNAINTE SĂ TORNI", "src": "DROP IT IN BEFORE THE POUR"},
     {"key": "chrome.garnish.tell_rim", "text": "ÎNVÂRTE PAHARUL ÎN BOL", "src": "TURN THE GLASS IN THE DISH"},
-    {"key": "chrome.job.clean_nights", "text": "SERI CURATE", "src": "CLEAN NIGHTS"},
-    {"key": "chrome.job.done", "text": "{who} · {target}/{target} · GATA · +${reward}", "src": "{who} · {target}/{target} · DONE · +${reward}"},
-    {"key": "chrome.job.perfect_pours", "text": "TURNĂRI PERFECTE", "src": "PERFECT POURS"},
     {"key": "chrome.ledger.drinks", "text": "băuturi ${amount}", "src": "drinks ${amount}"},
     {"key": "chrome.ledger.empty", "text": "Încă nicio zi. Închide mai întâi o seară.", "src": "No days yet. Close a night first."},
     {"key": "chrome.ledger.fines", "text": "amenzi ${amount}", "src": "fines ${amount}"},
@@ -66,7 +63,6 @@
     {"key": "chrome.ledger.walked_out#few", "text": "{n} plecați fără băutură", "src": "{n} left without one"},
     {"key": "chrome.ledger.walked_out#one", "text": "{n} plecat fără băutură", "src": "{n} left without one"},
     {"key": "chrome.ledger.walked_out#other", "text": "{n} de plecați fără băutură", "src": "{n} left without one"},
-    {"key": "chrome.log.job_done", "text": "<color=#6FCC4B>SARCINA DE LA {who}</color> gata · +${reward}", "src": "<color=#6FCC4B>{who}'S JOB</color> done · +${reward}"},
     {"key": "chrome.log.key", "text": "LOG", "src": "LOG"},
     {"key": "chrome.log.match_close", "text": "APROAPE", "src": "CLOSE"},
     {"key": "chrome.log.match_exact", "text": "EXACT", "src": "EXACT"},
@@ -135,7 +131,6 @@
     {"key": "chrome.story.got_it", "text": "AM ÎNȚELES", "src": "GOT IT"},
     {"key": "chrome.story.missing", "text": "NU AI PE RAFT: {styles}", "src": "NO {styles} ON THE SHELF"},
     {"key": "chrome.story.pour_it", "text": "TOARNĂ", "src": "POUR IT"},
-    {"key": "chrome.toast.job_paid", "text": "{who} PLĂTEȘTE · +${reward}", "src": "{who} PAYS UP · +${reward}"},
     {"key": "chrome.toast.perfect_pour", "text": "TURNARE PERFECTĂ · {recipe} — ACUM ÎN CARTE", "src": "PERFECT POUR · {recipe} — IN THE BOOK NOW"},
     {"key": "chrome.toast.said_no", "text": "I-AI SPUS NU — O SĂ REVINĂ", "src": "YOU TOLD THEM NO — THEY WILL BE BACK"}
   ]

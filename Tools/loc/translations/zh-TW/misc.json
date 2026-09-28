@@ -361,31 +361,6 @@
    "src": "READY TO ORDER"
   },
   {
-   "key": "job.name.clean",
-   "text": "整潔打烊",
-   "src": "CLEAN NIGHTS"
-  },
-  {
-   "key": "job.name.perfect",
-   "text": "完美出杯",
-   "src": "PERFECT POURS"
-  },
-  {
-   "key": "job.owed.clean#other",
-   "text": "還差 {n} 晚整潔打烊",
-   "src": "{n} MORE CLEAN NIGHTS"
-  },
-  {
-   "key": "job.owed.perfect#other",
-   "text": "還差 {n} 杯完美出杯",
-   "src": "{n} MORE PERFECT POURS"
-  },
-  {
-   "key": "job.owed.serve#other",
-   "text": "還差 {n} 杯 {drink}",
-   "src": "{n} MORE {drink}"
-  },
-  {
    "key": "night.count#other",
    "text": "{n} 晚",
    "src": "{n} nights"

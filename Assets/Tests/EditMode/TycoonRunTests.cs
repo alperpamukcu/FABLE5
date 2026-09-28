@@ -40,10 +40,10 @@ namespace LastCall.Tests
         private static TycoonRun NewRun(string seed = "day-one", int startingMoney = 20,
             params FixtureDefinition[] fixtures) =>
             new TycoonRun(NewShelf(), Book, new RunRng(seed),
-                // NO WEEKLY JOB (2026-09-06): these runs measure what the BAR earns, and a
-                // job's bonus is Ece's money. WeeklyJobTests plays with them switched on.
+                // NO JOB (2026-09-06, the hostess's book since 2026-09-28): these runs measure what the
+                // BAR earns, and a job's pay is hers. QuestChainTests plays with it switched on.
                 config: new TycoonConfig(startingMoney, orderDecisionSeconds: 0, savorSeconds: 0,
-                    weeklyJobs: false),
+                    quests: false),
                 fixtures: fixtures);
 
         /// <summary>A room worth two stars, put there by a fitting the bar owns from the
@@ -1275,7 +1275,7 @@ namespace LastCall.Tests
         // shelf cannot pour is on the menu and in the book, and nobody orders it.
 
         private static TycoonConfig LongPurse() =>
-            new TycoonConfig(5000, weeklyJobs: false, lastCall: false);
+            new TycoonConfig(5000, quests: false, lastCall: false);
 
         private static void CloseTheNight(TycoonRun run)
         {

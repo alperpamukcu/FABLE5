@@ -270,35 +270,6 @@ namespace LastCall.UI
             });
         }
 
-        // ── the week's job, as a tab under the beam (TycoonHud.Chrome builds and refreshes it) ────────────────────────
-
-        private const float JobTabH = 38f, JobFace = 26f, JobTextX = 44f, JobPipW = 12f, JobPipH = 6f, JobPipGap = 3f;
-        private Image _jobFace, _jobLip;
-        private RectTransform _jobPips;
-        private int _jobPipsFor = -1;
-
-        /// <summary>A pip for each of what the job asks, lit for each done - lime once it is paid, the beam's magenta
-        /// until then - redrawn only when the count changes.</summary>
-        private void LayJobPips(WeeklyJob job)
-        {
-            if (_jobPips == null || job == null) return;
-            int sig = job.Target * 1000 + job.Served * 10 + (job.IsDone ? 1 : 0);
-            if (sig == _jobPipsFor) return;
-            _jobPipsFor = sig;
-            foreach (Transform old in _jobPips) Destroy(old.gameObject);
-            for (int i = 0; i < job.Target; i++)
-            {
-                var pip = NewRect("P" + i, _jobPips);
-                Place(pip, new Vector2(0, 0.5f), new Vector2(JobPipW, JobPipH), new Vector2(i * (JobPipW + JobPipGap), 0f));
-                pip.pivot = new Vector2(0, 0.5f);
-                var pi = pip.gameObject.AddComponent<Image>();
-                bool lit = i < job.Served;
-                pi.color = !lit ? new Color(UITheme.Cream[1].r, UITheme.Cream[1].g, UITheme.Cream[1].b, 0.35f)
-                         : job.IsDone ? UITheme.Lime[3] : UITheme.Magenta[3];
-                pi.raycastTarget = false;
-            }
-        }
-
         /// <summary>How far a lit share of the five stars reaches, for the fill's mask.</summary>
         private float TopStarsReach(double stars) => (float)(stars / 5.0) * _ratingStars.Length * TopStarPitch;
 
