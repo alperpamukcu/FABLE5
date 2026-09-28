@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "週の依頼を1つ達成する。",
-      "src": "Finish a weekly job."
+      "text": "女主人の依頼を1つ達成する。",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "一週間の成果",
-      "src": "A Week's Work"
+      "text": "上出来",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

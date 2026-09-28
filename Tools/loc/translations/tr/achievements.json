@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Haftanın işini bitir.",
-      "src": "Finish a weekly job."
+      "text": "Ev sahibesinin bir işini bitir.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Haftanın İşi Tamam",
-      "src": "A Week's Work"
+      "text": "Temiz İş",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Ολοκλήρωσε μια εβδομαδιαία αποστολή.",
-      "src": "Finish a weekly job."
+      "text": "Ολοκλήρωσε μια αποστολή της οικοδέσποινας.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Μια εβδομάδα δουλειά",
-      "src": "A Week's Work"
+      "text": "Καλή δουλειά",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

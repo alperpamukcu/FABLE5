@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Accomplis une mission de la semaine.",
-      "src": "Finish a weekly job."
+      "text": "Accomplis une mission pour l'hôtesse.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Semaine bien remplie",
-      "src": "A Week's Work"
+      "text": "Du beau travail",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Slutför ett veckouppdrag.",
-      "src": "Finish a weekly job."
+      "text": "Slutför ett uppdrag åt värdinnan.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "En veckas arbete",
-      "src": "A Week's Work"
+      "text": "Väl utfört",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

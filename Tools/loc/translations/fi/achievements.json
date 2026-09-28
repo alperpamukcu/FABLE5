@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Suorita viikon tehtävä.",
-      "src": "Finish a weekly job."
+      "text": "Suorita emännän tehtävä.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Viikon urakka",
-      "src": "A Week's Work"
+      "text": "Hyvin tehty",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

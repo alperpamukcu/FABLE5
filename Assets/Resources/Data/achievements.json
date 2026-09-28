@@ -29,7 +29,7 @@
     { "id": "THE_USUAL", "tier": "week", "stat": "best_regular", "target": 2,
       "name": "The Usual", "description": "Win a guest over until they are one of your regulars." },
     { "id": "A_WEEKS_WORK", "tier": "week", "stat": "jobs_done", "target": 1,
-      "name": "A Week's Work", "description": "Finish a weekly job." },
+      "name": "A Job Well Done", "description": "Finish a job for the hostess." },
 
     { "id": "THE_BLOCKS_BEST", "tier": "early", "stat": "best_rank", "target": 2,
       "name": "The Block's Best", "description": "Reach one star." },

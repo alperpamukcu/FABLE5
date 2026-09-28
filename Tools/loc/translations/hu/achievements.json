@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Teljesíts egy heti munkát.",
-      "src": "Finish a weekly job."
+      "text": "Teljesíts egy megbízást a házigazdának.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Egyheti meló",
-      "src": "A Week's Work"
+      "text": "Jól végzett munka",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

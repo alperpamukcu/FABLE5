@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "完成一项每周任务。",
-      "src": "Finish a weekly job."
+      "text": "完成一项女主人的委托。",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "一周辛劳",
-      "src": "A Week's Work"
+      "text": "干得漂亮",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

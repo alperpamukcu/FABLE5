@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Выполни недельное задание.",
-      "src": "Finish a weekly job."
+      "text": "Выполни задание хозяйки.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Неделя трудов",
-      "src": "A Week's Work"
+      "text": "Хорошая работа",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

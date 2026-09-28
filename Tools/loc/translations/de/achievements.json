@@ -32,13 +32,13 @@
     },
     {
       "key": "achievement.a_weeks_work.description",
-      "text": "Erledige einen Wochenauftrag.",
-      "src": "Finish a weekly job."
+      "text": "Erledige einen Auftrag der Gastgeberin.",
+      "src": "Finish a job for the hostess."
     },
     {
       "key": "achievement.a_weeks_work.name",
-      "text": "Wochenwerk",
-      "src": "A Week's Work"
+      "text": "Gute Arbeit",
+      "src": "A Job Well Done"
     },
     {
       "key": "achievement.an_institution.description",

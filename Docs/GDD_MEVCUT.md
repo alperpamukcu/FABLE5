@@ -1996,6 +1996,11 @@ haftalık işin silinmesi (2026-09-28).
   döküm yapamayan oyuncu 2. görevde kalır), ikinci görev olarak `perfect`, sabit dolar ödüller, işareti ve "ON IT",
   derslerin yalnız plakada kalması (yürüyüşsüz), hızlı tırmanan barın `rank` görevlerini sessizce atlaması, yaşı ve
   geçmişi (kâğıtlar 28 diyor, satırlar daha yaşlı okunuyor).
+- **Başarım da taşındı (§9.133):** `A_WEEKS_WORK` ödenen haftalık işi sayıyordu; `Stats.JobsDone` artık
+  `PayForTheQuest`'te artıyor. Adı ve tarifi "A Job Well Done — Finish a job for the hostess." (29 dilde; metinde
+  isim yok). Kimlik ve sayaç adı (`jobs_done`) aynı kaldı: Steamworks henüz kurulmadı, dil anahtarları kimliğe bağlı.
+  İlk iş 1. gecenin kapanışında veriliyor, en erken 2. gece bitiyor; "week" katmanı yerinde, `Achievement Pacing`
+  yeniden koşulmadı.
 - Doğrulama (bu ağaçta, editörsüz): altı derleme birimi (Core, Game, UI, Editor, Tests, PlayTests) derleniyor; saf
   Core EditMode testleri 480/480; `check_tables` ve 28 dilin `check_parts`'ı 0 hata; `merge_fragments --check`
   geçti. Unity içindeki EditMode/PlayMode takımları bu bölüm yazılırken koşulmadı.
