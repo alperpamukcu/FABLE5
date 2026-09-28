@@ -86,8 +86,8 @@ CARDS = {
     'beer_collier':     ('keg', 1.25, 'a small dark painted beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly', 'Night', 'Cream', 'a small stylised harp, flat pixel emblem, no text'),
     'beer_marigold':    ('keg', 1.25, 'a small brass-toned beer keg standing upright, a ribbed barrel with a rolled rim at the top and bottom, a short valve fitting on the flat top and a painted brand band round the belly', 'Amber', 'ViceRed', 'a small stylised brass triangle, flat pixel emblem, no text'),
     # ── cans ────────────────────────────────────────────────────────────────────
-    'cola_marlow':      ('can', 2.0, 'a plain red aluminium soft drink can with a silver top and pull tab, matte flat red', 'ViceRed', 'Cream', 'a small stylised white ribbon swoosh, flat pixel emblem, no text'),
-    'energy_volt':      ('can', 2.0, 'a plain slim blue and silver aluminium energy drink can with a silver top and pull tab', 'ClubBlue', 'Cream', 'a small stylised ox head, flat pixel emblem, no text'),
+    'cola_marlow':      ('mixer', 2.0, 'a plain red aluminium soft drink can with a silver top and pull tab, matte flat red', 'ViceRed', 'Cream', 'a small stylised white ribbon swoosh, flat pixel emblem, no text'),
+    'energy_volt':      ('mixer', 2.0, 'a plain slim blue and silver aluminium energy drink can with a silver top and pull tab', 'ClubBlue', 'Cream', 'a small stylised ox head, flat pixel emblem, no text'),
     # ── juices: CARTONS (the author, 2026-09-08 evening: "meyve suları karton olsun cam
     #    değil" — the glass takes of that afternoon are raw/<id>/glass_s2*.png). The closed
     #    carton is the master; process.py unscrews the cap for the hand sprite

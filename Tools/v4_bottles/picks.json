@@ -1,113 +1,223 @@
 {
  "vodka_astra": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/vodka_astra",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "vodka_vor": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/vodka_vor",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "vodka_leonid": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/vodka_leonid",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "vodka_okhta": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/vodka_okhta",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "gin_boothby": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/gin_boothby",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "gin_thornwood": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/gin_thornwood",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "gin_veilcrest": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/gin_veilcrest",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "rum_cane_coral": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/rum_cane_coral",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "rum_tidewater": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/rum_tidewater",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "rum_windward": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/rum_windward",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "rum_reina_del_mar": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/rum_reina_del_mar",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "bourbon_redline": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/bourbon_redline",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "bourbon_old_harrow": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/bourbon_old_harrow",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "bourbon_ashfall": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/bourbon_ashfall",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "bourbon_hollow_oak": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/bourbon_hollow_oak",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "tequila_sonora": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/tequila_sonora",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "tequila_alta_luna": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/tequila_alta_luna",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "tequila_sol_viejo": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/tequila_sol_viejo",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "amaro_notte": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/amaro_notte",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "vermouth_velvet": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/vermouth_velvet",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "liqueur_delia": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/liqueur_delia",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "liqueur_kafa": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/liqueur_kafa",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "beer_kestrel": {
   "take": "s27",
@@ -125,83 +235,153 @@
   "note": "keg, not a bottle (2026-09-09: \"fıçı biralar için bira fıçısı görseli kullanmalıyız\")"
  },
  "cola_marlow": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/cola_marlow",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "energy_volt": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/energy_volt",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "orange_grove": {
-  "take": "brand_L0_s31",
-  "emblem": null,
-  "dir": "brand/orange_grove/brand_L0_s31",
-  "shelf": "brand/orange_grove/native/brand_N0_s31.png",
-  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  "take": "shelf_style",
+  "dir": "shelf_style/orange_grove",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "brand_L0_s31",
+   "emblem": null,
+   "dir": "brand/orange_grove/brand_L0_s31",
+   "shelf": "brand/orange_grove/native/brand_N0_s31.png",
+   "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  }
  },
  "lemon_fresh": {
-  "take": "brand_L0_s37",
-  "emblem": null,
-  "dir": "brand/lemon_fresh/brand_L0_s37",
-  "shelf": "brand/lemon_fresh/native/brand_N0_s31_c2.png",
-  "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native3 (juice_brands report)"
+  "take": "shelf_style",
+  "dir": "shelf_style/lemon_fresh",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "brand_L0_s37",
+   "emblem": null,
+   "dir": "brand/lemon_fresh/brand_L0_s37",
+   "shelf": "brand/lemon_fresh/native/brand_N0_s31_c2.png",
+   "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native3 (juice_brands report)"
+  }
  },
  "lime_fresh": {
-  "take": "brand_L0_s31",
-  "emblem": null,
-  "dir": "brand/lime_fresh/brand_L0_s31",
-  "shelf": "brand/lime_fresh/native/brand_N0_s31.png",
-  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  "take": "shelf_style",
+  "dir": "shelf_style/lime_fresh",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "brand_L0_s31",
+   "emblem": null,
+   "dir": "brand/lime_fresh/brand_L0_s31",
+   "shelf": "brand/lime_fresh/native/brand_N0_s31.png",
+   "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  }
  },
  "cranberry_north": {
-  "take": "brand_L0_s31",
-  "emblem": null,
-  "dir": "brand/cranberry_north/brand_L0_s31",
-  "shelf": "brand/cranberry_north/native/brand_N0_s31.png",
-  "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  "take": "shelf_style",
+  "dir": "shelf_style/cranberry_north",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "brand_L0_s31",
+   "emblem": null,
+   "dir": "brand/cranberry_north/brand_L0_s31",
+   "shelf": "brand/cranberry_north/native/brand_N0_s31.png",
+   "note": "real-brand round, 2026-09-23 - the author picked A31 + A-native1 (juice_brands report)"
+  }
  },
  "pineapple_isla": {
-  "take": "brand_L0_s37",
-  "emblem": null,
-  "dir": "brand/pineapple_isla/brand_L0_s37",
-  "shelf": "brand/pineapple_isla/native/brand_N0_s31.png",
-  "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native1 (juice_brands report)"
+  "take": "shelf_style",
+  "dir": "shelf_style/pineapple_isla",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "brand_L0_s37",
+   "emblem": null,
+   "dir": "brand/pineapple_isla/brand_L0_s37",
+   "shelf": "brand/pineapple_isla/native/brand_N0_s31.png",
+   "note": "real-brand round, 2026-09-23 - the author picked A37 + A-native1 (juice_brands report)"
+  }
  },
  "tonic_quinbury": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/tonic_quinbury",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "soda_klara": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/soda_klara",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "ginger_kicker": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/ginger_kicker",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "syrup_house": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/syrup_house",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "gin_juniper_crown": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/gin_juniper_crown",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "tequila_cielo_roto": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/tequila_cielo_roto",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  },
  "grenadine_rubis": {
-  "take": "s23",
-  "emblem": null,
-  "note": "single seed, 2026-09-04"
+  "take": "shelf_style",
+  "dir": "shelf_style/grenadine_rubis",
+  "note": "shelf style, drawn by Tools/v4_bottles/shelf_style.py / shelf_carton.py (2026-09-27)",
+  "prev": {
+   "take": "s23",
+   "emblem": null,
+   "note": "single seed, 2026-09-04"
+  }
  }
 }

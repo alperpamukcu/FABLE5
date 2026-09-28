@@ -349,6 +349,13 @@ namespace LastCall.UI
             if (_maskPx == null)
                 Debug.LogWarning("BottleArt: mask '" + sp.name + "' is not readable, so no drink can be drawn "
                                  + "(Resources/Items must import Read/Write; see PatronArtPostprocessor).");
+            // ...and measured from the SPRITE's centre, not the window's (2026-09-27). A mask imported with a
+            // TIGHT mesh has its textureRect trimmed to the opaque area (GlassArt's sheets found the same), so a
+            // bottle shorter than its canvas put the window's centre ~27 texels over the art's: the drink rode up
+            // the neck and left the foot empty. It only showed once a mask came in that FootFilled leaves alone —
+            // its FullRect copies have no offset.
+            var off = sp.textureRectOffset;
+            float ox = off.x + 0.5f - sp.rect.width * 0.5f, oy = off.y + 0.5f - sp.rect.height * 0.5f;
             var pts = new List<Vector2>(_lutW * _lutH / 2);
             if (_maskPx != null)
             {
@@ -356,7 +363,7 @@ namespace LastCall.UI
                 for (int y = 0; y < _lutH; y++)
                     for (int x = 0; x < _lutW; x++)
                         if (_maskPx[(y0 + y) * tw + x0 + x].a > 127)
-                            pts.Add(new Vector2(x + 0.5f - _lutW * 0.5f, y + 0.5f - _lutH * 0.5f));
+                            pts.Add(new Vector2(x + ox, y + oy));
             }
             _lut = new float[Buckets * Rows];
             _chordN = new float[Buckets * ChordBins];
@@ -484,6 +491,43 @@ namespace LastCall.UI
             t.Shoulder = t.MaxY;
             for (int ry = t.MaxY; ry >= t.MinY; ry--)
                 if (t.Width[ry] >= 0.88f * bodyW) { t.Shoulder = ry; break; }
+            // A BOTTLE WITHOUT A FLAT BODY (2026-09-27, the shelf-style bottles: Galliano's cone,
+            // Chambord's and Grand Marnier's balls, Clase Azul's pear, the Frangelico monk). The
+            // rule above looks for the width of a straight body, and on a shape that keeps
+            // widening or bulging it lands halfway down - a bottle bought full read under half
+            // full. When the shoulder it finds sits below 60% of the cavity's height, the full
+            // line is walked up from there instead, for as long as the glass stays a fifth wider
+            // than the neck: it stops where the neck begins. 0.6 and 1.2 were measured on the
+            // whole shelf-style set, hand and cellar plates together (Tools/v4_bottles, round
+            // six): every bottle then reads full between 58% and 95% of its cavity's height, and
+            // one bottle's full line differs by at most 12% of its height between its two sizes
+            // (at 0.5 the monk read 0.91 in the hand and 0.50 on the shelf).
+            if ((t.Shoulder - t.MinY + 1) / (float)hgt < 0.6f)
+            {
+                // The neck is the MEDIAN width of the cavity's top 30%, not its narrowest row: the
+                // open mouth leaves a sliver of cavity under the rim (the lip's near half), and a
+                // neck measured off that sliver let the walk run to the brim.
+                var top = new List<int>();
+                for (int ry = t.MaxY; ry >= t.MinY && (t.MaxY - ry) < hgt * 0.3f; ry--)
+                    if (t.Width[ry] > 0) top.Add(t.Width[ry]);
+                top.Sort();
+                int neckW = top.Count > 0 ? top[top.Count / 2] : int.MaxValue;
+                if (neckW != int.MaxValue)
+                {
+                    // A short waist (a rope, a belt, a pinch under a band) is stepped over too: the
+                    // walk carries on while the narrow run stays under 8% of the cavity's height and
+                    // the glass above it widens again. It ends on the last row that was wide enough.
+                    float needW = neckW * 1.2f;
+                    int allow = Mathf.Max(2, Mathf.RoundToInt(hgt * 0.08f));
+                    int lastWide = t.Shoulder, narrow = 0;
+                    for (int ry = t.Shoulder + 1; ry <= t.MaxY; ry++)
+                    {
+                        if (t.Width[ry] >= needW) { lastWide = ry; narrow = 0; }
+                        else if (++narrow > allow) break;
+                    }
+                    t.Shoulder = lastWide;
+                }
+            }
             for (int ry = t.MinY; ry <= t.Shoulder; ry++) t.BelowShoulder += t.Width[ry];
             _tables[mask] = t;
             return t;
