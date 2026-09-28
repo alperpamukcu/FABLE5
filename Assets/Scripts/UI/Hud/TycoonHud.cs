@@ -2179,19 +2179,8 @@ namespace LastCall.UI
         private const float StarDrop = 0.5f;     // one star's fall and settle
         private const float StarStagger = 0.42f; // the gap between two starting
 
-        /// <summary>Takes every star off the paper, so the slip lands with an empty row on
-        /// it (the author: "yıldızlar ilk 0'dır"). Called before the feed, not after.</summary>
-        private void EmptyStarRow()
-        {
-            if (Motion.Reduced) return;
-            foreach (var s in _billStars)
-            {
-                if (s == null) continue;
-                s.anchoredPosition = new Vector2(s.anchoredPosition.x, StarFallH);
-                var g = s.GetComponent<Image>();
-                if (g != null) g.color = Clear(g.color);
-            }
-        }
+        // (The stars are nought first - the author: "yıldızlar ilk 0'dır" - because TycoonHud.Tape builds them above
+        // their places and clear; nothing has to empty the row before the tape comes in.)
 
         // ── the stamp comes down (2026-08-11) ───────────────────────────────────
         private RectTransform _billStamp;

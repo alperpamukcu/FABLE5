@@ -21,28 +21,17 @@
     { "key": "dayend.fine.the_law", "text": "THE LAW", "note": "Fallback reason for a fine in dayend.bill.fines when no specific reason applies. Capitals, ~14 characters." },
 
     { "key": "dayend.score.counts", "text": "{served} SERVED  ·  {walked} WALKED", "note": "Quiet line under MALIBU CLUB at the head of the day-end tape. {served} = customers served, {walked} = customers who walked out or were wrongly shown out (whole numbers, often two digits). Small line, centred on the tape's 392 px column, about 26 characters." },
-    { "key": "dayend.house.service", "text": "SERVICE {rating}", "note": "House row on the day-end slip, beside a heart icon: tonight's drinks rating. {rating} is a one-decimal number like 3.5. Body face 16 px, ~14 characters." },
-    { "key": "dayend.house.comfort", "text": "COMFORT {rating}", "note": "House row on the day-end slip, beside a medallion icon: tonight's room rating. {rating} is a two-decimal number like 3.52 (since 2026-09-26). Body face 16 px, ~15 characters." },
 
     { "key": "dayend.week.head", "text": "THE WEEK", "note": "Caption on the head of THE WEEK card under the day-end week hook; the week number sits at its right. Body face 16 px, about 16 characters." },
-    { "key": "dayend.stand.head", "text": "AFTER TONIGHT", "note": "Caption on the head of the right board beside the day-end slip, which shows the bar's star standing once tonight is filed. The night number sits at its right. Body face 16 px, ~16 characters." },
-    { "key": "dayend.week.closed", "text": "CLOSED", "note": "Right-hand figure on a week-board row for a night the bar does not open. Body face 16 px, ~10 characters." },
-    { "key": "dayend.week.bills", "text": "TONIGHT'S BILLS", "note": "Foot line on the week board: tonight's rent, stock and upgrades; a money figure sits at the right. Body face 16 px, ~18 characters." },
-    { "key": "dayend.week.fines", "text": "TONIGHT'S FINES", "note": "Foot line on the week board: tonight's fines from the law; a money figure sits at the right. Body face 16 px, ~18 characters." },
     { "key": "dayend.week.taken", "text": "TAKEN SO FAR", "note": "Line on THE WEEK card: what the week has taken so far, tonight included (hidden on the week's first night). A money figure sits at the right. Body face 16 px, about 18 characters." },
     { "key": "dayend.week.net", "text": "NET SO FAR", "note": "Line on THE WEEK card: the week's profit or loss so far, tonight included (hidden on the week's first night). A signed money figure sits at the right. Body face 16 px, about 18 characters." },
 
-    { "key": "dayend.stand.night", "text": "NIGHT {day}", "note": "Reading at the right of the standing board's head (day-end). {day} is the run's night number. Display face 16 px, ~10 characters." },
     { "key": "dayend.stand.was", "text": "WAS {stars}", "note": "Under the standing gauge on the TOMORROW board: the bar's star standing before tonight. {stars} is a two-decimal number like 3.25. Body face 16 px, about 12 characters." },
     { "key": "dayend.stand.held", "text": "HELD", "note": "Chip beside WAS on the TOMORROW board when tonight did not move the bar's standing (otherwise it shows +0.12 / -0.12). Display face 16 px in a 104 px box, about 6 characters." },
     { "key": "dayend.stand.service", "text": "SERVICE", "note": "Rate row on the day-end tape, left of five hearts and a two-decimal figure: tonight's drinks rating. Body face 16 px (the small line where the house face is handed on), about 12 characters." },
     { "key": "dayend.stand.comfort", "text": "COMFORT", "note": "Rate row on the day-end tape, left of five medallions and a two-decimal figure: tonight's room rating. Body face 16 px (the small line where the house face is handed on), about 12 characters." },
     { "key": "dayend.stand.tonight", "text": "TONIGHT", "note": "Second crowd row on the TOMORROW board when tomorrow's crowd differs from tonight's: tonight's crowd name sits at its right. Body face 16 px, about 12 characters." },
-    { "key": "dayend.stand.ceiling", "text": "CEILING", "note": "Row caption on the standing board (day-end), leaders to a star figure: the most stars the bar's fittings allow. Body face 16 px, ~12 characters." },
     { "key": "dayend.stand.tomorrow", "text": "TOMORROW", "note": "Caption on the head of the day-end TOMORROW board; the next night's name sits at its right in cyan. Body face 16 px, about 12 characters." },
-    { "key": "dayend.stand.capped", "text": "THE ROOM WENT HIGHER THAN THE BAR IS FITTED FOR — BUY THE FITTINGS", "note": "Note at the foot of the standing board when tonight's rating was cut down by the bar's ceiling. Body face 16 px, wraps, up to three lines of ~24 characters." },
-    { "key": "dayend.stand.next_rung#one", "text": "NEXT RUNG AT {stars} STARS — {n} THING OPENS", "note": "Note at the foot of the standing board: the next star rating that unlocks shop items. {stars} is a one-decimal number like 3.5; {n} is how many items open there. Body face 16 px, wraps, up to three lines of ~24 characters." },
-    { "key": "dayend.stand.next_rung#other", "text": "NEXT RUNG AT {stars} STARS — {n} THINGS OPEN", "note": "As dayend.stand.next_rung#one." },
     { "key": "dayend.stand.all_open", "text": "EVERY RUNG ON THE LADDER IS OPEN", "note": "One line on the TOMORROW board where the next rung would be, when no rung is left to climb. Body face 16 px, wraps, two lines of about 24 characters." },
 
     { "key": "dayend.closing.basket#one", "text": "{n} THING IS STILL IN THE BASKET.", "note": "Warning in the 'close the order?' dialog on the market tablet when leaving with unbought items. {n} is the number of items. Shop bold face 16 px, wraps in 540 px, ~2 lines." },

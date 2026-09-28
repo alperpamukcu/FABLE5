@@ -2,6 +2,19 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The night's show (2026-09-28):** the day-end rebuilt on the author's "en baştan tekrardan tasarla", every
+  open question at its default. The room's light goes down to the author's 0.988, THAT'S LAST CALL is said on
+  the dark, and the till's Z-tape - his own bill_sheet stock re-cut to the night's length - unrolls, bounces and
+  counts itself top to bottom; the pen rings the lower of SERVICE and COMFORT and runs to the FILED stars (GDD 27
+  D7 reversed: one "tonight" number), the stars drop, the stamp strikes in its own zone, and the counterfoil is
+  torn, folded and hung on the week's bill hook (Monday first; filed nights carry stars, take and net). Beside it
+  the critics at their faces' real size and the TOMORROW board: the standing's climb, the next rung and what it
+  opens, tomorrow's crowd, and her job ("PAYS AT DAWN" asked of Core's new QuestPaysAtDawn). The two 356x460
+  boards, the fixed sheet and FitBillToPaper are gone, with ten string keys in every table. Fixed: the job's pay
+  and the state's thanks on their own rows, walk-out fees printed so both blocks add up, COMFORT in a box it fits,
+  reduced motion offering the certificate, CONTINUE never under the certificate. No generated art. GDD_MEVCUT
+  §9.135.
+
 - **The hostess and her book (2026-09-27/28):** the host Ece is replaced by the game's lead, an American hostess
   whose name lives once, in `papers.json` ("Roxy Vale"), and who comes by only for the jobs and the teaching. Her
   jobs are a written chain, the same every run, up the ladder (`Resources/Data/quests.json`: 18 jobs of nine kinds

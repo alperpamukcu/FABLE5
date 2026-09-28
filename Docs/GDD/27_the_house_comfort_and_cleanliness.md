@@ -438,6 +438,9 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 
 - **Top bar** (the shift): stars = the standing, as now, nothing else on the block; the two icon
   strips of §4.4 to its left.
+- *(Superseded 2026-09-28 by the night's tape, GDD_MEVCUT §9.135: its stars are the FILED stars, the lower of
+  SERVICE and COMFORT, which is ringed in pen on the tape's two rate rows; the raw rating is shown only on the
+  critics' rows; the standing board and the week board became the TOMORROW board and the week's hook.)*
 - **The slip** (day end): the five big stars stay the CUSTOMERS' rating (raw room stars, as the
   slip prints today) and the score row under them keeps its star, its number and its people
   (`★ 4.6 · 10 SERVED · 1 WALKED` — the author asked that star onto the row on 2026-09-04, and it
@@ -529,7 +532,9 @@ ServiceTonight), `ComfortBase by day p25/p50/p75`, `rungs bought by slot`, `Brok
 - **D7 — the slip's big stars stay the customers' raw rating and the score row keeps its star;
   the room gets its own row.** Three surfaces (slip, week board, book) still print three honest
   numbers (raw, capped, filed) and the standing board explains the min — that was true before
-  this module and is not made worse by it.
+  this module and is not made worse by it. *(Superseded 2026-09-28, the author's Q1: the tape's stars are the
+  FILED stars, the lower of the two ratings ringed in pen - one number for tonight on the screen; the raw
+  rating stays on each critic's row. GDD_MEVCUT §9.135.)*
 - **D8 — tomorrow's crowd reads the service side** (§2.3). Reversed from the first draft, which
   let the min pick the crowd and put a filthy fresh bar under the broke line.
 - **D9 — the top bar shows icon strips, not decimals** (§4.4). The author's 2026-08-19 ruling on

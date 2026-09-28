@@ -408,6 +408,8 @@ donebilir"*.
 - **Invoice UI**: a printed bill — income lines (drinks, tips), expense lines (refills,
   rent, purchases), net in big type, debt-strike warning stamps (1/3, 2/3, CLOSED).
   **Readability rules (2026-07-22): short labels, big type, the bill front-and-centre.**
+  **2026-09-28: the night's tape** (GDD_MEVCUT §9.135) - the room's light goes down, the till's Z-tape unrolls
+  and counts itself, its counterfoil is hung on the week's hook, and TOMORROW stands beside it.
 - **Market**: rotating offers as shelf cards (existing market visual language).
   **You cannot buy what you cannot pay for**: unaffordable cards are visibly disabled and
   a click raises a "NOT ENOUGH MONEY" notice. Only rent can push the till below zero.

@@ -55,7 +55,7 @@ namespace LastCall.UI
             return root;
         }
 
-        // ── the board's grid, its divider and its dark cards; the critics' reason ───────────────────────────
+        // ── the board's grid and its dark cards; the critics' reason ───────────────────────────────────────────
 
         /// <summary>One short honest line, from what a finished visit still carries. The
         /// judge's full verdict is transient — said in the service log, never stored — so
@@ -75,12 +75,6 @@ namespace LastCall.UI
         }
 
         /// <summary>
-        /// A PARAGRAPH BREAK IN THE FRAME'S OWN MAGENTA (seventh list: "paragrafı bölmek için kullanılan düz
-        /// çizgilerin yerini pembe UI'ın çerçevesinden yapabilirsin"): a five-unit bar - highlight, body, shade,
-        /// the steps the plate's rule is drawn in - run out to the frame on both sides, so the board reads as one
-        /// frame divided into rooms rather than a panel with hairlines laid on it.
-        /// </summary>
-        /// <summary>
         /// ONE GRID FOR BOTH BOARDS (2026-09-22, the eighth list): the body runs <see cref="BoardPad"/> in from the
         /// plate's edge, a card is exactly the body's width, and every word and figure on the board - on a card or off it
         /// - stands <see cref="BoardTextInset"/> inside the body: the nights' names and the foot's captions on one left
@@ -91,27 +85,8 @@ namespace LastCall.UI
         /// <summary>Where the body starts under the plate's top: the title's foot (30) and a hand.</summary>
         private const float BoardBodyTop = 44f;
 
-        private void BoardDivider(RectTransform body, ref float y)
-        {
-            y += 3f;
-            var bar = NewRect("Divider", body);
-            bar.anchorMin = new Vector2(0, 1); bar.anchorMax = new Vector2(1, 1);
-            bar.pivot = new Vector2(0.5f, 1);
-            bar.offsetMin = new Vector2(-(BoardPad - 6f), 0f); bar.offsetMax = new Vector2(BoardPad - 6f, 0f);
-            bar.sizeDelta = new Vector2(bar.sizeDelta.x, 5f);
-            bar.anchoredPosition = new Vector2(0, -y);
-            foreach (var (row, h, c) in new[] { (0f, 1f, UITheme.Magenta[4]), (1f, 3f, UITheme.Magenta[3]), (4f, 1f, UITheme.Magenta[1]) })
-            {
-                var strip = NewRect("S", bar);
-                strip.anchorMin = new Vector2(0, 1); strip.anchorMax = new Vector2(1, 1);
-                strip.pivot = new Vector2(0.5f, 1);
-                strip.sizeDelta = new Vector2(0, h);
-                strip.anchoredPosition = new Vector2(0, -row);
-                var si = strip.gameObject.AddComponent<Image>();
-                si.color = c; si.raycastTarget = false;
-            }
-            y += 5f + 7f;   // 15 in all, the hairline's own budget: the boards' height is fixed
-        }
+        // (The magenta paragraph divider of 2026-09-22 left with the two boards: the TOMORROW board's blocks stand apart
+        // on their own card and gaps, as the approved mock-up draws them.)
 
         /// <summary>A DARK CARD behind what the board wants read first (seventh list: "öne çıkmasını istediğin
         /// şeylerin arkasını karartacak kart"). Made at the block's top and sized by <see cref="CloseCard"/> once
