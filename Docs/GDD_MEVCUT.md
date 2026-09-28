@@ -31,7 +31,7 @@ DayEnd (hesap + market) → ContinueToNextDay(): puanlama, defter, iflas kontrol
 - **Geliş:** aralık `max(6, 12 − 0.5×gün) × yıldız çarpanı × (1±0.30)`; ≥3 bekleyen varsa gelen **vazgeçer** (balk). Ayrılanın (içki SERVİS EDİLENİN) boş bardağı tezgâhta kalır ve toplanana dek taburesini kilitler — kendiliğinden temizlenmez (7 sn'lik saat 2026-09-05'te emekli, §9.23); tıkla = topla (elde birikir, lavaboda yıkanır).
 - **Tek saat (2026-09-04, §9.22):** sabır `max(22, 50−2.5g)` sn, müşteri kararını verdiği an işlemeye başlar ve içki gelene dek işler; sorulmayı beklemek de aynı barı harcar (dolarsa fırtına gibi gider). **Kimlik okumak** barı sıfırlamaz, kalanın üstüne üç kutudan birini (`PatienceMax/3`) ekler, tavan dolu bar. (İki ayrı saat 2026-08-02 → 2026-09-04 arasında vardı.)
 - **Kimlik kartı (gizli bilgi):** `CustomerVisit.Order` `InspectId()` çağrılana dek **throw eder**; gerçek siparişi yalnız Core görür (`OrderTruth`). Kartı açmak siparişi almaktır — geri dönüşü yok. Kör servis yasal: yargıç gerçekle karşılaştırır. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza. **Kartın ikinci işi (2026-09-05, §9.24):** ikinci geceden itibaren gelenlerin bir kısmı 20 yaş altı (yarısı ödünç kartla); `CustomerVisit.Papers` kart okunana dek throw eder, `TycoonRun.Kick(visit)` yalnız okunmuş kartla çalışır — doğru kick defter dışı + $5 teşekkür, yanlış kick walk-out, servis edilen reşit olmayan kalkarken `$20 + $20×⌊itibar⌋` ceza.
-- **Sipariş havuzu (2026-09-26):** gecenin planı (`DayPlan`, §6.3) menünün yalnız barın YAPABİLDİĞİ sayfalarından kesilir — `TycoonRun.CanServe`: her bandı raftaki bir şişe karşılar (stil + `MinTier`, draught/neat_pour için tip; SAHİPLİK, doluluk değil), imza ekstrası bu gece rayda (basamak + kavanoz), Stirred sayfa için kaşık var. Şişesi alınmadan satın alınan sayfa menüde durur ama sorulmaz; şişe gelince sorulur. Hiçbir sayfa yapılamıyorsa (yalnız test düzeneği) eski menüye düşülür. Kuru şişe hâlâ sorulur — dolum kapanıştaki karar, gece içinde dürüst cevap `DeclineOrder` (`CanMake` dolumu okur). Ev sahibesinin serve görevleri de içkisini aynı yüklemle seçer (§9.134; haftalık iş 2026-09-28'de silindi). (Eski satır: "en düşük ranktan `3+gün` tarif; stok bakılmaz" — ikisi de artık doğru değil.)
+- **Sipariş havuzu (2026-09-26):** gecenin planı (`DayPlan`, §6.3) menünün yalnız barın YAPABİLDİĞİ sayfalarından kesilir — `TycoonRun.CanServe`: her bandı raftaki bir şişe karşılar (stil + `MinTier`, draught/neat_pour için tip; SAHİPLİK, doluluk değil), imza ekstrası bu gece rayda (basamak + kavanoz), Stirred sayfa için kaşık var. Şişesi alınmadan satın alınan sayfa menüde durur ama sorulmaz; şişe gelince sorulur. Hiçbir sayfa yapılamıyorsa (yalnız test düzeneği) eski menüye düşülür. Kuru şişe hâlâ sorulur — dolum kapanıştaki karar, gece içinde dürüst cevap `DeclineOrder` (`CanMake` dolumu okur). Ev sahibesinin serve görevleri de içkisini aynı yüklemle seçer (§9.134; haftalık iş 2026-09-28'de silindi); açık bir serve ya da pints görevinin içkisi dökülebiliyorsa gece ondan en az bir sipariş getirir (§6.3, §9.134). (Eski satır: "en düşük ranktan `3+gün` tarif; stok bakılmaz" — ikisi de artık doğru değil.)
 - **Servis tercihi (spec):** ~%50 sade; değilse 1–2 garnitür {buz, limon, tuz, şeker}. Draught'a garnitür yazılmaz. Beklenen doluluk 0.80 (tepeleme isteği 2026-08-02'de emekli). **"Sert çalkala" 2026-08-11'de emekli:** yöntem müşterinin hevesi değil TARİFİN talebi — hakem artık `Prep`'i notluyor (aşağıda).
 - **Ekstra tur:** Exact + zanaat tam + dönen müşteri + bekleme <%90 → en fazla 2 ek sipariş, sabır %80'e tazelenir.
 - **Müdavimler opt-in:** kayıt (registry) verilmezse anonim kalabalık. Müdavim: isim/yaş/şehir/arketip/ziyaret/ilişki taşır; duygu katmanı 2026-08-02'de söküldü — kokteyle verilen tepki tek gerçek.
@@ -194,6 +194,10 @@ ve ilk 1 hafta için kesinlikle özel sipariş listesi olmalı."*
   kolay/orta/zor karışımı (0★ 85/15/0 … 5★ 25/45/30), tek sayfa gecenin en çok %18'i, basamağın
   sayfaları her gece bir yer döner. Yalnız SIRA karıştırılır ("plan" akışı) — aynı duruşta iki gece
   aynı parayı kazanır, farklı oynar. Plan biterse aynı liste yeniden okunur, zar atılmaz.
+- **Ev sahibesinin kapağı (2026-09-28, §9.134):** açık bir serve ya da pints görevi varken ve içkisi bu gece
+  dökülebiliyorsa plan o içkiden en az bir kapak taşır (`DayPlan.Guarantee`). Kesilip karıştırılmış planda
+  yoksa, gecenin en çok istenen sayfasının ilk yarıdaki, ilk müşteriden sonraki en erken kapağı ona döner.
+  Zar yok, "plan" yerinde; yazılı ilk haftada da geçerli. Görevsiz koşu aynı tohumla aynı planı keser.
 - **Silinen hata:** `OrderPoolSize(day) = 3 + day` havuzu yıldız kapısının ÜSTÜNE en düşük rank'lı
   `3 + gün` sayfaya kısıyordu; 4. günde 3★ olan bar 21 sayfanın 7'sini soruluyordu.
 - **`FirstWeek`** ilk yedi geceyi DERS olarak yazar: build'ler → fıçı → sek → shaker → tüm menü;
@@ -1940,6 +1944,18 @@ haftalık işin silinmesi (2026-09-28).
   gitmemiş ve `NightHadAMistake` yok. Durum hedefleri (`rank`, `comfort`, `fit`) şafakta, `Rating.CloseNight`
   yüksek su işaretini yazdıktan sonra, KAPANAN gecenin defter satırına (o gecenin fişine değil; tostu ertesi
   gecenin ilk karesinde). D gecesinde biten görev onu D+1'in kapanışına getirir.
+- **İstediği içki mutlaka sipariş edilir (2026-09-28, inceleme):** tek bir içkiyi sayan görev — serve görevinin
+  seçilen sayfası, `pints`'te bira — ancak biri o içkiyi isteyince ilerler; gecenin planı ise barın en yüksek
+  basamağından kesilir ve 4★'da zemin kat sayfalarına yüz kapaktan ikisi düşer. Hızlı tırmanan bara verilen
+  `a_proper_head` (ya da yüksek basamakta geri yüklenen eski bir kaydın `first_wage`'i) böylece hiç sipariş
+  edilmiyor, süre sınırı da olmadığı için kitabın geri kalanını ve finali sonsuza dek bekletiyordu. Artık böyle
+  bir görev açıkken ve içkisi bu gece dökülebiliyorsa **her gece en az bir müşteri o içkiyi ister**: plan onu
+  zaten içermiyorsa bir kapak ona döner (§6.3) — hep ilk müşteri değil, gecenin ilk yarısında. Oyuncu bunu
+  görür, ilk haftada da: 1. gecenin kapanışında `first_wage` `gin_sour`'u seçtiyse (havuzu açılışın bantları
+  yazılı dört sayfası; bira ve sek girmez) 2. ve 3. gecenin yazılı listesinde de birer cin sour olur —
+  yoksa ilk kez 4. gece sorulurdu. Zar atılmaz; bira ile başka içki arasında değişen kapak "orders"ı §6.3'teki
+  gibi kaydırır. `garnish` görevine gerek yok: ekstralar bira olmayan her sipariş için atılır, çoğu sayfanın
+  alışkanlığı buz ya da limon kabuğu ve ray merdivende yalnız büyür.
 - **Ödeme:** `Money` ve gecenin BONUS satırı (`DayBonus`); onun payı ayrıca `DayQuestPaid` /
   `DayDetail.QuestPaid`. Fiş devletin teşekkürünü (`DayBonus − DayQuestPaid`, yalnız sıfırdan büyükse) ve onun
   işini ayrı satırda yazar ("ROXY'S JOB", `dayend.bill.quest`); defter de öyle (`chrome.ledger.quest`). Ödendiği an
@@ -1948,24 +1964,31 @@ haftalık işin silinmesi (2026-09-28).
 - **Sahne** (`TycoonHud.Hostess`): Core bir `HostessVisit` koyunca tezgâh ona açılır (kimlik, tezgâh, kitap, mahzen
   kapanır; tin ve bardaktaki içki Core'da kalır), sağdan her içici gibi bir DÜNYA sprite'ı olarak yürür — oda ışığı
   onu da aydınlatır, bar bacaklarını keser — ve barın SAHİP OLMADIĞI, kapıya en yakın tabureye geçer (bar ortadan
-  dolduğu için bu bir uç tabure; altısı da alınmışsa kapının hemen içi). ARRIVE, plakada satırları (GO ON; son tuş
+  dolduğu için bu bir uç tabure; altısı da alınmışsa kapının hemen içi: altıncı taburenin bir tabure aralığı
+  ötesi, alan dar gelirse kenardan yarım aralık içeride — 1280'de x 1190; inceleme öncesi x 1130 altıncı
+  içicinin üstüne biniyordu, oyunda ölçülecek). ARRIVE, plakada satırları (GO ON; son tuş
   görev getirdiyse ON IT, yoksa GOOD NIGHT), `HearHostess`, LEAVE ve çıkış. Oda ona kararır, lamba onu izler.
   Tutma bütün kalışını kapsar (plaka açık VEYA sahnede), yani o yürürken de kimse girmez, beklemez, çıkmaz.
   Azaltılmış harekette işaretinde belirir. Kendi çizimi gelene dek yüzü ve bedeni yer tutucu `silkwoman`.
 - **Balon** (`TycoonHud.Quest`, `ChromeArt.MessageBubble` / `MessageTail`, kodla çizilir): kirişin altında, sol
-  üstte, gelen bir mesaj gibi. Kapalıyken tek satır: türün ikonu, borç ("3 MORE NEGRONIS"; garnitürde
-  "3 MORE: ON ICE OR LEMON TWIST" — spec'teki "WITH" yerine iki nokta), "+$X"; yeni görevde iki kez atan nokta.
+  üstte, gelen bir mesaj gibi. Kapalıyken tek satır: türün ikonu, borç ("3 MORE NEGRONI" — içki sayfanın
+  adıdır, çoğul çekilmez; garnitürde "3 MORE: ON ICE OR LEMON TWIST" — spec'teki "WITH" yerine iki nokta),
+  "+$X"; yeni görevde iki kez atan nokta.
   Üstüne gelince 0,18 sn'de açılır (çıkışta 0,15 sn pay): yüzü ve adı, "JOB n OF 18 · başlık", son teslim satırı,
   pip'ler / oda çubuğu / basamak, ne ödediği ya da ne zaman geleceği. Bitince lime; basamak beklerken yüzü ve
-  "NEXT JOB AT …". İlk görevinden önce, sonuncusundan sonra, menü açıkken ve açık gece dışında gizli; mahzen ya da
-  tezgâh açıkken %35'e söner. Haftalık işin sekmesi (§9.107, §9.112) gitti.
+  "NEXT JOB AT …" ve durum satırı boş (o gece gelmez, basamak açılınca gelir). Balon görevi satırı, içkisi ve
+  verildiği geceyle tanır; yeni koşu (NEW RUN / CONTINUE) balonu, pip'leri ve okunmamış noktayı sıfırlar. İlk
+  görevinden önce, sonuncusundan sonra, menü açıkken ve açık gece dışında gizli; mahzen ya da tezgâh açıkken
+  %35'e söner. Haftalık işin sekmesi (§9.107, §9.112) gitti.
 - **İsim tek yerde:** `Assets/Data/customers/papers.json`'daki `hostess` satırı ("Roxy Vale", 28, United States).
   Plaka adı ve `StoryCharacter.ShortName` ("Roxy": tost, fiş, balon) oradan türer; hiçbir satırı ve hiçbir
   çevirmen notu adını yazmaz, yeniden adlandırma tek alan. `story.json`'da karakter `hostess` (rol host); ilk
   beat'in kimliği `ece_1` kaldı ki çeviri anahtarları geçerli kalsın. `en.json`'da artık "Ece" yok. Kendi sanatı
   sevk edilince `TycoonHud.PatronCast`'e girer ve kalabalık havuzlarından çıkarılır (o adım sanatla).
 - **Kayıt:** `RunSnapshot.Version` 1'de kaldı, ekleme katkılı (`questFormat` 1): görev id'siyle, seçilen içki,
-  ilerleme, hedef, ödül, verildiği ve bittiği gece, sıradaki satır, geliş gecesi, atlananlar ve okunmamış "bitti"
+  ilerleme, hedef, ödül, verildiği ve bittiği gece, sıradaki satır (dizini ve 2026-09-28'den beri id'si,
+  `questNextId`: veri güncellemesi göreve önüne satır koysa da aynı görev iki kez verilip ödenmez; sıradaki
+  satır hiçbir zaman eldeki görevin satırında ya da gerisinde olmaz), geliş gecesi, atlananlar ve okunmamış "bitti"
   işareti. Şafakta hiç ziyaret olmaz (gece onun altında kapanmaz), taşınmaz. `questFormat` 0 (eski kayıt) zinciri
   kendi şafağından, ilk satırdan başlatır; eski dosyanın haftalık işi (`job`, `jobDone`, `jobJustDone`,
   `jobGiver`) için alan kalmadı, JsonUtility bu anahtarları atlar — iş bittiği an ödendiği için borç kaybolmaz.
@@ -1982,12 +2005,14 @@ haftalık işin silinmesi (2026-09-28).
   ödüyorlardı. Emekli 18 çeviri anahtarı (`job.owed.*`, `job.name.*`, `chrome.job.*`, `chrome.toast.job_paid`,
   `chrome.log.job_done`) ve beş dilin (ru, pl, uk, cs, ro) fazladan çoğul biçimleri `en.json`'dan, 28 tablodan ve
   çeviri parçalarından tam satır silmeyle çıkarıldı; `check_tables` 0 hata.
-- **Çeviri:** UI anahtarları (`chrome.quest.*`, tost, log, ON IT, fiş ve defter satırı, `quest.owed.*`,
-  `quest.name.*`) 28 dilde; diyalog ve başlıklar (`data.quest.*`, `data.hostess.*`) yazar onaylayana dek İngilizce.
+- **Çeviri:** UI anahtarları (`chrome.quest.*`, tost, log, ON IT, fiş ve defter satırı, `quest.owed.*`;
+  dokuz `quest.name.*` kısa adı hiç çizilmediği için 2026-09-28'de `en.json`'dan, 28 tablodan ve parçalardan
+  silindi) 28 dilde; diyalog ve başlıklar (`data.quest.*`, `data.hostess.*`) yazar onaylayana dek İngilizce.
   **Tablo veri dosyasını ezer:** `quests.json`'da bir satır değişirse `Tools/loc/data_keys.py` ve
   `merge_fragments.py --update --write` yeniden koşulmalı, yoksa oyun eski İngilizceyi gösterir.
-- **Sim:** kitabı üç hikâye giriş noktasında okur; onun ödemesini kendi satırında ("Hostess's pay for finished
-  jobs"), devletin teşekkürünü ayrı yazar (eskiden haftalık işin parası teşekkürün içinde saklanıyordu); zincir
+- **Sim:** kitabı dört hikâye giriş noktasında okur (2026-09-28'den beri `Achievement Pacing` de: "A Job Well
+  Done" onun ödemesinden beslenir, kitapsız barda kazanılamazdı); onun ödemesini kendi satırında ("Hostess's
+  pay for finished jobs"), devletin teşekkürünü ayrı yazar (eskiden haftalık işin parası teşekkürün içinde saklanıyordu); zincir
   için verilen / biten / atlanan (medyan), id başına atlama, 10/20/30. gecede kitaptaki satır ve her görevin ilk
   bittiği gece. **Henüz koşulmadı.** Beklenen: taban bot `steady_hands`'te takılır (kusursuz yapım oranı ~%0);
   bunun etrafında ayar yapılmaz, takılma histogramı yazılır. `EconomyProjection` onun ödemesini modellemez
@@ -2002,8 +2027,8 @@ haftalık işin silinmesi (2026-09-28).
   İlk iş 1. gecenin kapanışında veriliyor, en erken 2. gece bitiyor; "week" katmanı yerinde, `Achievement Pacing`
   yeniden koşulmadı.
 - Doğrulama (bu ağaçta, editörsüz): altı derleme birimi (Core, Game, UI, Editor, Tests, PlayTests) derleniyor; saf
-  Core EditMode testleri 480/480; `check_tables` ve 28 dilin `check_parts`'ı 0 hata; `merge_fragments --check`
-  geçti. Unity içindeki EditMode/PlayMode takımları bu bölüm yazılırken koşulmadı.
+  Core EditMode testleri 480/480 (inceleme düzeltmeleriyle 485/485); `check_tables` ve 28 dilin `check_parts`'ı
+  0 hata; `merge_fragments --check` geçti. Unity içindeki EditMode/PlayMode takımları bu bölüm yazılırken koşulmadı.
 
 ### 9.133 · Steam entegrasyonu: 48 başarım, yaşam boyu sayaçlar, durum satırı, Steam dili (2026-09-28)
 

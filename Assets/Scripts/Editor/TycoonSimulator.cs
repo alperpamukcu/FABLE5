@@ -72,11 +72,15 @@ namespace LastCall.EditorTools
             var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
             var book = DataLoader.ParseAchievements(File.ReadAllText(
                 Path.Combine(Application.dataPath, "Resources", "Data", "achievements.json")));
+            // The hostess's book rides here as it rides Simulate (2026-09-28, the review): A Job Well Done is fed by her
+            // pay (Stats.JobsDone in PayForTheQuest), so a bar without her book could never earn it, and her money was
+            // missing from every till this report paces.
+            var quests = ReadQuests(fixtures);
             var pacing = new AchievementPacing(book);
-            var stats = new Aggregate();
+            var stats = new Aggregate { Book = quests };
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures, pacing: pacing);
+                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures, pacing: pacing, quests: quests);
             string report = pacing.Report(DayCap);
             var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs", "achievement_pacing.md"));
             File.WriteAllText(path, report);

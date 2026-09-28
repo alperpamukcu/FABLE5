@@ -114,6 +114,40 @@ namespace LastCall.Core
         }
 
         /// <summary>
+        /// ONE COVER KEPT FOR THE HOSTESS'S JOB (2026-09-28, the review of her book). A job that
+        /// counts one drink — a serve job's page, a pint — moves only when somebody orders it, and
+        /// the weights can cut every night without it: a four-star bar gives its ground-floor pages
+        /// two covers in a hundred, so a pint job handed to a fast climber stood on the bar for
+        /// ever, and the rest of the book behind it. So when no cover <paramref name="answers"/>,
+        /// one cover becomes <paramref name="page"/>, and the night asks for it at least once.
+        ///
+        /// Which cover is arithmetic on the plan already cut and shuffled, so no die is thrown and
+        /// "plan" keeps its place. It is looked for in the first half of the night after the opening
+        /// cover — a slow bar still reaches it — and it is the earliest cover there of the page the
+        /// night asks for most, so the night's shape moves as little as it can and where it falls is
+        /// wherever the shuffle put that page, not the same drinker every night. True when a cover
+        /// was given up.
+        /// </summary>
+        internal bool Guarantee(RecipeDefinition page, Func<RecipeDefinition, bool> answers)
+        {
+            if (page == null || answers == null || _queue.Length == 0) return false;
+            foreach (var r in _queue)
+                if (answers(r)) return false;
+            var asked = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var r in _queue) asked[r.Id] = asked.TryGetValue(r.Id, out int n) ? n + 1 : 1;
+            int slot = _queue.Length > 1 ? 1 : 0, most = 0;
+            int half = Math.Min(_queue.Length - 1, Math.Max(1, _queue.Length / 2));
+            for (int i = 1; i <= half; i++)
+                if (asked[_queue[i].Id] > most)
+                {
+                    most = asked[_queue[i].Id];
+                    slot = i;
+                }
+            _queue[slot] = page;
+            return true;
+        }
+
+        /// <summary>
         /// HOW MANY DRINKS A NIGHT SELLS, asked of the same numbers the floor uses, so the plan is
         /// cut for the night that is actually going to happen. The door admits one drinker every
         /// <see cref="TycoonConfig.ArrivalGap"/> seconds and the shift runs

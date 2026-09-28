@@ -143,6 +143,9 @@ uzun üstüne bir nesne veya asset geldiğinde şeffaflaşmalı (yok olmamalı s
 şeffaflaşmalı) mouse ile üstüne gelindiğinde netleşmeli"* and *"bildirimlerde alkollerin
 nesnelerin paranın yıldızın ve benzeri nesnelerin kullanım durumunda iconlarından faydalan"*.
 
+*(The job row below was superseded 2026-09-28 by the hostess's book, GDD_MEVCUT §9.134: the job is a
+message at the top left now.)*
+
 - **The week's job lives beside the LOG key**, one row, icon then line: the drink itself for a
   count of one drink, a star for perfect pours, the cloth for clean nights. It counts DOWN —
   "2 MORE PERFECT POURS" is an instruction, "1/3" is a scoreboard.
@@ -226,6 +229,7 @@ may be shoved aside but its pointer never is.
 **The week's job is a notice on a plate (2026-09-06):** the house card cut to the line, a
 magenta pip at its head, the count as a fraction of the week ("ECE · 2/5 · PERFECT POURS"), at
 full opacity — and the whole row goes with the job, since an empty plate is a hole in the screen.
+*(Superseded 2026-09-28 by the hostess's book, GDD_MEVCUT §9.134: the plate went with the weekly job.)*
 
 **The market's shelf (2026-09-06):** every product fills its box's height at whatever scale that
 takes (`PlaceProduct` no longer floors the scale under 3x — a 60-row drawing stood at 1x beside a

@@ -195,6 +195,16 @@ namespace LastCall.UI
         /// <summary>The story's hostess, off the bootstrap's own parsed cast (her name lives in papers.json).</summary>
         private StoryCharacter Hostess => _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
 
+        /// <summary>A new run (TycoonHud.OnRunStarted): the HUD outlives NEW RUN and CONTINUE, and its message must not
+        /// carry the last bar's words, pips or unread dot into this one.</summary>
+        private void ForgetQuestBubble()
+        {
+            _questSig = "";
+            _questPipsFor = -1;
+            _questUnread = false;
+            _questDotT = -1f;
+        }
+
         /// <summary>What the toast, the bill and the message call her: the name up to its first space, in capitals.</summary>
         private string HostessWho()
         {
@@ -228,7 +238,10 @@ namespace LastCall.UI
             var next = run.QuestNextUp;
             bool waiting = done && !run.QuestDoneUnsaid && next != null && run.Rank.Index < next.Rung;
             bool comesTonight = run.HostessComesOn > 0 && run.Day >= run.HostessComesOn;
-            string sig = quest.Id + "|" + quest.Progress + "/" + quest.Target + "|" + done + "|" + waiting + "|"
+            // The job's identity is its row, its drink and its night: a new run's first job is the same row with
+            // another drink, and must not keep the last run's words and icon.
+            string sig = quest.Id + "|" + quest.RecipeId + "|" + quest.GivenDay + "|"
+                         + quest.Progress + "/" + quest.Target + "|" + done + "|" + waiting + "|"
                          + comesTonight + "|" + run.Rank.Index + "|" + run.ComfortBase.ToString("0.00") + "|"
                          + (quest.Kind == QuestKind.Fit ? run.LadderLevel(quest.Definition.Slot) : 0) + "|"
                          + Localization.Current.Code + "|" + (Hostess?.Name ?? "");
@@ -269,7 +282,7 @@ namespace LastCall.UI
             }
             else
             {
-                // An instruction, not a scoreboard: "3 MORE NEGRONIS", counting down (Core's OwedLine).
+                // An instruction, not a scoreboard: "3 MORE NEGRONI", counting down (Core's OwedLine).
                 owed = UIText.Caps(UIText.T(quest.OwedLine()));
                 reward = UIText.T("chrome.quest.reward", ("reward", quest.Reward));
             }
@@ -306,8 +319,11 @@ namespace LastCall.UI
             {
                 _questStatus.fontSize = LanguageFonts.Size(_body, 8);
                 _questStatus.color = UITheme.Cream[3];
-                _questStatus.text = UIText.T(comesTonight ? "chrome.quest.comes_tonight" : "chrome.quest.comes_tomorrow",
-                    ("who", HostessWho()));
+                // WAITING ON A RUNG, SHE IS NOT COMING: the visit stays booked for every close, but she stays home until
+                // the rung opens, and the line above already says which - so the status row says nothing.
+                _questStatus.text = waiting ? ""
+                    : UIText.T(comesTonight ? "chrome.quest.comes_tonight" : "chrome.quest.comes_tomorrow",
+                        ("who", HostessWho()));
             }
         }
 

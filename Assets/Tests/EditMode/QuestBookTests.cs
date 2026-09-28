@@ -185,7 +185,8 @@ namespace LastCall.Tests
             var owed = serve.OwedLine();
             Assert.AreEqual("quest.owed.serve", owed.Key);
             Assert.AreEqual(2, owed.Count, "counted by what is left");
-            Assert.AreEqual("data.recipe.negroni.name", serve.NameLine.Key);
+            Assert.AreEqual("data.recipe.negroni.name", ((Line)owed.Args.First(a => a.Key == "drink").Value).Key,
+                "the drink rides as its page's own data line");
             Assert.AreEqual(2, serve.Left);
             Assert.IsFalse(serve.IsDone);
 
@@ -193,7 +194,6 @@ namespace LastCall.Tests
                 preps: new[] { Preparations.SaltRim, Preparations.SugarRim }), "", "", 2, 0, 20, 1);
             Assert.AreEqual("quest.owed.garnish2", rims.OwedLine().Key);
             Assert.AreEqual("", rims.RecipeId, "only a serve job names a drink");
-            Assert.AreEqual("quest.name.garnish", rims.NameLine.Key);
 
             var rank = new ActiveQuest(Row("rank", QuestKind.Rank, target: 0, goalRung: 3), "", "", 1, 0, 30, 1);
             Assert.AreEqual("quest.owed.rank", rank.OwedLine().Key);

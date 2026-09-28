@@ -14,6 +14,10 @@
   left - one line, opening on hover - where the week's job tab hung. The save carries the chain (an old save starts
   it at its own dawn), one new stream ("quest"). The weekly job is deleted, with its save fields, its switch
   (`TycoonConfig.WeeklyJobs` is `Quests` now) and its 18 string keys in every table. GDD_MEVCUT §9.134, GDD 26 §1b.
+  Review (2026-09-28): while a serve or pints job is open and its drink is pourable, the night's plan carries at
+  least one cover of it (a four-star plan never ordered a pint; no draw, "plan" keeps its place); the save carries
+  the next row by id; a calendar wound back brings an open job's night with it; Achievement Pacing reads the book;
+  the message knows a new run and a new drink; the nine unused `quest.name.*` keys are gone.
 
 - **The ninth list (2026-09-22):** the counter's props stand IN the room - the six dishes, the menu and the cloth
   keep their rects (hit target, hover, drag) and their pictures are stage sprites the lamps reach, so the hand-made

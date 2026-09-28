@@ -14,7 +14,8 @@ namespace LastCall.Tests
     ///
     /// The bar here pours one page, a gin and soda; a second page wants a sour nobody stocks, so it is on the menu
     /// and never pourable — the case a serve job must never name. Nobody takes a moment to decide or to drink, so a
-    /// night is a few hundred ticks and every serve is Exact.
+    /// night is a few hundred ticks and every serve is Exact. The jobs that count one drink are also played on a
+    /// four-star bar with pages on every rung (Ladder), where the night's plan would never ask for them by itself.
     /// </summary>
     public sealed class QuestChainTests
     {
@@ -61,9 +62,45 @@ namespace LastCall.Tests
         });
 
         private static TycoonRun NewRun(QuestBook book, string seed, bool people = false,
-            IReadOnlyList<FixtureDefinition> fixtures = null, int money = 5000) =>
-            new TycoonRun(NewShelf(), Menu, new RunRng(seed), config: Config(money),
+            IReadOnlyList<FixtureDefinition> fixtures = null, int money = 5000,
+            IReadOnlyList<RecipeDefinition> menu = null, Shelf shelf = null) =>
+            new TycoonRun(shelf ?? NewShelf(), menu ?? Menu, new RunRng(seed), config: Config(money),
                 regulars: people ? People() : null, fixtures: fixtures, quests: book);
+
+        /// <summary>A page of gin and soda at <paramref name="rank"/> — every one of them pourable off the bench's shelf.</summary>
+        private static RecipeDefinition Highball(string id, int rank, PrepMethod prep = PrepMethod.Built) =>
+            new RecipeDefinition(id, id, rank: rank, baseFlavor: 6, baseMult: 1, flavorPerLevel: 0, multPerLevel: 0,
+                requirements: Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[]
+                {
+                    new RatioRequirement(IngredientType.Spirit, 0.3, 0.7),
+                    new RatioRequirement(IngredientType.Bubbly, 0.3, 0.7),
+                },
+                minFill: 0.5, prep: prep);
+
+        /// <summary>
+        /// A BOOK UP THE WHOLE LADDER (for the jobs that count one drink): pages on every rung to four stars, the pint
+        /// and one stirred page on the ground floor. A four-star plan gives that floor two covers in a hundred, so
+        /// without her rule neither is ever ordered there.
+        /// </summary>
+        private static readonly IReadOnlyList<RecipeDefinition> Ladder = new[]
+        {
+            new RecipeDefinition("draught", "Draught", 1, 5, 1, 10, 1,
+                new[] { new PatternRequirement(1, IngredientType.Beer) },
+                exactMixSize: 1, minFill: 0.75, glassId: "pint", prep: PrepMethod.Built),
+            Highball("low_a", 2), Highball("low_stir", 3, PrepMethod.Stirred), Highball("low_b", 4), Highball("low_c", 5),
+            Highball("one_a", 9), Highball("one_b", 10),
+            Highball("two_a", 12), Highball("two_b", 13),
+            Highball("three_a", 15), Highball("three_b", 16), Highball("three_c", 17),
+            Highball("four_a", 22), Highball("four_b", 23), Highball("four_c", 24), Highball("four_d", 25),
+        };
+
+        private static Shelf LadderShelf() => new Shelf(new[]
+        {
+            new ShelfBottle(Gin.Clone(), capacity: 40000),
+            new ShelfBottle(Soda.Clone(), capacity: 40000),
+            new ShelfBottle(new IngredientCard("lager", "Lager", IngredientType.Beer, 3), capacity: 40000),
+        });
 
         /// <summary>One row, with lines that pass the book's rules for any kind.</summary>
         private static QuestDefinition Q(string id, QuestKind kind, int rung = 0, int target = 1, int reward = 10,
@@ -208,32 +245,42 @@ namespace LastCall.Tests
         [Test]
         public void NobodyListening_CoreHandsItOverOnTheFourthTick()
         {
+            // Two pourable pages, so the drink she names is a real pick: the same seed must pick the same one whether
+            // anybody listens or not, and across the seeds tried both pages must come up.
+            var twoPages = new[] { Highball("spritz", 2), Highball("long_spritz", 3) };
             var book = Book(Q("serve_one", QuestKind.Serve, target: 3, reward: 12), Q("then", QuestKind.Perfect));
-            var headless = NewRun(book, "grace");
-            Assert.IsNotNull(PlayToHerArrival(headless, serve: false));
-            int ticks = 0;
-            while (headless.HostessVisit != null)
+            var picked = new HashSet<string>();
+            for (int s = 0; s < 12 && picked.Count < 2; s++)
             {
-                Assert.Less(ticks, 10, "the backstop must fire");
-                headless.Tick(1.0);
-                ticks++;
+                string seed = "grace-" + s;
+                var headless = NewRun(book, seed, menu: twoPages);
+                Assert.IsNotNull(PlayToHerArrival(headless, serve: false));
+                int ticks = 0;
+                while (headless.HostessVisit != null)
+                {
+                    Assert.Less(ticks, 10, "the backstop must fire");
+                    headless.Tick(1.0);
+                    ticks++;
+                }
+                Assert.AreEqual(4, ticks, "handed over on the tick the unheard floor-seconds reach four");
+
+                // The same seed with somebody listening as long as they like: the same job, the same drink, the same pay.
+                var played = NewRun(book, seed, menu: twoPages);
+                Assert.IsNotNull(PlayToHerArrival(played, serve: false));
+                played.BeginTalk();
+                for (int i = 0; i < 30; i++) played.Tick(1.0);
+                played.HearHostess();
+                played.EndTalk();
+
+                Assert.AreEqual(played.Quest.Id, headless.Quest.Id, seed);
+                Assert.AreEqual(played.Quest.RecipeId, headless.Quest.RecipeId, seed + ": the same drink");
+                Assert.AreEqual(played.Quest.Target, headless.Quest.Target, seed);
+                Assert.AreEqual(played.Quest.Reward, headless.Quest.Reward, seed);
+                Assert.AreEqual(played.Quest.GivenDay, headless.Quest.GivenDay, seed);
+                picked.Add(headless.Quest.RecipeId);
             }
-            Assert.AreEqual(4, ticks, "handed over on the tick the unheard floor-seconds reach four");
             Assert.AreEqual(QuestRules.HostessGraceSeconds, 4.0);
-
-            // The same seed with somebody listening as long as they like: the same job, the same drink, the same pay.
-            var played = NewRun(book, "grace");
-            Assert.IsNotNull(PlayToHerArrival(played, serve: false));
-            played.BeginTalk();
-            for (int i = 0; i < 30; i++) played.Tick(1.0);
-            played.HearHostess();
-            played.EndTalk();
-
-            Assert.AreEqual(played.Quest.Id, headless.Quest.Id);
-            Assert.AreEqual(played.Quest.RecipeId, headless.Quest.RecipeId);
-            Assert.AreEqual(played.Quest.Target, headless.Quest.Target);
-            Assert.AreEqual(played.Quest.Reward, headless.Quest.Reward);
-            Assert.AreEqual(played.Quest.GivenDay, headless.Quest.GivenDay);
+            Assert.AreEqual(2, picked.Count, "both pages came up across the seeds: the pick was a real draw");
         }
 
         // ── 4. counting and paying ──────────────────────────────────────────────────
@@ -787,6 +834,186 @@ namespace LastCall.Tests
             Assert.AreEqual(3, run.Day);
             Assert.AreEqual(3, run.HostessComesOn, "a visit booked past the wound-back calendar is tonight's");
             Assert.AreEqual("serve_one", PlayToHerArrival(run)?.Finished?.Id);
+        }
+
+        [Test]
+        public void APresetThatWindsTheCalendarBack_BringsAnOpenJobsNightWithIt()
+        {
+            var run = NewRun(Book(Q("clean_one", QuestKind.Clean, reward: 24), Q("then", QuestKind.Perfect)), "dev-rewind");
+            run.DevJumpToNight(20);
+            PlayNight(run, serve: false);                         // 20: handed over
+            Assert.AreEqual("clean_one", run.Quest?.Id);
+            Assert.AreEqual(20, run.Quest.GivenDay);
+
+            run.DevPresetStars(0.5);                              // back to night 3
+            Assert.AreEqual(3, run.Day);
+            Assert.That(run.Quest.GivenDay, Is.LessThan(run.Day), "the job is dated no later than last night");
+
+            // Night 3 is a night after the hand-over now: served promptly and right, it counts.
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen) { Assert.Less(guard++, 5000); Step(run, serve: true); }
+            Assert.IsTrue(run.Quest.IsDone, "a clean night on the wound-back calendar did the job");
+            Assert.AreEqual(3, run.Quest.DoneDay);
+        }
+
+        // ── 15. her drink is ordered ────────────────────────────────────────────────
+
+        /// <summary>A job-less twin and the run under test, the same seed, both held at four stars through the dawn —
+        /// what the plan is cut from is then the same in both, so their plans can be laid side by side.</summary>
+        private static void HoldAtFourStars(params TycoonRun[] runs)
+        {
+            foreach (var run in runs) run.Rating.DevSet(4.0);
+        }
+
+        private static string[] PlanOf(TycoonRun run) => run.Plan.Queue.Select(r => r.Id).ToArray();
+
+        private static void DeclineTheNight(TycoonRun run)
+        {
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen) { Assert.Less(guard++, 5000); Step(run, serve: false); }
+            run.ContinueToNextDay();
+        }
+
+        [Test]
+        public void AServeJobsDrinkIsOnEveryNightsPlanWhileItIsOpen()
+        {
+            var book = Book(Q("stir_three", QuestKind.Serve, rung: 3, target: 3, pick: QuestPick.Stirred),
+                Q("then", QuestKind.Perfect, rung: 3));
+            var run = NewRun(book, "kept-cover", menu: Ladder, shelf: LadderShelf());
+            var twin = NewRun(null, "kept-cover", menu: Ladder, shelf: LadderShelf());
+            HoldAtFourStars(run, twin);
+            CollectionAssert.AreEqual(PlanOf(twin), PlanOf(run), "no job yet: the same seed plans the same night");
+            DeclineTheNight(run);
+            DeclineTheNight(twin);
+            Assert.AreEqual("low_stir", run.Quest?.RecipeId, "the one stirred page, on the ground floor");
+
+            int starved = 0;
+            var slots = new HashSet<int>();
+            for (int night = 2; night <= 9; night++)
+            {
+                HoldAtFourStars(run, twin);
+                Assert.IsFalse(run.Quest.IsDone, "nobody is served, so the job stays open");
+                string[] mine = PlanOf(run), theirs = PlanOf(twin);
+                Assert.Contains("low_stir", mine, "night " + night + ": her drink is on the plan");
+                Assert.AreEqual(theirs.Length, mine.Length, "the night is as long as it was");
+                var moved = Enumerable.Range(0, mine.Length).Where(i => mine[i] != theirs[i]).ToList();
+                if (theirs.Contains("low_stir"))
+                {
+                    Assert.IsEmpty(moved, "night " + night + ": already planned, nothing moves");
+                }
+                else
+                {
+                    starved++;
+                    Assert.AreEqual(1, moved.Count, "night " + night + ": exactly one cover is given up");
+                    Assert.AreEqual("low_stir", mine[moved[0]]);
+                    Assert.Greater(moved[0], 0, "never the night's first drinker");
+                    Assert.LessOrEqual(moved[0], mine.Length / 2, "in the first half of the night");
+                    slots.Add(moved[0]);
+                }
+                DeclineTheNight(run);
+                DeclineTheNight(twin);
+            }
+            Assert.Greater(starved, 3, "a four-star plan does not ask for a ground-floor page by itself");
+            Assert.Greater(slots.Count, 1, "the kept cover falls where the shuffle put its page, not on one drinker");
+        }
+
+        [Test]
+        public void AJobThatCountsNoDrinkPlansExactlyAsBefore()
+        {
+            var run = NewRun(Book(Q("perfect_two", QuestKind.Perfect, rung: 3, target: 2)), "no-drink",
+                menu: Ladder, shelf: LadderShelf());
+            var twin = NewRun(null, "no-drink", menu: Ladder, shelf: LadderShelf());
+            for (int night = 1; night <= 6; night++)
+            {
+                HoldAtFourStars(run, twin);
+                CollectionAssert.AreEqual(PlanOf(twin), PlanOf(run), "night " + night + ": the same plan, cover for cover");
+                DeclineTheNight(run);
+                DeclineTheNight(twin);
+            }
+            Assert.AreEqual("perfect_two", run.Quest?.Id, "the job was on the bar the whole time");
+        }
+
+        /// <summary>A pint pulled the way the mechanic asks — leaned over while it fills, then stood up until the head
+        /// is in its band.</summary>
+        private static void PullAGoodPint(TycoonRun run)
+        {
+            run.BeginPull("lager");
+            for (int i = 0; i < 200 && run.ServingGlass.FillFraction < 0.78; i++) run.PourTilted(0.05, TapPour.IdealTilt);
+            for (int i = 0; i < 200 && run.ServingGlass.Head / run.ServingGlass.Capacity < TapPour.IdealHead
+                            && !run.ServingGlass.IsFull; i++)
+                run.PourTilted(0.05, 0.0);
+            run.EndPull();
+        }
+
+        [Test]
+        public void APintJobHandedToAFourStarBar_IsDone()
+        {
+            var book = Book(Q("proper_head", QuestKind.Pints, rung: 3, target: 3, reward: 108));
+            var run = NewRun(book, "four-star-pints", menu: Ladder, shelf: LadderShelf());
+            var twin = NewRun(null, "four-star-pints", menu: Ladder, shelf: LadderShelf());
+            HoldAtFourStars(run, twin);
+            DeclineTheNight(run);
+            DeclineTheNight(twin);
+            Assert.AreEqual("proper_head", run.Quest?.Id);
+
+            int nights = 0, twinPints = 0;
+            while (!run.Quest.IsDone)
+            {
+                Assert.Less(nights++, 6, "three good pints within six nights of the hand-over");
+                HoldAtFourStars(run, twin);
+                twinPints += PlanOf(twin).Count(id => id == "draught");
+                int guard = 0;
+                while (run.Phase == TycoonPhase.DayOpen)
+                {
+                    Assert.Less(guard++, 5000);
+                    run.Tick(1.0);
+                    TestNight.Clean(run);
+                    if (run.Phase != TycoonPhase.DayOpen) break;
+                    foreach (var v in run.Floor.Seated.ToList())
+                    {
+                        if (v.State != VisitState.Waiting || !v.HasOrdered) continue;
+                        v.InspectId();
+                        if (v.Order.Wanted.Id != "draught") { run.DeclineOrder(v); continue; }
+                        PullAGoodPint(run);
+                        var verdict = run.ServeTo(v);
+                        Assert.AreEqual(OrderMatch.Exact, verdict.Match, "a pint, as ordered");
+                        Assert.IsTrue(verdict.CraftLanded, "with its head in the band");
+                    }
+                }
+                run.ContinueToNextDay();
+                DeclineTheNight(twin);
+            }
+            Assert.AreEqual(0, twinPints, "the job-less twin was never asked for a pint on those nights");
+        }
+
+        // ── 16. a book that moved under a save ──────────────────────────────────────
+
+        [Test]
+        public void ARowPutInFrontOfTheJob_NeverHandsItOverTwice()
+        {
+            var book = Book(Q("serve_one", QuestKind.Serve, reward: 15), Q("then", QuestKind.Perfect));
+            var run = NewRun(book, "moved-book");
+            RunSnapshot snap = null;
+            PlayNightThen(run, s => snap = s);                    // handed over at the close of night 1
+            Assert.AreEqual("serve_one", snap.quest.id);
+            Assert.AreEqual("then", snap.questNextId, "the next row is carried by its id");
+
+            // A data update writes a new first row: every row behind it moves down one.
+            var moved = Book(Q("a_new_first_row", QuestKind.Perfect), Q("serve_one", QuestKind.Serve, reward: 15),
+                Q("then", QuestKind.Perfect));
+            var back = Reborn(snap, moved);
+            Assert.AreEqual("serve_one", back.Quest.Id);
+            Assert.AreEqual("then", back.QuestNextUp?.Id, "she hands over what came after it, not the job again");
+
+            // ...and a save written before the id rode along falls back on the index, never at or behind the job.
+            snap.questNextId = "";
+            Assert.AreEqual("then", Reborn(snap, moved).QuestNextUp?.Id);
+
+            // A row taken out in front of it: the id finds the next row where the index would have skipped it.
+            var shorter = Book(Q("serve_one", QuestKind.Serve, reward: 15), Q("then", QuestKind.Perfect));
+            snap.questNext = 2;
+            snap.questNextId = "then";
+            Assert.AreEqual("then", Reborn(snap, shorter).QuestNextUp?.Id);
         }
     }
 }

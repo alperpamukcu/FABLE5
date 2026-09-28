@@ -1721,6 +1721,7 @@ namespace LastCall.UI
             _faceRng = null;          // re-seeded off the new run's own seed
             ResetSeats();
             HostessOff();             // she does not walk out of the last run into this one
+            ForgetQuestBubble();      // ...nor does her message
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();

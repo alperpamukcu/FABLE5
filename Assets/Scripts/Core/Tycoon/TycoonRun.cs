@@ -1749,8 +1749,12 @@ namespace LastCall.Core
             // The room's CROWD shortens the door's gap, so the plan is cut for the covers that may
             // walk in — the upper bound, since the floor only reads it while the bar keeps up and
             // the plan wraps with Take() whatever happens (2026-09-23).
-            return _plan = DayPlan.Roll(menu, Day, ShopStars, _config, _rng.GetStream("plan"),
+            _plan = DayPlan.Roll(menu, Day, ShopStars, _config, _rng.GetStream("plan"),
                 Buffs.ArrivalGapScale);
+            // HER JOB'S DRINK IS ORDERED (2026-09-28): one cover of it, taken from what was cut, while a
+            // job that counts it is open (TycoonRun.Quests). No draw; "orders" moves as the filter's note says.
+            KeepHerDrinkOnThePlan(_plan, menu);
+            return _plan;
         }
 
         /// <summary>What the night was planned to ask for. The slip reads it; so do the tests and the

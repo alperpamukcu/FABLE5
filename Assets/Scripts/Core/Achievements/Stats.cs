@@ -56,7 +56,7 @@ namespace LastCall.Core
         public const string GlassesWashed = "glasses_washed";
         /// <summary>Nights of ten or more guests with nobody walking out and nothing wrong across the bar.</summary>
         public const string CleanSheets = "clean_sheets";
-        /// <summary>Weekly jobs finished and paid.</summary>
+        /// <summary>Hostess jobs finished and paid.</summary>
         public const string JobsDone = "jobs_done";
         /// <summary>Tins of fizz shaken until they burst.</summary>
         public const string Blowouts = "blowouts";

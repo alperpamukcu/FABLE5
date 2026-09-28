@@ -116,6 +116,10 @@ namespace LastCall.Tests
                 Assert.IsTrue(drink.HasAuthoredRatios, seed + ": and has something to get right");
                 Assert.IsTrue(headless.CanServe(drink), seed + ": and the shelf pours it tonight");
 
+                // THE PICK IS MADE AT HER ARRIVAL: the drink she walked in with is the one put on the bar, whatever the
+                // room draws on its other streams in between (a drinker's voice line, here) and whoever hears her.
+                string atArrival = visit.Offered.RecipeId;
+                for (int i = 0; i < 7; i++) headless.VoiceStream.NextInt(100);
                 int ticks = 0;
                 while (headless.HostessVisit != null)
                 {
@@ -124,15 +128,16 @@ namespace LastCall.Tests
                     ticks++;
                 }
                 Assert.AreEqual(4, ticks, seed + ": handed over on the fourth unheard floor-second");
+                Assert.AreEqual(atArrival, headless.Quest.RecipeId, seed + ": the drink she walked in with");
 
                 var heard = LiveRun(seed);
-                TickToHer(heard);
+                Assert.AreEqual(atArrival, TickToHer(heard).Offered?.RecipeId, seed + ": the same seed, the same pick");
                 heard.BeginTalk();
                 for (int i = 0; i < 20; i++) heard.Tick(1.0);
                 heard.HearHostess();
                 heard.EndTalk();
                 Assert.AreEqual(heard.Quest.Id, headless.Quest.Id, seed);
-                Assert.AreEqual(heard.Quest.RecipeId, headless.Quest.RecipeId, seed + ": the same drink");
+                Assert.AreEqual(atArrival, heard.Quest.RecipeId, seed + ": the same drink, heard or not");
                 Assert.AreEqual(heard.Quest.Target, headless.Quest.Target, seed);
                 Assert.AreEqual(heard.Quest.Reward, headless.Quest.Reward, seed);
             }

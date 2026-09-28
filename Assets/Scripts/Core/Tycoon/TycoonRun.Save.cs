@@ -122,6 +122,9 @@ namespace LastCall.Core
         public int questFormat;
         public bool hasQuests;
         public int questNext, questVisitFrom, questsSkipped;
+        /// <summary>The next row BY ITS ID, which a data update cannot move: questNext is only the fallback (a
+        /// book whose next row has gone, or a save written before 2026-09-28's review, which reads "").</summary>
+        public string questNextId;
         public bool questDoneUnsaid;
         public QuestState quest;
         /// <summary>A state goal paid at this dawn, its "job done" flash not yet shown.</summary>
@@ -242,6 +245,7 @@ namespace LastCall.Core
             snap.questFormat = 1;
             snap.hasQuests = Quests != null;
             snap.questNext = _questNext;
+            snap.questNextId = QuestNextUp?.Id ?? string.Empty;
             snap.questVisitFrom = _visitFrom;
             snap.questsSkipped = QuestsSkipped;
             snap.questDoneUnsaid = _doneUnsaid;
@@ -453,7 +457,13 @@ namespace LastCall.Core
                         snap.quest.reward, snap.quest.givenDay);
                     Quest.Restore(snap.quest.progress, snap.quest.doneDay);
                 }
-                _questNext = snap.questNext;
+                // THE NEXT ROW BY ITS ID, AND NEVER AT OR BEHIND THE JOB ON THE BAR (2026-09-28, the review): an index
+                // alone points one row early once a data update puts a row in front of the job, and she would hand the
+                // same job over, and pay it, twice. The id survives rows put in or taken out before it; the floor is
+                // the job's own row, re-found by id above.
+                var nextRow = Quests?.Find(snap.questNextId);
+                _questNext = Math.Max(nextRow != null ? nextRow.Index : snap.questNext,
+                    Quest != null ? Quest.Definition.Index + 1 : 0);
                 _visitFrom = snap.questVisitFrom;
                 _doneUnsaid = snap.questDoneUnsaid;
                 QuestsSkipped = snap.questsSkipped;

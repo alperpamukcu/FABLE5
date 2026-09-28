@@ -24,6 +24,9 @@
 
 ## Ece's week (2026-09-06)
 
+> **Superseded 2026-09-28 by the hostess's book (GDD_MEVCUT §9.134):** the weekly job, its three kinds and
+> `WeeklyJobs` were deleted; the hostess hands over a written chain of jobs at the close instead.
+
 The author: *"gün sonu müşterisi olan eceyi kaldıralım, eceyi sadece haftalık görevler
 veren bir müşteri haline getireceğiz. Görevler örneğin: 3 adet perfect serv yap, 2 gün
 boyunca hiç hata yapma, 5 adet vodka soda servis et ... zorlukları ise ilk hafta kolay

@@ -295,7 +295,12 @@ namespace LastCall.UI
         /// <summary>
         /// HER MARK: the stool nearest the door that the bar does not own - so she never stands where somebody is
         /// sitting. The bar fills from the middle out (SeatFillOrder), so that is an END stool; with all six owned,
-        /// she stands just inside the door.
+        /// she stands just inside the door, a stool's pitch past the last one - or, where the field is too narrow for
+        /// that, half a pitch in from its edge, the room a drinker takes either side of a stool (2026-09-28, the
+        /// review: at the edge less 150 she stood 112 from the sixth stool, both bodies at order 25). At 1280 that
+        /// is x 1190, 172 from the sixth stool: the placeholder's widest standing frame (the order beat she talks
+        /// with, 88 units either side of her mark) ends at 1278 and starts about where the sixth drinker's
+        /// gesture ends. To be measured in play once her own art lands.
         /// </summary>
         private float HostessMark(TycoonRun run)
         {
@@ -307,7 +312,8 @@ namespace LastCall.UI
                 for (int k = 0; k < owned; k++) if (order[k] == i) { mine = true; break; }
                 if (!mine) return _seats[i].SeatX;
             }
-            return _hudRoot.rect.width - 150f;
+            float past = _seats.Count > 0 ? _seats[_seats.Count - 1].SeatX + SeatGap : _hudRoot.rect.width * 0.5f;
+            return Mathf.Min(past, _hudRoot.rect.width - SeatGap * 0.5f);
         }
 
         /// <summary>Everything that stands between her and the bar goes, as a hand clearing a counter would.</summary>

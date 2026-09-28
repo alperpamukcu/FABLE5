@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace LastCall.Core
 {
     // TycoonRun, part Quests: the hostess and her book (2026-09-27, spec §B).
@@ -234,6 +237,30 @@ namespace LastCall.Core
         }
 
         /// <summary>
+        /// A JOB THAT COUNTS ONE DRINK IS NEVER STARVED OF IT (2026-09-28, the review). Only an order moves a serve
+        /// job or a pint job, and every order comes off the night's plan, which is cut at the bar's best rung: a
+        /// four-star plan gives the ground floor two covers in a hundred, so a pint asked of a fast climber — or a
+        /// first page asked of an old save restored high up the ladder — was never ordered again, and the book stood
+        /// behind it for ever. While such a job is open and the shelf can pour its drink tonight, the plan carries at
+        /// least one cover of it (<see cref="DayPlan.Guarantee"/>). A garnish job needs no such cover: the extras are
+        /// rolled for every order that is not a pint, and the rail only grows up the ladder.
+        /// </summary>
+        private void KeepHerDrinkOnThePlan(DayPlan plan, IReadOnlyList<RecipeDefinition> pourable)
+        {
+            if (!QuestOpen) return;
+            Func<RecipeDefinition, bool> answers;
+            if (Quest.Kind == QuestKind.Serve)
+            {
+                string wanted = Quest.RecipeId;
+                answers = r => r.Id == wanted;
+            }
+            else if (Quest.Kind == QuestKind.Pints) answers = ServingSpec.IsDraught;
+            else return;
+            foreach (var page in pourable)
+                if (answers(page)) { plan.Guarantee(page, answers); return; }
+        }
+
+        /// <summary>
         /// THE DAWN'S BOOKKEEPING (spec B.6), after the day has turned: tonight is a new night for her, and every one-shot
         /// the screen had its frame to read is cleared so the save can represent what is left. And one self-healing rule:
         /// a run with nothing on the bar and nothing owed, whose book has rows left (rows appended after a finale), is
@@ -250,14 +277,17 @@ namespace LastCall.Core
                 _visitFrom = Day;
         }
 
-        /// <summary>The dev verbs move the calendar, sometimes backwards: she forgets tonight, and a visit scheduled for a
-        /// night the calendar has been wound back past is brought forward to tonight.</summary>
+        /// <summary>The dev verbs move the calendar, sometimes backwards: she forgets tonight, a visit scheduled for a
+        /// night the calendar has been wound back past is brought forward to tonight, and a job still open is dated no
+        /// later than last night — a clean job handed over on night twenty of a bar wound back to night three would
+        /// otherwise refuse to count for seventeen nights.</summary>
         private void HostessFollowsTheCalendar()
         {
             HostessVisit = null;
             _visitedTonight = false;
             _visitWaited = 0;
             if (_visitFrom > Day) _visitFrom = Day;
+            if (Quest != null && !Quest.IsDone && Quest.GivenDay > Day - 1) Quest.GivenDay = Day - 1;
         }
 
         /// <summary>How tonight's counted leavers split: those who drank, and those who walked (a wrong kick is a walk).

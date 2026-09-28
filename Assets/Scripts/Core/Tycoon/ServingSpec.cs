@@ -171,7 +171,9 @@ namespace LastCall.Core
             return false;
         }
 
-        private static bool IsDraught(RecipeDefinition recipe)
+        /// <summary>A pint's page: a band of beer. The hostess's pint job asks the night's plan the same
+        /// question (TycoonRun.Quests).</summary>
+        internal static bool IsDraught(RecipeDefinition recipe)
         {
             foreach (var band in recipe.RatioRequirements)
                 if (!band.IsStyleBand && band.Type == IngredientType.Beer) return true;

@@ -56,22 +56,35 @@ namespace LastCall.Tests
         public void EveryLineTheJobMessagePrintsIsInTheEnglishTable()
         {
             var en = English();
-            // What Core asks for, kind by kind, off the live book - plus the one-dish garnish job the book does not
-            // happen to use today.
-            var quests = new List<ActiveQuest>();
-            foreach (var q in LiveBook().Quests)
-                quests.Add(new ActiveQuest(q, q.Kind == QuestKind.Serve ? "gin_tonic" : "", "", q.Target, 0, q.Reward, 1));
-            var oneDish = new QuestDefinition("one_dish", QuestKind.Garnish, 1, 3, 10, "ONE DISH",
-                new[] { "Cold." }, new[] { "Good." }, preps: new[] { Preparations.Ice });
-            quests.Add(new ActiveQuest(oneDish, "", "", 3, 0, 10, 1));
+            // What Core asks for, kind by kind - one job of every kind written here, and the garnish kind with one dish
+            // and with two, so an edit to the book can never turn a string-table test red.
+            QuestDefinition Row(string id, QuestKind kind, int rung = 0, int target = 2,
+                PreparationDefinition[] preps = null, int goalRung = 0, double goalComfort = 0,
+                string slot = null, int level = 0, string fixtureId = null) =>
+                new QuestDefinition(id, kind, rung, target, 10, id.ToUpperInvariant(), new[] { "Go." }, new[] { "Good." },
+                    preps: preps, goalRung: goalRung, goalComfort: goalComfort, slot: slot, level: level, fixtureId: fixtureId);
+            var quests = new List<ActiveQuest>
+            {
+                new ActiveQuest(Row("serve", QuestKind.Serve), "gin_tonic", "Gin & Tonic", 2, 0, 10, 1),
+                new ActiveQuest(Row("perfect", QuestKind.Perfect), "", "", 2, 0, 10, 1),
+                new ActiveQuest(Row("pints", QuestKind.Pints), "", "", 2, 0, 10, 1),
+                new ActiveQuest(Row("one_dish", QuestKind.Garnish, rung: 1, preps: new[] { Preparations.Ice }), "", "", 2, 0, 10, 1),
+                new ActiveQuest(Row("two_dishes", QuestKind.Garnish, rung: 2,
+                    preps: new[] { Preparations.SaltRim, Preparations.SugarRim }), "", "", 2, 0, 10, 1),
+                new ActiveQuest(Row("clean", QuestKind.Clean, target: 1), "", "", 1, 0, 10, 1),
+                new ActiveQuest(Row("door", QuestKind.Door, rung: 2, target: 1), "", "", 1, 0, 10, 1),
+                new ActiveQuest(Row("rank", QuestKind.Rank, target: 0, goalRung: 3), "", "", 1, 0, 10, 1),
+                new ActiveQuest(Row("comfort", QuestKind.Comfort, target: 0, goalComfort: 1.0), "", "", 1, 0, 10, 1),
+                new ActiveQuest(Row("fit", QuestKind.Fit, target: 0, slot: "wall_center", level: 1, fixtureId: "art_city"),
+                    "", "", 1, 0, 10, 1),
+            };
             var kinds = new HashSet<QuestKind>();
             foreach (var aq in quests)
             {
                 kinds.Add(aq.Kind);
                 Has(en, aq.OwedLine().Key);
-                Has(en, aq.Kind == QuestKind.Serve ? "quest.name.serve" : aq.NameLine.Key);
             }
-            Assert.AreEqual(9, kinds.Count, "the live book no longer shows every kind; this test reads the kinds off it");
+            Assert.AreEqual(System.Enum.GetValues(typeof(QuestKind)).Length, kinds.Count, "one job of every kind");
 
             foreach (var key in new[]
                      {

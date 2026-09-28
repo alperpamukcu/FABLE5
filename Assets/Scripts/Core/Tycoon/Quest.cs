@@ -338,8 +338,8 @@ namespace LastCall.Core
         public int Progress { get; private set; }
         public int Reward { get; }
 
-        /// <summary>The night she handed it over.</summary>
-        public int GivenDay { get; }
+        /// <summary>The night she handed it over (a dev verb that winds the calendar back brings it back with it).</summary>
+        public int GivenDay { get; internal set; }
 
         /// <summary>The night it was done (for a state goal, the night the dawn filed); 0 while it is not.</summary>
         public int DoneDay { get; internal set; }
@@ -393,8 +393,9 @@ namespace LastCall.Core
         }
 
         /// <summary>
-        /// What is still owed, as a string-table line: an instruction, not a scoreboard ("3 MORE NEGRONIS", "REACH THE
-        /// TALK OF THE TOWN"). Data names ride as their data lines, so render it in capitals to read as the table does.
+        /// What is still owed, as a string-table line: an instruction, not a scoreboard ("3 MORE NEGRONI" — the drink
+        /// is its page's name, never a plural; "REACH THE TALK OF THE TOWN"). Data names ride as their data lines, so
+        /// render it in capitals to read as the table does.
         /// </summary>
         public Line OwedLine()
         {
@@ -403,7 +404,8 @@ namespace LastCall.Core
             switch (def.Kind)
             {
                 case QuestKind.Serve:
-                    return Line.Of("quest.owed.serve").Counting("n", left).With("drink", NameLine);
+                    return Line.Of("quest.owed.serve").Counting("n", left)
+                        .With("drink", Line.Of("data.recipe." + RecipeId + ".name"));
                 case QuestKind.Garnish:
                     return def.Preps.Count > 1
                         ? Line.Of("quest.owed.garnish2").Counting("n", left)
@@ -420,11 +422,6 @@ namespace LastCall.Core
                     return Line.Of("quest.owed." + QuestRules.KindName(def.Kind)).Counting("n", left);
             }
         }
-
-        /// <summary>What the job is about: the drink's data name on a serve job, the kind's own name on the others.</summary>
-        public Line NameLine => Kind == QuestKind.Serve
-            ? Line.Of("data.recipe." + RecipeId + ".name")
-            : Line.Of("quest.name." + QuestRules.KindName(Kind));
 
         public override string ToString() =>
             $"{Id} {Progress}/{Target}" + (Kind == QuestKind.Serve ? $" ({RecipeId})" : "") + (IsDone ? " done" : "");
