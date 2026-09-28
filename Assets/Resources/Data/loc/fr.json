@@ -7,7 +7,7 @@
     {"key": "achievement.a_new_page.name", "text": "Une nouvelle page", "src": "A New Page"},
     {"key": "achievement.a_thousand_pours.description", "text": "Sers 1000 boissons exactement comme elles ont été commandées.", "src": "Serve 1,000 drinks exactly as they were ordered."},
     {"key": "achievement.a_thousand_pours.name", "text": "Mille verres servis", "src": "A Thousand Pours"},
-    {"key": "achievement.a_weeks_work.description", "text": "Accomplis une mission pour l'hôtesse.", "src": "Finish a job for the hostess."},
+    {"key": "achievement.a_weeks_work.description", "text": "Accomplis une mission pour la maîtresse des lieux.", "src": "Finish a job for the hostess."},
     {"key": "achievement.a_weeks_work.name", "text": "Du beau travail", "src": "A Job Well Done"},
     {"key": "achievement.an_institution.description", "text": "Garde un bar ouvert 100 soirées.", "src": "Keep one bar open for 100 nights."},
     {"key": "achievement.an_institution.name", "text": "Une institution", "src": "An Institution"},
