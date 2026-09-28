@@ -64,6 +64,9 @@ namespace LastCall.PlayTests
             // every baseline, and a fixture must never read or clear a real save.
             LastCall.Game.SeedPolicy.UseForSession("LASTCALL-DEV");
             LastCall.Game.SaveStore.DisableForSession();
+            // ...and NEW RUN opens on the night itself, not on the hostess's house tour (2026-09-28): these tests
+            // play night one with their own mouse, and the tour holds the door while she talks.
+            LastCall.Game.GameBootstrap.TourForNewRuns = false;
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");

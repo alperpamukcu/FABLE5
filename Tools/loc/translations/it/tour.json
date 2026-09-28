@@ -1,0 +1,214 @@
+{
+  "strings": [
+    {
+      "key": "chrome.tour.skip",
+      "text": "SALTA LA VISITA",
+      "src": "SKIP THE TOUR"
+    },
+    {
+      "key": "data.tour.bill.say.0",
+      "text": "Alla chiusura l'affitto esce di lì. Tieni la cassa sopra quella cifra.",
+      "src": "At closing the rent comes back out of it. Keep the till above that."
+    },
+    {
+      "key": "data.tour.bill.say.1",
+      "text": "Chiudi tre serate di fila in rosso e questa sala torna al buio.",
+      "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.book.say.0",
+      "text": "Non ricordi come si fa un drink? Il menu sul bancone ha ogni pagina che versiamo.",
+      "src": "Forgot how a drink goes? The menu on the counter has every page we pour."
+    },
+    {
+      "key": "data.tour.book_shut.say.0",
+      "text": "Finché è aperto, la serata rallenta, ma non si ferma mai. Clicca fuori dal menu per chiuderlo.",
+      "src": "The night crawls while it's open, but it never stops. Click off the book to close it."
+    },
+    {
+      "key": "data.tour.bottle.say.0",
+      "text": "{drink} comincia con {bottle}. Prendi la bottiglia dallo scaffale.",
+      "src": "{drink} starts with {bottle}. Take it off the shelf."
+    },
+    {
+      "key": "data.tour.cap.say.0",
+      "text": "Questo si fa diretto. Non si shakera: trascina solo il coperchio sullo shaker.",
+      "src": "This one is built. No shaking, just drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.card.say.0",
+      "text": "Nome, età e il drink per cui è venuto. L'ordine vive solo sulla tessera.",
+      "src": "Name, age, and the drink they came for. The order only ever lives on the card."
+    },
+    {
+      "key": "data.tour.card.say.1",
+      "text": "Le scritte in piccolo conteranno più avanti. Stasera ognuno è chi dice di essere.",
+      "src": "The fine print will matter later. Tonight, everybody's who they say they are."
+    },
+    {
+      "key": "data.tour.card_away.say.0",
+      "text": "Clicca fuori dalla tessera per metterla via.",
+      "src": "Click anywhere off the card to put it away."
+    },
+    {
+      "key": "data.tour.cellar.say.0",
+      "text": "Ogni drink comincia dalla cantina sotto il bancone. Aprila.",
+      "src": "Every drink starts in the cellar under the counter. Open it up."
+    },
+    {
+      "key": "data.tour.clock.say.0",
+      "text": "Quello è l'orologio. Una serata va dalle sei alle due di notte.",
+      "src": "That's the clock. A night runs from six till two in the morning."
+    },
+    {
+      "key": "data.tour.clock.say.1",
+      "text": "Quando finisce, la porta si chiude e chi è dentro finisce il suo drink.",
+      "src": "When it runs out the door shuts, and whoever's in finishes their drink."
+    },
+    {
+      "key": "data.tour.corner.say.0",
+      "text": "Musica e impostazioni stanno lassù nell'angolo. Esc mette in pausa la serata.",
+      "src": "Music and settings live up in the corner. Escape pauses the night."
+    },
+    {
+      "key": "data.tour.doors.say.0",
+      "text": "Questo è il lavoro, sugar. La porta è tua.",
+      "src": "That's the job, sugar. The door is yours."
+    },
+    {
+      "key": "data.tour.doors.say.1",
+      "text": "Un'ultima cosa prima di lasciarti lavorare.",
+      "src": "One more thing before I let you work."
+    },
+    {
+      "key": "data.tour.finish.say.0",
+      "text": "Ora lascialo finire. A nessuno piace sentirsi mettere fretta.",
+      "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.glass.say.0",
+      "text": "Lasciano il bicchiere, e a uno sgabello con un bicchiere sporco davanti non si siede nessuno.",
+      "src": "They leave the glass behind, and a stool with a dirty glass in front of it seats nobody."
+    },
+    {
+      "key": "data.tour.glass.say.1",
+      "text": "Trascina quel bicchiere nel lavello.",
+      "src": "Drag that glass into the sink."
+    },
+    {
+      "key": "data.tour.guest.say.0",
+      "text": "Ecco il tuo primo cliente. Dagli un secondo per decidersi.",
+      "src": "Here's your first guest. Give them a second to make up their mind."
+    },
+    {
+      "key": "data.tour.hand_over.say.0",
+      "text": "Ora daglielo. Trascina il bicchiere fino al tuo cliente, o cliccalo e basta.",
+      "src": "Now hand it over. Drag the glass to your guest, or just click them."
+    },
+    {
+      "key": "data.tour.house.say.0",
+      "text": "I cuori dicono come sono andati giù i drink. Le medaglie, come si sta in sala.",
+      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+    },
+    {
+      "key": "data.tour.house.say.1",
+      "text": "La serata si registra col più basso dei due, quindi cura entrambi.",
+      "src": "The night is filed at the lower of the two, so mind both."
+    },
+    {
+      "key": "data.tour.measure.say.0",
+      "text": "Lo shaker mostra cosa contiene. Il ricettario illumina la casella dove va ogni bottiglia.",
+      "src": "The tin shows what's in it. The book lights the box each bottle lands in."
+    },
+    {
+      "key": "data.tour.measure.say.1",
+      "text": "Stasera basta andarci vicino. Fare centro è ciò che porta mance.",
+      "src": "Close is fine tonight. Dead on is what the tips are for."
+    },
+    {
+      "key": "data.tour.mixer.say.0",
+      "text": "Ora, {bottle}. Torna al bar con la freccia, prendi la bottiglia in cantina e versala.",
+      "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
+    },
+    {
+      "key": "data.tour.patience.say.0",
+      "text": "Quella barra sopra la sua testa è la pazienza. Quando finisce, se ne va.",
+      "src": "That bar over their head is patience. Once it's gone, so are they."
+    },
+    {
+      "key": "data.tour.patience.say.1",
+      "text": "Stasera, mentre ti faccio fare il giro, ti aspetta. Poi non più.",
+      "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pour.say.0",
+      "text": "Prendi la bottiglia e inclinala sopra lo shaker. Più la alzi, più scende veloce.",
+      "src": "Grab the bottle and tip it over the tin. The higher you lift it, the faster it runs."
+    },
+    {
+      "key": "data.tour.reaction.say.0",
+      "text": "Guardagli la faccia. È la recensione, e finisce nelle stelle.",
+      "src": "Watch their face. That's the review, and it goes into the stars."
+    },
+    {
+      "key": "data.tour.reaction.say.1",
+      "text": "Paga quando si alza. La mancia dipende da velocità, mestiere e un bicchiere ben pieno.",
+      "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
+    },
+    {
+      "key": "data.tour.serve_key.say.0",
+      "text": "Ti piace? SERVILO mette il bicchiere sul bancone.",
+      "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.stars.say.0",
+      "text": "Quelle stelle sono ciò che la strada dice di noi. Più stelle, più bar.",
+      "src": "Those stars are what the street says about us. More stars, more bar."
+    },
+    {
+      "key": "data.tour.stars.say.1",
+      "text": "Sbloccano le bottiglie buone, le pagine migliori, gli arredi del mercato.",
+      "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.stool.say.0",
+      "text": "Nessuno ti dice cosa vuole. Clicca il suo sgabello e leggi la tessera.",
+      "src": "Nobody tells you what they want. Click their stool and read the card."
+    },
+    {
+      "key": "data.tour.tap.say.0",
+      "text": "Quella è la spina. La birra è un mestiere a sé. Te lo mostro quando qualcuno la chiede.",
+      "src": "That's the tap. Beer is a craft of its own. I'll show you when somebody asks."
+    },
+    {
+      "key": "data.tour.till.say.0",
+      "text": "La cassa. Ogni drink che vendi finisce qui, mance comprese.",
+      "src": "The till. Every drink you sell lands in here, tips and all."
+    },
+    {
+      "key": "data.tour.tip.say.0",
+      "text": "Prendi lo shaker e inclinalo sopra il bicchiere. Quel che cade fuori è perso.",
+      "src": "Grab the tin and tip it over the glass. Whatever misses the glass is gone."
+    },
+    {
+      "key": "data.tour.welcome.say.0",
+      "text": "Eccoti, sugar. Si apre alle sei. Prima lascia che ti faccia fare un giro.",
+      "src": "There you are, sugar. The doors open at six. Let me walk you round first."
+    },
+    {
+      "key": "data.tour.welcome.say.1",
+      "text": "Fai con calma. Qui dentro non si muove niente finché parlo io.",
+      "src": "Take your time. Nothing in here moves while I'm talking."
+    },
+    {
+      "key": "data.tour.wipe.say.0",
+      "text": "E quell'alone sul legno. Un bancone sporco ti costa le medaglie della sala.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+    },
+    {
+      "key": "data.tour.wipe.say.1",
+      "text": "Prendi lo straccio e toglilo.",
+      "src": "Grab the cloth and rub it out."
+    }
+  ]
+}

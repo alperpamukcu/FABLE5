@@ -735,6 +735,60 @@ namespace LastCall.Game
             }
         }
 
+        /// <summary>
+        /// THE HOUSE TOUR (2026-09-28) — <c>Resources/Data/tour.json</c> into a <see cref="TourScript"/>. Refused here,
+        /// naming the step: a wait nobody reads, a point the screen would not find, a slot other than {drink} and
+        /// {bottle}, and either slot on a step before the guest's card is read (the drink lives behind the card, and
+        /// saying it earlier would be the card made decorative). The order of the steps is Core's to check.
+        /// </summary>
+        public static TourScript ParseTour(string json)
+        {
+            var dto = FromJson<TourFileDto>(json, "tour");
+            if (dto.steps == null || dto.steps.Count == 0)
+                throw new FormatException("Tour file has no steps in it.");
+            var steps = new List<TourStep>(dto.steps.Count);
+            bool cardRead = false;
+            foreach (var t in dto.steps)
+            {
+                string who = $"Tour step '{t.id}'";
+                var wait = TourWaits.Parse(t.wait);
+                if (wait == null)
+                    throw new FormatException(
+                        $"{who} waits for '{t.wait}'; a step waits for one of: {string.Join(", ", TourWaits.Names)}.");
+                if (!TourPoints.Known(t.point))
+                    throw new FormatException(
+                        $"{who} points at '{t.point}'; the screen knows: {string.Join(", ", TourPoints.Names)}.");
+                foreach (var line in t.say ?? new List<string>())
+                    foreach (System.Text.RegularExpressions.Match m in
+                             System.Text.RegularExpressions.Regex.Matches(line ?? string.Empty, @"\{([^}]*)\}"))
+                    {
+                        string slot = m.Groups[1].Value;
+                        if (slot != "drink" && slot != "bottle")
+                            throw new FormatException($"{who} says {{{slot}}}; a tour line knows only {{drink}} and {{bottle}}.");
+                        if (!cardRead)
+                            throw new FormatException(
+                                $"{who} says {{{slot}}} before the guest's card is read; the drink lives behind the card.");
+                    }
+                try
+                {
+                    steps.Add(new TourStep(t.id, t.say, wait.Value, t.point));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new FormatException("Tour file: " + e.Message);
+                }
+                if (wait.Value == TourWait.CardRead) cardRead = true;
+            }
+            try
+            {
+                return new TourScript(steps);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException("Tour file: " + e.Message);
+            }
+        }
+
         private static PrepMethod ParsePrep(string raw, string context)
         {
             // Loud, not silent (2026-08-14): the method now decides whether Core will let
@@ -1279,6 +1333,23 @@ namespace LastCall.Game
             public double goalComfort;              // comfort only: (0, 5]
             public string slot;                     // fit only: a fixtures.json slot id...
             public int level;                       // ...and the rung on its ladder, >= 1
+        }
+
+        [Serializable]
+        private sealed class TourFileDto
+        {
+            public int version;
+            public string _comment;
+            public List<TourStepDto> steps;
+        }
+
+        [Serializable]
+        private sealed class TourStepDto
+        {
+            public string id;
+            public string wait;      // TourWait by name
+            public string point;     // TourPoints by name, "" for none
+            public List<string> say;
         }
 
         [Serializable]

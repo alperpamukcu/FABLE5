@@ -225,6 +225,8 @@ LIST_PAIRS = [
     # she says that belong to no job (the finale, "not yet"). TycoonHud.Hostess fills the slots after the table.
     ("quest", "Assets/Resources/Data/quests.json", "quests", "id", {"handOver": "hand_over", "done": "done"}),
     ("hostess", "Assets/Resources/Data/quests.json", "visits", "id", {"say": "say"}),
+    # The house tour (2026-09-28): what she says walking the player round the bar on the first night.
+    ("tour", "Assets/Resources/Data/tour.json", "steps", "id", {"say": "say"}),
 ]
 
 LIST_NOTES = {
@@ -246,6 +248,14 @@ LIST_NOTES = {
                "plate: 'finale' after her last job is done, 'not_yet' when her next job waits until the bar climbs "
                "a rung. REWRITE it in her voice, do not translate word for word. Keep every {{name}} / {{rung}} "
                "slot: {{rung}} is a rank title in capitals (e.g. TALK OF THE TOWN). Never write her name out.",
+    "tour": "The hostess (the game's lead: American, old Miami, warm and sharp, calls the player 'sugar') walking "
+            "the player round the bar on the first night, one thing at a time: tour step '{id}', line {i} of {n} "
+            "on the talk plate while the thing she talks about is lit up on screen. Teach it plainly and in her "
+            "voice; a player who has never seen the game reads it. REWRITE it in the language, do not translate "
+            "word for word, but keep every on-screen word she names (BILL, SERVE IT) exactly as that screen "
+            "shows it in the language. Keep every {{drink}} / {{bottle}} slot: {{drink}} is a drink's name, "
+            "{{bottle}} a bottle's style word in lower case (gin, tonic). One or two short sentences, ~80 "
+            "characters. Never write her name out.",
     "story": "Story night '{id}', {field} line {i} of {n}, said on the talk plate by the guest or the host. "
              "One sentence; spoken, characterful.",
 }

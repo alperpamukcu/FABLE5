@@ -86,6 +86,9 @@ namespace LastCall.PlayTests
             // every baseline, and a fixture must never read or clear a real save.
             LastCall.Game.SeedPolicy.UseForSession("LASTCALL-DEV");
             LastCall.Game.SaveStore.DisableForSession();
+            // ...and NEW RUN opens on the night itself, not on the hostess's house tour (2026-09-28): these tests
+            // play night one with their own mouse, and the tour holds the door while she talks.
+            LastCall.Game.GameBootstrap.TourForNewRuns = false;
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(DesignW, DesignH, "LastCall PlayTests");
@@ -255,6 +258,66 @@ namespace LastCall.PlayTests
             finally
             {
                 LastCall.Game.Ceremony.Pace = SuitePace;
+            }
+        }
+
+        /// <summary>
+        /// THE HOUSE TOUR (2026-09-28, TycoonRun.Tour). Core plays the tour on its own (its tests walk every step);
+        /// this is the half only the scene can show: NEW RUN opens on her walking in and talking, the night's clock
+        /// standing at zero; her key moves the tour on and the thing she talks about is lit (the spot); the plate's
+        /// second key skips it, and she stays for the first job - heard, it is on the bar - and the night opens.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_first_night_opens_on_her_tour_and_its_skip_key_opens_the_night()
+        {
+            LastCall.Game.GameBootstrap.TourForNewRuns = true;
+            try
+            {
+                yield return OpenTheBar(untilTheClockRuns: false);
+                var run = _boot.Tycoon;
+                Assert.That(run.TourRunning, Is.True, "NEW RUN opens on the tour");
+
+                float by = Time.realtimeSinceStartup + 20f;
+                while (HostKey() == null && Time.realtimeSinceStartup < by) yield return null;
+                Assert.That(HostKey(), Is.Not.Null, "she never came on to talk");
+                var her = GameObject.Find("Hostess");
+                Assert.That(her != null && her.activeInHierarchy, Is.True, "her figure is in the room");
+                Assert.That(run.Floor.Elapsed, Is.EqualTo(0.0), "the night waits while she shows the player round");
+
+                string first = run.TourStep.Id;
+                for (int i = 0; i < 6 && run.TourStep != null && run.TourStep.Id == first; i++)
+                {
+                    var key = HostKey();
+                    if (key == null) { yield return null; continue; }
+                    yield return PressHostKey(key);
+                }
+                Assert.That(run.TourStep, Is.Not.Null);
+                Assert.That(run.TourStep.Id, Is.Not.EqualTo(first), "her key moves the tour on");
+                yield return new WaitForSecondsRealtime(0.3f);
+                var spot = Find("TourSpot");
+                Assert.That(spot != null && spot.gameObject.activeInHierarchy, Is.True,
+                    "the thing she talks about is lit (" + run.TourStep.Id + ")");
+
+                var skip = Find("SayNo", Find("LastCallPlate"));
+                Assert.That(skip != null && skip.gameObject.activeInHierarchy, Is.True, "SKIP THE TOUR stands on the plate");
+                yield return PressHostKey(skip);
+                Assert.That(run.TourRunning, Is.False, "the skip key ends the tour");
+                Assert.That(run.TourSkipped, Is.True);
+                Assert.That(run.HostessVisit, Is.Not.Null, "she stays for the first job");
+
+                yield return LetTheHostFinish();
+                Assert.That(run.Quest, Is.Not.Null, "heard, her first job is on the bar");
+                by = Time.realtimeSinceStartup + 20f;
+                while (run.Floor.Elapsed <= 0 && Time.realtimeSinceStartup < by)
+                {
+                    if (run.Talking || run.HostessVisit != null) yield return LetTheHostFinish();
+                    yield return null;
+                }
+                Assert.That(run.Floor.Elapsed, Is.GreaterThan(0), "and the night opens");
+            }
+            finally
+            {
+                LastCall.Game.GameBootstrap.TourForNewRuns = false;
             }
         }
 
@@ -1165,7 +1228,9 @@ namespace LastCall.PlayTests
         // ── the bar, opened ──────────────────────────────────────────────────────
 
         /// <summary>Loads the real scene and waits until the night is actually dealt.</summary>
-        private IEnumerator OpenTheBar()
+        /// <param name="untilTheClockRuns">False: back as soon as NEW RUN has been pressed - for the house tour, which
+        /// holds the night's clock at zero until it is over (TycoonRun.Tour).</param>
+        private IEnumerator OpenTheBar(bool untilTheClockRuns = true)
         {
             // THE WINDOW FIRST, THE BAR SECOND. The HUD measures the window once, while it
             // builds itself, and never re-measures — so a scene loaded before the Game view
@@ -1194,6 +1259,7 @@ namespace LastCall.PlayTests
             SuiteClock.Mark("dealt");
 
             yield return WalkThroughTheFrontDoor();
+            if (!untilTheClockRuns) yield break;
 
             // THE BAR IS OPEN WHEN ITS CLOCK IS RUNNING (2026-08-13). A quarter of a second
             // was the wait, and the suite's first test kept failing on a press that landed

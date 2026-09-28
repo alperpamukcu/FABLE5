@@ -572,10 +572,15 @@ says so instead of drawing nothing.
 
 ## 9. Tutorial (the opening shift)
 
-Scripted first shift with **fixed teaching customers**: one per starting drink — each
-teaches "how to build it" (menu → shaker → serve) and "who it is for" (its emotion
-identity), one concept at a time. The last teacher introduces the ID/read. Then Day 1
-begins unscripted. Skippable for returning players.
+**Built 2026-09-28 as the hostess's house tour — see GDD_MEVCUT §9.140.** The first night itself opens on her
+walking the player round the room (`Resources/Data/tour.json`, `TycoonRun.Tour`, `TycoonHud.Tour`): the door is
+held while she talks, one planned guest is taught on, one drink the whole way from the card to the sink, then the
+night opens and she hands over the first job. Skippable from its first line.
+
+The original sketch, kept for the record: scripted first shift with **fixed teaching customers**: one per starting
+drink — each teaches "how to build it" (menu → shaker → serve) and "who it is for" (its emotion identity), one
+concept at a time. The last teacher introduces the ID/read. Then Day 1 begins unscripted. Skippable for returning
+players.
 
 ## 11. The crowd's voices (2026-09-07)
 

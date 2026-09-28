@@ -464,7 +464,8 @@ namespace LastCall.Core
     /// <summary>The chain's rules that need no run, in one place so the tests can pin them without one.</summary>
     public static class QuestRules
     {
-        /// <summary>The night at whose close she first comes. Becomes 0 when the day-0 tutorial lands: the one line to change.</summary>
+        /// <summary>The night at whose close she first comes. A run that opens on the house tour (TycoonRun.Tour) has her
+        /// hand this first job over as the tour ends instead - the same visit, said early, on the same night.</summary>
         public const int FirstVisitNight = 1;
 
         /// <summary>Floor-seconds, unheld, before Core hands the job over by itself: a run nobody watches still gets it.</summary>

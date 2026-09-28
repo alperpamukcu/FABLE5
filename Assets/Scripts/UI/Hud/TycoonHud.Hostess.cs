@@ -56,6 +56,7 @@ namespace LastCall.UI
         /// </summary>
         private void SyncHostess(TycoonRun run)
         {
+            StepTour(run);   // the house tour's light and reports (TycoonHud.Tour), after the plate has its lines
             // Nothing of her survives the night: a closed night, a new run or a dev verb sends her off at once.
             if (run.Phase != TycoonPhase.DayOpen)
             {
@@ -63,22 +64,25 @@ namespace LastCall.UI
                 return;
             }
             var visit = run.HostessVisit;
+            // SHE IS IN THE ROOM FOR A VISIT - OR FOR THE HOUSE TOUR (2026-09-28, TycoonRun.Tour): the first night opens on
+            // her, and the tour's end hands straight on to the first job, so she walks in once and out once.
+            bool wanted = visit != null || TourUp(run);
             float dt = HostessDelta(Paused);
 
             switch (_hostessBeat)
             {
                 case HostessBeat.Off:
-                    if (visit != null && !MenuUp) HostessEnter(run, visit);
+                    if (wanted && !MenuUp) HostessEnter(run, visit);
                     break;
 
                 case HostessBeat.Enter:
                     // HEARD WITHOUT HER (Core's backstop, a dev verb): whatever she came to say is on the bar already.
-                    if (visit == null) { HostessBeginLeave(); break; }
+                    if (!wanted) { HostessBeginLeave(); break; }
                     StepHostessEnter(dt);
                     break;
 
                 case HostessBeat.Talk:
-                    if (visit == null) { HostessBeginLeave(); break; }
+                    if (!wanted) { HostessBeginLeave(); break; }
                     StepHostessTalk(dt);
                     break;
 
@@ -98,7 +102,8 @@ namespace LastCall.UI
             // NOBODY TO SAY IT (a story with no host, or nothing in her book to say): the moment is spent silently,
             // as SyncLesson spends a lesson - the job still goes on the bar.
             var host = Hostess;
-            if (host == null || HostessLines(run, visit, host).Count == 0)
+            if (host == null && TourUp(run)) { run.SkipTour(); return; }   // nobody to show the player round
+            if (host == null || (!TourUp(run) && HostessLines(run, visit, host).Count == 0))
             {
                 run.HearHostess();
                 return;

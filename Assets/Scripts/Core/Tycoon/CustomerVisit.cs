@@ -314,7 +314,9 @@ namespace LastCall.Core
         /// one first thinks the order over — only after that does patience tick, and zero
         /// patience is the storm-off.
         /// </summary>
-        public void Tick(double seconds)
+        /// <param name="patienceHeld">THE HOUSE TOUR (2026-09-28, TycoonRun.Tour): the door is held while she talks
+        /// the player through a drink - they still make up their mind and drink, but nobody's patience runs.</param>
+        public void Tick(double seconds, bool patienceHeld = false)
         {
             if (seconds <= 0) return;
 
@@ -340,6 +342,7 @@ namespace LastCall.Core
                 seconds = -DecideLeft;
                 DecideLeft = 0;
             }
+            if (patienceHeld) return;
 
             // One clock, whether they are waiting to be asked or waiting on the drink. A
             // customer nobody ever comes to storms off on the same bar as one whose drink

@@ -1,0 +1,214 @@
+{
+  "strings": [
+    {
+      "key": "chrome.tour.skip",
+      "text": "LEWATI TUR",
+      "src": "SKIP THE TOUR"
+    },
+    {
+      "key": "data.tour.bill.say.0",
+      "text": "Saat tutup, uang sewa keluar lagi dari situ. Jaga kas tetap di atasnya.",
+      "src": "At closing the rent comes back out of it. Keep the till above that."
+    },
+    {
+      "key": "data.tour.bill.say.1",
+      "text": "Tutup tiga malam berturut-turut dalam keadaan rugi, dan tempat ini gelap lagi.",
+      "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.book.say.0",
+      "text": "Lupa cara bikin minuman? Menu di meja bar punya semua halaman yang kita sajikan.",
+      "src": "Forgot how a drink goes? The menu on the counter has every page we pour."
+    },
+    {
+      "key": "data.tour.book_shut.say.0",
+      "text": "Selama terbuka, waktu merayap, tapi tak pernah berhenti. Klik di luar buku untuk menutup.",
+      "src": "The night crawls while it's open, but it never stops. Click off the book to close it."
+    },
+    {
+      "key": "data.tour.bottle.say.0",
+      "text": "{drink} dimulai dengan {bottle}. Ambil dari rak.",
+      "src": "{drink} starts with {bottle}. Take it off the shelf."
+    },
+    {
+      "key": "data.tour.cap.say.0",
+      "text": "Yang ini TUANG LANGSUNG. Tanpa kocok, cukup seret tutupnya ke shaker.",
+      "src": "This one is built. No shaking, just drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.card.say.0",
+      "text": "Nama, umur, dan minuman yang mereka cari. Pesanan cuma ada di kartu.",
+      "src": "Name, age, and the drink they came for. The order only ever lives on the card."
+    },
+    {
+      "key": "data.tour.card.say.1",
+      "text": "Tulisan kecilnya nanti penting. Malam ini, semua orang memang seperti yang mereka bilang.",
+      "src": "The fine print will matter later. Tonight, everybody's who they say they are."
+    },
+    {
+      "key": "data.tour.card_away.say.0",
+      "text": "Klik di mana saja di luar kartu untuk menyimpannya.",
+      "src": "Click anywhere off the card to put it away."
+    },
+    {
+      "key": "data.tour.cellar.say.0",
+      "text": "Setiap minuman berawal dari gudang di bawah meja bar. Buka.",
+      "src": "Every drink starts in the cellar under the counter. Open it up."
+    },
+    {
+      "key": "data.tour.clock.say.0",
+      "text": "Itu jamnya. Satu malam berjalan dari jam enam sampai jam dua pagi.",
+      "src": "That's the clock. A night runs from six till two in the morning."
+    },
+    {
+      "key": "data.tour.clock.say.1",
+      "text": "Saat waktunya habis, pintu ditutup, dan yang masih di dalam menghabiskan minumannya.",
+      "src": "When it runs out the door shuts, and whoever's in finishes their drink."
+    },
+    {
+      "key": "data.tour.corner.say.0",
+      "text": "Musik dan pengaturan ada di pojok atas. Esc menjeda malam.",
+      "src": "Music and settings live up in the corner. Escape pauses the night."
+    },
+    {
+      "key": "data.tour.doors.say.0",
+      "text": "Begitulah kerjanya, sugar. Pintunya milikmu.",
+      "src": "That's the job, sugar. The door is yours."
+    },
+    {
+      "key": "data.tour.doors.say.1",
+      "text": "Satu hal lagi sebelum kamu mulai kerja.",
+      "src": "One more thing before I let you work."
+    },
+    {
+      "key": "data.tour.finish.say.0",
+      "text": "Biarkan mereka menghabiskannya. Tak ada yang suka diburu-buru.",
+      "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.glass.say.0",
+      "text": "Mereka meninggalkan gelasnya, dan kursi dengan gelas kotor di depannya tak akan diduduki.",
+      "src": "They leave the glass behind, and a stool with a dirty glass in front of it seats nobody."
+    },
+    {
+      "key": "data.tour.glass.say.1",
+      "text": "Seret gelas itu ke wastafel.",
+      "src": "Drag that glass into the sink."
+    },
+    {
+      "key": "data.tour.guest.say.0",
+      "text": "Ini tamu pertamamu. Beri mereka waktu sebentar untuk memutuskan.",
+      "src": "Here's your first guest. Give them a second to make up their mind."
+    },
+    {
+      "key": "data.tour.hand_over.say.0",
+      "text": "Sekarang serahkan. Seret gelas ke tamumu, atau klik saja mereka.",
+      "src": "Now hand it over. Drag the glass to your guest, or just click them."
+    },
+    {
+      "key": "data.tour.house.say.0",
+      "text": "Hati menunjukkan bagaimana minumannya diterima. Medali, senyaman apa ruangannya.",
+      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+    },
+    {
+      "key": "data.tour.house.say.1",
+      "text": "Malam dinilai dari yang lebih rendah, jadi jaga keduanya.",
+      "src": "The night is filed at the lower of the two, so mind both."
+    },
+    {
+      "key": "data.tour.measure.say.0",
+      "text": "Shaker memperlihatkan isinya. Buku menyalakan kotak tempat tiap botol harus masuk.",
+      "src": "The tin shows what's in it. The book lights the box each bottle lands in."
+    },
+    {
+      "key": "data.tour.measure.say.1",
+      "text": "Malam ini mendekati pun sudah cukup. Tip itu untuk yang pas betul.",
+      "src": "Close is fine tonight. Dead on is what the tips are for."
+    },
+    {
+      "key": "data.tour.mixer.say.0",
+      "text": "Sekarang {bottle}. Kembali ke bar lewat panah, ambil dari gudang, lalu tuang.",
+      "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
+    },
+    {
+      "key": "data.tour.patience.say.0",
+      "text": "Bilah di atas kepala mereka itu kesabaran. Kalau habis, mereka juga pergi.",
+      "src": "That bar over their head is patience. Once it's gone, so are they."
+    },
+    {
+      "key": "data.tour.patience.say.1",
+      "text": "Malam ini, selama aku mengajakmu berkeliling, ia menunggumu. Setelah itu tidak.",
+      "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pour.say.0",
+      "text": "Pegang botolnya dan miringkan di atas shaker. Makin tinggi diangkat, makin deras alirannya.",
+      "src": "Grab the bottle and tip it over the tin. The higher you lift it, the faster it runs."
+    },
+    {
+      "key": "data.tour.reaction.say.0",
+      "text": "Lihat wajah mereka. Itu ulasannya, dan itu masuk ke bintang.",
+      "src": "Watch their face. That's the review, and it goes into the stars."
+    },
+    {
+      "key": "data.tour.reaction.say.1",
+      "text": "Mereka bayar saat berdiri. Tip tergantung kecepatan, keahlian, dan gelas yang terisi pas.",
+      "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
+    },
+    {
+      "key": "data.tour.serve_key.say.0",
+      "text": "Sudah puas? SAJIKAN menaruh gelasnya di meja bar.",
+      "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.stars.say.0",
+      "text": "Bintang itu kata orang di jalan tentang kita. Makin banyak bintang, makin besar barnya.",
+      "src": "Those stars are what the street says about us. More stars, more bar."
+    },
+    {
+      "key": "data.tour.stars.say.1",
+      "text": "Bintang membuka botol bagus, halaman yang lebih baik, dan perabot di pasar.",
+      "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.stool.say.0",
+      "text": "Tak ada yang bilang maunya apa. Klik kursinya dan baca kartunya.",
+      "src": "Nobody tells you what they want. Click their stool and read the card."
+    },
+    {
+      "key": "data.tour.tap.say.0",
+      "text": "Itu menara bir. Bir punya keahliannya sendiri. Nanti kutunjukkan kalau ada yang pesan.",
+      "src": "That's the tap. Beer is a craft of its own. I'll show you when somebody asks."
+    },
+    {
+      "key": "data.tour.till.say.0",
+      "text": "Kas. Setiap minuman yang kamu jual masuk ke sini, tipnya juga.",
+      "src": "The till. Every drink you sell lands in here, tips and all."
+    },
+    {
+      "key": "data.tour.tip.say.0",
+      "text": "Pegang shaker dan miringkan di atas gelas. Yang meleset dari gelas, hilang.",
+      "src": "Grab the tin and tip it over the glass. Whatever misses the glass is gone."
+    },
+    {
+      "key": "data.tour.welcome.say.0",
+      "text": "Nah, ini dia, sugar. Pintu buka jam enam. Biar kuajak berkeliling dulu.",
+      "src": "There you are, sugar. The doors open at six. Let me walk you round first."
+    },
+    {
+      "key": "data.tour.welcome.say.1",
+      "text": "Santai saja. Tak ada yang bergerak di sini selama aku bicara.",
+      "src": "Take your time. Nothing in here moves while I'm talking."
+    },
+    {
+      "key": "data.tour.wipe.say.0",
+      "text": "Dan bekas lingkaran di kayu itu. Meja bar kotor bikin ruangan kehilangan medali.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+    },
+    {
+      "key": "data.tour.wipe.say.1",
+      "text": "Ambil lap dan gosok sampai hilang.",
+      "src": "Grab the cloth and rub it out."
+    }
+  ]
+}

@@ -1871,7 +1871,7 @@ namespace LastCall.UI
             // because an unpoured drink is not a drink yet (2026-07-28). Say so, or the player
             // is left looking for a glass that was never filled.
             bool flowOpen = _flow != null && _flow.IsOpen;
-            if (_flowWasOpen && !flowOpen && run.DrinkWaitingInShaker)
+            if (_flowWasOpen && !flowOpen && run.DrinkWaitingInShaker && !run.TourRunning)   // on the tour she says it
                 Toast(UIText.T("hud.toast.still_in_shaker"));
             _flowWasOpen = flowOpen;
 

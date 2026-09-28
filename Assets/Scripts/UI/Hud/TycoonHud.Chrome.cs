@@ -2761,7 +2761,8 @@ namespace LastCall.UI
                     foreach (var s in _seats) if (s.Visit == lit) { x = s.Root.anchoredPosition.x; break; }
                 // ...AND FOR THE HOSTESS (2026-09-28, TycoonHud.Hostess): the room comes down to her as she walks in
                 // at the close, and the lamp finds her where she is standing.
-                bool her = _hostessOnStage && run.Phase == TycoonPhase.DayOpen;
+                // (Not while she shows the player round: the tour needs the whole room lit, TycoonHud.Tour.)
+                bool her = _hostessOnStage && run.Phase == TycoonPhase.DayOpen && !run.TourRunning;
                 stage.SetClosingBeat(lit != null || her, lit != null ? x : _hostessX);
             }
             // A WITHHELD NIGHT HAS NO TRIAL AND IS STILL A SCENE (GDD 26 §12). The guest came,
@@ -2784,6 +2785,9 @@ namespace LastCall.UI
                 // arrival to her last step out, the plate is hers - her lines while she talks, nothing while she
                 // walks - and the lessons wait. Asked on the visit as well as the scene: the tick she walks in on
                 // can queue a lesson before the scene has taken its first step.
+                // THE HOUSE TOUR COMES BEFORE ALL OF IT (2026-09-28, TycoonHud.Tour): the first night opens on her walk
+                // round the room, and the plate is the tour's until it is over.
+                if (TourUp(run) && _plate != null) { SyncTourPlate(run); return; }
                 if (run.Phase == TycoonPhase.DayOpen && (run.HostessVisit != null || _hostessOnStage) && _plate != null)
                 {
                     if (_hostessBeat == HostessBeat.Talk && run.HostessVisit != null)
@@ -2950,6 +2954,8 @@ namespace LastCall.UI
         private void OnPlateKey()
         {
             var run = Run;
+            // The tour's lines the same way (TycoonHud.Tour): the last line of a thing said moves the tour on.
+            if (run != null && _plateStage.StartsWith("tour:", StringComparison.Ordinal)) { TourPlateKey(run); return; }
             // A lesson is worked through with the same key; its last line is GOT IT, and
             // Core is told so the next one can follow (GDD 26 §1b).
             if (run != null && _plateStage.StartsWith("lesson:", StringComparison.Ordinal))
@@ -2986,6 +2992,8 @@ namespace LastCall.UI
         private void OnSayNoTonight()
         {
             var run = Run;
+            // On the tour the second key is SKIP THE TOUR (TycoonHud.Tour).
+            if (run != null && TourUp(run)) { TourSkipKey(run); return; }
             if (run == null || run.LastCustomer == null) return;
             run.DeclineLastCall();
             Sfx.Play("deny", 0.5f);   // no notice: the room's informational lines were retired (2026-09-28)

@@ -449,7 +449,8 @@ namespace LastCall.Core
             IReadOnlyList<IngredientCard> lockedStock = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
             StoryArc story = null,
-            QuestBook quests = null)
+            QuestBook quests = null,
+            TourScript tour = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -497,6 +498,8 @@ namespace LastCall.Core
             // With one, her first visit is the close of the first night.
             Quests = quests;
             if (QuestsLive) _visitFrom = QuestRules.FirstVisitNight;
+            // The house tour (TycoonRun.Tour), opt-in the same way: before the first night's lesson, which it says itself.
+            StartTour(tour);
             // The first night is the first thing the host has to say (GDD 26 §1b).
             TeachAtOpen();
         }
@@ -1309,7 +1312,8 @@ namespace LastCall.Core
             EnsurePhase(TycoonPhase.DayOpen);
             // THE NIGHT WAITS WHILE SHE TALKS (2026-09-27; TycoonRun.Talk). Before anything reads the seconds.
             if (Talking) return System.Array.Empty<CustomerVisit>();
-            var seated = Floor.Tick(seconds, NextArrival);
+            // THE HOUSE TOUR HOLDS THE DOOR (TycoonRun.Tour): the room carries on, the night's clock does not.
+            var seated = TourTick(Floor.Tick(seconds, NextArrival, doorHeld: TourHoldsTheDoor));
             FadeTheRoom(seconds);     // what the room is still talking about, running down
             SettleDepartures();
             Trial?.Waited(seconds);   // the talking backstop's clock, nothing else's
@@ -2696,6 +2700,9 @@ namespace LastCall.Core
                 wantsAnother = true;
             else if (wantsAnother && pageTrait.TakeRound > 0 && roundRoll < pageTrait.TakeRound)
                 wantsAnother = false;
+            // THE TOUR'S GUEST HAS THE ONE DRINK (TycoonRun.Tour): they are the lesson, and a second round would keep
+            // the door held over a drink she has already taught. After the draw, so the stream is the same stream.
+            if (wantsAnother && ReferenceEquals(visit, TourGuest) && TourRunning) wantsAnother = false;
             if (wantsAnother != verdict.OrdersAgain)
                 verdict = new ServiceVerdict(verdict.Match, verdict.BasePaid, verdict.Tip,
                     verdict.CraftLanded, wantsAnother, verdict.Satisfaction, verdict.SpecScore,

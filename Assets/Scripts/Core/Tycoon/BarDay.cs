@@ -237,11 +237,14 @@ namespace LastCall.Core
         /// when a stool is free and the moment comes, the factory seats the next arrival.
         /// Returns whoever just sat down, for the presentation layer to walk in.
         /// </summary>
-        public IReadOnlyList<CustomerVisit> Tick(double seconds, Func<CustomerVisit> arrivalFactory)
+        /// <param name="doorHeld">THE HOUSE TOUR (2026-09-28, TycoonRun.Tour): the people already in carry on - they
+        /// decide, drink, get up and leave their glass - but the shift's clock stands, nobody walks in, nobody's
+        /// patience runs and the marks do not age.</param>
+        public IReadOnlyList<CustomerVisit> Tick(double seconds, Func<CustomerVisit> arrivalFactory, bool doorHeld = false)
         {
             if (arrivalFactory == null) throw new ArgumentNullException(nameof(arrivalFactory));
 
-            foreach (var visit in _seated) visit.Tick(seconds);
+            foreach (var visit in _seated) visit.Tick(seconds, patienceHeld: doorHeld);
             _seated.RemoveAll(visit =>
             {
                 // The still-waiting and the still-drinking keep their stools; only the
@@ -273,7 +276,8 @@ namespace LastCall.Core
 
             // The counter's own clock: every mess past its grace costs a seat-second per
             // second, and the sink counts down. Ticked with the floor, never with the screen.
-            House.Tick(seconds);
+            House.Tick(seconds, held: doorHeld);
+            if (doorHeld) return Array.Empty<CustomerVisit>();
 
             // How much of this tick falls before closing. Taken BEFORE the clock advances, and
             // clamped: a single tick big enough to cover the whole shift must still let the

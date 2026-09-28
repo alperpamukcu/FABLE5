@@ -294,14 +294,19 @@ namespace LastCall.Core
         /// is the basin's, and a bar with two glasses to wash is not punished twice.</summary>
         public static double WashSecondsFor(int glasses) => WashSeconds;
 
+        private static readonly List<CounterMess> NoMesses = new List<CounterMess>();
+
         /// <summary>
         /// The floor's clock: every mess ages, every mess past its grace costs a seat-second
         /// per second, and the sink counts down. Called by <see cref="BarDay.Tick"/>.
         /// </summary>
-        public void Tick(double seconds)
+        /// <param name="held">THE HOUSE TOUR (2026-09-28): while the door is held the marks do not age - the night's
+        /// clock is standing, and a mark that cost comfort against a clock that was not running would be charged
+        /// against no night at all - but the sink still runs.</param>
+        public void Tick(double seconds, bool held = false)
         {
             if (seconds <= 0) return;
-            foreach (var mess in _messes)
+            foreach (var mess in held ? NoMesses : _messes)
             {
                 // The grace is spent BEFORE the exposure starts, exactly: a mess that crosses
                 // the line inside this tick pays only for the part past it.

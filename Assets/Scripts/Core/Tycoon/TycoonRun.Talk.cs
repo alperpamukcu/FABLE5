@@ -18,7 +18,10 @@ namespace LastCall.Core
         /// and a hold asked for over the books would outlive the night it was asked on.</summary>
         public void BeginTalk()
         {
-            if (Phase == TycoonPhase.DayOpen) Talking = true;
+            // THE TOUR HOLDS ITS OWN DOOR (2026-09-28, TycoonRun.Tour): while she shows the player round, the night's clock,
+            // the door and everybody's patience are already held, and the room must NOT stand still - the guest she is
+            // teaching on has to walk in, drink and leave while she talks. Her plate being up asks for nothing more.
+            if (Phase == TycoonPhase.DayOpen && !TourRunning) Talking = true;
         }
 
         /// <summary>The last line was heard: the night picks up exactly where it stopped. Harmless when nothing is

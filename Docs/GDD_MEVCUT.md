@@ -1902,6 +1902,66 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.140 · Ev turu: ilk gece Roxy'nin barı gezdirmesiyle açılır (2026-09-28)
+
+Yazar: “Oyunda bir öğreticimiz olmalı. Oyundaki ilk gün aslında scripted tüm ekranı neleri nasıl yapabileceğini
+anlatan ve tarif eden bir öğretici olmalı. Bu öğreticide sahneye ana karakterimiz gelir konuşarak sırayla temelden
+detaya doğru öğretir ekranı ve neler yapıldığını.”
+
+- **İlk gecenin kendisi, ayrı bir gün 0 değil.** NEW RUN gecesi turla açılır; gecenin parası, yıldızı ve kapanışı
+  normal sayılır. Tur sürerken Core **kapıyı tutar** (`TycoonRun.Tour`, `BarDay.Tick(doorHeld)`): gece saati durur,
+  kimse içeri girmez, kimsenin sabrı azalmaz, tezgâh lekeleri eskimez. Oda ise donmaz: turun tek misafiri yürür,
+  karar verir, içer, kalkar ve bardağını bırakır; lavabo çalışır. Tur açıkken `BeginTalk` bir şey tutmaz, çünkü
+  kapıyı zaten tur tutuyor.
+- **Adımlar veri** (`Resources/Data/tour.json`, 29 adım). Her adımda üç şey var:
+  - `say`: Roxy'nin söyledikleri, tuşa her basışta bir satır.
+  - `point`: ekranın ışık tuttuğu şey (`TourPoints`).
+  - `wait`: adımı ilerleten şey (`TourWait`, 17 kelime).
+  - `heard` bekleyen adım, plakanın GO ON tuşuyla ilerler. Oyuncuyu bekleyen adımda son satır tuşsuz kalır, oyuncu
+    işi yapınca ilerler.
+  - Core kendi görebildiğini kendisi okur: misafirin karar vermesi, kartın okunması, tenekenin dolması, bardağa
+    dökülme, servis, misafirin gitmesi, bardağın alınması, silinen iz.
+  - Yalnız ekranın gördüğünü HUD her karede bildirir (`TourSaw`): kartın kapanması, mahzenin açılması, şişenin elde
+    olması, kapak, SERVE IT'ten sonra tezgâhtaki bardak, kitabın açılıp kapanması.
+  - Önden koşan oyuncu yakalanır: gerçekleşmiş en ileri İLERLEME adımının ötesine atlanır. Zaten doğru olan adım
+    hiç söylenmeden geçer, örneğin iz kalmadıysa silme adımı.
+- **Sıra, temelden ayrıntıya:**
+  - Karşılama, saat, kasa, BILL ve kırmızı geceler, yıldızlar, kalp ve madalya.
+  - İlk misafir (gecenin planlı ilk kuveri, `NextArrival`) ve sabır çubuğu.
+  - Tabure, kimlik kartı, kartı geri verme.
+  - Mahzen ve siparişin ilk şişesi (`TourNextBottle`, kart okunmadan asla). Döküm ve ölçü, yani kitabın yaktığı
+    kutu.
+  - İkinci şişe: tezgâh açıkken geri tuşu gösterilir, mahzendeyken şişenin kendisi.
+  - Kapak, bardağa aktarma, SERVE IT, bardağı misafire verme (sürükle ya da tıkla).
+  - Tepki ve bahşiş. Misafir bitirir, bardak lavaboya, iz beze.
+  - Kitap ve kitabı kapatma.
+  - Musluk, köşedeki müzik ve ayarlar, kapanış.
+- **İlk iş turun sonunda:** son satır ya da SKIP THE TOUR, Roxy'nin ziyaretini orada açar (`StaysForTheFirstJob`,
+  aynı `PlanVisit`). first_wage bu gece verilir ve Roxy kapanışta yeniden gelmez. Tursuz koşular eskisi gibidir
+  (`QuestRules.FirstVisitNight` = 1). Tur misafiri ikinci tur ısmarlamaz (çekiliş yine yapılır, akış kaymaz).
+- **Sahne** (`TycoonHud.Tour`):
+  - Roxy kendi figürüyle yürüyüp gelir (`SyncHostess`, ziyaretlerindeki görünümle aynı). Plaka onun sözlerini
+    taşır. Tur boyunca plaka tezgâhın (25) ve kartın (20) üstündeki 27. katmana çıkar.
+  - Işık tutulan şey ekranın alt yarısındaysa, ya da tezgâh, kart veya kitap açıksa, plaka ekranın üstüne yerleşir.
+  - İkinci tuş SKIP THE TOUR'dur (`chrome.tour.skip`).
+  - Işık: gösterilen şeyin dışı kararır (konuşurken 0,62, oyuncu çalışırken 0,34). Etrafında nabız atan 2 px
+    Amber[3] çerçeve olur, yanında 1-bit ok (`ib_m_pointer`, Amber[4]) ekranın ortasına bakan taraftan hafifçe
+    sallanır. Tıklama almaz.
+  - Çerçeve görselin çizildiği yere oturur (preserveAspect kutusu ve sprite'ın sıkı ağı). Yeni hedefe 0,25 sn'de
+    kayar. `Motion.Reduced` kaymayı, nabzı ve sallanmayı kaldırır.
+  - Tur sırasında “içki hâlâ shaker'da” uyarısı çıkmaz, onu Roxy söylüyor.
+- **Anahtarlar:** tur ilk dersi (`first_night`) ve kart dersini (`first_licence`) sessizce harcar, iki kez
+  söylenmezler. `GameBootstrap.TourForNewRuns` oyunda açıktır; PlayMode fixture'ları kapatır, her play'de yeniden
+  açılır. Kaydedilmiş bir bar hiç tur açmaz, çünkü kayıt şafakta yazılır. Dev fiilleri takvimi oynatınca tur da
+  gider (`TourRunning` yalnız 1. gece).
+- **Sesler ve diller:** 42 anahtar (`data.tour.*` ve `chrome.tour.skip`), `data_keys.py` tour.json'u okur.
+- **Testler:**
+  - `TourTests` (12 test, 15 durum): kapı, misafir, turun tamamı, yakalama, atlama, betik kuralları, yükleyici. Ayrıca gerçek
+    içerikte üç tohumla baştan sona.
+  - PlayMode: `The_first_night_opens_on_her_tour_and_its_skip_key_opens_the_night`.
+- **Ölçüldü (r265):** 29 adımın hepsi oyunda ekran görüntüsüyle gezildi. Tur boyunca `Floor.Elapsed` 0,0 kaldı; son
+  satırdan sonra first_wage verildi.
+
 ### 9.139 · Ret, sorulduğu yerde: bildirim satırının kalan uyarıları imlecin yanında bir plaka oldu (2026-09-28)
 
 Yazar, §9.137'de kalan 35 uyarı satırı için: “Başka bir biçime geçilsin.”

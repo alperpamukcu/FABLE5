@@ -1,0 +1,214 @@
+{
+  "strings": [
+    {
+      "key": "chrome.tour.skip",
+      "text": "UGORJUK ÁT",
+      "src": "SKIP THE TOUR"
+    },
+    {
+      "key": "data.tour.bill.say.0",
+      "text": "Záráskor a bérleti díj kimegy belőle. Tartsd a kasszát e fölött.",
+      "src": "At closing the rent comes back out of it. Keep the till above that."
+    },
+    {
+      "key": "data.tour.bill.say.1",
+      "text": "Három piros nap egymás után, és ez a hely újra elsötétül.",
+      "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.book.say.0",
+      "text": "Elfelejtetted, mi kerül bele? A pulton fekvő itallapon minden oldal ott van.",
+      "src": "Forgot how a drink goes? The menu on the counter has every page we pour."
+    },
+    {
+      "key": "data.tour.book_shut.say.0",
+      "text": "Amíg nyitva a könyv, az este csak vánszorog, de nem áll meg. Kattints mellé, és becsukódik.",
+      "src": "The night crawls while it's open, but it never stops. Click off the book to close it."
+    },
+    {
+      "key": "data.tour.bottle.say.0",
+      "text": "{drink}. Első üveg: {bottle}. Vedd le a polcról.",
+      "src": "{drink} starts with {bottle}. Take it off the shelf."
+    },
+    {
+      "key": "data.tour.cap.say.0",
+      "text": "Ez pohárban készül. Nem kell rázni, csak húzd a fedőt a shakerre.",
+      "src": "This one is built. No shaking, just drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.card.say.0",
+      "text": "Név, kor, és az ital, amiért jöttek. A rendelés mindig csak az igazolványon van.",
+      "src": "Name, age, and the drink they came for. The order only ever lives on the card."
+    },
+    {
+      "key": "data.tour.card.say.1",
+      "text": "Az apró betű később számít majd. Ma este mindenki az, akinek mondja magát.",
+      "src": "The fine print will matter later. Tonight, everybody's who they say they are."
+    },
+    {
+      "key": "data.tour.card_away.say.0",
+      "text": "Kattints bárhová az igazolványon kívül, hogy eltedd.",
+      "src": "Click anywhere off the card to put it away."
+    },
+    {
+      "key": "data.tour.cellar.say.0",
+      "text": "Minden ital a pult alatti pincében kezdődik. Nyisd ki.",
+      "src": "Every drink starts in the cellar under the counter. Open it up."
+    },
+    {
+      "key": "data.tour.clock.say.0",
+      "text": "Ez az óra. Egy este hattól hajnali kettőig tart.",
+      "src": "That's the clock. A night runs from six till two in the morning."
+    },
+    {
+      "key": "data.tour.clock.say.1",
+      "text": "Ha lejár, bezár az ajtó, és aki bent van, megissza az italát.",
+      "src": "When it runs out the door shuts, and whoever's in finishes their drink."
+    },
+    {
+      "key": "data.tour.corner.say.0",
+      "text": "A zene és a beállítások fent a sarokban vannak. Az Esc megállítja az estét.",
+      "src": "Music and settings live up in the corner. Escape pauses the night."
+    },
+    {
+      "key": "data.tour.doors.say.0",
+      "text": "Ennyi a munka, sugar. Az ajtó a tiéd.",
+      "src": "That's the job, sugar. The door is yours."
+    },
+    {
+      "key": "data.tour.doors.say.1",
+      "text": "Még egy dolog, mielőtt dolgozni hagylak.",
+      "src": "One more thing before I let you work."
+    },
+    {
+      "key": "data.tour.finish.say.0",
+      "text": "Most hadd igyák meg. Senki sem szereti, ha siettetik.",
+      "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.glass.say.0",
+      "text": "Ott hagyják a poharat, és ahol koszos pohár áll a bárszék előtt, oda senki sem ül.",
+      "src": "They leave the glass behind, and a stool with a dirty glass in front of it seats nobody."
+    },
+    {
+      "key": "data.tour.glass.say.1",
+      "text": "Húzd azt a poharat a mosogatóba.",
+      "src": "Drag that glass into the sink."
+    },
+    {
+      "key": "data.tour.guest.say.0",
+      "text": "Itt az első vendéged. Adj neki egy percet, hogy döntsön.",
+      "src": "Here's your first guest. Give them a second to make up their mind."
+    },
+    {
+      "key": "data.tour.hand_over.say.0",
+      "text": "Most add át. Húzd a poharat a vendéghez, vagy csak kattints rá.",
+      "src": "Now hand it over. Drag the glass to your guest, or just click them."
+    },
+    {
+      "key": "data.tour.house.say.0",
+      "text": "A szívek az italokról szólnak, az érmek arról, milyen érzés itt ülni.",
+      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+    },
+    {
+      "key": "data.tour.house.say.1",
+      "text": "Az este a kettő közül a gyengébbet kapja, szóval figyelj mindkettőre.",
+      "src": "The night is filed at the lower of the two, so mind both."
+    },
+    {
+      "key": "data.tour.measure.say.0",
+      "text": "A shaker megmutatja, mi van benne. A könyv kivilágítja minden üveg mezőjét.",
+      "src": "The tin shows what's in it. The book lights the box each bottle lands in."
+    },
+    {
+      "key": "data.tour.measure.say.1",
+      "text": "Ma a közel is jó. A telitalálatért jár a borravaló.",
+      "src": "Close is fine tonight. Dead on is what the tips are for."
+    },
+    {
+      "key": "data.tour.mixer.say.0",
+      "text": "Következik: {bottle}. Nyíllal vissza a pulthoz, vedd ki a pincéből, és töltsd hozzá.",
+      "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
+    },
+    {
+      "key": "data.tour.patience.say.0",
+      "text": "Az a csík a fejük fölött a türelem. Ha elfogy, ők is elmennek.",
+      "src": "That bar over their head is patience. Once it's gone, so are they."
+    },
+    {
+      "key": "data.tour.patience.say.1",
+      "text": "Ma, amíg körbevezetlek, vár rád. Utána már nem fog.",
+      "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pour.say.0",
+      "text": "Fogd meg az üveget, és döntsd a shaker fölé. Minél magasabbra emeled, annál gyorsabban folyik.",
+      "src": "Grab the bottle and tip it over the tin. The higher you lift it, the faster it runs."
+    },
+    {
+      "key": "data.tour.reaction.say.0",
+      "text": "Figyeld az arcát. Az a kritika, és beleszámít a csillagokba.",
+      "src": "Watch their face. That's the review, and it goes into the stars."
+    },
+    {
+      "key": "data.tour.reaction.say.1",
+      "text": "Felálláskor fizetnek. A borravaló a gyorsaságon, a szakértelmen és a jó töltésen múlik.",
+      "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
+    },
+    {
+      "key": "data.tour.serve_key.say.0",
+      "text": "Elégedett vagy? A SZOLGÁLD FEL a pultra teszi a poharat.",
+      "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.stars.say.0",
+      "text": "Azok a csillagok azt mutatják, mit mond rólunk az utca. Több csillag, több bár.",
+      "src": "Those stars are what the street says about us. More stars, more bar."
+    },
+    {
+      "key": "data.tour.stars.say.1",
+      "text": "Ezek nyitják meg a jó üvegeket, a jobb oldalakat, a berendezést a piacon.",
+      "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.stool.say.0",
+      "text": "Senki nem mondja meg, mit kér. Kattints a bárszékére, és olvasd el az igazolványt.",
+      "src": "Nobody tells you what they want. Click their stool and read the card."
+    },
+    {
+      "key": "data.tour.tap.say.0",
+      "text": "Az ott a csap. A sör külön mesterség. Megmutatom, amikor valaki kér.",
+      "src": "That's the tap. Beer is a craft of its own. I'll show you when somebody asks."
+    },
+    {
+      "key": "data.tour.till.say.0",
+      "text": "A kassza. Minden eladott ital ide kerül, borravalóval együtt.",
+      "src": "The till. Every drink you sell lands in here, tips and all."
+    },
+    {
+      "key": "data.tour.tip.say.0",
+      "text": "Fogd meg a shakert, és döntsd a pohár fölé. Ami mellémegy, az elveszett.",
+      "src": "Grab the tin and tip it over the glass. Whatever misses the glass is gone."
+    },
+    {
+      "key": "data.tour.welcome.say.0",
+      "text": "Hát itt vagy, sugar. Hatkor nyitunk. Előbb körbevezetlek.",
+      "src": "There you are, sugar. The doors open at six. Let me walk you round first."
+    },
+    {
+      "key": "data.tour.welcome.say.1",
+      "text": "Nyugodtan. Amíg beszélek, itt semmi sem mozdul.",
+      "src": "Take your time. Nothing in here moves while I'm talking."
+    },
+    {
+      "key": "data.tour.wipe.say.0",
+      "text": "És az a karika a fán. A koszos pult elviszi a hely érmeit.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+    },
+    {
+      "key": "data.tour.wipe.say.1",
+      "text": "Fogd a törlőrongyot, és dörzsöld le.",
+      "src": "Grab the cloth and rub it out."
+    }
+  ]
+}
