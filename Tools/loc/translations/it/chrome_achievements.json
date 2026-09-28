@@ -1,0 +1,39 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.achievements",
+      "text": "OBIETTIVI",
+      "src": "ACHIEVEMENTS"
+    },
+    {
+      "key": "chrome.achievement.unlocked",
+      "text": "OBIETTIVO · {name}",
+      "src": "ACHIEVEMENT · {name}"
+    },
+    {
+      "key": "chrome.achievement.progress",
+      "text": "{name} · {have}/{need}",
+      "src": "{name} · {have}/{need}"
+    },
+    {
+      "key": "chrome.achievements.count",
+      "text": "{have} SU {total} RAGGIUNTI",
+      "src": "{have} OF {total} EARNED"
+    },
+    {
+      "key": "chrome.achievements.secret",
+      "text": "SEGRETO",
+      "src": "SECRET"
+    },
+    {
+      "key": "chrome.achievements.secret_hint",
+      "text": "Continua a giocare per scoprirlo.",
+      "src": "Keep playing to find out."
+    },
+    {
+      "key": "chrome.achievements.earned",
+      "text": "RAGGIUNTO",
+      "src": "EARNED"
+    }
+  ]
+}

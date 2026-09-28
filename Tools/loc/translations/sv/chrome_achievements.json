@@ -1,0 +1,39 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.achievements",
+      "text": "PRESTATIONER",
+      "src": "ACHIEVEMENTS"
+    },
+    {
+      "key": "chrome.achievement.unlocked",
+      "text": "PRESTATION · {name}",
+      "src": "ACHIEVEMENT · {name}"
+    },
+    {
+      "key": "chrome.achievement.progress",
+      "text": "{name} · {have}/{need}",
+      "src": "{name} · {have}/{need}"
+    },
+    {
+      "key": "chrome.achievements.count",
+      "text": "{have} AV {total} UPPNÅDDA",
+      "src": "{have} OF {total} EARNED"
+    },
+    {
+      "key": "chrome.achievements.secret",
+      "text": "HEMLIG",
+      "src": "SECRET"
+    },
+    {
+      "key": "chrome.achievements.secret_hint",
+      "text": "Fortsätt spela för att ta reda på det.",
+      "src": "Keep playing to find out."
+    },
+    {
+      "key": "chrome.achievements.earned",
+      "text": "UPPNÅDD",
+      "src": "EARNED"
+    }
+  ]
+}

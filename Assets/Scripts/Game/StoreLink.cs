@@ -16,6 +16,14 @@ namespace LastCall.Game
 
         public static bool HasPage => !string.IsNullOrEmpty(Page);
 
+        /// <summary>
+        /// THE STEAM APP ID (2026-09-28). Zero until the app exists on Steamworks; while it is zero the Steam
+        /// assembly never starts Steam, so the editor does not show the author as playing Spacewar and a build
+        /// keeps its achievements on disk alone. The day the app is created: this number, the same number in
+        /// steam_appid.txt at the project root (the editor's test runs), and Docs/steam/STEAMWORKS_SETUP.md.
+        /// </summary>
+        public const uint SteamAppId = 0;
+
         public static void Open()
         {
             if (HasPage) Application.OpenURL(Page);

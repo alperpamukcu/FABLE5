@@ -17,6 +17,7 @@ in ART below. Re-run after any of them changes.
 """
 import io
 import json
+import glob
 import os
 import re
 
@@ -26,6 +27,11 @@ FONTS = os.path.join(ROOT, "Assets", "Fonts")
 OUT_JSON = os.path.join(ROOT, "Assets", "Resources", "Data", "credits.json")
 OUT_LIC = os.path.join(ROOT, "Assets", "Resources", "Data", "licenses.txt")
 SOUNDS = os.path.join(ROOT, "Docs", "SES_KAYNAKLARI.md")
+# code libraries that ship inside the build and ask for their notice to travel with it (MIT), found in
+# the package cache Unity fills from Packages/manifest.json (2026-09-28: Steamworks.NET)
+LIBRARIES = [
+    ("STEAMWORKS.NET", os.path.join(ROOT, "Library", "PackageCache", "com.rlabrecque.steamworks.net*", "LICENSE*")),
+]
 
 STUDIO = "LASGEN INTERACTIVE"
 GAME = "MALIBU CLUB: COCKTAIL BAR SIMULATOR"
@@ -100,6 +106,11 @@ def main():
             body = text[text.rfind("\n", 0, at) + 1:].strip()
     assert body, "no OFL body found"
     licences = notices + [body]
+    # The libraries after the fonts: each one's whole licence, verbatim (MIT is short and asks exactly that).
+    for shown, pattern in LIBRARIES:
+        found = sorted(glob.glob(pattern))
+        assert found, "no licence for %s at %s - let Unity resolve the package first" % (shown, pattern)
+        licences.append(shown + "\n" + io.open(found[0], encoding="utf-8").read().replace("\r\n", "\n").strip())
     font_lines.append("SIL OPEN FONT LICENSE 1.1")
     sections.append({"head": "chrome.credits.fonts", "lines": font_lines})
     owners = sound_owners()

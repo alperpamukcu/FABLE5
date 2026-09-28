@@ -1,0 +1,499 @@
+{
+  "strings": [
+    {
+      "key": "achievement.a_fortnight_open.description",
+      "text": "Продержи один бар открытым двенадцать ночей.",
+      "src": "Keep one bar open for twelve nights."
+    },
+    {
+      "key": "achievement.a_fortnight_open.name",
+      "text": "Две недели на плаву",
+      "src": "A Fortnight Open"
+    },
+    {
+      "key": "achievement.a_new_page.description",
+      "text": "Купи рецепт в книгу.",
+      "src": "Buy a recipe for the book."
+    },
+    {
+      "key": "achievement.a_new_page.name",
+      "text": "Новая страница",
+      "src": "A New Page"
+    },
+    {
+      "key": "achievement.a_thousand_pours.description",
+      "text": "Подай 1000 напитков точно по заказу.",
+      "src": "Serve 1,000 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.a_thousand_pours.name",
+      "text": "Тысяча напитков",
+      "src": "A Thousand Pours"
+    },
+    {
+      "key": "achievement.a_weeks_work.description",
+      "text": "Выполни недельное задание.",
+      "src": "Finish a weekly job."
+    },
+    {
+      "key": "achievement.a_weeks_work.name",
+      "text": "Неделя трудов",
+      "src": "A Week's Work"
+    },
+    {
+      "key": "achievement.an_institution.description",
+      "text": "Продержи один бар открытым 100 ночей.",
+      "src": "Keep one bar open for 100 nights."
+    },
+    {
+      "key": "achievement.an_institution.name",
+      "text": "Заведение с историей",
+      "src": "An Institution"
+    },
+    {
+      "key": "achievement.big_night.description",
+      "text": "Собери $500 чаевых за одну ночь.",
+      "src": "Take $500 in tips in a single night."
+    },
+    {
+      "key": "achievement.big_night.name",
+      "text": "Большая ночь",
+      "src": "Big Night"
+    },
+    {
+      "key": "achievement.blowout.description",
+      "text": "Взбивай что-нибудь газированное, пока шейкер не рванёт.",
+      "src": "Shake something fizzy until the tin bursts."
+    },
+    {
+      "key": "achievement.blowout.name",
+      "text": "Бабах!",
+      "src": "Blowout"
+    },
+    {
+      "key": "achievement.clean_sheet.description",
+      "text": "Обслужи ночь на десять и более гостей так, чтобы никто не ушёл и ни один напиток не был перепутан.",
+      "src": "Serve a night of ten or more guests with nobody walking out and no wrong drinks."
+    },
+    {
+      "key": "achievement.clean_sheet.name",
+      "text": "Чистая работа",
+      "src": "Clean Sheet"
+    },
+    {
+      "key": "achievement.confidant.description",
+      "text": "Заслужи доверие завсегдатая.",
+      "src": "Earn a regular's confidence."
+    },
+    {
+      "key": "achievement.confidant.name",
+      "text": "Свой человек",
+      "src": "Confidant"
+    },
+    {
+      "key": "achievement.dish_pig.description",
+      "text": "Вымой 250 бокалов.",
+      "src": "Wash 250 glasses."
+    },
+    {
+      "key": "achievement.dish_pig.name",
+      "text": "Посудомойка",
+      "src": "Dish Pig"
+    },
+    {
+      "key": "achievement.down_to_the_drop.description",
+      "text": "Налей коктейль идеально: каждая часть точно по отметке.",
+      "src": "Pour a cocktail perfectly, every part on its mark."
+    },
+    {
+      "key": "achievement.down_to_the_drop.name",
+      "text": "До последней капли",
+      "src": "Down to the Drop"
+    },
+    {
+      "key": "achievement.elbow_grease.description",
+      "text": "Сотри со стойки 50 пятен.",
+      "src": "Wipe 50 marks off the counter."
+    },
+    {
+      "key": "achievement.elbow_grease.name",
+      "text": "До блеска",
+      "src": "Elbow Grease"
+    },
+    {
+      "key": "achievement.first_round.description",
+      "text": "Подай напиток точно по заказу.",
+      "src": "Serve a drink exactly as it was ordered."
+    },
+    {
+      "key": "achievement.first_round.name",
+      "text": "Первый заказ",
+      "src": "First Round"
+    },
+    {
+      "key": "achievement.five_hundred_pours.description",
+      "text": "Подай 500 напитков точно по заказу.",
+      "src": "Serve 500 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.five_hundred_pours.name",
+      "text": "Пятьсот напитков",
+      "src": "Five Hundred Pours"
+    },
+    {
+      "key": "achievement.five_star_room.description",
+      "text": "Обставь зал до пяти звёзд уюта.",
+      "src": "Furnish the room to five stars of comfort."
+    },
+    {
+      "key": "achievement.five_star_room.name",
+      "text": "Зал на пять звёзд",
+      "src": "Five-Star Room"
+    },
+    {
+      "key": "achievement.five_stars_tonight.description",
+      "text": "Получи пять звёзд за одну ночь.",
+      "src": "Earn five stars for a single night."
+    },
+    {
+      "key": "achievement.five_stars_tonight.name",
+      "text": "Пять звёзд за ночь",
+      "src": "Five Stars Tonight"
+    },
+    {
+      "key": "achievement.four_weeks_open.description",
+      "text": "Продержи один бар открытым 24 ночи.",
+      "src": "Keep one bar open for 24 nights."
+    },
+    {
+      "key": "achievement.four_weeks_open.name",
+      "text": "Четыре недели на плаву",
+      "src": "Four Weeks Open"
+    },
+    {
+      "key": "achievement.getting_the_hang.description",
+      "text": "Подай 25 напитков точно по заказу.",
+      "src": "Serve 25 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.getting_the_hang.name",
+      "text": "Набиваешь руку",
+      "src": "Getting the Hang of It"
+    },
+    {
+      "key": "achievement.good_heads.description",
+      "text": "Нацеди пять пинт с пеной в нужной зоне.",
+      "src": "Pull five pints with the head in the good band."
+    },
+    {
+      "key": "achievement.good_heads.name",
+      "text": "Хорошая пена",
+      "src": "Good Heads"
+    },
+    {
+      "key": "achievement.hard_shake.description",
+      "text": "Подай взбитый в шейкере коктейль точно по заказу.",
+      "src": "Serve a shaken cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.hard_shake.name",
+      "text": "Крепкая встряска",
+      "src": "Hard Shake"
+    },
+    {
+      "key": "achievement.home_improvement.description",
+      "text": "Купи новую обстановку для зала.",
+      "src": "Buy a new fitting for the room."
+    },
+    {
+      "key": "achievement.home_improvement.name",
+      "text": "Обустройство",
+      "src": "Home Improvement"
+    },
+    {
+      "key": "achievement.hundred_club.description",
+      "text": "Подай 100 напитков точно по заказу.",
+      "src": "Serve 100 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.hundred_club.name",
+      "text": "Клуб сотни",
+      "src": "Hundred Club"
+    },
+    {
+      "key": "achievement.last_orders.description",
+      "text": "Потеряй бар. Такое бывает и с лучшими.",
+      "src": "Lose a bar. It happens to the best of them."
+    },
+    {
+      "key": "achievement.last_orders.name",
+      "text": "Последний заказ",
+      "src": "Last Orders"
+    },
+    {
+      "key": "achievement.legendary_glassware.description",
+      "text": "Подними одну линейку бокалов до легендарного уровня.",
+      "src": "Raise a line of glassware to legendary."
+    },
+    {
+      "key": "achievement.legendary_glassware.name",
+      "text": "Легендарные бокалы",
+      "src": "Legendary Glassware"
+    },
+    {
+      "key": "achievement.lights_out.description",
+      "text": "Подведи итоги своей первой ночи.",
+      "src": "Close the books on your first night."
+    },
+    {
+      "key": "achievement.lights_out.name",
+      "text": "Гасим свет",
+      "src": "Lights Out"
+    },
+    {
+      "key": "achievement.money_in_the_bank.description",
+      "text": "Закрой ночь с $50 000 в кассе.",
+      "src": "Close a night with $50,000 in the till."
+    },
+    {
+      "key": "achievement.money_in_the_bank.name",
+      "text": "Деньги в банке",
+      "src": "Money in the Bank"
+    },
+    {
+      "key": "achievement.night_owl.description",
+      "text": "Закрой в сумме 50 ночей во всех своих барах.",
+      "src": "Close 50 nights across all your bars."
+    },
+    {
+      "key": "achievement.night_owl.name",
+      "text": "Ночная сова",
+      "src": "Night Owl"
+    },
+    {
+      "key": "achievement.not_tonight.description",
+      "text": "Выставь за дверь того, кому не стоит пить.",
+      "src": "Show the door to someone who should not be drinking."
+    },
+    {
+      "key": "achievement.not_tonight.name",
+      "text": "Не сегодня",
+      "src": "Not Tonight"
+    },
+    {
+      "key": "achievement.same_again.description",
+      "text": "Добейся, чтобы пять гостей заказали ещё по одной.",
+      "src": "Have five guests order another round."
+    },
+    {
+      "key": "achievement.same_again.name",
+      "text": "Повторить!",
+      "src": "Same Again"
+    },
+    {
+      "key": "achievement.seen_them_all.description",
+      "text": "Поймай все виды фальшивых карточек: чужую, подправленную, скопированную и нарисованную от руки.",
+      "src": "Catch every kind of fake card: borrowed, altered, copied and drawn."
+    },
+    {
+      "key": "achievement.seen_them_all.name",
+      "text": "Всякое видали",
+      "src": "Seen Them All"
+    },
+    {
+      "key": "achievement.six_nights.description",
+      "text": "Закрой полную неделю ночей.",
+      "src": "Close a full week of nights."
+    },
+    {
+      "key": "achievement.six_nights.name",
+      "text": "Шесть ночей в неделю",
+      "src": "Six Nights a Week"
+    },
+    {
+      "key": "achievement.stirred_not_shaken.description",
+      "text": "Подай размешанный коктейль точно по заказу.",
+      "src": "Serve a stirred cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.stirred_not_shaken.name",
+      "text": "Смешать, но не взбалтывать",
+      "src": "Stirred, Not Shaken"
+    },
+    {
+      "key": "achievement.stocking_up.description",
+      "text": "Купи три новые бутылки на полку одного бара.",
+      "src": "Buy three new bottles for one bar's shelf."
+    },
+    {
+      "key": "achievement.stocking_up.name",
+      "text": "Запасаемся",
+      "src": "Stocking Up"
+    },
+    {
+      "key": "achievement.talk_of_the_street.description",
+      "text": "Достигни половины звезды.",
+      "src": "Reach half a star."
+    },
+    {
+      "key": "achievement.talk_of_the_street.name",
+      "text": "Говорит вся улица",
+      "src": "Talk of the Street"
+    },
+    {
+      "key": "achievement.talk_of_the_town.description",
+      "text": "Достигни двух звёзд.",
+      "src": "Reach two stars."
+    },
+    {
+      "key": "achievement.talk_of_the_town.name",
+      "text": "Говорит весь город",
+      "src": "Talk of the Town"
+    },
+    {
+      "key": "achievement.tapmaster.description",
+      "text": "Нацеди 50 пинт с пеной в нужной зоне.",
+      "src": "Pull 50 pints with the head in the good band."
+    },
+    {
+      "key": "achievement.tapmaster.name",
+      "text": "Мастер разлива",
+      "src": "Tapmaster"
+    },
+    {
+      "key": "achievement.ten_out_of_ten.description",
+      "text": "Налей идеально десять рецептов в одном баре.",
+      "src": "Perfect ten recipes in one bar."
+    },
+    {
+      "key": "achievement.ten_out_of_ten.name",
+      "text": "Десять из десяти",
+      "src": "Ten Out of Ten"
+    },
+    {
+      "key": "achievement.the_best_there_is.description",
+      "text": "Достигни пяти звёзд.",
+      "src": "Reach five stars."
+    },
+    {
+      "key": "achievement.the_best_there_is.name",
+      "text": "Лучше не бывает",
+      "src": "The Best There Is"
+    },
+    {
+      "key": "achievement.the_blocks_best.description",
+      "text": "Достигни одной звезды.",
+      "src": "Reach one star."
+    },
+    {
+      "key": "achievement.the_blocks_best.name",
+      "text": "Лучший в квартале",
+      "src": "The Block's Best"
+    },
+    {
+      "key": "achievement.the_bouncer.description",
+      "text": "Выставь за дверь 25 человек, которым не стоит пить.",
+      "src": "Show the door to 25 people who should not be drinking."
+    },
+    {
+      "key": "achievement.the_bouncer.name",
+      "text": "Вышибала",
+      "src": "The Bouncer"
+    },
+    {
+      "key": "achievement.the_citys_best.description",
+      "text": "Достигни трёх звёзд.",
+      "src": "Reach three stars."
+    },
+    {
+      "key": "achievement.the_citys_best.name",
+      "text": "Лучший в городе",
+      "src": "The City's Best"
+    },
+    {
+      "key": "achievement.the_countrys_best.description",
+      "text": "Достигни четырёх звёзд.",
+      "src": "Reach four stars."
+    },
+    {
+      "key": "achievement.the_countrys_best.name",
+      "text": "Лучший в стране",
+      "src": "The Country's Best"
+    },
+    {
+      "key": "achievement.the_usual.description",
+      "text": "Расположи к себе гостя, пока он не станет твоим завсегдатаем.",
+      "src": "Win a guest over until they are one of your regulars."
+    },
+    {
+      "key": "achievement.the_usual.name",
+      "text": "Как обычно",
+      "src": "The Usual"
+    },
+    {
+      "key": "achievement.the_whole_book.description",
+      "text": "Собери в одном баре все существующие рецепты.",
+      "src": "Own every recipe there is in one bar."
+    },
+    {
+      "key": "achievement.the_whole_book.name",
+      "text": "Вся книга",
+      "src": "The Whole Book"
+    },
+    {
+      "key": "achievement.tip_jar.description",
+      "text": "Заработай $500 чаевых.",
+      "src": "Earn $500 in tips."
+    },
+    {
+      "key": "achievement.tip_jar.name",
+      "text": "Банка для чаевых",
+      "src": "Tip Jar"
+    },
+    {
+      "key": "achievement.two_more_stools.description",
+      "text": "Усади за стойку шестерых.",
+      "src": "Seat six at the bar."
+    },
+    {
+      "key": "achievement.two_more_stools.name",
+      "text": "Ещё два стула",
+      "src": "Two More Stools"
+    },
+    {
+      "key": "achievement.well_read.description",
+      "text": "Собери двадцать рецептов в книге одного бара.",
+      "src": "Have twenty recipes in one bar's book."
+    },
+    {
+      "key": "achievement.well_read.name",
+      "text": "Книжный червь",
+      "src": "Well Read"
+    },
+    {
+      "key": "achievement.wrong_call.description",
+      "text": "Выставь за дверь честного взрослого.",
+      "src": "Show the door to an honest adult."
+    },
+    {
+      "key": "achievement.wrong_call.name",
+      "text": "Промашка",
+      "src": "Wrong Call"
+    },
+    {
+      "key": "steam.presence.books",
+      "text": "Подводит итоги ночи {night}",
+      "src": "Closing the books on night {night}"
+    },
+    {
+      "key": "steam.presence.menu",
+      "text": "У входной двери",
+      "src": "At the front door"
+    },
+    {
+      "key": "steam.presence.night",
+      "text": "Ночь {night} · {stars}★",
+      "src": "Night {night} · {stars}★"
+    }
+  ]
+}

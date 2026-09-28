@@ -1,0 +1,39 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.achievements",
+      "text": "実績",
+      "src": "ACHIEVEMENTS"
+    },
+    {
+      "key": "chrome.achievement.unlocked",
+      "text": "実績 · {name}",
+      "src": "ACHIEVEMENT · {name}"
+    },
+    {
+      "key": "chrome.achievement.progress",
+      "text": "{name} · {have}/{need}",
+      "src": "{name} · {have}/{need}"
+    },
+    {
+      "key": "chrome.achievements.count",
+      "text": "{have}/{total} 獲得",
+      "src": "{have} OF {total} EARNED"
+    },
+    {
+      "key": "chrome.achievements.secret",
+      "text": "シークレット",
+      "src": "SECRET"
+    },
+    {
+      "key": "chrome.achievements.secret_hint",
+      "text": "遊び続けるとわかります。",
+      "src": "Keep playing to find out."
+    },
+    {
+      "key": "chrome.achievements.earned",
+      "text": "獲得",
+      "src": "EARNED"
+    }
+  ]
+}

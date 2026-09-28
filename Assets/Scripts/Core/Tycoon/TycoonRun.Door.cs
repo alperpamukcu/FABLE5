@@ -80,6 +80,7 @@ namespace LastCall.Core
                 WrongKicks++;
                 visit.Regular?.RecordVisit(0);   // refused a drink they were entitled to
             }
+            FeatTheKick(rightly, papers);
         }
     }
 }

@@ -1895,6 +1895,59 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.133 · Steam entegrasyonu: 48 başarım, yaşam boyu sayaçlar, durum satırı, Steam dili (2026-09-28)
+
+Yazar: “Oyuna steam etkileşimleri koyalım. Steam başarımı vs. bu entegrasyonu oyuna iyi bir şekilde yap her
+saniye başarım da kazanılmasın çok zor başarımlarda olsun ama sık başarım kazanılsın oyuncuya ilerleme hissi
+verilsin.” Steamworks sitesinde yapılacaklar ve dosya yolları `Docs/STEAMWORKS.md`'de.
+
+- **Kurallar Core'da** (UI'ya güvenilmez): `TycoonRun.Feats` koşunun yaptığını olduğu yerde raporlar — servis
+  hakem karar verdiğinde (tam servis, çalkalanmış / karıştırılmış tam servis, köpüğü iyi pint, kusursuz döküm,
+  bahşiş, tekrar tur, müdavim yakınlığı), kapıda atış (doğru / yanlış, dört sahte kart türü), patlayan shaker,
+  ödenen haftalık iş; gecenin sayıları defter kapanırken (gece, bir barın gece sayısı, gecenin yıldızı ve
+  bahşişi, kasa, rütbe, alınan/bilinen/kusursuz tarif, bütün kitap, alınan marka ve fikstür, bardak kademesi,
+  tabure, oda konforu, silme/yıkama, iflas). Market alışverişi gecenin kendi fişinden, iade penceresi
+  kapandıktan sonra sayılır. Kimse dinlemiyorsa (sim, testler) kuyruk hiç dolmaz; **bir dev fiili**
+  (preset, gece atlama, bedava fikstür, rütbe tırmandırma) koşuyu kalıcı işaretler, kayda da yazılır, bir
+  daha hiçbir şey saymaz.
+- **Yaşam boyu defter** (`AchievementTracker`, saf): 35 istatistik (toplanan ya da en iyi), 48 başarım
+  (`Resources/Data/achievements.json` — veri; DataLoader yanlış istatistik adını, katmanı, gizli/sır
+  uyuşmazlığını reddeder). Uzun sayaçlar çeyreklerde (100+) ya da yarıda (10+) bir ilerleme notu verir;
+  set başarımları her yeni parçada. Yeni eklenen bir başarım, oyuncunun zaten yetmiş sayıları varsa ilk
+  okumada kazanılır.
+- **Saklama** (`Achievements`, Game): `persistentDataPath/achievements.json`, bütün barlar boyunca, atomik
+  yazım; okunamayan dosya ezilmez, kenara alınır. SaveStore'un kapalı olduğu oturum (test takımları) hiçbir
+  şey okumaz, yazmaz, göstermez.
+- **Steam** (`Assets/Scripts/Steam`, Steamworks.NET 2025.164.1, MIT): paket kuruluyken derlenir,
+  `StoreLink.SteamAppId` 0 iken **Steam'i hiç başlatmaz**. Açıldığında: yerel kayıt ile Steam iki yönlü
+  birleşir (başka bilgisayardaki sayılar sessizce alınır, burada kazanılanlar Steam'e verilir), her başarım
+  ve istatistik gönderilir, ilerleme notları Steam'in kendi bildirimiyle de çıkar; oyun dili sıralaması
+  kayıtlı seçim → **Steam kütüphanesinde seçilen dil** → işletim sistemi; overlay açık geceyi duraklatır;
+  arkadaş listesinde durum satırı (menü / “Gece 12 · 3★” / defter kapanışı, 29 dil). Paketin tanım
+  sembollerini yönetmesi kapalı (`ProjectSettings/SteamworksNETSettings.json`) — proje ayarlarına dokunmaz.
+- **Ekranda**: kazanılınca sağ üstte, bildirim satırının altında kayan bir kart (koyu plaka, altın kenar,
+  kupa, ad; ses); ilerleme notu aynı kart camgöbeği kenar ve altta dolum çubuğuyla. Kartlar kuyrukta tek tek
+  gelir; bildirim satırına hiç yazmaz. Ana menünün küçük sırasında **ACHIEVEMENTS**: bütün liste kazanılma
+  sırasıyla, kazanılanlar yanık, sayaçların çubuğu, sırlar “?” ile. Azaltılmış harekette kart kaymaz.
+- **Tempo, ölçüldü** (`LastCall → Achievement Pacing`, `Docs/achievement_pacing.md`, 200 bar): taban bot ilk
+  gece 3, ilk 12 gecede ortalama 18,7 başarım alıyor (gecede ~1,5; “sık ama her saniye değil”), en uzun boş
+  aralık ortanca 4 gece. Orta ve geç katmanlar (2★ ve üstü, 500/1000 servis, 50.000$ kasa, efsane bardak,
+  beş yıldızlı oda, bütün kitap, 100 gece) botun ulaşamadığı yerde — insan için ekonomi projeksiyonu 2★'ı
+  ~17., 5★'ı ~53–76. geceye koyuyor. Kalibrasyonla: “Good Heads” ve “Same Again” 10'dan 5'e, “Dish Pig”
+  500'den 250'ye, “Money in the Bank” 25.000'den 50.000'e; “A Fortnight Open” ve “Five Hundred Pours”
+  aradaki boşlukları doldurmak için eklendi; iki sır (yanlış atış, patlayan shaker).
+- **Metin**: başarım adları/açıklamaları `achievement.<id>.name/description` (`Tools/loc/achievement_keys.py`),
+  29 dilde; rütbe adlı başarımlar Türkçede rütbe unvanlarıyla aynı. Yan bulgu: `rank.title.*` yalnız
+  Türkçe tabloda çevrili — diğer 27 dilin çevirmenleri bu başarım adlarını unvan olarak kullanabilir.
+- **Ortak bildirim satırı düzeltmesi**: ikonlu bildirimde satırın sol kenarı merkeze göre ayarlanıyordu; 620
+  px'lik kutu sağ yarıya iniyor, sözler kırılıyor ve ondan sonraki her bildirim o yarıda kalıyordu. Kenar
+  artık kendi başlangıcından kayar, ikon sözlerin hemen önünde durur (r257).
+- **Kalan, yazarın**: App ID, Steamworks girişleri (`Tools/steamworks/achievements_kit.py` 35 istatistik /
+  48 başarım tablosunu, 29 dilli çeviri VDF'ini ve durum satırı dosyalarını üretir), 96 başarım ikonu
+  (64×64, yanık + gri — seçim bekliyor), Auto-Cloud yolu (`companyName` kesinleşince).
+- Doğrulama: EditMode 803/803 (`AchievementTests` 12 yeni), PlayMode 15/15; menünün görüntü testinin
+  referansı (`menu.png`) yeni tuşla yeniden onaylandı; kart, liste ve menü oyunda ölçüldü (r257, r258).
+
 ### 9.132 · Ana menüde bardaklar yerine barın kendi şişeleri geziyor (2026-09-28)
 
 Yazar: “Başlangıç menüsünde artık arkada uçan bardaklar değil yeni alkol şişelerimiz gezsin.”

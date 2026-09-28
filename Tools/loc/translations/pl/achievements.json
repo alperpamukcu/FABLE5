@@ -1,0 +1,499 @@
+{
+  "strings": [
+    {
+      "key": "achievement.a_fortnight_open.description",
+      "text": "Utrzymaj jeden bar otwarty przez dwanaście nocy.",
+      "src": "Keep one bar open for twelve nights."
+    },
+    {
+      "key": "achievement.a_fortnight_open.name",
+      "text": "Dwa tygodnie za barem",
+      "src": "A Fortnight Open"
+    },
+    {
+      "key": "achievement.a_new_page.description",
+      "text": "Kup przepis do księgi.",
+      "src": "Buy a recipe for the book."
+    },
+    {
+      "key": "achievement.a_new_page.name",
+      "text": "Nowa strona",
+      "src": "A New Page"
+    },
+    {
+      "key": "achievement.a_thousand_pours.description",
+      "text": "Podaj 1000 drinków dokładnie tak, jak je zamówiono.",
+      "src": "Serve 1,000 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.a_thousand_pours.name",
+      "text": "Tysiąc drinków",
+      "src": "A Thousand Pours"
+    },
+    {
+      "key": "achievement.a_weeks_work.description",
+      "text": "Wykonaj tygodniowe zlecenie.",
+      "src": "Finish a weekly job."
+    },
+    {
+      "key": "achievement.a_weeks_work.name",
+      "text": "Tydzień roboty",
+      "src": "A Week's Work"
+    },
+    {
+      "key": "achievement.an_institution.description",
+      "text": "Utrzymaj jeden bar otwarty przez 100 nocy.",
+      "src": "Keep one bar open for 100 nights."
+    },
+    {
+      "key": "achievement.an_institution.name",
+      "text": "Instytucja",
+      "src": "An Institution"
+    },
+    {
+      "key": "achievement.big_night.description",
+      "text": "Zbierz $500 napiwków w jedną noc.",
+      "src": "Take $500 in tips in a single night."
+    },
+    {
+      "key": "achievement.big_night.name",
+      "text": "Wielka noc",
+      "src": "Big Night"
+    },
+    {
+      "key": "achievement.blowout.description",
+      "text": "Wstrząsaj czymś gazowanym, aż shaker wybuchnie.",
+      "src": "Shake something fizzy until the tin bursts."
+    },
+    {
+      "key": "achievement.blowout.name",
+      "text": "Wybuchowa mieszanka",
+      "src": "Blowout"
+    },
+    {
+      "key": "achievement.clean_sheet.description",
+      "text": "Obsłuż noc z co najmniej dziesięcioma gośćmi tak, by nikt nie wyszedł i żaden drink nie był pomylony.",
+      "src": "Serve a night of ten or more guests with nobody walking out and no wrong drinks."
+    },
+    {
+      "key": "achievement.clean_sheet.name",
+      "text": "Czyste konto",
+      "src": "Clean Sheet"
+    },
+    {
+      "key": "achievement.confidant.description",
+      "text": "Zdobądź zaufanie stałego bywalca.",
+      "src": "Earn a regular's confidence."
+    },
+    {
+      "key": "achievement.confidant.name",
+      "text": "Powiernik",
+      "src": "Confidant"
+    },
+    {
+      "key": "achievement.dish_pig.description",
+      "text": "Umyj 250 szklanek.",
+      "src": "Wash 250 glasses."
+    },
+    {
+      "key": "achievement.dish_pig.name",
+      "text": "Król zmywaka",
+      "src": "Dish Pig"
+    },
+    {
+      "key": "achievement.down_to_the_drop.description",
+      "text": "Nalej koktajl idealnie, każdy składnik do swojej kreski.",
+      "src": "Pour a cocktail perfectly, every part on its mark."
+    },
+    {
+      "key": "achievement.down_to_the_drop.name",
+      "text": "Co do kropli",
+      "src": "Down to the Drop"
+    },
+    {
+      "key": "achievement.elbow_grease.description",
+      "text": "Zetrzyj 50 plam z kontuaru.",
+      "src": "Wipe 50 marks off the counter."
+    },
+    {
+      "key": "achievement.elbow_grease.name",
+      "text": "Ścierka w ruch",
+      "src": "Elbow Grease"
+    },
+    {
+      "key": "achievement.first_round.description",
+      "text": "Podaj drinka dokładnie tak, jak go zamówiono.",
+      "src": "Serve a drink exactly as it was ordered."
+    },
+    {
+      "key": "achievement.first_round.name",
+      "text": "Pierwsza kolejka",
+      "src": "First Round"
+    },
+    {
+      "key": "achievement.five_hundred_pours.description",
+      "text": "Podaj 500 drinków dokładnie tak, jak je zamówiono.",
+      "src": "Serve 500 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.five_hundred_pours.name",
+      "text": "Pięćset drinków",
+      "src": "Five Hundred Pours"
+    },
+    {
+      "key": "achievement.five_star_room.description",
+      "text": "Urządź salę na pięć gwiazdek komfortu.",
+      "src": "Furnish the room to five stars of comfort."
+    },
+    {
+      "key": "achievement.five_star_room.name",
+      "text": "Sala na pięć gwiazdek",
+      "src": "Five-Star Room"
+    },
+    {
+      "key": "achievement.five_stars_tonight.description",
+      "text": "Zdobądź pięć gwiazdek za jedną noc.",
+      "src": "Earn five stars for a single night."
+    },
+    {
+      "key": "achievement.five_stars_tonight.name",
+      "text": "Dziś pięć gwiazdek",
+      "src": "Five Stars Tonight"
+    },
+    {
+      "key": "achievement.four_weeks_open.description",
+      "text": "Utrzymaj jeden bar otwarty przez 24 noce.",
+      "src": "Keep one bar open for 24 nights."
+    },
+    {
+      "key": "achievement.four_weeks_open.name",
+      "text": "Cztery tygodnie za barem",
+      "src": "Four Weeks Open"
+    },
+    {
+      "key": "achievement.getting_the_hang.description",
+      "text": "Podaj 25 drinków dokładnie tak, jak je zamówiono.",
+      "src": "Serve 25 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.getting_the_hang.name",
+      "text": "Nabierasz wprawy",
+      "src": "Getting the Hang of It"
+    },
+    {
+      "key": "achievement.good_heads.description",
+      "text": "Utocz pięć kufli z pianą w dobrym zakresie.",
+      "src": "Pull five pints with the head in the good band."
+    },
+    {
+      "key": "achievement.good_heads.name",
+      "text": "Ładna piana",
+      "src": "Good Heads"
+    },
+    {
+      "key": "achievement.hard_shake.description",
+      "text": "Podaj wstrząśnięty koktajl dokładnie tak, jak go zamówiono.",
+      "src": "Serve a shaken cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.hard_shake.name",
+      "text": "Porządnie wstrząśnięty",
+      "src": "Hard Shake"
+    },
+    {
+      "key": "achievement.home_improvement.description",
+      "text": "Kup nowe wyposażenie do sali.",
+      "src": "Buy a new fitting for the room."
+    },
+    {
+      "key": "achievement.home_improvement.name",
+      "text": "Złota rączka",
+      "src": "Home Improvement"
+    },
+    {
+      "key": "achievement.hundred_club.description",
+      "text": "Podaj 100 drinków dokładnie tak, jak je zamówiono.",
+      "src": "Serve 100 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.hundred_club.name",
+      "text": "Klub stu",
+      "src": "Hundred Club"
+    },
+    {
+      "key": "achievement.last_orders.description",
+      "text": "Strać bar. Zdarza się najlepszym.",
+      "src": "Lose a bar. It happens to the best of them."
+    },
+    {
+      "key": "achievement.last_orders.name",
+      "text": "Ostatnia kolejka",
+      "src": "Last Orders"
+    },
+    {
+      "key": "achievement.legendary_glassware.description",
+      "text": "Podnieś jedną linię szkła do poziomu legendarnego.",
+      "src": "Raise a line of glassware to legendary."
+    },
+    {
+      "key": "achievement.legendary_glassware.name",
+      "text": "Legendarne szkło",
+      "src": "Legendary Glassware"
+    },
+    {
+      "key": "achievement.lights_out.description",
+      "text": "Rozlicz swoją pierwszą noc.",
+      "src": "Close the books on your first night."
+    },
+    {
+      "key": "achievement.lights_out.name",
+      "text": "Gasimy światła",
+      "src": "Lights Out"
+    },
+    {
+      "key": "achievement.money_in_the_bank.description",
+      "text": "Zakończ noc z $50 000 w kasie.",
+      "src": "Close a night with $50,000 in the till."
+    },
+    {
+      "key": "achievement.money_in_the_bank.name",
+      "text": "Pieniądze w banku",
+      "src": "Money in the Bank"
+    },
+    {
+      "key": "achievement.night_owl.description",
+      "text": "Zamknij łącznie 50 nocy we wszystkich swoich barach.",
+      "src": "Close 50 nights across all your bars."
+    },
+    {
+      "key": "achievement.night_owl.name",
+      "text": "Nocny marek",
+      "src": "Night Owl"
+    },
+    {
+      "key": "achievement.not_tonight.description",
+      "text": "Wyproś kogoś, kto nie powinien pić.",
+      "src": "Show the door to someone who should not be drinking."
+    },
+    {
+      "key": "achievement.not_tonight.name",
+      "text": "Nie dziś",
+      "src": "Not Tonight"
+    },
+    {
+      "key": "achievement.same_again.description",
+      "text": "Niech pięciu gości zamówi kolejną kolejkę.",
+      "src": "Have five guests order another round."
+    },
+    {
+      "key": "achievement.same_again.name",
+      "text": "To samo jeszcze raz",
+      "src": "Same Again"
+    },
+    {
+      "key": "achievement.seen_them_all.description",
+      "text": "Przyłap każdy rodzaj fałszywki: cudzy, przerobiony, skopiowany i ręcznie rysowany dokument.",
+      "src": "Catch every kind of fake card: borrowed, altered, copied and drawn."
+    },
+    {
+      "key": "achievement.seen_them_all.name",
+      "text": "Wszystko już było",
+      "src": "Seen Them All"
+    },
+    {
+      "key": "achievement.six_nights.description",
+      "text": "Zamknij pełny tydzień nocy.",
+      "src": "Close a full week of nights."
+    },
+    {
+      "key": "achievement.six_nights.name",
+      "text": "Sześć nocy w tygodniu",
+      "src": "Six Nights a Week"
+    },
+    {
+      "key": "achievement.stirred_not_shaken.description",
+      "text": "Podaj mieszany koktajl dokładnie tak, jak go zamówiono.",
+      "src": "Serve a stirred cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.stirred_not_shaken.name",
+      "text": "Zamieszane, nie wstrząśnięte",
+      "src": "Stirred, Not Shaken"
+    },
+    {
+      "key": "achievement.stocking_up.description",
+      "text": "Kup trzy nowe butelki na półkę jednego baru.",
+      "src": "Buy three new bottles for one bar's shelf."
+    },
+    {
+      "key": "achievement.stocking_up.name",
+      "text": "Robimy zapasy",
+      "src": "Stocking Up"
+    },
+    {
+      "key": "achievement.talk_of_the_street.description",
+      "text": "Zdobądź pół gwiazdki.",
+      "src": "Reach half a star."
+    },
+    {
+      "key": "achievement.talk_of_the_street.name",
+      "text": "Na ustach całej ulicy",
+      "src": "Talk of the Street"
+    },
+    {
+      "key": "achievement.talk_of_the_town.description",
+      "text": "Zdobądź dwie gwiazdki.",
+      "src": "Reach two stars."
+    },
+    {
+      "key": "achievement.talk_of_the_town.name",
+      "text": "Na ustach całego miasta",
+      "src": "Talk of the Town"
+    },
+    {
+      "key": "achievement.tapmaster.description",
+      "text": "Utocz 50 kufli z pianą w dobrym zakresie.",
+      "src": "Pull 50 pints with the head in the good band."
+    },
+    {
+      "key": "achievement.tapmaster.name",
+      "text": "Mistrz nalewaka",
+      "src": "Tapmaster"
+    },
+    {
+      "key": "achievement.ten_out_of_ten.description",
+      "text": "Nalej idealnie dziesięć przepisów w jednym barze.",
+      "src": "Perfect ten recipes in one bar."
+    },
+    {
+      "key": "achievement.ten_out_of_ten.name",
+      "text": "Dziesięć na dziesięć",
+      "src": "Ten Out of Ten"
+    },
+    {
+      "key": "achievement.the_best_there_is.description",
+      "text": "Zdobądź pięć gwiazdek.",
+      "src": "Reach five stars."
+    },
+    {
+      "key": "achievement.the_best_there_is.name",
+      "text": "Najlepszy z najlepszych",
+      "src": "The Best There Is"
+    },
+    {
+      "key": "achievement.the_blocks_best.description",
+      "text": "Zdobądź jedną gwiazdkę.",
+      "src": "Reach one star."
+    },
+    {
+      "key": "achievement.the_blocks_best.name",
+      "text": "Najlepszy w okolicy",
+      "src": "The Block's Best"
+    },
+    {
+      "key": "achievement.the_bouncer.description",
+      "text": "Wyproś 25 osób, które nie powinny pić.",
+      "src": "Show the door to 25 people who should not be drinking."
+    },
+    {
+      "key": "achievement.the_bouncer.name",
+      "text": "Bramkarz",
+      "src": "The Bouncer"
+    },
+    {
+      "key": "achievement.the_citys_best.description",
+      "text": "Zdobądź trzy gwiazdki.",
+      "src": "Reach three stars."
+    },
+    {
+      "key": "achievement.the_citys_best.name",
+      "text": "Najlepszy w mieście",
+      "src": "The City's Best"
+    },
+    {
+      "key": "achievement.the_countrys_best.description",
+      "text": "Zdobądź cztery gwiazdki.",
+      "src": "Reach four stars."
+    },
+    {
+      "key": "achievement.the_countrys_best.name",
+      "text": "Najlepszy w kraju",
+      "src": "The Country's Best"
+    },
+    {
+      "key": "achievement.the_usual.description",
+      "text": "Zjednaj sobie gościa, aż zostanie twoim stałym bywalcem.",
+      "src": "Win a guest over until they are one of your regulars."
+    },
+    {
+      "key": "achievement.the_usual.name",
+      "text": "To co zwykle",
+      "src": "The Usual"
+    },
+    {
+      "key": "achievement.the_whole_book.description",
+      "text": "Zdobądź w jednym barze wszystkie istniejące przepisy.",
+      "src": "Own every recipe there is in one bar."
+    },
+    {
+      "key": "achievement.the_whole_book.name",
+      "text": "Cała księga",
+      "src": "The Whole Book"
+    },
+    {
+      "key": "achievement.tip_jar.description",
+      "text": "Zarób $500 napiwków.",
+      "src": "Earn $500 in tips."
+    },
+    {
+      "key": "achievement.tip_jar.name",
+      "text": "Słoik na napiwki",
+      "src": "Tip Jar"
+    },
+    {
+      "key": "achievement.two_more_stools.description",
+      "text": "Posadź przy barze sześć osób.",
+      "src": "Seat six at the bar."
+    },
+    {
+      "key": "achievement.two_more_stools.name",
+      "text": "Jeszcze dwa stołki",
+      "src": "Two More Stools"
+    },
+    {
+      "key": "achievement.well_read.description",
+      "text": "Miej dwadzieścia przepisów w księdze jednego baru.",
+      "src": "Have twenty recipes in one bar's book."
+    },
+    {
+      "key": "achievement.well_read.name",
+      "text": "Mól książkowy",
+      "src": "Well Read"
+    },
+    {
+      "key": "achievement.wrong_call.description",
+      "text": "Wyproś uczciwego dorosłego.",
+      "src": "Show the door to an honest adult."
+    },
+    {
+      "key": "achievement.wrong_call.name",
+      "text": "Pudło!",
+      "src": "Wrong Call"
+    },
+    {
+      "key": "steam.presence.books",
+      "text": "Rozlicza noc {night}",
+      "src": "Closing the books on night {night}"
+    },
+    {
+      "key": "steam.presence.menu",
+      "text": "Przy drzwiach wejściowych",
+      "src": "At the front door"
+    },
+    {
+      "key": "steam.presence.night",
+      "text": "Noc {night} · {stars}★",
+      "src": "Night {night} · {stars}★"
+    }
+  ]
+}

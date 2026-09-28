@@ -68,6 +68,9 @@ PICKS = {
     "m_credits":     "Software_Text_Document_Credits_Roll_Attributions",
     "m_steam":       "Platforms_Steam_Valve",
     "m_pointer":     "Arrows_Pointer_Right_East",
+    # the achievements (2026-09-28): the menu key, the list and the toast; a secret still to find
+    "m_achievements": "Sports_Winner_Award_Cup_Achievement_Trophy",
+    "m_secret":      "Software_Warning_Sign_Circle_Question_Mark_Help",
 }
 
 

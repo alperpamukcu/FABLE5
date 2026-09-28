@@ -210,10 +210,15 @@ namespace LastCall.Core
             Ratings = ratings; _sum = sum;
         }
 
+        /// <summary>The standing was parked by <see cref="DevSet"/>: the run it belongs to reports no
+        /// achievement stats (TycoonRun.DevTouched).</summary>
+        public bool DevTouched { get; private set; }
+
         /// <summary>Dev tooling only: parks the standing for the game-mode presets — and the high-water mark
         /// with it, so a parked five-star bar is a five-star bar on the ladder too.</summary>
         public void DevSet(double stars)
         {
+            DevTouched = true;   // a parked standing earns nothing (TycoonRun.Feats)
             _standing = Math.Max(0.0, Math.Min(MaxStars, stars));
             if (_standing > BestStanding) BestStanding = _standing;
         }

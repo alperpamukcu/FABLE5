@@ -35,6 +35,13 @@ fontun telif notunu ve SIL OFL 1.1'in tam metnini gösteriyor (`Tools/credits_bu
 | Galmuri (ko) | `Assets/Fonts/OFL-Galmuri.txt` |
 | Fusion Pixel 12 (ja / zh) | `Assets/Fonts/OFL-FusionPixel.txt` |
 
+## Kod kütüphaneleri
+
+| Oyunda | Kaynak | Sahibi | Lisans | Atıf |
+|---|---|---|---|---|
+| Steam entegrasyonu `Assets/Scripts/Steam` (2026-09-28) | [Steamworks.NET](https://github.com/rlabrecque/Steamworks.NET) 2025.164.1 | Riley Labrecque | MIT | **Zorunlu:** telif notu + lisans metni derlemeyle gider — CREDITS ekranının lisanslar bölümünde (`Tools/credits_build.py` paket önbelleğinden okur) |
+| `steam_api64.dll` (paketin içinde) | Steamworks SDK 1.64 | Valve | Steamworks SDK Erişim Sözleşmesi — yeniden dağıtılabilir | Gerekmez |
+
 ## Ses
 
 Bütün kayıtlar CC0 / kamu malı; dosya dosya kaynakları `Docs/SES_KAYNAKLARI.md`'de

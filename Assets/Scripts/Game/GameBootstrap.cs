@@ -103,7 +103,14 @@ namespace LastCall.Game
             // default, is exactly the two lines that stood here (vsync 1, no target); a cap of 60,
             // 120 or 144 turns vsync off and targets it. DisplayOptions keeps the player-only guard.
             DisplayOptions.ApplyPacing();
+            // THE ACHIEVEMENTS LISTEN TO WHICHEVER RUN IS BEING PLAYED (2026-09-28): a fresh bar, a saved one
+            // taken up again, or one carried across a language reload — every one of them raises this.
+            RunStarted += () => Achievements.Attach(Tycoon);
         }
+
+        private void Update() => Achievements.Step();
+
+        private void OnApplicationQuit() => Achievements.Flush();
 
         /// <summary>The scene came up around a run that was already going (a language
         /// reload) — the front door must not reappear over a night in progress.</summary>

@@ -1,0 +1,499 @@
+{
+  "strings": [
+    {
+      "key": "achievement.a_fortnight_open.description",
+      "text": "Houd een bar twaalf avonden open.",
+      "src": "Keep one bar open for twelve nights."
+    },
+    {
+      "key": "achievement.a_fortnight_open.name",
+      "text": "Twee weken open",
+      "src": "A Fortnight Open"
+    },
+    {
+      "key": "achievement.a_new_page.description",
+      "text": "Koop een recept voor het boek.",
+      "src": "Buy a recipe for the book."
+    },
+    {
+      "key": "achievement.a_new_page.name",
+      "text": "Een nieuwe bladzijde",
+      "src": "A New Page"
+    },
+    {
+      "key": "achievement.a_thousand_pours.description",
+      "text": "Serveer 1000 drankjes precies zoals ze besteld zijn.",
+      "src": "Serve 1,000 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.a_thousand_pours.name",
+      "text": "Duizend glazen",
+      "src": "A Thousand Pours"
+    },
+    {
+      "key": "achievement.a_weeks_work.description",
+      "text": "Rond een weekklus af.",
+      "src": "Finish a weekly job."
+    },
+    {
+      "key": "achievement.a_weeks_work.name",
+      "text": "Klus van de week",
+      "src": "A Week's Work"
+    },
+    {
+      "key": "achievement.an_institution.description",
+      "text": "Houd een bar 100 avonden open.",
+      "src": "Keep one bar open for 100 nights."
+    },
+    {
+      "key": "achievement.an_institution.name",
+      "text": "Een begrip",
+      "src": "An Institution"
+    },
+    {
+      "key": "achievement.big_night.description",
+      "text": "Haal op één avond $500 aan fooi binnen.",
+      "src": "Take $500 in tips in a single night."
+    },
+    {
+      "key": "achievement.big_night.name",
+      "text": "Topavond",
+      "src": "Big Night"
+    },
+    {
+      "key": "achievement.blowout.description",
+      "text": "Shake iets met prik tot de shaker knapt.",
+      "src": "Shake something fizzy until the tin bursts."
+    },
+    {
+      "key": "achievement.blowout.name",
+      "text": "Met een knal",
+      "src": "Blowout"
+    },
+    {
+      "key": "achievement.clean_sheet.description",
+      "text": "Werk een avond met tien of meer gasten af zonder dat iemand wegloopt en zonder verkeerde drankjes.",
+      "src": "Serve a night of ten or more guests with nobody walking out and no wrong drinks."
+    },
+    {
+      "key": "achievement.clean_sheet.name",
+      "text": "De nul gehouden",
+      "src": "Clean Sheet"
+    },
+    {
+      "key": "achievement.confidant.description",
+      "text": "Win het vertrouwen van een stamgast.",
+      "src": "Earn a regular's confidence."
+    },
+    {
+      "key": "achievement.confidant.name",
+      "text": "Vertrouweling",
+      "src": "Confidant"
+    },
+    {
+      "key": "achievement.dish_pig.description",
+      "text": "Spoel 250 glazen.",
+      "src": "Wash 250 glasses."
+    },
+    {
+      "key": "achievement.dish_pig.name",
+      "text": "Afwasser",
+      "src": "Dish Pig"
+    },
+    {
+      "key": "achievement.down_to_the_drop.description",
+      "text": "Schenk een perfecte cocktail, elk deel precies op zijn streep.",
+      "src": "Pour a cocktail perfectly, every part on its mark."
+    },
+    {
+      "key": "achievement.down_to_the_drop.name",
+      "text": "Tot op de druppel",
+      "src": "Down to the Drop"
+    },
+    {
+      "key": "achievement.elbow_grease.description",
+      "text": "Veeg 50 vlekken van de bar.",
+      "src": "Wipe 50 marks off the counter."
+    },
+    {
+      "key": "achievement.elbow_grease.name",
+      "text": "Flink boenen",
+      "src": "Elbow Grease"
+    },
+    {
+      "key": "achievement.first_round.description",
+      "text": "Serveer een drankje precies zoals het besteld is.",
+      "src": "Serve a drink exactly as it was ordered."
+    },
+    {
+      "key": "achievement.first_round.name",
+      "text": "Eerste rondje",
+      "src": "First Round"
+    },
+    {
+      "key": "achievement.five_hundred_pours.description",
+      "text": "Serveer 500 drankjes precies zoals ze besteld zijn.",
+      "src": "Serve 500 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.five_hundred_pours.name",
+      "text": "Vijfhonderd glazen",
+      "src": "Five Hundred Pours"
+    },
+    {
+      "key": "achievement.five_star_room.description",
+      "text": "Richt de zaal in tot vijf sterren comfort.",
+      "src": "Furnish the room to five stars of comfort."
+    },
+    {
+      "key": "achievement.five_star_room.name",
+      "text": "Vijfsterrenzaal",
+      "src": "Five-Star Room"
+    },
+    {
+      "key": "achievement.five_stars_tonight.description",
+      "text": "Haal vijf sterren op één avond.",
+      "src": "Earn five stars for a single night."
+    },
+    {
+      "key": "achievement.five_stars_tonight.name",
+      "text": "Vijf sterren vanavond",
+      "src": "Five Stars Tonight"
+    },
+    {
+      "key": "achievement.four_weeks_open.description",
+      "text": "Houd een bar 24 avonden open.",
+      "src": "Keep one bar open for 24 nights."
+    },
+    {
+      "key": "achievement.four_weeks_open.name",
+      "text": "Vier weken open",
+      "src": "Four Weeks Open"
+    },
+    {
+      "key": "achievement.getting_the_hang.description",
+      "text": "Serveer 25 drankjes precies zoals ze besteld zijn.",
+      "src": "Serve 25 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.getting_the_hang.name",
+      "text": "De slag te pakken",
+      "src": "Getting the Hang of It"
+    },
+    {
+      "key": "achievement.good_heads.description",
+      "text": "Tap vijf biertjes met de schuimkraag in de goede zone.",
+      "src": "Pull five pints with the head in the good band."
+    },
+    {
+      "key": "achievement.good_heads.name",
+      "text": "Mooie schuimkragen",
+      "src": "Good Heads"
+    },
+    {
+      "key": "achievement.hard_shake.description",
+      "text": "Serveer een geshakete cocktail precies zoals hij besteld is.",
+      "src": "Serve a shaken cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.hard_shake.name",
+      "text": "Stevig geshaket",
+      "src": "Hard Shake"
+    },
+    {
+      "key": "achievement.home_improvement.description",
+      "text": "Koop een nieuw stuk inrichting voor de zaal.",
+      "src": "Buy a new fitting for the room."
+    },
+    {
+      "key": "achievement.home_improvement.name",
+      "text": "Opknapbeurt",
+      "src": "Home Improvement"
+    },
+    {
+      "key": "achievement.hundred_club.description",
+      "text": "Serveer 100 drankjes precies zoals ze besteld zijn.",
+      "src": "Serve 100 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.hundred_club.name",
+      "text": "Club van honderd",
+      "src": "Hundred Club"
+    },
+    {
+      "key": "achievement.last_orders.description",
+      "text": "Verlies een bar. Het overkomt de besten.",
+      "src": "Lose a bar. It happens to the best of them."
+    },
+    {
+      "key": "achievement.last_orders.name",
+      "text": "Sluitingstijd",
+      "src": "Last Orders"
+    },
+    {
+      "key": "achievement.legendary_glassware.description",
+      "text": "Breng een lijn glaswerk naar de legendarische trede.",
+      "src": "Raise a line of glassware to legendary."
+    },
+    {
+      "key": "achievement.legendary_glassware.name",
+      "text": "Legendarisch glaswerk",
+      "src": "Legendary Glassware"
+    },
+    {
+      "key": "achievement.lights_out.description",
+      "text": "Maak de kas op van je eerste avond.",
+      "src": "Close the books on your first night."
+    },
+    {
+      "key": "achievement.lights_out.name",
+      "text": "Licht uit",
+      "src": "Lights Out"
+    },
+    {
+      "key": "achievement.money_in_the_bank.description",
+      "text": "Sluit een avond af met $50.000 in de kassa.",
+      "src": "Close a night with $50,000 in the till."
+    },
+    {
+      "key": "achievement.money_in_the_bank.name",
+      "text": "Volle kassa",
+      "src": "Money in the Bank"
+    },
+    {
+      "key": "achievement.night_owl.description",
+      "text": "Sluit 50 avonden af, verspreid over al je bars.",
+      "src": "Close 50 nights across all your bars."
+    },
+    {
+      "key": "achievement.night_owl.name",
+      "text": "Nachtuil",
+      "src": "Night Owl"
+    },
+    {
+      "key": "achievement.not_tonight.description",
+      "text": "Wijs iemand de deur die niet zou mogen drinken.",
+      "src": "Show the door to someone who should not be drinking."
+    },
+    {
+      "key": "achievement.not_tonight.name",
+      "text": "Vanavond niet",
+      "src": "Not Tonight"
+    },
+    {
+      "key": "achievement.same_again.description",
+      "text": "Laat vijf gasten nog een rondje bestellen.",
+      "src": "Have five guests order another round."
+    },
+    {
+      "key": "achievement.same_again.name",
+      "text": "Nog eentje",
+      "src": "Same Again"
+    },
+    {
+      "key": "achievement.seen_them_all.description",
+      "text": "Betrap elke soort valse pas: geleend, vervalst, gekopieerd en getekend.",
+      "src": "Catch every kind of fake card: borrowed, altered, copied and drawn."
+    },
+    {
+      "key": "achievement.seen_them_all.name",
+      "text": "Alles al gezien",
+      "src": "Seen Them All"
+    },
+    {
+      "key": "achievement.six_nights.description",
+      "text": "Sluit een volle week aan avonden af.",
+      "src": "Close a full week of nights."
+    },
+    {
+      "key": "achievement.six_nights.name",
+      "text": "Zes avonden per week",
+      "src": "Six Nights a Week"
+    },
+    {
+      "key": "achievement.stirred_not_shaken.description",
+      "text": "Serveer een geroerde cocktail precies zoals hij besteld is.",
+      "src": "Serve a stirred cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.stirred_not_shaken.name",
+      "text": "Geroerd, niet geschud",
+      "src": "Stirred, Not Shaken"
+    },
+    {
+      "key": "achievement.stocking_up.description",
+      "text": "Koop drie nieuwe flessen voor de plank van één bar.",
+      "src": "Buy three new bottles for one bar's shelf."
+    },
+    {
+      "key": "achievement.stocking_up.name",
+      "text": "Voorraad aanvullen",
+      "src": "Stocking Up"
+    },
+    {
+      "key": "achievement.talk_of_the_street.description",
+      "text": "Bereik een halve ster.",
+      "src": "Reach half a star."
+    },
+    {
+      "key": "achievement.talk_of_the_street.name",
+      "text": "Gesprek van de straat",
+      "src": "Talk of the Street"
+    },
+    {
+      "key": "achievement.talk_of_the_town.description",
+      "text": "Bereik twee sterren.",
+      "src": "Reach two stars."
+    },
+    {
+      "key": "achievement.talk_of_the_town.name",
+      "text": "Gesprek van de stad",
+      "src": "Talk of the Town"
+    },
+    {
+      "key": "achievement.tapmaster.description",
+      "text": "Tap 50 biertjes met de schuimkraag in de goede zone.",
+      "src": "Pull 50 pints with the head in the good band."
+    },
+    {
+      "key": "achievement.tapmaster.name",
+      "text": "Tapmeester",
+      "src": "Tapmaster"
+    },
+    {
+      "key": "achievement.ten_out_of_ten.description",
+      "text": "Perfectioneer tien recepten in één bar.",
+      "src": "Perfect ten recipes in one bar."
+    },
+    {
+      "key": "achievement.ten_out_of_ten.name",
+      "text": "Tien met een griffel",
+      "src": "Ten Out of Ten"
+    },
+    {
+      "key": "achievement.the_best_there_is.description",
+      "text": "Bereik vijf sterren.",
+      "src": "Reach five stars."
+    },
+    {
+      "key": "achievement.the_best_there_is.name",
+      "text": "Beter bestaat niet",
+      "src": "The Best There Is"
+    },
+    {
+      "key": "achievement.the_blocks_best.description",
+      "text": "Bereik één ster.",
+      "src": "Reach one star."
+    },
+    {
+      "key": "achievement.the_blocks_best.name",
+      "text": "De beste van de buurt",
+      "src": "The Block's Best"
+    },
+    {
+      "key": "achievement.the_bouncer.description",
+      "text": "Wijs 25 mensen de deur die niet zouden mogen drinken.",
+      "src": "Show the door to 25 people who should not be drinking."
+    },
+    {
+      "key": "achievement.the_bouncer.name",
+      "text": "De uitsmijter",
+      "src": "The Bouncer"
+    },
+    {
+      "key": "achievement.the_citys_best.description",
+      "text": "Bereik drie sterren.",
+      "src": "Reach three stars."
+    },
+    {
+      "key": "achievement.the_citys_best.name",
+      "text": "De beste van de stad",
+      "src": "The City's Best"
+    },
+    {
+      "key": "achievement.the_countrys_best.description",
+      "text": "Bereik vier sterren.",
+      "src": "Reach four stars."
+    },
+    {
+      "key": "achievement.the_countrys_best.name",
+      "text": "De beste van het land",
+      "src": "The Country's Best"
+    },
+    {
+      "key": "achievement.the_usual.description",
+      "text": "Maak van een gast een van je stamgasten.",
+      "src": "Win a guest over until they are one of your regulars."
+    },
+    {
+      "key": "achievement.the_usual.name",
+      "text": "Zoals altijd",
+      "src": "The Usual"
+    },
+    {
+      "key": "achievement.the_whole_book.description",
+      "text": "Bezit elk bestaand recept in één bar.",
+      "src": "Own every recipe there is in one bar."
+    },
+    {
+      "key": "achievement.the_whole_book.name",
+      "text": "Het hele boek",
+      "src": "The Whole Book"
+    },
+    {
+      "key": "achievement.tip_jar.description",
+      "text": "Verdien $500 aan fooi.",
+      "src": "Earn $500 in tips."
+    },
+    {
+      "key": "achievement.tip_jar.name",
+      "text": "De fooienpot",
+      "src": "Tip Jar"
+    },
+    {
+      "key": "achievement.two_more_stools.description",
+      "text": "Zorg voor zes plekken aan de bar.",
+      "src": "Seat six at the bar."
+    },
+    {
+      "key": "achievement.two_more_stools.name",
+      "text": "Twee krukken erbij",
+      "src": "Two More Stools"
+    },
+    {
+      "key": "achievement.well_read.description",
+      "text": "Heb twintig recepten in het boek van één bar.",
+      "src": "Have twenty recipes in one bar's book."
+    },
+    {
+      "key": "achievement.well_read.name",
+      "text": "Belezen",
+      "src": "Well Read"
+    },
+    {
+      "key": "achievement.wrong_call.description",
+      "text": "Wijs een eerlijke volwassene de deur.",
+      "src": "Show the door to an honest adult."
+    },
+    {
+      "key": "achievement.wrong_call.name",
+      "text": "Misser",
+      "src": "Wrong Call"
+    },
+    {
+      "key": "steam.presence.books",
+      "text": "Maakt de kas op na avond {night}",
+      "src": "Closing the books on night {night}"
+    },
+    {
+      "key": "steam.presence.menu",
+      "text": "Bij de voordeur",
+      "src": "At the front door"
+    },
+    {
+      "key": "steam.presence.night",
+      "text": "Avond {night} · {stars}★",
+      "src": "Night {night} · {stars}★"
+    }
+  ]
+}

@@ -1,0 +1,499 @@
+{
+  "strings": [
+    {
+      "key": "achievement.a_fortnight_open.description",
+      "text": "Κράτα ένα μπαρ ανοιχτό για δώδεκα βραδιές.",
+      "src": "Keep one bar open for twelve nights."
+    },
+    {
+      "key": "achievement.a_fortnight_open.name",
+      "text": "Δύο εβδομάδες ανοιχτά",
+      "src": "A Fortnight Open"
+    },
+    {
+      "key": "achievement.a_new_page.description",
+      "text": "Αγόρασε μια συνταγή για το βιβλίο.",
+      "src": "Buy a recipe for the book."
+    },
+    {
+      "key": "achievement.a_new_page.name",
+      "text": "Μια νέα σελίδα",
+      "src": "A New Page"
+    },
+    {
+      "key": "achievement.a_thousand_pours.description",
+      "text": "Σέρβιρε 1.000 ποτά ακριβώς όπως τα παρήγγειλαν.",
+      "src": "Serve 1,000 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.a_thousand_pours.name",
+      "text": "Χίλια ποτά",
+      "src": "A Thousand Pours"
+    },
+    {
+      "key": "achievement.a_weeks_work.description",
+      "text": "Ολοκλήρωσε μια εβδομαδιαία αποστολή.",
+      "src": "Finish a weekly job."
+    },
+    {
+      "key": "achievement.a_weeks_work.name",
+      "text": "Μια εβδομάδα δουλειά",
+      "src": "A Week's Work"
+    },
+    {
+      "key": "achievement.an_institution.description",
+      "text": "Κράτα ένα μπαρ ανοιχτό για 100 βραδιές.",
+      "src": "Keep one bar open for 100 nights."
+    },
+    {
+      "key": "achievement.an_institution.name",
+      "text": "Θεσμός",
+      "src": "An Institution"
+    },
+    {
+      "key": "achievement.big_night.description",
+      "text": "Μάζεψε $500 σε φιλοδωρήματα μέσα σε μία βραδιά.",
+      "src": "Take $500 in tips in a single night."
+    },
+    {
+      "key": "achievement.big_night.name",
+      "text": "Μεγάλη βραδιά",
+      "src": "Big Night"
+    },
+    {
+      "key": "achievement.blowout.description",
+      "text": "Χτύπα κάτι ανθρακούχο στο σέικερ μέχρι να σκάσει.",
+      "src": "Shake something fizzy until the tin bursts."
+    },
+    {
+      "key": "achievement.blowout.name",
+      "text": "Μπαμ!",
+      "src": "Blowout"
+    },
+    {
+      "key": "achievement.clean_sheet.description",
+      "text": "Σέρβιρε μια βραδιά με δέκα ή περισσότερους πελάτες χωρίς να φύγει κανείς και χωρίς κανένα λάθος ποτό.",
+      "src": "Serve a night of ten or more guests with nobody walking out and no wrong drinks."
+    },
+    {
+      "key": "achievement.clean_sheet.name",
+      "text": "Άψογη βραδιά",
+      "src": "Clean Sheet"
+    },
+    {
+      "key": "achievement.confidant.description",
+      "text": "Κέρδισε την εμπιστοσύνη ενός θαμώνα.",
+      "src": "Earn a regular's confidence."
+    },
+    {
+      "key": "achievement.confidant.name",
+      "text": "Έμπιστος",
+      "src": "Confidant"
+    },
+    {
+      "key": "achievement.dish_pig.description",
+      "text": "Πλύνε 250 ποτήρια.",
+      "src": "Wash 250 glasses."
+    },
+    {
+      "key": "achievement.dish_pig.name",
+      "text": "Βασιλιάς του νεροχύτη",
+      "src": "Dish Pig"
+    },
+    {
+      "key": "achievement.down_to_the_drop.description",
+      "text": "Βάλε ένα κοκτέιλ τέλεια, κάθε υλικό στη γραμμή του.",
+      "src": "Pour a cocktail perfectly, every part on its mark."
+    },
+    {
+      "key": "achievement.down_to_the_drop.name",
+      "text": "Μέχρι την τελευταία σταγόνα",
+      "src": "Down to the Drop"
+    },
+    {
+      "key": "achievement.elbow_grease.description",
+      "text": "Σκούπισε 50 λεκέδες από τον πάγκο.",
+      "src": "Wipe 50 marks off the counter."
+    },
+    {
+      "key": "achievement.elbow_grease.name",
+      "text": "Γυαλίζει ο πάγκος",
+      "src": "Elbow Grease"
+    },
+    {
+      "key": "achievement.first_round.description",
+      "text": "Σέρβιρε ένα ποτό ακριβώς όπως το παρήγγειλαν.",
+      "src": "Serve a drink exactly as it was ordered."
+    },
+    {
+      "key": "achievement.first_round.name",
+      "text": "Πρώτη γύρα",
+      "src": "First Round"
+    },
+    {
+      "key": "achievement.five_hundred_pours.description",
+      "text": "Σέρβιρε 500 ποτά ακριβώς όπως τα παρήγγειλαν.",
+      "src": "Serve 500 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.five_hundred_pours.name",
+      "text": "Πεντακόσια ποτά",
+      "src": "Five Hundred Pours"
+    },
+    {
+      "key": "achievement.five_star_room.description",
+      "text": "Επίπλωσε τον χώρο ως τα πέντε αστέρια άνεσης.",
+      "src": "Furnish the room to five stars of comfort."
+    },
+    {
+      "key": "achievement.five_star_room.name",
+      "text": "Χώρος πέντε αστέρων",
+      "src": "Five-Star Room"
+    },
+    {
+      "key": "achievement.five_stars_tonight.description",
+      "text": "Κέρδισε πέντε αστέρια σε μία μόνο βραδιά.",
+      "src": "Earn five stars for a single night."
+    },
+    {
+      "key": "achievement.five_stars_tonight.name",
+      "text": "Πέντε αστέρια απόψε",
+      "src": "Five Stars Tonight"
+    },
+    {
+      "key": "achievement.four_weeks_open.description",
+      "text": "Κράτα ένα μπαρ ανοιχτό για 24 βραδιές.",
+      "src": "Keep one bar open for 24 nights."
+    },
+    {
+      "key": "achievement.four_weeks_open.name",
+      "text": "Τέσσερις εβδομάδες ανοιχτά",
+      "src": "Four Weeks Open"
+    },
+    {
+      "key": "achievement.getting_the_hang.description",
+      "text": "Σέρβιρε 25 ποτά ακριβώς όπως τα παρήγγειλαν.",
+      "src": "Serve 25 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.getting_the_hang.name",
+      "text": "Πιάνεις το κόλπο",
+      "src": "Getting the Hang of It"
+    },
+    {
+      "key": "achievement.good_heads.description",
+      "text": "Βάλε πέντε μπύρες με τον αφρό στη σωστή ζώνη.",
+      "src": "Pull five pints with the head in the good band."
+    },
+    {
+      "key": "achievement.good_heads.name",
+      "text": "Ωραίος αφρός",
+      "src": "Good Heads"
+    },
+    {
+      "key": "achievement.hard_shake.description",
+      "text": "Σέρβιρε ένα κοκτέιλ στο σέικερ ακριβώς όπως το παρήγγειλαν.",
+      "src": "Serve a shaken cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.hard_shake.name",
+      "text": "Δυνατό χτύπημα",
+      "src": "Hard Shake"
+    },
+    {
+      "key": "achievement.home_improvement.description",
+      "text": "Αγόρασε νέο εξοπλισμό για τον χώρο.",
+      "src": "Buy a new fitting for the room."
+    },
+    {
+      "key": "achievement.home_improvement.name",
+      "text": "Ανακαίνιση",
+      "src": "Home Improvement"
+    },
+    {
+      "key": "achievement.hundred_club.description",
+      "text": "Σέρβιρε 100 ποτά ακριβώς όπως τα παρήγγειλαν.",
+      "src": "Serve 100 drinks exactly as they were ordered."
+    },
+    {
+      "key": "achievement.hundred_club.name",
+      "text": "Λέσχη των εκατό",
+      "src": "Hundred Club"
+    },
+    {
+      "key": "achievement.last_orders.description",
+      "text": "Χάσε ένα μπαρ. Συμβαίνει και στους καλύτερους.",
+      "src": "Lose a bar. It happens to the best of them."
+    },
+    {
+      "key": "achievement.last_orders.name",
+      "text": "Τελευταία γύρα",
+      "src": "Last Orders"
+    },
+    {
+      "key": "achievement.legendary_glassware.description",
+      "text": "Ανέβασε μια σειρά ποτηριών σε θρυλικό επίπεδο.",
+      "src": "Raise a line of glassware to legendary."
+    },
+    {
+      "key": "achievement.legendary_glassware.name",
+      "text": "Θρυλικά ποτήρια",
+      "src": "Legendary Glassware"
+    },
+    {
+      "key": "achievement.lights_out.description",
+      "text": "Κλείσε τα λογιστικά της πρώτης σου βραδιάς.",
+      "src": "Close the books on your first night."
+    },
+    {
+      "key": "achievement.lights_out.name",
+      "text": "Σβήνουν τα φώτα",
+      "src": "Lights Out"
+    },
+    {
+      "key": "achievement.money_in_the_bank.description",
+      "text": "Κλείσε μια βραδιά με $50.000 στο ταμείο.",
+      "src": "Close a night with $50,000 in the till."
+    },
+    {
+      "key": "achievement.money_in_the_bank.name",
+      "text": "Λεφτά στην τράπεζα",
+      "src": "Money in the Bank"
+    },
+    {
+      "key": "achievement.night_owl.description",
+      "text": "Κλείσε συνολικά 50 βραδιές σε όλα τα μπαρ σου.",
+      "src": "Close 50 nights across all your bars."
+    },
+    {
+      "key": "achievement.night_owl.name",
+      "text": "Νυχτοπούλι",
+      "src": "Night Owl"
+    },
+    {
+      "key": "achievement.not_tonight.description",
+      "text": "Δείξε την πόρτα σε κάποιον που δεν πρέπει να πίνει.",
+      "src": "Show the door to someone who should not be drinking."
+    },
+    {
+      "key": "achievement.not_tonight.name",
+      "text": "Όχι απόψε",
+      "src": "Not Tonight"
+    },
+    {
+      "key": "achievement.same_again.description",
+      "text": "Κάνε πέντε πελάτες να παραγγείλουν άλλη μια γύρα.",
+      "src": "Have five guests order another round."
+    },
+    {
+      "key": "achievement.same_again.name",
+      "text": "Ξανά τα ίδια",
+      "src": "Same Again"
+    },
+    {
+      "key": "achievement.seen_them_all.description",
+      "text": "Πιάσε κάθε είδος πλαστής κάρτας: δανεική, πειραγμένη, αντιγραμμένη και ζωγραφισμένη στο χέρι.",
+      "src": "Catch every kind of fake card: borrowed, altered, copied and drawn."
+    },
+    {
+      "key": "achievement.seen_them_all.name",
+      "text": "Τα έχω δει όλα",
+      "src": "Seen Them All"
+    },
+    {
+      "key": "achievement.six_nights.description",
+      "text": "Κλείσε μια ολόκληρη εβδομάδα βραδιών.",
+      "src": "Close a full week of nights."
+    },
+    {
+      "key": "achievement.six_nights.name",
+      "text": "Έξι βραδιές την εβδομάδα",
+      "src": "Six Nights a Week"
+    },
+    {
+      "key": "achievement.stirred_not_shaken.description",
+      "text": "Σέρβιρε ένα ανακατεμένο κοκτέιλ ακριβώς όπως το παρήγγειλαν.",
+      "src": "Serve a stirred cocktail exactly as it was ordered."
+    },
+    {
+      "key": "achievement.stirred_not_shaken.name",
+      "text": "Ανακατεμένο, όχι ανακινημένο",
+      "src": "Stirred, Not Shaken"
+    },
+    {
+      "key": "achievement.stocking_up.description",
+      "text": "Αγόρασε τρία νέα μπουκάλια για το ράφι ενός μπαρ.",
+      "src": "Buy three new bottles for one bar's shelf."
+    },
+    {
+      "key": "achievement.stocking_up.name",
+      "text": "Γεμίζουμε τα ράφια",
+      "src": "Stocking Up"
+    },
+    {
+      "key": "achievement.talk_of_the_street.description",
+      "text": "Φτάσε το μισό αστέρι.",
+      "src": "Reach half a star."
+    },
+    {
+      "key": "achievement.talk_of_the_street.name",
+      "text": "Μιλάει όλος ο δρόμος",
+      "src": "Talk of the Street"
+    },
+    {
+      "key": "achievement.talk_of_the_town.description",
+      "text": "Φτάσε τα δύο αστέρια.",
+      "src": "Reach two stars."
+    },
+    {
+      "key": "achievement.talk_of_the_town.name",
+      "text": "Μιλάει όλη η πόλη",
+      "src": "Talk of the Town"
+    },
+    {
+      "key": "achievement.tapmaster.description",
+      "text": "Βάλε 50 μπύρες με τον αφρό στη σωστή ζώνη.",
+      "src": "Pull 50 pints with the head in the good band."
+    },
+    {
+      "key": "achievement.tapmaster.name",
+      "text": "Μάστορας της μπύρας",
+      "src": "Tapmaster"
+    },
+    {
+      "key": "achievement.ten_out_of_ten.description",
+      "text": "Βάλε τέλεια δέκα συνταγές σε ένα μπαρ.",
+      "src": "Perfect ten recipes in one bar."
+    },
+    {
+      "key": "achievement.ten_out_of_ten.name",
+      "text": "Δέκα στα δέκα",
+      "src": "Ten Out of Ten"
+    },
+    {
+      "key": "achievement.the_best_there_is.description",
+      "text": "Φτάσε τα πέντε αστέρια.",
+      "src": "Reach five stars."
+    },
+    {
+      "key": "achievement.the_best_there_is.name",
+      "text": "Το καλύτερο που υπάρχει",
+      "src": "The Best There Is"
+    },
+    {
+      "key": "achievement.the_blocks_best.description",
+      "text": "Φτάσε το ένα αστέρι.",
+      "src": "Reach one star."
+    },
+    {
+      "key": "achievement.the_blocks_best.name",
+      "text": "Το καλύτερο της γειτονιάς",
+      "src": "The Block's Best"
+    },
+    {
+      "key": "achievement.the_bouncer.description",
+      "text": "Δείξε την πόρτα σε 25 άτομα που δεν πρέπει να πίνουν.",
+      "src": "Show the door to 25 people who should not be drinking."
+    },
+    {
+      "key": "achievement.the_bouncer.name",
+      "text": "Ο πορτιέρης",
+      "src": "The Bouncer"
+    },
+    {
+      "key": "achievement.the_citys_best.description",
+      "text": "Φτάσε τα τρία αστέρια.",
+      "src": "Reach three stars."
+    },
+    {
+      "key": "achievement.the_citys_best.name",
+      "text": "Το καλύτερο της πόλης",
+      "src": "The City's Best"
+    },
+    {
+      "key": "achievement.the_countrys_best.description",
+      "text": "Φτάσε τα τέσσερα αστέρια.",
+      "src": "Reach four stars."
+    },
+    {
+      "key": "achievement.the_countrys_best.name",
+      "text": "Το καλύτερο της χώρας",
+      "src": "The Country's Best"
+    },
+    {
+      "key": "achievement.the_usual.description",
+      "text": "Κέρδισε έναν πελάτη ώσπου να γίνει θαμώνας σου.",
+      "src": "Win a guest over until they are one of your regulars."
+    },
+    {
+      "key": "achievement.the_usual.name",
+      "text": "Το συνηθισμένο",
+      "src": "The Usual"
+    },
+    {
+      "key": "achievement.the_whole_book.description",
+      "text": "Απόκτησε κάθε συνταγή που υπάρχει σε ένα μπαρ.",
+      "src": "Own every recipe there is in one bar."
+    },
+    {
+      "key": "achievement.the_whole_book.name",
+      "text": "Όλο το βιβλίο",
+      "src": "The Whole Book"
+    },
+    {
+      "key": "achievement.tip_jar.description",
+      "text": "Κέρδισε $500 σε φιλοδωρήματα.",
+      "src": "Earn $500 in tips."
+    },
+    {
+      "key": "achievement.tip_jar.name",
+      "text": "Βάζο για φιλοδωρήματα",
+      "src": "Tip Jar"
+    },
+    {
+      "key": "achievement.two_more_stools.description",
+      "text": "Βάλε έξι πελάτες να κάθονται στο μπαρ.",
+      "src": "Seat six at the bar."
+    },
+    {
+      "key": "achievement.two_more_stools.name",
+      "text": "Ακόμα δύο σκαμπό",
+      "src": "Two More Stools"
+    },
+    {
+      "key": "achievement.well_read.description",
+      "text": "Μάζεψε είκοσι συνταγές στο βιβλίο ενός μπαρ.",
+      "src": "Have twenty recipes in one bar's book."
+    },
+    {
+      "key": "achievement.well_read.name",
+      "text": "Βιβλιοφάγος",
+      "src": "Well Read"
+    },
+    {
+      "key": "achievement.wrong_call.description",
+      "text": "Δείξε την πόρτα σε έναν έντιμο ενήλικα.",
+      "src": "Show the door to an honest adult."
+    },
+    {
+      "key": "achievement.wrong_call.name",
+      "text": "Γκάφα",
+      "src": "Wrong Call"
+    },
+    {
+      "key": "steam.presence.books",
+      "text": "Κλείνει τα λογιστικά της βραδιάς {night}",
+      "src": "Closing the books on night {night}"
+    },
+    {
+      "key": "steam.presence.menu",
+      "text": "Στην εξώπορτα",
+      "src": "At the front door"
+    },
+    {
+      "key": "steam.presence.night",
+      "text": "Βραδιά {night} · {stars}★",
+      "src": "Night {night} · {stars}★"
+    }
+  ]
+}

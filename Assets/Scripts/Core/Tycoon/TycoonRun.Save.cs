@@ -71,6 +71,12 @@ namespace LastCall.Core
         public int crowdToday;
         public int declinedOrders;
         public int blowouts;
+        /// <summary>The achievements' side of the run (TycoonRun.Feats, 2026-09-28): a dev verb touched it,
+        /// and what the market sold it. Absent from older saves, which read as an untouched bar that bought
+        /// nothing — the achievements then count from this dawn on.</summary>
+        public bool devTouched;
+        public int brandsBought;
+        public int fittingsBought;
         public bool anyLicenceRead;
         public string jobGiver;
 
@@ -144,6 +150,9 @@ namespace LastCall.Core
                 crowdToday = (int)CrowdToday,
                 declinedOrders = DeclinedOrders,
                 blowouts = Blowouts,
+                devTouched = DevTouched,
+                brandsBought = _brandsBought,
+                fittingsBought = _fittingsBought,
                 anyLicenceRead = _anyLicenceRead,
                 jobGiver = JobGiver,
                 debtStrikes = Ledger.DebtStrikes,
@@ -354,6 +363,9 @@ namespace LastCall.Core
             CrowdToday = (WealthTier)snap.crowdToday;
             DeclinedOrders = snap.declinedOrders;
             Blowouts = snap.blowouts;
+            _devTouched = snap.devTouched;
+            _brandsBought = snap.brandsBought;
+            _fittingsBought = snap.fittingsBought;
             _anyLicenceRead = snap.anyLicenceRead;
             JobGiver = string.IsNullOrEmpty(snap.jobGiver) ? JobGiver : snap.jobGiver;
 

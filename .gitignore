@@ -167,3 +167,9 @@ Tools/social/state/
 # the author's copy of Nikoichu's "1-bit Pixel Icons" (CC0) stays on this machine: only the picks
 # Tools/icons_1bit_ship.py ships (Assets/Resources/Items/ib_*) are kept (the author, 2026-09-28)
 /1-bit_Pixel_Icons/
+
+# the Steamworks kit's output: regenerated from the data by Tools/steamworks/achievements_kit.py
+/Tools/steamworks/out/
+# Steamworks.NET writes the test App ID (480) here on import; the game ignores it until StoreLink.SteamAppId
+# is set (Docs/STEAMWORKS.md), and the real one is committed that day
+/steam_appid.txt

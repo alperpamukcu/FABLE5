@@ -1,0 +1,39 @@
+{
+  "strings": [
+    {
+      "key": "chrome.menu.achievements",
+      "text": "成就",
+      "src": "ACHIEVEMENTS"
+    },
+    {
+      "key": "chrome.achievement.unlocked",
+      "text": "成就 · {name}",
+      "src": "ACHIEVEMENT · {name}"
+    },
+    {
+      "key": "chrome.achievement.progress",
+      "text": "{name} · {have}/{need}",
+      "src": "{name} · {have}/{need}"
+    },
+    {
+      "key": "chrome.achievements.count",
+      "text": "已獲得 {have}/{total}",
+      "src": "{have} OF {total} EARNED"
+    },
+    {
+      "key": "chrome.achievements.secret",
+      "text": "隱藏成就",
+      "src": "SECRET"
+    },
+    {
+      "key": "chrome.achievements.secret_hint",
+      "text": "繼續遊戲就會揭曉。",
+      "src": "Keep playing to find out."
+    },
+    {
+      "key": "chrome.achievements.earned",
+      "text": "已獲得",
+      "src": "EARNED"
+    }
+  ]
+}

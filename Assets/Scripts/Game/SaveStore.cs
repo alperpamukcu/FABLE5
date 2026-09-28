@@ -55,6 +55,10 @@ namespace LastCall.Game
         /// player's save (mirrors PlayerOptions.UseDefaultsForSession).</summary>
         public static void DisableForSession() => s_disabled = true;
 
+        /// <summary>This session keeps the player's files. A session that keeps no save keeps no achievements
+        /// either (Achievements reads this), so the suites' one pin covers both.</summary>
+        public static bool Enabled => !s_disabled;
+
         private static string Dir => Path.Combine(Application.persistentDataPath, "saves");
         private static string MainPath => Path.Combine(Dir, "run.json");
         private static string PrevPath => Path.Combine(Dir, "run.prev.json");

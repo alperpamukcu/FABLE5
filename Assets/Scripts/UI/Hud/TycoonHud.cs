@@ -1649,10 +1649,12 @@ namespace LastCall.UI
             if (stage != null) stage.SetSinkHandler(OnSinkClicked);
             if (stage != null) stage.SetCellarHandler(OnCellarPick);
             if (stage != null) stage.SetCellarHoverHandler(OnCellarHover);
+            WireAchievements();      // the notices, the store's overlay (TycoonHud.Achievements, 2026-09-28)
         }
 
         private void OnDestroy()
         {
+            UnwireAchievements();
             if (_bootstrap != null) _bootstrap.RunStarted -= OnRunStarted;
             CursorSkin.Reset();
             // The pause menu stops the engine's clock (TycoonHud.Pause.SetPaused) and the editor keeps
@@ -1772,6 +1774,7 @@ namespace LastCall.UI
             StepMarketKeyLamp();
             StepPatronPrewarm();     // one person's clips a frame (2026-09-26, the weight pass)
             StepMenuFade();          // the title comes up out of the dark (2026-09-27)
+            StepAchievements();      // an earned one's notice, the status friends see (2026-09-28)
 
             var run = Run;
             if (run == null) return;

@@ -900,6 +900,7 @@ namespace LastCall.Core
         /// </summary>
         public void DevPreset(int stage)
         {
+            MarkDevTouched();
             if (stage <= 0) return;
             bool late = stage >= 2;
             // AT THE STAGE'S OWN SCALE (StarEconomy, 2026-09-06): a 2.6-star bar's rent and
@@ -1026,6 +1027,7 @@ namespace LastCall.Core
         /// </summary>
         public void DevPresetStars(double stars)
         {
+            MarkDevTouched();
             stars = Math.Max(0.0, Math.Min(BarRating.MaxStars, stars));
             bool top = stars >= BarRating.MaxStars - 1e-9;
             Money = StarEconomy.PriceAt(120 + (int)Math.Round(stars * 96), stars);
@@ -1168,6 +1170,7 @@ namespace LastCall.Core
 
         public void DevSkipToDayEnd()
         {
+            MarkDevTouched();
             if (Phase != TycoonPhase.DayOpen) return;
             // A generous cap: a night is 95 seconds and the longest patience is under a
             // minute, so this lands long before it. It exists so a bug can never spin here.
@@ -1201,6 +1204,7 @@ namespace LastCall.Core
         /// </summary>
         public int DevJumpToNight(int day)
         {
+            MarkDevTouched();
             if (Phase != TycoonPhase.DayOpen || day <= Day) return 0;
             int from = Day;
             Day = day;
@@ -1417,7 +1421,16 @@ namespace LastCall.Core
         /// For the dev bench's jump and the beat's own light-rig test — the beat is intact,
         /// the SCENE simply does not schedule it any more.
         /// </summary>
-        public bool DevForceLastCall { get; set; }
+        public bool DevForceLastCall
+        {
+            get => _devForceLastCall;
+            set
+            {
+                if (value) MarkDevTouched();
+                _devForceLastCall = value;
+            }
+        }
+        private bool _devForceLastCall;
 
         /// <summary>The beat being played tonight. Set when they sit down and kept until the
         /// night is closed, so the last word can still be said after they have gone.</summary>
@@ -1480,6 +1493,7 @@ namespace LastCall.Core
             // from doing something rather than from selling something (GDD 28 §7's own box).
             DayBonus += Job.Reward;
             JobJustDone = Job;
+            Feat(Stats.JobsDone, 1);
         }
 
         /// <summary>Who signs the week's jobs. Presentation only — nothing is graded by
@@ -2313,6 +2327,7 @@ namespace LastCall.Core
             if (ShakeBlowsTheTin)
             {
                 Blowouts++;
+                Feat(Stats.Blowouts, 1);
                 WriteOffVessels();
                 return;
             }
@@ -2677,7 +2692,8 @@ namespace LastCall.Core
             // nothing downstream can announce a round Core refused. Decided on the truth
             // behind the card, never on what the screen printed.
             var papers = visit.Regular?.Papers;
-            if (papers != null && papers.ShouldBeKicked && !ReferenceEquals(visit, LastCustomer))
+            bool toAMinor = papers != null && papers.ShouldBeKicked && !ReferenceEquals(visit, LastCustomer);
+            if (toAMinor)
             {
                 visit.FineOwed = IdPapers.FineFor(Rating.Average);
                 MinorsServed++;
@@ -2738,6 +2754,9 @@ namespace LastCall.Core
             // The last customer is the one visit the arc is watching (GDD 26 §5). Exactly what
             // they asked for moves the story on; near enough does not, and comes back.
             if (ReferenceEquals(visit, LastCustomer)) AnswerLastCall(matchKind == OrderMatch.Exact);
+
+            // The achievements' numbers (TycoonRun.Feats), off the glass before it is rinsed below.
+            FeatTheServe(visit, matchKind, delivered, verdict);
 
             // No money moves here. The verdict is settled onto the VISIT (its Paid/PaidBase),
             // and the till collects when they get up — see SettleDepartures. The author's note
@@ -3191,6 +3210,7 @@ namespace LastCall.Core
         /// </summary>
         public void DevFit(string fixtureId)
         {
+            MarkDevTouched();
             foreach (var f in _fixtureCatalogue)
                 if (f.Id == fixtureId)
                 {
@@ -3394,6 +3414,8 @@ namespace LastCall.Core
                     // And what the drinks that never came cost (2026-09-22).
                     WalkOutFees = DayWalkOutFees, WalkOutsCharged = DayWalkOuts,
                 });
+            // The night is a fact now: its numbers go to the achievements (TycoonRun.Feats).
+            FeatTheNight(served, walked);
 
             if (Ledger.IsBankrupt)
             {

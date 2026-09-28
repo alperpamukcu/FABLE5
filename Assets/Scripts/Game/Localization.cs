@@ -8,10 +8,10 @@ namespace LastCall.Game
     /// <summary>
     /// Which language the game speaks, and its tables (2026-09-13, localization L0).
     ///
-    /// The choice, first that answers: the player's own pick (saved), then the OS language.
-    /// When Steamworks lands, <c>SteamApps.GetCurrentGameLanguage()</c> goes between the two
-    /// (<see cref="Languages.FromSteam"/>) — it is the language the player set for this game in
-    /// the Steam library. Tables are <c>Resources/Data/loc/&lt;code&gt;.json</c>, read the way the
+    /// The choice, first that answers: the player's own pick (saved), then the language the player set
+    /// for this game in the Steam library (<see cref="StorePlatform"/>, through
+    /// <see cref="Languages.FromSteam"/>; since 2026-09-28), then the OS language. Tables are
+    /// <c>Resources/Data/loc/&lt;code&gt;.json</c>, read the way the
     /// voices are; only the tables on the language's fallback chain are loaded.
     /// </summary>
     public static class Localization
@@ -49,6 +49,10 @@ namespace LastCall.Game
             // still previews any language; a player's build follows the OS as below.
             return Languages.Source;
 #else
+            // THE LANGUAGE SET FOR THIS GAME IN THE STEAM LIBRARY (2026-09-28), before the OS's: the store is up
+            // by now (it registers before the first scene loads, and nothing asks for text earlier).
+            string store = Languages.FromSteam(StorePlatform.Current?.Language);
+            if (store != null) return store;
             return Languages.FromSystemLanguage(Application.systemLanguage.ToString()) ?? Languages.Source;
 #endif
         }

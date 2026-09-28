@@ -101,14 +101,25 @@ namespace LastCall.UI
             _toastIcon.sprite = icon;
             _toastIcon.enabled = icon != null;
             _toastIcon.color = tint ?? Color.white;
-            // The line shifts right to make room for it, and comes back when there is none.
+            // The line shifts right to make room for it, and comes back when there is none. FROM ITS OWN LEFT EDGE
+            // (2026-09-28): the line is placed at a point (top centre), so its offsets are measured from the centre,
+            // and this set the left edge to the CENTRE plus the room — the 620 box shrank to its right half, the
+            // words wrapped, and every notice after the first with a picture stayed in that half. Measured on the
+            // achievements' first notice (r257).
             var rt = _toast.rectTransform;
-            var off = rt.offsetMin;
-            rt.offsetMin = new Vector2(icon != null ? ToastIconRoom : 0f, off.y);
+            if (float.IsNaN(_toastLeft)) _toastLeft = rt.offsetMin.x;
+            rt.offsetMin = new Vector2(_toastLeft + (icon != null ? ToastIconRoom : 0f), rt.offsetMin.y);
+            if (icon == null) return;
+            // ...and the picture stands just before the words, wherever the centred words begin.
+            float w = rt.rect.width, words = Mathf.Min(_toast.preferredWidth, w);
+            _toastIcon.rectTransform.anchoredPosition = new Vector2(Mathf.Max(0f, (w - words) * 0.5f - ToastIconRoom), 0f);
         }
 
         /// <summary>How much room the notice gives up when it carries a picture.</summary>
         private const float ToastIconRoom = 22f;
+
+        /// <summary>The line's own left edge, as it was built (read at the first notice).</summary>
+        private float _toastLeft = float.NaN;
 
         /// <summary>
         /// The first perfect pour of a recipe, told three ways (2026-08-25, the author:

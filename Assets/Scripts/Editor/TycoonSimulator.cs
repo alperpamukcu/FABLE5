@@ -55,6 +55,35 @@ namespace LastCall.EditorTools
         public static void Simulate200() => Simulate(200);
 
         /// <summary>
+        /// THE ACHIEVEMENTS' PACE (2026-09-28): the same bar Simulate plays, its feats recording, each
+        /// bar with a fresh ledger. Writes Docs/achievement_pacing.md (AchievementPacing).
+        /// </summary>
+        [MenuItem("LastCall/Achievement Pacing (60 Runs)")]
+        public static void MeasureAchievementPacing60() => MeasureAchievementPacing(60);
+
+        public static void MeasureAchievementPacing(int runs)
+        {
+            var deck = DataLoader.ParseDeck(Read("bottles/base_bar.json"));
+            var recipes = DataLoader.ParseRecipes(Read("recipes/recipes.json"));
+            var archetypes = DataLoader.ParseArchetypes(Read("customers/archetypes.json"));
+            var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
+            var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
+            var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+            var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
+            var book = DataLoader.ParseAchievements(File.ReadAllText(
+                Path.Combine(Application.dataPath, "Resources", "Data", "achievements.json")));
+            var pacing = new AchievementPacing(book);
+            var stats = new Aggregate();
+            for (int i = 0; i < runs; i++)
+                PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
+                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures, pacing: pacing);
+            string report = pacing.Report(DayCap);
+            var path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Docs", "achievement_pacing.md"));
+            File.WriteAllText(path, report);
+            Debug.Log($"[TycoonSim] wrote {path}");
+        }
+
+        /// <summary>
         /// The v5 P12 gate: an open night must pay a faster bar in customers. Runs the same
         /// seeds at three service speeds and prints what each got through the door — if the
         /// three come out level, the night is not open, it is just quiet.
@@ -850,7 +879,8 @@ namespace LastCall.EditorTools
             IReadOnlyList<GlasswareDefinition> glassware = null,
             StoryArc story = null,
             Hands handsIn = null,
-            IReadOnlyList<FixtureDefinition> fixtures = null)
+            IReadOnlyList<FixtureDefinition> fixtures = null,
+            AchievementPacing pacing = null)
         {
             stats.BeginRun();   // this bar has climbed nothing yet
 
@@ -892,6 +922,7 @@ namespace LastCall.EditorTools
                 regulars: new RegularsRegistry(archetypes), brandCatalogue: catalogue,
                 glassware: glassware,
                 lockedStock: deck.LockedCards, story: story, fixtures: fixtures);
+            pacing?.BeginRun(run);   // the achievements' pace (2026-09-28): off unless measured
             var hands = handsIn ?? Hands.Steady;
             hands.Dice = rng.GetStream("hands");
             hands.Door = rng.GetStream("door");
@@ -1247,9 +1278,11 @@ namespace LastCall.EditorTools
                     stats.RecordStanding(run.Day, run.Rating.Average);
                     stats.RecordTill(run.Day, run.Money);
                     stats.RecordDay(run.ContinueToNextDay());
+                    pacing?.Drain(run);
                 }
             }
 
+            pacing?.EndRun(run);
             stats.Runs++;
             stats.RevealedSum += run.PerfectedCount;
             stats.DaysSurvived.Add(run.Ledger.History.Count);

@@ -156,6 +156,13 @@
     { "key": "chrome.mood.sour", "text": "SOUR", "note": "How a night went: poor satisfaction, customers unhappy. As chrome.mood.great. ~8 characters." },
     { "key": "chrome.garnish.tell_rim", "text": "TURN THE GLASS IN THE DISH", "note": "Instruction beside a picture of a rimmed glass on the garnish card (salt or sugar rim). Wraps inside 200 units, 16px body face; two short lines at most." },
     { "key": "chrome.garnish.tell_ice", "text": "DROP IT IN BEFORE THE POUR", "note": "Instruction beside the ice bucket picture on the garnish card. Wraps inside 200 units, 16px body face; two short lines at most." },
-    { "key": "chrome.garnish.tell_garnish", "text": "ON THE RIM OR IN THE DRINK", "note": "Instruction beside a garnish dish picture (lime wedge, olive...) on the garnish card: where the garnish goes. Wraps inside 200 units, 16px body face; two short lines at most." }
+    { "key": "chrome.garnish.tell_garnish", "text": "ON THE RIM OR IN THE DRINK", "note": "Instruction beside a garnish dish picture (lime wedge, olive...) on the garnish card: where the garnish goes. Wraps inside 200 units, 16px body face; two short lines at most." },
+    { "key": "chrome.menu.achievements", "text": "ACHIEVEMENTS", "note": "The main menu's small key that opens the list of achievements (the same ones Steam shows). Capitals, one word if the language has one; it sits in a row beside AUDIO, LANGUAGE and CREDITS, so keep it short." },
+    { "key": "chrome.achievement.unlocked", "text": "ACHIEVEMENT · {name}", "note": "The notice at the top of the screen the moment an achievement is earned. {name} is the achievement's name. Capitals, one line." },
+    { "key": "chrome.achievement.progress", "text": "{name} · {have}/{need}", "note": "The notice when a long achievement passes a quarter or its half: {name} is its name, {have}/{need} how far along (numbers). Usually left as it is; capitals." },
+    { "key": "chrome.achievements.count", "text": "{have} OF {total} EARNED", "note": "The line under the ACHIEVEMENTS title: how many of all the achievements this player has earned. Capitals, 8px." },
+    { "key": "chrome.achievements.secret", "text": "SECRET", "note": "The name shown in the ACHIEVEMENTS list in place of a hidden achievement not yet earned. Capitals, one word." },
+    { "key": "chrome.achievements.secret_hint", "text": "Keep playing to find out.", "note": "The description shown in place of a hidden achievement's until it is earned. Short sentence." },
+    { "key": "chrome.achievements.earned", "text": "EARNED", "note": "The mark on the right of an achievement's row once it is earned. Capitals, one word, 8px." }
   ]
 }

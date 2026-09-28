@@ -1,0 +1,26 @@
+{
+    "name": "LastCall.Steam",
+    "rootNamespace": "LastCall.Steam",
+    "references": [
+        "LastCall.Core",
+        "LastCall.Game",
+        "com.rlabrecque.steamworks.net"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "LASTCALL_STEAM"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.rlabrecque.steamworks.net",
+            "expression": "1.0.0",
+            "define": "LASTCALL_STEAM"
+        }
+    ],
+    "noEngineReferences": false
+}

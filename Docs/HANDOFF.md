@@ -17,6 +17,8 @@ Everything here is deliberately gitignored. The clone will look complete and wil
 | `Temp/`, `obj/`, `Logs/`, `UserSettings/` | Per-machine scratch. | Nothing. |
 | `Tools/*_raw/`, `Tools/AssetPipeline/staging/` | Raw generator output, ~2 MB, already processed into `Assets/`. Untracked on 2026-08-20. | Nothing. Re-generate if a pipeline is ever re-run. |
 | `.agents/` | IDE agent rules for another tool. | Nothing. |
+| `1-bit_Pixel_Icons/` | The icon pack (Nikoichu, CC0) the 1-bit marks were picked from; only the picks (`Items/ib_*`) are kept (the author, 2026-09-28). | Nothing to play. To add or redo a pick, download it from nikoichu.itch.io/pixel-icons to the project root. |
+| `steam_appid.txt`, `Tools/steamworks/out/` | Steamworks.NET writes the test App ID (480) on import; the kit's upload files are regenerated from the data. | Nothing until the app exists — then `Docs/STEAMWORKS.md` §3. |
 
 ## 2 · Order of operations on the new machine
 

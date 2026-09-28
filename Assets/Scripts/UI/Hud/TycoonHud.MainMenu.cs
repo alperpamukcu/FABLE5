@@ -17,7 +17,7 @@ namespace LastCall.UI
     /// breathing like a tube (NeonPulse). The keys wear the 1-bit pack's marks (Nikoichu, CC0 - credited)
     /// at exactly 2x: CONTINUE (always on the board - greyed while no save stands, its note naming the
     /// night and the till when one does), NEW RUN (a fresh SeedPolicy seed), SETTINGS, QUIT; under them a
-    /// neon rule and the small row - AUDIO and LANGUAGE straight to their pages, CREDITS, and STEAM once
+    /// neon rule and the small row - AUDIO and LANGUAGE straight to their pages, ACHIEVEMENTS, CREDITS, and STEAM once
     /// StoreLink carries an address. The keys rise into place one after another as the title fades up,
     /// and a neon pointer stands beside whichever key the mouse is over. Everything that moves is
     /// arithmetic on the unscaled clock (no RNG stream is ever touched) and holds still under REDUCED
@@ -381,6 +381,9 @@ namespace LastCall.UI
                     () => OpenSettingsFromMenu("AUDIO"), rowH),
                 SmallMenuKey("LANGUAGE", UIText.T("chrome.settings.language"), "mail", "language",
                     () => OpenSettingsFromMenu("LANGUAGE"), rowH),
+                // the achievements (2026-09-28): the list of what a bar earns, lit as it is earned
+                SmallMenuKey("ACHIEVEMENTS", UIText.T("chrome.menu.achievements"), "info", "achievements",
+                    OpenAchievements, rowH),
                 SmallMenuKey("CREDITS", UIText.T("chrome.menu.credits"), "info", "credits", OpenCredits, rowH),
             };
             if (StoreLink.HasPage)
@@ -513,6 +516,7 @@ namespace LastCall.UI
             CloseId();
             RebuildMenuColumn();
             if (_creditsPanel != null) _creditsPanel.gameObject.SetActive(false);
+            if (_achievementsPanel != null) _achievementsPanel.gameObject.SetActive(false);
             _menuPanel.gameObject.SetActive(true);
             SetPaused(true);
             _menuFadeT = Motion.Reduced ? 1f : 0f;
@@ -578,6 +582,7 @@ namespace LastCall.UI
         {
             if (_menuPanel == null) return;
             if (_creditsPanel != null) _creditsPanel.gameObject.SetActive(false);
+            if (_achievementsPanel != null) _achievementsPanel.gameObject.SetActive(false);
             _menuPanel.gameObject.SetActive(false);
             SetPaused(false);
         }

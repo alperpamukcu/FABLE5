@@ -790,6 +790,53 @@ namespace LastCall.Game
             throw new FormatException($"Unknown {field} '{raw}' (in '{context}').");
         }
 
+        /// <summary>The pacing bands an achievement may sit in (the tier is read by the pacing report and the
+        /// Steamworks sheet; nothing in play decides on it). "secret" is exactly the hidden ones.</summary>
+        public static readonly string[] AchievementTiers = { "opening", "week", "early", "mid", "late", "secret" };
+
+        /// <summary>
+        /// THE ACHIEVEMENTS (2026-09-28) — `Resources/Data/achievements.json` into the book the lifetime ledger
+        /// rules with. Loud, like every loader here: an id Steamworks would not take as an API name, an id twice,
+        /// a stat the run does not report, a target of nothing, a tier off the list, a secret that is not
+        /// hidden (or the other way round), a missing name or description.
+        /// </summary>
+        public static IReadOnlyList<AchievementDefinition> ParseAchievements(string json)
+        {
+            var dto = FromJson<AchievementsFileDto>(json, "achievements");
+            if (dto.achievements == null || dto.achievements.Count == 0)
+                throw new FormatException("Achievements file lists none.");
+            var book = new List<AchievementDefinition>(dto.achievements.Count);
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var a in dto.achievements)
+            {
+                string id = a.id ?? string.Empty;
+                bool apiName = id.Length > 0 && char.IsLetter(id[0]);
+                foreach (char c in id) apiName &= (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_';
+                if (!apiName)
+                    throw new FormatException($"Achievement id '{id}' must be UPPER_SNAKE (A–Z, 0–9, _), the way Steamworks takes an API name.");
+                if (!seen.Add(id)) throw new FormatException($"Achievement '{id}' is listed twice.");
+                if (Array.IndexOf(AchievementTiers, a.tier) < 0)
+                    throw new FormatException($"Achievement '{id}' sits in tier '{a.tier}'; the tiers are {string.Join(", ", AchievementTiers)}.");
+                if ((a.tier == "secret") != a.hidden)
+                    throw new FormatException($"Achievement '{id}': the secret tier and the hidden flag go together.");
+                if (string.IsNullOrWhiteSpace(a.name) || string.IsNullOrWhiteSpace(a.description))
+                    throw new FormatException($"Achievement '{id}' needs an English name and description.");
+                if (!string.IsNullOrEmpty(a.stat) && a.stats != null && a.stats.Count > 0)
+                    throw new FormatException($"Achievement '{id}' names both 'stat' and 'stats'; use one.");
+                var stats = a.stats != null && a.stats.Count > 0 ? a.stats
+                    : string.IsNullOrEmpty(a.stat) ? null : new List<string> { a.stat };
+                try
+                {
+                    book.Add(new AchievementDefinition(id, stats, a.target, a.hidden, a.tier, a.name, a.description));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new FormatException("Achievements file: " + e.Message);
+                }
+            }
+            return book;
+        }
+
         private static T FromJson<T>(string json, string label) where T : class
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -1073,6 +1120,26 @@ namespace LastCall.Game
             public string id;
             public string when;
             public List<string> say;
+        }
+
+        [Serializable]
+        private sealed class AchievementsFileDto
+        {
+            public int version;
+            public List<AchievementDto> achievements;
+        }
+
+        [Serializable]
+        private sealed class AchievementDto
+        {
+            public string id;
+            public string tier;
+            public bool hidden;
+            public string stat;
+            public List<string> stats;
+            public long target;
+            public string name;
+            public string description;
         }
 
         [Serializable]
