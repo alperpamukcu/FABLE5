@@ -140,15 +140,17 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void Ece_is_in_the_cast_and_is_turkish()
+        public void The_hostess_is_in_the_cast_and_is_american()
         {
-            // GDD 26 §1b: she works the shift, so she has papers like anyone else — but she
-            // is never rolled into the crowd. Losing this row would leave the story's host
-            // nameless on the plate, which is the one line the arc cannot do without.
-            var ece = Load().For("ece");
-            Assert.That(ece, Is.Not.Null, "the bar has no bartender");
-            Assert.That(ece.Name, Is.EqualTo("Ece Toprak"));
-            Assert.That(ece.Iso, Is.EqualTo("tr"));
+            // GDD 26 §1b, recast 2026-09-27: the game's lead has papers like anyone else — but she
+            // is never rolled into the crowd. Her row is the ONE place her name is written (the plate,
+            // the bubble, the bill and the toast all read it), so losing it would leave her nameless
+            // everywhere at once.
+            var hostess = Load().For("hostess");
+            Assert.That(hostess, Is.Not.Null, "the bar has no hostess");
+            Assert.That(hostess.Name, Is.EqualTo("Roxy Vale"));
+            Assert.That(hostess.Iso, Is.EqualTo("us"));
+            Assert.That(Load().For("ece"), Is.Null, "the host she replaced has no papers left behind");
         }
 
         // ── the loud failures ────────────────────────────────────────────────────

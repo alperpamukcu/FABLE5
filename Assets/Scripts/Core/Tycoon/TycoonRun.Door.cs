@@ -74,6 +74,7 @@ namespace LastCall.Core
             {
                 visit.Regular.Bar();
                 RightKicks++;
+                CountQuestKick();   // the hostess's door job counts the right ones (TycoonRun.Quests)
             }
             else
             {

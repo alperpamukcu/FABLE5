@@ -35,7 +35,7 @@ namespace LastCall.Tests
         }
 
         [Test]
-        public void The_shipped_arc_is_ece_and_only_ece_for_now()
+        public void The_shipped_arc_is_the_hostess_and_only_her_for_now()
         {
             // THE AUTHOR'S CALL, 2026-08-13: one written night while the story around her is
             // built. The three guests who follow are complete and parked in
@@ -43,7 +43,7 @@ namespace LastCall.Tests
             // notices if one of them is put back without the rest of the shape being ready.
             var arc = Load();
             Assert.That(arc.Beats.Count, Is.EqualTo(1),
-                "the live arc is Ece's night alone; the rest wait in Docs/story_guests_drafted.json");
+                "the live arc is the hostess's night alone; the rest wait in Docs/story_guests_drafted.json");
             Assert.That(arc.Beats[0].Id, Is.EqualTo("ece_1"));
             Assert.That(arc.Beats[0].Who.IsHost, Is.True, "and she is the house, not a guest");
             Assert.That(arc.Lessons.Count, Is.GreaterThan(0), "the host still teaches");
@@ -71,7 +71,7 @@ namespace LastCall.Tests
             var drafts = Read("/../Docs/story_guests_drafted.json");
             Assert.That(drafts, Does.Contain("gourmet_1"), "the drafted guests went missing");
 
-            // Bolt Ece back on so the file is a legal arc, then build it exactly as the
+            // Bolt the hostess back on so the file is a legal arc, then build it exactly as the
             // loader would: every rule the live file obeys is checked on the drafts too.
             string live = Read("/Data/story/story.json");
             var merged = MergeForCheck(live, drafts);
@@ -83,7 +83,7 @@ namespace LastCall.Tests
                     $"guests come on {BarCalendar.Name(BarCalendar.VipNight)}");
         }
 
-        /// <summary>Ece's file with the drafted guests spliced back in, in order, the way a
+        /// <summary>The hostess's file with the drafted guests spliced back in, in order, the way a
         /// writer would do it by hand — the chain relinked from her to the first of them.</summary>
         private static string MergeForCheck(string live, string drafts)
         {
@@ -178,11 +178,12 @@ namespace LastCall.Tests
         [Test]
         public void The_story_borrows_a_face_it_actually_owns()
         {
-            var ece = Load().Cast.First(c => c.IsHost);
-            Assert.That(ece.Name, Is.EqualTo("Ece Toprak"), "the papers come off the look");
-            Assert.That(ece.PlaceholderLook, Is.Not.Null,
+            var hostess = Load().Cast.First(c => c.IsHost);
+            Assert.That(hostess.Name, Is.EqualTo("Roxy Vale"), "the papers come off the look");
+            Assert.That(hostess.ShortName, Is.EqualTo("Roxy"), "what the bar calls her");
+            Assert.That(hostess.PlaceholderLook, Is.Not.Null,
                 "until her portrait is drawn the plate borrows one — delete the field with the art");
-            Assert.That(Cast().For(ece.PlaceholderLook), Is.Not.Null);
+            Assert.That(Cast().For(hostess.PlaceholderLook), Is.Not.Null);
         }
 
         // ── the loud failures ────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ namespace LastCall.Tests
         private static string Wrap(string beatBody, string characters = null) => @"{
             ""version"": 2,
             ""characters"": [" + (characters ?? @"
-                { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
+                { ""id"": ""hostess"", ""look"": ""hostess"", ""role"": ""host"" },
                 { ""id"": ""guest"", ""look"": ""execman"", ""role"": ""guest"" }") + @"],
             ""beats"": [" + beatBody + @"]
         }";
@@ -247,7 +248,7 @@ namespace LastCall.Tests
         public void A_face_nobody_has_papers_for_is_refused()
         {
             var e = Refused(Wrap(GoodBeat, @"
-                { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
+                { ""id"": ""hostess"", ""look"": ""hostess"", ""role"": ""host"" },
                 { ""id"": ""guest"", ""look"": ""nobody_by_that_name"", ""role"": ""guest"" }"));
             Assert.That(e.Message, Does.Contain("nobody_by_that_name"));
         }
@@ -302,7 +303,7 @@ namespace LastCall.Tests
         public void A_bar_with_two_hosts_or_none_is_refused()
         {
             var two = Refused(Wrap(GoodBeat, @"
-                { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
+                { ""id"": ""hostess"", ""look"": ""hostess"", ""role"": ""host"" },
                 { ""id"": ""other"", ""look"": ""teal"", ""role"": ""host"" },
                 { ""id"": ""guest"", ""look"": ""execman"", ""role"": ""guest"" }"));
             Assert.That(two.Message, Does.Contain("2 hosts"));
@@ -316,7 +317,7 @@ namespace LastCall.Tests
         public void A_role_the_game_does_not_know_is_refused()
         {
             var e = Refused(Wrap(GoodBeat, @"
-                { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
+                { ""id"": ""hostess"", ""look"": ""hostess"", ""role"": ""host"" },
                 { ""id"": ""guest"", ""look"": ""execman"", ""role"": ""bouncer"" }"));
             Assert.That(e.Message, Does.Contain("bouncer"));
         }
@@ -327,7 +328,7 @@ namespace LastCall.Tests
             string json = @"{
                 ""version"": 2,
                 ""characters"": [
-                    { ""id"": ""ece"", ""look"": ""ece"", ""role"": ""host"" },
+                    { ""id"": ""hostess"", ""look"": ""hostess"", ""role"": ""host"" },
                     { ""id"": ""guest"", ""look"": ""execman"", ""role"": ""guest"" }],
                 ""beats"": [" + GoodBeat + @"],
                 ""lessons"": [ { ""id"": ""l1"", ""when"": ""when_the_moon_is_right"",

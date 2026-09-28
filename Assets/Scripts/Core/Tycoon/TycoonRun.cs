@@ -448,7 +448,8 @@ namespace LastCall.Core
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<IngredientCard> lockedStock = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
-            StoryArc story = null)
+            StoryArc story = null,
+            QuestBook quests = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -492,6 +493,10 @@ namespace LastCall.Core
             // The story is opt-in exactly like the regulars: a run built without an arc has
             // no last customer and behaves in every way like a run from before there was one.
             Story = story != null ? new StoryProgress(story) : null;
+            // The hostess's book is opt-in the same way (TycoonRun.Quests): a run built without one has no chain.
+            // With one, her first visit is the close of the first night.
+            Quests = quests;
+            if (QuestsLive) _visitFrom = QuestRules.FirstVisitNight;
             // The first night is the first thing the host has to say (GDD 26 §1b).
             TeachAtOpen();
         }
@@ -1006,6 +1011,7 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
+            HostessFollowsTheCalendar();
             Phase = TycoonPhase.DayOpen;
         }
 
@@ -1105,6 +1111,7 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
+            HostessFollowsTheCalendar();   // the presets can wind the calendar BACK (3/6/12/18/24/30)
             Phase = TycoonPhase.DayOpen;
         }
 
@@ -1171,6 +1178,10 @@ namespace LastCall.Core
         public void DevSkipToDayEnd()
         {
             MarkDevTouched();
+            // A HELD NIGHT IS LET GO FIRST (2026-09-27): Tick refuses to move while a conversation holds it, so a
+            // lesson or the hostess on the plate would spin the loop below twenty thousand times and hand the
+            // night back still open. She is heard out by Core's own backstop inside the loop.
+            EndTalk();
             if (Phase != TycoonPhase.DayOpen) return;
             // A generous cap: a night is 95 seconds and the longest patience is under a
             // minute, so this lands long before it. It exists so a bug can never spin here.
@@ -1211,6 +1222,8 @@ namespace LastCall.Core
             // Everything ContinueToNextDay clears for a new night, minus the books.
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
+            DayQuestPaid = 0;          // with DayBonus, or the bill's thanks (bonus less hers) goes negative
+            NightHadAMistake = false;
             DayWalkOuts = DayWalkOutFees = DayWalkOutOwed = 0;
             RoomAura = 0; _auraLeft = 0;   // the room forgets at the curtain
             UpgradesToday = 0;
@@ -1220,6 +1233,7 @@ namespace LastCall.Core
             LastCallBeat = null;
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
+            HostessFollowsTheCalendar();
             ResetVessels();
             Floor = NewFloor(Rating.Average);
             return Day - from;
@@ -1299,6 +1313,7 @@ namespace LastCall.Core
             FadeTheRoom(seconds);     // what the room is still talking about, running down
             SettleDepartures();
             Trial?.Waited(seconds);   // the talking backstop's clock, nothing else's
+            WatchForHostess(seconds); // she walks in at closing time on her night (TycoonRun.Quests)
             seated = SettleLastCall(seated);
             WatchForLessons();        // the host's cues that are read off the floor
 
@@ -1315,7 +1330,9 @@ namespace LastCall.Core
             // süresi bittikten 3 saniye sonra gerçekleşsin"). The last glass is collected into a
             // running tap; closing on that frame zeroed the wash in CloseNight and the books came
             // down over it. The night now ends when the tap stops, and the HUD's beat follows.
-            if (Floor.IsComplete && Floor.House.CounterClear && !Floor.House.SinkBusy)
+            // …AND NOT WHILE SHE IS IN THE ROOM (2026-09-27, TycoonRun.Quests): the books do not come down over
+            // the hostess. Unheard, she hands the job over herself after QuestRules.HostessGraceSeconds.
+            if (Floor.IsComplete && Floor.House.CounterClear && !Floor.House.SinkBusy && HostessVisit == null)
             {
                 // The counter's night ends here, BEFORE anything reads ComfortTonight: what
                 // is still in the hand and in the sink is washed for free, what is still on
@@ -1349,6 +1366,9 @@ namespace LastCall.Core
                 Money -= rent;
                 DayRent += rent;
                 RollMarket();
+                // A CLEAN NIGHT FOR HER BOOK (TycoonRun.Quests): counted the moment the night is over, so the
+                // pay is on the slip and in the takings the red-night lesson reads just below.
+                CountQuestCleanNight();
                 // Two things a closing can be the first of (GDD 26 §10): the market
                 // opening at all, and a night that ended under the rent.
                 Teach(StoryCue.FirstMarket);
@@ -1487,7 +1507,8 @@ namespace LastCall.Core
 
         private void PayForTheJob()
         {
-            if (Job == null || Job.Reward <= 0) return;
+            // The weekly job and the hostess's book never both pay (2026-09-27): a run with a book pays hers.
+            if (Job == null || Job.Reward <= 0 || Quests != null) return;
             Money += Job.Reward;
             // It rides in the night's BONUS line, beside the state's thanks — money that came
             // from doing something rather than from selling something (GDD 28 §7's own box).
@@ -1553,6 +1574,9 @@ namespace LastCall.Core
                 }
                 LastCustomer = null;
             }
+
+            // THE HOSTESS FIRST (2026-09-27): the story's guest waits for the floor to empty after her.
+            if (HostessVisit != null) return seated;
 
             // SWITCHED OFF FOR THE SCENE (2026-09-06): Ece's place in the loop is the
             // week's job now, not a guest after closing. The beat is intact and its own
@@ -2703,6 +2727,10 @@ namespace LastCall.Core
                         verdict.FillScore, verdict.Accuracy, verdict.PerfectMake);
             }
 
+            // THE HOSTESS'S JOB IS COUNTED HERE (2026-09-27, TycoonRun.Quests), after the papers and not before:
+            // a drink poured to somebody the card said to show the door counts for nothing, however well made.
+            CountQuestServe(visit, matchKind, verdict, delivered, papers);
+
             visit.ServedGlassId = ServingGlassware?.Id;
             // A drink crossed the bar (GDD 27 §4.1): this, and nothing about the STATE, is
             // what the floor reads when they get up to decide whether a glass and a mark
@@ -3377,23 +3405,20 @@ namespace LastCall.Core
             // Everything the night was made of, written down with it. The run has always known
             // all of this at this exact moment and the book kept none of it, so a closed day
             // could only say that it made or lost money — never which half of the bar did it.
-            int served = 0, walked = 0;
-            foreach (var visit in Floor.FinishedCounted())
-            {
-                // A right kick FILES A REVIEW now (2026-09-22) but is still neither served nor
-                // walked — the half of GDD 28 D10 that was always about the slip rather than about
-                // the stars. RightKicks is the count that speaks for them.
-                if (visit.OffTheBooks) continue;
-                // A wrong kick is on the books as the walk-out it is.
-                if (visit.State == VisitState.StormedOff || visit.State == VisitState.Kicked) walked++;
-                else served++;
-            }
+            // A right kick FILES A REVIEW now (2026-09-22) but is still neither served nor
+            // walked — the half of GDD 28 D10 that was always about the slip rather than about
+            // the stars. RightKicks is the count that speaks for them. A wrong kick is on the
+            // books as the walk-out it is. (NightTally, shared with the close's clean night.)
+            var (served, walked) = NightTally();
             // A CLEAN NIGHT: nobody walked out, nothing wrong went over the bar (2026-09-06).
             // Counted here because this is the moment the night becomes a fact, and paid on
             // the spot like every other job — the money lands on the night that earned it.
             if (Job != null && Job.RunsOn(Day) && Job.Kind == JobKind.Clean
                 && Job.CountNight(walked == 0 && !NightHadAMistake))
                 PayForTheJob();
+            // THE HOSTESS'S STATE GOALS (2026-09-27, TycoonRun.Quests): the rung, the room, the ladder, read now
+            // that CloseNight has filed the high-water mark — paid into THIS night's row, before the books close.
+            CountQuestStateGoal();
 
             var result = Ledger.CloseDay(Day, DayIncome, DayExpenses, standing,
                 tillAfter: Money,
@@ -3413,6 +3438,8 @@ namespace LastCall.Core
                     MinorsServed = MinorsServed, MinorsMet = MinorsMet,
                     // And what the drinks that never came cost (2026-09-22).
                     WalkOutFees = DayWalkOutFees, WalkOutsCharged = DayWalkOuts,
+                    // And the part of the bonus that was the hostess's (2026-09-27).
+                    QuestPaid = DayQuestPaid,
                 });
             // The night is a fact now: its numbers go to the achievements (TycoonRun.Feats).
             FeatTheNight(served, walked);
@@ -3427,6 +3454,7 @@ namespace LastCall.Core
             CrowdToday = Ledger.TomorrowsCrowd;
             DaySales = DayTips = DayRent = DayStock = DayUpgrades = 0;
             DayFines = DayBonus = RightKicks = WrongKicks = MinorsServed = MinorsMet = 0;
+            DayQuestPaid = 0;          // always with DayBonus: the bill reads the thanks as the bonus less hers
             DayWalkOuts = DayWalkOutFees = DayWalkOutOwed = 0;
             RoomAura = 0; _auraLeft = 0;   // the room forgets at the curtain
             NightHadAMistake = false;  // tomorrow starts clean, whatever tonight was
@@ -3438,6 +3466,7 @@ namespace LastCall.Core
             Trial = null;
             _lastCallSpent = _lastCallAnswered = LastCallWithheld = false;
             SettleTheJob();
+            SettleQuestAtDawn();       // a new night for the hostess (TycoonRun.Quests)
             ResetVessels();
             // THE SAVE POINT. Everything after this line is re-derived by a restore — the
             // floor from the streams, the market from the shelf — so the snapshot is taken
@@ -3462,6 +3491,9 @@ namespace LastCall.Core
         private void SettleTheJob()
         {
             if (!_config.WeeklyJobs) return;
+            // A RUN WITH THE HOSTESS'S BOOK HAS NO WEEKLY JOB (2026-09-27): the book replaces it, and the two
+            // must never both pay. This whole method leaves with WeeklyJob (spec F.3, C2).
+            if (Quests != null) return;
             int week = BarCalendar.WeekOf(Day);
             if (Job != null && Job.Week == week) return;      // still this week's
 

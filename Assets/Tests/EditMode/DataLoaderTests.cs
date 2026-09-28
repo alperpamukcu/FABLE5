@@ -115,7 +115,7 @@ namespace LastCall.Tests
                 Assert.IsTrue(deck.IsStarting(card));
             }
             Assert.AreEqual(8, deck.StartingCards.Count(c => c.Type != IngredientType.Beer),
-                "eight bottles and a keg — what Ece says on the first night");
+                "eight bottles and a keg — what the hostess says on the first night");
             Assert.IsFalse(deck.Cards.Where(c => !deck.StartingCards.Contains(c)).Any(deck.IsStarting),
                 "and nothing else is");
 

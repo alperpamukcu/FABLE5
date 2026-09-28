@@ -135,12 +135,16 @@ namespace LastCall.EditorTools
             var glassware = DataLoader.ParseGlassware(Read("glassware/glassware.json"));
             var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
             var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
+            // The hostess's book rides every run the game's does (2026-09-27), because her pay is money the bar
+            // really earns. This tool's bar has no fixture catalogue, so the book's fit job can never be done here
+            // and the chain stands on it: this report reads the ladder, the 200-run report reads the chain.
+            var quests = ReadQuests(DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures);
 
             const int Runs = 60, Horizon = 120;
             var stats = new Aggregate();
             for (int i = 0; i < Runs; i++)
                 PlayRun($"STAR-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, Horizon, glassware, story);
+                    DrinkBuildSeconds, Horizon, glassware, story, quests: quests);
 
             var sb = new StringBuilder();
             sb.AppendLine("# The star track — how far a bar climbs, and how fast");
@@ -689,11 +693,15 @@ namespace LastCall.EditorTools
             // by the room's rungs, so a bot without them would sit at the free base forever
             // and report a floor that is artificially low (GELISTIRME §8.1 P2, closed here).
             var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
+            // THE HOSTESS'S BOOK (2026-09-27): the jobs the game hands over, in the game's order. The bot never
+            // hears her — Core hands each job over itself once she has stood unheard — so the chain is measured
+            // exactly as a headless run plays it, and her pay is reported on its own row, apart from the thanks.
+            var quests = ReadQuests(fixtures);
 
-            var stats = new Aggregate();
+            var stats = new Aggregate { Book = quests };
             for (int i = 0; i < runs; i++)
                 PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures);
+                    DrinkBuildSeconds, DayCap, glassware, story, fixtures: fixtures, quests: quests);
 
             string report = stats.Report(runs);
             Debug.Log(report);
@@ -770,6 +778,7 @@ namespace LastCall.EditorTools
             var cast = DataLoader.ParsePapers(Read("customers/papers.json"));
             var story = DataLoader.ParseStory(Read("story/story.json"), cast, recipes);
             var fixtures = DataLoader.ParseFixtures(Read("fixtures/fixtures.json")).Fixtures;
+            var quests = ReadQuests(fixtures);
 
             Aggregate Play(bool enabled)
             {
@@ -777,10 +786,10 @@ namespace LastCall.EditorTools
                 try
                 {
                     HouseBuffs.Enabled = enabled;
-                    var stats = new Aggregate();
+                    var stats = new Aggregate { Book = quests };
                     for (int i = 0; i < runs; i++)
                         PlayRun($"TYC-{i:0000}", deck, recipes, archetypes, stats,
-                            DrinkBuildSeconds, horizon, glassware, story, fixtures: fixtures);
+                            DrinkBuildSeconds, horizon, glassware, story, fixtures: fixtures, quests: quests);
                     return stats;
                 }
                 finally { HouseBuffs.Enabled = was; }
@@ -873,6 +882,11 @@ namespace LastCall.EditorTools
         private static string Read(string relative) =>
             File.ReadAllText(Path.Combine(Application.dataPath, "Data", relative));
 
+        /// <summary>The hostess's book, from where the game loads it (Resources/Data), read against the catalogue.</summary>
+        private static QuestBook ReadQuests(IReadOnlyList<FixtureDefinition> fixtures) =>
+            DataLoader.ParseQuests(
+                File.ReadAllText(Path.Combine(Application.dataPath, "Resources", "Data", "quests.json")), fixtures);
+
         private static void PlayRun(string seed, LoadedDeck deck,
             IReadOnlyList<RecipeDefinition> recipes, IReadOnlyList<ArchetypeDefinition> archetypes,
             Aggregate stats, double buildSeconds = DrinkBuildSeconds, int dayCap = DayCap,
@@ -880,7 +894,8 @@ namespace LastCall.EditorTools
             StoryArc story = null,
             Hands handsIn = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
-            AchievementPacing pacing = null)
+            AchievementPacing pacing = null,
+            QuestBook quests = null)
         {
             stats.BeginRun();   // this bar has climbed nothing yet
 
@@ -921,9 +936,12 @@ namespace LastCall.EditorTools
             var run = new TycoonRun(shelf, recipes, rng,
                 regulars: new RegularsRegistry(archetypes), brandCatalogue: catalogue,
                 glassware: glassware,
-                lockedStock: deck.LockedCards, story: story, fixtures: fixtures);
+                lockedStock: deck.LockedCards, story: story, fixtures: fixtures, quests: quests);
             pacing?.BeginRun(run);   // the achievements' pace (2026-09-28): off unless measured
             var hands = handsIn ?? Hands.Steady;
+            // WHERE THE CHAIN GOT TO (2026-09-27). Read off the job on the bar after every tick and every dawn —
+            // never off the one-shot flashes, which belong to the screen — so watching changes nothing.
+            var chain = quests != null ? new ChainWatch() : null;
             hands.Dice = rng.GetStream("hands");
             hands.Door = rng.GetStream("door");
             var judged = new HashSet<CustomerVisit>();   // one look at each card, never two draws
@@ -937,6 +955,7 @@ namespace LastCall.EditorTools
                 if (run.Phase == TycoonPhase.DayOpen)
                 {
                     run.Tick(1.0);
+                    chain?.Watch(run);
                     // THE COUNTER'S NIGHT (GDD 27 §4, 2026-09-05). The bussing beat grew up:
                     // a leaver's glass holds the stool until it is COLLECTED, the mark under
                     // it costs the room until it is WIPED, and the hand's glasses go through
@@ -1277,8 +1296,10 @@ namespace LastCall.EditorTools
                     // 2.5" means the same thing here and on the screen.
                     stats.RecordStanding(run.Day, run.Rating.Average);
                     stats.RecordTill(run.Day, run.Money);
+                    if (chain != null) stats.RecordChainAt(run.Day, run);
                     stats.RecordDay(run.ContinueToNextDay());
                     pacing?.Drain(run);
+                    chain?.Watch(run);   // a state goal is paid at the dawn
                 }
             }
 
@@ -1300,6 +1321,26 @@ namespace LastCall.EditorTools
                     stats.StalledOn.TryGetValue(id, out int stalled);
                     stats.StalledOn[id] = stalled + 1;
                 }
+            }
+            if (chain != null) stats.RecordChain(run, chain);
+        }
+
+        /// <summary>
+        /// One run's walk up the hostess's book, from the outside: which jobs went on the bar, and the night each was
+        /// done. A job stays on the bar for at least a night after it is done (she comes the night after), so a look
+        /// after every tick and every dawn misses nothing.
+        /// </summary>
+        private sealed class ChainWatch
+        {
+            public readonly HashSet<string> Handed = new HashSet<string>(StringComparer.Ordinal);
+            public readonly Dictionary<string, int> DoneOn = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            public void Watch(TycoonRun run)
+            {
+                var quest = run.Quest;
+                if (quest == null) return;
+                Handed.Add(quest.Id);
+                if (quest.IsDone && !DoneOn.ContainsKey(quest.Id)) DoneOn[quest.Id] = quest.DoneDay;
             }
         }
 
@@ -1794,6 +1835,99 @@ namespace LastCall.EditorTools
             public int StoryTrials, StoryDrinks, StoryPassed, StoryFailed, StoryDeclined;
             public int ArcsFinished;
             public readonly Dictionary<string, int> StalledOn = new Dictionary<string, int>();
+
+            // THE HOSTESS'S BOOK (2026-09-27): what she paid, how far each run got up the book and when, which
+            // jobs were passed over, and where the runs were standing when the nights ran out. The floor bot makes
+            // almost no perfect pours, so expect it to stand on steady_hands: the histogram is printed as it is,
+            // and nothing is tuned around it.
+            public QuestBook Book;
+            public long QuestPaidSum;
+            public readonly List<int> JobsHanded = new List<int>(), JobsDone = new List<int>(), JobsSkipped = new List<int>();
+            public readonly Dictionary<string, int> SkipsById = new Dictionary<string, int>(StringComparer.Ordinal);
+            public readonly Dictionary<string, List<int>> FirstDoneById = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            public readonly Dictionary<string, int> ChainStall = new Dictionary<string, int>(StringComparer.Ordinal);
+            private static readonly int[] ChainNights = { 10, 20, 30 };
+            public readonly Dictionary<int, List<int>> ChainAtNight = new Dictionary<int, List<int>>();
+
+            /// <summary>How far up the book a run stands on <paramref name="day"/>: the row of the job on the bar
+            /// (1-based), 0 before her first visit. Read where the standing is, before the night is filed.</summary>
+            public void RecordChainAt(int day, TycoonRun run)
+            {
+                if (Array.IndexOf(ChainNights, day) < 0) return;
+                if (!ChainAtNight.TryGetValue(day, out var list)) ChainAtNight[day] = list = new List<int>();
+                list.Add(run.Quest != null ? run.Quest.Definition.Index + 1 : 0);
+            }
+
+            public void RecordChain(TycoonRun run, ChainWatch chain)
+            {
+                var book = run.Quests;
+                if (book == null) return;
+                if (Book == null) Book = book;
+                JobsHanded.Add(chain.Handed.Count);
+                JobsDone.Add(chain.DoneOn.Count);
+                JobsSkipped.Add(run.QuestsSkipped);
+                // Every row the book has moved past without putting it on the bar was passed over at an arrival.
+                int passed = run.QuestNextUp?.Index ?? book.Count;
+                for (int i = 0; i < passed; i++)
+                {
+                    string id = book[i].Id;
+                    if (chain.Handed.Contains(id)) continue;
+                    SkipsById.TryGetValue(id, out int n);
+                    SkipsById[id] = n + 1;
+                }
+                foreach (var pair in chain.DoneOn)
+                {
+                    if (!FirstDoneById.TryGetValue(pair.Key, out var days)) FirstDoneById[pair.Key] = days = new List<int>();
+                    days.Add(pair.Value);
+                }
+                string stall =
+                    run.QuestChainOver ? "(the book is finished)"
+                    : run.Quest == null ? "(nothing handed over)"
+                    : !run.Quest.IsDone ? run.Quest.Id
+                    : run.QuestNextUp != null ? "done, next up " + run.QuestNextUp.Id
+                    : "done, finale owed";
+                ChainStall.TryGetValue(stall, out int s);
+                ChainStall[stall] = s + 1;
+            }
+
+            private void ChainSection(StringBuilder sb)
+            {
+                if (Book == null) return;
+                sb.AppendLine();
+                sb.AppendLine("## The hostess's book (2026-09-27)");
+                sb.AppendLine();
+                sb.AppendLine("The bot never hears her: Core hands each job over itself once she has stood four");
+                sb.AppendLine("floor-seconds unheard, so this is the chain as a headless run plays it. A job is");
+                sb.AppendLine("counted from the hand-over and she comes the night after it is done. The floor bot");
+                sb.AppendLine("pours band midpoints and makes almost no PERFECT pours, so it is expected to stand");
+                sb.AppendLine("on `steady_hands`; the table says where it stands, nothing is tuned around it.");
+                sb.AppendLine();
+                sb.AppendLine("| Measure | Value |");
+                sb.AppendLine("|---|---|");
+                sb.AppendLine($"| Jobs handed / done / skipped per run (median) | {Q(JobsHanded, 0.5)} / {Q(JobsDone, 0.5)} / {Q(JobsSkipped, 0.5)} |");
+                foreach (int night in ChainNights)
+                    sb.AppendLine($"| Job on the bar at night {night}, p25/median/p75 (row of {Book.Count}) | " +
+                                  (ChainAtNight.TryGetValue(night, out var at) && at.Count > 0
+                                      ? $"{Q(at, 0.25)} / {Q(at, 0.5)} / {Q(at, 0.75)} ({at.Count} runs)"
+                                      : "—") + " |");
+                sb.AppendLine();
+                sb.AppendLine("| Job | Runs that finished it | Night first done, p25/median/p75 | Skipped in |");
+                sb.AppendLine("|---|---|---|---|");
+                foreach (var def in Book.Quests)
+                {
+                    FirstDoneById.TryGetValue(def.Id, out var days);
+                    SkipsById.TryGetValue(def.Id, out int skips);
+                    string when = days == null || days.Count == 0 ? "—"
+                        : $"{Q(days, 0.25)} / {Q(days, 0.5)} / {Q(days, 0.75)}";
+                    sb.AppendLine($"| {def.Index + 1}. {def.Id} ({QuestRules.KindName(def.Kind)}, rung {def.Rung}, ${def.Reward}) | " +
+                                  $"{Pct(days?.Count ?? 0, Runs)} | {when} | {(skips > 0 ? Pct(skips, Runs) : "—")} |");
+                }
+                sb.AppendLine();
+                sb.AppendLine("| Where the runs stood when the nights ran out | Runs |");
+                sb.AppendLine("|---|---|");
+                foreach (var pair in ChainStall.OrderByDescending(p => p.Value).ThenBy(p => p.Key, StringComparer.Ordinal))
+                    sb.AppendLine($"| {pair.Key} | {Pct(pair.Value, Runs)} |");
+            }
             // WHY a trial drink came back (GDD 26 §4). Without this the report can only say
             // that the bot fails, which is a fact and not a reason — and the reason is the
             // whole point of measuring: a standard nobody can meet is a design bug, and a
@@ -1940,7 +2074,10 @@ namespace LastCall.EditorTools
                 WrongKicks += result.WrongKicks;
                 MinorsServed += result.MinorsServed;
                 FinesSum += result.Fines;
-                BonusSum += result.Bonus;
+                // The night's bonus line carries two people's money since 2026-09-27: the state's thanks for the
+                // door, and the hostess's pay for a finished job. Each has its own row.
+                BonusSum += result.Bonus - result.QuestPaid;
+                QuestPaidSum += result.QuestPaid;
                 WalkOutFeesSum += result.WalkOutFees;
                 WalkOutsCharged += result.WalkOutsCharged;
                 int star = (int)Math.Floor(Math.Max(0, _lastStanding));
@@ -2098,6 +2235,9 @@ namespace LastCall.EditorTools
                 // about whether the thanks could be farmed. What the design fenced (GDD 28
                 // §9) is the thanks staying a small part of what a night takes.
                 sb.AppendLine($"| State's thanks (total · of income) | ${BonusSum} · {100.0 * BonusSum / Math.Max(1, IncomeSum):0.0}% |");
+                // THE HOSTESS'S PAY (2026-09-27): the other half of the bonus line, where the weekly job's pay used
+                // to hide inside the thanks. EconomyProjection does not model it; it is reported here, on its own.
+                sb.AppendLine($"| Hostess's pay for finished jobs (total · of income) | ${QuestPaidSum} · {100.0 * QuestPaidSum / Math.Max(1, IncomeSum):0.0}% |");
                 sb.AppendLine($"| Recipes bought (of {Runs} runs) | {RecipesBought} |");
                 sb.AppendLine($"| Brand upgrades bought | {BrandsBought} |");
                 sb.AppendLine($"| Tier demands the shelf could not answer | {TierShort} of {TierDemands}" +
@@ -2162,6 +2302,8 @@ namespace LastCall.EditorTools
                     foreach (var pair in TrialMisses.OrderByDescending(p => p.Value))
                         sb.AppendLine($"| {pair.Key} | {pair.Value} |");
                 }
+
+                ChainSection(sb);
 
                 sb.AppendLine();
                 // THE WHOLE HORIZON, NOT THE FIRST FIFTEEN (2026-08-15). This table used to

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. Ece Toprak (slug 'ece') is the bartender who works the shift with the player -- GDD 26 section 1b. She is cast, not crowd: her look is reserved out of the arrivals pool and her portrait is the one art asset the story is waiting on. The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove. execman/profess are RESERVED for the last-call arc (GDD 26 §8) and carry papers even with no art yet — the story draws them through placeholderLook.",
+  "_comment": "THE CAST'S PAPERS: what the licence prints for each face (GDD 22 section 3). Moved out of TycoonHud on 2026-08-12 (PLAN_last_call S0) -- 30 people were a hardcoded Dictionary in a UI file, which broke the house rule that content is data and made the story's characters impossible to write without touching C#. The slug is the LOOK: the sprite folder under Resources/Patron, and the key the licence, the receipt and the guide all agree on. The empty slug is the fallback for a face with no papers of its own. Adding a person here is adding a person to the bar; nothing else has to change. The hostess (slug 'hostess') is the game's lead: cast, not crowd -- she comes by at closing with the jobs and the lessons (GDD 26 section 1b; the quest chain, 2026-09-27). Her row is the one place her name is written: the plate, the bubble, the bill and the toast all read it from here, and no line of dialogue spells it. Her age is read off her drawing like everyone else's; until it ships the story borrows a crowd face (placeholderLook in story.json). The last nine rows are the 2026-08-19 rig -- the faces the bar actually draws today (TycoonHud.PatronCast). They were written on 2026-08-25 because the whole LIVE cast had no papers at all: each one fell through to the archetype's name pool for a name, printed a HOMETOWN where the licence asks for a citizenship, and drew no flag, so nine different drawings introduced themselves as nine spellings of nobody. Age and citizenship are read off the drawing, the way the first thirty were. spanishsuit was cut on 2026-08-25 (broken art and animations) and never had papers to remove. execman/profess are RESERVED for the last-call arc (GDD 26 §8) and carry papers even with no art yet — the story draws them through placeholderLook.",
   "papers": [
     {
       "slug": "",
@@ -52,11 +52,11 @@
       "iso": "us"
     },
     {
-      "slug": "ece",
-      "name": "Ece Toprak",
-      "age": 31,
-      "country": "Turkey",
-      "iso": "tr"
+      "slug": "hostess",
+      "name": "Roxy Vale",
+      "age": 28,
+      "country": "United States",
+      "iso": "us"
     },
     {
       "slug": "clubgirl",

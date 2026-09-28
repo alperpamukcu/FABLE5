@@ -36,7 +36,7 @@ namespace LastCall.Core
         // and at 4s the short rolls were over before the dots read as thinking.
         public TycoonConfig(int startingMoney = DefaultStartingMoney,
             double orderDecisionSeconds = 5.0, double savorSeconds = 6.0,
-            bool counterSmudges = true, bool weeklyJobs = true, bool lastCall = true)
+            bool counterSmudges = true, bool weeklyJobs = true, bool lastCall = true, bool quests = true)
         {
             if (orderDecisionSeconds < 0) throw new ArgumentOutOfRangeException(nameof(orderDecisionSeconds));
             if (savorSeconds < 0) throw new ArgumentOutOfRangeException(nameof(savorSeconds));
@@ -46,6 +46,7 @@ namespace LastCall.Core
             CounterSmudges = counterSmudges;
             WeeklyJobs = weeklyJobs;
             LastCall = lastCall;
+            Quests = quests;
         }
 
         /// <summary>
@@ -64,6 +65,14 @@ namespace LastCall.Core
         /// measuring a bonus as well.
         /// </summary>
         public bool WeeklyJobs { get; }
+
+        /// <summary>
+        /// WHETHER THE HOSTESS'S BOOK PLAYS (2026-09-27, TycoonRun.Quests). On for the game and for the sim; a run
+        /// built without a book has no chain whatever this says. It stands beside <see cref="WeeklyJobs"/> until
+        /// the weekly job is deleted and takes that switch's place (spec F.3, C2); a run with a book never pays a
+        /// weekly job either way.
+        /// </summary>
+        public bool Quests { get; }
 
         /// <summary>
         /// Whether a served leaver marks the counter as well as leaving their glass (GDD 27

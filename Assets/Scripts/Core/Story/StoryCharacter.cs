@@ -21,13 +21,27 @@ namespace LastCall.Core
         public string Look { get; }
 
         public string Name { get; }
+
+        /// <summary>What the bar calls them — the name up to its first space ("Roxy" for Roxy Vale). The toast, the
+        /// bill and the bubble say this; the plate says the whole <see cref="Name"/>. Derived, so the cast file stays
+        /// the one place a name is written.</summary>
+        public string ShortName
+        {
+            get
+            {
+                string name = Name.Trim();
+                int space = name.IndexOf(' ');
+                return space > 0 ? name.Substring(0, space) : name;
+            }
+        }
+
         public int Age { get; }
 
         /// <summary>Where the licence says they are from.</summary>
         public string Hometown { get; }
 
         /// <summary>The host works the shift and frames the beats; guests come in through the
-        /// door and are the ones being served (GDD 26 §1b). Ece is the only host there is.</summary>
+        /// door and are the ones being served (GDD 26 §1b). The hostess is the only host there is.</summary>
         public bool IsHost { get; }
 
         /// <summary>One line about who they are, for the book and for whoever writes the next

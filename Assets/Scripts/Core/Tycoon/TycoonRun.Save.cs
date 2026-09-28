@@ -58,6 +58,13 @@ namespace LastCall.Core
             public long serviceStarsBits; public long comfortStarsBits;
             public int fines; public int bonus; public int rightKicks; public int wrongKicks;
             public int minorsServed; public int minorsMet; public int walkOutFees; public int walkOutsCharged;
+            public int questPaid;
+        }
+        /// <summary>The job on the bar (TycoonRun.Quests): its row by id, the drink she picked, and how far along.</summary>
+        [Serializable] public sealed class QuestState
+        {
+            public bool has; public string id; public string recipeId; public int target; public int progress;
+            public int reward; public int givenDay; public int doneDay;
         }
 
         public int version = Version;
@@ -114,6 +121,20 @@ namespace LastCall.Core
         public JobState jobDone;
         /// <summary>The unread "job finished" flash: 0 none, 1 it is <see cref="job"/>, 2 it is <see cref="jobDone"/>.</summary>
         public int jobJustDone;
+
+        /// <summary>
+        /// THE HOSTESS'S BOOK (2026-09-27, TycoonRun.Quests), added without a version bump: 0 is a save written before
+        /// the chain existed (JsonUtility leaves a missing field at its default), 1 is this layout. An old save starts
+        /// the chain from its own dawn; its weekly job is dropped, since a weekly job was paid the moment it finished.
+        /// There is never a visit at dawn — the night cannot close under her — so none is carried.
+        /// </summary>
+        public int questFormat;
+        public bool hasQuests;
+        public int questNext, questVisitFrom, questsSkipped;
+        public bool questDoneUnsaid;
+        public QuestState quest;
+        /// <summary>A state goal paid at this dawn, its "job done" flash not yet shown.</summary>
+        public bool questJustDone;
 
         public bool hasStory;
         public int storyAt; public int storyDueDay; public int storyKept; public int storyMissed;
@@ -198,6 +219,7 @@ namespace LastCall.Core
                     fines = row.Fines, bonus = row.Bonus, rightKicks = row.RightKicks,
                     wrongKicks = row.WrongKicks, minorsServed = row.MinorsServed, minorsMet = row.MinorsMet,
                     walkOutFees = row.WalkOutFees, walkOutsCharged = row.WalkOutsCharged,
+                    questPaid = row.QuestPaid,
                 });
 
             foreach (var recipe in _recipes) snap.menu.Add(recipe.Id);
@@ -230,6 +252,16 @@ namespace LastCall.Core
             snap.job = JobStateOf(Job);
             snap.jobDone = JobStateOf(JobDone);
             snap.jobJustDone = JobJustDone == null ? 0 : ReferenceEquals(JobJustDone, Job) ? 1 : 2;
+
+            snap.questFormat = 1;
+            snap.hasQuests = Quests != null;
+            snap.questNext = _questNext;
+            snap.questVisitFrom = _visitFrom;
+            snap.questsSkipped = QuestsSkipped;
+            snap.questDoneUnsaid = _doneUnsaid;
+            snap.quest = QuestStateOf(Quest);
+            // Only ever the job on the bar: the flash is cleared at every hand-over (HearHostess).
+            snap.questJustDone = QuestJustDone != null;
 
             snap.hasStory = Story != null;
             if (Story != null)
@@ -274,6 +306,14 @@ namespace LastCall.Core
                 target = job.Target, served = job.Served, week = job.Week, who = job.Who, reward = job.Reward,
             };
 
+        private static RunSnapshot.QuestState QuestStateOf(ActiveQuest quest) => quest == null
+            ? new RunSnapshot.QuestState()
+            : new RunSnapshot.QuestState
+            {
+                has = true, id = quest.Id, recipeId = quest.RecipeId, target = quest.Target,
+                progress = quest.Progress, reward = quest.Reward, givenDay = quest.GivenDay, doneDay = quest.DoneDay,
+            };
+
         private static RunSnapshot.PersonState PersonStateOf(RegularState person)
         {
             var state = new RunSnapshot.PersonState
@@ -309,7 +349,8 @@ namespace LastCall.Core
             RegularsRegistry regulars = null,
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
-            StoryArc story = null)
+            StoryArc story = null,
+            QuestBook quests = null)
         {
             if (snap == null) throw new ArgumentNullException(nameof(snap));
             if (snap.version != RunSnapshot.Version)
@@ -320,6 +361,9 @@ namespace LastCall.Core
                 throw new ArgumentException("The save and the content disagree about the story.");
             if (snap.hasRegulars != (regulars != null))
                 throw new ArgumentException("The save and the content disagree about the regulars.");
+            // A save from before the book (questFormat 0) lands in either kind of scene; one written since must agree.
+            if (snap.questFormat >= 1 && snap.hasQuests != (quests != null))
+                throw new ArgumentException("The save and the content disagree about the hostess's book.");
 
             var cardById = new Dictionary<string, IngredientCard>(StringComparer.Ordinal);
             foreach (var card in allCards)
@@ -347,7 +391,7 @@ namespace LastCall.Core
             // and the LAST thing restored is the streams, so nothing the constructor rolled
             // can leak into the resumed run.
             var run = new TycoonRun(new Shelf(bottles), recipes, new RunRng(snap.seed ?? string.Empty),
-                config, regulars, catalogue, glassware, locked, fixtures, story);
+                config, regulars, catalogue, glassware, locked, fixtures, story, quests);
             run.ApplySnapshot(snap, recipeById, Recipe);
             return run;
         }
@@ -386,7 +430,7 @@ namespace LastCall.Core
                     row.tillAfter, row.hasDetail,
                     RunSnapshot.BitsToDouble(row.serviceStarsBits), RunSnapshot.BitsToDouble(row.comfortStarsBits),
                     row.fines, row.bonus, row.rightKicks, row.wrongKicks,
-                    row.minorsServed, row.minorsMet, row.walkOutFees, row.walkOutsCharged));
+                    row.minorsServed, row.minorsMet, row.walkOutFees, row.walkOutsCharged, row.questPaid));
             Ledger.RestoreFrom(history, snap.debtStrikes, (WealthTier)snap.tomorrowsCrowd);
 
             _recipes.Clear();
@@ -422,6 +466,45 @@ namespace LastCall.Core
             Job = JobFrom(snap.job);
             JobDone = JobFrom(snap.jobDone);
             JobJustDone = snap.jobJustDone == 1 ? Job : snap.jobJustDone == 2 ? JobDone : null;
+            // A run with the hostess's book has no weekly job, and an old save's is dropped rather than carried into
+            // a run that pays her instead: it was paid the moment it finished, so nothing owed is lost.
+            if (Quests != null) Job = JobDone = JobJustDone = null;
+
+            if (snap.questFormat >= 1)
+            {
+                Quest = null;
+                if (snap.quest != null && snap.quest.has)
+                {
+                    var def = Quests?.Find(snap.quest.id)
+                              ?? throw new ArgumentException($"Save names a job the book no longer has: '{snap.quest.id}'.");
+                    string recipeName = string.Empty;
+                    if (!string.IsNullOrEmpty(snap.quest.recipeId)) recipeName = recipe(snap.quest.recipeId).Name;
+                    Quest = new ActiveQuest(def, snap.quest.recipeId, recipeName, snap.quest.target, 0,
+                        snap.quest.reward, snap.quest.givenDay);
+                    Quest.Restore(snap.quest.progress, snap.quest.doneDay);
+                }
+                _questNext = snap.questNext;
+                _visitFrom = snap.questVisitFrom;
+                _doneUnsaid = snap.questDoneUnsaid;
+                QuestsSkipped = snap.questsSkipped;
+                QuestJustDone = snap.questJustDone ? Quest : null;
+            }
+            else
+            {
+                // A SAVE FROM BEFORE THE BOOK (2026-09-27): the chain starts at this dawn, from its first row. Set
+                // explicitly — the constructor scheduled her for night one, and the dawn's self-healing rule only
+                // fires on an unscheduled visit, so it would never correct a run restored at night twelve.
+                Quest = null;
+                _questNext = 0;
+                _doneUnsaid = false;
+                QuestsSkipped = 0;
+                QuestJustDone = null;
+                _visitFrom = QuestsLive ? Day : 0;
+            }
+            HostessVisit = null;
+            QuestJustGiven = null;
+            _visitedTonight = false;
+            _visitWaited = 0;
 
             if (Story != null)
             {
@@ -463,6 +546,10 @@ namespace LastCall.Core
             foreach (var stream in snap.streams ?? new List<RunSnapshot.StreamState>())
                 _rng.GetStream(stream.name).RestoreState(
                     ulong.Parse(stream.state, NumberStyles.HexNumber, CultureInfo.InvariantCulture));
+
+            // The one repair a restore makes (spec A.3): a serve job whose drink the data update made unpourable is
+            // pointed at the first page of the same rule. No stream is drawn, so the run stays the saved run.
+            RepairTheQuestAfterRestore();
 
             // And the dawn's own tail, the same three lines ContinueToNextDay runs after the
             // save point: fresh vessels, the new floor off the restored streams, the open.

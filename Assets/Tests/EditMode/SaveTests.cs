@@ -33,6 +33,7 @@ namespace LastCall.Tests
             public IReadOnlyList<GlasswareDefinition> Glassware;
             public LoadedFixtures Dressing;
             public StoryArc Story;
+            public QuestBook Quests;
             public List<IngredientCard> AllCards;
         }
 
@@ -46,6 +47,10 @@ namespace LastCall.Tests
             content.Dressing = DataLoader.ParseFixtures(ReadDataFile("fixtures/fixtures.json"));
             var cast = DataLoader.ParsePapers(ReadDataFile("customers/papers.json"));
             content.Story = DataLoader.ParseStory(ReadDataFile("story/story.json"), cast, content.Recipes);
+            // The hostess's book (2026-09-27), from where the game loads it: the gold walk carries the chain too.
+            content.Quests = DataLoader.ParseQuests(
+                File.ReadAllText(Path.Combine(Application.dataPath, "Resources", "Data", "quests.json")),
+                content.Dressing.Fixtures);
             content.AllCards = new List<IngredientCard>(content.Deck.Cards);
             content.AllCards.AddRange(content.Deck.LockedCards);
             return content;
@@ -67,7 +72,8 @@ namespace LastCall.Tests
                 glassware: content.Glassware,
                 lockedStock: content.Deck.LockedCards,
                 fixtures: content.Dressing.Fixtures,
-                story: content.Story);
+                story: content.Story,
+                quests: content.Quests);
         }
 
         private static TycoonRun Reborn(Content content, RunSnapshot snap) =>
@@ -76,7 +82,8 @@ namespace LastCall.Tests
                 regulars: new RegularsRegistry(content.Archetypes),
                 glassware: content.Glassware,
                 fixtures: content.Dressing.Fixtures,
-                story: content.Story);
+                story: content.Story,
+                quests: content.Quests);
 
         /// <summary>One night, played the same on both twins: even nights are worked (every
         /// waiting drinker gets a vodka-soda, right or wrong, off a clean counter), odd
@@ -221,6 +228,109 @@ namespace LastCall.Tests
                 regulars: new RegularsRegistry(content.Archetypes),
                 glassware: content.Glassware, fixtures: content.Dressing.Fixtures, story: null),
                 "a save with a story cannot land in a scene without one");
+
+            var noBook = JsonUtility.FromJson<RunSnapshot>(good);
+            Assert.Throws<ArgumentException>(() => TycoonRun.Restore(noBook, content.Recipes,
+                content.AllCards, config: TycoonConfig.ForTheScene,
+                regulars: new RegularsRegistry(content.Archetypes),
+                glassware: content.Glassware, fixtures: content.Dressing.Fixtures, story: content.Story,
+                quests: null),
+                "a save written with the hostess's book cannot land in a scene without one");
+
+            var goneJob = JsonUtility.FromJson<RunSnapshot>(good);
+            Assert.IsTrue(goneJob.quest.has, "she handed a job over at the first close");
+            goneJob.quest.id = "a_job_the_book_never_had";
+            Assert.Throws<ArgumentException>(() => Reborn(content, goneJob), "a job the book no longer has is refused");
+        }
+
+        /// <summary>
+        /// THE JOB ON THE BAR RIDES THE SAVE WHOLE (2026-09-27): its row, the drink she picked, how far along it is,
+        /// what it pays, the night it was handed over, where the book stands and when she comes next — and the
+        /// unread "done" flash a state goal raises at the dawn itself.
+        /// </summary>
+        [Test]
+        public void TheChainRidesTheSaveWhole()
+        {
+            var content = Load();
+            var run = NewRun(content, "SAVE-CHAIN");
+            PlayNight(run, worked: false);
+            RunSnapshot dawn = null;
+            run.ContinueToNextDay(s => dawn = s);
+            Assert.AreEqual("first_wage", dawn.quest.id, "handed over at the close of night one");
+            Assert.AreEqual(1, dawn.questFormat);
+
+            // Mid-job: two of three poured, and the flash still unread.
+            dawn.quest.progress = 2;
+            dawn.questJustDone = true;
+            string json = JsonUtility.ToJson(dawn);
+            var back = Reborn(content, JsonUtility.FromJson<RunSnapshot>(json));
+            Assert.AreEqual("first_wage", back.Quest.Id);
+            Assert.AreEqual(dawn.quest.recipeId, back.Quest.RecipeId);
+            Assert.AreEqual(2, back.Quest.Progress);
+            Assert.AreEqual(dawn.quest.target, back.Quest.Target);
+            Assert.AreEqual(dawn.quest.reward, back.Quest.Reward);
+            Assert.AreEqual(1, back.Quest.GivenDay);
+            Assert.AreEqual(dawn.questNext, back.QuestNextUp.Index, "the book stands where it stood");
+            Assert.AreEqual(dawn.questVisitFrom, back.HostessComesOn);
+            Assert.AreSame(back.Quest, back.TakeQuestJustDone(), "and the flash is still owed");
+
+            // And it goes on being the same run: the reborn dawn writes the dawn it was reborn from.
+            RunSnapshot again = null;
+            PlayNight(back, worked: false);
+            back.ContinueToNextDay(s => again = s);
+            Assert.AreEqual(2, again.quest.progress);
+            Assert.AreEqual(dawn.quest.recipeId, again.quest.recipeId);
+            Assert.AreEqual(dawn.questNext, again.questNext);
+        }
+
+        /// <summary>
+        /// A SAVE FROM BEFORE THE BOOK (2026-09-27). Its file has no quest fields at all — JsonUtility reads each as
+        /// its default — and may carry a weekly job. The job is dropped (it was paid the moment it finished; nothing
+        /// owed is lost) and the chain starts at the save's own dawn: she comes at the close of the night it resumes.
+        /// </summary>
+        [Test]
+        public void AnOldSaveStartsTheChain()
+        {
+            var content = Load();
+            var run = NewRun(content, "SAVE-OLD");
+            for (int night = 0; night < 3; night++)
+            {
+                PlayNight(run, worked: night % 2 == 1);
+                if (night < 2) run.ContinueToNextDay();
+            }
+            RunSnapshot snap = null;
+            run.ContinueToNextDay(s => snap = s);
+
+            // Written down the way the game wrote it before 2026-09-27.
+            snap.questFormat = 0;
+            snap.hasQuests = false;
+            snap.questNext = snap.questVisitFrom = snap.questsSkipped = 0;
+            snap.questDoneUnsaid = snap.questJustDone = false;
+            snap.quest = new RunSnapshot.QuestState();
+            var page = content.Recipes.First(r => r.HasAuthoredRatios && !r.Locked);
+            snap.job = new RunSnapshot.JobState
+            {
+                has = true, kind = (int)JobKind.Serve, recipeId = page.Id, recipeName = page.Name,
+                target = 3, served = 1, week = BarCalendar.WeekOf(snap.day), who = "ECE", reward = 12,
+            };
+            snap.jobJustDone = 1;
+
+            var back = Reborn(content, JsonUtility.FromJson<RunSnapshot>(JsonUtility.ToJson(snap)));
+            Assert.IsNull(back.Quest, "nothing is on the bar yet");
+            Assert.AreEqual(snap.day, back.HostessComesOn, "she comes at the close of the night it resumes");
+            Assert.IsNull(back.Job, "the weekly job is dropped: the book pays instead, never both");
+            Assert.IsNull(back.TakeJobJustDone());
+            Assert.AreEqual("first_wage", back.QuestNextUp?.Id, "and the book starts at its first row");
+
+            int guard = 0;
+            while (back.HostessVisit == null)
+            {
+                Assert.Less(guard++, 20000);
+                Assert.AreEqual(TycoonPhase.DayOpen, back.Phase, "she comes before the night closes");
+                back.Tick(0.25);
+            }
+            Assert.AreEqual(snap.day, back.HostessVisit.Day);
+            Assert.AreEqual("first_wage", back.HostessVisit.Offered?.Id);
         }
 
         [Test]

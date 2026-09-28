@@ -79,6 +79,10 @@ namespace LastCall.Core
         public int WalkOutFees { get; }
         public int WalkOutsCharged { get; }
 
+        /// <summary>The part of <see cref="Bonus"/> that was the hostess's pay for a finished job (2026-09-27,
+        /// TycoonRun.Quests) — the rest is the state's thanks. Zero on a day booked without detail.</summary>
+        public int QuestPaid { get; }
+
         /// <summary>The till once everything was paid. This is the number the strike watches,
         /// so it is the number the book has to show.</summary>
         public int TillAfter { get; }
@@ -92,7 +96,7 @@ namespace LastCall.Core
             bool hasDetail = false, double serviceStars = 0, double comfortStars = 0,
             int fines = 0, int bonus = 0, int rightKicks = 0, int wrongKicks = 0,
             int minorsServed = 0, int minorsMet = 0,
-            int walkOutFees = 0, int walkOutsCharged = 0)
+            int walkOutFees = 0, int walkOutsCharged = 0, int questPaid = 0)
         {
             Day = day;
             Income = income;
@@ -118,6 +122,7 @@ namespace LastCall.Core
             MinorsMet = minorsMet;
             WalkOutFees = walkOutFees;
             WalkOutsCharged = walkOutsCharged;
+            QuestPaid = questPaid;
         }
     }
 
@@ -131,6 +136,7 @@ namespace LastCall.Core
         public double ServiceStars, ComfortStars;
         public int Fines, Bonus, RightKicks, WrongKicks, MinorsServed, MinorsMet;
         public int WalkOutFees, WalkOutsCharged;
+        public int QuestPaid;
     }
 
     /// <summary>
@@ -198,7 +204,7 @@ namespace LastCall.Core
                     detail.ServiceStars, detail.ComfortStars,
                     detail.Fines, detail.Bonus, detail.RightKicks, detail.WrongKicks,
                     detail.MinorsServed, detail.MinorsMet,
-                    detail.WalkOutFees, detail.WalkOutsCharged);
+                    detail.WalkOutFees, detail.WalkOutsCharged, detail.QuestPaid);
             _history.Add(result);
 
             DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;

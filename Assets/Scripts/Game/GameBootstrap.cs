@@ -73,6 +73,11 @@ namespace LastCall.Game
         /// so the UI can read a character's lines and borrowed face without asking Core.</summary>
         public StoryArc Story { get; private set; }
 
+        /// <summary>The hostess's book (2026-09-27) — <c>Resources/Data/quests.json</c>, read like the voices so the
+        /// scene needs no new wire. Unlike the voices it is NOT optional: a missing book is a boot error, never a
+        /// quietly chain-less run. The run holds its own place in it; the UI reads the lines from here.</summary>
+        public QuestBook Quests { get; private set; }
+
         /// <summary>Where the room stands its bought dressing (2026-08-10). Presentation
         /// data: it comes out of the same file as the fixtures but never enters Core.</summary>
         public IReadOnlyList<StageSlot> StageSlots { get; private set; }
@@ -175,6 +180,12 @@ namespace LastCall.Game
                 : new LoadedFixtures(System.Array.Empty<FixtureDefinition>(),
                                      System.Array.Empty<StageSlot>());
             StageSlots = dressing.Slots;
+            // The book names rungs of the room's ladders, so it is read against the catalogue just parsed.
+            var questsJson = Resources.Load<TextAsset>("Data/quests");
+            if (questsJson == null)
+                throw new System.FormatException(
+                    "Resources/Data/quests.json is missing: the hostess has no book, and a run without one is not the game.");
+            Quests = DataLoader.ParseQuests(questsJson.text, dressing.Fixtures);
             Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
             var strangersJson = Resources.Load<TextAsset>("Data/strangers");
             Strangers = strangersJson != null ? DataLoader.ParsePapers(strangersJson.text) : null;
@@ -230,7 +241,8 @@ namespace LastCall.Game
                     regulars: content.Archetypes != null ? new RegularsRegistry(content.Archetypes) : null,
                     glassware: Glassware,
                     fixtures: content.Dressing.Fixtures,
-                    story: storyInPlay ? Story : null);
+                    story: storyInPlay ? Story : null,
+                    quests: Quests);
                 Tycoon = run;
                 CurrentSeed = snap.seed;
                 Debug.Log($"[LastCall] Run resumed — seed '{CurrentSeed}', night {run.Day}, " +
@@ -276,7 +288,8 @@ namespace LastCall.Game
                 glassware: Glassware,
                 lockedStock: LockedStock,
                 fixtures: content.Dressing.Fixtures,
-                story: storyInPlay ? Story : null);
+                story: storyInPlay ? Story : null,
+                quests: Quests);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

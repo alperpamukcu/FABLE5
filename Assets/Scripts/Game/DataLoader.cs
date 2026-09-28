@@ -624,6 +624,117 @@ namespace LastCall.Game
                 throw new FormatException($"Beat '{beatId}' names '{id}' as its {field}, which is not a recipe.");
         }
 
+        /// <summary>
+        /// THE HOSTESS'S BOOK (2026-09-27) — <c>Resources/Data/quests.json</c> into a <see cref="QuestBook"/>. It needs
+        /// the fixture catalogue in hand, because a FIT job names a rung of a real ladder and that rung has to be one the
+        /// shop sells to a bar standing where the job is handed over.
+        ///
+        /// Everything a row can get wrong is refused HERE, naming the job: a kind nobody counts, a garnish the shop can
+        /// withhold (olives, mint), a door or a spoon before its rung, a rank the bar already stands on, a slot or a rung
+        /// that does not exist, a line that says {drink} on a job with no drink, a count past the bubble's twelve pips, a
+        /// book whose rungs go back down. Most of these are Core's own refusals (<see cref="QuestDefinition"/>,
+        /// <see cref="QuestBook"/>, <see cref="QuestRules.ResolveFit"/>), so a bench test can ask them without this
+        /// loader; what is left here is reading the words the file writes.
+        /// </summary>
+        public static QuestBook ParseQuests(string json, IReadOnlyList<FixtureDefinition> fixtures)
+        {
+            var dto = FromJson<QuestFileDto>(json, "quests");
+            if (dto.quests == null || dto.quests.Count == 0)
+                throw new FormatException("Quests file has no jobs in it.");
+            if (dto.quests.Count > QuestRules.MaxQuests)
+                throw new FormatException(
+                    $"Quests file holds {dto.quests.Count} jobs; the book holds {QuestRules.MaxQuests}.");
+
+            var rows = new List<QuestDefinition>(dto.quests.Count);
+            foreach (var q in dto.quests)
+            {
+                string id = q.id ?? string.Empty;
+                string who = $"Job '{id}'";
+                var parsed = QuestRules.ParseKind(q.kind);
+                if (parsed == null)
+                    throw new FormatException(
+                        $"{who} is a '{q.kind}'; a job is one of: {string.Join(", ", QuestRules.KindNamesInData)}.");
+                var kind = parsed.Value;
+                string kindName = QuestRules.KindName(kind);
+
+                // WHAT BELONGS TO ONE KIND ONLY. A field written on the wrong kind would be read by nobody, so the
+                // job would quietly be a different job from the one its writer meant.
+                if (!string.IsNullOrEmpty(q.pick) && kind != QuestKind.Serve)
+                    throw new FormatException($"{who} is a {kindName} job and names a pick; only a serve job picks a drink.");
+                if (q.preps != null && q.preps.Count > 0 && kind != QuestKind.Garnish)
+                    throw new FormatException($"{who} is a {kindName} job and names preps; only a garnish job does.");
+                if (q.goalRung != 0 && kind != QuestKind.Rank)
+                    throw new FormatException($"{who} is a {kindName} job and names a goalRung; only a rank job does.");
+                if (q.goalComfort != 0 && kind != QuestKind.Comfort)
+                    throw new FormatException($"{who} is a {kindName} job and names a goalComfort; only a comfort job does.");
+                if ((!string.IsNullOrEmpty(q.slot) || q.level != 0) && kind != QuestKind.Fit)
+                    throw new FormatException($"{who} is a {kindName} job and names a slot; only a fit job does.");
+
+                var pick = QuestRules.ParsePick(q.pick);
+                if (pick == null)
+                    throw new FormatException($"{who} picks '{q.pick}'; a serve job picks any, stirred or top.");
+
+                List<PreparationDefinition> preps = null;
+                if (kind == QuestKind.Garnish && q.preps != null)
+                {
+                    preps = new List<PreparationDefinition>(q.preps.Count);
+                    foreach (var prepId in q.preps)
+                        preps.Add(Preparations.Find(prepId ?? string.Empty)
+                                  ?? throw new FormatException($"{who} asks for '{prepId}', which is not a preparation."));
+                }
+
+                try
+                {
+                    string fixtureId = kind == QuestKind.Fit
+                        ? QuestRules.ResolveFit(fixtures, id, q.slot, q.level, q.rung).Id
+                        : null;
+                    rows.Add(new QuestDefinition(id, kind, q.rung, q.target, q.reward, q.title, q.handOver, q.done,
+                        pick.Value, preps, q.goalRung, q.goalComfort, q.slot, q.level, fixtureId));
+                }
+                catch (ArgumentException e)
+                {
+                    throw new FormatException("Quests file: " + e.Message);
+                }
+            }
+
+            // ── the two things she says that belong to no job ────────────────────
+            List<string> finale = null;
+            string notYet = null;
+            if (dto.visits != null)
+                foreach (var v in dto.visits)
+                {
+                    if (v.id == "finale")
+                    {
+                        if (finale != null) throw new FormatException("Quests file: the finale is written twice.");
+                        finale = v.say ?? new List<string>();
+                    }
+                    else if (v.id == "not_yet")
+                    {
+                        if (notYet != null) throw new FormatException("Quests file: the \"not yet\" line is written twice.");
+                        if (v.say == null || v.say.Count != 1)
+                            throw new FormatException(
+                                $"Quests file: \"not yet\" has {v.say?.Count ?? 0} lines; it is one line.");
+                        notYet = v.say[0];
+                    }
+                    else
+                        throw new FormatException(
+                            $"Quests file: a visit called '{v.id}'; she says only 'finale' and 'not_yet' outside a job.");
+                }
+            if (finale == null)
+                throw new FormatException("Quests file: no 'finale' — she has nothing to say when the book is done.");
+            if (notYet == null)
+                throw new FormatException("Quests file: no 'not_yet' — she has nothing to say when the next job waits on a rung.");
+
+            try
+            {
+                return new QuestBook(rows, finale, notYet);
+            }
+            catch (ArgumentException e)
+            {
+                throw new FormatException("Quests file: " + e.Message);
+            }
+        }
+
         private static PrepMethod ParsePrep(string raw, string context)
         {
             // Loud, not silent (2026-08-14): the method now decides whether Core will let
@@ -1140,6 +1251,41 @@ namespace LastCall.Game
             public long target;
             public string name;
             public string description;
+        }
+
+        [Serializable]
+        private sealed class QuestFileDto
+        {
+            public int version;
+            public string _comment;
+            public List<QuestDto> quests;
+            public List<HostessWordsDto> visits;   // chain-level lines: "finale", "not_yet"
+        }
+
+        [Serializable]
+        private sealed class QuestDto
+        {
+            public string id;
+            public string kind;
+            public int rung;
+            public int target;                      // 0 on the state kinds, read as 1
+            public int reward;
+            public string title;
+            public List<string> handOver;
+            public List<string> done;
+            public string pick;                     // serve only: "" / "any" | "stirred" | "top"
+            public List<string> preps;              // garnish only: 1-2 of ice, lemon_twist, salt_rim, sugar_rim
+            public int goalRung;                    // rank only: 1..6
+            public double goalComfort;              // comfort only: (0, 5]
+            public string slot;                     // fit only: a fixtures.json slot id...
+            public int level;                       // ...and the rung on its ladder, >= 1
+        }
+
+        [Serializable]
+        private sealed class HostessWordsDto
+        {
+            public string id;
+            public List<string> say;
         }
 
         [Serializable]

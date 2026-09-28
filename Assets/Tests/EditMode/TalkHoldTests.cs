@@ -80,5 +80,19 @@ namespace LastCall.Tests
             run.BeginTalk();
             Assert.IsFalse(run.Talking, "a closed night has no clock to hold");
         }
+
+        [Test]
+        public void DevSkipToDayEnd_LetsGoOfAHeldNight()
+        {
+            // The dev verb plays the night out on the real clock; a conversation left holding it (a lesson, the
+            // hostess) would freeze that clock and hand the night back still open after twenty thousand ticks.
+            var run = NewRun();
+            run.Tick(5);
+            run.BeginTalk();
+            Assert.IsTrue(run.Talking);
+            run.DevSkipToDayEnd();
+            Assert.IsFalse(run.Talking, "the hold is let go first");
+            Assert.AreEqual(TycoonPhase.DayEnd, run.Phase, "and the night is played to its close");
+        }
     }
 }

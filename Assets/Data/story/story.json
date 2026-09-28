@@ -1,19 +1,19 @@
 {
   "version": 3,
-  "_comment": "THE LAST CUSTOMER (GDD 26). ONLY ECE FOR NOW (2026-08-13, the author): the arc is one written night -- hers, on the opening Monday -- and the three guests who follow her are parked in Docs/story_guests_drafted.json until the story around her is built. Everything the module does is exercised by this one beat: she arrives after the door is shut, the room dims to her, the plate talks, the trial runs on its own clock, and the arc finishes. The rules the file obeys are unchanged: a beat is a WEEK plus a NIGHT of the bar's six-night calendar (Mondays dark); a GUEST may only come on a friday or a saturday and only the host may work a quiet night, which is why hers is a Monday; a beat that needs a style must say that style in a hostWarning line; asks are revealed one at a time and graded to the trial's standard (the drink exactly, the craft exactly, the fill forgiven at >= 0.90); a missed night costs the night and not the arc.",
+  "_comment": "THE LAST CUSTOMER (GDD 26). ONLY THE HOSTESS FOR NOW (2026-08-13, the author; the host became the hostess, the game's lead, on 2026-09-27 -- her name is written once, in papers.json, and her jobs live in Resources/Data/quests.json; the beat keeps its id ece_1 so its string-table keys stay valid): the arc is one written night -- hers, on the opening Monday -- and the three guests who follow her are parked in Docs/story_guests_drafted.json until the story around her is built. Everything the module does is exercised by this one beat: she arrives after the door is shut, the room dims to her, the plate talks, the trial runs on its own clock, and the arc finishes. The rules the file obeys are unchanged: a beat is a WEEK plus a NIGHT of the bar's six-night calendar (Mondays dark); a GUEST may only come on a friday or a saturday and only the host may work a quiet night, which is why hers is a Monday; a beat that needs a style must say that style in a hostWarning line; asks are revealed one at a time and graded to the trial's standard (the drink exactly, the craft exactly, the fill forgiven at >= 0.90); a missed night costs the night and not the arc.",
   "characters": [
     {
-      "id": "ece",
-      "look": "ece",
+      "id": "hostess",
+      "look": "hostess",
       "role": "host",
-      "blurb": "Works the shift with you. Has done this before, in rooms that did not make it. Takes the first last call herself.",
+      "blurb": "The hostess and the game's lead. Ran rooms on Ocean Drive. Comes by at closing with a job.",
       "placeholderLook": "silkwoman"
     }
   ],
   "beats": [
     {
       "id": "ece_1",
-      "character": "ece",
+      "character": "hostess",
       "week": 1,
       "night": "monday",
       "asks": [
