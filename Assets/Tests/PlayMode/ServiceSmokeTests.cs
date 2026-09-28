@@ -936,6 +936,135 @@ namespace LastCall.PlayTests
                 "the night ended anyway, behind the question");
         }
 
+        /// <summary>
+        /// THE NIGHT'S TAPE ADDS UP, AND THE WAY ON WAITS FOR IT (2026-09-28, the day-end rebuilt). The old slip carried
+        /// the walk-out fees in its subtotal and printed no row for them, so its rows did not add up on any night
+        /// somebody walked (§9.2). The tape prints every figure as digits in a Text named V: each block's rows add up to
+        /// the subtotal under them, and the subtotals are Core's own DayIncome and DayExpenses. And CONTINUE is never up
+        /// while the counterfoil is still on the tape - the way out waits for the whole show.
+        ///
+        /// Addressed from the tape's own unique names (ZTape, ZRows, ZStub): "Night" and "Week" also name pieces of the
+        /// top bar.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_nights_tape_adds_up_and_the_way_on_waits_for_it()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+            run.DevSkipToDayEnd();
+
+            RectTransform tape = null;
+            float deadline = Time.realtimeSinceStartup + 25f;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                tape = Find("ZTape");
+                if (tape != null && tape.gameObject.activeInHierarchy) break;
+                tape = null;
+                yield return null;
+            }
+            Assert.That(tape, Is.Not.Null, "the night's tape never came up");
+            var early = Find("BillNext");
+            Assert.That(early == null || !early.gameObject.activeInHierarchy, Is.True,
+                "CONTINUE was offered with the tape, before the show");
+
+            RectTransform way = null;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                var stub = Find("ZStub");
+                bool onTheTape = stub != null && stub.parent != null && stub.parent.name == "ZTape";
+                way = Find("BillNext");
+                if (way != null && way.gameObject.activeInHierarchy)
+                {
+                    Assert.That(onTheTape, Is.False, "CONTINUE came up while the counterfoil was still on the tape");
+                    break;
+                }
+                way = null;
+                yield return null;
+            }
+            Assert.That(way, Is.Not.Null, "the night's tape never offered a way on");
+
+            var rows = Find("ZRows");
+            Assert.That(rows, Is.Not.Null, "the tape has no rows");
+            int inRows = 0, outRows = 0, inSub = int.MinValue, outSub = int.MinValue, till = int.MinValue;
+            bool rent = false, walkouts = false;
+            foreach (Transform row in rows)
+            {
+                string name = row.name;
+                if (name == "Row.in.sub") inSub = FigureOf(row);
+                else if (name.StartsWith("Row.in.")) inRows += FigureOf(row);
+                else if (name == "Row.out.sub") outSub = FigureOf(row);
+                else if (name.StartsWith("Row.out."))
+                {
+                    outRows += FigureOf(row);
+                    rent |= name == "Row.out.rent";
+                    walkouts |= name == "Row.out.walkouts";
+                }
+                else if (name == "Row.till") till = FigureOf(row);
+            }
+            Assert.That(inSub, Is.EqualTo(run.DayIncome), "TOOK IN is not what the night took in");
+            Assert.That(inRows, Is.EqualTo(inSub), "the rows over TOOK IN do not add up to it");
+            Assert.That(outSub, Is.EqualTo(run.DayExpenses), "PAID OUT is not what the night paid out");
+            Assert.That(outRows, Is.EqualTo(outSub), "the rows over PAID OUT do not add up to it");
+            Assert.That(rent, Is.True, "the tape printed no RENT");
+            Assert.That(walkouts, Is.EqualTo(run.DayWalkOutFees > 0),
+                "the walk-outs' row does not match whether the night billed any (" + run.DayWalkOutFees + ")");
+            Assert.That(till, Is.EqualTo(Mathf.Abs(run.Money)), "the TILL is not what is in the till");
+
+            yield return OpenTheMarket();
+        }
+
+        /// <summary>
+        /// REDUCED MOTION LAYS THE NIGHT OUT AT ONCE (2026-09-28): on the first frame the night is up, the tape is at its
+        /// whole length (its paper and the counterfoil's 66), every figure is final, and the counterfoil already hangs on
+        /// the week's hook. Ordering only - no time is measured (the first press of a session is the slow one).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Reduced_motion_lays_the_night_out_at_once()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+            LastCall.Game.PlayerOptions.ReducedMotion = true;
+            try
+            {
+                run.DevSkipToDayEnd();
+                RectTransform tape = null;
+                float deadline = Time.realtimeSinceStartup + 25f;
+                while (Time.realtimeSinceStartup < deadline)
+                {
+                    tape = Find("ZTape");
+                    if (tape != null && tape.gameObject.activeInHierarchy) break;
+                    tape = null;
+                    yield return null;
+                }
+                Assert.That(tape, Is.Not.Null, "the night never came up");
+                var paper = Find("ZPaper", tape);
+                Assert.That(paper, Is.Not.Null, "the tape has no paper");
+                Assert.That(tape.rect.height, Is.EqualTo(paper.rect.height + 66f).Within(0.5f),
+                    "the tape was not laid out at its whole length on the night's first frame");
+                var sub = Find("Row.in.sub", tape);
+                Assert.That(sub, Is.Not.Null, "the tape has no TOOK IN subtotal");
+                Assert.That(FigureOf(sub), Is.EqualTo(run.DayIncome), "the figures were not final on the first frame");
+                var stub = Find("ZStub");
+                Assert.That(stub, Is.Not.Null, "the tape has no counterfoil");
+                var slot = stub.parent;
+                Assert.That(slot != null && slot.name.StartsWith("Slot") && slot.parent != null && slot.parent.name == "Week",
+                    Is.True, "the counterfoil was not already on the week's hook (under " + (slot != null ? slot.name : "nothing") + ")");
+                yield return OpenTheMarket();
+            }
+            finally
+            {
+                LastCall.Game.PlayerOptions.ReducedMotion = false;
+            }
+        }
+
+        /// <summary>The digits a tape row prints (its Text named V), or 0 for a row that prints none.</summary>
+        private static int FigureOf(Transform row)
+        {
+            var v = row.Find("V");
+            var text = v != null ? v.GetComponent<Text>() : null;
+            return text != null && int.TryParse(text.text, out int n) ? n : 0;
+        }
+
         /// <summary>Walks the night's slip and stops when the market is on screen and settled.
         /// Three tests take this same door; the look suite keeps its own copy because it has
         /// to photograph what it finds at the end of it.</summary>

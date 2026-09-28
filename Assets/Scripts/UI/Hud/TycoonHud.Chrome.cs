@@ -1043,8 +1043,10 @@ namespace LastCall.UI
             {
                 // AND IT GOES BEHIND A SHEET (2026-09-09): the books and the market draw
                 // their own till, and a second one hanging over the tablet is both a repeat
-                // and something in the way.
-                bool room = _dayEndPanel == null || !_dayEndPanel.gameObject.activeSelf;
+                // and something in the way. ...once the dark has arrived (2026-09-28): while the
+                // night's light goes down it is still the room's.
+                bool room = _dayEndPanel == null || !_dayEndPanel.gameObject.activeSelf
+                            || _show == NightBeat.Lights;
                 if (_beamTillCard.gameObject.activeSelf != room)
                     _beamTillCard.gameObject.SetActive(room);
             }

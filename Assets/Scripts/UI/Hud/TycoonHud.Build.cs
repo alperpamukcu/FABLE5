@@ -626,8 +626,10 @@ namespace LastCall.UI
             Stretch(_dayEndPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var panelImg = _dayEndPanel.gameObject.AddComponent<Image>();
             // 0.88 until 2026-09-08 (the author: "gün sonu fatura ekranında arka plan daha da
-            // karartılsın"): the room behind the bill is all but gone now.
+            // karartılsın"): the room behind the bill is all but gone now. It ARRIVES since
+            // 2026-09-28 - the show fades it up from nothing, so the bar's light is seen going down.
             panelImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.988f);
+            _dayEndScrim = panelImg;
 
             var title = _dayEndTitle = NewText("Title", _dayEndPanel, _display, 16, TextAnchor.MiddleCenter, UITheme.PrimaryAction);
             Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(900, 24), new Vector2(0, -22));
@@ -646,7 +648,7 @@ namespace LastCall.UI
             _lastCallCard.text = UIText.T("build.dayend.called");
             _lastCallCard.raycastTarget = false;
             var calledUnder = NewText("CalledSub", _dayEndPanel, _body, 16, TextAnchor.MiddleCenter,
-                new Color(0.72f, 0.68f, 0.62f));
+                UITheme.Cream[3]);
             Place(calledUnder.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 20),
                 new Vector2(0, -22f));
             calledUnder.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -660,49 +662,22 @@ namespace LastCall.UI
             _lastCallGroup.blocksRaycasts = false;
             _lastCallRt.gameObject.SetActive(false);
 
-            // Left column: the till slip (v5 P13). Cream stock, and pinned to 16pt — a whole
-            // multiple of the face's 8px design size, so the monospace columns the receipt is
-            // set in actually land on the pixel grid instead of blurring between it.
-            // THE SLIP, CENTRED (2026-08-10). It hung from the top of the screen at a
-            // fixed 470, so a quiet night left a hand's width of blank paper under the
-            // total and the bill sat high on a screen that had room for it in the middle.
-            // THE PAPER IS GENERATED NOW (2026-08-10, the author: the drawn sheet and its
-            // marks read as filler). PixelLab painted a receipt torn off a roll — jagged at
-            // both ends, warm, slightly handled — at 140x192, drawn here at a WHOLE 3x like
-            // the licence, because pixel art magnifies only in whole steps. FIXED size, and
-            // that is a receipt being honest: the paper is the roll's, the print is the
-            // night's, and a quiet night leaves blank stock above the foot tear.
-            var bill = _dayEndBill = NewRect("Bill", _dayEndPanel);
-            Place(bill, new Vector2(0.5f, 0.5f), new Vector2(BillW, BillH), Vector2.zero);
-            var sheet = bill.gameObject.AddComponent<Image>();
-            sheet.sprite = ItemArt.Load("bill_sheet");
-            if (sheet.sprite == null) { sheet.color = BillPaper; Frame(bill, 2f, BillEdge); }
+            // THE NIGHT'S SHEET (2026-09-28, the day-end rebuilt): one rect over the panel that the show lays the
+            // night out in - the tape, the week's hook, the critics and the TOMORROW board (TycoonHud.NightShow) -
+            // rebuilt every night and moved whole on the way out. It never takes the pointer: CONTINUE is built
+            // after it, so it draws on top and is the one thing on this step that can be pressed.
+            _nightSheet = NewRect("Night", _dayEndPanel);
+            Stretch(_nightSheet, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            _nightGroup = _nightSheet.gameObject.AddComponent<CanvasGroup>();
+            _nightGroup.blocksRaycasts = false;
+            _nightGroup.interactable = false;
 
-            // The head is PRINTED, not banded: a receipt is one ink on one paper, and the
-            // navy band belonged to the licence, not to a till roll.
-            var headTitle = NewText("T", bill, _display, 24, TextAnchor.MiddleCenter, BillInk);
-            Place(headTitle.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 26),
-                new Vector2(0, -30f));
-            headTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
-            headTitle.text = UIText.T("build.bill.head");
-            _billWhen = NewText("W", bill, _body, 16, TextAnchor.MiddleCenter, BillQuiet);
-            Place(_billWhen.rectTransform, new Vector2(0.5f, 1), new Vector2(BillW - 60f, 20),
-                new Vector2(0, -54f));
-            _billWhen.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-            // Every line lands in here, one rect to a row, so the columns cannot bend.
-            _invoiceRows = NewRect("Rows", bill);
-            _invoiceRows.anchorMin = new Vector2(0, 1); _invoiceRows.anchorMax = new Vector2(1, 1);
-            _invoiceRows.pivot = new Vector2(0.5f, 1);
-            _invoiceRows.sizeDelta = new Vector2(-BillInset * 2f, 0);
-            _invoiceRows.anchoredPosition = new Vector2(0, -BillRowsTop);
-
-            // The bill's OWN way forward (2026-08-07). The day-end button moved inside the
+            // The night's OWN way forward (2026-08-07). The day-end button moved inside the
             // tablet, and the tablet is only up on the market step — which left the books
-            // with no door out of them at all. The slip carries its own now.
-            // ON THE SLIP'S FOOT, not at a fixed 530 down the panel: the bill is centred
-            // and its length is the night's, so a fixed key sat on top of a short slip and
-            // under a long one. RebuildDayEnd puts it where the paper actually ends.
+            // with no door out of them at all. The night carries its own now.
+            // ON THE TAPE'S FOOT, not at a fixed 530 down the panel: the tape's length is the
+            // night's, so a fixed key sat on top of a short one and under a long one.
+            // BuildNightSheet puts it where the paper was, under the counterfoil's place.
             // THE HOUSE'S OWN KEY (2026-09-22, the author's seventh list: "Go To The Order butonunu değiştir oyunun
             // konseptine renk paletine UI tarzına uygun bir şekilde değiştir"). It was a flat amber slab the width of
             // the paper - the one control on the day-end screen that did not come out of the game's key pack. It is
@@ -723,10 +698,6 @@ namespace LastCall.UI
             _billNext.GetComponent<PackKey>().Refit(MenuPack.Plate("bill_berry", berry, false), MenuPack.Hovered(),
                 MenuPack.Plate("bill_berry", berry, true), berryInk, Color.Lerp(berryInk, Color.white, 0.35f));
             _billNextLabel.color = berryInk;
-
-            // The slip is the night's money; these two are the night's PLACE — where it sits
-            // in the week, and what it did to the bar. See the block above RebuildDayEnd.
-            BuildNightBoards(_dayEndPanel);
 
             // THE DEVICE. 1096 x 700 wearing sh_ipad2, which is drawn at 274 x 175 — the
             // same ratio to five decimals — with a 28px border. A sliced Image draws its

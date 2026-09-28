@@ -76,6 +76,43 @@ namespace LastCall.UI
         // ── the show's door in ────────────────────────────────────────────────────────────────────────────────────────
 
         /// <summary>
+        /// THE NIGHT'S END, once the floor is clear, the sink has stopped and the beat after it has passed
+        /// (StepDayEndDue). Every sheet shuts, the night's sheet is laid out and parked, and the show starts from the
+        /// room's light going down - or, under reduced motion, is laid out whole. Same name as ever: the probes call it
+        /// by reflection.
+        /// </summary>
+        private void ShowDayEnd()
+        {
+            // Nothing of the last market is still moving when the books come up (2026-09-27), above all the night's own
+            // way out, which would carry this night's sheet off under the next.
+            SettleMarketMotion();
+            // Nothing of the shift survives into the books.
+            CloseEverySheet();
+            SettleBillOut();
+            var run = Run;
+            if (run == null) return;
+            _dayEndStep = 0;   // the night first; the market only after CONTINUE
+            // THE SHOW IS CLAIMED BEFORE THE REBUILD (2026-08-11): the rebuild asks ShowWayOn, which reads it, so the
+            // way on cannot come up on the first frame of the night's own arrival.
+            _show = NightBeat.Lights;
+            _showT = 0f;
+            _standT = -1f; _chipPop = 0f; _starT = -1f; _stampT = -1f; _billShake = 0f; _stampArmed = false;
+            // WHAT TONIGHT HAS TO SAY FOR ITSELF, decided once, here (2026-08-11): DISGRACE on a night filed at nothing,
+            // RECORD on one filed above every night before it (and there has to have been one). Both read the number the
+            // book files (Q1), which is the number the tape's stars show.
+            double filed = run.TonightStars;
+            _stampKind = filed <= 1e-9 ? StampKind.Disgrace
+                : run.Rating.NightsClosed > 0 && filed > run.Rating.BestNight + 1e-9 ? StampKind.Record
+                : StampKind.None;
+            _dayEndPanel.gameObject.SetActive(true);
+            SetNightScrim(Motion.Reduced ? DayEndScrimA : 0f);
+            if (_lastCallRt != null) _lastCallRt.gameObject.SetActive(false);
+            BuildNightSheet(run);
+            RebuildDayEnd();
+            if (Motion.Reduced) PlaceWholeNight(run);
+        }
+
+        /// <summary>
         /// Lays the night's sheet out and starts the show. Everything the sheet shows is built here, once, at its rest
         /// pose - and then parked (the columns off their edges, the tape rolled up, the figures blank, the stars above
         /// their places) for the beats to bring in.
@@ -135,6 +172,7 @@ namespace LastCall.UI
                 foreach (var count in _billCounts) count(0f);
                 foreach (var count in _criticCounts) count(0f);
                 SetGrade(0f, 0f);
+                SetStarFigure(0f);
             }
         }
 
@@ -270,21 +308,22 @@ namespace LastCall.UI
 
         private void StepClimb(TycoonRun run, float dt)
         {
-            if (ClickedToSkip())
-            {
-                if (_standT >= 0f) _standT = StandClimb;
-                _chipPop = 0f;
-                if (_standDeltaChip != null) _standDeltaChip.localScale = Vector3.one;
-                if (_swapT >= 0f) _swapT = RungSwap;
-            }
+            // One click lands the whole beat - the climb, the chip's pop and the swap - in this frame.
+            bool skip = ClickedToSkip();
             if (_climbStage == 0)
             {
+                if (skip && _standT >= 0f) _standT = StandClimb;
                 StepStandingClimb();
                 if (_standT >= 0f) return;
                 _climbStage = 1;
             }
             if (_climbStage == 1)
             {
+                if (skip && _chipPop > 0f)
+                {
+                    _chipPop = 0f;
+                    if (_standDeltaChip != null) _standDeltaChip.localScale = Vector3.one;
+                }
                 if (_chipPop > 0f) return;
                 _climbStage = 2;
                 bool crossed = _swapTo.Count > 0;
@@ -294,6 +333,7 @@ namespace LastCall.UI
             {
                 if (_swapT >= 0f)
                 {
+                    if (skip) _swapT = RungSwap;
                     _swapT += dt;
                     SetRungSwap(Mathf.Clamp01(_swapT / RungSwap));
                     if (_swapT < RungSwap) return;

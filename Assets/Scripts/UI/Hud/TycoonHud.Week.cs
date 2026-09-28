@@ -145,7 +145,7 @@ namespace LastCall.UI
             if (stub != null) img.sprite = stub; else img.color = UITheme.Cream[4];
             TicketHole(slot);
 
-            var name = NewText("Night", slot, _display, 16, TextAnchor.MiddleLeft, TapeInk);
+            var name = NewText("Day", slot, _display, 16, TextAnchor.MiddleLeft, TapeInk);
             TicketZone(name.rectTransform, -106f, 10f, false);
             name.text = UIText.T(BarCalendar.WeekColumnLines[(int)night]);
             StarRow(slot, new Vector2(0.5f, 0.5f), new Vector2(-106f + 40f, -11f), 14f, book.NightStars,

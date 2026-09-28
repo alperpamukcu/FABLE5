@@ -697,7 +697,7 @@ namespace LastCall.UI
             if (right != null) fold.sprite = right; else fold.color = UITheme.Cream[4];
             _zStubFold.gameObject.SetActive(false);
 
-            var night = NewText("Night", _zStub, _display, 16, TextAnchor.MiddleLeft, TapeInk);
+            var night = NewText("Day", _zStub, _display, 16, TextAnchor.MiddleLeft, TapeInk);
             TicketLine(night.rectTransform, 8f, -24f);
             night.text = UIText.T(BarCalendar.WeekColumnLines[(int)BarCalendar.NightOf(run.Day)]);
             var z = NewText("Z", _zStub, _body, 16, TextAnchor.MiddleLeft, TapeQuiet);
@@ -861,6 +861,132 @@ namespace LastCall.UI
             if (_zStubFold != null) _zStubFold.gameObject.SetActive(false);
             TicketHole(_zStub);
             Frame(_zStub, 2f, UITheme.Cyan[3]);
+        }
+
+        // ── the stamp's blow, the tape's words where the house face is handed on, the fines' reason ──────────
+
+        /// <summary>Dresses the stamp for what it is about to say.</summary>
+        private void SetStampFace(StampKind kind)
+        {
+            _stampKind = kind;
+            if (_billStamp == null || kind == StampKind.None) return;
+            bool good = kind == StampKind.Record;
+            // The truer inks (seventh list): the ramps' own saturated steps, not a faded brown-green.
+            var ink = good ? UITheme.Lime[2] : UITheme.ViceRed[2];
+            _billStamp.GetComponent<Image>().color = new Color(ink.r, ink.g, ink.b, 0.16f);
+            foreach (var edge in _billStamp.GetComponentsInChildren<Image>(true))
+                if (edge.transform != _billStamp && edge.GetComponent<Text>() == null)
+                    edge.color = new Color(ink.r, ink.g, ink.b, 0.95f);
+            _billStampInk.color = new Color(ink.r, ink.g, ink.b, 1f);
+            if (_shop != null) _billStampInk.font = _shop;   // the heaviest face the game ships
+            _billStampInk.text = UIText.T(good ? "dayend.stamp.record" : "dayend.stamp.disgrace");
+            _billStamp.sizeDelta = new Vector2(good ? 288f : 256f, 54f);
+        }
+
+        /// <summary>
+        /// A rubber stamp is a thing DRIVEN at the paper: it arrives huge, out of focus and
+        /// crooked, and it stops dead. So it scales down hard rather than easing, and the
+        /// only softness in it is after the strike — it rocks a few degrees and settles,
+        /// and the paper takes the blow on the same frame the ink lands.
+        /// </summary>
+        private void ArmStamp()
+        {
+            if (_stampArmed || _billStamp == null || _stampKind == StampKind.None) return;
+            _stampArmed = true;
+            if (Motion.Reduced)
+            {
+                _billStamp.localScale = Vector3.one;
+                _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+                _billStamp.gameObject.SetActive(true);
+                return;
+            }
+            _stampT = 0f;
+            // THE FIRST FRAME OF THE STRIKE IS SET HERE, not left to the step that runs
+            // next frame. Arming can happen after StepStamp has already run for this frame
+            // (the zero-star night arms from the beats, which are stepped last), and a stamp
+            // shown at whatever pose it was left in flashes at rest for one frame before it
+            // starts falling. Shown huge, crooked and unprinted, it can only fall.
+            _billStamp.localScale = new Vector3(3.4f, 3.4f, 1f);
+            _billStamp.localRotation = Quaternion.Euler(0, 0, -26f);
+            var ink0 = _billStampInk.color;
+            _billStampInk.color = new Color(ink0.r, ink0.g, ink0.b, 0f);
+            _billStamp.gameObject.SetActive(true);
+        }
+
+        private void StepStamp()
+        {
+            if (_stampT < 0f || _billStamp == null) return;
+            _stampT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
+            float k = Mathf.Clamp01(_stampT / StampFall);
+            float e = k * k * k;                            // gathers pace all the way down
+            float scale = Mathf.Lerp(3.4f, 1f, e);
+            _billStamp.localScale = new Vector3(scale, scale, 1f);
+            _billStamp.localRotation = Quaternion.Euler(0, 0,
+                Mathf.Lerp(-26f, -9f, e) + Mathf.Sin(k * Mathf.PI * 4f) * 3f * (1f - k));
+            var c = _billStampInk.color;
+            _billStampInk.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(k * 2.2f));
+            if (k < 1f) return;
+            _billStamp.localScale = Vector3.one;
+            _billStamp.localRotation = Quaternion.Euler(0, 0, -9f);
+            _stampT = -1f;
+            _billShake = 1f;                                 // the paper takes it
+            Sfx.Play("stamp", 0.95f);
+        }
+
+        /// <summary>
+        /// THE SLIP IN A LANGUAGE THE HOUSE FACE CANNOT DRAW (2026-09-22, the author's eighth list: "fatura üstündeki
+        /// türkçe fontu beğenmedim çok büyük duruyor ve üst satırdaki metinlerle çakışıyor biraz küçült ve küçük harflerde
+        /// kullan (ALPER değil Alper)"). Silkscreen is a capitals face with a short cap; the face that draws Turkish, and
+        /// the other languages <see cref="LanguageFonts"/> hands on, is a full-height face with a lower case, so at the
+        /// slip's 24 its capitals stood half as tall again and İ's dot and Ş's cedilla reached the row above. Where the
+        /// body face has been handed on, the slip's WORDS go a step down (24 to 16, 16 to 8) and into sentence case -
+        /// "Satış", "Nina" - and its FIGURES stay in the house face at the size the English slip prints them: digits
+        /// and the dollar are the same in every language, and so is the column they line up in.
+        /// </summary>
+        private bool BillHandedOn => bodyFont != null && _body != bodyFont;
+        /// <summary>The slip's big words, a step down where the face is handed on (24 to 16).</summary>
+        private int BillWordSize(int size) => BillHandedOn && size >= 24 ? 16 : size;
+        /// <summary>The slip's small lines: the house face at 16, or the handed-on face's small line
+        /// (<see cref="LanguageFonts.SmallLine"/>) - Galmuri7's 8 read as specks, its 16 too tall (r153).</summary>
+        private Font BillSmallFont => BillHandedOn ? LanguageFonts.SmallLine(_body).font : _body;
+        private int BillSmallSize => BillHandedOn ? LanguageFonts.SmallLine(_body).size : 16;
+        /// <summary>Sentence case where the face is handed on, one clause at a time: a slip line runs clauses
+        /// together with a middle dot, and each of them starts like a sentence ("Hafta 2 · Cumartesi").</summary>
+        private string BillWords(string s)
+        {
+            if (!BillHandedOn || string.IsNullOrEmpty(s)) return s;
+            var parts = s.Split('·');
+            for (int i = 0; i < parts.Length; i++) parts[i] = UIText.Sentence(parts[i]);
+            return string.Join("·", parts);
+        }
+        private Font BillDigits(Font font) => BillHandedOn && font == _body ? bodyFont : font;
+
+        /// <summary>What the fines were for (GDD 28 §7): the label carries the reason, read
+        /// off the truth behind each fined card — or UNREAD CARD for a minor served blind,
+        /// which is the honest word for it.</summary>
+        private static string FineReason(TycoonRun run)
+        {
+            int under = 0, borrowed = 0, altered = 0, copied = 0, drawn = 0, unread = 0;
+            foreach (var v in run.Floor.Finished)
+            {
+                if (!v.Fined) continue;
+                if (!v.IdInspected) { unread++; continue; }
+                var truth = v.Papers;
+                var kind = truth != null ? truth.Forgery : Forgery.None;
+                if (kind == Forgery.Altered) altered++;
+                else if (kind == Forgery.Copied) copied++;       // the cheap reprint (the eighth list)
+                else if (kind == Forgery.Drawn) drawn++;         // the card drawn by hand
+                else if (kind == Forgery.Borrowed) borrowed++;
+                else under++;
+            }
+            var parts = new List<string>();
+            if (under > 0) parts.Add(UIText.T("dayend.fine.under_age"));
+            if (borrowed > 0) parts.Add(UIText.T("dayend.fine.borrowed"));
+            if (altered > 0) parts.Add(UIText.T("dayend.fine.altered"));
+            if (copied > 0) parts.Add(UIText.T("dayend.fine.copied"));
+            if (drawn > 0) parts.Add(UIText.T("dayend.fine.drawn"));
+            if (unread > 0) parts.Add(UIText.T("dayend.fine.unread"));
+            return parts.Count == 0 ? UIText.T("dayend.fine.the_law") : string.Join(", ", parts);
         }
 
         private static Vector2 RoundV(Vector2 v) => new Vector2(Mathf.Round(v.x), Mathf.Round(v.y));

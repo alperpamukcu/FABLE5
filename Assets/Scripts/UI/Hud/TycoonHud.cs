@@ -882,7 +882,7 @@ namespace LastCall.UI
 
         private Text _bannerText;
 
-        private RectTransform _dayEndBill, _dayEndTablet;
+        private RectTransform _dayEndTablet;
 
         private Text _dayEndTitle;
 
@@ -1705,6 +1705,7 @@ namespace LastCall.UI
             VesselArt.ClearCache();     // measurements are of sprites, so they go with them
             _lastPhase = TycoonPhase.DayOpen;
             _dayEndDue = false;   // a new bar is not owed last night's books
+            _show = NightBeat.Off; // ...nor the rest of last night's show
             _tabFloats = 0;       // and nothing of last night's is still in the air
             // A NEW BAR REMEMBERS NOBODY (2026-08-25). The guest log and the casting both
             // outlived the run they were built in: the HUD is made once and StartNewRun only
@@ -1894,7 +1895,7 @@ namespace LastCall.UI
             StepStamp();
             StepMoneyDrops();
             StepMarketKey();
-            StepDayEndBeats();
+            StepNightShow();
             StepChipPop();
             StepDayEndDue();
         }
@@ -2123,46 +2124,9 @@ namespace LastCall.UI
 
         // ── day end ─────────────────────────────────────────────────────────────
 
-        // ── the slip's own grid (2026-08-10) ────────────────────────────────────
-        // One rect per line, the label pinned left and the figure pinned right. Dot
-        // leaders lined a receipt up only while every name stayed short; a long drink
-        // pushed its price off the grid and the whole slip leaned.
-
-        // 152x200 art at 3x (grown on the author's note). The stock is generated; the
-        // SILHOUETTE is authored — straight roll sides, a fine tear carved only at the
-        // top and the foot — because three takes in a row drew perforated stamp edges on
-        // all four sides: shape is a specification, and the generator does not hit
-        // specifications. Solid stock spans y 6..591, full width, measured off the cream.
-        // SET BIGGER (2026-08-11, the author: "faturadaki yazıların puntosunu arttır"). The
-        // slip was set at 8 for everything that was not a figure, which is the size the HUD
-        // uses for a hint you glance at — and this is the document the whole day is read
-        // off. Every line moves up one legal step: the pixel faces rasterise cleanly only at
-        // whole multiples of 8, so 8 goes to 16 and 16 to 24, and the rows and the marks
-        // grow with them rather than the type growing inside its old gutter.
-        private const float BillW = 456f, BillH = 600f, BillHeadH = 62f, BillRowH = 26f;
-
-        private const float BillInset = 36f;   // type margin inside the sheet
-        /// <summary>Where the print starts under the head. 12 → 20 on 2026-08-25: the first
-        /// row is the star row, the stamp is struck ACROSS the star row, and a stamp is
-        /// crooked and taller than what it strikes — so on a night that earned nothing its
-        /// raised corner clipped the date line above it. Eight units of paper is the whole
-        /// fix, and the roll has blank stock to spare at the foot.</summary>
-        private const float BillRowsTop = BillHeadH + 20f;
-
+        /// <summary>The till roll's cream (the tape itself is the author's stock now - ChromeArt.TapeBody); the
+        /// certificate's paper is warmed from it (TycoonHud.Ladder).</summary>
         private static readonly Color BillPaper = new Color(0.965f, 0.945f, 0.886f, 1f);
-
-        private static readonly Color BillEdge = new Color(0.62f, 0.58f, 0.50f, 1f);
-
-
-        private static readonly Color BillInk = new Color(0.13f, 0.11f, 0.09f, 1f);
-
-        private static readonly Color BillRed = new Color(0.65f, 0.17f, 0.27f, 1f);
-
-        private static readonly Color BillQuiet = new Color(0.51f, 0.47f, 0.41f, 1f);
-
-        private RectTransform _invoiceRows;
-
-        private Text _billWhen;
 
         /// <summary>
         /// The night's stars, drawn as stars — five of them, 24px on the pixel grid, with
@@ -2186,30 +2150,25 @@ namespace LastCall.UI
         private int _starCount;          // how many are due to land
         private int _landed;             // how many have; the shake fires on the change
         private float _billShake;        // 1 at the impact, decaying to 0
-        private Vector2 _billHome;
 
-        // The night's end, in beats: 1 the call, 2 the paper feeding, 3 the stars.
+        // The night is called before it is counted: the called line's three clocks (TycoonHud.NightShow).
         private RectTransform _lastCallRt;
 
         private CanvasGroup _lastCallGroup;
 
         private Text _lastCallCard;
 
-        private int _endBeat;
-
-        private float _endT, _endStarFrac;
-
         private const float CallIn = 0.4f, CallHold = 1.5f, CallOut = 0.5f;
 
-        /// <summary>How slowly the paper feeds, and from how far up.
+        /// <summary>How slowly the tape unrolls.
         ///
         /// 1.05 → 2.6 (2026-08-11, the author: much slower still). A till does not throw
         /// paper at you; it grinds it out, and the grinding is what the whole beat is for —
         /// the player has nothing to do but watch the night arrive.</summary>
-        private const float SlipFeed = 2.6f, SlipFeedFrom = 760f;
+        private const float SlipFeed = 2.6f;
 
-        /// <summary>How long the boards take to arrive. Under the paper's own feed, so they
-        /// are standing there before the slip lands rather than racing it.</summary>
+        /// <summary>How long the side columns take to arrive. Under the paper's own feed, so they
+        /// are standing there before the tape lands rather than racing it.</summary>
         private const float BoardsIn = 0.85f;
 
         private const float StarFallH = 70f;     // how far above its place a star starts
@@ -2252,7 +2211,7 @@ namespace LastCall.UI
 
         private bool _stampArmed;
 
-        // ── the night's two instruments (2026-08-25) ────────────────────────────
+        // ── the night's two instruments (2026-08-25; the week hook and the TOMORROW board since 2026-09-28) ──
         //
         // The author: "gün sonu ekranını baştan sona tekrardan tasarla, mevcut haftalık
         // takvimin ilerlemesini daha profesyonelce göster, gün sonunda restoranın yıldız
@@ -2272,39 +2231,8 @@ namespace LastCall.UI
         // drawn in the room's own chrome — the market's card, the bottle gauge's tube — and
         // both read the RULES for their numbers (BarRating.StandingAfter, TycoonRun's
         // ceilings and crowd) rather than working the climb out for themselves.
-        /// <summary>The night's two instruments. The width is the plate's own drawing at a
-        /// whole 2× (178 art px); the HEIGHT is the content's, because the plate is 9-sliced
-        /// now (ItemArt.BoardPlate) and only its plain navy field stretches — a hard 350 was
-        /// the first build's mistake, and it cut the week's subtotal and the standing's
-        /// next-rung line off the bottom of their own instruments.</summary>
-        // 420 → 460 on 2026-09-05 (H5): the standing board took SERVICE and COMFORT above
-        // TONIGHT, two rows of 28, and the week board rides the same plate.
-        private const float BoardW = 356f, BoardH = 460f, BoardX = 430f, BoardY = 48f;
-
+        /// <summary>How far a house plate's body stands in from its frame (TycoonHud.Tomorrow's HousePlate).</summary>
         private const float BoardPad = 18f;
-        /// <summary>The standing board's row metrics (2026-09-07). ONE figure column at
-        /// StandFigW, the unit mark in its own StandUnitW gutter to the left of it, and a row
-        /// tall enough for 16px type to sit in — measured at 26 and found to be 20 units of
-        /// line for 16 units of face, which is why the readings looked crammed against their
-        /// own rules.</summary>
-        // The unit gutter is 26, not 19 (measured 2026-09-07 in the shot): at 19 the leader
-        // run ended hard against the heart and the medallion, and a dotted rule touching an
-        // icon reads as a broken icon. 26 leaves the mark clear air on both sides.
-        private const float StandRowH = 30f, StandFigW = 56f, StandUnitW = 26f;
-
-        private static readonly Color BoardPlate = new Color(0.102f, 0.063f, 0.137f, 0.96f);
-
-        /// <summary>One of the two boards: the plate, its head, and the body its rows are
-        /// rebuilt into every night.</summary>
-        private sealed class NightBoard
-        {
-            public RectTransform Root;
-            public RectTransform Body;
-            public CanvasGroup Group;
-            public Text Reading;      // the head's right-hand figure
-        }
-
-        private NightBoard _weekBoard, _standBoard;
 
         // The standing's moving parts, re-taken every rebuild (the body is destroyed and
         // built again, so a reference kept across nights would point at a corpse).
@@ -2323,24 +2251,7 @@ namespace LastCall.UI
 
         private const float StandClimb = 1.1f;
 
-        // ── the week, as a record rather than a row of names ────────────────────
-
-        /// <summary>40 → 38 on 2026-09-04, when a night's row took a second figure (the
-        /// TAKE over the NET). Seven of these, a rule and a two-line foot have to finish
-        /// clear of the plate's own drawn foot — its bottom border is 18 art px at 2×, and
-        /// the rivets live inside it — so the rows give the foot the two units it needs.</summary>
-        // MEASURED THREE TIMES, and this is what the plate actually holds (2026-09-07). The
-        // board grew two outgoing rows (bills, fines) and its foot rows grew from a 21 pitch
-        // to 26 to clear the coin, which is 16 screen pixels tall — and each time the ladder
-        // above had to give the space back or NET SO FAR fell off the bottom of the
-        // instrument, which is the one figure the whole board is for. Seven nights at 36
-        // leaves the foot inside the plate with room to spare. The stacked figures sit at
-        // +/-10 in it, which was the readable half of the change anyway.
-        private const float WeekRowH = 36f;
-
-        /// <summary>Where a night's score starts. Far enough past the VIP mark that
-        /// Saturday's promise is not read as Saturday's first star.</summary>
-        private const float WeekStarsX = 92f;
+        // (the week's record is a bill hook now - TycoonHud.Week)
 
         private float _chipPop;
 
@@ -2402,7 +2313,6 @@ namespace LastCall.UI
 
         private bool _slideOut;                 // out: away and gone, then tomorrow
         private bool _slideFade = true;         // paper does not fade in; a tablet does
-        private bool _slideSteady;              // paper is extruded, not thrown
         private CanvasGroup _slideGroup;
 
         // THE SECOND SLOT (2026-09-27, the author: "Markette(tablette) ekran geçişleri ...
@@ -3121,6 +3031,7 @@ namespace LastCall.UI
             // in, the night is filed, and Core hands the dawn out before dealing tomorrow.
             // Only this call passes the door — the sim and the tests save nothing.
             run.ContinueToNextDay(LastCall.Game.SaveStore.Autosave);
+            _show = NightBeat.Off;   // the night's show is over with its books
             if (run.Phase == TycoonPhase.Closed) LastCall.Game.SaveStore.Clear();
             _dayEndPanel.gameObject.SetActive(false);
             // The market is a sheet like any other and the next night must not open behind
