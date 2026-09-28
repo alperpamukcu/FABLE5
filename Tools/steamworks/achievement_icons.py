@@ -4,20 +4,29 @@ açılmamış hallerinde.").
 
 One plate for every icon, drawn here in the game's palette on a 32x32 grid: the night field, a pink neon edge
 (the logo's), a soft disc behind the mark. On it, the achievement's mark from the 1-bit pack (Nikoichu, CC0 -
-the same set the buffs and the menu's keys wear), or, for the unachieved state, a padlock drawn here in the
-pack's own hand (white fill, 1px black ring) because the pack has none. The pack's star and heart are never
-used (one star, one heart).
+the same set the buffs and the menu's keys wear). The pack's star and heart are never used (one star, one heart).
+
+THE UNACHIEVED STATE (the author, 2026-09-28, approving the set: "Açık olmayan başarım siyah beyaz gözüksün.
+Gizli olan başarım kilit iconuyla gözüksün"): the same icon in black and white; a SECRET's is the plate with a
+padlock, drawn here in the pack's own hand (white fill, 1px black ring) because the pack has none - also in black
+and white - so a secret gives nothing away before it is found.
 
     py -3 -X utf8 Tools/steamworks/achievement_icons.py            write Tools/steamworks/out/icons/
     py -3 -X utf8 Tools/steamworks/achievement_icons.py --sheet    also a contact sheet of all 48, both states
+    py -3 -X utf8 Tools/steamworks/achievement_icons.py --ship     also the game's own 32x32 copies
 
 Out: <API>_achieved.jpg / <API>_unachieved.jpg at 256x256 (Steam's recommended size, x8) and 64x64 (x2) under
-out/icons/256 and out/icons/64 - whole multiples, so every pixel stays square. Nothing enters Assets from here.
+out/icons/256 and out/icons/64 - whole multiples, so every pixel stays square. --ship writes
+Assets/Resources/Items/ach_<id>.png, ach_<id>_off.png and ach_secret.png at the 32x32 of the design (the list and
+the card draw them at 2x), each with a meta copied from the house's own 16 under a fixed guid - idempotent.
 """
 
+import hashlib
 import json
 import os
+import re
 import sys
+import uuid
 
 from PIL import Image
 
@@ -25,6 +34,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 PACK = os.path.join(ROOT, "1-bit_Pixel_Icons", "Sprites")
 BOOK = os.path.join(ROOT, "Assets", "Resources", "Data", "achievements.json")
+ITEMS = os.path.join(ROOT, "Assets", "Resources", "Items")
+META_FROM = os.path.join(ITEMS, "heart3d_16.png.meta")
 OUT = os.path.join(HERE, "out", "icons")
 
 # the palette (UITheme ramps, darkest first)
@@ -163,6 +174,28 @@ def stamp(base, mark, fill, ring):
     return out
 
 
+def black_and_white(img):
+    """The icon's own light, without its colour: the unachieved state."""
+    return img.convert("L").convert("RGB")
+
+
+def ship(img, name):
+    """The game's copy: Items/<name>.png at 32x32, written only when its pixels changed; a meta beside a new one."""
+    out = os.path.join(ITEMS, name + ".png")
+    want = img.convert("RGBA")
+    if os.path.exists(out):
+        have = Image.open(out).convert("RGBA")
+        if have.size == want.size and hashlib.sha1(have.tobytes()).digest() == hashlib.sha1(want.tobytes()).digest():
+            return False
+    want.save(out)
+    meta = out + ".meta"
+    if not os.path.exists(meta):
+        src = open(META_FROM, encoding="utf-8", newline="").read()
+        guid = uuid.uuid5(uuid.NAMESPACE_URL, "lastcall/" + name).hex
+        open(meta, "w", encoding="utf-8", newline="").write(re.sub(r"guid: [0-9a-f]{32}", "guid: " + guid, src, count=1))
+    return True
+
+
 def save_all(img, api, state):
     for size in (256, 64):
         folder = os.path.join(OUT, str(size))
@@ -174,25 +207,35 @@ def save_all(img, api, state):
 
 
 def main(argv):
-    book = [a["id"] for a in json.load(open(BOOK, encoding="utf-8"))["achievements"]]
+    rows = json.load(open(BOOK, encoding="utf-8"))["achievements"]
+    book = [a["id"] for a in rows]
+    secret = {a["id"] for a in rows if a.get("hidden")}
     missing = [a for a in book if a not in PICKS]
     if missing:
         raise SystemExit("no mark picked for: " + ", ".join(missing))
     base = plate()
-    lock = stamp(base, mark_from_rows(PADLOCK), CREAM[2], NIGHT[0])
+    lock = black_and_white(stamp(base, mark_from_rows(PADLOCK), CREAM[4], NIGHT[0]))
     sheet_rows = []
+    shipped = 0
     for api in book:
         done = stamp(base, mark_from_pack(PICKS[api]), CREAM[4], NIGHT[0])
+        off = lock if api in secret else black_and_white(done)
         save_all(done, api, "achieved")
-        save_all(lock, api, "unachieved")
+        save_all(off, api, "unachieved")
         sheet_rows.append((api, done))
+        sheet_rows.append((api, off))
+        if "--ship" in argv:
+            shipped += ship(done, "ach_" + api.lower())
+            shipped += ship(off, "ach_" + api.lower() + "_off")
+    if "--ship" in argv:
+        shipped += ship(lock, "ach_secret")
+        print(f"in-game copies: {shipped} written, the rest already current")
     if "--sheet" in argv:
         cols, cell = 8, 32 * 4 + 16
-        rows = (len(sheet_rows) + cols - 1) // cols + 1
-        sheet = Image.new("RGB", (cols * cell, rows * cell), NIGHT[0])
+        nrows = (len(sheet_rows) + cols - 1) // cols
+        sheet = Image.new("RGB", (cols * cell, nrows * cell), NIGHT[0])
         for i, (api, img) in enumerate(sheet_rows):
             sheet.paste(img.resize((128, 128), Image.NEAREST), ((i % cols) * cell + 8, (i // cols) * cell + 8))
-        sheet.paste(lock.resize((128, 128), Image.NEAREST), (8, (rows - 1) * cell + 8))
         sheet.save(os.path.join(OUT, "sheet.png"))
     print(f"{len(book)} achievements x 2 states -> {OUT} (256 and 64)")
     return 0

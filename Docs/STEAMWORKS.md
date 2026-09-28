@@ -35,8 +35,9 @@ Steamworks sitesinde yapılacak işlerin sırası ve oyunun o tarafla nasıl kon
    başka bilgisayara taşınan sayılar için).
 3. **Başarımlar:** SHEET §2, **tablodaki sırayla** (Steam token'ları ekleme sırasına göre numaralıyor). Gizli işareti
    yalnız iki sırrın. İlerleme çubuğu olanlara Progress Stat (min 0, max tablodaki).
-4. **İkonlar:** `py -3 -X utf8 Tools/steamworks/achievement_icons.py` → `out/icons/256/<API>_achieved.jpg` ve
-   `_unachieved.jpg` (256×256; Steam kendisi küçültür). **Seçim sayfası yazarda** — onaydan önce yükleme.
+4. **İkonlar (yazar onayladı, 2026-09-28):** `py -3 -X utf8 Tools/steamworks/achievement_icons.py` →
+   `out/icons/256/<API>_achieved.jpg` ve `_unachieved.jpg` (256×256; Steam kendisi küçültür). Açılmamış hal ikonun
+   siyah-beyazı, iki sırrınki kilit; oyun içindeki liste ve kart aynı resimleri kullanır (GDD §9.137).
 5. **Çeviriler:** Achievement Localization → Import `out/achievements_loc.vdf` (29 dil). Sıra karıştıysa önce Export,
    sonra `achievements_kit.py --from <export.vdf>`.
 6. **Sıralama listeleri:** oyun ilk puanda oluşturur; sitede her birine Community Name ver (SHEET §3).

@@ -497,8 +497,7 @@ namespace LastCall.UI
             if (done != null)
             {
                 string who = HostessWho();
-                Toast(UIText.T("chrome.toast.quest_paid", ("who", who), ("reward", done.Reward)),
-                      UITheme.Lime[3], 3.2f, ChromeArt.Mark("cash"));
+                // no notice: the room's informational lines were retired (2026-09-28); the till and the log carry the pay
                 Sfx.Play("cash", 0.9f);
                 LogService(UIText.T("chrome.log.quest_done", ("who", who), ("reward", done.Reward)));
             }

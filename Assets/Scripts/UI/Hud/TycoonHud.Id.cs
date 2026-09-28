@@ -298,23 +298,20 @@ namespace LastCall.UI
         /// <summary>
         /// THE KICK, FROM THE CARD (GDD 28 §4). The visit is read into a local first: the
         /// card closes itself the moment a visit stops waiting, and the local is what
-        /// survives that. Core decides — right or wrong — and the toast says what the door
-        /// said; a refused kick (unread card, already served) comes back as the rule's own
-        /// words.
+        /// survives that. Core decides — right or wrong — and the door's sound says it (the notice that
+        /// named the reason was retired with the room's other informational lines, 2026-09-28; the log
+        /// still does); a refused kick (unread card, already served) comes back as the rule's own words.
         /// </summary>
         private void KickTheOneOnTheCard()
         {
             var visit = _idVisit;
             var run = Run;
             if (visit == null || run == null) return;
-            IdPapers truth = null;
-            try { truth = visit.Papers; } catch (InvalidOperationException) { }
             try { run.Kick(visit); }
             catch (InvalidOperationException e) { Toast(UIText.Refusal(e)); return; }
             CloseId();
             Sfx.Play("kick_out", 0.8f);   // shown the door, and the door shuts behind them (2026-09-15)
-            Toast(UIText.T("id.kick.shown_door", ("reason", UIText.Caps(KickReason(truth)))),
-                visit.OffTheBooks ? (Color?)UITheme.Lime[3] : UITheme.ViceRed[3]);
+            // no notice: the room's informational lines were retired (2026-09-28)
         }
 
         /// <summary>Why somebody was shown the door, in the log's words — off the truth

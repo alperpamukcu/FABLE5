@@ -134,9 +134,7 @@ namespace LastCall.UI
         {
             if (recipe == null) return;
             if (!_perfectNews.Contains(recipe.Id)) _perfectNews.Add(recipe.Id);
-            Toast(UIText.T("chrome.toast.perfect_pour",
-                    ("recipe", UIText.Caps(UIText.Data("recipe", recipe.Id, "name", recipe.Name)))),
-                BkPlatinum, 3.4f);
+            // no notice: the room's informational lines were retired (2026-09-28); the book's badge and its title page carry the news
             // ...and a moment on Steam's recording (StoreTimeline): the first perfect pour of a page is worth a clip.
             StoreTimeline.Moment(UIText.Data("recipe", recipe.Id, "name", recipe.Name),
                 UIText.T("chrome.toast.perfect_pour", ("recipe", UIText.Caps(UIText.Data("recipe", recipe.Id, "name", recipe.Name)))),
@@ -2933,8 +2931,7 @@ namespace LastCall.UI
             var run = Run;
             if (run == null || run.LastCustomer == null) return;
             run.DeclineLastCall();
-            Sfx.Play("deny", 0.5f);
-            Toast(UIText.T("chrome.toast.said_no"));
+            Sfx.Play("deny", 0.5f);   // no notice: the room's informational lines were retired (2026-09-28)
         }
 
         /// <summary>The register's book of past days (GDD 24 §7, 2026-07-22): a scrollable

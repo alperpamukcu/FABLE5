@@ -36,13 +36,14 @@ namespace LastCall.UI
             public float Seconds;
             public bool Unlock;
             public float Fraction;   // the progress card's bar; unused on an unlock
+            public Sprite Icon;      // the achievement's own, lit on an unlock, black and white on the way
         }
 
         private RectTransform _achievementsPanel;
         private ScrollRect _achievementsScroll;
 
         private const float AchievementsW = 760f, AchievementsH = 600f, AchievementsPad = 44f;
-        private const float AchievementRowH = 46f, AchievementIcon = 32f;
+        private const float AchievementRowH = 74f, AchievementIcon = 64f;
 
         // ── the card ──
         private RectTransform _achCard, _achCardBar, _achCardFill;
@@ -50,7 +51,21 @@ namespace LastCall.UI
         private Image[] _achCardEdge;
         private Text _achCardText;
         private float _achCardAt = -1f, _achCardHold;
-        private const float AchCardH = 52f, AchCardMaxW = 680f, AchCardSlide = 0.28f, AchCardRight = 14f, AchCardTop = 92f;
+        private const float AchCardH = 76f, AchCardMaxW = 720f, AchCardSlide = 0.28f, AchCardRight = 14f, AchCardTop = 92f;
+
+        /// <summary>
+        /// THE ACHIEVEMENT'S OWN ICON (2026-09-28, the author approving the set: "İkonlar güzel beğendim kullanılsın.
+        /// Açık olmayan başarım siyah beyaz gözüksün. Gizli olan başarım kilit iconuyla gözüksün."): the same picture
+        /// Steam shows — the plate with the achievement's mark, lit when earned, in black and white until then, and a
+        /// secret the padlock until it is found. Items/ach_&lt;id&gt;[_off].png and ach_secret.png, 32x32, drawn at 2x;
+        /// the trophy stands in should one be missing.
+        /// </summary>
+        private static Sprite AchievementPicture(AchievementDefinition a, bool earned)
+        {
+            string name = earned ? "ach_" + a.Id.ToLowerInvariant()
+                : a.Hidden ? "ach_secret" : "ach_" + a.Id.ToLowerInvariant() + "_off";
+            return ItemArt.Load(name) ?? ItemArt.Load("ib_m_achievements");
+        }
 
         /// <summary>The name and description in the language being spoken; the data's English where a
         /// table has not caught up (<c>achievement.&lt;id&gt;.name/description</c>, Tools/loc/achievement_keys.py).</summary>
@@ -80,6 +95,7 @@ namespace LastCall.UI
                 Ink = UITheme.Amber[4],
                 Seconds = 3.8f,
                 Unlock = true,
+                Icon = AchievementPicture(a, true),
             });
             StoreTimeline.Moment(UIText.Caps(AchievementText(a, "name")), AchievementText(a, "description"),
                 "steam_achievement", 100, true);
@@ -96,6 +112,7 @@ namespace LastCall.UI
                 Seconds = 2.8f,
                 Unlock = false,
                 Fraction = (float)p.Fraction,
+                Icon = AchievementPicture(p.Achievement, false),
             });
             // A list left open keeps its bars honest.
             if (_achievementsPanel != null && _achievementsPanel.gameObject.activeSelf) RebuildAchievements();
@@ -202,12 +219,13 @@ namespace LastCall.UI
             _achCardText.color = n.Ink;
             // The line at 16 where it fits the card, else at 8: the faces rasterise only at whole multiples.
             _achCardText.fontSize = LanguageFonts.Size(_display, 16);
-            const float Pad = 12f, IconRoom = 32f + 10f;
+            const float Pad = 6f, IconRoom = 64f + 12f;
             float room = AchCardMaxW - Pad * 2f - IconRoom;
             if (_achCardText.preferredWidth > room) _achCardText.fontSize = LanguageFonts.Size(_display, 8);
             float w = Mathf.Min(AchCardMaxW, Mathf.Ceil(_achCardText.preferredWidth) + Pad * 2f + IconRoom + 4f);
             _achCard.sizeDelta = new Vector2(w, AchCardH);
-            _achCardIcon.color = n.Ink;
+            _achCardIcon.sprite = n.Icon;
+            _achCardIcon.color = Color.white;   // the icon carries its own colours (or none, on the way)
             foreach (var e in _achCardEdge) e.color = n.Unlock ? UITheme.Amber[3] : UITheme.Cyan[3];
             _achCardBar.gameObject.SetActive(!n.Unlock);
             _achCardFill.anchorMax = new Vector2(Mathf.Clamp01(n.Fraction), 1f);
@@ -250,10 +268,9 @@ namespace LastCall.UI
             var icon = NewRect("Icon", _achCard);
             icon.anchorMin = icon.anchorMax = new Vector2(0f, 0.5f);
             icon.pivot = new Vector2(0f, 0.5f);
-            icon.sizeDelta = new Vector2(32f, 32f);
-            icon.anchoredPosition = new Vector2(12f, 1f);
+            icon.sizeDelta = new Vector2(64f, 64f);
+            icon.anchoredPosition = new Vector2(6f, 0f);
             _achCardIcon = icon.gameObject.AddComponent<Image>();
-            _achCardIcon.sprite = ItemArt.Load("ib_m_achievements");
             _achCardIcon.preserveAspect = true;
             _achCardIcon.raycastTarget = false;
 
@@ -263,7 +280,7 @@ namespace LastCall.UI
             var tr = _achCardText.rectTransform;
             tr.anchorMin = new Vector2(0f, 0f);
             tr.anchorMax = new Vector2(1f, 1f);
-            tr.offsetMin = new Vector2(12f + 32f + 10f, 4f);
+            tr.offsetMin = new Vector2(6f + 64f + 12f, 4f);
             tr.offsetMax = new Vector2(-12f, 0f);
 
             // the progress card's bar, along the foot inside the edge
@@ -271,7 +288,7 @@ namespace LastCall.UI
             _achCardBar.anchorMin = new Vector2(0f, 0f);
             _achCardBar.anchorMax = new Vector2(1f, 0f);
             _achCardBar.pivot = new Vector2(0.5f, 0f);
-            _achCardBar.offsetMin = new Vector2(54f, 6f);
+            _achCardBar.offsetMin = new Vector2(6f + 64f + 12f, 8f);
             _achCardBar.offsetMax = new Vector2(-12f, 10f);
             var track = _achCardBar.gameObject.AddComponent<Image>();
             track.color = UITheme.Night[0];
@@ -395,21 +412,20 @@ namespace LastCall.UI
             bg.color = earned ? UITheme.Night[3] : UITheme.Night[1];
             bg.raycastTarget = false;
 
-            // the trophy, lit when earned; a question mark for a secret still to find
+            // the achievement's own icon: lit when earned, black and white on the way, the padlock for a secret
             var icon = NewRect("Icon", row);
             icon.anchorMin = icon.anchorMax = new Vector2(0f, 0.5f);
             icon.pivot = new Vector2(0f, 0.5f);
             icon.sizeDelta = new Vector2(AchievementIcon, AchievementIcon);
-            icon.anchoredPosition = new Vector2(8f, 0f);
+            icon.anchoredPosition = new Vector2(5f, 0f);
             var iconImg = icon.gameObject.AddComponent<Image>();
-            iconImg.sprite = ItemArt.Load(dark ? "ib_m_secret" : "ib_m_achievements");
+            iconImg.sprite = AchievementPicture(a, earned);
             iconImg.preserveAspect = true;
             iconImg.raycastTarget = false;
-            iconImg.color = earned ? UITheme.Amber[4] : new Color(1f, 1f, 1f, 0.35f);
 
             // the right-hand column: EARNED, or the count and its bar
             const float RightW = 150f;
-            float textX = 8f + AchievementIcon + 12f;
+            float textX = 5f + AchievementIcon + 12f;
             float textW = width - textX - RightW - 12f;
             if (earned)
             {
@@ -449,7 +465,7 @@ namespace LastCall.UI
             title.raycastTarget = false;
             title.text = name;
             if (title.preferredWidth > textW) title.fontSize = LanguageFonts.Size(_display, 8);
-            PlaceTextInRow(title.rectTransform, textX, -6f, textW, 18f);
+            PlaceTextInRow(title.rectTransform, textX, -18f, textW, 18f);
 
             var body = NewText("What", row, _body, 8, TextAnchor.UpperLeft,
                 earned ? UITheme.Cream[4] : UITheme.Cream[2]);
@@ -457,7 +473,7 @@ namespace LastCall.UI
             body.verticalOverflow = VerticalWrapMode.Overflow;
             body.raycastTarget = false;
             body.text = what;
-            PlaceTextInRow(body.rectTransform, textX, -26f, textW, 16f);
+            PlaceTextInRow(body.rectTransform, textX, -38f, textW, 16f);
 
             return y + AchievementRowH;
         }

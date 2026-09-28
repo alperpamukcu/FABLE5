@@ -1430,8 +1430,7 @@ namespace LastCall.UI
             // down — and it says how many cubes the pour turned out to be.
             if (_icePourCount > 0)
             {
-                Toast(UIText.T("seats.garnish.ice_in", ("cubes", run.ServingGlass.IceCubes)),
-                      UITheme.Cyan[3]);
+                // no notice: the room's informational lines were retired (2026-09-28)
                 DropPrep(false);
                 return;
             }
@@ -2088,7 +2087,7 @@ namespace LastCall.UI
                 // Back on the counter it goes, exactly as it was. The prop is drawn from the
                 // mess every frame, so there is nothing to put back by hand.
                 if (_glassCarry != null) _glassCarry.gameObject.SetActive(false);
-                if (view != null) Toast(UIText.T("seats.sink.put_back"), UITheme.Cream[3]);
+                // no notice: the room's informational lines were retired (2026-09-28)
                 return;
             }
             if (run.SinkBusy)
@@ -2111,8 +2110,7 @@ namespace LastCall.UI
             // INTO THE BASIN, not into thin air (the author: "bardağın lavaboya girdiği bir
             // fade animasyonu gösterilsin bardak direkt yok olmasın").
             SinkFade(_glassCarry, _glassCarryImg);
-            Sfx.Play("drain", 0.5f);
-            Toast(UIText.T("seats.sink.washing_up"), UITheme.Cyan[4]);
+            Sfx.Play("drain", 0.5f);   // no notice: the room's informational lines were retired (2026-09-28)
         }
 
         /// <summary>The screen point under a carried thing's centre: where the PICTURE is,
@@ -2187,8 +2185,7 @@ namespace LastCall.UI
             try { run.WashGlasses(); }
             // As the rule wrote it, not in capitals: the one refusal here that never shouted.
             catch (System.InvalidOperationException e) { Toast(Said.TryGet(e, out var l) ? UIText.T(l) : e.Message); return; }
-            Sfx.Play("drain", 0.5f);
-            Toast(UIText.T("seats.sink.washing_up"), UITheme.Cyan[4]);
+            Sfx.Play("drain", 0.5f);   // no notice: the room's informational lines were retired (2026-09-28)
         }
 
         /// <summary>The clock that stands over the basin while its tap runs.</summary>
@@ -2485,10 +2482,7 @@ namespace LastCall.UI
                 double pinch = run.ServingGlass.Capacity * GarnishPinch;
                 if (run.PourAtGlass(bottle.Id, pinch) <= 0)
                 { Toast(UIText.T("seats.garnish.glass_full")); return; }
-                Sfx.Play("garnish");
-                Toast(UIText.T("seats.garnish.in_drink",
-                          ("bottle", UIText.Caps(UIText.Data("bottle", bottle.Id, "name", bottle.Name)))),
-                      UITheme.Lime[3]);
+                Sfx.Play("garnish");   // no notice: the room's informational lines were retired (2026-09-28)
                 return;
             }
 
@@ -2506,11 +2500,7 @@ namespace LastCall.UI
                 return;
             }
             run.AddPreparationAtGlass(prop.Prep);
-            Sfx.Play(prop.Id == "ice" ? "ice_drop" : "garnish");
-            Toast(prop.Id == "ice"
-                ? UIText.T("seats.garnish.ice_in", ("cubes", run.ServingGlass.IceCubes))
-                : UIText.T("seats.garnish.on_drink", ("garnish", UIText.Caps(UIText.T(prop.Prep.NameLine)))),
-                UITheme.Cyan[3]);
+            Sfx.Play(prop.Id == "ice" ? "ice_drop" : "garnish");   // no notice: the room's informational lines were retired (2026-09-28)
         }
 
         /// <summary>How much of the glass one tap of a garnish is worth. The tin's own
@@ -2574,8 +2564,7 @@ namespace LastCall.UI
                         run.AddPreparationAtGlass(prop.Prep);
                         Sfx.Play("rim_done", 0.9f);
                         _rimSwept.Remove(prop.Id);
-                        Toast(UIText.T(prop.Id == "salt_rim" ? "seats.rim.salt_done" : "seats.rim.sugar_done"),
-                              UITheme.Lime[3]);
+                        // no notice: the room's informational lines were retired (2026-09-28)
                         _rimAngleKnown = false;
                         return true;
                     }
@@ -3038,8 +3027,7 @@ namespace LastCall.UI
             int fee;
             try { fee = run.PourAwayAtSink(); }
             catch (InvalidOperationException) { Toast(UIText.T("seats.sink.tap_running")); return; }
-            Sfx.Play("drain", 0.9f);
-            Toast(fee > 0 ? UIText.T("seats.drain.poured_fee", ("fee", "-$" + fee)) : UIText.T("seats.drain.poured"));
+            Sfx.Play("drain", 0.9f);   // no notice: the room's informational lines were retired (2026-09-28); the fee is the log's
             if (fee > 0)
                 LogService(UIText.T("seats.log.poured_away", ("fee", "-$" + fee)));
             _drinkGlass.gameObject.SetActive(false);
@@ -3270,8 +3258,7 @@ namespace LastCall.UI
                 return;
             }
             SinkFade(_tinCarry, _tinCarryImg);
-            Sfx.Play("drain", 0.9f);
-            Toast(fee > 0 ? UIText.T("seats.tin.tipped_fee", ("fee", "-$" + fee)) : UIText.T("seats.tin.tipped"));
+            Sfx.Play("drain", 0.9f);   // no notice: the room's informational lines were retired (2026-09-28); the fee is the log's
             if (fee > 0) LogService(UIText.T("seats.log.tipped_out", ("fee", "-$" + fee)));
         }
 

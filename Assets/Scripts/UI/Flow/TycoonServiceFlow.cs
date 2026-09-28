@@ -1339,9 +1339,7 @@ namespace LastCall.UI
                 if (_stage == Stage.Shaker) RefreshShaker();
                 else if (_stage == Stage.Serve) RefreshServe();
                 else if (_stage == Stage.Tap) RefreshTap();   // the pint goes too (2026-09-21)
-                GetComponent<TycoonHud>()?.Toast(fee > 0
-                    ? UIText.T("bench.binned_fee", ("fee", "$" + fee))
-                    : UIText.T("bench.binned"));
+                // no notice: the room's informational lines were retired (2026-09-28)
             };
             return rt;
         }

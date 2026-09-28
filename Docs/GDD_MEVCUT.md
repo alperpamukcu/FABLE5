@@ -1902,6 +1902,30 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.137 · Başarım ikonları oyunda ve Steam'de; oda bildirim satırının bilgilendirme yazıları kalktı (2026-09-28)
+
+Yazar, ikon setini onaylarken: “İkonlar güzel beğendim kullanılsın. Açık olmayan başarım siyah beyaz gözüksün.
+Gizli olan başarım kilit iconuyla gözüksün.” Ve oda üstündeki yeşil bir “SHOWN THE DOOR · UNDER AGE” için:
+“Bu tarz bilgilendirme yazıları kaldırılsın bunlar eski sürüme ait olmalı artık bu tarzda yazı ve bildirim
+kullanmıyoruz.”
+
+- **İkonlar** (`Tools/steamworks/achievement_icons.py`): açılmamış hal artık ikonun kendisinin **siyah-beyazı**;
+  bir **sırrın** açılmamış hali kilit (o da siyah-beyaz) — sır bulunmadan hiçbir şey ele vermez. Steam için
+  256/64 JPG'ler, oyun için `--ship` ile `Items/ach_<id>.png`, `ach_<id>_off.png`, `ach_secret.png` (32×32,
+  point, sıkıştırmasız; idempotent).
+- **Oyunda** (`TycoonHud.Achievements`): BAŞARIMLAR listesinin her satırında o başarımın ikonu 2x (64): kazanılan
+  renkli, yoldaki siyah-beyaz, bulunmamış sır kilit; açılma kartında renkli ikon, ilerleme kartında siyah-beyaz
+  ikon + çubuk. Satır 74, kart 76 birim yüksekliğe çıktı. Kupa yalnız bir ikon eksikse yedek. Test: her başarımın
+  iki ikonu ve sırrın kilidi var (`EveryAchievement_HasItsIcon_LitAndInBlackAndWhite`).
+- **Bilgilendirme yazıları kalktı** — bildirim satırında olup biteni anlatan 14 satır: kapıdan atma (sebebiyle),
+  mükemmel döküm (kitabın rozeti ve açılış sayfası haberi taşımaya devam ediyor), görevin ödenmesi (§9.134'teki
+  tek atımlık; kasa ve kayıt satırı kalıyor, `chrome.toast.quest_paid` anahtarı tabloda duruyor), son müşteriye
+  “hayır”, içkinin çöpe gitmesi, buzun/garnitürün/kenarın eklenmesi, bardağın yerine konması, bulaşığın yıkanması,
+  lavaboya dökme ve shaker boşaltma (ücretleri kayıt defterinde). Sesler olduğu gibi. **Kalan 35 satır uyarı**:
+  bir eylemin neden yapılamadığını söyleyenler (önce kimlik, içki hâlâ shaker'da, musluk akıyor, sepet boş, para
+  yetmiyor...) ve dev tezgâhı — onların kaderi yazarın kararında.
+- Doğrulama: EditMode 854/854, PlayMode 18/18; liste ve kartlar oyunda ölçüldü (r260).
+
 ### 9.136 · Steam'e bağlandı: App ID 5336380, sıralama listeleri, zaman çizelgesi, LasGen Interactive, rütbe unvanları 29 dilde (2026-09-28)
 
 Yazar: “Steam başarımları için gerekenleri sağlayalım ve tamamlayalım.” — App ID, desteklenen özelliklerden

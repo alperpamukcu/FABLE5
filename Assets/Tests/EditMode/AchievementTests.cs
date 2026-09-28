@@ -146,6 +146,21 @@ namespace LastCall.Tests
         }
 
         [Test]
+        public void EveryAchievement_HasItsIcon_LitAndInBlackAndWhite()
+        {
+            // The list and the card draw the same pictures Steam shows (Tools/steamworks/achievement_icons.py --ship):
+            // lit when earned, black and white on the way, and the padlock for a secret still to find.
+            string items = Path.Combine(Application.dataPath, "Resources", "Items");
+            Assert.IsTrue(File.Exists(Path.Combine(items, "ach_secret.png")), "the secret's padlock");
+            foreach (var a in ShippedBook())
+            {
+                string id = a.Id.ToLowerInvariant();
+                Assert.IsTrue(File.Exists(Path.Combine(items, "ach_" + id + ".png")), a.Id + " has no lit icon");
+                Assert.IsTrue(File.Exists(Path.Combine(items, "ach_" + id + "_off.png")), a.Id + " has no black-and-white icon");
+            }
+        }
+
+        [Test]
         public void ABadBook_IsRefusedLoudly()
         {
             string Row(string body) => "{\"achievements\":[" + body + "]}";
