@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "PARTIS · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "PARTIS · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "PALIER SUIVANT", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "{n} ARTICLE S'OUVRE", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "{n} ARTICLES S'OUVRENT", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "LA SALLE A PLAFONNÉ CE SOIR À {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "LE MENU A PLAFONNÉ CE SOIR À {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "CLIENTÈLE", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "TERMINÉ", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "RAPPORTE +${reward} À L'AUBE", "src": "PAYS +${reward} AT DAWN"}
+]}

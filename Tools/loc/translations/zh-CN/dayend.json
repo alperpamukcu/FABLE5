@@ -49,7 +49,7 @@
 {"key": "dayend.host.fallback", "text": "本店"},
 {"key": "dayend.host.go_on", "text": "继续"},
 {"key": "dayend.host.got_it", "text": "明白了"},
-{"key": "dayend.market.title", "text": "最后一轮 — 该下单了"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — 该下单了", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "达到 {stars} 星，这里会出现更多。"},
 {"key": "dayend.more.drinks#other", "text": "还有 {n} 款酒，本店暂不为你开放"},
 {"key": "dayend.more.identity", "text": "{stars} 星解锁更多"},

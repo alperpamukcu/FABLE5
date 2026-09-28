@@ -55,7 +55,7 @@
 {"key": "dayend.host.fallback", "text": "PODNIK", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "DÁL", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "ROZUMÍM", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "POSLEDNÍ RUNDA — ČAS OBJEDNAT", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — ČAS OBJEDNAT", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Získej {stars} hvězdy a objeví se tu další.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#few", "text": "{n} drinky, které ti podnik zatím neotevře", "src": "{n} drinks the house will not open for you yet"},
 {"key": "dayend.more.drinks#one", "text": "{n} drink, který ti podnik zatím neotevře", "src": "{n} drink the house will not open for you yet"},

@@ -52,7 +52,7 @@
 {"key": "dayend.host.fallback", "text": "HUSET", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "FORTSÆT", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "FORSTÅET", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "SIDSTE OMGANG – BESTIL VARER", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — BESTIL VARER", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Få {stars} stjerner, så dukker der flere af dem op her.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#one", "text": "{n} drink, huset ikke åbner for dig endnu", "src": "{n} drink the house will not open for you yet"},
 {"key": "dayend.more.drinks#other", "text": "{n} drinks, huset ikke åbner for dig endnu", "src": "{n} drinks the house will not open for you yet"},

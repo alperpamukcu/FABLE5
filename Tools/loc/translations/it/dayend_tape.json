@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "PERSI · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "PERSI · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "PROSS. LIVELLO", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "SI APRE {n} ARTICOLO", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "SI APRONO {n} ARTICOLI", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "LA SALA HA FRENATO STASERA A {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "IL MENU HA FRENATO STASERA A {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "CLIENTELA", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "FATTO", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "PAGA +${reward} ALL'ALBA", "src": "PAYS +${reward} AT DAWN"}
+]}

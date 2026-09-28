@@ -53,7 +53,7 @@
     {"key": "dayend.host.fallback", "text": "LA CASA"},
     {"key": "dayend.host.go_on", "text": "AVANTI"},
     {"key": "dayend.host.got_it", "text": "CAPITO"},
-    {"key": "dayend.market.title", "text": "ULTIMO GIRO — ORA DI ORDINARE"},
+    {"key": "dayend.market.title", "text": "MALIBU CLUB — ORA DI ORDINARE", "src": "MALIBU CLUB — TIME TO ORDER"},
     {"key": "dayend.more.body", "text": "Arriva a {stars} stelle e qui comparirà dell'altro."},
     {"key": "dayend.more.drinks#one", "text": "{n} drink che la casa non ti apre ancora"},
     {"key": "dayend.more.drinks#other", "text": "{n} drink che la casa non ti apre ancora"},

@@ -49,7 +49,7 @@
 {"key": "dayend.host.fallback", "text": "가게"},
 {"key": "dayend.host.go_on", "text": "계속"},
 {"key": "dayend.host.got_it", "text": "알겠어요"},
-{"key": "dayend.market.title", "text": "라스트 오더 — 주문할 시간"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — 주문할 시간", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "별점 {stars}에 도달하면 여기에 더 많이 나타납니다."},
 {"key": "dayend.more.drinks#other", "text": "아직 가게가 열어 주지 않는 음료 {n}종"},
 {"key": "dayend.more.identity", "text": "별점 {stars}에 추가 개방"},

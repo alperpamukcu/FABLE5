@@ -52,7 +52,7 @@
 {"key": "dayend.host.fallback", "text": "TALO", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "JATKA", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "SELVÄ", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "VALOMERKKI — TILAUKSEN AIKA", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — TILAUKSEN AIKA", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Hanki {stars} tähteä, niin näitä ilmestyy tänne lisää.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#one", "text": "{n} drinkki, jota talo ei vielä avaa sinulle", "src": "{n} drink the house will not open for you yet"},
 {"key": "dayend.more.drinks#other", "text": "{n} drinkkiä, joita talo ei vielä avaa sinulle", "src": "{n} drinks the house will not open for you yet"},

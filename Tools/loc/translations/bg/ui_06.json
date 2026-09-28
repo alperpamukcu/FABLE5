@@ -63,7 +63,7 @@
 {"key": "dayend.host.fallback", "text": "ЗАВЕДЕНИЕТО", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "НАТАТЪК", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "ЯСНО", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "ПОСЛЕДНА ПОРЪЧКА — ВРЕМЕ ЗА ДОСТАВКИ", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — ВРЕМЕ ЗА ДОСТАВКИ", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Събери {stars} звезди и тук ще се появят още.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#one", "text": "{n} напитка, която заведението още не ти отваря", "src": "{n} drink the house will not open for you yet"},
 {"key": "dayend.more.drinks#other", "text": "{n} напитки, които заведението още не ти отваря", "src": "{n} drinks the house will not open for you yet"},

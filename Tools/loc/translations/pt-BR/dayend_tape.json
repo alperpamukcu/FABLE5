@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "SAÍRAM · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "SAÍRAM · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "PRÓXIMO NÍVEL", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "LIBERA {n} ITEM", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "LIBERA {n} ITENS", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "O SALÃO TRAVOU A NOITE EM {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "O CARDÁPIO TRAVOU A NOITE EM {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "PÚBLICO", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "FEITO", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "PAGA +${reward} DE MANHÃ", "src": "PAYS +${reward} AT DAWN"}
+]}

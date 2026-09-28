@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "TERK EDEN · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "TERK EDEN · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "SONRAKİ BASAMAK", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "{n} ŞEY AÇILIR", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "{n} ŞEY AÇILIR", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "SALON BU GECEYİ {stars} İLE SINIRLADI", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "MENÜ BU GECEYİ {stars} İLE SINIRLADI", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "KALABALIK", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "TAMAM", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "ÖDÜL +${reward} ŞAFAKTA", "src": "PAYS +${reward} AT DAWN"}
+]}

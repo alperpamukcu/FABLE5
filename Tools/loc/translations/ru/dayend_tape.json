@@ -1,0 +1,15 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "УШЛИ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#few", "text": "УШЛИ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#many", "text": "УШЛИ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "СТУПЕНЬ ВЫШЕ", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "ОТКРОЕТСЯ {n} ПОЗИЦИЯ", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#few", "text": "ОТКРОЮТСЯ {n} ПОЗИЦИИ", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.opens#many", "text": "ОТКРОЕТСЯ {n} ПОЗИЦИЙ", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "ПОТОЛОК ЗАЛА СЕГОДНЯ: {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "ПОТОЛОК МЕНЮ СЕГОДНЯ: {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "ПУБЛИКА", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "ГОТОВО", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "ПЛАТИТ +${reward} УТРОМ", "src": "PAYS +${reward} AT DAWN"}
+]}

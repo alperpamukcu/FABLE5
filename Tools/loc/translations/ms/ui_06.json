@@ -60,7 +60,7 @@
 {"key": "dayend.host.fallback", "text": "BAR", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "TERUSKAN", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "FAHAM", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "PESANAN TERAKHIR — MASA MENEMPAH", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — MASA MENEMPAH", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Dapatkan {stars} bintang dan lebih banyak lagi akan muncul di sini.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#other", "text": "{n} minuman yang bar belum buka untuk anda", "src": "{n} drinks the house will not open for you yet"},
 {"key": "dayend.more.identity", "text": "LEBIH BANYAK PADA {stars} BINTANG", "src": "MORE AT {stars} STARS"},

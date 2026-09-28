@@ -52,7 +52,7 @@
   {"key": "dayend.host.fallback", "text": "A HÁZ", "src": "THE HOUSE"},
   {"key": "dayend.host.go_on", "text": "TOVÁBB", "src": "GO ON"},
   {"key": "dayend.host.got_it", "text": "ÉRTEM", "src": "GOT IT"},
-  {"key": "dayend.market.title", "text": "UTOLSÓ KÖR — RENDELÉS IDEJE", "src": "LAST CALL — TIME TO ORDER"},
+  {"key": "dayend.market.title", "text": "MALIBU CLUB — RENDELÉS IDEJE", "src": "MALIBU CLUB — TIME TO ORDER"},
   {"key": "dayend.more.body", "text": "{stars} csillagnál több ilyen jelenik meg itt.", "src": "Get {stars} stars and more of these show up here."},
   {"key": "dayend.more.drinks#one", "text": "{n} ital, amit a ház még nem nyit meg neked", "src": "{n} drink the house will not open for you yet"},
   {"key": "dayend.more.drinks#other", "text": "{n} ital, amit a ház még nem nyit meg neked", "src": "{n} drinks the house will not open for you yet"},

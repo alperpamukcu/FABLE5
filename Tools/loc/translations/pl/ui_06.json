@@ -66,7 +66,7 @@
 {"key": "dayend.host.fallback", "text": "LOKAL", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "DALEJ", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "JASNE", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "OSTATNIA KOLEJKA — CZAS ZAMAWIAĆ", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — CZAS ZAMAWIAĆ", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Zdobądź {stars} gwiazdki, a pojawi się tu więcej takich rzeczy.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#one", "text": "{n} drink, którego lokal jeszcze ci nie otworzy", "src": "{n} drink the house will not open for you yet"},
 {"key": "dayend.more.drinks#few", "text": "{n} drinki, których lokal jeszcze ci nie otworzy", "src": "{n} drinks the house will not open for you yet"},

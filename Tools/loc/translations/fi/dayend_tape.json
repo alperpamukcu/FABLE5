@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "LÄHTENEET · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "LÄHTENEET · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "SEURAAVA TASO", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "{n} ASIA AUKEAA", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "{n} ASIAA AUKEAA", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "SALI RAJASI ILLAN LUKUUN {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "LISTA RAJASI ILLAN LUKUUN {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "PORUKKA", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "VALMIS", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "PALKKIO +${reward} AAMULLA", "src": "PAYS +${reward} AT DAWN"}
+]}

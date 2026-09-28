@@ -60,7 +60,7 @@
 {"key": "dayend.host.fallback", "text": "QUÁN", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "TIẾP ĐI", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "HIỂU RỒI", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "LƯỢT GỌI CUỐI — ĐẶT HÀNG THÔI", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — ĐẶT HÀNG THÔI", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Đạt {stars} sao là sẽ có thêm những thứ này ở đây.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#other", "text": "{n} món quán chưa mở cho bạn", "src": "{n} drinks the house will not open for you yet"},
 {"key": "dayend.more.identity", "text": "THÊM Ở MỨC {stars} SAO", "src": "MORE AT {stars} STARS"},

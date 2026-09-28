@@ -1,0 +1,11 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "中途離開 · {n} 位", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "下一階", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#other", "text": "解鎖 {n} 項", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "今晚店面把評分封頂在 {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "今晚酒單把評分封頂在 {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "客群", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "完成", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "報酬 +${reward} 天亮入帳", "src": "PAYS +${reward} AT DAWN"}
+]}

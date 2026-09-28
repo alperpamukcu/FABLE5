@@ -52,7 +52,7 @@
 {"key": "dayend.host.fallback", "text": "DAS HAUS"},
 {"key": "dayend.host.go_on", "text": "WEITER"},
 {"key": "dayend.host.got_it", "text": "VERSTANDEN"},
-{"key": "dayend.market.title", "text": "LETZTE RUNDE – BESTELLZEIT"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — BESTELLZEIT", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "Hol dir {stars} Sterne, dann tauchen hier mehr davon auf."},
 {"key": "dayend.more.drinks#one", "text": "{n} Drink gibt dir das Haus noch nicht frei"},
 {"key": "dayend.more.drinks#other", "text": "{n} Drinks gibt dir das Haus noch nicht frei"},

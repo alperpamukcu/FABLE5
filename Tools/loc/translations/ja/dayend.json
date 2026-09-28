@@ -50,7 +50,7 @@
     {"key": "dayend.host.fallback", "text": "お店"},
     {"key": "dayend.host.go_on", "text": "次へ"},
     {"key": "dayend.host.got_it", "text": "了解"},
-    {"key": "dayend.market.title", "text": "ラストオーダー — 発注の時間です"},
+    {"key": "dayend.market.title", "text": "MALIBU CLUB — 発注の時間です", "src": "MALIBU CLUB — TIME TO ORDER"},
     {"key": "dayend.more.body", "text": "星{stars}になると、ここにもっと並びます。"},
     {"key": "dayend.more.drinks#other", "text": "まだ解放されていないドリンク {n}品"},
     {"key": "dayend.more.identity", "text": "星{stars}でさらに解放"},

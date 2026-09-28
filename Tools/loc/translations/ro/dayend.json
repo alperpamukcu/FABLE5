@@ -56,7 +56,7 @@
     {"key": "dayend.host.fallback", "text": "CASA", "src": "THE HOUSE"},
     {"key": "dayend.host.go_on", "text": "CONTINUĂ", "src": "GO ON"},
     {"key": "dayend.host.got_it", "text": "AM ÎNȚELES", "src": "GOT IT"},
-    {"key": "dayend.market.title", "text": "ULTIMA COMANDĂ — ACUM COMANZI TU", "src": "LAST CALL — TIME TO ORDER"},
+    {"key": "dayend.market.title", "text": "MALIBU CLUB — ACUM COMANZI TU", "src": "MALIBU CLUB — TIME TO ORDER"},
     {"key": "dayend.more.body", "text": "Adună {stars} stele și apar mai multe aici.", "src": "Get {stars} stars and more of these show up here."},
     {"key": "dayend.more.drinks#few", "text": "{n} băuturi pe care casa nu ți le deschide încă", "src": "{n} drinks the house will not open for you yet"},
     {"key": "dayend.more.drinks#one", "text": "{n} băutură pe care casa nu ți-o deschide încă", "src": "{n} drink the house will not open for you yet"},

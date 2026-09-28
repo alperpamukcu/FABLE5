@@ -1,0 +1,11 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "BEREDAR · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "TAHAP BERIKUT", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#other", "text": "{n} BARANG DIBUKA", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "PREMIS MENAHAN MALAM INI PADA {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "MENU MENAHAN MALAM INI PADA {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "PENGUNJUNG", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "SIAP", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "BAYAR +${reward} SUBUH", "src": "PAYS +${reward} AT DAWN"}
+]}

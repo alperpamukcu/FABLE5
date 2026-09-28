@@ -1,0 +1,15 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "ODESZŁO · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#few", "text": "ODESZŁO · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#many", "text": "ODESZŁO · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "NASTĘPNY SZCZEBEL", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "OTWIERA SIĘ {n} RZECZ", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#few", "text": "OTWIERAJĄ SIĘ {n} RZECZY", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.opens#many", "text": "OTWIERA SIĘ {n} RZECZY", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "SUFIT SALI DZIŚ: {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "SUFIT KARTY DZIŚ: {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "KLIENTELA", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "GOTOWE", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "PŁACI +${reward} O ŚWICIE", "src": "PAYS +${reward} AT DAWN"}
+]}

@@ -1,0 +1,13 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "ELMENTEK · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "ELMENTEK · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "KÖVETKEZŐ FOK", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "{n} ÚJ DOLOG NYÍLIK", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#other", "text": "{n} ÚJ DOLOG NYÍLIK", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "A VENDÉGTÉR PLAFONJA MA: {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "AZ ITALLAP PLAFONJA MA: {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "KÖZÖNSÉG", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "KÉSZ", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "JUTALOM +${reward} HAJNALBAN", "src": "PAYS +${reward} AT DAWN"}
+]}

@@ -52,7 +52,7 @@
 {"key": "dayend.host.fallback", "text": "MEKÂN", "src": "THE HOUSE"},
 {"key": "dayend.host.go_on", "text": "DEVAM", "src": "GO ON"},
 {"key": "dayend.host.got_it", "text": "ANLADIM", "src": "GOT IT"},
-{"key": "dayend.market.title", "text": "SON SİPARİŞ — TEDARİK ZAMANI", "src": "LAST CALL — TIME TO ORDER"},
+{"key": "dayend.market.title", "text": "MALIBU CLUB — TEDARİK ZAMANI", "src": "MALIBU CLUB — TIME TO ORDER"},
 {"key": "dayend.more.body", "text": "{stars} yıldıza çık, buraya bunlardan daha çoğu gelsin.", "src": "Get {stars} stars and more of these show up here."},
 {"key": "dayend.more.drinks#one", "text": "Evin henüz sana açmadığı {n} içki", "src": "{n} drink the house will not open for you yet"},
 {"key": "dayend.more.drinks#other", "text": "Evin henüz sana açmadığı {n} içki", "src": "{n} drinks the house will not open for you yet"},

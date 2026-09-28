@@ -1,0 +1,15 @@
+{"strings": [
+{"key": "dayend.tape.z", "text": "Z {n}", "src": "Z {n}"},
+{"key": "dayend.tape.walkouts#one", "text": "ODEŠLÍ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#few", "text": "ODEŠLÍ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tape.walkouts#other", "text": "ODEŠLÍ · {n}", "src": "WALK-OUTS · {n}"},
+{"key": "dayend.tomorrow.next_rung", "text": "DALŠÍ STUPEŇ", "src": "NEXT RUNG"},
+{"key": "dayend.tomorrow.opens#one", "text": "OTEVŘE SE {n} VĚC", "src": "{n} THING OPENS"},
+{"key": "dayend.tomorrow.opens#few", "text": "OTEVŘOU SE {n} VĚCI", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.opens#other", "text": "OTEVŘE SE {n} VĚCÍ", "src": "{n} THINGS OPEN"},
+{"key": "dayend.tomorrow.room_held", "text": "STROP LOKÁLU DNES: {stars}", "src": "THE ROOM HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.menu_held", "text": "STROP MENU DNES: {stars}", "src": "THE MENU HELD TONIGHT AT {stars}"},
+{"key": "dayend.tomorrow.crowd", "text": "KLIENTELA", "src": "CROWD"},
+{"key": "dayend.tomorrow.job_done", "text": "HOTOVO", "src": "DONE"},
+{"key": "dayend.tomorrow.pays_dawn", "text": "ODMĚNA +${reward} RÁNO", "src": "PAYS +${reward} AT DAWN"}
+]}
