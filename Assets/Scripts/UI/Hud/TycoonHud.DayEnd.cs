@@ -2253,9 +2253,15 @@ namespace LastCall.UI
             // The door's two lines print only when they happened (GDD 28 §7 — routine zeros
             // were cut from the slip on 2026-08-11). The label carries the count and the
             // reason; the figure column stays the figure's.
-            if (run.DayBonus > 0)
-                y = BillRow(y, UIText.N("dayend.bill.thanks", run.RightKicks), run.DayBonus, "",
+            // THE BONUS IS TWO PEOPLE'S MONEY (2026-09-28): the state's thanks for the door, and the hostess's pay
+            // for a job (TycoonRun.DayQuestPaid) - each on its own row, under whoever paid it.
+            int thanks = run.DayBonus - run.DayQuestPaid;
+            if (thanks > 0)
+                y = BillRow(y, UIText.N("dayend.bill.thanks", run.RightKicks), thanks, "",
                     BillInk, false, "thanks");
+            if (run.DayQuestPaid > 0)
+                y = BillRow(y, UIText.T("dayend.bill.quest", ("who", HostessWho())), run.DayQuestPaid, "",
+                    BillInk, false, "cash");
             y = BillSub(y, tookIn, "", BillInk);
 
             y += 4f;

@@ -67,6 +67,7 @@
     { "key": "dayend.bill.tips", "text": "TIPS", "note": "Bill row label on the day-end slip, body face 24 px, ~14 characters." },
     { "key": "dayend.bill.thanks#one", "text": "THANKS · {n} SHOWN OUT", "note": "Bill row label on the day-end slip: the reward for rightly throwing out customers who should not be served. {n} is how many were shown out. Body face 24 px, ~22 characters." },
     { "key": "dayend.bill.thanks#other", "text": "THANKS · {n} SHOWN OUT", "note": "As dayend.bill.thanks#one." },
+    { "key": "dayend.bill.quest", "text": "{who}'S JOB", "note": "Bill row label on the day-end slip: what the hostess paid tonight for a job done. {who} = her first name in capitals, from the cast file (never write a name here). Body face 24 px, money figure at the right, ~14 characters." },
     { "key": "dayend.bill.paid_out", "text": "PAID OUT", "note": "Block heading on the day-end slip over the expense lines. Body face 16 px, quiet ink." },
     { "key": "dayend.bill.rent", "text": "RENT", "note": "Bill row label on the day-end slip, body face 24 px, red ink, ~14 characters." },
     { "key": "dayend.bill.stock", "text": "STOCK", "note": "Bill row label on the day-end slip: bottles and restocks bought. Body face 24 px, ~14 characters." },

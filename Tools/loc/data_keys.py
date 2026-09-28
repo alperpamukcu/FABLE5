@@ -95,6 +95,12 @@ def _notes_archetype_name(obj, ctx):
             "not seen in player builds.")
 
 
+def _notes_quest_title(obj, ctx):
+    return (f"Name of one of the hostess's jobs (job '{obj['id']}', kind {obj.get('kind', '?')}), in capitals: "
+            "the detail line of the job message at the top left (\"JOB 3 OF 18 · <title>\", 8 px body face) and "
+            "the service log. At most 24 characters in English; keep it short, a few words. No slots.")
+
+
 # kind, field, source file, list property, id property, text property, note builder, trim
 # `trim` mirrors the loader: RecipeLore.Parse trims the note (not the origin, which it takes as
 # `origin ?? ""`); DataLoader passes the rest as-is.
@@ -113,6 +119,8 @@ PAIRS = [
     # the strangers a borrowed licence wears (2026-09-22): their flags carry a country's name on the card's tip too
     ("country", "name", "Assets/Resources/Data/strangers.json", "papers", "iso", "country", _notes_country_name, False),
     ("archetype", "name", "Assets/Data/customers/archetypes.json", "archetypes", "id", "name", _notes_archetype_name, False),
+    # the hostess's jobs (2026-09-28): the Resources file, which is what the game loads
+    ("quest", "title", "Assets/Resources/Data/quests.json", "quests", "id", "title", _notes_quest_title, False),
 ]
 
 # (file, loc_codebase.json field) -> the pair that covers it
@@ -213,6 +221,10 @@ LIST_PAIRS = [
     ("voice", "Assets/Resources/Data/voices.json", "voices", "id", {
         "order": "order", "perfect": "perfect", "another": "another", "close": "close", "wrong": "wrong",
         "praise": "praise", "sip": "sip", "leaving": "leaving", "kicked": "kicked"}),
+    # The hostess (2026-09-28): what she says handing a job over and thanking the bar for it, and the two things
+    # she says that belong to no job (the finale, "not yet"). TycoonHud.Hostess fills the slots after the table.
+    ("quest", "Assets/Resources/Data/quests.json", "quests", "id", {"handOver": "hand_over", "done": "done"}),
+    ("hostess", "Assets/Resources/Data/quests.json", "visits", "id", {"say": "say"}),
 ]
 
 LIST_NOTES = {
@@ -221,8 +233,19 @@ LIST_NOTES = {
              "words carry over), do not translate word for word. Keep every {{drink}} / {{advice}} / {{advice_l}} "
              "slot: {{drink}} is a drink name, {{advice}} a sentence of advice, {{advice_l}} the same with a "
              "lower-case first letter. One short spoken line in a speech balloon.",
-    "lesson": "Ece, the host, teaching the player one thing (tutorial in her voice), line {i} of {n} on the "
+    "lesson": "The hostess, teaching the player one thing (tutorial in her voice), line {i} of {n} on the "
               "talk plate / the market's host note. One sentence; warm, dry, never a manual. Lesson '{id}'.",
+    "quest": "The hostess, the game's lead (American, ran rooms on old Miami's Ocean Drive; warm, sharp, calls the "
+             "player 'sugar' and 'honey'), job '{id}', {field} line {i} of {n}, said on the talk plate at closing "
+             "time: hand_over when she gives the job, done when she thanks the bar for it the night after. The last "
+             "hand_over line is also quoted on the job message at the top left, so keep it one sentence. REWRITE "
+             "it in her voice in the language, do not translate word for word. Keep every {{name}} / {{drink}} / "
+             "{{n}} slot: {{name}} is her full name, {{drink}} a drink's name, {{n}} a count. Never write her name "
+             "out; the slot carries it.",
+    "hostess": "The hostess, the game's lead (American, old Miami; warm, sharp), '{id}' line {i} of {n} on the talk "
+               "plate: 'finale' after her last job is done, 'not_yet' when her next job waits until the bar climbs "
+               "a rung. REWRITE it in her voice, do not translate word for word. Keep every {{name}} / {{rung}} "
+               "slot: {{rung}} is a rank title in capitals (e.g. TALK OF THE TOWN). Never write her name out.",
     "story": "Story night '{id}', {field} line {i} of {n}, said on the talk plate by the guest or the host. "
              "One sentence; spoken, characterful.",
 }

@@ -3670,6 +3670,77 @@ namespace LastCall.UI
             return Cache[key] = Make(px, W, H, Vector4.zero);
         }
 
+        // ── the hostess's message (2026-09-28, the quest chain) ─────────────────────────────
+        //
+        // THE JOB ON THE BAR IS A MESSAGE SHE LEFT (the author, 2026-09-27: "aktif görev sol üstte bir mesaj balonu
+        // gibi"). The round-cornered balloon the drinkers speak in, drawn the way SpeechBox's own fallback is, in the
+        // night's ink with her magenta rim - and a received message's tail at the bottom left. Done, it goes green:
+        // the lime the rest of the game says "landed" in. Drawn here, in the palette's tokens; nothing generated.
+
+        /// <summary>The plate: a 17x17 rounded rectangle, radius 5.5, a 2 px rim, sliced at 7 so the arc stays an arc
+        /// at any size. Night[1] at 0xF0 under Magenta[3]; done, Lime[0] under Lime[3].</summary>
+        public static Sprite MessageBubble(bool done)
+        {
+            string key = "message:box:" + (done ? "done" : "open");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int S = 17, B = 7;
+            const float R = 5.5f;
+            var rim = MessageRim(done);
+            var fill = MessageFill(done, 0xF0);
+            var px = new Color32[S * S];
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    float cx = x + 0.5f, cy = y + 0.5f;
+                    float qx = Mathf.Clamp(cx, R, S - R), qy = Mathf.Clamp(cy, R, S - R);
+                    float inset = R - Mathf.Sqrt((cx - qx) * (cx - qx) + (cy - qy) * (cy - qy));
+                    px[y * S + x] = inset <= 0f ? new Color32(0, 0, 0, 0) : inset < 2f ? rim : fill;
+                }
+            return Cache[key] = Make(px, S, S, new Vector4(B, B, B, B));
+        }
+
+        /// <summary>
+        /// The tail: 9x7, leaning down and to the left like a message that came IN. Its top two rows are the plate's
+        /// own bottom rim seen from inside - solid fill between its two walls, so hung two rows into the plate it
+        /// erases the rim where the balloon opens into it (the <see cref="BubbleTail"/> trick). The walls are the
+        /// plate's two-pixel weight and fall to a one-pixel point.
+        /// </summary>
+        public static Sprite MessageTail(bool done)
+        {
+            string key = "message:tail:" + (done ? "done" : "open");
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            const int W = 9, H = 7, Skirt = 2, Wall = 2;
+            var rim = MessageRim(done);
+            var fill = MessageFill(done, 0xF0);
+            var solid = MessageFill(done, 0xFF);   // the eraser has to be opaque, or the rim shows through it
+            var px = new Color32[W * H];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(0, 0, 0, 0);
+            for (int fromTop = 0; fromTop < H; fromTop++)
+            {
+                // The skirt is as wide as the mouth; below it the left wall leans out to x 0 and the right one falls
+                // in to meet it, one row at a time, so the point lands on the bottom-left pixel.
+                float k = fromTop < Skirt ? 0f : (fromTop - Skirt) / (float)(H - 1 - Skirt);
+                int left = Mathf.RoundToInt(Mathf.Lerp(2f, 0f, k));
+                int right = Mathf.RoundToInt(Mathf.Lerp(W - 1, 1f, k));
+                int y = H - 1 - fromTop;
+                for (int x = left; x <= right; x++)
+                {
+                    bool wall = x < left + Wall || x > right - Wall;
+                    px[y * W + x] = wall ? rim : fromTop < Skirt ? solid : fill;
+                }
+            }
+            return Cache[key] = Make(px, W, H, Vector4.zero);
+        }
+
+        private static Color32 MessageRim(bool done) => done ? (Color32)UITheme.Lime[3] : (Color32)UITheme.Magenta[3];
+
+        private static Color32 MessageFill(bool done, byte alpha)
+        {
+            Color32 c = done ? UITheme.Lime[0] : UITheme.Night[1];
+            c.a = alpha;
+            return c;
+        }
+
         public static Sprite CloudBubble(BubbleTone tone = BubbleTone.Drink)
         {
             string key = "cloud:plate:" + tone;

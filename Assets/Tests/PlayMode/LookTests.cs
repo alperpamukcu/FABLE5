@@ -205,7 +205,10 @@ namespace LastCall.PlayTests
             while (run.LastCustomer == null && run.Phase == TycoonPhase.DayOpen
                    && Time.realtimeSinceStartup < deadline)
             {
-                if (run.Talking) yield return LetTheHostFinish();   // (a lesson up mid-night holds the run's clock until she is heard: TycoonRun.Talk, 2026-09-27)
+                // (a lesson up mid-night holds the run's clock until she is heard: TycoonRun.Talk, 2026-09-27; and the
+                // hostess walks in at the close of night one with her first job, 2026-09-28 - this hand never ticks
+                // under her, or the frames between her arrival and the HUD's hold would spend her backstop's grace)
+                if (run.HostessVisit != null || run.Talking) { yield return LetTheHostFinish(); continue; }
                 run.Tick(1.0);            // the night on the run's own clock, not the wall's
                 yield return null;
             }
@@ -248,7 +251,7 @@ namespace LastCall.PlayTests
             float deadline2 = Time.realtimeSinceStartup + 20f;
             while (run2.Phase == TycoonPhase.DayOpen && Time.realtimeSinceStartup < deadline2)
             {
-                if (run2.Talking) yield return LetTheHostFinish();
+                if (run2.HostessVisit != null || run2.Talking) { yield return LetTheHostFinish(); continue; }
                 run2.Tick(1.0);
                 yield return null;
             }
@@ -716,13 +719,30 @@ namespace LastCall.PlayTests
             // 40, not 12 (2026-09-14): every press is one line, and the first market of a fresh profile
             // queues several lessons back to back — twelve lines left her key up and the basket dimmed
             // under her box (the suite clock caught it: "host key still up after 12 presses").
-            for (int i = 0; i < 40; i++)
+            // ...AND THE HOSTESS WALKS (2026-09-28): she comes in at the close with a job, and her walk in and
+            // her walk out have no key to press - the run is held (Talking) the whole time she is in the room. So
+            // this waits while she is there, presses whenever a key is up, and gives her twenty seconds in all.
+            float until = Time.realtimeSinceStartup + 20f;
+            int presses = 0;
+            while (Time.realtimeSinceStartup < until)
             {
                 var key = HostKey();
-                if (key == null) yield break;
-                yield return ClickCentre(key);
-                yield return new WaitForSecondsRealtime(0.2f);
+                if (key != null)
+                {
+                    if (presses >= 40) break;
+                    presses++;
+                    yield return ClickCentre(key);
+                    yield return new WaitForSecondsRealtime(0.2f);
+                    continue;
+                }
+                var run = _boot != null ? _boot.Tycoon : null;
+                if (run == null || (run.HostessVisit == null && !run.Talking)) yield break;
+                yield return new WaitForSecondsRealtime(0.1f);
             }
+            var still = _boot != null ? _boot.Tycoon : null;
+            if (HostKey() == null && still != null && (still.HostessVisit != null || still.Talking))
+                SuiteClock.Mark("hostess still on stage after 20 s (visit " + (still.HostessVisit != null)
+                                + ", talking " + still.Talking + ")");
             var stuck = HostKey();
             if (stuck != null)
             {

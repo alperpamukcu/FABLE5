@@ -145,6 +145,119 @@ namespace LastCall.PlayTests
             // the half of this test which has no assert of its own and still earns its place.
         }
 
+        /// <summary>
+        /// THE HOSTESS COMES AT THE FIRST CLOSE AND LEAVES A JOB (2026-09-28, the quest chain). Core decides she
+        /// comes and what she brings (TycoonRun.Quests, and its own tests); this is the half only the scene can
+        /// show: a figure walks into the room at closing time, speaks on the plate under the name papers.json
+        /// gives her, the night holds while she is there, her last key puts the first job on the bar, and the
+        /// message she leaves at the top left opens under the pointer.
+        ///
+        /// At the GAME's pace, not the suite's: at eight her walk back to the door is a quarter of a second, and
+        /// the message is read during that walk - the one stretch after she is heard when the night still holds
+        /// for her, before an empty floor lets it close.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator The_hostess_comes_at_the_first_close_and_leaves_a_job()
+        {
+            yield return OpenTheBar();       // the curtain at the suite's pace; she walks at the game's
+            LastCall.Game.Ceremony.Pace = 1f;
+            try
+            {
+                var run = _boot.Tycoon;
+
+                // Night one on the run's own clock, her lessons heard, until she walks in at closing time - and never
+                // a tick once she is in: the HUD holds the night for her from its next frame.
+                float deadline = Time.realtimeSinceStartup + 60f;
+                while (run.HostessVisit == null && run.Phase == TycoonPhase.DayOpen
+                       && Time.realtimeSinceStartup < deadline)
+                {
+                    if (run.Talking) yield return LetTheHostFinish();
+                    run.Tick(1.0);
+                    yield return null;
+                }
+                Assert.That(run.HostessVisit, Is.Not.Null,
+                    "night one reached " + run.Phase + " and the hostess never came to its close");
+                Assert.That(run.HostessVisit.Offered, Is.Not.Null, "she came to the first close with no job");
+
+                // She walks in: a figure in the room, lit and cropped like every drinker.
+                GameObject figure = null;
+                float seen = Time.realtimeSinceStartup + 3f;
+                while ((figure = GameObject.Find("Hostess")) == null && Time.realtimeSinceStartup < seen)
+                    yield return null;
+                Assert.That(figure, Is.Not.Null, "she was due and nobody walked into the room");
+
+                // ...and speaks on the plate, under her own name - the one written in papers.json.
+                StoryCharacter host = null;
+                Assert.That(_boot.Story, Is.Not.Null, "the scene loaded no story, so there is no hostess to name");
+                foreach (var c in _boot.Story.Cast) if (c.IsHost) { host = c; break; }
+                Assert.That(host, Is.Not.Null, "the story has no host");
+                Text who = null;
+                float plateBy = Time.realtimeSinceStartup + 10f;
+                while (who == null && Time.realtimeSinceStartup < plateBy)
+                {
+                    var plate = Find("LastCallPlate");
+                    if (plate != null && plate.gameObject.activeInHierarchy)
+                    {
+                        var name = Find("Who", plate);
+                        who = name != null ? name.GetComponent<Text>() : null;
+                    }
+                    if (who == null) yield return null;
+                }
+                Assert.That(who, Is.Not.Null, "she walked in and the plate never came up");
+                Assert.That(who.text, Is.EqualTo(host.Name.ToUpperInvariant()), "the plate does not say who she is");
+                Assert.That(run.Talking, Is.True, "she is talking and the night is not holding for her");
+
+                // Her lines, key by key - not the helper, which would also wait out her walk to the door.
+                float heard = Time.realtimeSinceStartup + 20f;
+                while (run.HostessVisit != null && Time.realtimeSinceStartup < heard)
+                {
+                    var key = HostKey();
+                    if (key != null) yield return PressHostKey(key);
+                    else yield return null;
+                }
+                Assert.That(run.HostessVisit, Is.Null, "every line was pressed and she was never heard");
+                Assert.That(run.Quest != null ? run.Quest.Id : null, Is.EqualTo("first_wage"),
+                    "she was heard and the first job is not on the bar");
+
+                // SHE IS ON HER WAY OUT AND THE NIGHT STILL HOLDS: the message she left is up, one line, and the
+                // pointer opens it.
+                RectTransform bubble = null;
+                float upBy = Time.realtimeSinceStartup + 1f;
+                while (Time.realtimeSinceStartup < upBy)
+                {
+                    bubble = Find("QuestBubble");
+                    if (bubble != null && bubble.gameObject.activeInHierarchy) break;
+                    yield return null;
+                }
+                Assert.That(bubble != null && bubble.gameObject.activeInHierarchy, Is.True,
+                    "the job is on the bar and no message says so");
+                Assert.That(bubble.rect.height, Is.LessThan(40f), "the message came up open before anyone pointed at it");
+                var onIt = RectTransformUtility.WorldToScreenPoint(null, bubble.TransformPoint(bubble.rect.center));
+                Set(_mouse.position, onIt);
+                float openBy = Time.realtimeSinceStartup + 1f;
+                while (bubble.rect.height <= 60f && Time.realtimeSinceStartup < openBy) yield return null;
+                Assert.That(bubble.rect.height, Is.GreaterThan(60f),
+                    "the pointer is on the message and it did not open · under it: " + WhatIsUnder(onIt)
+                    + " · talking " + run.Talking + " · phase " + run.Phase);
+                Set(_mouse.position, new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
+
+                // And on to the end of the night once she is through the door.
+                yield return LetTheHostFinish();
+                float closeBy = Time.realtimeSinceStartup + 30f;
+                while (run.Phase == TycoonPhase.DayOpen && Time.realtimeSinceStartup < closeBy)
+                {
+                    if (run.Talking || run.HostessVisit != null) yield return LetTheHostFinish();
+                    run.Tick(1.0);
+                    yield return null;
+                }
+                Assert.That(run.Phase, Is.EqualTo(TycoonPhase.DayEnd), "the night never closed after she left");
+            }
+            finally
+            {
+                LastCall.Game.Ceremony.Pace = SuitePace;
+            }
+        }
+
         [UnityTest]
         public IEnumerator A_stool_answers_the_pointer_and_the_licence_takes_the_order()
         {
@@ -994,7 +1107,9 @@ namespace LastCall.PlayTests
             var run = _boot.Tycoon;
             for (int i = 0; i < 600 && FirstSeated() == null; i++)
             {
-                if (run.Talking) yield return LetTheHostFinish();   // (a lesson up mid-night holds the run's clock until she is heard: TycoonRun.Talk, 2026-09-27)
+                // (a lesson up mid-night holds the run's clock until she is heard: TycoonRun.Talk, 2026-09-27; so does
+                // the hostess at the close, 2026-09-28)
+                if (run.Talking || run.HostessVisit != null) yield return LetTheHostFinish();
                 run.Tick(0.5);
                 if (i % 20 == 0) yield return null;   // let the HUD see what the floor did
             }
@@ -1210,18 +1325,40 @@ namespace LastCall.PlayTests
             // 40, not 12 (2026-09-14): every press is one line, and the first market of a fresh profile
             // queues several lessons back to back — twelve lines left her key up and the basket dimmed
             // under her box (the suite clock caught it: "host key still up after 12 presses").
-            for (int i = 0; i < 40; i++)
+            // ...AND THE HOSTESS WALKS (2026-09-28): she comes in at the close with a job, and her walk in and
+            // her walk out have no key to press - the run is held (Talking) the whole time she is in the room. So
+            // this waits while she is there, presses whenever a key is up, and gives her twenty seconds in all.
+            float until = Time.realtimeSinceStartup + 20f;
+            int presses = 0;
+            while (Time.realtimeSinceStartup < until)
             {
                 var key = HostKey();
-                if (key == null) yield break;
-                // Keys are placed by their anchor, so the rect's own position is an edge;
-                // the press goes to the centre of the face, where a hand would put it.
-                var centre = RectTransformUtility.WorldToScreenPoint(null, key.TransformPoint(key.rect.center));
-                yield return ClickOn(key, centre - ScreenPointOf(key));
-                yield return new WaitForSecondsRealtime(0.2f);
+                if (key != null)
+                {
+                    if (presses >= 40) break;
+                    presses++;
+                    yield return PressHostKey(key);
+                    continue;
+                }
+                var run = _boot != null ? _boot.Tycoon : null;
+                if (run == null || (run.HostessVisit == null && !run.Talking)) yield break;
+                yield return new WaitForSecondsRealtime(0.1f);
             }
+            var still = _boot != null ? _boot.Tycoon : null;
+            if (HostKey() == null && still != null && (still.HostessVisit != null || still.Talking))
+                SuiteClock.Mark("hostess still on stage after 20 s (visit " + (still.HostessVisit != null)
+                                + ", talking " + still.Talking + ")");
             var stuck = HostKey();
             if (stuck != null) SuiteClock.Mark("host key still up after 40 presses (" + stuck.name + ", under it " + WhatIsUnder(ScreenPointOf(stuck)) + ", saying " + HostLine() + ")");
+        }
+
+        /// <summary>One press on the host's key: keys are placed by their anchor, so the rect's own position is an
+        /// edge; the press goes to the centre of the face, where a hand would put it.</summary>
+        private IEnumerator PressHostKey(RectTransform key)
+        {
+            var centre = RectTransformUtility.WorldToScreenPoint(null, key.TransformPoint(key.rect.center));
+            yield return ClickOn(key, centre - ScreenPointOf(key));
+            yield return new WaitForSecondsRealtime(0.2f);
         }
 
         /// <summary>Who is on the host's plate or note and the line it is showing, for the suite clock when a key

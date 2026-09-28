@@ -1920,126 +1920,17 @@ namespace LastCall.UI
             if (_comfortFill != null)
                 _comfortFill.sizeDelta = new Vector2((float)(run.ComfortNow / BarRating.MaxStars) * HouseStripW, 0);
 
-            RefreshJobStrip(run);
-            StepJobStrip();
+            // THE HOSTESS'S JOB (2026-09-28, TycoonHud.Quest): the message at the top left, and its news.
+            RefreshQuestBubble(run);
+            StepQuestBubble();
             RefreshLadderFlag(run);
             StepLadder();
             StepHouseWave(run);
 
-            // ECE SETTLES UP THE MOMENT IT LANDS (2026-09-06). The run raises the flag on the
-            // serve — or on the night, for a clean week — and the room says so once, with the
+            // SHE SETTLES UP THE MOMENT IT LANDS (2026-09-06 for the week's job; hers since 2026-09-28). The run
+            // raises the flag on the serve, the kick, the close or the dawn, and the room says so once, with the
             // coin beside it and the money already in the till.
-            var done = run.TakeJobJustDone();
-            if (done != null)
-            {
-                Toast(UIText.T("chrome.toast.job_paid", ("who", done.Who), ("reward", done.Reward)),
-                      UITheme.Lime[3], 3.2f, ChromeArt.Mark("cash"));
-                Sfx.Play("cash", 0.9f);
-                LogService(UIText.T("chrome.log.job_done", ("who", done.Who), ("reward", done.Reward)));
-            }
-        }
-
-        /// <summary>
-        /// The week's job in one line: how many are left, and of what. It counts DOWN rather
-        /// than up — "3 MORE NEGRONIS" is an instruction and "2/5 NEGRONI" is a scoreboard,
-        /// and this sits beside a LOG key at 8px where only one of those is worth the room.
-        /// Done, it says so in the lime the rest of the game says "landed" in, and stays
-        /// said for the rest of the week: a job finished on Tuesday should still be visible
-        /// on Friday, or the player cannot tell it from one never given.
-        /// </summary>
-        private void RefreshJobStrip(TycoonRun run)
-        {
-            if (_jobStrip == null) return;
-            var job = run.Job;
-            bool show = job != null && job.RunsOn(run.Day);
-            if (_jobIcon != null && _jobIcon.gameObject.activeSelf != show)
-                _jobIcon.gameObject.SetActive(show);
-            // The plate is a notice; an empty plate is a hole in the screen (photographed
-            // the week it went up). The whole row goes with the job.
-            if (_jobStripRow != null && _jobStripRow.gameObject.activeSelf != show)
-                _jobStripRow.gameObject.SetActive(show);
-            if (!show) { _jobStrip.text = ""; return; }
-            // THE ICON SAYS WHAT KIND OF WEEK IT IS (2026-09-06, the author: "bildirimlerde
-            // alkollerin nesnelerin paranın yıldızın ... ikonlarından faydalan"): the drink
-            // itself for a count of one drink, a star for perfect pours, the cloth for a run
-            // of clean nights. Read before the words are.
-            if (_jobIcon != null)
-            {
-                Sprite art = null;
-                switch (job.Kind)
-                {
-                    case JobKind.Perfect:
-                        art = ItemArt.Star(true, 16);
-                        break;
-                    case JobKind.Clean:
-                        art = ItemArt.Load("bar_cloth") ?? ItemArt.Load("cloth");
-                        break;
-                    default:
-                        foreach (var r in run.AllRecipes)
-                            if (r.Id == job.RecipeId) { art = DrinkIcon.For(r, _bootstrap.Glassware); break; }
-                        break;
-                }
-                _jobIcon.sprite = art;
-                _jobIcon.enabled = art != null;
-                _jobIcon.color = job.IsDone ? UITheme.Lime[3] : Color.white;
-            }
-            // THE COUNT, ON A PLATE (2026-09-06, the author: "Ecenin görev bildirimleri daha
-            // dikkat çekici olmalı arkaplanda yok oluyor bir plaka olmalı onun üstünde yazmalı
-            // ve kaçta kaç olduğu yazmalı"). What is asked, as a fraction of the week —
-            // "2/5" — beside the giver's name, and the plate behind the row is cut to the
-            // line so the notice is a THING on the screen rather than words over the room.
-            // The job's own line: "PERFECT POURS" / "CLEAN NIGHTS", or the drink's data name,
-            // which reads as the data file writes it and so is set in capitals here.
-            string what = UIText.Caps(UIText.T(job.RecipeNameLine));
-            _jobStrip.text = job.IsDone
-                ? "<color=#6FCC4B>" + UIText.T("chrome.job.done", ("who", job.Who), ("target", job.Target),
-                                               ("reward", job.Reward)) + "</color>"
-                : $"<color=#E84DA6>{job.Who}</color> · {what}";
-            // HER FACE (the eighth list): the host who hands the week's job over, off the story's own cast
-            if (_jobFace != null)
-            {
-                var host = _bootstrap?.Story?.Cast?.FirstOrDefault(c => c.IsHost);
-                var face = LookForStory(host)?.Face;   // her own face, or the one she borrows until it is drawn
-                _jobFace.sprite = face;
-                _jobFace.enabled = face != null;
-                _jobFace.transform.parent.gameObject.SetActive(face != null);
-            }
-            LayJobPips(job);
-            if (_jobPlate != null)
-            {
-                float textW = Mathf.Max(_jobStrip.preferredWidth + 22f, job.Target * (JobPipW + JobPipGap));
-                _jobStripRow.sizeDelta = new Vector2(JobTextX + textW + 12f, JobTabH);
-                _jobPlate.color = job.IsDone
-                    ? new Color(UITheme.Lime[0].r, UITheme.Lime[0].g, UITheme.Lime[0].b, 0.96f)
-                    : new Color(UITheme.Night[1].r, UITheme.Night[1].g, UITheme.Night[1].b, 0.96f);
-            }
-            // the lip wears the beam's tube, whatever colour the hour has it in
-            if (_jobLip != null && _neonTube != null) _jobLip.color = _neonTube.color;
-        }
-
-        /// <summary>
-        /// THE STRIP GETS OUT OF THE WAY WITHOUT LEAVING (2026-09-06, the author: "çok uzun
-        /// üstüne bir nesne veya asset geldiğinde şeffaflaşmalı (yok olmamalı sadece biraz
-        /// şeffaflaşmalı) mouse ile üstüne gelindiğinde netleşmeli"). It sits over the room,
-        /// so anything the room raises into that corner — a drinker walking in, the cellar
-        /// coming up — would be read through it. It fades to a third rather than going, so
-        /// the job is never a thing the player has to remember was there, and the pointer
-        /// brings it back whole.
-        /// </summary>
-        private void StepJobStrip()
-        {
-            if (_jobStrip == null || _jobStripGroup == null) return;
-            var mouse = UnityEngine.InputSystem.Mouse.current;
-            bool under = false;
-            if (mouse != null && _jobStrip.gameObject.activeInHierarchy)
-                under = RectTransformUtility.RectangleContainsScreenPoint(
-                    _jobStripRow, mouse.position.ReadValue(), null);
-            // Busy behind it: the counter is up (the cellar is open) or a bench is over the
-            // room. Both are the moments the corner has something else to say.
-            bool busy = CellarOpen || (_flow != null && _flow.IsOpen);
-            float want = under ? 1f : busy ? 0.35f : 1f;
-            _jobStripGroup.alpha = Motion.Reduced ? want
-                : Mathf.MoveTowards(_jobStripGroup.alpha, want, Time.unscaledDeltaTime * 3.5f);
+            ReadQuestNews(run);
         }
 
         private void BuildServiceLog(RectTransform root)
@@ -2047,95 +1938,10 @@ namespace LastCall.UI
             // THE KEY IS GONE (2026-09-21, the author: "LOG butonunu ana ekrandan kaldır"); the sheet it opened
             // is still built below, for the toggle that remains in code.
 
-            // THE WEEK'S JOB, BESIDE THE LOG KEY (2026-09-04, the author: "bu görev oyun
-            // içerisinde LOG'un olduğu yerde çok yer kaplamamalı"). One line, 8px, on the
-            // LOG key's own row and running off to its right: a count, then the drink. It
-            // is not a panel and it does not open — a job you have to press for is a job
-            // nobody reads, and a job with a box around it is a second window on a screen
-            // whose whole rule is that its instruments are objects in the room.
-            //
-            // It draws NOTHING at all before the first hand-over, so week one is exactly
-            // the screen it was.
-            // One row, so the icon and the line fade together and can be asked whether the
-            // pointer is on THEM rather than on the text's own overflowing rect.
-            // A TAB HUNG UNDER THE BEAM (2026-09-22, the author's eighth list: "Görseldeki görev bildirimi geliştirilsin
-            // ve üst barın en altındaki şeffaf pembe pixel şerite göre hizalansın. Tasarımı ve görsel kullanımı
-            // arttırılsın, üstüne gelindiğinde ödülü ve ne kadar süresi kaldığı gösterilsin"). It hangs from the beam's
-            // own foot under the hour's well, the beam's tube carried down across its head so it reads as a tab of the
-            // bar and not a card floating over the room; the one who asked is on it (her face), what she asked for is
-            // on it in words, and how far it has come is drawn - a pip a night's worth, lit as they are earned. The
-            // pointer on it asks what it pays and how long is left (the tip).
-            _jobStripRow = NewRect("WeekJobRow", root);
-            _jobStripRow.anchorMin = _jobStripRow.anchorMax = new Vector2(0, 1);
-            _jobStripRow.pivot = new Vector2(0, 1);
-            _jobStripRow.sizeDelta = new Vector2(260f, JobTabH);
-            // HUNG ON THE BEAM'S OWN LINE (2026-09-23, the author's tenth list: "Görev bildirimini üst bara
-            // ve oyun ekranının soluna göre hizala"). It stood at the same x as the hour's case and did not
-            // LOOK it: the instruments on the beam are drawn on ChromeArt.Well, whose bevel sits a few pixels
-            // outside its rect, while the tab was a plain Card - so two things at x = 16 read as four pixels
-            // apart (measured in play, r200: the case's ink starts at 12, the tab's at 16). It wears the
-            // beam's own case now, which makes the two edges the same edge, and it hangs two pixels INTO the
-            // tube so it reads as part of the beam rather than as a card floating under it.
-            _jobStripRow.anchoredPosition = new Vector2(TopEdge, -(TopBarH - 2f));
-            _jobStripGroup = _jobStripRow.gameObject.AddComponent<CanvasGroup>();
-            _jobStripGroup.blocksRaycasts = true;           // the tip reads the pointer on it
-            _jobPlate = _jobStripRow.gameObject.AddComponent<Image>();
-            _jobPlate.sprite = ChromeArt.Well();
-            _jobPlate.type = Image.Type.Sliced;
-            _jobPlate.color = Color.white;
-            _jobPlate.raycastTarget = true;
-            var lip = NewRect("Lip", _jobStripRow);
-            lip.anchorMin = new Vector2(0, 1); lip.anchorMax = new Vector2(1, 1);
-            lip.pivot = new Vector2(0.5f, 1);
-            lip.sizeDelta = new Vector2(-4f, 2f);
-            lip.anchoredPosition = Vector2.zero;
-            _jobLip = lip.gameObject.AddComponent<Image>();
-            _jobLip.color = UITheme.Magenta[3];
-            _jobLip.raycastTarget = false;
-
-            // her face, in a frame
-            var frame = NewRect("Face", _jobStripRow);
-            Place(frame, new Vector2(0, 0.5f), new Vector2(JobFace + 4f, JobFace + 4f), new Vector2(8f, -1f));
-            frame.pivot = new Vector2(0, 0.5f);
-            var fi = frame.gameObject.AddComponent<Image>();
-            fi.color = UITheme.Cream[1];
-            fi.raycastTarget = false;
-            var photo = NewRect("Photo", frame);
-            Stretch(photo, Vector2.zero, Vector2.one, new Vector2(2f, 2f), new Vector2(-2f, -2f));
-            _jobFace = photo.gameObject.AddComponent<Image>();
-            _jobFace.preserveAspect = true;
-            _jobFace.raycastTarget = false;
-
-            // what she asked for, and the drink/star/cloth that says it before the words do
-            var iconRt = NewRect("Icon", _jobStripRow);
-            Place(iconRt, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(JobTextX, 6f));
-            iconRt.pivot = new Vector2(0, 0.5f);
-            _jobIcon = iconRt.gameObject.AddComponent<Image>();
-            _jobIcon.preserveAspect = true;
-            _jobIcon.raycastTarget = false;
-            iconRt.gameObject.SetActive(false);
-            _jobStrip = NewText("WeekJob", _jobStripRow, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
-            Place(_jobStrip.rectTransform, new Vector2(0, 0.5f), new Vector2(292, 18), new Vector2(JobTextX + 22f, 6f));
-            _jobStrip.rectTransform.pivot = new Vector2(0, 0.5f);
-            _jobStrip.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _jobStrip.verticalOverflow = VerticalWrapMode.Overflow;
-            _jobStrip.supportRichText = true;
-            _jobStrip.raycastTarget = false;
-            _jobStrip.text = "";
-            // how far it has come: the pips, laid by RefreshJobStrip for the job's own count
-            _jobPips = NewRect("Pips", _jobStripRow);
-            Place(_jobPips, new Vector2(0, 0.5f), new Vector2(200, JobPipH), new Vector2(JobTextX, -9f));
-            _jobPips.pivot = new Vector2(0, 0.5f);
-
-            HoverTip(_jobStripRow, ItemArt.Coin(16f), UIText.T("chrome.job.tip_title"), () =>
-            {
-                var r = Run;
-                var j = r?.Job;
-                if (j == null) return "";
-                if (j.IsDone) return UIText.T("chrome.job.tip_paid", ("reward", j.Reward));
-                int nights = Mathf.Max(0, BarCalendar.OpenNights - (int)BarCalendar.NightOf(r.Day));
-                return UIText.T("chrome.job.tip_reward", ("reward", j.Reward)) + "  ·  " + UIText.N("chrome.job.tip_left", nights);
-            });
+            // THE HOSTESS'S JOB, where the week's job tab hung (2026-09-28, TycoonHud.Quest): a message at the top
+            // left, one line until the pointer opens it. It draws nothing before her first job, so the opening
+            // night is exactly the screen it was.
+            BuildQuestBubble(root);
 
             var panel = _serviceLogPanel = NewRect("ServiceLog", root);
             Place(panel, new Vector2(0, 1), new Vector2(430, 150), new Vector2(10, -90));
@@ -2892,7 +2698,10 @@ namespace LastCall.UI
                 float x = 0f;
                 if (lit != null)
                     foreach (var s in _seats) if (s.Visit == lit) { x = s.Root.anchoredPosition.x; break; }
-                stage.SetClosingBeat(lit != null, x);
+                // ...AND FOR THE HOSTESS (2026-09-28, TycoonHud.Hostess): the room comes down to her as she walks in
+                // at the close, and the lamp finds her where she is standing.
+                bool her = _hostessOnStage && run.Phase == TycoonPhase.DayOpen;
+                stage.SetClosingBeat(lit != null || her, lit != null ? x : _hostessX);
             }
             // A WITHHELD NIGHT HAS NO TRIAL AND IS STILL A SCENE (GDD 26 §12). The guest came,
             // the bar has not reached their rung, and they are on the stool saying so — which
@@ -2909,6 +2718,23 @@ namespace LastCall.UI
                 // picked up, so while the drawer is out the lesson waits, queued.
                 // ...nor over the front door (2026-09-26): the host would speak across the
                 // main menu's scrim. The lesson stays queued until the menu is down.
+                //
+                // AND THE HOSTESS COMES FIRST (2026-09-28, TycoonHud.Hostess): while she is in the room, from her
+                // arrival to her last step out, the plate is hers - her lines while she talks, nothing while she
+                // walks - and the lessons wait. Asked on the visit as well as the scene: the tick she walks in on
+                // can queue a lesson before the scene has taken its first step.
+                if (run.Phase == TycoonPhase.DayOpen && (run.HostessVisit != null || _hostessOnStage) && _plate != null)
+                {
+                    if (_hostessBeat == HostessBeat.Talk && run.HostessVisit != null)
+                    {
+                        SyncHostessPlate(run, run.HostessVisit);
+                        return;
+                    }
+                    if (_plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
+                    if (_postIt != null && _postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
+                    if (_gateRow != null && _gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
+                    return;
+                }
                 var lesson = run.Phase == TycoonPhase.DayOpen && !CellarOpen && !MenuUp ? run.LessonDue : null;
                 if (lesson != null && _plate != null) { SyncLesson(run, lesson); return; }
                 if (_plate != null && _plate.gameObject.activeSelf) _plate.gameObject.SetActive(false);
@@ -3074,6 +2900,17 @@ namespace LastCall.UI
                 run.HeardLesson();
                 return;
             }
+            // THE HOSTESS'S LINES the same way (2026-09-28): the last one is ON IT (or GOOD NIGHT), and pressing it
+            // tells Core she was heard - the job goes on the bar - and walks her out (TycoonHud.Hostess).
+            if (run != null && _plateStage.StartsWith("hostess:", StringComparison.Ordinal))
+            {
+                Sfx.Play("key_press", 0.5f);
+                if (_plateAt < _plateScript.Count - 1) { _plateAt++; return; }
+                _plateAt = _plateScript.Count;
+                _plateStage = "";
+                HostessHeard(run);
+                return;
+            }
             // A WITHHELD NIGHT HAS NO TRIAL and the key must still turn the page (GDD 26 §12);
             // guarding on `Trial` alone left the guest's own scene unadvanceable, with the
             // only way out being the clock.
@@ -3207,9 +3044,14 @@ namespace LastCall.UI
                 if (d.Stock > 0) outgoings.Add(UIText.T("chrome.ledger.stock", ("amount", $"{d.Stock}")));
                 if (d.Upgrades > 0) outgoings.Add(UIText.T("chrome.ledger.fittings", ("amount", $"{d.Upgrades}")));
                 if (d.Fines > 0) outgoings.Add(UIText.T("chrome.ledger.fines", ("amount", $"{d.Fines}")));   // the law (GDD 28 §7)
+                // The bonus is two people's money now (2026-09-28): the state's thanks, and the hostess's pay for a
+                // job - each on its own item, so a night of hers does not read as a night of kicks.
+                int thanks = d.Bonus - d.QuestPaid;
+                string hostess = Hostess?.ShortName ?? "";
                 money.text = "        " + UIText.T("chrome.ledger.drinks", ("amount", $"{d.Sales}"))
                            + " · " + UIText.T("chrome.ledger.tips", ("amount", $"{d.Tips}"))
-                           + (d.Bonus > 0 ? " · " + UIText.T("chrome.ledger.thanks", ("amount", $"{d.Bonus}")) : "")
+                           + (thanks > 0 ? " · " + UIText.T("chrome.ledger.thanks", ("amount", $"{thanks}")) : "")
+                           + (d.QuestPaid > 0 ? " · " + UIText.T("chrome.ledger.quest", ("who", hostess), ("amount", $"{d.QuestPaid}")) : "")
                            + (outgoings.Count > 0 ? "   —   " + string.Join(" · ", outgoings) : "");
 
                 var room = NewText($"Day{d.Day}Room", _ledgerRows, _body, 8, TextAnchor.UpperLeft,

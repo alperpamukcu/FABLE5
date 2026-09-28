@@ -1581,13 +1581,9 @@ namespace LastCall.UI
         /// test that raises it runs every frame.</summary>
         private bool _closedSpoke;
 
-        /// <summary>The week's job, one line beside the LOG key (2026-09-04).</summary>
-        private Text _jobStrip;
-        private RectTransform _jobStripRow;   // icon + line, so they fade as one
-        private CanvasGroup _jobStripGroup;
-        private Image _jobPlate;             // the notice's plate, cut to its line (2026-09-06)
+        // (The week's job strip lived here, 2026-09-04 to 2026-09-28. The hostess's job is a message at the top
+        // left now: TycoonHud.Quest.)
         private int _prepMatSlots = -1;      // the rail's standing dishes the room's mat was last told
-        private Image _jobIcon;
 
 
         private Text _toast;
@@ -1724,6 +1720,7 @@ namespace LastCall.UI
             _faceClock = 0;
             _faceRng = null;          // re-seeded off the new run's own seed
             ResetSeats();
+            HostessOff();             // she does not walk out of the last run into this one
             _dayEndPanel.gameObject.SetActive(false);
             _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
@@ -1807,7 +1804,9 @@ namespace LastCall.UI
                 // SHE TALKS, THE NIGHT WAITS (2026-09-27, the author: "Konuşmalar yaşanırken zaman ilerlememeli,
                 // yeni insanlar gelmemeli"): the host's plate being up IS the conversation, and Core holds the
                 // floor for as long as it is (TycoonRun.Talk) - the clock, the door, everybody's patience.
-                bool talking = _plate != null && _plate.gameObject.activeInHierarchy;
+                // ...and while the HOSTESS is in the room, from her first step in to her last step out (2026-09-28,
+                // TycoonHud.Hostess): her walk has no plate, and the night must not close or fill up around it.
+                bool talking = (_plate != null && _plate.gameObject.activeInHierarchy) || _hostessOnStage;
                 if (talking) run.BeginTalk();
                 else if (run.Talking) run.EndTalk();
                 float clock = Paused || run.Talking ? 0f : _bookOpen ? (float)TycoonConfig.BookTimeScale
@@ -1867,6 +1866,7 @@ namespace LastCall.UI
             RefreshSeats();
             PlaceBookProp();      // it stands on the counter, so it rides with the counter
             SyncLastCall(run);    // after the seats: the guest is one of them
+            SyncHostess(run);     // the hostess at the close: after the plate, which carries her lines
             SyncHostNote(run);    // the closing's lessons, on the market
             UpdateHotkeys();      // the book, the cellar and the music on their keys (2026-09-15)
             StepSettings();       // a controls row listening for its key
@@ -2360,14 +2360,7 @@ namespace LastCall.UI
         /// </summary>
         private void CloseEverySheet()
         {
-            if (_bookOpen)
-            {
-                _bookOpen = false;
-                if (_bookAnim != null) { StopCoroutine(_bookAnim); _bookAnim = null; }
-                if (_bookTurnAnim != null) { StopCoroutine(_bookTurnAnim); _bookTurnAnim = null; }
-                _bookTurning = false;
-                if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
-            }
+            ShutTheBookHard();
             if (Showing(_pausePanel)) _pausePanel.gameObject.SetActive(false);
             SetPaused(false); _settingsFromPause = false; _settingsHeldClock = false; _bindListening = null;
             if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
@@ -2379,6 +2372,18 @@ namespace LastCall.UI
             // ...and the room itself goes back to how it opens: the counter's cellar shut,
             // instantly, because this is a cut and not a beat.
             if (stage != null) stage.SetDrawerOpen(false, instant: true);
+        }
+
+        /// <summary>The book shut HARD, not toggled (see CloseEverySheet) - also what the hostess does to it when she
+        /// walks up to the bar (TycoonHud.Hostess).</summary>
+        private void ShutTheBookHard()
+        {
+            if (!_bookOpen) return;
+            _bookOpen = false;
+            if (_bookAnim != null) { StopCoroutine(_bookAnim); _bookAnim = null; }
+            if (_bookTurnAnim != null) { StopCoroutine(_bookTurnAnim); _bookTurnAnim = null; }
+            _bookTurning = false;
+            if (_bookPanel != null) _bookPanel.gameObject.SetActive(false);
         }
 
         // ── panel movement (2026-08-10) ─────────────────────────────────────────
