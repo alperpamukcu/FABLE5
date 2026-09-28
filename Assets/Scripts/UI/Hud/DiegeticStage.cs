@@ -232,9 +232,6 @@ namespace LastCall.UI
         public void SetCounterFinish(string id)
         {
             if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
-            for (int i = 0; i < _shelfTops.Count; i++)                 // the deepened boards wear the counter's finish
-                if (_shelfTops[i] != null && i < _shelfTopSrc.Count) _shelfTops[i].sprite = CounterFinish.Recolour(_shelfTopSrc[i], id);
-            _shelfTopFinish = id;
             // THE DOOR IS NOT REFINISHED (2026-09-22, the author: "kapağın rengi raflarla aynı olmamalı, sabit bir
             // renk seçilmeli"): it is the one FIXED surface in the room - teal planks against the magenta shelves,
             // the palette's split-complement of the frames, with the pink flamingo on it landing on its own
@@ -457,10 +454,13 @@ namespace LastCall.UI
         /// is told the money — it never reads the run. Anything past <see cref="CellarSlots"/>
         /// is not drawn, because there is no shelf for it to stand on.
         /// </summary>
-        public void SetCellar(IReadOnlyList<Sprite> bottles, IReadOnlyList<string> ids = null)
+        public void SetCellar(IReadOnlyList<Sprite> bottles, IReadOnlyList<string> ids = null,
+                              IReadOnlyList<int> boards = null, IReadOnlyList<int> families = null)
         {
             int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
             _cellarIds = ids;
+            _cellarBoard = boards;
+            _cellarFamily = families;
             // The pack decides how many the shelves can actually hold at full size, which
             // is never MORE than what was handed in and can be less.
             PackCellar(bottles, n);
@@ -523,6 +523,7 @@ namespace LastCall.UI
             _cellarSlotX.Clear();
             _cellarSlotW.Clear();
             _cellarSlotFoot.Clear();
+            _cellarSlotBay.Clear();
             if (bottles == null || n <= 0) return;
 
             int compartments = CellarShelfFootPx.Length * CellarBays;
@@ -531,6 +532,13 @@ namespace LastCall.UI
             {
                 int left = compartments - c;
                 int want = Mathf.Min(Mathf.CeilToInt((n - taken) / (float)left), CellarMaxPerBay);
+                // THE PLANOGRAM (2026-09-28): when the HUD gives each bottle its board, the board's families are
+                // laid over its three bays where they split best (PlanCellar) instead of an even share of the stock.
+                if (_cellarBoard != null)
+                {
+                    if (c == 0) PlanCellar(bottles, n);
+                    want = Mathf.Min(_cellarPlan[c], CellarMaxPerBay);
+                }
 
                 // How many of the next `want` actually fit this bay at the tightest legal
                 // packing. Measured off the sprites themselves — the first bottle costs its
@@ -540,7 +548,7 @@ namespace LastCall.UI
                 while (take < want && taken + take < n)
                 {
                     float w = CellarDrawnWidth(bottles[taken + take]);
-                    float needed = sumW + w + take * CellarMinGapPx;
+                    float needed = sumW + w + take * CellarMinGapPx + FamilyBreaks(taken, take + 1) * CellarFamilyGapPx;
                     if (take > 0 && needed > CellarBayWidthPx) break;
                     sumW += w;
                     take++;
@@ -551,16 +559,19 @@ namespace LastCall.UI
                 // one-pixel minimum and a sparse one stands its bottles apart. The RUN is
                 // then centred in the bay rather than laid out from its left edge, so the
                 // packing is symmetric at every density and cannot creep past a post.
+                float breaks = FamilyBreaks(taken, take) * CellarFamilyGapPx;   // two families in a bay: their own air
                 float gap = take > 1
-                    ? Mathf.Max(CellarMinGapPx, (CellarBayWidthPx - sumW) / (take + 1))
+                    ? Mathf.Max(CellarMinGapPx, (CellarBayWidthPx - sumW - breaks) / (take + 1))
                     : 0f;
-                float run = sumW + (take - 1) * gap;
+                float run = sumW + (take - 1) * gap + breaks;
                 float x = CellarBayCentrePx[c % CellarBays] - run * 0.5f;
                 float foot = CellarShelfFootPx[Mathf.Min(c / CellarBays,
                     CellarShelfFootPx.Length - 1)];
                 for (int k = 0; k < take; k++)
                 {
                     float w = CellarDrawnWidth(bottles[taken + k]);
+                    if (k > 0 && FamilyBreaks(taken + k - 1, 2) > 0) x += CellarFamilyGapPx;
+                    _cellarSlotBay.Add(c);
                     _cellarSlotX.Add(x + w * 0.5f);
                     _cellarSlotW.Add(w);
                     _cellarSlotFoot.Add(foot);
@@ -568,6 +579,96 @@ namespace LastCall.UI
                 }
                 taken += take;
             }
+        }
+
+        // ── the planogram (2026-09-28) ─────────────────────────────────────────────
+        // The author: "mahzende şişelerin gruplandırılması ve şişelerin sıralaması değiştirilsin, oyuncu için
+        // gruplandırmayı daha profesyonel ve anlaşılır hale getir". The HUD decides which board a family stands on and
+        // in what order; the stage decides where the board's run breaks at its two posts. Measured on the catalogue:
+        // a family is four or five bottles of 82-104 px, a bay is 175, so no two families but the two syrups share a
+        // bay, and a family cannot always have a bay to itself - six bays hold nine families. So each board's run is
+        // cut where it costs least: bays as evenly filled as they can be, and a family cut in two only when nothing
+        // else fits (with the whole catalogue, the gin and the tequila; the lower board none).
+        private IReadOnlyList<int> _cellarBoard, _cellarFamily;
+        private readonly int[] _cellarPlan = new int[CellarBays * 2];
+        private readonly List<int> _cellarSlotBay = new List<int>();
+        /// <summary>The extra air between two families in one bay, in the counter art's pixels.</summary>
+        private const float CellarFamilyGapPx = 6f;
+        /// <summary>What cutting a family at a post costs, in pixels of uneven fill it is worth.</summary>
+        private const float CellarSplitCost = 60f;
+
+        /// <summary>The compartment (0-2 upper board, 3-5 lower) slot <paramref name="i"/> stands in, or -1.</summary>
+        public int CellarSlotBay(int i) => i >= 0 && i < _cellarSlotBay.Count ? _cellarSlotBay[i] : -1;
+
+        /// <summary>How many bottles each compartment takes: every board's own run, cut into its three bays.</summary>
+        private void PlanCellar(IReadOnlyList<Sprite> bottles, int n)
+        {
+            System.Array.Clear(_cellarPlan, 0, _cellarPlan.Length);
+            int start = 0;
+            for (int board = 0; board < 2; board++)
+            {
+                int end = start;
+                while (end < n && end < _cellarBoard.Count && _cellarBoard[end] <= board) end++;
+                if (board == 1) end = n;                       // whatever is left stands on the lower board
+                int bestI = -1, bestJ = -1;
+                float best = float.MaxValue;
+                for (int i = start; i <= end; i++)
+                    for (int j = i; j <= end; j++)
+                    {
+                        float a = BayNeed(bottles, start, i), b = BayNeed(bottles, i, j), d = BayNeed(bottles, j, end);
+                        if (a > CellarBayWidthPx || b > CellarBayWidthPx || d > CellarBayWidthPx) continue;
+                        float cost = Mathf.Max(a, Mathf.Max(b, d)) - Mathf.Min(a, Mathf.Min(b, d));
+                        if (SplitsFamily(i, start, end)) cost += CellarSplitCost;
+                        if (SplitsFamily(j, start, end)) cost += CellarSplitCost;
+                        if (cost < best) { best = cost; bestI = i; bestJ = j; }
+                    }
+                if (bestI < 0)
+                {
+                    // the board's run is more than its three bays hold: as many as fit, bay by bay, and the rest
+                    // left for the pack's own overflow into the next bay
+                    int k = start;
+                    for (int bay = 0; bay < CellarBays; bay++)
+                    {
+                        int m = k;
+                        while (m < end && BayNeed(bottles, k, m + 1) <= CellarBayWidthPx) m++;
+                        _cellarPlan[board * CellarBays + bay] = m - k;
+                        k = m;
+                    }
+                    start = k;
+                    continue;
+                }
+                _cellarPlan[board * CellarBays + 0] = bestI - start;
+                _cellarPlan[board * CellarBays + 1] = bestJ - bestI;
+                _cellarPlan[board * CellarBays + 2] = end - bestJ;
+                start = end;
+            }
+        }
+
+        /// <summary>The width bottles [from, to) take in one bay at the tightest legal packing.</summary>
+        private float BayNeed(IReadOnlyList<Sprite> bottles, int from, int to)
+        {
+            if (to <= from) return 0f;
+            float w = 0f;
+            for (int i = from; i < to; i++) w += CellarDrawnWidth(bottles[i]);
+            return w + (to - from - 1) * CellarMinGapPx + FamilyBreaks(from, to - from) * CellarFamilyGapPx;
+        }
+
+        /// <summary>Whether a cut before bottle <paramref name="i"/> falls inside a family.</summary>
+        private bool SplitsFamily(int i, int start, int end)
+        {
+            if (_cellarFamily == null || i <= start || i >= end || i >= _cellarFamily.Count) return false;
+            return _cellarFamily[i] == _cellarFamily[i - 1];
+        }
+
+        /// <summary>How many times the family changes across <paramref name="count"/> bottles from
+        /// <paramref name="from"/>.</summary>
+        private int FamilyBreaks(int from, int count)
+        {
+            if (_cellarFamily == null) return 0;
+            int breaks = 0;
+            for (int i = from + 1; i < from + count && i < _cellarFamily.Count; i++)
+                if (_cellarFamily[i] != _cellarFamily[i - 1]) breaks++;
+            return breaks;
         }
 
         /// <summary>How wide a bottle is DRAWN, in the counter art's own pixels: its own
@@ -1559,59 +1660,6 @@ namespace LastCall.UI
         private readonly List<SpriteRenderer> _cellarLamps = new List<SpriteRenderer>();
 
         /// <summary>One strip per compartment, born dark: the drawer is what turns them on.</summary>
-        // ── the boards as ledges (2026-09-26) ────────────────────────────────────
-        //
-        // The author: "Alkoller raflarda havada duruyor aşağı çek ve 2.5d bir rafta tam üstünde duruyor hissiyatı ver."
-        // The counter draws each board as a six-row top face (rows 138..143, the darker magenta) over a six-row front
-        // (144..149) with an outline over and under, which reads as a plank seen from barely above: a bottle standing
-        // on it covers the whole top face and looks stood on the plank's edge. These strips carry the top face six rows
-        // further back, to a dark line where the board meets the wall (rows 131..137 over the upper board, 221..227 over
-        // the lower), across each bay between its posts - so a board has a depth the stock visibly stands in, the
-        // bottles' feet a few rows in from its front edge. Drawn in the counter's own two colours and recoloured with
-        // it (SetCounterFinish), at order 30 a hair nearer than the counter and farther than the stock's shadows.
-        private readonly List<SpriteRenderer> _shelfTops = new List<SpriteRenderer>();
-        private readonly List<Sprite> _shelfTopSrc = new List<Sprite>();
-        private string _shelfTopFinish;
-        /// <summary>The board outline rows the ledges grow back from, and how far.</summary>
-        private static readonly int[] ShelfBoardTopPx = { 137, 227 };
-        private const int ShelfLedgeRows = 7;
-        /// <summary>Each bay's inside, between its posts, in the counter art's columns (measured: posts at 7-32,
-        /// 209-226, 412-429, 605-630).</summary>
-        private static readonly int[,] CellarBayInsidePx = { { 33, 208 }, { 227, 411 }, { 430, 604 } };
-
-        private void BuildShelfTops()
-        {
-            if (_shelfTops.Count > 0 || _counterNative.x <= 0f) return;
-            var edge = new Color32(117, 0, 80, 255);           // the board's own outline
-            var face = new Color32(182, 84, 151, 255);         // and its top face
-            float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
-            for (int shelf = 0; shelf < ShelfBoardTopPx.Length; shelf++)
-                for (int bay = 0; bay < CellarBayInsidePx.GetLength(0); bay++)
-                {
-                    int x0 = CellarBayInsidePx[bay, 0], x1 = CellarBayInsidePx[bay, 1];
-                    int w = x1 - x0 + 1, h = ShelfLedgeRows;
-                    var px = new Color32[w * h];
-                    for (int y = 0; y < h; y++)                 // texture rows run upward: the top row is the wall line
-                        for (int x = 0; x < w; x++)
-                            px[y * w + x] = y == h - 1 ? edge : face;
-                    var tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
-                    { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
-                    tex.SetPixels32(px);
-                    tex.Apply();
-                    var src = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
-                    src.name = $"ShelfTop{shelf}_{bay}";
-                    _shelfTopSrc.Add(src);
-                    var sr = WorldSprite(src.name, CounterFinish.Recolour(src, _shelfTopFinish ?? CounterFinish.Current.Id), order: 30);
-                    // rows (top - h + 1) .. top of the drawing: the outline row is repainted as face, the wall line
-                    // stands h - 1 rows behind it
-                    float rowTop = ShelfBoardTopPx[shelf] - h + 1;
-                    sr.transform.localPosition = new Vector3(
-                        (x0 + x1 + 1) * 0.5f - _counterNative.x * 0.5f,
-                        counterTop - rowTop - h * 0.5f, -0.0005f);
-                    _shelfTops.Add(sr);
-                }
-        }
-
         private void BuildCellarLights()
         {
             if (_cellarLights.Count > 0) return;
@@ -2979,7 +3027,9 @@ namespace LastCall.UI
                 // ...and the cellar's, off the same art: the shelves are a room of their own
                 // once the roller is up, and nothing over the bar reaches into them.
                 BuildCellarLights();
-                BuildShelfTops();
+                // (The ledges drawn over the boards on 2026-09-26, seven rows of the board's top face carried back
+                //  to the wall, went on 2026-09-28 - the author: "raf assetinin üstünde ortadaki rafları yükseklik
+                //  bakımından uzatılması" was a later addition to the drawn shelves. The boards are the art's own.)
             }
             // Order 33: over the counter's cabinet (30) AND over the stock standing in it
             // (31), and under anything on the bar top (35). The roller has to hide the

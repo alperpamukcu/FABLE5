@@ -1254,23 +1254,31 @@ namespace LastCall.UI
                         continue;
                     stock.Add(card);
                 }
+            // ...and SHELVED BY A PLANOGRAM (2026-09-28, see CellarBoard): the spirits on the upper board, what
+            // they are mixed with on the lower, every family in the order a bartender reaches for it and each one
+            // from the well bottle to the top shelf, left to right.
             stock.Sort((a, b) =>
             {
-                int ga = CellarGroupOrder(a), gb = CellarGroupOrder(b);
-                if (ga != gb) return ga.CompareTo(gb);
+                int oa = CellarOrder(a, out _), ob = CellarOrder(b, out _);
+                if (oa != ob) return oa.CompareTo(ob);
                 return string.CompareOrdinal(a.Name, b.Name);
             });
+            var boards = new List<int>(stock.Count);
+            var families = new List<int>(stock.Count);
             foreach (var card in stock)
             {
                 var sprite = ItemArt.Bottle(card);
                 if (sprite == null) continue;
                 art.Add(sprite);
                 _cellarCards.Add(card);          // the SAME order the plates are indexed by
+                boards.Add(CellarBoard(CellarGroup(card)));
+                CellarOrder(card, out int family);
+                families.Add(family);
                 if (art.Count >= DiegeticStage.CellarSlots) break;
             }
             var ids = new List<string>(_cellarCards.Count);
             foreach (var c in _cellarCards) ids.Add(c.Id);
-            stage.SetCellar(art, ids);
+            stage.SetCellar(art, ids, boards, families);
             // The v4 sandwich: plates, drink tones and levels in the same order (PLAN §4c).
             var plates = new List<ItemArt.BottlePlates>(_cellarCards.Count);
             var tones = new List<Color>(_cellarCards.Count);
@@ -1385,63 +1393,71 @@ namespace LastCall.UI
             _cellarCardOver = plate;
         }
 
-        // ── the shelf captions (2026-09-07; regrouped 2026-09-22) ─────────────────
-        // THE BACK BAR'S SECTIONS, NOT TWELVE FAMILIES (2026-09-22, the author's seventh list: "raf alkol
-        // gruplandırması ve alkol gruplandırma isimleri değiştirilmeli sahneye uygun olmalı"). The shelf wore a plate
-        // under every family - GIN, VODKA, RUM, WHISKY, TEQUILA, SOUR, SODA & TONIC... - which is a warehouse's
-        // labelling. A bar sorts its back bar the way the bartender reaches for it: the white spirits, the dark
-        // spirits, the liqueurs, the sweet things, and what they are topped with. Five plates; the families still
-        // stand together inside each, in the old order.
-        private static readonly string[] CellarGroupRank =
-            { "gin", "vodka", "tequila", "rum", "whiskey", "liqueur", "syrup", "bitters", "juice", "sour", "soda", "mixer" };
-        private static readonly string[] CellarStationRank = { "white", "dark", "liqueur", "sweet", "mix" };
+        // ── the shelf captions (2026-09-07; regrouped 2026-09-22; a planogram 2026-09-28) ──────
+        // THE BACK BAR'S SECTIONS (2026-09-22, the author's seventh list: "raf alkol gruplandırması ve alkol
+        // gruplandırma isimleri değiştirilmeli sahneye uygun olmalı") were right in name and wrong on the shelf: the
+        // stock was dealt out evenly over the six bays, so a section ran over a post (the white spirits across two
+        // bays), came back on the other board (the dark spirits top right AND bottom left) and its plate stood under
+        // the post between. The author, 2026-09-28: "mahzende şişelerin gruplandırılması ve şişelerin sıralaması
+        // değiştirilsin, oyuncu için gruplandırmayı daha profesyonel ve anlaşılır hale getir, şu anki kötü".
+        // A PLANOGRAM, as a bar's back bar is kept: the spirits on the upper board, at eye level, in the order a
+        // bartender reaches for them - vodka, gin, rum, tequila, whisky - and what they are mixed with on the lower:
+        // the liqueurs, the syrups, the juices and the mixers. A plate under every family, in every bay it stands in
+        // (DiegeticStage.PlanCellar cuts a board where it costs least; a family is cut only when nothing else fits),
+        // so no name ever stands under a post. Inside a family the bottles go from the well to the top shelf (tier 1
+        // to 4), left to right.
+        private static readonly string[] CellarFamilyRank =
+            { "vodka", "gin", "rum", "tequila", "whiskey", "liqueur", "syrup", "juice", "mixer" };
 
-        /// <summary>The back-bar section a family stands in.</summary>
-        private static string CellarStation(string family)
+        /// <summary>The board a family stands on: 0 the upper (the spirits), 1 the lower (what they are mixed with).</summary>
+        private static int CellarBoard(string family)
         {
             switch (family)
             {
-                case "gin": case "vodka": case "tequila": return "white";
-                case "rum": case "whiskey": return "dark";
-                case "syrup": case "bitters": return "sweet";
-                case "juice": case "sour": case "soda": case "mixer": return "mix";
-                default: return "liqueur";   // liqueurs, amari, vermouths and anything the data adds later
+                case "vodka": case "gin": case "rum": case "tequila": case "whiskey": return 0;
+                default: return 1;   // liqueurs, amari, vermouths, the syrups, juices, mixers - and whatever the data adds
             }
         }
 
-        /// <summary>The family a bottle stands with: the category for the spirits, the
-        /// type's plain word for the rest.</summary>
+        /// <summary>The family a bottle stands with, and the word on its plate: the category for the spirits
+        /// and liqueurs, the type's plain word for the rest.</summary>
         private static string CellarGroup(IngredientCard card)
         {
             string cat = card?.Info?.Category;
             if (!string.IsNullOrEmpty(cat) && cat != IngredientCategories.Mixer && cat != IngredientCategories.Juice)
-                return cat;
+                return System.Array.IndexOf(CellarFamilyRank, cat) >= 0 ? cat : "liqueur";
+            if (cat == IngredientCategories.Juice) return "juice";
             switch (card?.Type ?? IngredientType.Spirit)
             {
-                case IngredientType.Bubbly: return "soda";
-                case IngredientType.Sour: return cat == IngredientCategories.Juice ? "juice" : "sour";
-                case IngredientType.Sweet: return cat == IngredientCategories.Juice ? "juice" : "syrup";
-                case IngredientType.Bitter: return "bitters";
-                default: return cat ?? "mixer";
+                case IngredientType.Sweet: case IngredientType.Bitter: return "syrup";
+                case IngredientType.Sour: return "juice";
+                default: return "mixer";   // soda, tonic, ginger beer, cola, energy
             }
         }
 
-        private static int CellarGroupOrder(IngredientCard card)
+        /// <summary>Inside a family, the order a bartender lines them up: the juices citrus first, the mixers by
+        /// how often they are reached for, the liqueurs aperitif before sweet; a spirit by its tier.</summary>
+        private static readonly string[] CellarStyleRank =
+            { "lemon", "lime", "orange", "pineapple", "cranberry",
+              "soda", "tonic", "ginger", "cola", "energy",
+              "syrup", "grenadine",
+              "vermouth", "amaro", "triple_sec", "coffee_liqueur" };
+
+        /// <summary>The shelf order: board, then family, then style, then tier; the family's index comes back too.</summary>
+        private static int CellarOrder(IngredientCard card, out int family)
         {
             string g = CellarGroup(card);
-            int st = System.Array.IndexOf(CellarStationRank, CellarStation(g));
-            int i = System.Array.IndexOf(CellarGroupRank, g);
-            return st * 100 + (i < 0 ? CellarGroupRank.Length : i);   // by section, then by family inside it
+            family = System.Array.IndexOf(CellarFamilyRank, g);
+            int style = System.Array.IndexOf(CellarStyleRank, card?.Info?.Style ?? "");
+            int tier = card?.Info?.Tier ?? 1;
+            return CellarBoard(g) * 100000 + (family < 0 ? 99 : family) * 1000 + (style < 0 ? 99 : style) * 10
+                   + Mathf.Clamp(tier, 0, 9);
         }
 
         private static string CellarGroupWord(string group)
         {
             switch (group)
             {
-                case "white": return UIText.T("chrome.cellar.station.white");
-                case "dark": return UIText.T("chrome.cellar.station.dark");
-                case "sweet": return UIText.T("chrome.cellar.station.sweet");
-                case "mix": return UIText.T("chrome.cellar.station.mix");
                 case "whiskey": return UIText.T("chrome.cellar.group.whiskey");
                 case "soda": return UIText.T("chrome.cellar.group.soda");
                 case "syrup": return UIText.T("chrome.cellar.group.syrup");
@@ -1471,9 +1487,10 @@ namespace LastCall.UI
             var runs = new List<(string group, int first, int last)>();
             for (int i = 0; i < _cellarCards.Count && i < stage.CellarSlotCount; i++)
             {
-                string g = CellarStation(CellarGroup(_cellarCards[i]));   // one plate a SECTION
+                string g = CellarGroup(_cellarCards[i]);   // one plate a FAMILY, under its part in each bay
                 stage.CellarSlotStage(i, out var here);
-                if (runs.Count > 0 && runs[runs.Count - 1].group == g)
+                if (runs.Count > 0 && runs[runs.Count - 1].group == g
+                    && stage.CellarSlotBay(runs[runs.Count - 1].last) == stage.CellarSlotBay(i))   // never across a post
                 {
                     stage.CellarSlotStage(runs[runs.Count - 1].last, out var prev);
                     if (Mathf.Abs(prev.y - here.y) < 1f)
