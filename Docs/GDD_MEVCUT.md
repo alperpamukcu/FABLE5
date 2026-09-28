@@ -2201,8 +2201,10 @@ haftalık işin silinmesi (2026-09-28).
   düzeltildi: içki adı çoğul almadığı için sayılan satırlar artık tur sayıyor ("3 rounds of Gin Sour").
 - **Kendi sanatı oyunda (2026-09-28 akşamı):** yer tutucu silkwoman gitti; ev sahibesi `Resources/Patron/hostess/`
   altında kendi kareleriyle geliyor. Yazarın seçimi: kadronun kendi üreticisiyle (v3, evin çizim kuralları) çizilen
-  kumral-kızıl adayın "Neon Bar" kıyafeti (magenta barmen yeleği, turkuaz papyon ve pantolon — arayüzün iki rengi);
-  yazar "oyunumuzun yüzlerinden birisi olacak" dedi. Stil kopyalayan üretici (pro_flash) yüzleri eğri çizdiği için iki
+  kumral-kızıl aday; yazar "oyunumuzun yüzlerinden birisi olacak" dedi. Kıyafeti önce "Neon Bar" (magenta yelek,
+  turkuaz papyon), sonra yazar paletten bağımsız beş kıyafet istedi ve **bordo**yu seçti (2026-09-29): siyah yakalı
+  bordo kolsuz smokin tulum, altın kemer. Aynı gün yazar onu **mekânın sahibi** yaptı; hikâye buna göre yeniden
+  yazılıyor (satırlar onay bekliyor). Stil kopyalayan üretici (pro_flash) yüzleri eğri çizdiği için iki
   kez reddedildi; kıyafet değiştirme adımı yüzü bulanıklaştırdığı için kendi başı pozu birebir tutan resme geri taşındı
   (baş %99 örtüşüyor). Klipler: `walk` (iki yarım adım, sonuncusu ilkine sabitli, 15 kare), `arrive` (yürüyüşten
   odaya dönüş, son karesi duruşu), `idle` (tek kare — kadronun kuralı, "sabit durmalı"), `talk_1`/`talk_2`/`talk`
