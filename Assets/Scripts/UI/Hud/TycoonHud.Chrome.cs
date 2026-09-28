@@ -92,34 +92,90 @@ namespace LastCall.UI
         /// </summary>
         public void Toast(string message, Color? tint, float seconds, Sprite icon)
         {
-            if (_toast == null) return;
-            _toast.text = message;
-            _toast.color = tint ?? _toastInk;
-            _toastUntil = Time.unscaledTime + seconds;
-            _toast.gameObject.SetActive(true);
-            if (_toastIcon == null) return;
-            _toastIcon.sprite = icon;
-            _toastIcon.enabled = icon != null;
-            _toastIcon.color = tint ?? Color.white;
-            // The line shifts right to make room for it, and comes back when there is none. FROM ITS OWN LEFT EDGE
-            // (2026-09-28): the line is placed at a point (top centre), so its offsets are measured from the centre,
-            // and this set the left edge to the CENTRE plus the room — the 620 box shrank to its right half, the
-            // words wrapped, and every notice after the first with a picture stayed in that half. Measured on the
-            // achievements' first notice (r257).
-            var rt = _toast.rectTransform;
-            if (float.IsNaN(_toastLeft)) _toastLeft = rt.offsetMin.x;
-            rt.offsetMin = new Vector2(_toastLeft + (icon != null ? ToastIconRoom : 0f), rt.offsetMin.y);
-            if (icon == null) return;
-            // ...and the picture stands just before the words, wherever the centred words begin.
-            float w = rt.rect.width, words = Mathf.Min(_toast.preferredWidth, w);
-            _toastIcon.rectTransform.anchoredPosition = new Vector2(Mathf.Max(0f, (w - words) * 0.5f - ToastIconRoom), 0f);
+            // THE REFUSAL, WHERE IT WAS ASKED (2026-09-28). The author, of the notice line's words over the room:
+            // "artık bu tarzda yazı ve bildirim kullanmıyoruz" - the informational ones went (§9.137) - and of the
+            // refusals that were left: "Başka bir biçime geçilsin". What this channel still says is WHY something
+            // cannot be done (the card unread, the drink still in the tin, the tap running, the basket empty), and it
+            // is said where the player just pressed: a small dark plate with a red edge and the no-sign, just over
+            // the pointer, held a moment and gone (FadeAway). Its look is the refusal's own, so the tint and the
+            // picture the callers still hand in are not used; the old line is built but never lit.
+            if (string.IsNullOrEmpty(message) || _toast == null) return;
+            if (_refusal == null) BuildRefusal(_toast.transform.parent as RectTransform);
+            _refusalText.text = message;
+            // At 16 where it fits, else at 8: the faces rasterise only at whole multiples.
+            _refusalText.fontSize = LanguageFonts.Size(_display, 16);
+            float room = RefusalMaxW - RefusalPad * 2f - RefusalIconRoom;
+            if (_refusalText.preferredWidth > room) _refusalText.fontSize = LanguageFonts.Size(_display, 8);
+            float w = Mathf.Min(RefusalMaxW, Mathf.Ceil(_refusalText.preferredWidth) + RefusalPad * 2f + RefusalIconRoom + 4f);
+            _refusal.sizeDelta = new Vector2(w, RefusalH);
+            // Just over the pointer (every refusal answers a press), kept on the screen.
+            var root = (RectTransform)_refusal.parent;
+            Vector2 screen = Mouse.current != null ? Mouse.current.position.ReadValue()
+                : new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(root, screen, null, out Vector2 local);
+            var r = root.rect;
+            float x = Mathf.Clamp(local.x, r.xMin + w * 0.5f + 8f, r.xMax - w * 0.5f - 8f);
+            float y = Mathf.Clamp(local.y + RefusalLift, r.yMin + 8f, r.yMax - RefusalH - 8f);
+            _refusal.anchoredPosition = new Vector2(x, y) - r.center;
+            _refusal.SetAsLastSibling();
+            _refusal.GetComponent<FadeAway>().Hold(Mathf.Max(seconds, RefusalSeconds));
         }
 
-        /// <summary>How much room the notice gives up when it carries a picture.</summary>
-        private const float ToastIconRoom = 22f;
+        private RectTransform _refusal;
+        private Text _refusalText;
+        private const float RefusalH = 40f, RefusalMaxW = 600f, RefusalPad = 10f, RefusalIconRoom = 32f + 8f,
+            RefusalLift = 26f, RefusalSeconds = 1.8f;
 
-        /// <summary>The line's own left edge, as it was built (read at the first notice).</summary>
-        private float _toastLeft = float.NaN;
+        /// <summary>The refusal plate: the night glass, a 2px red edge, the no-sign at 2x and the words; on its own
+        /// canvas over everything the room and the menus draw (it takes no clicks).</summary>
+        private void BuildRefusal(RectTransform root)
+        {
+            _refusal = NewRect("Refusal", root);
+            _refusal.anchorMin = _refusal.anchorMax = new Vector2(0.5f, 0.5f);
+            _refusal.pivot = new Vector2(0.5f, 0f);
+            _refusal.sizeDelta = new Vector2(RefusalMaxW, RefusalH);
+            var canvas = _refusal.gameObject.AddComponent<Canvas>();
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 32;   // over the menu (31), the curtain and the cards (30), the bench (25)
+            var plate = _refusal.gameObject.AddComponent<Image>();
+            plate.color = UITheme.Night[1];
+            plate.raycastTarget = false;
+            for (int i = 0; i < 4; i++)
+            {
+                var e = NewRect("Edge" + i, _refusal);
+                bool across = i < 2;
+                e.anchorMin = across ? new Vector2(0f, i == 0 ? 1f : 0f) : new Vector2(i == 2 ? 0f : 1f, 0f);
+                e.anchorMax = across ? new Vector2(1f, i == 0 ? 1f : 0f) : new Vector2(i == 2 ? 0f : 1f, 1f);
+                e.pivot = across ? new Vector2(0.5f, i == 0 ? 1f : 0f) : new Vector2(i == 2 ? 0f : 1f, 0.5f);
+                e.sizeDelta = across ? new Vector2(0f, 2f) : new Vector2(2f, 0f);
+                e.anchoredPosition = Vector2.zero;
+                var edge = e.gameObject.AddComponent<Image>();
+                edge.color = UITheme.ViceRed[3];
+                edge.raycastTarget = false;
+            }
+            var icon = NewRect("NoSign", _refusal);
+            icon.anchorMin = icon.anchorMax = new Vector2(0f, 0.5f);
+            icon.pivot = new Vector2(0f, 0.5f);
+            icon.sizeDelta = new Vector2(32f, 32f);
+            icon.anchoredPosition = new Vector2(RefusalPad - 2f, 0f);
+            var iconImg = icon.gameObject.AddComponent<Image>();
+            iconImg.sprite = ItemArt.Load("ib_m_refuse");
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+            iconImg.color = UITheme.ViceRed[4];   // the no-sign in the edge's red (a 1-bit mark takes a tint)
+            _refusalText = NewText("Why", _refusal, _display, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            _refusalText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _refusalText.raycastTarget = false;
+            var tr = _refusalText.rectTransform;
+            tr.anchorMin = Vector2.zero;
+            tr.anchorMax = Vector2.one;
+            tr.offsetMin = new Vector2(RefusalPad + RefusalIconRoom - 4f, 2f);
+            tr.offsetMax = new Vector2(-RefusalPad, 0f);
+            _refusal.gameObject.AddComponent<CanvasGroup>();
+            _refusal.gameObject.AddComponent<FadeAway>();
+            _refusal.gameObject.SetActive(false);
+            UiAuditExempt.Mark(_refusal, "a refusal stands over the pointer that asked, not in a fixed place");
+        }
 
         /// <summary>
         /// The first perfect pour of a recipe, told three ways (2026-08-25, the author:

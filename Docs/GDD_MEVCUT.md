@@ -1902,6 +1902,25 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.139 · Ret, sorulduğu yerde: bildirim satırının kalan uyarıları imlecin yanında bir plaka oldu (2026-09-28)
+
+Yazar, §9.137'de kalan 35 uyarı satırı için: “Başka bir biçime geçilsin.”
+
+- **Plaka imlecin yanında** (`TycoonHud.Chrome` → `Toast`, adı ve 35 çağıranı değişmedi): bir eylem reddedilince
+  sebebi odanın tepesindeki şeritte değil, tıklanan yerin hemen üstünde çıkar — Night[1] zemin, 2 px ViceRed[3]
+  kenar, solda 1-bit “yasak” işareti (`ib_m_refuse`, ViceRed[4] tintli, 32), yanında display-16 Cream[4] cümle;
+  sığmazsa 8'e iner, plaka en çok 600 geniş, ekranın 8 birim içinde kalır. Oyuncunun gözü zaten oradadır; tepedeki
+  satır, bakılmayan yerde söylenen bir “hayır”dı.
+- **Kısa yaşar** (`Behaviours/FadeAway`): 0,1 sn'de hafifçe büyüyerek gelir, en az 1,8 sn durur (ölçeksiz saat —
+  duran bir gecede de okunur), 0,25 sn'de söner, kendini kapatır. Tıklamaları engellemez. `Motion.Reduced` büyüme ve
+  sönmeyi atlar, bekleme kalır. Yeni bir ret eskisinin yerine geçer; iki plaka üst üste binmez.
+- Renk tint'i ve ikon parametresi artık yok sayılır: bir ret her zaman aynı görünür, başka bir şey anlatmaz.
+- **Steam pompası** (`SteamPlatform`): oyun açıkken bir derleme (“Recompile And Continue Playing”) statikleri ve
+  Steamworks.NET'in dağıtıcı sayacını sıfırlıyor, pompayı ayakta bırakıyordu — Steam açıkken her karede
+  “Callback dispatcher is not initialized”. Pompa artık her karede `IsUp` sorar, Steam altından gittiyse kendini
+  kaldırır (o oyunun kalanı çevrimdışı); kapanış sıralı: önce canlı işaret, sonra katman, lider tablosu çağrıları,
+  en son `SteamAPI.Shutdown`.
+
 ### 9.137 · Başarım ikonları oyunda ve Steam'de; oda bildirim satırının bilgilendirme yazıları kalktı (2026-09-28)
 
 Yazar, ikon setini onaylarken: “İkonlar güzel beğendim kullanılsın. Açık olmayan başarım siyah beyaz gözüksün.

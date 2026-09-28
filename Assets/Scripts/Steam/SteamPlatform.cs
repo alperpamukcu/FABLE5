@@ -75,12 +75,20 @@ namespace LastCall.Steam
             StorePlatform.Register(s_live);
         }
 
+        // A script reload in the middle of a play (the editor's "Recompile And Continue Playing") clears these
+        // statics and Steamworks.NET's dispatcher count with them, but leaves the pump standing: it asks here
+        // before every pump, and stands down instead of throwing once a frame.
+        internal static bool IsUp => s_live != null && CallbackDispatcher.IsInitialized;
+
         internal static void Shutdown()
         {
-            if (s_live == null) return;
+            var live = s_live;
+            if (live == null) return;
+            s_live = null;
             s_overlay?.Dispose();
             s_overlay = null;
-            s_live = null;
+            foreach (var find in live._finds) find.Dispose();
+            live._finds.Clear();
             SteamAPI.Shutdown();
         }
 
@@ -184,7 +192,11 @@ namespace LastCall.Steam
     /// <summary>Pumps Steam's callbacks once a frame and takes Steam down with the game.</summary>
     internal sealed class SteamPump : MonoBehaviour
     {
-        private void Update() => SteamAPI.RunCallbacks();
+        private void Update()
+        {
+            if (SteamPlatform.IsUp) SteamAPI.RunCallbacks();
+            else Destroy(gameObject);   // Steam went down under it (a reload mid-play): the rest of the play is offline
+        }
 
         private void OnDestroy() => SteamPlatform.Shutdown();
     }

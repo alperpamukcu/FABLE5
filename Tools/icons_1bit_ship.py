@@ -71,6 +71,8 @@ PICKS = {
     # the achievements (2026-09-28): the menu key, the list and the toast; a secret still to find
     "m_achievements": "Sports_Winner_Award_Cup_Achievement_Trophy",
     "m_secret":      "Software_Warning_Sign_Circle_Question_Mark_Help",
+    # a refusal, where it was asked (2026-09-28): the plate by the pointer that replaced the notice line
+    "m_refuse":      "Software_Sign_Crossout_Cancel_Forbidden_Illegal_1",
 }
 
 
