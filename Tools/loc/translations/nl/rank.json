@@ -1,0 +1,259 @@
+{
+  "strings": [
+    {
+      "key": "rank.title.r0",
+      "text": "NOG NOOIT VAN GEHOORD",
+      "src": "NOBODY'S HEARD OF IT"
+    },
+    {
+      "key": "rank.title.r1",
+      "text": "GESPREK VAN DE STRAAT",
+      "src": "TALK OF THE STREET"
+    },
+    {
+      "key": "rank.title.r2",
+      "text": "DE BESTE VAN DE BUURT",
+      "src": "THE BLOCK'S BEST"
+    },
+    {
+      "key": "rank.title.r3",
+      "text": "GESPREK VAN DE STAD",
+      "src": "TALK OF THE TOWN"
+    },
+    {
+      "key": "rank.title.r4",
+      "text": "DE BESTE VAN DE STAD",
+      "src": "THE CITY'S BEST"
+    },
+    {
+      "key": "rank.title.r5",
+      "text": "DE BESTE VAN HET LAND",
+      "src": "THE COUNTRY'S BEST"
+    },
+    {
+      "key": "rank.title.r6",
+      "text": "BETER BESTAAT NIET",
+      "src": "THE BEST THERE IS"
+    },
+    {
+      "key": "rank.window.title",
+      "text": "DE BAR IS IN OPMARS",
+      "src": "THE BAR IS GOING PLACES"
+    },
+    {
+      "key": "rank.window.title_again",
+      "text": "WAAR DE BAR STAAT",
+      "src": "WHERE THE BAR STANDS"
+    },
+    {
+      "key": "rank.window.from",
+      "text": "EERST",
+      "src": "WAS"
+    },
+    {
+      "key": "rank.window.to",
+      "text": "NU",
+      "src": "NOW"
+    },
+    {
+      "key": "rank.window.new",
+      "text": "NIEUW ACHTER DE BAR",
+      "src": "NEW BEHIND THE BAR"
+    },
+    {
+      "key": "rank.window.nothing_new",
+      "text": "NIETS NIEUWS TE SCHENKEN — MAAR ZE KENNEN JE HIER",
+      "src": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME"
+    },
+    {
+      "key": "rank.window.next",
+      "text": "VOLGENDE TREDE: {stars} STERREN",
+      "src": "NEXT RUNG AT {stars} STARS"
+    },
+    {
+      "key": "rank.window.top",
+      "text": "DE TOP VAN DE LADDER",
+      "src": "THE TOP OF THE LADDER"
+    },
+    {
+      "key": "rank.window.continue",
+      "text": "VERDER",
+      "src": "CONTINUE"
+    },
+    {
+      "key": "rank.unlock.ice_lemon",
+      "text": "IJS EN CITROENTWIST OP DE BAR",
+      "src": "ICE AND A LEMON TWIST ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.door",
+      "text": "DE DEUR: LEES DE PAS, BETRAP DE VALSE, ZET ZE ERUIT",
+      "src": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT"
+    },
+    {
+      "key": "rank.unlock.rims",
+      "text": "ZOUT- EN SUIKERRANDEN OP DE BAR",
+      "src": "SALT AND SUGAR RIMS ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.spoon",
+      "text": "DE BARLEPEL: GEROERDE DRANKJES",
+      "src": "THE BAR SPOON: STIRRED DRINKS"
+    },
+    {
+      "key": "rank.unlock.jars",
+      "text": "OLIJVEN EN MUNT VANAVOND OP DE MARKT",
+      "src": "OLIVES AND MINT IN TONIGHT'S MARKET"
+    },
+    {
+      "key": "rank.unlock.line2",
+      "text": "EEN TWEEDE TAPKRAAN: EEN TWEEDE VAT OP DE MARKT",
+      "src": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.unlock.line3",
+      "text": "EEN DERDE TAPKRAAN: EEN DERDE VAT OP DE MARKT",
+      "src": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.cert.heading",
+      "text": "OORKONDE VAN AANZIEN",
+      "src": "CERTIFICATE OF STANDING"
+    },
+    {
+      "key": "rank.cert.known_as",
+      "text": "DEZE BAR HEET VOORTAAN",
+      "src": "THIS BAR IS HEREBY KNOWN AS"
+    },
+    {
+      "key": "rank.cert.risen_from",
+      "text": "VOORHEEN: {title}",
+      "src": "RISEN FROM {title}"
+    },
+    {
+      "key": "rank.cert.meta_climb",
+      "text": "VOORHEEN: {title}, AVOND {night}",
+      "src": "RISEN FROM {title}, NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.foot",
+      "text": "TOEGEKEND OP AVOND {night} DOOR WIE HIER DRINKT",
+      "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"
+    },
+    {
+      "key": "rank.cert.foot_again",
+      "text": "STAND OP AVOND {night}",
+      "src": "STANDING AS OF NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.comfort",
+      "text": "COMFORT",
+      "src": "COMFORT"
+    },
+    {
+      "key": "rank.cert.service",
+      "text": "SERVICE",
+      "src": "SERVICE"
+    },
+    {
+      "key": "rank.cert.class.counter",
+      "text": "DE BAR",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "rank.cert.class.door",
+      "text": "DE DEUR",
+      "src": "THE DOOR"
+    },
+    {
+      "key": "rank.cert.class.bench",
+      "text": "DE WERKPLEK",
+      "src": "THE BENCH"
+    },
+    {
+      "key": "rank.cert.class.draught",
+      "text": "DE TAPKRANEN",
+      "src": "THE TAPS"
+    },
+    {
+      "key": "rank.cert.class.room",
+      "text": "DE ZAAL",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "rank.cert.class.market",
+      "text": "DE MARKT",
+      "src": "THE MARKET"
+    },
+    {
+      "key": "rank.cert.class.book",
+      "text": "HET BOEK",
+      "src": "THE BOOK"
+    },
+    {
+      "key": "rank.tile.ice",
+      "text": "IJS",
+      "src": "ICE"
+    },
+    {
+      "key": "rank.tile.lemon",
+      "text": "CITROENTWIST",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "rank.tile.salt",
+      "text": "ZOUTRAND",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "rank.tile.sugar",
+      "text": "SUIKERRAND",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "rank.tile.door",
+      "text": "ID-PAPIEREN",
+      "src": "ID PAPERS"
+    },
+    {
+      "key": "rank.tile.spoon",
+      "text": "BARLEPEL",
+      "src": "BAR SPOON"
+    },
+    {
+      "key": "rank.tile.olives",
+      "text": "OLIJVEN",
+      "src": "OLIVES"
+    },
+    {
+      "key": "rank.tile.mint",
+      "text": "MUNT",
+      "src": "MINT"
+    },
+    {
+      "key": "rank.tile.line2",
+      "text": "TAPKRAAN 2",
+      "src": "2ND LINE"
+    },
+    {
+      "key": "rank.tile.line3",
+      "text": "TAPKRAAN 3",
+      "src": "3RD LINE"
+    },
+    {
+      "key": "rank.window.no_certificate",
+      "text": "NOG GEEN OORKONDE. DE EERSTE BIJ {stars} STERREN",
+      "src": "NO CERTIFICATE YET. THE FIRST COMES AT {stars} STARS"
+    },
+    {
+      "key": "rank.strip.new",
+      "text": "NIEUW",
+      "src": "NEW"
+    },
+    {
+      "key": "rank.strip.tip",
+      "text": "DE RANG VAN DE BAR\nKLIK OM TE ZIEN WAAR HIJ STAAT EN WAT ELKE TREDE OPENT",
+      "src": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS"
+    }
+  ]
+}

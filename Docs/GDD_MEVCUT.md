@@ -1902,6 +1902,42 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.136 · Steam'e bağlandı: App ID 5336380, sıralama listeleri, zaman çizelgesi, LasGen Interactive, rütbe unvanları 29 dilde (2026-09-28)
+
+Yazar: “Steam başarımları için gerekenleri sağlayalım ve tamamlayalım.” — App ID, desteklenen özelliklerden
+değer olanlar, ikonlar (“arkaplan hep aynı ... kilitli olanlarda kilit”), şirket adı, rütbe unvanlarının
+çevirisi. Steamworks tarafının sırası `Docs/STEAMWORKS.md`'de.
+
+- **App ID** `StoreLink.SteamAppId = 5336380`, proje kökünde `steam_appid.txt` (artık git'te; editörün ve
+  Steam dışından açılan bir build'in Steam'e konuşabilmesi için). Steam istemcisi kapalıyken oyun çevrimdışı
+  moda geçer, başarımlar diskte kalır (ölçüldü, r259). Yayın build'ine `steam_appid.txt` girmez; Steam dışından
+  açılan build kendini Steam üzerinden yeniden başlatır.
+- **Desteklenen özellikler**, oyuna değenler çalışır halde: Başarımlar, İstatistikler, **Sıralama Listeleri**
+  (üç kişisel en iyi: bir barın açık kaldığı gece `LONGEST_RUN`, kapanıştaki kasa `BIGGEST_TILL`, tek gecenin
+  bahşişi `BEST_NIGHT_TIPS`; oyun listeyi ilk puanda kendisi oluşturur, Steam en iyiyi tutar, dev dokunmuş koşu
+  puan göndermez), **Zaman Çizelgesi** (her gece bir oyun aşaması; kayıt çubuğunun altında gece/defter/ön kapı;
+  işaretli anlar: başarım, beş yıldızlı gece, yeni rütbe, bir tarifin ilk kusursuz dökümü, barın kapanması —
+  metinler oyuncunun dilinde, ikonlar Steam'in `steam_*` seti), Steam Cloud (Auto-Cloud yolu Steamworks
+  sayfasında). Dışarıda kalanlar ve nedeni: Remote Play telefon/tablet/TV (kumanda desteği yok), Remote Play
+  Together (tek oyunculu), satın alma, atölye, bölüm düzenleyici, bildirimler, HDR, yorum, Source (oyunda yok),
+  altyazı (seslendirme yok).
+- **İstatistikler**: Steam'de yalnız ilerleme çubuğu çizen 8'i zorunlu; kalan 27'si isteğe bağlı (Steam'in
+  bilmediği istatistik sessizce atlanır). Kit (`Tools/steamworks/achievements_kit.py`) sayfayı buna göre yazar:
+  istatistikler, başarımlar (sırasıyla), sıralama listeleri, Steam Cloud, işaretlenecek özellikler.
+- **İkonlar** (`Tools/steamworks/achievement_icons.py`): 32×32 mantıksal pikselde tek plaka — gece moru,
+  logonun pembe neon kenarı, işaretin arkasında disk — üstünde başarımın 1-bit işareti (Nikoichu, CC0; kokteyl ve
+  bira bardakları dahil), açılmamış halde aynı plakada elle çizilmiş asma kilit (pakette yok, paketin çizim
+  diliyle). ×8 = 256×256 (Steam'in önerisi) ve ×2 = 64×64, tam katlarla keskin. Paketin yıldızı ve kalbi
+  kullanılmadı. **Seçim sayfası yazarda** (yeni sanat önce rapor); Steam'e yükleme ve oyun içi listede kupa
+  yerine kullanım onaydan sonra.
+- **Şirket adı** LasGen Interactive (`PlayerSettings.companyName`, editörden). `persistentDataPath` artık
+  `LocalLow/LasGen Interactive/Malibu Club`; eski klasörde kayıt yoktu, yazarın editör PlayerPrefs'i yeni anahtara
+  bir kez kopyalandı (yalnız bu makine; oyun hiç dağıtılmadığı için oyuncu tarafında göç gerekmiyor).
+- **Rütbe unvanları ve rütbe penceresi**: `rank` parçasının 51 anahtarı yalnız Türkçede vardı; 27 dile çevrildi,
+  unvanlar r1–r6 her dilde o dilin başarım adlarıyla aynı (Yunanca büyük harfte aksansız). 27 tablo +51'er satır,
+  check_tables 0 hata.
+- Doğrulama: EditMode 853/853, PlayMode 18/18 (App ID ayarlıyken, Steam kapalı).
+
 ### 9.135 · Gecenin gösterisi: ışık iner, Z-şeridi açılır, koçan çiviye asılır, YARIN panosu (2026-09-28)
 
 Yazar (2026-09-27): "Gün sonu ekranı en baştan tekrardan tasarla kendin araştır ve bu tarz oyunlardaki gün sonu

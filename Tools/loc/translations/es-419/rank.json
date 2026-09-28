@@ -1,0 +1,259 @@
+{
+  "strings": [
+    {
+      "key": "rank.title.r0",
+      "text": "NADIE LO CONOCE AÚN",
+      "src": "NOBODY'S HEARD OF IT"
+    },
+    {
+      "key": "rank.title.r1",
+      "text": "SUENA EN LA CALLE",
+      "src": "TALK OF THE STREET"
+    },
+    {
+      "key": "rank.title.r2",
+      "text": "LO MEJOR DE LA CUADRA",
+      "src": "THE BLOCK'S BEST"
+    },
+    {
+      "key": "rank.title.r3",
+      "text": "SUENA EN TODA LA CIUDAD",
+      "src": "TALK OF THE TOWN"
+    },
+    {
+      "key": "rank.title.r4",
+      "text": "LO MEJOR DE LA CIUDAD",
+      "src": "THE CITY'S BEST"
+    },
+    {
+      "key": "rank.title.r5",
+      "text": "LO MEJOR DEL PAÍS",
+      "src": "THE COUNTRY'S BEST"
+    },
+    {
+      "key": "rank.title.r6",
+      "text": "LO MEJOR QUE HAY",
+      "src": "THE BEST THERE IS"
+    },
+    {
+      "key": "rank.window.title",
+      "text": "EL BAR ESTÁ DESPEGANDO",
+      "src": "THE BAR IS GOING PLACES"
+    },
+    {
+      "key": "rank.window.title_again",
+      "text": "EN QUÉ NIVEL ESTÁ EL BAR",
+      "src": "WHERE THE BAR STANDS"
+    },
+    {
+      "key": "rank.window.from",
+      "text": "ANTES",
+      "src": "WAS"
+    },
+    {
+      "key": "rank.window.to",
+      "text": "AHORA",
+      "src": "NOW"
+    },
+    {
+      "key": "rank.window.new",
+      "text": "NUEVO DETRÁS DE LA BARRA",
+      "src": "NEW BEHIND THE BAR"
+    },
+    {
+      "key": "rank.window.nothing_new",
+      "text": "NADA NUEVO QUE SERVIR — PERO AQUÍ YA TE CONOCEN",
+      "src": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME"
+    },
+    {
+      "key": "rank.window.next",
+      "text": "PRÓXIMO NIVEL: {stars} ESTRELLAS",
+      "src": "NEXT RUNG AT {stars} STARS"
+    },
+    {
+      "key": "rank.window.top",
+      "text": "EN LO MÁS ALTO",
+      "src": "THE TOP OF THE LADDER"
+    },
+    {
+      "key": "rank.window.continue",
+      "text": "CONTINUAR",
+      "src": "CONTINUE"
+    },
+    {
+      "key": "rank.unlock.ice_lemon",
+      "text": "HIELO Y TWIST DE LIMÓN EN LA BARRA",
+      "src": "ICE AND A LEMON TWIST ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.door",
+      "text": "LA PUERTA: LEE LA CREDENCIAL, CAZA LAS FALSAS, SÁCALOS",
+      "src": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT"
+    },
+    {
+      "key": "rank.unlock.rims",
+      "text": "BORDES DE SAL Y AZÚCAR EN LA BARRA",
+      "src": "SALT AND SUGAR RIMS ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.spoon",
+      "text": "LA CUCHARA DE BAR: TRAGOS REVUELTOS",
+      "src": "THE BAR SPOON: STIRRED DRINKS"
+    },
+    {
+      "key": "rank.unlock.jars",
+      "text": "ACEITUNAS Y MENTA HOY EN EL MERCADO",
+      "src": "OLIVES AND MINT IN TONIGHT'S MARKET"
+    },
+    {
+      "key": "rank.unlock.line2",
+      "text": "UNA SEGUNDA LÍNEA: UN SEGUNDO BARRIL EN EL MERCADO",
+      "src": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.unlock.line3",
+      "text": "UNA TERCERA LÍNEA: UN TERCER BARRIL EN EL MERCADO",
+      "src": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.cert.heading",
+      "text": "CERTIFICADO DE REPUTACIÓN",
+      "src": "CERTIFICATE OF STANDING"
+    },
+    {
+      "key": "rank.cert.known_as",
+      "text": "ESTE BAR SERÁ CONOCIDO COMO",
+      "src": "THIS BAR IS HEREBY KNOWN AS"
+    },
+    {
+      "key": "rank.cert.risen_from",
+      "text": "ANTES: {title}",
+      "src": "RISEN FROM {title}"
+    },
+    {
+      "key": "rank.cert.meta_climb",
+      "text": "ANTES: {title}, NOCHE {night}",
+      "src": "RISEN FROM {title}, NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.foot",
+      "text": "OTORGADO LA NOCHE {night} POR QUIENES TOMAN AQUÍ",
+      "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"
+    },
+    {
+      "key": "rank.cert.foot_again",
+      "text": "REPUTACIÓN EN LA NOCHE {night}",
+      "src": "STANDING AS OF NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.comfort",
+      "text": "COMODIDAD",
+      "src": "COMFORT"
+    },
+    {
+      "key": "rank.cert.service",
+      "text": "SERVICIO",
+      "src": "SERVICE"
+    },
+    {
+      "key": "rank.cert.class.counter",
+      "text": "LA BARRA",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "rank.cert.class.door",
+      "text": "LA PUERTA",
+      "src": "THE DOOR"
+    },
+    {
+      "key": "rank.cert.class.bench",
+      "text": "LA ESTACIÓN",
+      "src": "THE BENCH"
+    },
+    {
+      "key": "rank.cert.class.draught",
+      "text": "LA TORRE",
+      "src": "THE TAPS"
+    },
+    {
+      "key": "rank.cert.class.room",
+      "text": "EL SALÓN",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "rank.cert.class.market",
+      "text": "EL MERCADO",
+      "src": "THE MARKET"
+    },
+    {
+      "key": "rank.cert.class.book",
+      "text": "EL RECETARIO",
+      "src": "THE BOOK"
+    },
+    {
+      "key": "rank.tile.ice",
+      "text": "HIELO",
+      "src": "ICE"
+    },
+    {
+      "key": "rank.tile.lemon",
+      "text": "TWIST DE LIMÓN",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "rank.tile.salt",
+      "text": "BORDE DE SAL",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "rank.tile.sugar",
+      "text": "BORDE DE AZÚCAR",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "rank.tile.door",
+      "text": "DOCUMENTOS",
+      "src": "ID PAPERS"
+    },
+    {
+      "key": "rank.tile.spoon",
+      "text": "CUCHARA DE BAR",
+      "src": "BAR SPOON"
+    },
+    {
+      "key": "rank.tile.olives",
+      "text": "ACEITUNAS",
+      "src": "OLIVES"
+    },
+    {
+      "key": "rank.tile.mint",
+      "text": "MENTA",
+      "src": "MINT"
+    },
+    {
+      "key": "rank.tile.line2",
+      "text": "LÍNEA 2",
+      "src": "2ND LINE"
+    },
+    {
+      "key": "rank.tile.line3",
+      "text": "LÍNEA 3",
+      "src": "3RD LINE"
+    },
+    {
+      "key": "rank.window.no_certificate",
+      "text": "SIN CERTIFICADO AÚN. EL PRIMERO, CON {stars} ESTRELLAS",
+      "src": "NO CERTIFICATE YET. THE FIRST COMES AT {stars} STARS"
+    },
+    {
+      "key": "rank.strip.new",
+      "text": "NUEVO",
+      "src": "NEW"
+    },
+    {
+      "key": "rank.strip.tip",
+      "text": "EL RANGO DEL BAR\nHAZ CLIC PARA VER DÓNDE ESTÁ Y QUÉ DESBLOQUEA CADA NIVEL",
+      "src": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS"
+    }
+  ]
+}

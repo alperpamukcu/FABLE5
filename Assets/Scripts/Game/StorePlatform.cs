@@ -28,6 +28,19 @@ namespace LastCall.Game
         void Commit();
         void SetPresence(string key, string value);
         void ClearPresence();
+
+        /// <summary>A score on a leaderboard, kept only if it beats the player's own best there.</summary>
+        void SubmitScore(string board, long score);
+
+        /// <summary>The Timeline's mode: what the recording bar shows the player was doing.</summary>
+        void SetTimelineMode(StoreTimeline.Mode mode);
+        /// <summary>The line under the recording bar, until the next one.</summary>
+        void SetTimelineTooltip(string text);
+        /// <summary>A marked moment on the recording. <paramref name="featured"/> offers it as a clip.</summary>
+        void MarkMoment(string title, string description, string icon, int priority, bool featured);
+        /// <summary>A stretch of play the recording groups under one heading (a night).</summary>
+        void BeginPhase(string id);
+        void EndPhase();
     }
 
     public static class StorePlatform
@@ -55,6 +68,72 @@ namespace LastCall.Game
 
         /// <summary>Called by a store's own assembly when its overlay opens or closes.</summary>
         public static void RaiseOverlay(bool shown) => OverlayChanged?.Invoke(shown);
+    }
+
+    /// <summary>
+    /// THE STEAM TIMELINE (2026-09-28, the Steamworks feature list's "Zaman Çizelgesi"). Steam records play for the
+    /// player's own clips; the game marks what happened on that recording. Each night is a game phase (opened when
+    /// the doors do, closed at dawn), the recording bar says what the player is doing (a night / the books / the
+    /// front door), and the moments worth a clip are marked: an achievement earned, five stars in a night, a new
+    /// rank, a perfect pour, a bar closing for good. Every string arrives already in the player's language (the HUD
+    /// reads it from its tables); the icons are Steam's own (steam_*). Change-detected, so the HUD may call it every
+    /// frame; with no store up, every call is nothing.
+    /// </summary>
+    public static class StoreTimeline
+    {
+        public enum Mode { Playing, Menus, Staging }
+
+        private static Mode s_mode;
+        private static bool s_modeSet, s_inPhase;
+        private static string s_tooltip, s_phase;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetForSession()
+        {
+            s_modeSet = s_inPhase = false;
+            s_tooltip = s_phase = null;
+        }
+
+        public static void SetMode(Mode mode)
+        {
+            var store = StorePlatform.Current;
+            if (store == null || (s_modeSet && s_mode == mode)) return;
+            s_mode = mode;
+            s_modeSet = true;
+            store.SetTimelineMode(mode);
+        }
+
+        public static void Tooltip(string text)
+        {
+            var store = StorePlatform.Current;
+            if (store == null || text == s_tooltip) return;
+            s_tooltip = text;
+            store.SetTimelineTooltip(text ?? string.Empty);
+        }
+
+        /// <summary>Opens the phase <paramref name="id"/> (one night of one bar), closing any other first.</summary>
+        public static void BeginPhase(string id)
+        {
+            var store = StorePlatform.Current;
+            if (store == null || (s_inPhase && id == s_phase)) return;
+            if (s_inPhase) store.EndPhase();
+            store.BeginPhase(id);
+            s_inPhase = true;
+            s_phase = id;
+        }
+
+        public static void EndPhase()
+        {
+            var store = StorePlatform.Current;
+            if (store == null || !s_inPhase) return;
+            store.EndPhase();
+            s_inPhase = false;
+            s_phase = null;
+        }
+
+        /// <summary>A moment worth finding again; <paramref name="featured"/> offers it as a clip.</summary>
+        public static void Moment(string title, string description, string icon, int priority, bool featured) =>
+            StorePlatform.Current?.MarkMoment(title, description ?? string.Empty, icon, priority, featured);
     }
 
     /// <summary>

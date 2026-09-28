@@ -1,0 +1,259 @@
+{
+  "strings": [
+    {
+      "key": "rank.title.r0",
+      "text": "NINGUÉM OUVIU FALAR",
+      "src": "NOBODY'S HEARD OF IT"
+    },
+    {
+      "key": "rank.title.r1",
+      "text": "ASSUNTO DA RUA",
+      "src": "TALK OF THE STREET"
+    },
+    {
+      "key": "rank.title.r2",
+      "text": "O MELHOR DO BAIRRO",
+      "src": "THE BLOCK'S BEST"
+    },
+    {
+      "key": "rank.title.r3",
+      "text": "ASSUNTO DA CIDADE",
+      "src": "TALK OF THE TOWN"
+    },
+    {
+      "key": "rank.title.r4",
+      "text": "O MELHOR DA CIDADE",
+      "src": "THE CITY'S BEST"
+    },
+    {
+      "key": "rank.title.r5",
+      "text": "O MELHOR DO PAÍS",
+      "src": "THE COUNTRY'S BEST"
+    },
+    {
+      "key": "rank.title.r6",
+      "text": "O MELHOR QUE EXISTE",
+      "src": "THE BEST THERE IS"
+    },
+    {
+      "key": "rank.window.title",
+      "text": "O BAR ESTÁ DECOLANDO",
+      "src": "THE BAR IS GOING PLACES"
+    },
+    {
+      "key": "rank.window.title_again",
+      "text": "EM QUE NÍVEL ESTÁ O BAR",
+      "src": "WHERE THE BAR STANDS"
+    },
+    {
+      "key": "rank.window.from",
+      "text": "ANTES",
+      "src": "WAS"
+    },
+    {
+      "key": "rank.window.to",
+      "text": "AGORA",
+      "src": "NOW"
+    },
+    {
+      "key": "rank.window.new",
+      "text": "NOVO ATRÁS DO BALCÃO",
+      "src": "NEW BEHIND THE BAR"
+    },
+    {
+      "key": "rank.window.nothing_new",
+      "text": "NADA NOVO PARA SERVIR — MAS O SALÃO SABE SEU NOME",
+      "src": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME"
+    },
+    {
+      "key": "rank.window.next",
+      "text": "PRÓXIMO NÍVEL: {stars} ESTRELAS",
+      "src": "NEXT RUNG AT {stars} STARS"
+    },
+    {
+      "key": "rank.window.top",
+      "text": "O TOPO DA ESCADA",
+      "src": "THE TOP OF THE LADDER"
+    },
+    {
+      "key": "rank.window.continue",
+      "text": "CONTINUAR",
+      "src": "CONTINUE"
+    },
+    {
+      "key": "rank.unlock.ice_lemon",
+      "text": "GELO E TWIST DE LIMÃO NO BALCÃO",
+      "src": "ICE AND A LEMON TWIST ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.door",
+      "text": "A PORTA: LEIA A CARTEIRINHA, PEGUE AS FALSAS, EXPULSE",
+      "src": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT"
+    },
+    {
+      "key": "rank.unlock.rims",
+      "text": "CRUSTA DE SAL E AÇÚCAR NO BALCÃO",
+      "src": "SALT AND SUGAR RIMS ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.spoon",
+      "text": "A COLHER BAILARINA: DRINQUES MEXIDOS",
+      "src": "THE BAR SPOON: STIRRED DRINKS"
+    },
+    {
+      "key": "rank.unlock.jars",
+      "text": "AZEITONAS E HORTELÃ NO MERCADO DE HOJE",
+      "src": "OLIVES AND MINT IN TONIGHT'S MARKET"
+    },
+    {
+      "key": "rank.unlock.line2",
+      "text": "SEGUNDA TORNEIRA: UM SEGUNDO BARRIL NO MERCADO",
+      "src": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.unlock.line3",
+      "text": "TERCEIRA TORNEIRA: UM TERCEIRO BARRIL NO MERCADO",
+      "src": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.cert.heading",
+      "text": "CERTIFICADO DE REPUTAÇÃO",
+      "src": "CERTIFICATE OF STANDING"
+    },
+    {
+      "key": "rank.cert.known_as",
+      "text": "ESTE BAR FICA CONHECIDO COMO",
+      "src": "THIS BAR IS HEREBY KNOWN AS"
+    },
+    {
+      "key": "rank.cert.risen_from",
+      "text": "ANTES: {title}",
+      "src": "RISEN FROM {title}"
+    },
+    {
+      "key": "rank.cert.meta_climb",
+      "text": "ANTES: {title}, NOITE {night}",
+      "src": "RISEN FROM {title}, NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.foot",
+      "text": "CONCEDIDO NA NOITE {night} POR QUEM BEBE AQUI",
+      "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"
+    },
+    {
+      "key": "rank.cert.foot_again",
+      "text": "REPUTAÇÃO NA NOITE {night}",
+      "src": "STANDING AS OF NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.comfort",
+      "text": "CONFORTO",
+      "src": "COMFORT"
+    },
+    {
+      "key": "rank.cert.service",
+      "text": "SERVIÇO",
+      "src": "SERVICE"
+    },
+    {
+      "key": "rank.cert.class.counter",
+      "text": "O BALCÃO",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "rank.cert.class.door",
+      "text": "A PORTA",
+      "src": "THE DOOR"
+    },
+    {
+      "key": "rank.cert.class.bench",
+      "text": "A BANCADA",
+      "src": "THE BENCH"
+    },
+    {
+      "key": "rank.cert.class.draught",
+      "text": "AS TORNEIRAS",
+      "src": "THE TAPS"
+    },
+    {
+      "key": "rank.cert.class.room",
+      "text": "O SALÃO",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "rank.cert.class.market",
+      "text": "O MERCADO",
+      "src": "THE MARKET"
+    },
+    {
+      "key": "rank.cert.class.book",
+      "text": "O LIVRO",
+      "src": "THE BOOK"
+    },
+    {
+      "key": "rank.tile.ice",
+      "text": "GELO",
+      "src": "ICE"
+    },
+    {
+      "key": "rank.tile.lemon",
+      "text": "TWIST DE LIMÃO",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "rank.tile.salt",
+      "text": "CRUSTA DE SAL",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "rank.tile.sugar",
+      "text": "CRUSTA DE AÇÚCAR",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "rank.tile.door",
+      "text": "DOCUMENTOS",
+      "src": "ID PAPERS"
+    },
+    {
+      "key": "rank.tile.spoon",
+      "text": "COLHER BAILARINA",
+      "src": "BAR SPOON"
+    },
+    {
+      "key": "rank.tile.olives",
+      "text": "AZEITONAS",
+      "src": "OLIVES"
+    },
+    {
+      "key": "rank.tile.mint",
+      "text": "HORTELÃ",
+      "src": "MINT"
+    },
+    {
+      "key": "rank.tile.line2",
+      "text": "TORNEIRA 2",
+      "src": "2ND LINE"
+    },
+    {
+      "key": "rank.tile.line3",
+      "text": "TORNEIRA 3",
+      "src": "3RD LINE"
+    },
+    {
+      "key": "rank.window.no_certificate",
+      "text": "AINDA SEM CERTIFICADO. O PRIMEIRO COM {stars} ESTRELAS",
+      "src": "NO CERTIFICATE YET. THE FIRST COMES AT {stars} STARS"
+    },
+    {
+      "key": "rank.strip.new",
+      "text": "NOVO",
+      "src": "NEW"
+    },
+    {
+      "key": "rank.strip.tip",
+      "text": "A CATEGORIA DO BAR\nCLIQUE PARA VER ONDE ELE ESTÁ E O QUE CADA NÍVEL LIBERA",
+      "src": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS"
+    }
+  ]
+}

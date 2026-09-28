@@ -1,74 +1,64 @@
-# STEAMWORKS — başarımlar, istatistikler, durum satırı, bulut
+# STEAMWORKS — başarımlar, istatistikler, sıralama, zaman çizelgesi, bulut
 
-*2026-09-28. Yazar: "Oyuna steam etkileşimleri koyalım. Steam başarımı vs. bu entegrasyonu oyuna iyi bir
-şekilde yap her saniye başarım da kazanılmasın çok zor başarımlarda olsun ama sık başarım kazanılsın
-oyuncuya ilerleme hissi verilsin." Kurallar `Docs/GDD_MEVCUT.md` §9'daki başarım kaydında; bu belge
+*2026-09-28. Yazar: "Oyuna steam etkileşimleri koyalım ... sık başarım kazanılsın ... ilerleme hissi verilsin."
+Aynı gün: "Steam başarımları için gerekenleri sağlayalım ve tamamlayalım" — App ID, desteklenen özellikler,
+ikonlar, şirket adı, rütbe unvanlarının çevirisi. Kurallar `Docs/GDD_MEVCUT.md` §9.133 ve §9.136'te; bu belge
 Steamworks sitesinde yapılacak işlerin sırası ve oyunun o tarafla nasıl konuştuğu.*
 
-## 1. Bugün ne çalışıyor (App ID olmadan da)
+**Uygulama:** Malibu Club: Cocktail Bar Simulator — **App ID 5336380** (`StoreLink.SteamAppId`, proje kökünde
+`steam_appid.txt`). **Şirket:** LasGen Interactive (ProjectSettings `companyName`).
 
-- **48 başarım, 35 istatistik** — `Assets/Resources/Data/achievements.json` (veri; yeni başarım = yeni satır).
-  Kurallar Core'da (`AchievementTracker`, `TycoonRun.Feats`), saklama Game'de (`Achievements`), çizim UI'da
-  (`TycoonHud.Achievements`).
-- **Oyun kendi kaydını tutar:** `persistentDataPath/achievements.json` (bütün barlar boyunca, atomik yazım,
-  okunamayan dosya ezilmez, kenara alınır). Steam yokken, editörde, App ID gelmeden kazanılan her şey burada
-  durur ve Steam ilk açıldığında ona verilir.
-- **Oyun içinde:** kazanılınca üst bildirim satırında altın kupa + ses; uzun sayaçlar çeyreklerde /
-  yarıda camgöbeği "12/25" notu; ana menüde **ACHIEVEMENTS** listesi (kazanılanlar yanık, sayaçların çubuğu,
-  gizliler "?" ile).
-- **Dev fiilleri başarım kazandırmaz:** preset, gece atlama, bedava fikstür, rütbe tırmandırma koşuyu
-  kalıcı olarak işaretler (`DevTouched`, kayda da yazılır). Testler (SaveStore kapalı oturum) hiçbir şey
-  kaydetmez, göstermez.
-- **Tempo ölçüldü:** `LastCall → Achievement Pacing (60 Runs)` → `Docs/achievement_pacing.md`. Taban bot
-  ilk gece 3, ilk 12 gecede ~19 başarım alıyor (gecede ~1,5); en uzun boş aralık ortanca 4 gece. Orta/geç
-  katmanlar (2★+, 500 servis, 5★ oda...) botun ulaşamadığı yerde — insan için ekonomi projeksiyonu 2★'ı
-  ~17., 5★'ı ~53–76. geceye koyuyor.
+## 1. Oyunda ne çalışıyor
 
-## 2. Steam tarafı nasıl bağlı
+- **48 başarım, 35 istatistik** — `Assets/Resources/Data/achievements.json` (veri). Kurallar Core'da
+  (`AchievementTracker`, `TycoonRun.Feats`), saklama Game'de (`Achievements`), çizim UI'da
+  (`TycoonHud.Achievements`). Oyun kendi kaydını tutar (`persistentDataPath/achievements.json`); Steam
+  açıldığında ikisi iki yönlü birleşir. Dev fiilleri başarım kazandırmaz; test takımları hiçbir şey kaydetmez.
+- **Sıralama listeleri (3):** `LONGEST_RUN` (bir barın açık kaldığı gece), `BIGGEST_TILL` (bir gecenin
+  kapanışında kasa), `BEST_NIGHT_TIPS` (tek gecenin bahşişi). Kişisel en iyiler; Steam her oyuncunun en iyisini
+  tutar. Oyun listeyi ilk puanda kendisi oluşturur.
+- **Zaman çizelgesi (Steam Timeline):** her gece bir oyun aşaması (kapılar açılınca başlar, şafakta kapanır);
+  kayıt çubuğunun altında "Gece 12 · 3★" / defter / ön kapı; işaretli anlar: başarım, beş yıldızlı gece, yeni
+  rütbe, bir tarifin ilk kusursuz dökümü, barın kapanması. Metinler oyuncunun dilinde, ikonlar Steam'in kendi
+  `steam_*` seti — sitede ayar gerekmez.
+- **Durum satırı (rich presence):** menüde / "Gece 12 · 3★" / defter kapanışı, 29 dil.
+- **Dil:** oyuncunun kayıtlı seçimi → Steam kütüphanesinde bu oyun için seçilen dil → işletim sistemi.
+- **Overlay:** Shift+Tab açık bir geceyi duraklatır.
+- **Steam yokken:** oyun "[store] Steam is not running for this app" der ve kaydını diskte tutar (ölçüldü,
+  r259). Steam'den başlatılmayan bir build (steam_appid.txt yanında değilse) kendini Steam üzerinden yeniden açar.
 
-- **Paket:** Steamworks.NET 2025.164.1 (SDK 1.64, MIT) — `Packages/manifest.json`.
-- **`Assets/Scripts/Steam/`** (`LastCall.Steam`): yalnız paket kuruluyken derlenir (asmdef version define),
-  ve **`StoreLink.SteamAppId` 0 iken Steam'i hiç başlatmaz** — editör "Spacewar oynuyor" görünmez.
-  App ID girilince: oyun Steam dışından açılırsa Steam üzerinden yeniden başlatır (`RestartAppIfNecessary`,
-  yalnız build), `SteamAPI.Init`, her kare callback, oyun kapanırken `Shutdown`.
-- **Birleştirme:** bir oturumda Steam ilk kez açıldığında iki yön birden — Steam'in bildiği büyük sayılar ve
-  kazanılmışlar sessizce alınır (başka bilgisayar), buradakiler Steam'e verilir.
-- **Dil:** oyuncunun kayıtlı seçimi → **Steam kütüphanesinde bu oyun için seçtiği dil** → işletim sistemi.
-- **Overlay:** Shift+Tab açık bir geceyi duraklatır (odak kaybı gibi).
-- **Durum satırı (rich presence):** menüde "At the front door", gecede "Night 12 · 3★", kapanışta
-  "Closing the books on night 12" — 29 dilde.
+## 2. Steamworks'te, sırayla
 
-## 3. App oluşunca, sırayla
-
-1. **App ID:** `Assets/Scripts/Game/StoreLink.cs` → `SteamAppId = <id>`; aynı sayıyı proje kökündeki
-   `steam_appid.txt`'ye yaz (yalnız editör testleri için; `.gitignore`'dan çıkar ve commit'le). Aynı gün
-   `StoreLink.Page` adresi de girilir (menüdeki STEAM tuşu onunla görünür).
-2. **Kit'i üret:** `py -3 -X utf8 Tools/steamworks/achievements_kit.py` → `Tools/steamworks/out/`.
-3. **İstatistikler:** Stats & Achievements → Stats: `out/SHEET.md` §1'deki 35 istatistik (INT, Client;
-   *sum* olanlara Increment Only).
-4. **Başarımlar:** aynı sayfada Achievements: `SHEET.md` §2'deki 48 başarım, **tablodaki sırayla** (Steam
-   token'ları ekleme sırasına göre numaralıyor). Gizli işareti yalnız iki sırrın. İlerleme çubuğu olanlara
-   Progress Stat (min 0, max tablodaki).
-5. **Çeviriler:** Achievement Localization → Import `out/achievements_loc.vdf` (29 dil). Sıra karıştıysa:
-   önce Export al, sonra `achievements_kit.py --from <export.vdf>` → `out/achievements_loc_from_export.vdf`.
-6. **İkonlar:** her başarım için 64×64 JPG, yanık + gri. **Henüz seçilmedi** — aday sayfası yazar onayına
-   gidecek (yeni sanat önce rapor, sonra oyuna).
-7. **Durum satırı:** Community → Rich Presence Localization: `out/rich_presence/<dil>.vdf` dosyaları.
-8. **Steam Cloud (Auto-Cloud):** kök *WinAppDataLocalLow*, alt klasör `<şirket>/Malibu Club`:
-   `saves/*.json` ve `achievements.json`. **Önce `companyName`'i kesinleştir** (bugün `DefaultCompany`;
-   GELISTIRME §0.0 madde 8 "LasGen Interactive" diyor) — değişirse yol da değişir.
+1. **Kit'i üret:** `py -3 -X utf8 Tools/steamworks/achievements_kit.py` → `Tools/steamworks/out/SHEET.md`
+   (bütün tablolar), `achievements_loc.vdf`, `rich_presence/*.vdf`.
+2. **İstatistikler:** SHEET §1 — **8'i zorunlu** (ilerleme çubuğunu çizenler); kalan 27 isteğe bağlı (yalnız
+   başka bilgisayara taşınan sayılar için).
+3. **Başarımlar:** SHEET §2, **tablodaki sırayla** (Steam token'ları ekleme sırasına göre numaralıyor). Gizli işareti
+   yalnız iki sırrın. İlerleme çubuğu olanlara Progress Stat (min 0, max tablodaki).
+4. **İkonlar:** `py -3 -X utf8 Tools/steamworks/achievement_icons.py` → `out/icons/256/<API>_achieved.jpg` ve
+   `_unachieved.jpg` (256×256; Steam kendisi küçültür). **Seçim sayfası yazarda** — onaydan önce yükleme.
+5. **Çeviriler:** Achievement Localization → Import `out/achievements_loc.vdf` (29 dil). Sıra karıştıysa önce Export,
+   sonra `achievements_kit.py --from <export.vdf>`.
+6. **Sıralama listeleri:** oyun ilk puanda oluşturur; sitede her birine Community Name ver (SHEET §3).
+7. **Durum satırı:** Community → Rich Presence Localization: `out/rich_presence/<dil>.vdf`.
+8. **Steam Cloud (Auto-Cloud):** SHEET §4 — kök WinAppDataLocalLow, `LasGen Interactive/Malibu Club/saves`
+   (`*.json`) ve `LasGen Interactive/Malibu Club` (`achievements.json`); kota 10 MB / 50 dosya.
 9. **Publish:** Stats & Achievements değişiklikleri App Admin'de yayınlanmadan oyuna görünmez.
-10. **Dene:** Steam açık, hesap uygulamaya sahip → editörde Play → konsolda `[store] Steam is up` → ilk
-    doğru servis "First Round"u açmalı, Shift+Tab geceyi durdurmalı. Sıfırlamak için Steam konsolu:
-    `steam://open/console` → `reset_all_stats <appid>`.
+10. **Desteklenen özellikler:** SHEET §5 — işaretle: Başarımlar, Steam Cloud, İstatistikler, Sıralama Listeleri,
+    Zaman Çizelgesi. İşaretleme: Remote Play (telefon/tablet/TV — kumanda desteği yok), Remote Play Together
+    (tek oyunculu), satın alma / atölye / bölüm düzenleyici / bildirimler / HDR / yorum / Source (oyunda yok),
+    altyazı (seslendirme yok). Her kutu, özellik yayınlanıp denendikten sonra.
+11. **Dene:** Steam açık, hesap uygulamaya sahip → editörde Play → konsolda `[store] Steam is up` → ilk doğru servis
+    "First Round"u açmalı; Shift+Tab geceyi durdurmalı; Steam'in kayıt çubuğunda gece aşaması görünmeli. Sıfırlamak
+    için: `steam://open/console` → `reset_all_stats 5336380`.
 
-## 4. Yeni başarım eklemek
+## 3. Yeni başarım eklemek
 
-1. `achievements.json`'a satır (yalnız `Stats.cs`'teki istatistiklerden biri; yeni bir sayı gerekirse önce
-   Core'da raporlanmalı — `TycoonRun.Feats`). DataLoader yanlış adı, yanlış katmanı, gizli/sır uyuşmazlığını
-   yüksek sesle reddeder.
-2. `py -3 -X utf8 Tools/loc/achievement_keys.py` → `merge_fragments.py --update --write` → 28 dilin
+1. `achievements.json`'a satır (yalnız `Stats.cs`'teki istatistiklerden biri; yeni bir sayı gerekirse önce Core'da
+   raporlanmalı — `TycoonRun.Feats`). DataLoader yanlış adı, katmanı, gizli/sır uyuşmazlığını reddeder.
+2. `Tools/loc/achievement_keys.py` → `merge_fragments.py --update --write` → 28 dilin
    `Tools/loc/translations/<dil>/achievements.json` parçası → `assemble_table.py` → `check_tables.py`.
 3. `LastCall → Achievement Pacing` ile nereye düştüğünü ölç.
-4. Steamworks'te **listenin sonuna** ekle, kit'i yeniden üret, çevirileri yükle, ikonu koy, Publish.
-   Oyuncunun zaten yetmiş olduğu bir başarım, dosya ilk okunduğunda sessizce kazanılır (`Reconcile`).
+4. `achievement_icons.py`'nin PICKS tablosuna işaretini ekle; Steamworks'te **listenin sonuna** ekle, kit'i yeniden
+   üret, çevirileri ve ikonları yükle, Publish. Oyuncunun zaten yetmiş olduğu bir başarım ilk okumada sessizce
+   kazanılır (`Reconcile`).

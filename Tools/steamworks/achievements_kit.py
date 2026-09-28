@@ -138,37 +138,67 @@ def write_presence(langs):
         (folder / f"{api}.vdf").write_text("\n".join(lines), encoding="utf-8")
 
 
+def leaderboards():
+    """(board API name, stat) from Achievements.Leaderboards in the Game layer."""
+    text = (ROOT / "Assets" / "Scripts" / "Game" / "Achievements.cs").read_text(encoding="utf-8")
+    consts = dict(re.findall(r'public const string (\w+) = "([a-z_]+)";', STATS.read_text(encoding="utf-8")))
+    return [(b, consts[c]) for b, c in re.findall(r'\{\s*"([A-Z_]+)",\s*Stats\.(\w+)\s*\}', text)]
+
+
+def company():
+    text = (ROOT / "ProjectSettings" / "ProjectSettings.asset").read_text(encoding="utf-8")
+    m = re.search(r"^\s*companyName: (.+)$", text, re.M)
+    p = re.search(r"^\s*productName: (.+)$", text, re.M)
+    return (m.group(1).strip() if m else "?"), (p.group(1).strip() if p else "?")
+
+
+def app_id():
+    text = (ROOT / "Assets" / "Scripts" / "Game" / "StoreLink.cs").read_text(encoding="utf-8")
+    m = re.search(r"SteamAppId = (\d+);", text)
+    return m.group(1) if m else "0"
+
+
 def write_sheet(book, stat_list):
     by_stat = {}
     for a in book:
         for s in a.get("stats") or [a["stat"]]:
             by_stat.setdefault(s, []).append(a["id"])
     kinds = dict(stat_list)
+    progress_stats = set()
+    for a in book:
+        names = a.get("stats") or [a["stat"]]
+        if len(names) == 1 and a["target"] > 1 and kinds.get(names[0]) == "sum":
+            progress_stats.add(names[0])
+    comp, prod = company()
     lines = [
-        "# Steamworks sheet — stats and achievements",
+        "# Steamworks sheet — Malibu Club (App ID %s)" % app_id(),
         "",
-        "Written by `Tools/steamworks/achievements_kit.py` from `Assets/Resources/Data/achievements.json`; do not",
-        "edit by hand. The steps around it are in `Docs/STEAMWORKS.md`.",
+        "Written by `Tools/steamworks/achievements_kit.py` from the game's own data; do not edit by hand. The",
+        "order of work is in `Docs/STEAMWORKS.md`.",
         "",
-        "## 1. Stats (Stats & Achievements → Stats) — create these first",
+        "## 1. Stats (Stats & Achievements → Stats)",
         "",
         "Every stat: type **INT**, *Set By* **Client**, default 0, no min/max. A **sum** stat only ever grows",
-        "(tick *Increment Only*); a **best** stat is the highest value ever reached (leave it unticked — the game",
-        "never lowers it, but Steam must not refuse the first write).",
+        "(tick *Increment Only*); a **best** stat is the highest value ever reached (leave it unticked).",
         "",
-        "| # | API name | kind | read by |",
-        "|--:|---|---|---|",
+        "**Needed** are the %d that draw an achievement's progress bar — create those. The rest are **optional**:" % len(progress_stats),
+        "the game counts them itself and Steam only uses them to carry the numbers to another computer; a stat",
+        "Steam does not know is simply skipped.",
+        "",
+        "| # | API name | kind | on Steam | read by |",
+        "|--:|---|---|---|---|",
     ]
     for i, (s, kind) in enumerate(stat_list, 1):
-        lines.append(f"| {i} | `{s}` | {kind} | {', '.join(by_stat.get(s, [])) or '—'} |")
+        need = "**needed**" if s in progress_stats else "optional"
+        lines.append(f"| {i} | `{s}` | {kind} | {need} | {', '.join(by_stat.get(s, [])) or '—'} |")
     lines += [
         "",
         "## 2. Achievements (Stats & Achievements → Achievements) — create them IN THIS ORDER",
         "",
         "Steam numbers achievements 32 to a block in the order they are added; `achievements_loc.vdf` counts on",
         "this order (or fill Steam's own export with `--from`). *Hidden* goes on exactly the secret ones. Where a",
-        "row names a progress stat, set it under *Progress Stat* with min 0 and the max shown — that is what",
-        "draws the bar on Steam. Icons (64×64 JPG, one lit, one grey) are still to be picked.",
+        "row names a progress stat, set it under *Progress Stat* with min 0 and the max shown. Icons: upload",
+        "`out/icons/256/<API>_achieved.jpg` and `<API>_unachieved.jpg` (256×256; Steam scales them).",
         "",
         "| # | API name | name (English) | description (English) | hidden | progress stat (min–max) |",
         "|--:|---|---|---|:-:|---|",
@@ -179,9 +209,49 @@ def write_sheet(book, stat_list):
         if len(stat_names) == 1 and a["target"] > 1 and kinds.get(stat_names[0]) == "sum":
             progress = f"`{stat_names[0]}` (0–{a['target']})"
         lines.append(f"| {i} | `{a['id']}` | {a['name']} | {a['description']} | {'yes' if a.get('hidden') else ''} | {progress} |")
-    lines += ["", f"{len(book)} achievements, {len(stat_list)} stats.", ""]
+    lines += [
+        "",
+        "## 3. Leaderboards (Stats & Achievements → Leaderboards)",
+        "",
+        "The game creates them itself the first time it sends a score (`FindOrCreateLeaderboard`, descending,",
+        "numeric, keep best). On the partner site give each a **Community Name** (per language if wanted) so it",
+        "shows in the community hub; nothing else to set.",
+        "",
+        "| API name | carries | sort | display |",
+        "|---|---|---|---|",
+    ]
+    for board, stat in leaderboards():
+        lines.append(f"| `{board}` | `{stat}` | descending | numeric |")
+    lines += [
+        "",
+        "## 4. Steam Cloud (Steam Cloud → Auto-Cloud)",
+        "",
+        f"Company `{comp}`, product `{prod}` — Unity writes to `%USERPROFILE%/AppData/LocalLow/{comp}/{prod}`.",
+        "Byte quota 10 MB, files 50. Root overrides are not needed for Windows-only builds.",
+        "",
+        "| root | subdirectory | pattern | recursive |",
+        "|---|---|---|:-:|",
+        f"| WinAppDataLocalLow | `{comp}/{prod}/saves` | `*.json` | no |",
+        f"| WinAppDataLocalLow | `{comp}/{prod}` | `achievements.json` | no |",
+        "",
+        "## 5. Supported features (Store Page Admin → Basic Info → Supported Features)",
+        "",
+        "| tick | feature | why |",
+        "|:-:|---|---|",
+        "| ✔ | Steam Achievements | 48, after section 2 is published |",
+        "| ✔ | Steam Cloud | after section 4 is set and tested |",
+        "| ✔ | Stats | the needed stats of section 1 |",
+        "| ✔ | Steam Leaderboards | section 3 |",
+        "| ✔ | Steam Timeline | nights as game phases, marked moments (achievements, five stars, new rank, perfect pour, a bar closing) |",
+        "| — | Remote Play on Phone/Tablet/TV | needs full controller support (the game has none yet) |",
+        "| — | Remote Play Together | needs local multiplayer; the game is single-player |",
+        "| — | In-App Purchases, Workshop, Level Editor, Game Notifications, HDR, Commentary, Source SDK | not in the game |",
+        "| — | Captions | the game has no voiced audio to caption |",
+        "",
+        f"{len(book)} achievements, {len(stat_list)} stats ({len(progress_stats)} needed), {len(leaderboards())} leaderboards.",
+        "",
+    ]
     (OUT / "SHEET.md").write_text("\n".join(lines), encoding="utf-8")
-
 
 def main(argv):
     book = json.loads(BOOK.read_text(encoding="utf-8"))["achievements"]

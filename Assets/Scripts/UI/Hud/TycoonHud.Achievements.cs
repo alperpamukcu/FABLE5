@@ -81,6 +81,8 @@ namespace LastCall.UI
                 Seconds = 3.8f,
                 Unlock = true,
             });
+            StoreTimeline.Moment(UIText.Caps(AchievementText(a, "name")), AchievementText(a, "description"),
+                "steam_achievement", 100, true);
             if (_achievementsPanel != null && _achievementsPanel.gameObject.activeSelf) RebuildAchievements();
         }
 
@@ -109,6 +111,58 @@ namespace LastCall.UI
             else if (run.Phase == TycoonPhase.DayOpen)
                 StorePresence.Show(StorePresence.State.Night, run.Day, (int)Math.Floor(run.Rating.Average));
             else StorePresence.Show(StorePresence.State.Books, run.Day, 0);
+            StepTimeline(run);
+        }
+
+        // ── the Steam Timeline ──
+        private TycoonPhase _timelinePhase = (TycoonPhase)(-1);
+        private int _timelineDay = -1;
+
+        /// <summary>
+        /// What Steam's recording shows (StoreTimeline): the mode and the line under the bar every frame (change-
+        /// detected there), a game phase per night — opened when the doors open, closed at dawn — and, at the moment
+        /// a night's books close, the two things worth a clip: a five-star night and a new rank. A closed bar is the
+        /// last moment of its run. Every word is the tables' own, already in the player's language.
+        /// </summary>
+        private void StepTimeline(TycoonRun run)
+        {
+            if (StorePlatform.Current == null) return;
+            if (MenuUp || run == null)
+            {
+                StoreTimeline.SetMode(StoreTimeline.Mode.Menus);
+                StoreTimeline.Tooltip(UIText.T("steam.presence.menu"));
+                return;
+            }
+            int stars = (int)Math.Floor(run.Rating.Average);
+            if (run.Phase == TycoonPhase.DayOpen)
+            {
+                StoreTimeline.SetMode(StoreTimeline.Mode.Playing);
+                StoreTimeline.Tooltip(UIText.T("steam.presence.night", ("night", run.Day), ("stars", stars)));
+                if (_timelinePhase != TycoonPhase.DayOpen || _timelineDay != run.Day)
+                    StoreTimeline.BeginPhase("bar-" + (_bootstrap != null ? _bootstrap.CurrentSeed : "") + "-night-" + run.Day);
+            }
+            else
+            {
+                StoreTimeline.SetMode(StoreTimeline.Mode.Menus);
+                StoreTimeline.Tooltip(UIText.T("steam.presence.books", ("night", run.Day)));
+                if (run.Phase == TycoonPhase.DayEnd && (_timelinePhase != TycoonPhase.DayEnd || _timelineDay != run.Day))
+                {
+                    string night = UIText.T("steam.presence.night", ("night", run.Day), ("stars", stars));
+                    if (run.TonightStars >= BarRating.MaxStars - 1e-6)
+                        StoreTimeline.Moment(UIText.TOr("achievement.five_stars_tonight.name", "Five Stars Tonight"), night,
+                            "steam_star", 90, true);
+                    if (run.RankAfterTonight.Index > run.Rank.Index)
+                        StoreTimeline.Moment(UIText.T("rank.window.title"),
+                            UIText.T("rank.title.r" + run.RankAfterTonight.Index), "steam_crown", 95, true);
+                }
+                if (run.Phase == TycoonPhase.Closed && _timelinePhase != TycoonPhase.Closed)
+                {
+                    StoreTimeline.Moment(UIText.T("hud.closed.banner").Split('\n')[0], null, "steam_death", 100, true);
+                    StoreTimeline.EndPhase();
+                }
+            }
+            _timelinePhase = run.Phase;
+            _timelineDay = run.Day;
         }
 
         private void StepAchievementCard()

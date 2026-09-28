@@ -34,9 +34,9 @@ bölüm kazanır (483 test → bugün 789+15; kayıt sistemi §9.123 ile geldi).
    kayıt `Docs/KREDILER.md`'de hazır; ana menüye CREDITS ya da derleme klasörüne `LICENSES` dosyası gerek.
 5. ~~**Steam entegrasyonu yok**~~ **KOD HAZIR 2026-09-28** (GDD §9.133, `Docs/STEAMWORKS.md`): Steamworks.NET,
    48 başarım / 35 istatistik (yerel kayıt + Steam'e iki yönlü birleştirme), durum satırı, overlay'de duraklama,
-   dil Steam kütüphanesinden. **Kalan, yazarın:** App ID (`StoreLink.SteamAppId` 0 iken Steam hiç başlamaz),
-   Steamworks'e girişler (`Tools/steamworks/achievements_kit.py` üretir), 96 başarım ikonu (seçim bekliyor),
-   Auto-Cloud yolu — `companyName` (madde 8) kesinleşince.
+   dil Steam kütüphanesinden; App ID 5336380, sıralama listeleri ve zaman çizelgesi (GDD §9.136). **Kalan, yazarın:**
+   Steamworks'e girişler (`Tools/steamworks/achievements_kit.py` → SHEET.md), başarım ikonlarının onayı (seçim
+   sayfası), Auto-Cloud yolu (SHEET §4), özellik kutuları (SHEET §5).
 6. **Yazılı son müşteri sahnede KAPALI:** `TycoonConfig.ForTheScene` `lastCall: false`
    (`TycoonConfig.cs:51-58`); ark yalnız `DevForceLastCall` ile oynuyor. `storyInPlay` alanı
    "S3 ile sil" notuna rağmen duruyor (`GameBootstrap.cs:35-44`). KARAR: demoda açık mı?
@@ -45,8 +45,8 @@ bölüm kazanır (483 test → bugün 789+15; kayıt sistemi §9.123 ile geldi).
    (`GDD_MEVCUT` 9.122). P18'in dört kutusu açık (`PLAN_service_depth.md:756-813`), döküm
    hassasiyeti neredeyse fark yaratmıyor (%18 hata → %99.9 Exact, `imperfect_hands_report.md`).
 8. **Kayıt sınırları (bilerek):** tek yuva, yalnız şafakta; sürüm/veri kayması TÜM kaydı reddeder
-   (göç yok); `companyName` hâlâ DefaultCompany — EA'den önce BİR KEZ "LasGen Interactive"e
-   çevrilmeli (kayıt klasörü + PlayerPrefs taşınır).
+   (göç yok). ~~`companyName` DefaultCompany~~ **2026-09-28 LasGen Interactive** (GDD §9.136; yazarın editör
+   PlayerPrefs'i yeni anahtara kopyalandı, eski kayıt klasörü boştu).
 9. **PlayMode ilk-koşu yalancı kırmızısı** hâlâ teşhissiz (§0.5); UI 59k satıra 15 PlayMode testi.
 10. **Depo hijyeni:** mağaza/pazarlama hattı git dışı (PROJE_HARITASI §6.1 — kayıp riski),
     ~1.300 aday/çıktı `??` sızıntısı (§6.2), sevk girdisi 4 dosya izlenmiyor (`room7_ship.py`).

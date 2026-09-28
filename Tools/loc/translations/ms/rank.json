@@ -1,0 +1,259 @@
+{
+  "strings": [
+    {
+      "key": "rank.title.r0",
+      "text": "TIADA SIAPA KENAL",
+      "src": "NOBODY'S HEARD OF IT"
+    },
+    {
+      "key": "rank.title.r1",
+      "text": "BUAH MULUT JALANAN",
+      "src": "TALK OF THE STREET"
+    },
+    {
+      "key": "rank.title.r2",
+      "text": "TERBAIK SEKAWASAN",
+      "src": "THE BLOCK'S BEST"
+    },
+    {
+      "key": "rank.title.r3",
+      "text": "BUAH MULUT PEKAN",
+      "src": "TALK OF THE TOWN"
+    },
+    {
+      "key": "rank.title.r4",
+      "text": "TERBAIK DI BANDAR",
+      "src": "THE CITY'S BEST"
+    },
+    {
+      "key": "rank.title.r5",
+      "text": "TERBAIK SENEGARA",
+      "src": "THE COUNTRY'S BEST"
+    },
+    {
+      "key": "rank.title.r6",
+      "text": "TIADA TANDINGAN",
+      "src": "THE BEST THERE IS"
+    },
+    {
+      "key": "rank.window.title",
+      "text": "BAR INI SEDANG MENEMPA NAMA",
+      "src": "THE BAR IS GOING PLACES"
+    },
+    {
+      "key": "rank.window.title_again",
+      "text": "KEDUDUKAN BAR",
+      "src": "WHERE THE BAR STANDS"
+    },
+    {
+      "key": "rank.window.from",
+      "text": "DAHULU",
+      "src": "WAS"
+    },
+    {
+      "key": "rank.window.to",
+      "text": "KINI",
+      "src": "NOW"
+    },
+    {
+      "key": "rank.window.new",
+      "text": "BARU DI BALIK KAUNTER",
+      "src": "NEW BEHIND THE BAR"
+    },
+    {
+      "key": "rank.window.nothing_new",
+      "text": "TIADA MINUMAN BARU — TETAPI SEMUA KENAL NAMA ANDA",
+      "src": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME"
+    },
+    {
+      "key": "rank.window.next",
+      "text": "TAHAP BERIKUT: {stars} BINTANG",
+      "src": "NEXT RUNG AT {stars} STARS"
+    },
+    {
+      "key": "rank.window.top",
+      "text": "PUNCAK TANGGA",
+      "src": "THE TOP OF THE LADDER"
+    },
+    {
+      "key": "rank.window.continue",
+      "text": "TERUSKAN",
+      "src": "CONTINUE"
+    },
+    {
+      "key": "rank.unlock.ice_lemon",
+      "text": "AIS DAN PINTALAN LEMON DI KAUNTER",
+      "src": "ICE AND A LEMON TWIST ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.door",
+      "text": "PINTU: BACA KAD, TANGKAP YANG PALSU, HALAU KELUAR",
+      "src": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT"
+    },
+    {
+      "key": "rank.unlock.rims",
+      "text": "BIBIR GARAM DAN GULA DI KAUNTER",
+      "src": "SALT AND SUGAR RIMS ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.spoon",
+      "text": "SUDU BAR: MINUMAN YANG DIKACAU",
+      "src": "THE BAR SPOON: STIRRED DRINKS"
+    },
+    {
+      "key": "rank.unlock.jars",
+      "text": "MALAM INI ZAITUN DAN PUDINA ADA DI PASAR",
+      "src": "OLIVES AND MINT IN TONIGHT'S MARKET"
+    },
+    {
+      "key": "rank.unlock.line2",
+      "text": "PILI KEDUA: TONG BIR KEDUA DI PASAR",
+      "src": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.unlock.line3",
+      "text": "PILI KETIGA: TONG BIR KETIGA DI PASAR",
+      "src": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.cert.heading",
+      "text": "SIJIL KEDUDUKAN",
+      "src": "CERTIFICATE OF STANDING"
+    },
+    {
+      "key": "rank.cert.known_as",
+      "text": "BAR INI KINI DIKENALI SEBAGAI",
+      "src": "THIS BAR IS HEREBY KNOWN AS"
+    },
+    {
+      "key": "rank.cert.risen_from",
+      "text": "NAIK DARIPADA {title}",
+      "src": "RISEN FROM {title}"
+    },
+    {
+      "key": "rank.cert.meta_climb",
+      "text": "NAIK DARIPADA {title}, MALAM {night}",
+      "src": "RISEN FROM {title}, NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.foot",
+      "text": "DIANUGERAHKAN MALAM {night} OLEH PEMINUM DI SINI",
+      "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"
+    },
+    {
+      "key": "rank.cert.foot_again",
+      "text": "KEDUDUKAN SETAKAT MALAM {night}",
+      "src": "STANDING AS OF NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.comfort",
+      "text": "KESELESAAN",
+      "src": "COMFORT"
+    },
+    {
+      "key": "rank.cert.service",
+      "text": "PERKHIDMATAN",
+      "src": "SERVICE"
+    },
+    {
+      "key": "rank.cert.class.counter",
+      "text": "KAUNTER",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "rank.cert.class.door",
+      "text": "PINTU",
+      "src": "THE DOOR"
+    },
+    {
+      "key": "rank.cert.class.bench",
+      "text": "MEJA BANCUH",
+      "src": "THE BENCH"
+    },
+    {
+      "key": "rank.cert.class.draught",
+      "text": "PILI",
+      "src": "THE TAPS"
+    },
+    {
+      "key": "rank.cert.class.room",
+      "text": "PREMIS",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "rank.cert.class.market",
+      "text": "PASAR",
+      "src": "THE MARKET"
+    },
+    {
+      "key": "rank.cert.class.book",
+      "text": "BUKU RESIPI",
+      "src": "THE BOOK"
+    },
+    {
+      "key": "rank.tile.ice",
+      "text": "AIS",
+      "src": "ICE"
+    },
+    {
+      "key": "rank.tile.lemon",
+      "text": "PINTALAN LEMON",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "rank.tile.salt",
+      "text": "BIBIR GARAM",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "rank.tile.sugar",
+      "text": "BIBIR GULA",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "rank.tile.door",
+      "text": "KAD PENGENALAN",
+      "src": "ID PAPERS"
+    },
+    {
+      "key": "rank.tile.spoon",
+      "text": "SUDU BAR",
+      "src": "BAR SPOON"
+    },
+    {
+      "key": "rank.tile.olives",
+      "text": "ZAITUN",
+      "src": "OLIVES"
+    },
+    {
+      "key": "rank.tile.mint",
+      "text": "PUDINA",
+      "src": "MINT"
+    },
+    {
+      "key": "rank.tile.line2",
+      "text": "PILI KE-2",
+      "src": "2ND LINE"
+    },
+    {
+      "key": "rank.tile.line3",
+      "text": "PILI KE-3",
+      "src": "3RD LINE"
+    },
+    {
+      "key": "rank.window.no_certificate",
+      "text": "BELUM ADA SIJIL. YANG PERTAMA PADA {stars} BINTANG",
+      "src": "NO CERTIFICATE YET. THE FIRST COMES AT {stars} STARS"
+    },
+    {
+      "key": "rank.strip.new",
+      "text": "BARU",
+      "src": "NEW"
+    },
+    {
+      "key": "rank.strip.tip",
+      "text": "KEDUDUKAN BAR\nKLIK UNTUK LIHAT KEDUDUKAN BAR DAN APA YANG DIBUKA SETIAP TAHAP",
+      "src": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS"
+    }
+  ]
+}

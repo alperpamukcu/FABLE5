@@ -1,0 +1,259 @@
+{
+  "strings": [
+    {
+      "key": "rank.title.r0",
+      "text": "KENNT NOCH KEINER",
+      "src": "NOBODY'S HEARD OF IT"
+    },
+    {
+      "key": "rank.title.r1",
+      "text": "STRASSENGESPRÄCH",
+      "src": "TALK OF THE STREET"
+    },
+    {
+      "key": "rank.title.r2",
+      "text": "BESTE BAR IM VIERTEL",
+      "src": "THE BLOCK'S BEST"
+    },
+    {
+      "key": "rank.title.r3",
+      "text": "STADTGESPRÄCH",
+      "src": "TALK OF THE TOWN"
+    },
+    {
+      "key": "rank.title.r4",
+      "text": "BESTE BAR DER STADT",
+      "src": "THE CITY'S BEST"
+    },
+    {
+      "key": "rank.title.r5",
+      "text": "BESTE BAR IM LAND",
+      "src": "THE COUNTRY'S BEST"
+    },
+    {
+      "key": "rank.title.r6",
+      "text": "BESSER GEHT'S NICHT",
+      "src": "THE BEST THERE IS"
+    },
+    {
+      "key": "rank.window.title",
+      "text": "DIE BAR IST IM KOMMEN",
+      "src": "THE BAR IS GOING PLACES"
+    },
+    {
+      "key": "rank.window.title_again",
+      "text": "WO DIE BAR STEHT",
+      "src": "WHERE THE BAR STANDS"
+    },
+    {
+      "key": "rank.window.from",
+      "text": "VORHER",
+      "src": "WAS"
+    },
+    {
+      "key": "rank.window.to",
+      "text": "JETZT",
+      "src": "NOW"
+    },
+    {
+      "key": "rank.window.new",
+      "text": "NEU HINTER DEM TRESEN",
+      "src": "NEW BEHIND THE BAR"
+    },
+    {
+      "key": "rank.window.nothing_new",
+      "text": "NICHTS NEUES ZUM MIXEN — ABER MAN KENNT DICH HIER",
+      "src": "NOTHING NEW TO POUR — BUT THE ROOM KNOWS YOUR NAME"
+    },
+    {
+      "key": "rank.window.next",
+      "text": "NÄCHSTE STUFE: {stars} STERNE",
+      "src": "NEXT RUNG AT {stars} STARS"
+    },
+    {
+      "key": "rank.window.top",
+      "text": "GANZ OBEN AUF DER LEITER",
+      "src": "THE TOP OF THE LADDER"
+    },
+    {
+      "key": "rank.window.continue",
+      "text": "WEITER",
+      "src": "CONTINUE"
+    },
+    {
+      "key": "rank.unlock.ice_lemon",
+      "text": "EIS UND ZITRONENZESTE AUF DEM TRESEN",
+      "src": "ICE AND A LEMON TWIST ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.door",
+      "text": "DIE TÜR: AUSWEIS LESEN, FÄLSCHUNGEN ERKENNEN, RAUSWERFEN",
+      "src": "THE DOOR: READ THE CARD, CATCH THE FAKES, SHOW THEM OUT"
+    },
+    {
+      "key": "rank.unlock.rims",
+      "text": "SALZ- UND ZUCKERRAND AUF DEM TRESEN",
+      "src": "SALT AND SUGAR RIMS ON THE COUNTER"
+    },
+    {
+      "key": "rank.unlock.spoon",
+      "text": "DER BARLÖFFEL: GERÜHRTE DRINKS",
+      "src": "THE BAR SPOON: STIRRED DRINKS"
+    },
+    {
+      "key": "rank.unlock.jars",
+      "text": "OLIVEN UND MINZE HEUTE IM MARKT",
+      "src": "OLIVES AND MINT IN TONIGHT'S MARKET"
+    },
+    {
+      "key": "rank.unlock.line2",
+      "text": "ZWEITER ZAPFHAHN: EIN ZWEITES FASS IM MARKT",
+      "src": "A SECOND DRAUGHT LINE: A SECOND KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.unlock.line3",
+      "text": "DRITTER ZAPFHAHN: EIN DRITTES FASS IM MARKT",
+      "src": "A THIRD DRAUGHT LINE: A THIRD KEG IN THE MARKET"
+    },
+    {
+      "key": "rank.cert.heading",
+      "text": "EHRENURKUNDE",
+      "src": "CERTIFICATE OF STANDING"
+    },
+    {
+      "key": "rank.cert.known_as",
+      "text": "DIESE BAR GILT FORTAN ALS",
+      "src": "THIS BAR IS HEREBY KNOWN AS"
+    },
+    {
+      "key": "rank.cert.risen_from",
+      "text": "ZUVOR: {title}",
+      "src": "RISEN FROM {title}"
+    },
+    {
+      "key": "rank.cert.meta_climb",
+      "text": "ZUVOR: {title}, NACHT {night}",
+      "src": "RISEN FROM {title}, NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.foot",
+      "text": "VERLIEHEN IN NACHT {night} VON DENEN, DIE HIER TRINKEN",
+      "src": "CONFERRED ON NIGHT {night} BY THE PEOPLE WHO DRINK HERE"
+    },
+    {
+      "key": "rank.cert.foot_again",
+      "text": "STAND: NACHT {night}",
+      "src": "STANDING AS OF NIGHT {night}"
+    },
+    {
+      "key": "rank.cert.comfort",
+      "text": "KOMFORT",
+      "src": "COMFORT"
+    },
+    {
+      "key": "rank.cert.service",
+      "text": "SERVICE",
+      "src": "SERVICE"
+    },
+    {
+      "key": "rank.cert.class.counter",
+      "text": "DER TRESEN",
+      "src": "THE COUNTER"
+    },
+    {
+      "key": "rank.cert.class.door",
+      "text": "DIE TÜR",
+      "src": "THE DOOR"
+    },
+    {
+      "key": "rank.cert.class.bench",
+      "text": "DIE STATION",
+      "src": "THE BENCH"
+    },
+    {
+      "key": "rank.cert.class.draught",
+      "text": "DAS FASSBIER",
+      "src": "THE TAPS"
+    },
+    {
+      "key": "rank.cert.class.room",
+      "text": "DER RAUM",
+      "src": "THE ROOM"
+    },
+    {
+      "key": "rank.cert.class.market",
+      "text": "DER MARKT",
+      "src": "THE MARKET"
+    },
+    {
+      "key": "rank.cert.class.book",
+      "text": "DAS BUCH",
+      "src": "THE BOOK"
+    },
+    {
+      "key": "rank.tile.ice",
+      "text": "EIS",
+      "src": "ICE"
+    },
+    {
+      "key": "rank.tile.lemon",
+      "text": "ZESTE",
+      "src": "LEMON TWIST"
+    },
+    {
+      "key": "rank.tile.salt",
+      "text": "SALZRAND",
+      "src": "SALT RIM"
+    },
+    {
+      "key": "rank.tile.sugar",
+      "text": "ZUCKERRAND",
+      "src": "SUGAR RIM"
+    },
+    {
+      "key": "rank.tile.door",
+      "text": "AUSWEIS",
+      "src": "ID PAPERS"
+    },
+    {
+      "key": "rank.tile.spoon",
+      "text": "BARLÖFFEL",
+      "src": "BAR SPOON"
+    },
+    {
+      "key": "rank.tile.olives",
+      "text": "OLIVEN",
+      "src": "OLIVES"
+    },
+    {
+      "key": "rank.tile.mint",
+      "text": "MINZE",
+      "src": "MINT"
+    },
+    {
+      "key": "rank.tile.line2",
+      "text": "ZAPFHAHN 2",
+      "src": "2ND LINE"
+    },
+    {
+      "key": "rank.tile.line3",
+      "text": "ZAPFHAHN 3",
+      "src": "3RD LINE"
+    },
+    {
+      "key": "rank.window.no_certificate",
+      "text": "NOCH KEINE URKUNDE. DIE ERSTE AB {stars} STERNEN",
+      "src": "NO CERTIFICATE YET. THE FIRST COMES AT {stars} STARS"
+    },
+    {
+      "key": "rank.strip.new",
+      "text": "NEU",
+      "src": "NEW"
+    },
+    {
+      "key": "rank.strip.tip",
+      "text": "DER RANG DER BAR\nKLICKEN: WO SIE STEHT UND WAS JEDE STUFE ÖFFNET",
+      "src": "THE BAR'S RANK\nCLICK TO SEE WHERE IT STANDS AND WHAT EACH RUNG OPENS"
+    }
+  ]
+}

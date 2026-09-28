@@ -17,12 +17,11 @@ namespace LastCall.Game
         public static bool HasPage => !string.IsNullOrEmpty(Page);
 
         /// <summary>
-        /// THE STEAM APP ID (2026-09-28). Zero until the app exists on Steamworks; while it is zero the Steam
-        /// assembly never starts Steam, so the editor does not show the author as playing Spacewar and a build
-        /// keeps its achievements on disk alone. The day the app is created: this number, the same number in
-        /// steam_appid.txt at the project root (the editor's test runs), and Docs/steam/STEAMWORKS_SETUP.md.
+        /// THE STEAM APP ID (2026-09-28): "Malibu Club: Cocktail Bar Simulator (5336380)" on Steamworks. The same
+        /// number stands in steam_appid.txt at the project root, which is what lets the editor (and a build
+        /// started outside Steam, with the file beside it) talk to Steam at all. Zero would keep Steam off.
         /// </summary>
-        public const uint SteamAppId = 0;
+        public const uint SteamAppId = 5336380;
 
         public static void Open()
         {

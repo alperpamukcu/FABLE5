@@ -137,6 +137,10 @@ namespace LastCall.UI
             Toast(UIText.T("chrome.toast.perfect_pour",
                     ("recipe", UIText.Caps(UIText.Data("recipe", recipe.Id, "name", recipe.Name)))),
                 BkPlatinum, 3.4f);
+            // ...and a moment on Steam's recording (StoreTimeline): the first perfect pour of a page is worth a clip.
+            StoreTimeline.Moment(UIText.Data("recipe", recipe.Id, "name", recipe.Name),
+                UIText.T("chrome.toast.perfect_pour", ("recipe", UIText.Caps(UIText.Data("recipe", recipe.Id, "name", recipe.Name)))),
+                "steam_checkmark", 70, true);
             Sfx.Play("cheer_sfx", 0.5f);
             RefreshBookBadge();
         }

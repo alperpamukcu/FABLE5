@@ -170,6 +170,3 @@ Tools/social/state/
 
 # the Steamworks kit's output: regenerated from the data by Tools/steamworks/achievements_kit.py
 /Tools/steamworks/out/
-# Steamworks.NET writes the test App ID (480) here on import; the game ignores it until StoreLink.SteamAppId
-# is set (Docs/STEAMWORKS.md), and the real one is committed that day
-/steam_appid.txt

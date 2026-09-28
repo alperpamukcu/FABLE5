@@ -35,6 +35,18 @@ namespace LastCall.Game
         /// <summary>How often a ledger with news on it is written and sent, when nothing was unlocked.</summary>
         private const float WriteEvery = 30f;
 
+        /// <summary>
+        /// THE LEADERBOARDS (2026-09-28, the Steamworks feature list's "Sıralama Listeleri"): the personal bests worth
+        /// holding up against friends', each kept at its best on Steam. Board API name → the lifetime stat it carries;
+        /// Steam creates a board the first time a score is sent to it (its community name is set on Steamworks).
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string> Leaderboards = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "LONGEST_RUN", Stats.LongestRun },         // nights one bar stayed open
+            { "BIGGEST_TILL", Stats.BestTill },          // dollars in the till at a night's close
+            { "BEST_NIGHT_TIPS", Stats.BestNightTips },  // dollars of tips in one night
+        };
+
         /// <summary>An achievement was earned just now.</summary>
         public static event Action<AchievementDefinition> Unlocked;
         /// <summary>A count crossed one of its progress marks (a quarter, a half, one more of a set).</summary>
@@ -105,7 +117,12 @@ namespace LastCall.Game
                 s_dirty = true;
                 var store = StorePlatform.Current;
                 if (store != null)
-                    foreach (var b in bumps) store.SetStat(b.Stat, ledger.Stat(b.Stat));
+                    foreach (var b in bumps)
+                    {
+                        store.SetStat(b.Stat, ledger.Stat(b.Stat));
+                        foreach (var board in Leaderboards)
+                            if (board.Value == b.Stat) store.SubmitScore(board.Key, ledger.Stat(b.Stat));
+                    }
                 if (news.Unlocked.Count > 0)
                 {
                     string now = Now();
@@ -156,6 +173,8 @@ namespace LastCall.Game
             string now = Now();
             foreach (var a in ledger.Reconcile().Unlocked) s_earnedAt[a.Id] = now;
             foreach (var kv in ledger.AllStats) store.SetStat(kv.Key, kv.Value);
+            foreach (var board in Leaderboards)
+                if (ledger.Stat(board.Value) > 0) store.SubmitScore(board.Key, ledger.Stat(board.Value));
             foreach (var a in ledger.Book)
                 if (ledger.IsUnlocked(a.Id)) store.Unlock(a.Id);
             store.Commit();
