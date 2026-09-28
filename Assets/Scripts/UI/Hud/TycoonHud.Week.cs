@@ -105,9 +105,8 @@ namespace LastCall.UI
             tip.pivot = new Vector2(0.5f, 0.5f);
             tip.sizeDelta = new Vector2(4f, 8f);
             tip.anchoredPosition = new Vector2(0f, -HookPointY);
-            tip.localScale = new Vector3(1f, -1f, 1f);
             var ti = tip.gameObject.AddComponent<Image>();
-            ti.sprite = ChromeArt.SpikeTip();
+            ti.sprite = ChromeArt.SpikeTip(pointDown: true);
             ti.raycastTarget = false;
             if (ti.sprite == null) ti.color = UITheme.Graphite[4];
 

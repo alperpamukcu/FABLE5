@@ -4448,15 +4448,16 @@ namespace LastCall.UI
             return Cache[Key] = Paint(rows, c => c == 'L' ? lit : c == 'B' ? body : c == 'D' ? dark : (Color32?)null);
         }
 
-        /// <summary>The hook's point, 2x4, drawn point UP (the caller flips it to hang point down): the lit side and
-        /// the shade, the shaft's own two strips.</summary>
-        public static Sprite SpikeTip()
+        /// <summary>The hook's point, 2x4: the lit side and the shade, the shaft's own two strips, narrowing to the
+        /// point. Drawn point up, or - <paramref name="pointDown"/>, as the week's hook hangs it - the same rows read
+        /// bottom to top, so no negative scale ever stands in for the flip.</summary>
+        public static Sprite SpikeTip(bool pointDown = false)
         {
-            const string Key = "hook:tip";
-            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
-            string[] rows = { "L.", "LD", "LD", "LD" };
+            string key = pointDown ? "hook:tip:down" : "hook:tip";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            string[] rows = pointDown ? new[] { "LD", "LD", "LD", "L." } : new[] { "L.", "LD", "LD", "LD" };
             Color32 lit = UITheme.Graphite[4], dark = UITheme.Graphite[2];
-            return Cache[Key] = Paint(rows, c => c == 'L' ? lit : c == 'D' ? dark : (Color32?)null);
+            return Cache[key] = Paint(rows, c => c == 'L' ? lit : c == 'D' ? dark : (Color32?)null);
         }
 
         /// <summary>
