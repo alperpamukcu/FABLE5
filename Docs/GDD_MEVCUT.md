@@ -1895,6 +1895,32 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.132 · Ana menüde bardaklar yerine barın kendi şişeleri geziyor (2026-09-28)
+
+Yazar: “Başlangıç menüsünde artık arkada uçan bardaklar değil yeni alkol şişelerimiz gezsin.”
+
+- **Hangi şişeler** (`TycoonHud.FillMenuDrift`): katalogdaki bütün alkollü şişeler — açılış rafı
+  (`Shelf`) ile marketin kataloğu (`CatalogueBottles`) birlikte, bugün 24. Bira ve alkolsüzler (kola, tonik,
+  soda, zencefil, şurup, grenadin, meyve suları: `Abv` 0) dışarıda; `Abv` burada yalnız bir resim süzgeci,
+  hiçbir kurala girmez. Şişeler tarif defterindeki gibi DOLU çizilir (`ItemArt.BottleFull`, mahzen
+  plakaları), yani yeniden çizilen bir şişe sevk edildiği gün menüde de görünür.
+- **Nasıl geziyor**: logo ile tuşların kapladığı orta blok her gösterimde ölçülür (dil ve STEAM tuşu genişliği
+  değiştirir); şişeler bu bloğun iki yanındaki şeritlerde, yanda beş, üçer sütunda yukarı süzülür. Her yan tek
+  hızda (15 / 16,5 birim/sn) — bir şeridin beşi açılıştaki eşit aralığı (şeridin beşte biri) korur, kümelenmez,
+  birbirini geçmez; salınım ve eğim her şişenin kendi. Üstten çıkan şişe alttan BAŞKA bir şişe olarak girer:
+  dağıtıcı raftaki sıradaki, ekranda olmayan şişeyi verir; sütun, hemen üstündeki şişenin kullanmadığı bir
+  sütun olur. Aşağı yukarı 4,6 sn'de bir şişe girer, bütün raf iki buçuk dakikada bir döner.
+- **Neden yan şeritler**: ilk denemede şişeler bütün alana dağılıyordu ve tuşların aralarından
+  görünüyordu (LANGUAGE ile CREDITS arası); orta blok ekranın ortasını logodan küçük sıraya kadar kaplıyor,
+  şişenin görünebileceği yer iki yan. Arayüz doğrusal renk uzayında karıştığı için saydamlık sayısından güçlü
+  okunur: 0,45 şişeyi aşağı yukarı üçte iki gösteriyor (ölçüldü), bardakların 0,13'ü de gözle ~0,35'ti.
+- **Hareket**: her şey saatin aritmetiği (RunRng'ye dokunulmaz); her gösterim aynı dizilmiş kareden başlar,
+  azaltılmış harekette o karede durur.
+- Ölçüldü (r256): süzülme 0,25 sn adımlarla on dakika yürütüldü — üst üste binme 0, ekranda aynı şişe iki kez
+  0, aynı sütundaki en yakın iki şişe 376 birim. Menü görüntü testinin referansı (`menu.png`) yeniden
+  onaylandı: test bölgesi orta blok olduğu için şişeler oraya girmiyor, resim f4'ün yeni plakalarından
+  bağımsız. EditMode 791/791, PlayMode 15/15.
+
 ### 9.131 · Ev sahibi konuşurken gece durur (2026-09-27)
 
 Yazar: “Konuşmalar yaşanırken zaman ilerlememeli, yeni insanlar gelmemeli.” Ders plakası açıkken gece
