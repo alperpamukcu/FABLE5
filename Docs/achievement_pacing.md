@@ -6,7 +6,7 @@ never learns, and goes bankrupt young — so a late achievement it does not reac
 early one it does not reach is a design bug. Nights are counted from 1; a bar's night is the
 one whose books just closed (the market comes before, so purchases count on their own night).
 
-Nights played p25/median/p75: 18 / 22 / 22.
+Nights played p25/median/p75: 17 / 21 / 22.
 Longest run of nights with nothing earned, p25/median/p75: 2 / 4 / 5.
 
 ## How many land on each night
@@ -14,29 +14,29 @@ Longest run of nights with nothing earned, p25/median/p75: 2 / 4 / 5.
 | night | bars still open | unlocks per open bar | earned by then (per bar) |
 |--:|--:|--:|--:|
 | 1 | 200 | 3.03 | 3.03 |
-| 2 | 200 | 1.71 | 4.74 |
-| 3 | 200 | 1.04 | 5.78 |
-| 4 | 200 | 2.43 | 8.20 |
-| 5 | 200 | 1.85 | 10.05 |
-| 6 | 200 | 1.77 | 11.82 |
-| 7 | 200 | 1.66 | 13.48 |
-| 8 | 200 | 0.96 | 14.44 |
-| 9 | 200 | 1.05 | 15.49 |
-| 10 | 200 | 0.76 | 16.25 |
-| 11 | 200 | 1.13 | 17.37 |
-| 12 | 200 | 1.28 | 18.65 |
-| 13 | 200 | 0.23 | 18.88 |
-| 14 | 200 | 0.20 | 19.08 |
-| 15 | 200 | 0.67 | 19.74 |
-| 16 | 200 | 0.65 | 20.39 |
-| 17 | 191 | 0.30 | 20.68 |
-| 18 | 150 | 0.19 | 20.83 |
-| 19 | 134 | 0.07 | 20.88 |
-| 20 | 128 | 0.10 | 20.94 |
-| 21 | 122 | 0.23 | 21.08 |
-| 22 | 101 | 0.78 | 21.48 |
-| 23 | 29 | 0.83 | 21.60 |
-| 24 | 6 | 2.00 | 21.66 |
+| 2 | 200 | 1.96 | 4.99 |
+| 3 | 200 | 0.99 | 5.97 |
+| 4 | 200 | 2.41 | 8.38 |
+| 5 | 200 | 1.71 | 10.09 |
+| 6 | 200 | 1.79 | 11.88 |
+| 7 | 200 | 1.70 | 13.57 |
+| 8 | 200 | 0.94 | 14.51 |
+| 9 | 200 | 1.10 | 15.61 |
+| 10 | 200 | 0.71 | 16.32 |
+| 11 | 200 | 1.07 | 17.39 |
+| 12 | 200 | 1.32 | 18.71 |
+| 13 | 200 | 0.25 | 18.96 |
+| 14 | 200 | 0.22 | 19.17 |
+| 15 | 200 | 0.68 | 19.85 |
+| 16 | 200 | 0.63 | 20.48 |
+| 17 | 189 | 0.33 | 20.79 |
+| 18 | 142 | 0.20 | 20.93 |
+| 19 | 126 | 0.06 | 20.97 |
+| 20 | 121 | 0.09 | 21.03 |
+| 21 | 115 | 0.23 | 21.16 |
+| 22 | 94 | 0.71 | 21.49 |
+| 23 | 29 | 0.97 | 21.63 |
+| 24 | 2 | 2.00 | 21.65 |
 
 ## Each achievement
 
@@ -55,26 +55,26 @@ Longest run of nights with nothing earned, p25/median/p75: 2 / 4 / 5.
 | TALK_OF_THE_STREET | week | Talk of the Street | 200 of 200 (100.00%) | 9 / 10 / 10 |
 | SIX_NIGHTS | week | Six Nights a Week | 200 of 200 (100.00%) | 6 / 6 / 6 |
 | THE_USUAL | week | The Usual | 200 of 200 (100.00%) | 2 / 2 / 3 |
-| A_WEEKS_WORK | week | A Week's Work | 196 of 200 (98.00%) | 3 / 3 / 4 |
-| THE_BLOCKS_BEST | early | The Block's Best | 76 of 200 (38.00%) | 12 / 13 / 14 |
-| NOT_TONIGHT | early | Not Tonight | 66 of 200 (33.00%) | 14 / 15 / 16 |
+| A_WEEKS_WORK | week | A Job Well Done | 200 of 200 (100.00%) | 3 / 3 / 4 |
+| THE_BLOCKS_BEST | early | The Block's Best | 82 of 200 (41.00%) | 12 / 13 / 13 |
+| NOT_TONIGHT | early | Not Tonight | 69 of 200 (34.50%) | 14 / 15 / 16 |
 | HUNDRED_CLUB | early | Hundred Club | 200 of 200 (100.00%) | 11 / 11 / 11 |
 | TIP_JAR | early | Tip Jar | 200 of 200 (100.00%) | 15 / 15 / 16 |
-| CLEAN_SHEET | early | Clean Sheet | 196 of 200 (98.00%) | 8 / 9 / 9 |
-| TWO_MORE_STOOLS | early | Two More Stools | 200 of 200 (100.00%) | 7 / 7 / 8 |
+| CLEAN_SHEET | early | Clean Sheet | 195 of 200 (97.50%) | 8 / 9 / 9 |
+| TWO_MORE_STOOLS | early | Two More Stools | 200 of 200 (100.00%) | 7 / 7 / 7 |
 | A_FORTNIGHT_OPEN | early | A Fortnight Open | 200 of 200 (100.00%) | 12 / 12 / 12 |
-| LAST_ORDERS | early | Last Orders | 200 of 200 (100.00%) | 18 / 22 / 22 |
-| CONFIDANT | early | Confidant | 174 of 200 (87.00%) | 8 / 10 / 14 |
+| LAST_ORDERS | early | Last Orders | 200 of 200 (100.00%) | 17 / 21 / 22 |
+| CONFIDANT | early | Confidant | 169 of 200 (84.50%) | 8 / 10 / 14 |
 | TALK_OF_THE_TOWN | mid | Talk of the Town | 0 of 200 (0.00%) | — |
 | STIRRED_NOT_SHAKEN | mid | Stirred, Not Shaken | 0 of 200 (0.00%) | — |
 | WELL_READ | mid | Well Read | 0 of 200 (0.00%) | — |
-| DOWN_TO_THE_DROP | mid | Down to the Drop | 16 of 200 (8.00%) | 17 / 20 / 22 |
+| DOWN_TO_THE_DROP | mid | Down to the Drop | 12 of 200 (6.00%) | 16 / 17 / 17 |
 | THE_CITYS_BEST | mid | The City's Best | 0 of 200 (0.00%) | — |
 | SEEN_THEM_ALL | mid | Seen Them All | 1 of 200 (0.50%) | 16 / 16 / 16 |
 | BIG_NIGHT | mid | Big Night | 0 of 200 (0.00%) | — |
 | TAPMASTER | mid | Tapmaster | 0 of 200 (0.00%) | — |
 | THE_BOUNCER | mid | The Bouncer | 0 of 200 (0.00%) | — |
-| FOUR_WEEKS_OPEN | mid | Four Weeks Open | 6 of 200 (3.00%) | 24 / 24 / 24 |
+| FOUR_WEEKS_OPEN | mid | Four Weeks Open | 2 of 200 (1.00%) | 24 / 24 / 24 |
 | NIGHT_OWL | mid | Night Owl | 0 of 200 (0.00%) | — |
 | FIVE_HUNDRED_POURS | mid | Five Hundred Pours | 0 of 200 (0.00%) | — |
 | DISH_PIG | mid | Dish Pig | 0 of 200 (0.00%) | — |

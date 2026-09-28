@@ -1979,6 +1979,9 @@ sanat tasarımını oyuna ekle." İncelenen spesifikasyonun on iki açık sorusu
   `The_nights_tape_adds_up_and_the_way_on_waits_for_it` (iki blok alt toplamına ve Core'un
   `DayIncome`/`DayExpenses`'ına eşit, KASA kasaya, walk-out satırı yalnız ücret varsa, koçan şeritteyken CONTINUE
   hiç yok) ve `Reduced_motion_lays_the_night_out_at_once`. EditMode: `QuestChainTests.TheDawnsPayIsAskedBeforeTheDawn`.
+- **Doğrulama:** EditMode 853/853, PlayMode 18/18 (sepet, tezgâh, menü görüntü testleri değişmedi). Oyunda
+  ölçüldü (boş gece, REZALET damgası): şerit 456 genişlikte, gösteri CONTINUE'ya kadar yürüdü, koçan pazartesi
+  biletine asıldı, YARIN panosunda ev sahibesinin işi. `Economy Projection` yeniden koşuldu, tablolar değişmedi.
 - **Sonraki tur:** Pazar baskısı (kanca hazır: `NightBeat.Edition`, `WeekClosesTonight`, `WeekNights`, tek çıkış).
 
 ### 9.134 · Roxy ve görev zinciri: haftalık iş gitti, yazılı sıra geldi (2026-09-27)
@@ -2095,9 +2098,12 @@ haftalık işin silinmesi (2026-09-28).
   Done" onun ödemesinden beslenir, kitapsız barda kazanılamazdı); onun ödemesini kendi satırında ("Hostess's
   pay for finished jobs"), devletin teşekkürünü ayrı yazar (eskiden haftalık işin parası teşekkürün içinde saklanıyordu); zincir
   için verilen / biten / atlanan (medyan), id başına atlama, 10/20/30. gecede kitaptaki satır ve her görevin ilk
-  bittiği gece. **Henüz koşulmadı.** Beklenen: taban bot `steady_hands`'te takılır (kusursuz yapım oranı ~%0);
-  bunun etrafında ayar yapılmaz, takılma histogramı yazılır. `EconomyProjection` onun ödemesini modellemez
-  (`Docs/ECONOMY_2026-09-23.md`).
+  bittiği gece. **Koşuldu (2026-09-28, 200 koşu):** taban bot ilk işi 200/200 bitiriyor (3. gece, p25/medyan/p75
+  3/3/4), sonra 200/200 `steady_hands`'te duruyor (kusursuz yapım 12 / 41.657 servis). Onun ödemesi $2.400 (gelirin
+  %0,8), devletin teşekkürü $1.700 (%0,6). Haftalık iş bota daha çok ödüyordu (eski satır: teşekkür + iş $6.184,
+  %2,0): medyan hayatta kalma 22 → 21 gece. Bunun etrafında ayar yapılmadı; taban bot kusursuz döküm yapmıyor,
+  oyuncu yapıyor. `EconomyProjection` onun ödemesini modellemez (`Docs/ECONOMY_2026-09-23.md`; yeniden koşuldu,
+  tablolar değişmedi).
 - **Yazarın açık kararları** (varsayılan seçildi, hiçbiri bloklamıyor): takılan görev (süre sınırı yok; hiç kusursuz
   döküm yapamayan oyuncu 2. görevde kalır), ikinci görev olarak `perfect`, sabit dolar ödüller, işareti ve "ON IT",
   derslerin yalnız plakada kalması (yürüyüşsüz), hızlı tırmanan barın `rank` görevlerini sessizce atlaması, yaşı ve
@@ -2105,11 +2111,15 @@ haftalık işin silinmesi (2026-09-28).
 - **Başarım da taşındı (§9.133):** `A_WEEKS_WORK` ödenen haftalık işi sayıyordu; `Stats.JobsDone` artık
   `PayForTheQuest`'te artıyor. Adı ve tarifi "A Job Well Done — Finish a job for the hostess." (29 dilde; metinde
   isim yok). Kimlik ve sayaç adı (`jobs_done`) aynı kaldı: Steamworks henüz kurulmadı, dil anahtarları kimliğe bağlı.
-  İlk iş 1. gecenin kapanışında veriliyor, en erken 2. gece bitiyor; "week" katmanı yerinde, `Achievement Pacing`
-  yeniden koşulmadı.
+  İlk iş 1. gecenin kapanışında veriliyor, en erken 2. gece bitiyor; "week" katmanı yerinde. `Achievement Pacing`
+  200 barla yeniden koşuldu: 200/200 kazanıyor, p25/medyan/p75 3/3/4. gece (haftalık işle 196/200 idi).
 - Doğrulama (bu ağaçta, editörsüz): altı derleme birimi (Core, Game, UI, Editor, Tests, PlayTests) derleniyor; saf
   Core EditMode testleri 480/480 (inceleme düzeltmeleriyle 485/485); `check_tables` ve 28 dilin `check_parts`'ı
-  0 hata; `merge_fragments --check` geçti. Unity içindeki EditMode/PlayMode takımları bu bölüm yazılırken koşulmadı.
+  0 hata; `merge_fragments --check` geçti. Editörde (2026-09-28, gecenin gösterisiyle birlikte, §9.135): EditMode
+  853/853, PlayMode 18/18 (üç yeni test dahil; görüntü testleri değişmedi). Oyunda ölçüldü: 1. gecenin kapanışında
+  geliyor, plaka onun adıyla konuşuyor, gece duruyor, ON IT işi veriyor ve çıkıp gidiyor; balon kapalıyken tek
+  satır (266×30, sol üst 16/60), üstüne gelince 380×156 açılıyor. Oyunda görülen "Make me 3 Gin Sour" satırı
+  düzeltildi: içki adı çoğul almadığı için sayılan satırlar artık tur sayıyor ("3 rounds of Gin Sour").
 
 ### 9.133 · Steam entegrasyonu: 48 başarım, yaşam boyu sayaçlar, durum satırı, Steam dili (2026-09-28)
 
