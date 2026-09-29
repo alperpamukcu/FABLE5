@@ -15,6 +15,13 @@ namespace LastCall.UI
     // top of the screen whenever what she points at is in the lower half (the counter, the cellar, a bench), so it never
     // covers the thing it asks for; it takes no clicks but its own two keys. What Core cannot see (a card put away, the
     // cellar open, the lid on, the book open or shut) is reported to it here, once a frame, for the step on screen only.
+    //
+    // 2026-09-29, the author: "Öğreticide göstergeler daha animasyonlu olmalı, göstergede eğer bir şey işaret ediliyorsa
+    // sadece onunla etkileşime geçilmeli." The light breathes now - corner brackets that open and close, a ring that
+    // runs out from what she wants done, a pointer that bounces - a drag step shows a hand carrying the thing to where it
+    // goes, and while something is pointed at, nothing else on the screen takes a click (TourShade) or a book or cellar
+    // key. The first-use lessons (a door, a shake, a stir, a garnish, a rim) ride the same plate and the same light,
+    // without her walk-on: they come up in the middle of work.
     public sealed partial class TycoonHud
     {
         /// <summary>The house tour is on the screen: an open night whose tour is running.</summary>
@@ -50,7 +57,7 @@ namespace LastCall.UI
                 if (_plateScript.Count == 0) _plateScript.Add((host.Name, LookForStory(host)?.Slug, ""));
             }
             DockPlateForTour(true);
-            bool standing = _hostessBeat == HostessBeat.Talk || _hostessView == null || _hostessView.Look == null;
+            bool standing = TourSpeakerStanding(run);
             if (standing != _plate.gameObject.activeSelf) _plate.gameObject.SetActive(standing);
             if (!standing) return;
 
@@ -67,7 +74,7 @@ namespace LastCall.UI
             if (keyUp) _plateKeyLabel.text = UIText.T("chrome.story.go_on");
             if (!_plateNoKey.gameObject.activeSelf) _plateNoKey.gameObject.SetActive(true);
             var noLabel = _plateNoKey.Find("Face/Label")?.GetComponent<Text>();
-            if (noLabel != null) noLabel.text = UIText.T("chrome.tour.skip");
+            if (noLabel != null) noLabel.text = UIText.T(run.TourIsHouse ? "chrome.tour.skip" : "chrome.tour.skip_lesson");
             if (_gateRow.gameObject.activeSelf) _gateRow.gameObject.SetActive(false);
             if (_postIt.gameObject.activeSelf) _postIt.gameObject.SetActive(false);
         }
@@ -98,7 +105,12 @@ namespace LastCall.UI
         private string FillTourLine(TycoonRun run, string line)
         {
             if (string.IsNullOrEmpty(line)) return line;
-            var guest = run.TourGuest;
+            var guest = run.TourFocus;
+            if (line.Contains("{garnish}"))
+            {
+                var g = run.TourGarnish;
+                line = line.Replace("{garnish}", g != null ? UIText.T("advice.garnish." + g.Id) : "");
+            }
             if (line.Contains("{drink}"))
             {
                 string drink = "";
@@ -173,6 +185,8 @@ namespace LastCall.UI
                 case TourWait.OnTheCounter: seen = (_flow == null || !_flow.IsOpen) && run.DrinkReady; break;
                 case TourWait.BookOpen: seen = _bookOpen; break;
                 case TourWait.BookShut: seen = !_bookOpen; break;
+                case TourWait.RecipeShown: seen = _idRecipeTip != null && _idRecipeTip.gameObject.activeInHierarchy; break;
+                case TourWait.RecipePinned: seen = _note != null && _note.gameObject.activeSelf; break;
                 default: return;
             }
             if (seen) run.TourSaw(step.Wait);
@@ -181,8 +195,6 @@ namespace LastCall.UI
         // ── the spotlight ────────────────────────────────────────────────────────────────────────────────────────────
 
         private RectTransform _tourSpot;                  // full screen, its own canvas; takes no clicks
-        private readonly Image[] _tourDim = new Image[4];
-        private readonly Image[] _tourFrame = new Image[4];
         private RectTransform _tourArrow;
         private bool _tourSpotOn;
         private Rect _tourHole;                            // where the light is now, in the spot's own (centred) space
@@ -212,17 +224,27 @@ namespace LastCall.UI
             if (!TourUp(run)) { HideTourSpot(); return; }   // that report was the last thing it waited for
             RememberTourSeat(run);
             var step = run.TourStep;
-            bool standing = _hostessBeat == HostessBeat.Talk || _hostessView == null || _hostessView.Look == null;
-            if (!standing || !TourTargetRect(run, step.Point, out Rect hole)) { HideTourSpot(); return; }
-            ShowTourSpot(hole, step.Point, step.Wait == TourWait.Heard);
+            if (!TourSpeakerStanding(run) || !TourTargetRect(run, step.Point, out Rect hole)) { HideTourSpot(); return; }
+            Rect to = default;
+            bool drag = !string.IsNullOrEmpty(step.To) && TourTargetRect(run, step.To, out to);
+            ShowTourSpot(hole, step.Point, step.Wait == TourWait.Heard, drag, to);
         }
+
+        /// <summary>Her plate is up: the house tour waits for her to reach her mark, a lesson is said where the work is.</summary>
+        private bool TourSpeakerStanding(TycoonRun run) =>
+            !run.TourIsHouse || _hostessBeat == HostessBeat.Talk || _hostessView == null || _hostessView.Look == null;
 
         private void RememberTourSeat(TycoonRun run)
         {
-            if (run.TourGuest == null) return;
+            var focus = run.TourFocus;
+            if (focus == null) return;
             for (int i = 0; i < _seats.Count; i++)
-                if (_seats[i].Visit == run.TourGuest) { _tourSeat = i; return; }
+                if (_seats[i].Visit == focus) { _tourSeat = i; return; }
         }
+
+        /// <summary>While something is pointed at, the book's and the cellar's keys do nothing - unless the book or the
+        /// cellar is the thing (UpdateHotkeys asks).</summary>
+        private bool TourLetsTheKey(string point) => !_tourSpotOn || _tourPointFor == point;
 
         /// <summary>Where a step's point is on the screen this frame, in the spot's own space; false when it is not there
         /// to be shown (a bench that is not out, a guest not seated yet, a glass already carried off).</summary>
@@ -247,7 +269,27 @@ namespace LastCall.UI
                 case "guest": return seat != null && seat.Visit != null && RectOf(seat.Root, out rect);
                 case "patience": return seat != null && seat.Visit != null && RectOf(seat.Gauge, out rect);
                 case "dirty_glass": return seat != null && RectOf(seat.DirtyProp, out rect);
-                case "card": return _idRoot != null && _idRoot.gameObject.activeSelf && RectOf(_idCardRt, out rect);
+                case "card": return CardUp && RectOf(_idCardRt, out rect);
+                case "card_order": return CardUp && RectOf(_idOrderBox, out rect);
+                case "recipe_card": return CardUp && RectOf(_idRecipeTip, out rect);
+                case "pin_key": return CardUp && RectOf(Under(_idRecipeTip, "PinKey"), out rect);
+                case "card_age": return CardUp && RectOf(Under(_idCardRt, "Box_Age") ?? _idAge?.rectTransform, out rect);
+                case "card_flag": return CardUp && RectOf(_idFlagBox, out rect);
+                case "card_kick": return CardUp && RectOf(_idKick, out rect);
+                case "sink": return RectOf(SinkDoor(), out rect);
+                case "mark":
+                {
+                    if (seat == null) return false;
+                    foreach (var m in seat.Marks)
+                        if (m.Mess != null && m.Mess.Smudged && RectOf(m.Prop, out rect)) return true;
+                    return false;
+                }
+                case "garnish":
+                {
+                    var g = run.TourGarnish;
+                    var dish = g != null && _prepProps != null ? _prepProps.Find(d => d.Id == g.Id) : null;
+                    return dish != null && RectOf(dish.Rt, out rect);
+                }
                 case "cellar": return RectOf(FoundByName("ShutterDoor"), out rect);
                 case "bottle":
                 {
@@ -341,6 +383,26 @@ namespace LastCall.UI
             corners[3] = target.TransformPoint(new Vector3(hi.x, lo.y, 0f));
         }
 
+        private bool CardUp => _idRoot != null && _idRoot.gameObject.activeSelf;
+
+        private static RectTransform Under(RectTransform root, string name)
+        {
+            if (root == null) return null;
+            foreach (var rt in root.GetComponentsInChildren<RectTransform>(false))
+                if (rt.name == name) return rt;
+            return null;
+        }
+
+        /// <summary>The sink's hit plate (the prop door whose fixture is a sink: sink_old, counter_sink, sink_brass...).</summary>
+        private RectTransform SinkDoor()
+        {
+            var taps = FoundByName("TapDoors");
+            if (taps == null) return null;
+            foreach (var rt in taps.GetComponentsInChildren<RectTransform>(false))
+                if (rt.name.StartsWith("PropDoor_", System.StringComparison.Ordinal) && rt.name.Contains("sink")) return rt;
+            return null;
+        }
+
         /// <summary>A named piece of the room the HUD holds no field for (the cellar's shutter, the tap's plate), found once
         /// and kept while it lives.</summary>
         private RectTransform FoundByName(string name, bool prefix = false)
@@ -366,11 +428,20 @@ namespace LastCall.UI
             var canvas = _tourSpot.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = TourSpotOrder;
-            for (int i = 0; i < 4; i++)
-            {
-                _tourDim[i] = NewSpotImage("Dim" + i, UITheme.Night[0]);
-                _tourFrame[i] = NewSpotImage("Frame" + i, UITheme.Amber[3]);
-            }
+            _tourSpot.gameObject.AddComponent<GraphicRaycaster>();   // the shade takes the clicks it blocks
+
+            var shadeRt = NewRect("Shade", _tourSpot);
+            shadeRt.anchorMin = Vector2.zero;
+            shadeRt.anchorMax = Vector2.one;
+            shadeRt.offsetMin = shadeRt.offsetMax = Vector2.zero;
+            shadeRt.gameObject.AddComponent<CanvasRenderer>();
+            _tourShade = shadeRt.gameObject.AddComponent<TourShade>();
+            _tourShade.color = UITheme.Night[0];
+
+            for (int i = 0; i < _tourBrackets.Length; i++) _tourBrackets[i] = NewSpotImage("Bracket" + i, UITheme.Amber[3]);
+            for (int i = 0; i < _tourToBrackets.Length; i++) _tourToBrackets[i] = NewSpotImage("ToBracket" + i, UITheme.Cyan[3]);
+            for (int i = 0; i < _tourRipple.Length; i++) _tourRipple[i] = NewSpotImage("Ripple" + i, UITheme.Amber[4]);
+
             _tourArrow = NewRect("Pointer", _tourSpot);
             _tourArrow.anchorMin = _tourArrow.anchorMax = new Vector2(0.5f, 0.5f);
             _tourArrow.pivot = new Vector2(1f, 0.5f);   // the point of the arrow is its right edge
@@ -380,6 +451,16 @@ namespace LastCall.UI
             arrow.color = UITheme.Amber[4];
             arrow.preserveAspect = true;
             arrow.raycastTarget = false;
+
+            // The drag hand: the player's own pointer art, carrying the thing from where it is to where it goes.
+            _tourHand = NewRect("Hand", _tourSpot);
+            _tourHand.anchorMin = _tourHand.anchorMax = new Vector2(0.5f, 0.5f);
+            _tourHand.pivot = new Vector2(3f / 32f, 1f - 1f / 32f);   // the fingertip, CursorSkin's own hotspot
+            _tourHand.sizeDelta = new Vector2(32f, 32f);
+            _tourHandImg = _tourHand.gameObject.AddComponent<Image>();
+            _tourHandImg.raycastTarget = false;
+            _tourHand.gameObject.SetActive(false);
+
             _tourSpot.gameObject.SetActive(false);
             UiAuditExempt.Mark(_tourSpot, "the tour's light follows whatever she is pointing at, not a fixed place");
         }
@@ -395,18 +476,31 @@ namespace LastCall.UI
             return img;
         }
 
-        /// <summary>Lifts <paramref name="target"/> out of the room: the rest dimmed (harder while she is only talking,
-        /// lighter while the player works), a pulsing brass frame round it and the pointer beside it, pointing in from
-        /// the side nearer the middle of the screen. A new target is glided to; reduced motion snaps and holds still.</summary>
-        private void ShowTourSpot(Rect target, string point, bool talking)
+        private TourShade _tourShade;
+        private readonly Image[] _tourBrackets = new Image[8], _tourToBrackets = new Image[8], _tourRipple = new Image[4];
+        private RectTransform _tourHand;
+        private Image _tourHandImg;
+        private float _tourStepShownAt;
+        private readonly List<Rect> _tourHoles = new List<Rect>(2);
+        private const float BracketArm = 12f, BracketW = 2f;
+
+        /// <summary>
+        /// Lifts <paramref name="target"/> out of the room: the rest dimmed (harder while she is only talking, lighter
+        /// while the player works) and taking no clicks, brass corner brackets that breathe round it, a ring that runs
+        /// out from it while it waits for the player, and the pointer bouncing in from the side nearer the middle of the
+        /// screen. A DRAG step lights where the thing goes too (cyan brackets) and shows a hand carrying it there. A new
+        /// target is glided to; reduced motion snaps and holds everything still.
+        /// </summary>
+        private void ShowTourSpot(Rect target, string point, bool talking, bool drag, Rect to)
         {
             EnsureTourSpot();
-            target = Rect.MinMaxRect(target.xMin - TourPad, target.yMin - TourPad, target.xMax + TourPad, target.yMax + TourPad);
+            target = Pad(target);
             if (!_tourSpotOn || point != _tourPointFor)
             {
                 _tourHoleFrom = _tourSpotOn ? _tourHole : target;
                 _tourHoleT = _tourSpotOn && !Motion.Reduced ? 0f : 1f;
                 _tourPointFor = point;
+                _tourStepShownAt = Time.unscaledTime;
             }
             _tourSpotOn = true;
             if (!_tourSpot.gameObject.activeSelf) _tourSpot.gameObject.SetActive(true);
@@ -416,31 +510,128 @@ namespace LastCall.UI
             var hole = _tourHole = new Rect(
                 Vector2.Lerp(_tourHoleFrom.position, target.position, e),
                 Vector2.Lerp(_tourHoleFrom.size, target.size, e));
+            if (drag) to = Pad(to);
 
-            var full = _tourSpot.rect;
-            float dim = talking ? 0.62f : 0.34f;
-            SetBox(_tourDim[0], full.xMin, hole.yMax, full.xMax, full.yMax, dim);   // above
-            SetBox(_tourDim[1], full.xMin, full.yMin, full.xMax, hole.yMin, dim);   // below
-            SetBox(_tourDim[2], full.xMin, hole.yMin, hole.xMin, hole.yMax, dim);   // left
-            SetBox(_tourDim[3], hole.xMax, hole.yMin, full.xMax, hole.yMax, dim);   // right
+            float now = Time.unscaledTime;
+            bool still = Motion.Reduced;
+            var shadeColor = UITheme.Night[0];
+            shadeColor.a = talking ? 0.62f : 0.40f;
+            _tourShade.color = shadeColor;
+            _tourShade.Blocks = true;
+            _tourHoles.Clear();
+            _tourHoles.Add(hole);
+            if (drag) _tourHoles.Add(to);
+            _tourShade.SetHoles(_tourHoles);
 
-            float pulse = Motion.Reduced ? 1f : 0.65f + 0.35f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f));
-            SetBox(_tourFrame[0], hole.xMin, hole.yMax - TourFrameW, hole.xMax, hole.yMax, pulse);
-            SetBox(_tourFrame[1], hole.xMin, hole.yMin, hole.xMax, hole.yMin + TourFrameW, pulse);
-            SetBox(_tourFrame[2], hole.xMin, hole.yMin, hole.xMin + TourFrameW, hole.yMax, pulse);
-            SetBox(_tourFrame[3], hole.xMax - TourFrameW, hole.yMin, hole.xMax, hole.yMax, pulse);
+            // The brackets breathe out and in; the drop's own brackets breathe against them.
+            float breath = still ? 0f : 3f * (0.5f + 0.5f * Mathf.Sin(now * 4f));
+            float glow = still ? 1f : 0.7f + 0.3f * (0.5f + 0.5f * Mathf.Sin(now * 4f));
+            Brackets(_tourBrackets, hole, breath, glow);
+            if (drag) Brackets(_tourToBrackets, to, still ? 0f : 3f - breath, glow);
+            else Brackets(_tourToBrackets, default, 0f, 0f);
+
+            // The ring runs out from what she wants DONE (not from what she is only talking about), every 1.4 s.
+            if (!talking && !still)
+            {
+                float t = Mathf.Repeat(now - _tourStepShownAt, 1.4f) / 1.4f;
+                float grow = 2f + 16f * t;
+                Outline(_tourRipple, Rect.MinMaxRect(hole.xMin - grow, hole.yMin - grow, hole.xMax + grow, hole.yMax + grow),
+                        (1f - t) * 0.85f);
+            }
+            else Outline(_tourRipple, default, 0f);
 
             // The pointer comes in from the side facing the middle of the screen, so it never runs off the edge the
             // thing it points at is standing against: from above or below, unless the thing stands about the screen's
             // middle height, where there is room either side (a key in a row would have its neighbour under it).
+            var full = _tourSpot.rect;
             Vector2 c = hole.center;
             bool sideways = Mathf.Abs(c.y) / Mathf.Max(1f, full.height) < 0.18f;
             Vector2 dir = sideways ? new Vector2(c.x > 0f ? 1f : -1f, 0f) : new Vector2(0f, c.y > 0f ? 1f : -1f);
-            float bob = Motion.Reduced ? 0f : 5f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f));
+            // A bounce, not a sway: out fast, in with a knock (|sin|), and the head swells a touch at the knock.
+            float k = still ? 0f : Mathf.Abs(Mathf.Sin(now * 5.5f));
+            float bob = 12f * k;
             Vector2 edge = new Vector2(dir.x == 0f ? c.x : dir.x > 0f ? hole.xMin : hole.xMax,
                                        dir.y == 0f ? c.y : dir.y > 0f ? hole.yMin : hole.yMax);
             _tourArrow.anchoredPosition = edge - dir * (6f + bob);
             _tourArrow.localEulerAngles = new Vector3(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+            _tourArrow.localScale = Vector3.one * (still ? 1f : 1f + 0.12f * (1f - k));
+
+            StepTourHand(drag, hole, to, now, still);
+        }
+
+        private static Rect Pad(Rect r) => Rect.MinMaxRect(r.xMin - TourPad, r.yMin - TourPad, r.xMax + TourPad, r.yMax + TourPad);
+
+        /// <summary>Four L-shaped corners round <paramref name="r"/>, pushed out by <paramref name="out_"/>.</summary>
+        private static void Brackets(Image[] b, Rect r, float out_, float alpha)
+        {
+            if (alpha <= 0f || r.width <= 0f)
+            {
+                foreach (var i in b) SetBox(i, 0f, 0f, 0f, 0f, 0f);
+                return;
+            }
+            float x0 = r.xMin - out_, x1 = r.xMax + out_, y0 = r.yMin - out_, y1 = r.yMax + out_;
+            float arm = Mathf.Min(BracketArm, r.width * 0.45f, r.height * 0.45f) + 2f;
+            SetBox(b[0], x0, y1 - BracketW, x0 + arm, y1, alpha);           // top left, across
+            SetBox(b[1], x0, y1 - arm, x0 + BracketW, y1, alpha);           // top left, down
+            SetBox(b[2], x1 - arm, y1 - BracketW, x1, y1, alpha);           // top right
+            SetBox(b[3], x1 - BracketW, y1 - arm, x1, y1, alpha);
+            SetBox(b[4], x0, y0, x0 + arm, y0 + BracketW, alpha);           // bottom left
+            SetBox(b[5], x0, y0, x0 + BracketW, y0 + arm, alpha);
+            SetBox(b[6], x1 - arm, y0, x1, y0 + BracketW, alpha);           // bottom right
+            SetBox(b[7], x1 - BracketW, y0, x1, y0 + arm, alpha);
+        }
+
+        private static void Outline(Image[] o, Rect r, float alpha)
+        {
+            if (alpha <= 0f || r.width <= 0f)
+            {
+                foreach (var i in o) SetBox(i, 0f, 0f, 0f, 0f, 0f);
+                return;
+            }
+            SetBox(o[0], r.xMin, r.yMax - 1f, r.xMax, r.yMax, alpha);
+            SetBox(o[1], r.xMin, r.yMin, r.xMax, r.yMin + 1f, alpha);
+            SetBox(o[2], r.xMin, r.yMin, r.xMin + 1f, r.yMax, alpha);
+            SetBox(o[3], r.xMax - 1f, r.yMin, r.xMax, r.yMax, alpha);
+        }
+
+        /// <summary>
+        /// THE DRAG, SHOWN: the hand presses on the thing, carries it along an eased path to where it goes, lets go there
+        /// and fades, and starts again - 2 s a round. Reduced motion shows the hand still, at the thing.
+        /// </summary>
+        private void StepTourHand(bool drag, Rect from, Rect to, float now, bool still)
+        {
+            if (!drag)
+            {
+                if (_tourHand.gameObject.activeSelf) _tourHand.gameObject.SetActive(false);
+                return;
+            }
+            if (!_tourHand.gameObject.activeSelf) _tourHand.gameObject.SetActive(true);
+            _tourHand.SetAsLastSibling();
+            Vector2 a = from.center, b = to.center;
+            if (still)
+            {
+                _tourHandImg.sprite = ItemArt.Load("cursor_hand");
+                _tourHand.anchoredPosition = a;
+                _tourHandImg.color = Color.white;
+                return;
+            }
+            float t = Mathf.Repeat(now - _tourStepShownAt, 2.0f);
+            string art;
+            Vector2 at;
+            float alpha = 1f;
+            if (t < 0.3f) { art = "cursor_hand_pressed"; at = a; }
+            else if (t < 1.3f)
+            {
+                float u = (t - 0.3f) / 1.0f;
+                u = u * u * (3f - 2f * u);
+                art = "cursor_hand_grab";
+                at = Vector2.Lerp(a, b, u) + Vector2.up * (Mathf.Sin(u * Mathf.PI) * 18f);   // a small lift on the way
+            }
+            else if (t < 1.6f) { art = "cursor_hand"; at = b; }
+            else { art = "cursor_hand"; at = b; alpha = 1f - (t - 1.6f) / 0.4f; }
+            _tourHandImg.sprite = ItemArt.Load(art);
+            _tourHand.anchoredPosition = at;
+            _tourHandImg.color = new Color(1f, 1f, 1f, alpha);
         }
 
         private static void SetBox(Image img, float x0, float y0, float x1, float y1, float alpha)
@@ -457,6 +648,7 @@ namespace LastCall.UI
         {
             _tourSpotOn = false;
             _tourPointFor = "";
+            if (_tourShade != null) _tourShade.Blocks = false;
             if (_tourSpot != null && _tourSpot.gameObject.activeSelf) _tourSpot.gameObject.SetActive(false);
         }
     }

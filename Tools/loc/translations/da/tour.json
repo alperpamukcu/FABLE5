@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Klik et sted uden for kortet for at lægge det væk.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Klik et sted uden for kortet for at lægge det væk. Den fastnålede opskrift bliver.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "Sådan er jobbet, sugar. Døren er din.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Når døren lukker, kommer aftenens bon og så markedet: flasker, sider og inventar.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Én ting til, før jeg lader dig arbejde.",
-      "src": "One more thing before I let you work."
+      "text": "Sådan er jobbet, sugar. Døren er din.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Tag kluden og tør den af.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "SPRING OVER",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Hældt forkert? SKRALD tømmer shakeren. Det koster lidt, så sigt først.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Døren er din nu, sugar. Tjek alderen: under tyve drikker ikke her.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Se på selve kortet. Et flag fra det forkerte land, et ansigt, der ikke er deres, et kort, der ser tegnet ud: så er det falsk.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "AFVIS viser dem døren. Rammer du rigtigt, takker byen dig ved lukketid.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Skænker du for et barn, betaler du bøden. Smider du en ærlig sjæl ud, mister du en gæst.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Små ting. De giver drikkepenge for små ting. Giv den videre nu.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "De bad om den {garnish}. Træk pynten fra skålen over på glasset.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "Hold musen over drinkens navn, så dukker opskriften op ved siden af.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Hold musen stille et øjeblik, så falder den på plads. Nålen holder den fremme, mens du arbejder.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Der er kanten. Giv den videre nu.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "De vil have den {garnish}. Hold skålen og før den én gang rundt om glassets kant.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Låg på først. Træk låget over på shakeren.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Sådan ryster man. Over til glasset, ligesom før.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Tag nu shakeren, hold knappen nede og ryst frem og tilbage, til MIX-søjlen er fuld.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Den her skal rystes. Den vil have is og luft igennem, ikke en ske.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Listen til venstre fører dig gennem drinken. Hvert trin krydses af, når du gør det.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Silke, ikke skum. Låg på og over til glasset.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Den her skal røres, ikke rystes. Tag skeen og rør i cirkler over den åbne shaker.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Én ting til, før jeg lader dig arbejde.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

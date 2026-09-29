@@ -1996,6 +1996,56 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.149 · Yeni fiilin dersi ilk kullanıldığı anda başlar; tur yalnız işaret ettiğine dokundurur (2026-09-29)
+
+Yazar: “1. görselde hover'i tutturabildiğini anlatsın.” ve “Öğreticiyi detaylandıralım. Aynı zamanda oyuna yeni oynanış
+mekaniği geldiğinde örneğin kimlik kontrol etme yaş kontrol etme, alkolleri karıştırma çalkalama. İçerisine garnish
+koyma. Bunların da öğreticileri oyuncu ilk defa açtığında ve kullanmak zorunda olduğunda otomatik başlamalı.
+Öğreticide göstergeler daha animasyonlu olmalı, göstergede eğer bir şey işaret ediliyorsa sadece onunla etkileşime
+geçilmeli.”
+
+- **Tur bir kitap oldu** (`tour.json` sürüm 2, `{"tours": [{id, when, steps}]}`, `TourBook` / `TourScript` /
+  `TourCue`). Ev turu kitabın bir sayfası (`first_night`). Geri kalanı **ilk kullanım dersleri**. Her dersin bir anı
+  (`when`) var:
+  - `first_door`: kapı barın olduktan sonra okunan ilk kart. Yaş, sahte kart (başka ülkenin bayrağı, başka yüz, çizilmiş
+    kart), KICK tuşu, ceza ve teşekkür anlatılır.
+  - `first_shake`: çalkalanan bir içki ilk kez tenekede karışmadan durduğunda. Sırayla neden çalkalandığı, kapak,
+    çalkalama ve MIX sütunu gösterilir.
+  - `first_stir`: karıştırılan içki için aynısı, kaşık açıksa. Kaşığı açık tenekenin üstünde daire çizerek kullanmak.
+  - `first_garnish`: bardaktaki içki, istenen süsü beklerken. Süsü kabından bardağa sürüklemek anlatılır. `{garnish}`
+    satırda istenen süsün adı olarak okunur.
+  - `first_rim`: tuz ya da şeker kenarı için aynısı. Kabı tutup bardağın kenarında bir tur gezdirmek.
+- **Ders de kapıyı tutar**, ev turu gibi. Gece saati durur, kimse içeri girmez, sabırlar azalmaz. Ders, hakkında olduğu
+  misafirde öğretilir (`TourSubject`). Her ders bir koşuda bir kez oynar. Öğretilenler kayıtla birlikte saklanır
+  (`RunSnapshot.toursTaught`), yüklenen bar dersi tekrar anlatmaz. İçki çöpe giderse ya da iş kendiliğinden
+  anlamsızlaşırsa ders biter (`LessonIsMoot`). Önden koşan oyuncu evdeki gibi yakalanır.
+- **Veri kuralları** (`DataLoader.ParseTours`):
+  - `{garnish}` yalnız süs ve kenar derslerinde geçer.
+  - `{drink}` ve `{bottle}` yalnız kart okunduktan sonraki adımlarda geçer. `{bottle}` yalnız ev turunda.
+  - Karıştırma derslerinde yer tutucu yoktur.
+  - Misafiri oturtan adım (`guest_ready`) yalnız ev turunda olabilir.
+  - Ders kimlikleri, anları ve adım kimlikleri tekildir.
+- **Ev turu 33 adım oldu:**
+  - Siparişin adının üstüne gelince tarifin açıldığını söyler (`recipe_shown`, kartın sipariş satırı). Tarifin
+    iğnelenip ekranda kaldığını da söyler (`recipe_pinned`).
+  - Tezgâhın solundaki adım listesini tanıtır.
+  - Çöp tuşunu tanıtır.
+  - Kapanışta gece fişini ve pazarı haber verir.
+  - Taşıma adımlarında ışık iki yeri birden tutar (`to`): nereden (şişe, kapak, bardak) ve nereye (teneke, servis
+    bardağı, misafir, lavabo, iz).
+- **Gösterge canlandı ve yalnız işaret ettiğine dokundurur** (`TourShade`, `TycoonHud.Tour`):
+  - Işık tutulan yerin dışı kararır ve tıklamayı yutar. Delikler yalnız işaret edilen şeyin ve varış yerinin
+    dikdörtgenleri.
+  - Deliğin köşelerinde nefes alan köşebentler durur, varış yerinin köşebentleri turkuaz. Köşelerden dalga halkaları
+    yayılır, üstte zıplayan bir ok durur.
+  - Sürükleme isteyen adımda imlecin kendi eli nereden nereye yolu iki saniyede bir çizer.
+  - Kısayol tuşları da adımın işaret ettiği şeyle sınırlı (`TourLetsTheKey`): kitap adımında kitap tuşu, mahzen
+    adımında mahzen tuşu çalışır.
+  - Derslerde plakanın ikinci tuşu SKIP THIS der, ev turundaki SKIP THE TOUR değil. Dersi atlamak yalnız o dersi
+    kapatır.
+- **Tur testleri:** yükleyici, kapı dersi, çalkalama dersi (Gin Sour, `PerfectBoxes` ile dökülür), çöpe giden içkinin
+  dersi bitirmesi ve kayıttan dönen öğretilmiş dersler (`TourTests`). 28 dilin `tour` parçaları 62 anahtar.
+
 ### 9.147 · Ayarlar bir kabin: sekmeler haftanın satırı, seçimler kuyuda, tüp göstergeler, bayraklı dil listesi (2026-09-29)
 
 Yazar (§9.145'teki aynı istek): “Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle tekrardan diğer sahneleri

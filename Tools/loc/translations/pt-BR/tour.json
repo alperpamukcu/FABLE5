@@ -6,6 +6,11 @@
       "src": "SKIP THE TOUR"
     },
     {
+      "key": "chrome.tour.skip_lesson",
+      "text": "PULAR",
+      "src": "SKIP THIS"
+    },
+    {
       "key": "data.tour.bill.say.0",
       "text": "No fechamento, o aluguel sai dali de volta. Passe o mouse no dinheiro para ver a conta desta noite.",
       "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
@@ -14,6 +19,11 @@
       "key": "data.tour.bill.say.1",
       "text": "Feche três noites seguidas no vermelho e este salão apaga de novo.",
       "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Errou a dose? LIXO esvazia a coqueteleira. Custa um pouco, então mire antes.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
     },
     {
       "key": "data.tour.book.say.0",
@@ -47,8 +57,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Clique fora da carteirinha para guardar.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Clique fora da carteirinha para guardar. A receita fixada continua lá.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -71,19 +81,49 @@
       "src": "Escape pauses the night. The settings are in there."
     },
     {
+      "key": "data.tour.door_age.say.0",
+      "text": "Agora a porta é sua, sugar. Confira a idade: menor de vinte não bebe aqui.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Olhe a própria carteirinha. Bandeira que não é do país, rosto que não é o da pessoa, carteirinha que parece desenhada: é falsa.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "FORA mostra a porta da rua. Acertou? A cidade agradece no fechamento.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Sirva um moleque e você paga a multa. Expulse uma cara honesta e perde um cliente.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
       "key": "data.tour.doors.say.0",
-      "text": "O trabalho é esse, sugar. A porta é sua.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Quando a porta fecha, vem a conta da noite e depois o mercado: garrafas, páginas e melhorias.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Mais uma coisa antes de te deixar trabalhar.",
-      "src": "One more thing before I let you work."
+      "text": "O trabalho é esse, sugar. A porta é sua.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
       "text": "Agora deixe ele terminar. Ninguém gosta de ser apressado.",
       "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Detalhes. É por detalhe que eles dão gorjeta. Agora entregue.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Pediu {garnish}. Arraste a guarnição do pratinho até o copo.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
     },
     {
       "key": "data.tour.glass.say.0",
@@ -131,6 +171,11 @@
       "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
     },
     {
+      "key": "data.tour.order.say.0",
+      "text": "Passe o mouse no nome do drinque e a receita aparece do lado.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
       "key": "data.tour.patience.say.0",
       "text": "Essa barra em cima da cabeça é a paciência. Quando ela acaba, o cliente vai embora.",
       "src": "That bar over their head is patience. Once it's gone, so are they."
@@ -139,6 +184,11 @@
       "key": "data.tour.patience.say.1",
       "text": "Hoje, enquanto eu te mostro o lugar, ela espera por você. Depois, não.",
       "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Deixe o mouse parado um instante e ela assenta. O alfinete mantém a receita na tela enquanto você trabalha.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
     },
     {
       "key": "data.tour.pour.say.0",
@@ -156,9 +206,39 @@
       "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
     },
     {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Crusta feita. Agora entregue.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Quer {garnish}. Segure o pratinho e passe uma vez em volta da borda do copo.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
       "key": "data.tour.serve_key.say.0",
       "text": "Gostou? Aperte SIRVA e o copo vai para o balcão.",
       "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Primeiro, tampe. Arraste a tampa até a coqueteleira.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Batido. Agora para o copo, igual antes.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Agora pegue a coqueteleira, segure o botão e sacuda de um lado para o outro até a coluna MIX encher.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Este é batido. Precisa de gelo e ar, não de colher.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
     },
     {
       "key": "data.tour.stars.say.0",
@@ -169,6 +249,21 @@
       "key": "data.tour.stars.say.1",
       "text": "Elas liberam as garrafas boas, as páginas melhores, as melhorias do mercado.",
       "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "A lista à esquerda te guia pelo drinque. Cada passo é marcado assim que você faz.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Seda, não espuma. Tampe e leve até o copo.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Este é mexido, não batido. Pegue a colher e faça círculos sobre a coqueteleira aberta.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
     },
     {
       "key": "data.tour.stool.say.0",
@@ -209,6 +304,11 @@
       "key": "data.tour.wipe.say.1",
       "text": "Pegue o pano e esfregue até sair.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Mais uma coisa antes de te deixar trabalhar.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

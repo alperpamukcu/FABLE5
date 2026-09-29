@@ -6,6 +6,11 @@
       "src": "SKIP THE TOUR"
     },
     {
+      "key": "chrome.tour.skip_lesson",
+      "text": "PŘESKOČ",
+      "src": "SKIP THIS"
+    },
+    {
       "key": "data.tour.bill.say.0",
       "text": "Při zavírání z ní zase odejde nájem. Najeď myší na peníze a uvidíš dnešní účet.",
       "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
@@ -14,6 +19,11 @@
       "key": "data.tour.bill.say.1",
       "text": "Tři noci po sobě v červených a tenhle lokál zase zhasne.",
       "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Nalito špatně? KOŠ vylije shaker. Něco to stojí, tak nejdřív miř.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
     },
     {
       "key": "data.tour.book.say.0",
@@ -47,8 +57,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Klikni kamkoli mimo průkaz a odlož ho.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Klikni kamkoli mimo průkaz a odlož ho. Připnutý recept zůstane.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -71,19 +81,49 @@
       "src": "Escape pauses the night. The settings are in there."
     },
     {
+      "key": "data.tour.door_age.say.0",
+      "text": "Dveře jsou teď tvoje, sugar. Hlídej věk: pod dvacet se tu nepije.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Podívej se na samotný průkaz. Vlajka, která není jejich země, cizí tvář, průkaz jako kreslený: to je padělek.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "VEN jim ukáže dveře. Když se trefíš, město ti při zavírání poděkuje.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Nalej děcku a platíš pokutu. Vyhoď poctivou tvář a přijdeš o hosta.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
       "key": "data.tour.doors.say.0",
-      "text": "Tak to je celá práce, sugar. Dveře jsou tvoje.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Když se zavřou dveře, přijde účet za noc a pak obchod: lahve, stránky a vybavení.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Ještě jedna věc, než tě nechám pracovat.",
-      "src": "One more thing before I let you work."
+      "text": "Tak to je celá práce, sugar. Dveře jsou tvoje.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
       "text": "Teď je nech dopít. Nikdo nemá rád, když ho někdo honí.",
       "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Drobnosti. Za drobnosti dávají spropitné. Teď to podej.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "K tomu má být {garnish}. Přetáhni ozdobu z misky na sklenici.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
     },
     {
       "key": "data.tour.glass.say.0",
@@ -131,6 +171,11 @@
       "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
     },
     {
+      "key": "data.tour.order.say.0",
+      "text": "Najeď myší na název drinku a vedle se objeví recept.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
       "key": "data.tour.patience.say.0",
       "text": "Ten proužek nad hlavou je trpělivost. Jakmile zmizí, zmizí i oni.",
       "src": "That bar over their head is patience. Once it's gone, so are they."
@@ -139,6 +184,11 @@
       "key": "data.tour.patience.say.1",
       "text": "Dnes, dokud tě provádím, na tebe počká. Potom už ne.",
       "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Chvíli drž myš v klidu a recept se usadí. Připínáček ho nechá na obrazovce, zatímco pracuješ.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
     },
     {
       "key": "data.tour.pour.say.0",
@@ -156,9 +206,39 @@
       "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
     },
     {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Tak vypadá krusta. Teď to podej.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "K tomu má být {garnish}. Chyť misku a objeď s ní jednou okraj sklenice.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
       "key": "data.tour.serve_key.say.0",
       "text": "Sedí to? PODEJ postaví sklenici na pult.",
       "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Nejdřív zavíčkuj. Přetáhni víčko na shaker.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Tak se třepe. Teď do sklenice, jako předtím.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Teď chyť shaker, drž tlačítko a třep s ním sem a tam, dokud se sloupec MIX nenaplní.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Tenhle se protřepává. Chce led a vzduch, ne lžičku.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
     },
     {
       "key": "data.tour.stars.say.0",
@@ -169,6 +249,21 @@
       "key": "data.tour.stars.say.1",
       "text": "Otevírají lepší lahve, lepší stránky a vybavení v obchodě.",
       "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Seznam vlevo tě provede drinkem. Každý krok se odškrtne, jakmile ho uděláš.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Hedvábí, ne pěna. Zavíčkuj a do sklenice.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Tenhle se míchá, ne třepe. Vezmi lžičku a krouž nad otevřeným shakerem.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
     },
     {
       "key": "data.tour.stool.say.0",
@@ -209,6 +304,11 @@
       "key": "data.tour.wipe.say.1",
       "text": "Vezmi utěrku a setři ho.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Ještě jedna věc, než tě nechám pracovat.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

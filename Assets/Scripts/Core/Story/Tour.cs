@@ -46,6 +46,16 @@ namespace LastCall.Core
         BookOpen,
         /// <summary>SCREEN: the recipe book is shut again.</summary>
         BookShut,
+        /// <summary>SCREEN: the recipe card is up over the licence's order.</summary>
+        RecipeShown,
+        /// <summary>SCREEN: a recipe is pinned to the screen (the post-it).</summary>
+        RecipePinned,
+        /// <summary>The tin has been shaken.</summary>
+        Shaken,
+        /// <summary>The open tin has been stirred.</summary>
+        Stirred,
+        /// <summary>The glass carries the garnish the lesson is about.</summary>
+        Garnished,
     }
 
     public static class TourWaits
@@ -69,6 +79,11 @@ namespace LastCall.Core
             { "counter_wiped", TourWait.CounterWiped },
             { "book_open", TourWait.BookOpen },
             { "book_shut", TourWait.BookShut },
+            { "recipe_shown", TourWait.RecipeShown },
+            { "recipe_pinned", TourWait.RecipePinned },
+            { "shaken", TourWait.Shaken },
+            { "stirred", TourWait.Stirred },
+            { "garnished", TourWait.Garnished },
         };
 
         /// <summary>Reads a wait by the name the data uses; null for anything else.</summary>
@@ -93,7 +108,51 @@ namespace LastCall.Core
         /// <summary>The waits only the screen can see.</summary>
         public static bool IsScreen(TourWait w) =>
             w == TourWait.CardPutAway || w == TourWait.CellarOpen || w == TourWait.BottleInHand || w == TourWait.Capped ||
-            w == TourWait.OnTheCounter || w == TourWait.BookOpen || w == TourWait.BookShut;
+            w == TourWait.OnTheCounter || w == TourWait.BookOpen || w == TourWait.BookShut ||
+            w == TourWait.RecipeShown || w == TourWait.RecipePinned;
+    }
+
+    /// <summary>
+    /// WHEN A TOUR PLAYS (2026-09-29, the author: "oyuna yeni oynanış mekaniği geldiğinde örneğin kimlik kontrol etme yaş
+    /// kontrol etme, alkolleri karıştırma çalkalama. İçerisine garnish koyma. Bunların da öğreticileri oyuncu ilk defa
+    /// açtığında ve kullanmak zorunda olduğunda otomatik başlamalı"). The house tour opens the first night; every other
+    /// is a short lesson that starts by itself the first time its mechanic is both open and needed. Each plays once a run.
+    /// </summary>
+    public enum TourCue
+    {
+        /// <summary>The run's first night: the house tour.</summary>
+        FirstNight,
+        /// <summary>The door is the bar's (1 star) and a licence has just been read: ages, fakes and the KICK key.</summary>
+        FirstDoor,
+        /// <summary>A shaken drink stands in the tin, unmixed.</summary>
+        FirstShake,
+        /// <summary>A stirred drink stands in the open tin, unmixed, and the spoon is the bar's.</summary>
+        FirstStir,
+        /// <summary>A drink is in the glass and its guest asked for a garnish that goes IN it (ice, twist, olive, mint).</summary>
+        FirstGarnish,
+        /// <summary>...or for a RIM (salt, sugar), which is run round the glass rather than dropped.</summary>
+        FirstRim,
+    }
+
+    public static class TourCues
+    {
+        private static readonly Dictionary<string, TourCue> ByName = new Dictionary<string, TourCue>
+        {
+            { "first_night", TourCue.FirstNight },
+            { "first_door", TourCue.FirstDoor },
+            { "first_shake", TourCue.FirstShake },
+            { "first_stir", TourCue.FirstStir },
+            { "first_garnish", TourCue.FirstGarnish },
+            { "first_rim", TourCue.FirstRim },
+        };
+
+        public static TourCue? Parse(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+            return ByName.TryGetValue(name.Trim().ToLowerInvariant(), out var c) ? c : (TourCue?)null;
+        }
+
+        public static IEnumerable<string> Names => ByName.Keys;
     }
 
     /// <summary>
@@ -108,6 +167,11 @@ namespace LastCall.Core
             "clock", "till", "bill", "stars", "house", "stool", "patience", "card", "cellar", "bottle", "bench_bottle",
             "tin_gauge", "lid", "shaker", "serve_key", "counter_glass", "guest", "dirty_glass", "cloth", "book", "tap",
             "corner",
+            // 2026-09-29: the licence's order row, its recipe card and pin, its age, its flag and its KICK key; the tin,
+            // the spoon and the MIX column; the serve bench's glass; the sink and a mark on the wood; the garnish the
+            // lesson is about; the bench's list of steps and its bin.
+            "card_order", "recipe_card", "pin_key", "card_age", "card_flag", "card_kick", "tin", "spoon", "mix_column",
+            "serve_glass", "sink", "mark", "garnish", "bench_steps", "bin_key",
         };
 
         public static bool Known(string point)
@@ -128,7 +192,11 @@ namespace LastCall.Core
         public TourWait Wait { get; }
         public string Point { get; }
 
-        public TourStep(string id, IReadOnlyList<string> say, TourWait wait, string point)
+        /// <summary>Where a DRAG step's thing goes (the glass to the guest, the lid onto the tin): the screen shows a hand
+        /// carrying it there, and lights both ends. Empty for everything else.</summary>
+        public string To { get; }
+
+        public TourStep(string id, IReadOnlyList<string> say, TourWait wait, string point, string to = null)
         {
             if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A tour step needs an id.", nameof(id));
             if (say == null || say.Count == 0) throw new ArgumentException($"tour step '{id}' has nothing to say", nameof(say));
@@ -138,6 +206,7 @@ namespace LastCall.Core
             Say = new List<string>(say);
             Wait = wait;
             Point = point ?? "";
+            To = to ?? "";
         }
 
         public override string ToString() => $"{Id} ({Wait})";
@@ -152,9 +221,23 @@ namespace LastCall.Core
     {
         public IReadOnlyList<TourStep> Steps { get; }
 
-        public TourScript(IReadOnlyList<TourStep> steps)
+        /// <summary>The tour's name ("house", "door"...) - what the run remembers it has played.</summary>
+        public string Id { get; }
+
+        /// <summary>When it plays.</summary>
+        public TourCue When { get; }
+
+        /// <summary>The house tour: the one that seats a guest of its own and walks the whole first night.</summary>
+        public bool IsHouse => When == TourCue.FirstNight;
+
+        public TourScript(IReadOnlyList<TourStep> steps) : this("house", TourCue.FirstNight, steps) { }
+
+        public TourScript(string id, TourCue when, IReadOnlyList<TourStep> steps)
         {
-            if (steps == null || steps.Count == 0) throw new ArgumentException("The tour has no steps.", nameof(steps));
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("A tour needs an id.", nameof(id));
+            Id = id;
+            When = when;
+            if (steps == null || steps.Count == 0) throw new ArgumentException($"tour '{id}' has no steps.", nameof(steps));
             var ids = new HashSet<string>();
             bool seated = false;
             foreach (var step in steps)
@@ -163,10 +246,11 @@ namespace LastCall.Core
                 if (!ids.Add(step.Id)) throw new ArgumentException($"tour step '{step.Id}' is written twice", nameof(steps));
                 if (step.Wait == TourWait.GuestReady)
                 {
+                    if (!IsHouse) throw new ArgumentException($"tour '{id}' seats a guest; only the house tour does.", nameof(steps));
                     if (seated) throw new ArgumentException("The tour seats its guest twice.", nameof(steps));
                     seated = true;
                 }
-                else if (!seated && step.Wait != TourWait.Heard && NeedsTheGuest(step.Wait))
+                else if (IsHouse && !seated && step.Wait != TourWait.Heard && NeedsTheGuest(step.Wait))
                     throw new ArgumentException($"tour step '{step.Id}' works on the guest before one is seated", nameof(steps));
             }
             if (steps[steps.Count - 1].Wait != TourWait.Heard)
@@ -176,5 +260,40 @@ namespace LastCall.Core
 
         private static bool NeedsTheGuest(TourWait w) =>
             w != TourWait.CellarOpen && w != TourWait.BookOpen && w != TourWait.BookShut;
+    }
+
+    /// <summary>
+    /// Every tour the game has, the house tour and the first-use lessons (<c>Resources/Data/tour.json</c>). At most one
+    /// per cue, and the step ids are unique across the whole book - they are the string table's keys.
+    /// </summary>
+    public sealed class TourBook
+    {
+        public IReadOnlyList<TourScript> Tours { get; }
+
+        public TourBook(IReadOnlyList<TourScript> tours)
+        {
+            if (tours == null || tours.Count == 0) throw new ArgumentException("The tour book is empty.", nameof(tours));
+            var cues = new HashSet<TourCue>();
+            var ids = new HashSet<string>();
+            var steps = new HashSet<string>();
+            foreach (var t in tours)
+            {
+                if (t == null) throw new ArgumentException("The tour book has an empty tour.", nameof(tours));
+                if (!ids.Add(t.Id)) throw new ArgumentException($"tour '{t.Id}' is written twice", nameof(tours));
+                if (!cues.Add(t.When)) throw new ArgumentException($"two tours play on {t.When}", nameof(tours));
+                foreach (var s in t.Steps)
+                    if (!steps.Add(s.Id)) throw new ArgumentException($"tour step '{s.Id}' is written twice in the book", nameof(tours));
+            }
+            Tours = new List<TourScript>(tours);
+        }
+
+        /// <summary>The book of one tour (the tests' and a bench's).</summary>
+        public TourBook(TourScript tour) : this(new[] { tour }) { }
+
+        public TourScript For(TourCue cue)
+        {
+            foreach (var t in Tours) if (t.When == cue) return t;
+            return null;
+        }
     }
 }

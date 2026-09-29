@@ -6,6 +6,11 @@
       "src": "SKIP THE TOUR"
     },
     {
+      "key": "chrome.tour.skip_lesson",
+      "text": "OVERSLAAN",
+      "src": "SKIP THIS"
+    },
+    {
       "key": "data.tour.bill.say.0",
       "text": "Bij sluiting gaat de huur er weer uit. Ga met de muis over het geld voor de rekening van vanavond.",
       "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
@@ -14,6 +19,11 @@
       "key": "data.tour.bill.say.1",
       "text": "Sluit je drie avonden op rij af in het rood, dan gaat hier het licht weer uit.",
       "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Verkeerd geschonken? WEG kiept de shaker leeg. Dat kost wat, dus eerst mikken.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
     },
     {
       "key": "data.tour.book.say.0",
@@ -47,8 +57,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Klik ergens naast de pas om hem weg te leggen.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Klik ergens naast de pas om hem weg te leggen. Het vastgezette recept blijft staan.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -71,19 +81,49 @@
       "src": "Escape pauses the night. The settings are in there."
     },
     {
+      "key": "data.tour.door_age.say.0",
+      "text": "De deur is nu van jou, sugar. Check de leeftijd: onder de twintig wordt hier niet gedronken.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Kijk naar de pas zelf. Een vlag die niet bij het land hoort, een gezicht dat niet van hem is, een pas die getekend lijkt: vals.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "ERUIT wijst hem de deur. Zit je goed, dan bedankt de stad je bij sluiting.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Schenk voor een kind en je betaalt de boete. Zet een eerlijk gezicht buiten en je bent een gast kwijt.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
       "key": "data.tour.doors.say.0",
-      "text": "Dat is het werk, sugar. De deur is van jou.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Gaat de deur dicht, dan komt eerst de rekening van de avond, dan de markt: flessen, pagina's en inrichting.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Nog één ding voor ik je aan het werk laat.",
-      "src": "One more thing before I let you work."
+      "text": "Dat is het werk, sugar. De deur is van jou.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
       "text": "Laat hem nu rustig uitdrinken. Niemand wordt graag opgejaagd.",
       "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Kleine dingen. Voor kleine dingen geven ze fooi. Geef het nu aan.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Hij wil {garnish}. Sleep de garnering uit het schaaltje op het glas.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
     },
     {
       "key": "data.tour.glass.say.0",
@@ -131,6 +171,11 @@
       "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
     },
     {
+      "key": "data.tour.order.say.0",
+      "text": "Ga met de muis over de naam van het drankje, dan verschijnt het recept ernaast.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
       "key": "data.tour.patience.say.0",
       "text": "Die balk boven zijn hoofd is geduld. Is die leeg, dan is hij weg.",
       "src": "That bar over their head is patience. Once it's gone, so are they."
@@ -139,6 +184,11 @@
       "key": "data.tour.patience.say.1",
       "text": "Vanavond, zolang ik je rondleid, wacht die balk op je. Daarna niet meer.",
       "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Hou de muis even stil, dan blijft het staan. De punaise houdt het op het scherm terwijl je werkt.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
     },
     {
       "key": "data.tour.pour.say.0",
@@ -156,9 +206,39 @@
       "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
     },
     {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Zo doe je een randje. Geef het nu aan.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Hij wil {garnish}. Hou het schaaltje vast en ga er één keer mee rond de rand van het glas.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
       "key": "data.tour.serve_key.say.0",
       "text": "Tevreden? SERVEREN zet het glas op de bar.",
       "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Eerst het deksel erop. Sleep het op de shaker.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Zo shake je. Naar het glas, net als eerst.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Pak nu de shaker, hou de knop ingedrukt en schud heen en weer tot de kolom MIX vol is.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Deze wordt geshaket. Er moet ijs en lucht door, geen lepel.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
     },
     {
       "key": "data.tour.stars.say.0",
@@ -169,6 +249,21 @@
       "key": "data.tour.stars.say.1",
       "text": "Ze openen de goede flessen, betere pagina's, de inrichting in de markt.",
       "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Het lijstje links loodst je door het drankje. Elke stap wordt afgevinkt zodra je hem doet.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Zijde, geen schuim. Deksel erop en naar het glas.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Deze wordt geroerd, niet geshaket. Pak de lepel en draai rondjes boven de open shaker.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
     },
     {
       "key": "data.tour.stool.say.0",
@@ -209,6 +304,11 @@
       "key": "data.tour.wipe.say.1",
       "text": "Pak de doek en veeg hem weg.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Nog één ding voor ik je aan het werk laat.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

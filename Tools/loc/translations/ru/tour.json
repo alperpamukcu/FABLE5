@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Щёлкни мимо удостоверения, чтобы его убрать.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Щёлкни мимо удостоверения, чтобы его убрать. Приколотый рецепт останется.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "Вот и вся работа, sugar. Дверь — твоя.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Когда дверь закроется, придёт чек за ночь, а за ним магазин: бутылки, страницы и обстановка.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Ещё кое-что, прежде чем отпущу тебя работать.",
-      "src": "One more thing before I let you work."
+      "text": "Вот и вся работа, sugar. Дверь — твоя.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Возьми тряпку и сотри его.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "ПРОПУСТИТЬ",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Налил не то? МУСОР выльет всё из шейкера. Это стоит пару монет, так что сперва целься.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Теперь дверь твоя, sugar. Смотри на возраст: кому нет двадцати, тут не пьёт.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Смотри на само удостоверение. Флаг не той страны, чужое лицо, будто нарисовано от руки — это подделка.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "ВОН выставляет за дверь. Выгонишь по делу — при закрытии город скажет спасибо.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Нальёшь ребёнку — заплатишь штраф. Выгонишь честного — потеряешь гостя.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Мелочи. За мелочи и дают чаевые. Теперь подай.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Просили: {garnish}. Перетащи из блюдца на бокал.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "Наведи мышь на название напитка — рядом появится рецепт.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Не двигай мышь пару секунд — рецепт замрёт. Булавка держит его на экране, пока работаешь.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Вот это край. Теперь подай.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Хотят: {garnish}. Зажми блюдце и проведи им один раз по краю бокала.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Сначала закрой. Перетащи крышку на шейкер.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Вот так взбивают. Теперь в бокал, как в прошлый раз.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Теперь хватай шейкер, зажми кнопку и тряси туда-сюда, пока не заполнится столбец MIX.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Этот взбивают. Ему нужны лёд и воздух, а не ложка.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Список слева ведёт тебя по напитку. Каждый шаг отмечается, как только его сделаешь.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Шёлк, а не пена. Закрой и неси к бокалу.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Этот размешивают, а не взбивают. Возьми ложку и води кругами над открытым шейкером.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Ещё кое-что, прежде чем отпущу тебя работать.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

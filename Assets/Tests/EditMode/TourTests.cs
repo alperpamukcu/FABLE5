@@ -80,7 +80,7 @@ namespace LastCall.Tests
         /// bench's.</summary>
         private static TycoonRun NewRun(string seed, TourScript tour, QuestBook book = null) =>
             new TycoonRun(NewShelf(), Menu, new RunRng(seed), config: new TycoonConfig(startingMoney: 5000, savorSeconds: 6.0),
-                tour: tour, quests: book);
+                tours: tour != null ? new TourBook(tour) : null, quests: book);
 
         private static void TickFor(TycoonRun run, double seconds, double step = 0.25)
         {
@@ -354,6 +354,142 @@ namespace LastCall.Tests
                 "the cellar can be shown before anybody sits down");
         }
 
+        // ── the first-use lessons ───────────────────────────────────────────────────
+
+        private static readonly IngredientCard Lemon =
+            new IngredientCard("lemon", "Lemon", IngredientType.Sour, 2, new IngredientInfo("lemon"));
+
+        private static readonly RecipeDefinition GinSour =
+            new RecipeDefinition("gin_sour_t", "Gin Sour", rank: 3, baseFlavor: 6, baseMult: 1,
+                flavorPerLevel: 0, multPerLevel: 0,
+                requirements: Array.Empty<PatternRequirement>(),
+                ratioRequirements: new[]
+                {
+                    new RatioRequirement("gin", 0.5, 0.7),
+                    new RatioRequirement("lemon", 0.3, 0.5),
+                },
+                minFill: 0.5, prep: PrepMethod.Shaken);
+
+        private static TourScript Lesson(string id, TourCue when, params TourStep[] steps) => new TourScript(id, when, steps);
+
+        private static TourBook Lessons() => new TourBook(new[]
+        {
+            Lesson("door", TourCue.FirstDoor, S("door_age", TourWait.Heard, "card_age"), S("door_kick", TourWait.Heard, "card_kick")),
+            Lesson("shake", TourCue.FirstShake, S("shake_cap", TourWait.Capped, "lid"), S("shake_it", TourWait.Shaken, "tin"),
+                S("shake_done", TourWait.Heard)),
+        });
+
+        private static TycoonRun LessonRun(string seed, IReadOnlyList<RecipeDefinition> menu = null) =>
+            new TycoonRun(new Shelf(new[]
+                {
+                    new ShelfBottle(Gin.Clone(), capacity: 4000),
+                    new ShelfBottle(Soda.Clone(), capacity: 4000),
+                    new ShelfBottle(Lemon.Clone(), capacity: 4000),
+                }),
+                menu ?? Menu, new RunRng(seed), config: new TycoonConfig(startingMoney: 5000, savorSeconds: 6.0),
+                tours: Lessons());
+
+        [Test]
+        public void TheDoorLesson_StartsTheFirstTimeACardIsReadWithTheDoorOpen_AndOnlyOnce()
+        {
+            var run = LessonRun("door-lesson");
+            Assert.IsFalse(run.TourRunning, "no house tour in this book");
+            TickUntil(run, () => run.Floor.Seated.Any(v => v.HasOrdered), "somebody sits and decides");
+            var first = run.Floor.Seated.First(v => v.HasOrdered);
+            first.InspectId();
+            run.Tick(0.25);
+            Assert.IsFalse(run.TourRunning, "no door yet: the bar has no stars");
+
+            run.DevPresetStars(1.0);
+            Assert.IsTrue(run.Has(Feature.Door));
+            TickUntil(run, () => run.Floor.Seated.Any(v => v.HasOrdered && !v.IdInspected), "a second guest decides");
+            var second = run.Floor.Seated.First(v => v.HasOrdered && !v.IdInspected);
+            second.InspectId();
+            run.Tick(0.25);
+            Assert.AreEqual("door", run.TourId, "the card read with the door open starts the lesson");
+            Assert.AreSame(second, run.TourSubject, "about the guest whose card it was");
+            double patience = second.PatienceLeft;
+            TickFor(run, 60);
+            Assert.AreEqual(patience, second.PatienceLeft, "the door is held while she explains it");
+            run.HearTour();
+            run.HearTour();
+            Assert.IsFalse(run.TourRunning);
+            Assert.IsNull(run.TourSubject);
+            CollectionAssert.Contains(run.ToursTaught.ToList(), "door");
+
+            TickUntil(run, () => run.Floor.Seated.Any(v => v.HasOrdered && !v.IdInspected), "a third guest decides");
+            run.Floor.Seated.First(v => v.HasOrdered && !v.IdInspected).InspectId();
+            run.Tick(0.25);
+            Assert.IsFalse(run.TourRunning, "a lesson plays once a run");
+        }
+
+        [Test]
+        public void TheShakeLesson_StartsWhenAShakenDrinkStandsUnmixed_AndWaitsForTheShake()
+        {
+            var run = LessonRun("shake-lesson", new[] { Menu[0], GinSour });
+            int i0 = 0, i1 = 1;
+            double lo0 = Math.Max(0.5, GinSour.PerfectBoxes[i0] * 0.2), hi0 = Math.Min(0.7, GinSour.PerfectBoxes[i0] * 0.2 + 0.2);
+            double lo1 = Math.Max(0.3, GinSour.PerfectBoxes[i1] * 0.2), hi1 = Math.Min(0.5, GinSour.PerfectBoxes[i1] * 0.2 + 0.2);
+            double gin = (lo0 + hi0) * 0.5, lemon = (lo1 + hi1) * 0.5, total = gin + lemon;
+            run.PourMeasure("gin", gin / total * 0.9);
+            run.PourMeasure("lemon", lemon / total * 0.9);
+            Assert.AreEqual(PrepMethod.Shaken, run.TinMethod, "the tin reads as the shaken page");
+            run.Tick(0.25);
+            Assert.AreEqual("shake", run.TourId, "an unmixed shaken drink starts the lesson");
+            Assert.AreEqual("shake_cap", run.TourStep.Id);
+            run.TourSaw(TourWait.Capped);
+            Assert.AreEqual("shake_it", run.TourStep.Id);
+            run.Shake(1.0);
+            run.Tick(0.25);
+            Assert.AreEqual("shake_done", run.TourStep.Id, "the shake moves it on");
+            run.HearTour();
+            Assert.IsFalse(run.TourRunning);
+        }
+
+        [Test]
+        public void ALessonWhoseDrinkIsBinned_IsOver()
+        {
+            var run = LessonRun("binned-lesson", new[] { Menu[0], GinSour });
+            run.PourMeasure("gin", 0.55);
+            run.PourMeasure("lemon", 0.35);
+            run.Tick(0.25);
+            if (!run.TourRunning) Assert.Inconclusive("the tin did not read as the shaken page at these shares");
+            run.DiscardGlass();
+            run.Tick(0.25);
+            Assert.IsFalse(run.TourRunning, "nothing left to shake: the lesson is over, the door open again");
+            TickFor(run, 5);
+            Assert.Greater(run.Floor.Elapsed, 4.9);
+        }
+
+        [Test]
+        public void TheLessonsPlayed_ComeBackWithASavedBar()
+        {
+            var run = LessonRun("saved-lessons");
+            run.DevPresetStars(1.0);
+            TickUntil(run, () => run.Floor.Seated.Any(v => v.HasOrdered), "somebody sits and decides");
+            run.Floor.Seated.First(v => v.HasOrdered).InspectId();
+            run.Tick(0.25);
+            Assert.AreEqual("door", run.TourId);
+            run.SkipTour();
+            int guard = 0;
+            while (run.Phase == TycoonPhase.DayOpen)
+            {
+                Assert.Less(guard++, 40000, "the night must end");
+                run.Tick(0.5);
+                TestNight.Clean(run);
+                foreach (var v in run.Floor.Seated.ToList())
+                    if (v.State == VisitState.Waiting && v.HasOrdered) run.DeclineOrder(v);
+            }
+            RunSnapshot snap = null;
+            run.ContinueToNextDay(s => snap = s);
+            Assert.IsNotNull(snap);
+            CollectionAssert.Contains(snap.toursTaught, "door");
+            var back = TycoonRun.Restore(snap, Menu, new[] { Gin, Soda, Lemon },
+                config: new TycoonConfig(startingMoney: 5000, savorSeconds: 6.0), tours: Lessons());
+            CollectionAssert.Contains(back.ToursTaught.ToList(), "door", "the resumed bar remembers the lesson");
+            Assert.IsFalse(back.TourRunning);
+        }
+
         // ── the shipped tour ────────────────────────────────────────────────────────
 
         private static string ReadData(string relative) =>
@@ -365,11 +501,23 @@ namespace LastCall.Tests
         [Test]
         public void TheShippedTour_Parses_AndPointsOnlyAtThingsTheScreenKnows()
         {
-            var tour = DataLoader.ParseTour(ReadResource("tour.json"));
+            var book = DataLoader.ParseTours(ReadResource("tour.json"));
+            var tour = book.For(TourCue.FirstNight);
+            Assert.IsNotNull(tour, "the house tour");
             Assert.Greater(tour.Steps.Count, 10);
             Assert.AreEqual(1, tour.Steps.Count(s => s.Wait == TourWait.GuestReady), "one guest");
-            foreach (var step in tour.Steps) Assert.IsTrue(TourPoints.Known(step.Point), step.Id);
-            Assert.AreEqual(TourWait.Heard, tour.Steps[tour.Steps.Count - 1].Wait);
+            Assert.IsTrue(tour.Steps.Any(s => s.Wait == TourWait.RecipePinned), "the tour shows the recipe can be pinned");
+            foreach (var cue in new[] { TourCue.FirstDoor, TourCue.FirstShake, TourCue.FirstStir, TourCue.FirstGarnish, TourCue.FirstRim })
+                Assert.IsNotNull(book.For(cue), "a lesson for " + cue);
+            foreach (var t in book.Tours)
+            {
+                foreach (var step in t.Steps)
+                {
+                    Assert.IsTrue(TourPoints.Known(step.Point), step.Id);
+                    Assert.IsTrue(TourPoints.Known(step.To), step.Id);
+                }
+                Assert.AreEqual(TourWait.Heard, t.Steps[t.Steps.Count - 1].Wait, t.Id + " ends on a thing said");
+            }
         }
 
         [Test]
@@ -378,12 +526,22 @@ namespace LastCall.Tests
             const string early = "{ \"steps\": [ { \"id\": \"a\", \"wait\": \"heard\", \"point\": \"\", \"say\": [\"Make me a {drink}.\"] }," +
                                  " { \"id\": \"b\", \"wait\": \"guest_ready\", \"point\": \"stool\", \"say\": [\"x\"] }," +
                                  " { \"id\": \"c\", \"wait\": \"heard\", \"point\": \"\", \"say\": [\"y\"] } ] }";
-            Assert.Throws<FormatException>(() => DataLoader.ParseTour(early));
+            Assert.Throws<FormatException>(() => DataLoader.ParseTours(Book(early)));
             const string point = "{ \"steps\": [ { \"id\": \"a\", \"wait\": \"heard\", \"point\": \"moon\", \"say\": [\"x\"] } ] }";
-            Assert.Throws<FormatException>(() => DataLoader.ParseTour(point));
+            Assert.Throws<FormatException>(() => DataLoader.ParseTours(Book(point)));
             const string wait = "{ \"steps\": [ { \"id\": \"a\", \"wait\": \"dance\", \"point\": \"\", \"say\": [\"x\"] } ] }";
-            Assert.Throws<FormatException>(() => DataLoader.ParseTour(wait));
+            Assert.Throws<FormatException>(() => DataLoader.ParseTours(Book(wait)));
+            const string garnish = "{ \"steps\": [ { \"id\": \"a\", \"wait\": \"heard\", \"point\": \"\", \"say\": [\"A {garnish}.\"] } ] }";
+            Assert.Throws<FormatException>(() => DataLoader.ParseTours(Book(garnish, "first_door")),
+                "only the garnish lessons know a garnish");
+            Assert.DoesNotThrow(() => DataLoader.ParseTours(Book(garnish, "first_garnish")));
         }
+
+        /// <summary>A one-tour book around the old one-script shape.</summary>
+        private static string Book(string script, string when = "first_night") =>
+            "{ \"tours\": [ { \"id\": \"t\", \"when\": \"" + when + "\", " + script.Trim().TrimStart('{').TrimEnd('}') + " } ] }";
+
+
 
         /// <summary>
         /// The first night as the scene deals it - the starting shelf, the real book of recipes and jobs, the scene's
@@ -395,14 +553,14 @@ namespace LastCall.Tests
         [TestCase("tour-c")]
         public void TheShippedTour_WalksTheFirstNightThrough_OnTheShippedContent(string seed)
         {
-            var tour = DataLoader.ParseTour(ReadResource("tour.json"));
+            var tour = DataLoader.ParseTours(ReadResource("tour.json"));
             var bar = DataLoader.ParseDeck(ReadData("bottles/base_bar.json"));
             var recipes = DataLoader.ParseRecipes(ReadData("recipes/recipes.json"));
             var fixtures = DataLoader.ParseFixtures(ReadData("fixtures/fixtures.json")).Fixtures;
             var book = DataLoader.ParseQuests(ReadResource("quests.json"), fixtures);
             var shelf = new Shelf(bar.Cards.Where(bar.IsStarting).Select(c => new ShelfBottle(c.Clone())).ToList());
             var run = new TycoonRun(shelf, recipes, new RunRng(seed), config: TycoonConfig.ForTheScene,
-                fixtures: fixtures, quests: book, tour: tour);
+                fixtures: fixtures, quests: book, tours: tour);
 
             int guard = 0;
             while (run.TourRunning)

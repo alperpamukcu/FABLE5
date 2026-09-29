@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "点酒客证外面任意位置，就能收起来。",
-      "src": "Click anywhere off the card to put it away."
+      "text": "点酒客证外面任意位置，就能收起来。钉住的酒谱会留着。",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "活儿就是这些，sugar。门交给你了。",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "门一关，先出今晚的结算单，再开商店：酒、酒谱页和陈设。",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "放你去干活之前，还有一件事。",
-      "src": "One more thing before I let you work."
+      "text": "活儿就是这些，sugar。门交给你了。",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "拿起抹布，把它擦掉。",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "跳过",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "倒错了？点“倒掉”就能把雪克壶倒空。要花一点钱，所以先瞄准再倒。",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "现在门交给你了，sugar。看年龄：不满二十岁，在这儿不能喝酒。",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "看酒客证本身。国旗和国家对不上、脸不是本人、证件像手画的——那就是假的。",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "“请出”就是送他们出门。请对了人，打烊时城里会谢你。",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "给孩子倒酒，罚款你来付。把老实人赶出去，你就少一位客人。",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "都是小细节。客人就为小细节给小费。现在递过去。",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "客人要{garnish}。把它从碟子里拖到杯子上。",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "把鼠标移到酒名上，旁边就会出现酒谱。",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "鼠标停一会儿别动，它就会稳住。有图钉钉着，干活时它会一直留在屏幕上。",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "杯边做好了。现在递过去。",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "客人要{garnish}。按住碟子，沿着杯口绕一圈。",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "先盖上。把盖子拖到雪克壶上。",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "这就是摇和。跟刚才一样，倒进杯子。",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "现在抓住雪克壶，按住按键来回摇，直到“MIX”那一栏满了。",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "这杯要摇和。它要的是冰和空气，不是吧勺。",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "左边的清单会一步步带你调这杯酒。每做完一步就会打勾。",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "要的是丝滑，不是泡沫。盖上，倒进杯子。",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "这杯要搅拌，不是摇和。拿起吧勺，在开着的雪克壶上方画圈。",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "放你去干活之前，还有一件事。",
+      "src": "One more thing before I let you work."
     }
   ]
 }

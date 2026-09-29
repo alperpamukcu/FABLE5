@@ -736,52 +736,89 @@ namespace LastCall.Game
         }
 
         /// <summary>
-        /// THE HOUSE TOUR (2026-09-28) — <c>Resources/Data/tour.json</c> into a <see cref="TourScript"/>. Refused here,
-        /// naming the step: a wait nobody reads, a point the screen would not find, a slot other than {drink} and
-        /// {bottle}, and either slot on a step before the guest's card is read (the drink lives behind the card, and
-        /// saying it earlier would be the card made decorative). The order of the steps is Core's to check.
+        /// THE TOURS (2026-09-28, the first-use lessons 2026-09-29) - <c>Resources/Data/tour.json</c> into a
+        /// <see cref="TourBook"/>: the house tour and the short lessons, each with the cue it plays on. Refused here,
+        /// naming the step: a cue or a wait nobody reads, a point the screen would not find, and a slot a line cannot
+        /// fill - {drink} and {bottle} only once a card is read ({bottle} only on the house tour, which makes a drink),
+        /// {garnish} only in the garnish and rim lessons, nothing in the mix lessons (they know no guest). The shape of
+        /// each tour and of the book is Core's to check.
         /// </summary>
-        public static TourScript ParseTour(string json)
+        public static TourBook ParseTours(string json)
         {
             var dto = FromJson<TourFileDto>(json, "tour");
-            if (dto.steps == null || dto.steps.Count == 0)
-                throw new FormatException("Tour file has no steps in it.");
-            var steps = new List<TourStep>(dto.steps.Count);
-            bool cardRead = false;
-            foreach (var t in dto.steps)
+            if (dto.tours == null || dto.tours.Count == 0)
+                throw new FormatException("Tour file has no tours in it.");
+            var tours = new List<TourScript>(dto.tours.Count);
+            foreach (var tour in dto.tours)
             {
-                string who = $"Tour step '{t.id}'";
-                var wait = TourWaits.Parse(t.wait);
-                if (wait == null)
+                var cue = TourCues.Parse(tour.when);
+                if (cue == null)
                     throw new FormatException(
-                        $"{who} waits for '{t.wait}'; a step waits for one of: {string.Join(", ", TourWaits.Names)}.");
-                if (!TourPoints.Known(t.point))
-                    throw new FormatException(
-                        $"{who} points at '{t.point}'; the screen knows: {string.Join(", ", TourPoints.Names)}.");
-                foreach (var line in t.say ?? new List<string>())
-                    foreach (System.Text.RegularExpressions.Match m in
-                             System.Text.RegularExpressions.Regex.Matches(line ?? string.Empty, @"\{([^}]*)\}"))
+                        $"Tour '{tour.id}' plays on '{tour.when}'; a tour plays on one of: {string.Join(", ", TourCues.Names)}.");
+                if (tour.steps == null || tour.steps.Count == 0)
+                    throw new FormatException($"Tour '{tour.id}' has no steps.");
+                bool house = cue.Value == TourCue.FirstNight;
+                bool garnish = cue.Value == TourCue.FirstGarnish || cue.Value == TourCue.FirstRim;
+                bool mix = cue.Value == TourCue.FirstShake || cue.Value == TourCue.FirstStir;
+                bool cardRead = !house;   // a lesson about a guest is about a guest whose card is read
+                var steps = new List<TourStep>(tour.steps.Count);
+                foreach (var t in tour.steps)
+                {
+                    string who = $"Tour step '{t.id}'";
+                    var wait = TourWaits.Parse(t.wait);
+                    if (wait == null)
+                        throw new FormatException(
+                            $"{who} waits for '{t.wait}'; a step waits for one of: {string.Join(", ", TourWaits.Names)}.");
+                    if (!TourPoints.Known(t.point))
+                        throw new FormatException(
+                            $"{who} points at '{t.point}'; the screen knows: {string.Join(", ", TourPoints.Names)}.");
+                    if (!TourPoints.Known(t.to))
+                        throw new FormatException(
+                            $"{who} drags to '{t.to}'; the screen knows: {string.Join(", ", TourPoints.Names)}.");
+                    foreach (var line in t.say ?? new List<string>())
+                        foreach (System.Text.RegularExpressions.Match m in
+                                 System.Text.RegularExpressions.Regex.Matches(line ?? string.Empty, @"\{([^}]*)\}"))
+                        {
+                            string slot = m.Groups[1].Value;
+                            if (slot == "garnish")
+                            {
+                                if (!garnish)
+                                    throw new FormatException($"{who} says {{garnish}}; only the garnish and rim lessons know one.");
+                                continue;
+                            }
+                            if (slot != "drink" && slot != "bottle")
+                                throw new FormatException(
+                                    $"{who} says {{{slot}}}; a tour line knows only {{drink}}, {{bottle}} and {{garnish}}.");
+                            if (mix)
+                                throw new FormatException($"{who} says {{{slot}}}; a mix lesson is about the tin, not a guest.");
+                            if (slot == "bottle" && !house)
+                                throw new FormatException($"{who} says {{bottle}}; only the house tour makes a drink with the player.");
+                            if (!cardRead)
+                                throw new FormatException(
+                                    $"{who} says {{{slot}}} before the guest's card is read; the drink lives behind the card.");
+                        }
+                    try
                     {
-                        string slot = m.Groups[1].Value;
-                        if (slot != "drink" && slot != "bottle")
-                            throw new FormatException($"{who} says {{{slot}}}; a tour line knows only {{drink}} and {{bottle}}.");
-                        if (!cardRead)
-                            throw new FormatException(
-                                $"{who} says {{{slot}}} before the guest's card is read; the drink lives behind the card.");
+                        steps.Add(new TourStep(t.id, t.say, wait.Value, t.point, t.to));
                     }
+                    catch (ArgumentException e)
+                    {
+                        throw new FormatException("Tour file: " + e.Message);
+                    }
+                    if (wait.Value == TourWait.CardRead) cardRead = true;
+                }
                 try
                 {
-                    steps.Add(new TourStep(t.id, t.say, wait.Value, t.point));
+                    tours.Add(new TourScript(tour.id, cue.Value, steps));
                 }
                 catch (ArgumentException e)
                 {
                     throw new FormatException("Tour file: " + e.Message);
                 }
-                if (wait.Value == TourWait.CardRead) cardRead = true;
             }
             try
             {
-                return new TourScript(steps);
+                return new TourBook(tours);
             }
             catch (ArgumentException e)
             {
@@ -1340,6 +1377,14 @@ namespace LastCall.Game
         {
             public int version;
             public string _comment;
+            public List<TourDto> tours;
+        }
+
+        [Serializable]
+        private sealed class TourDto
+        {
+            public string id;
+            public string when;      // TourCue by name
             public List<TourStepDto> steps;
         }
 
@@ -1349,6 +1394,7 @@ namespace LastCall.Game
             public string id;
             public string wait;      // TourWait by name
             public string point;     // TourPoints by name, "" for none
+            public string to;        // a drag step's destination, "" for none
             public List<string> say;
         }
 

@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Klik di mana-mana di luar kad untuk simpan.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Klik di mana-mana di luar kad untuk simpan. Resipi yang dipin kekal di situ.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "Itulah kerjanya, sugar. Pintu ini milik anda.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Bila pintu ditutup, keluar resit malam ini, kemudian pasar: botol, halaman dan perabot.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Satu lagi sebelum saya biar anda bekerja.",
-      "src": "One more thing before I let you work."
+      "text": "Itulah kerjanya, sugar. Pintu ini milik anda.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Ambil kain lap dan gosok sampai hilang.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "LANGKAU",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Salah tuang? BUANG akan kosongkan tin. Ada kosnya sedikit, jadi sasar dulu.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Pintu ini milik anda sekarang, sugar. Semak umur: bawah dua puluh, tak boleh minum di sini.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Tengok kad itu sendiri. Bendera yang bukan negaranya, muka yang bukan mukanya, kad yang nampak dilukis: itu palsu.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "HALAU tunjukkan mereka pintu keluar. Kalau betul, bandar berterima kasih semasa tutup.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Tuang untuk budak, anda bayar denda. Halau orang jujur, anda hilang seorang tetamu.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Perkara kecil. Mereka beri tip untuk perkara kecil. Sekarang serahkan.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Mereka minta {garnish}. Seret dari piringnya ke atas gelas.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "Halakan tetikus pada nama minuman, resipinya muncul di sebelah.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Diamkan tetikus sekejap, resipi akan berhenti. Pin mengekalkannya di skrin semasa anda bekerja.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Bibir gelas siap. Sekarang serahkan.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Mereka mahu {garnish}. Pegang piring dan putarkan sekali keliling bibir gelas.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Tutup dulu. Seret penutup ke atas tin.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Itulah goncangan. Ke gelas, sama seperti tadi.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Sekarang pegang tin, tahan butang dan goncang ke depan ke belakang sampai lajur MIX penuh.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Yang ini digoncang. Ia perlukan ais dan udara, bukan sudu.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Senarai di kiri bawa anda melalui minuman ini. Setiap langkah ditanda bila anda buat.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Sutera, bukan buih. Tutup dan bawa ke gelas.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Yang ini dikacau, bukan digoncang. Ambil sudu dan buat bulatan di atas tin yang terbuka.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Satu lagi sebelum saya biar anda bekerja.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

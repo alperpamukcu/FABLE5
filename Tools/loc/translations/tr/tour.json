@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Kaldırmak için ruhsatın dışına tıkla.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Kaldırmak için ruhsatın dışına tıkla. İğnelenen tarif yerinde kalır.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "İş bu kadar, sugar. Kapı artık senin.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Kapı kapanınca önce gecenin fişi gelir, sonra market: şişeler, sayfalar ve donanımlar.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Seni işine bırakmadan önce bir şey daha.",
-      "src": "One more thing before I let you work."
+      "text": "İş bu kadar, sugar. Kapı artık senin.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Bezi al, sil şunu.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "BUNU ATLA",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Yanlış mı döktün? ÇÖP shaker'ı boşaltır. Azıcık para tutar, o yüzden önce nişan al.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Kapı artık senin, sugar. Yaşa bak: yirmisini doldurmayan burada içmez.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Ruhsatın kendisine bak. Bayrak ülkesini tutmuyorsa, yüz onun değilse, ruhsat elle çizilmiş gibiyse: sahtedir.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "KOV onlara kapıyı gösterir. Doğru kişiyi kovarsan kapanışta şehir sana teşekkür eder.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Çocuğa içki verirsen cezayı sen ödersin. Dürüst birini kovarsan bir müşteri kaybedersin.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Ufak şeyler. Bahşişi ufak şeylere verirler. Şimdi teslim et.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Bunu {garnish} istediler. Tabağından alıp bardağın üstüne sürükle.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "İmleci içkinin adının üstüne getir, tarifi hemen yanında çıkar.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Bir an kıpırdama, tarif yerine oturur. İğne, sen çalışırken onu ekranda tutar.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Kenar tamam. Şimdi teslim et.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Bunu {garnish} istiyorlar. Tabağı tut ve bardağın kenarında bir tur gezdir.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Önce kapat. Kapağı shaker'ın üstüne sürükle.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "İşte çalkalamak bu. Şimdi bardağa, az önceki gibi.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Şimdi shaker'ı kavra, tuşu basılı tut ve MIX sütunu dolana kadar ileri geri çalkala.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Bu çalkalanır. İçinden buz ve hava geçmeli, kaşık değil.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Soldaki liste içkiyi adım adım anlatır. Her adım sen yaptıkça işaretlenir.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Köpük değil, ipek. Kapat ve bardağa götür.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Bu çalkalanmaz, karıştırılır. Kaşığı al, açık shaker'ın üstünde daire çiz.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Seni işine bırakmadan önce bir şey daha.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

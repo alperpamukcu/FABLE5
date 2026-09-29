@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Klicka utanför legget för att lägga undan det.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Klicka utanför legget för att lägga undan det. Det nålade receptet stannar kvar.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "Det var jobbet, sugar. Dörren är din.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "När dörren stängs kommer kvällens kvitto, sen marknaden: flaskor, sidor och inredning.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "En sak till innan jag låter dig jobba.",
-      "src": "One more thing before I let you work."
+      "text": "Det var jobbet, sugar. Dörren är din.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Ta trasan och gnugga bort den.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "HOPPA ÖVER",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Hällt fel? SLÄNG tömmer shakern. Det kostar lite, så sikta först.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Dörren är din nu, sugar. Kolla åldern: under tjugo dricker ingen här.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Titta på själva legget. Fel lands flagga, ett ansikte som inte är deras, ett leg som ser ritat ut: då är det falskt.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "UT visar dem på dörren. Gör du rätt tackar staden dig vid stängning.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Häller du åt en unge betalar du böterna. Kastar du ut någon ärlig förlorar du en gäst.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Småsaker. De ger dricks för småsaker. Räck över den nu.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "De bad om den {garnish}. Dra garneringen från skålen till glaset.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "Håll musen över drinkens namn, så dyker receptet upp bredvid.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Håll musen still en stund så lägger det sig. Nålen håller det kvar på skärmen medan du jobbar.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Så ser en kant ut. Räck över den nu.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "De vill ha den {garnish}. Håll skålen och dra den ett varv runt glasets kant.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Lock på först. Dra locket till shakern.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Så skakar man. Över till glaset, som förut.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Ta shakern nu, håll inne knappen och skaka fram och tillbaka tills MIX-stapeln är full.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Den här skakas. Den vill ha is och luft igenom sig, inte en sked.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Listan till vänster leder dig genom drinken. Varje steg bockas av när du gör det.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Siden, inte skum. Lock på och ta den till glaset.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Den här rörs, inte skakas. Ta skeden och rör i cirklar över den öppna shakern.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "En sak till innan jag låter dig jobba.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

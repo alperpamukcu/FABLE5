@@ -78,12 +78,12 @@ namespace LastCall.Game
         /// quietly chain-less run. The run holds its own place in it; the UI reads the lines from here.</summary>
         public QuestBook Quests { get; private set; }
 
-        /// <summary>The house tour (2026-09-28, TycoonRun.Tour) — <c>Resources/Data/tour.json</c>, read loudly like the
+        /// <summary>The house tour and the first-use lessons (2026-09-28/29, TycoonRun.Tour) — <c>Resources/Data/tour.json</c>, read loudly like the
         /// book. Null when the file is missing: the first night then opens the way it did before there was one.</summary>
-        public TourScript Tour { get; private set; }
+        public TourBook Tours { get; private set; }
 
         /// <summary>
-        /// Whether a NEW RUN opens on the tour. On in the game; the PlayMode fixtures switch it off for their session
+        /// Whether a NEW RUN opens on the tour (and a resumed bar keeps its first-use lessons). On in the game; the PlayMode fixtures switch it off for their session
         /// (they play the first night by hand, with their own mouse, and a held door would stop them) and it comes back
         /// on at every play, as <see cref="Ceremony.Pace"/> does. A resumed bar never has one: the tour lives inside a
         /// first night, and a save is written at a dawn.
@@ -213,7 +213,7 @@ namespace LastCall.Game
                     "Resources/Data/quests.json is missing: the hostess has no book, and a run without one is not the game.");
             Quests = DataLoader.ParseQuests(questsJson.text, dressing.Fixtures);
             var tourJson = Resources.Load<TextAsset>("Data/tour");
-            Tour = tourJson != null ? DataLoader.ParseTour(tourJson.text) : null;
+            Tours = tourJson != null ? DataLoader.ParseTours(tourJson.text) : null;
             Cast = papersJson != null ? DataLoader.ParsePapers(papersJson.text) : null;
             var strangersJson = Resources.Load<TextAsset>("Data/strangers");
             Strangers = strangersJson != null ? DataLoader.ParsePapers(strangersJson.text) : null;
@@ -270,7 +270,8 @@ namespace LastCall.Game
                     glassware: Glassware,
                     fixtures: content.Dressing.Fixtures,
                     story: storyInPlay ? Story : null,
-                    quests: Quests);
+                    quests: Quests,
+                    tours: TourForNewRuns ? Tours : null);
                 Tycoon = run;
                 CurrentSeed = snap.seed;
                 Debug.Log($"[LastCall] Run resumed — seed '{CurrentSeed}', night {run.Day}, " +
@@ -318,7 +319,7 @@ namespace LastCall.Game
                 fixtures: content.Dressing.Fixtures,
                 story: storyInPlay ? Story : null,
                 quests: Quests,
-                tour: TourForNewRuns ? Tour : null);
+                tours: TourForNewRuns ? Tours : null);
 
             Debug.Log($"[LastCall] Tycoon run started — seed '{CurrentSeed}', " +
                       $"{startingBottles.Count} bottles, wallet ${Tycoon.Money}, " +

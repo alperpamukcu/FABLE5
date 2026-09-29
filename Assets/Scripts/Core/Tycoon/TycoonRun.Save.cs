@@ -140,6 +140,9 @@ namespace LastCall.Core
         public List<string> storyKeptIds;
         public List<StoryPersonState> storyPeople;
         public List<string> lessonsQueued;
+        /// <summary>The tours played (2026-09-29, TycoonRun.Tour: the house tour and the first-use lessons), so a resumed
+        /// bar does not hear a lesson twice. Added without a version bump: an older file reads none.</summary>
+        public List<string> toursTaught;
 
         public bool hasRegulars;
         public List<PersonState> people;
@@ -274,6 +277,8 @@ namespace LastCall.Core
                 foreach (var lesson in _lessons) snap.lessonsQueued.Add(lesson.Cue.ToString());
             }
 
+            snap.toursTaught = ToursTaughtForSave();
+
             snap.hasRegulars = _regulars != null;
             if (_regulars != null)
             {
@@ -336,7 +341,8 @@ namespace LastCall.Core
             IReadOnlyList<GlasswareDefinition> glassware = null,
             IReadOnlyList<FixtureDefinition> fixtures = null,
             StoryArc story = null,
-            QuestBook quests = null)
+            QuestBook quests = null,
+            TourBook tours = null)
         {
             if (snap == null) throw new ArgumentNullException(nameof(snap));
             if (snap.version != RunSnapshot.Version)
@@ -377,7 +383,7 @@ namespace LastCall.Core
             // and the LAST thing restored is the streams, so nothing the constructor rolled
             // can leak into the resumed run.
             var run = new TycoonRun(new Shelf(bottles), recipes, new RunRng(snap.seed ?? string.Empty),
-                config, regulars, catalogue, glassware, locked, fixtures, story, quests);
+                config, regulars, catalogue, glassware, locked, fixtures, story, quests, tours);
             run.ApplySnapshot(snap, recipeById, Recipe);
             return run;
         }
@@ -496,6 +502,8 @@ namespace LastCall.Core
             QuestJustGiven = null;
             _visitedTonight = false;
             _visitWaited = 0;
+
+            RestoreToursTaught(snap.toursTaught);
 
             if (Story != null)
             {

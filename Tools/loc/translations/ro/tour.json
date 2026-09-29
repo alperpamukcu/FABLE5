@@ -6,6 +6,11 @@
       "src": "SKIP THE TOUR"
     },
     {
+      "key": "chrome.tour.skip_lesson",
+      "text": "SARI PESTE",
+      "src": "SKIP THIS"
+    },
+    {
       "key": "data.tour.bill.say.0",
       "text": "La închidere, chiria iese înapoi de acolo. Treci cu mouse-ul peste bani pentru nota din seara asta.",
       "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
@@ -14,6 +19,11 @@
       "key": "data.tour.bill.say.1",
       "text": "Închei trei seri la rând pe minus și localul ăsta se stinge iar.",
       "src": "End three nights running in the red and this room goes dark again."
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Ai turnat greșit? ARUNCĂ golește shakerul. Costă puțin, așa că țintește întâi.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
     },
     {
       "key": "data.tour.book.say.0",
@@ -47,8 +57,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Apasă în afara legitimației ca s-o pui deoparte.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Apasă oriunde în afara legitimației ca s-o pui deoparte. Rețeta fixată rămâne.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -71,19 +81,49 @@
       "src": "Escape pauses the night. The settings are in there."
     },
     {
+      "key": "data.tour.door_age.say.0",
+      "text": "Acum ușa e a ta, sugar. Verifică vârsta: sub douăzeci de ani, aici nu se bea.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Uită-te la legitimația însăși. Un steag care nu e al țării lui, o față care nu e a lui, o legitimație care pare desenată: e falsă.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "AFARĂ îi arată ușa. Dacă ai dreptate, orașul îți mulțumește la închidere.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Torni unui copil și plătești amenda. Dai afară o față cinstită și pierzi un client.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
       "key": "data.tour.doors.say.0",
-      "text": "Asta e treaba, sugar. Ușa e a ta.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Când se închide ușa vine nota serii, apoi piața: sticle, pagini și dotări.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Încă un lucru înainte să te las la treabă.",
-      "src": "One more thing before I let you work."
+      "text": "Asta e treaba, sugar. Ușa e a ta.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
       "text": "Acum lasă-l să termine. Nimănui nu-i place să fie grăbit.",
       "src": "Now let them finish. Nobody likes being rushed."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Lucrurile mici. Pentru lucrurile mici lasă bacșiș. Acum dă-i-o.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "A cerut {garnish}. Trage garnitura din bol pe pahar.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
     },
     {
       "key": "data.tour.glass.say.0",
@@ -131,6 +171,11 @@
       "src": "Now the {bottle}. Back to the bar with the arrow, take it from the cellar and pour it in."
     },
     {
+      "key": "data.tour.order.say.0",
+      "text": "Treci cu mouse-ul peste numele băuturii și rețeta apare alături.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
       "key": "data.tour.patience.say.0",
       "text": "Bara de deasupra capului e răbdarea. Când se golește, pleacă.",
       "src": "That bar over their head is patience. Once it's gone, so are they."
@@ -139,6 +184,11 @@
       "key": "data.tour.patience.say.1",
       "text": "În seara asta, cât te plimb prin local, te așteaptă. După aceea, nu.",
       "src": "Tonight, while I'm showing you round, it waits for you. After that it won't."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Ține mouse-ul nemișcat o clipă și se așază. Pioneza o ține pe ecran cât lucrezi.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
     },
     {
       "key": "data.tour.pour.say.0",
@@ -156,9 +206,39 @@
       "src": "They pay when they get up. The tip rides on speed, craft and a good fill."
     },
     {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Asta e o crustă. Acum dă-i-o.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Vrea {garnish}. Ține bolul și plimbă-l o dată de jur împrejurul buzei paharului.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
       "key": "data.tour.serve_key.say.0",
       "text": "Îți place? SERVEȘTE pune paharul pe tejghea.",
       "src": "Happy with it? SERVE IT puts the glass on the counter."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Întâi pune capacul. Trage-l peste shaker.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Așa se agită. Acum la pahar, ca înainte.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Acum apucă shakerul, ține butonul apăsat și agită-l înainte și înapoi până se umple coloana MIX.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Asta se agită. Vrea gheață și aer prin ea, nu lingură.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
     },
     {
       "key": "data.tour.stars.say.0",
@@ -169,6 +249,21 @@
       "key": "data.tour.stars.say.1",
       "text": "Ele deblochează sticlele bune, paginile mai bune, dotările din piață.",
       "src": "They open the good bottles, the better pages, the fittings in the market."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Lista din stânga te poartă prin băutură. Fiecare pas se bifează pe măsură ce îl faci.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Mătase, nu spumă. Pune capacul și du-l la pahar.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Asta se amestecă, nu se agită. Ia lingura și fă cercuri deasupra shakerului deschis.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
     },
     {
       "key": "data.tour.stool.say.0",
@@ -209,6 +304,11 @@
       "key": "data.tour.wipe.say.1",
       "text": "Ia cârpa și șterge-o.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Încă un lucru înainte să te las la treabă.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

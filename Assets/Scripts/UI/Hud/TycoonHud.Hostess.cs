@@ -70,7 +70,7 @@ namespace LastCall.UI
             var visit = run.HostessVisit;
             // SHE IS IN THE ROOM FOR A VISIT - OR FOR THE HOUSE TOUR (2026-09-28, TycoonRun.Tour): the first night opens on
             // her, and the tour's end hands straight on to the first job, so she walks in once and out once.
-            bool wanted = visit != null || TourUp(run);
+            bool wanted = visit != null || (TourUp(run) && run.TourIsHouse);   // the first-use lessons are said without her walk-on
             float dt = HostessDelta(Paused);
 
             switch (_hostessBeat)
@@ -106,7 +106,7 @@ namespace LastCall.UI
             // NOBODY TO SAY IT (a story with no host, or nothing in her book to say): the moment is spent silently,
             // as SyncLesson spends a lesson - the job still goes on the bar.
             var host = Hostess;
-            if (host == null && TourUp(run)) { run.SkipTour(); return; }   // nobody to show the player round
+            if (host == null && TourUp(run) && run.TourIsHouse) { run.SkipTour(); return; }   // nobody to show the player round
             if (host == null || (!TourUp(run) && HostessLines(run, visit, host).Count == 0))
             {
                 run.HearHostess();

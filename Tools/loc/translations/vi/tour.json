@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "Bấm vào chỗ nào ngoài thẻ để cất nó đi.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "Bấm vào chỗ nào ngoài thẻ để cất nó đi. Công thức đã ghim vẫn ở lại.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "Việc là vậy đó, sugar. Cánh cửa giao cho bạn.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "Khi cửa đóng, phiếu tổng kết đêm hiện lên, rồi tới cửa hàng: chai, trang và nội thất.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "Còn một chuyện trước khi bạn vào việc.",
-      "src": "One more thing before I let you work."
+      "text": "Việc là vậy đó, sugar. Cánh cửa giao cho bạn.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "Cầm khăn lau và chùi nó đi.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "BỎ QUA",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "Rót sai à? Bấm BỎ để đổ sạch bình. Mất chút tiền đấy, nên nhắm kỹ trước khi rót.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "Giờ cánh cửa là của bạn, sugar. Xem tuổi: dưới hai mươi thì không được uống ở đây.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "Nhìn chính tấm thẻ. Cờ không phải nước của họ, mặt không phải của họ, thẻ trông như vẽ tay: đó là thẻ giả.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "MỜI RA là tiễn họ ra cửa. Mời đúng người thì lúc đóng cửa thành phố sẽ cảm ơn bạn.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "Rót cho trẻ con là bạn đóng phạt. Đuổi người ngay thẳng là bạn mất một vị khách.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "Chuyện nhỏ thôi. Khách boa vì những chuyện nhỏ. Giờ đưa cho khách.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "Khách muốn {garnish}. Kéo nó từ đĩa thả lên ly.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "Rê chuột lên tên đồ uống, công thức sẽ hiện ngay bên cạnh.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "Để yên chuột một lát là nó đứng lại. Cái ghim giữ nó trên màn hình trong lúc bạn làm.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "Viền là vậy đó. Giờ đưa cho khách.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "Khách muốn {garnish}. Giữ chiếc đĩa và rê nó một vòng quanh miệng ly.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "Đậy nắp trước đã. Kéo nắp lên bình.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "Lắc là vậy đó. Giờ sang ly, như lúc nãy.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "Giờ cầm bình, giữ nút chuột và lắc qua lắc lại cho tới khi cột MIX đầy.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "Món này phải lắc. Nó cần đá và không khí luồn qua, không phải thìa.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "Danh sách bên trái dẫn bạn qua từng bước pha. Xong bước nào, bước đó được đánh dấu.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "Mịn như lụa, không bọt. Đậy nắp rồi sang ly.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "Món này phải khuấy, không lắc. Cầm thìa và khuấy vòng tròn trên bình đang mở.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "Còn một chuyện trước khi bạn vào việc.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

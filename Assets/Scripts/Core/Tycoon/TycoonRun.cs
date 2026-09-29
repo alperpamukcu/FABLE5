@@ -483,7 +483,7 @@ namespace LastCall.Core
             IReadOnlyList<FixtureDefinition> fixtures = null,
             StoryArc story = null,
             QuestBook quests = null,
-            TourScript tour = null)
+            TourBook tours = null)
         {
             _shelf = shelf ?? throw new ArgumentNullException(nameof(shelf));
             if (recipes == null) throw new ArgumentNullException(nameof(recipes));
@@ -532,7 +532,7 @@ namespace LastCall.Core
             Quests = quests;
             if (QuestsLive) _visitFrom = QuestRules.FirstVisitNight;
             // The house tour (TycoonRun.Tour), opt-in the same way: before the first night's lesson, which it says itself.
-            StartTour(tour);
+            StartTour(tours);
             // The first night is the first thing the host has to say (GDD 26 §1b).
             TeachAtOpen();
         }

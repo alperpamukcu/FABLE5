@@ -153,8 +153,12 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   what she says, what the screen lights, what moves it on), `TycoonRun.Tour` in Core, `TycoonHud.Tour` on screen.
   While a step is up Core HOLDS THE DOOR (no clock, nobody in, no patience, no marks ageing) but the room still runs,
   and the one tour guest is the night's first planned cover; the first job is handed over as the tour ends, not at
-  the close. Opt-in like the book (constructor `tour:`); NEW RUN passes it while `GameBootstrap.TourForNewRuns` is
+  the close. Opt-in like the book (constructor `tours:`); NEW RUN passes it while `GameBootstrap.TourForNewRuns` is
   on, and the PlayMode fixtures switch that off - a new PlayMode test that plays night one by hand must too.
+  The same file is a BOOK since 2026-09-29 (§9.149, `TourBook`): the house tour plus FIRST-USE LESSONS - the door,
+  the shake, the stir, the garnish, the rim - each starting by itself the first time the player must use that verb,
+  holding the door the same way, played once a run and saved (`toursTaught`). While a step points at something,
+  `TourShade` dims the rest and eats every click outside it, and the hotkeys ask `TourLetsTheKey`.
 - Regulars are **opt-in**: a `TycoonRun` built without `archetypes` has no named customers,
   so bench setups and older tests stay valid. They carry a name, an age, a hometown, visits
   and a relationship — the emotion machinery (stats, charges, reads, `DemandLevel`, mood

@@ -16,18 +16,27 @@ namespace LastCall.UI
                 case "lid": return _stage == Stage.Shaker ? _shakerTop : null;
                 case "shaker": return _stage == Stage.Serve ? _serveShaker : null;
                 case "serve_key": return _stage == Stage.Serve ? _serveDone : null;
-                case "back": return BackKeyOf(_stage == Stage.Shaker ? _shakerPanel : _stage == Stage.Serve ? _servePanel
-                    : _stage == Stage.Tap ? _tapPanel : null);
+                case "back": return Named(OpenPanel, "EdgeBack");
+                // 2026-09-29: the first-use lessons and the tour's finer steps
+                case "tin": return _stage == Stage.Shaker ? _shakerVessel : null;
+                case "spoon": return _stage == Stage.Shaker && _spoonRt != null && _spoonRt.gameObject.activeInHierarchy ? _spoonRt : null;
+                case "mix_column": return _stage == Stage.Shaker ? Named(_shakerPanel, "WorkColumn") : null;
+                case "serve_glass": return _stage == Stage.Serve ? _serveGlass : null;
+                case "bench_steps": return _stage == Stage.Shaker ? _shakerSteps : Named(OpenPanel, "StepPanel");
+                case "bin_key": return Named(OpenPanel, "Bin");
                 default: return null;
             }
         }
 
-        /// <summary>The bench's way back to the bar (AddEdgeBack's "EdgeBack"), wherever the key row hangs it.</summary>
-        private static RectTransform BackKeyOf(RectTransform panel)
+        private RectTransform OpenPanel =>
+            _stage == Stage.Shaker ? _shakerPanel : _stage == Stage.Serve ? _servePanel : _stage == Stage.Tap ? _tapPanel : null;
+
+        /// <summary>A live piece of a bench by name (the way back is AddEdgeBack's "EdgeBack", wherever the key row hangs it).</summary>
+        private static RectTransform Named(RectTransform panel, string name)
         {
             if (panel == null) return null;
             foreach (var rt in panel.GetComponentsInChildren<RectTransform>(false))
-                if (rt.name == "EdgeBack") return rt;
+                if (rt.name == name) return rt;
             return null;
         }
 

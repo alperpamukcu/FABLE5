@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "신분증 바깥 아무 데나 클릭하면 치워져요.",
-      "src": "Click anywhere off the card to put it away."
+      "text": "신분증 바깥 아무 데나 클릭하면 치워져요. 고정한 레시피는 그대로 남아요.",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "이게 일이에요, sugar. 문은 이제 맡길게요.",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "문이 닫히면 오늘 밤 전표가 뜨고, 이어서 마켓이 열려요. 병, 페이지, 인테리어요.",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "일 시작하기 전에 하나만 더요.",
-      "src": "One more thing before I let you work."
+      "text": "이게 일이에요, sugar. 문은 이제 맡길게요.",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "행주를 잡고 문질러 지우세요.",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "건너뛰기",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "잘못 부었어요? '버리기'로 셰이커를 비워요. 돈이 조금 드니까 먼저 잘 겨냥하세요.",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "이제 문은 당신 거예요, sugar. 나이를 확인하세요. 스무 살 미만은 여기서 못 마셔요.",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "신분증 자체를 보세요. 나라와 안 맞는 국기, 본인이 아닌 얼굴, 손으로 그린 듯한 신분증. 그건 가짜예요.",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "'퇴장'을 누르면 내보내요. 제대로 가려내면 마감 때 도시가 고마워해요.",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "아이에게 술을 내주면 벌금을 내요. 정직한 손님을 내쫓으면 손님 하나를 잃고요.",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "작은 것들. 팁은 작은 것에서 나와요. 이제 건네요.",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "{garnish} 해 달래요. 접시에서 잔 위로 끌어다 놓으세요.",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "음료 이름 위에 마우스를 올리면 옆에 레시피가 떠요.",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "잠깐 가만히 있으면 레시피가 자리를 잡아요. 일하는 동안엔 핀이 화면에 붙잡아 둬요.",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "그게 리밍이에요. 이제 건네요.",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "{garnish} 주문이에요. 접시를 잡은 채로 잔 테두리를 따라 한 바퀴 돌리세요.",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "뚜껑부터요. 뚜껑을 셰이커 위로 끌어다 놓으세요.",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "그게 셰이킹이에요. 아까처럼 잔으로 가져가요.",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "이제 셰이커를 잡고 버튼을 누른 채, 'MIX' 칸이 찰 때까지 앞뒤로 흔드세요.",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "이건 셰이킹이에요. 스푼 말고, 얼음과 공기가 통해야 해요.",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "왼쪽 목록이 만드는 순서를 알려 줘요. 한 단계씩 할 때마다 체크돼요.",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "거품 말고 비단처럼. 뚜껑 닫고 잔으로 가져가요.",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "이건 셰이킹 말고 스터링이에요. 스푼을 들고 열린 셰이커 위에서 원을 그리세요.",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "일 시작하기 전에 하나만 더요.",
+      "src": "One more thing before I let you work."
     }
   ]
 }

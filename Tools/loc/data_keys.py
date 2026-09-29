@@ -253,8 +253,8 @@ LIST_NOTES = {
             "on the talk plate while the thing she talks about is lit up on screen. Teach it plainly and in her "
             "voice; a player who has never seen the game reads it. REWRITE it in the language, do not translate "
             "word for word, but keep every on-screen word she names (BILL, SERVE IT) exactly as that screen "
-            "shows it in the language. Keep every {{drink}} / {{bottle}} slot: {{drink}} is a drink's name, "
-            "{{bottle}} a bottle's style word in lower case (gin, tonic). One or two short sentences, ~80 "
+            "shows it in the language. Keep every {{drink}} / {{bottle}} / {{garnish}} slot: {{drink}} is a drink's name, "
+            "{{bottle}} a bottle's style word in lower case (gin, tonic), {{garnish}} a garnish with its article (a lemon twist, a salt rim). One or two short sentences, ~80 "
             "characters. Never write her name out.",
     "story": "Story night '{id}', {field} line {i} of {n}, said on the talk plate by the guest or the host. "
              "One sentence; spoken, characterful.",
@@ -266,6 +266,9 @@ def list_entries(errors, cache, entries, counts):
         data = load(rel, errors, cache)
         made = 0
         items = (data or {}).get(list_prop)
+        if kind == "tour" and items is None and isinstance((data or {}).get("tours"), list):
+            # the book format (2026-09-29): tours[].steps[], step ids unique across the book
+            items = [st for t in data["tours"] for st in (t.get("steps") or [])]
         if not isinstance(items, list):
             errors.append(f"{rel}: no '{list_prop}' list")
             counts.append((kind, "*", rel, list_prop, "lines", 0, 0))

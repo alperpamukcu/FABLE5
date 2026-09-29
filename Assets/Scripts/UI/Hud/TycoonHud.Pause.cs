@@ -500,8 +500,10 @@ namespace LastCall.UI
             if (Keys.Pressed(KeyAction.NextTrack)) { Sfx.SkipTrack(+1); Sfx.Play("click"); }
             if (Keys.Pressed(KeyAction.MusicToggle)) { Sfx.MusicPaused = !Sfx.MusicPaused; Sfx.Play("click"); }
             if (run.Phase != TycoonPhase.DayOpen) return;
-            if (Keys.Pressed(KeyAction.Book)) ToggleRecipeBook();
-            else if (Keys.Pressed(KeyAction.Cellar) && stage != null && (_flow == null || !_flow.IsOpen))
+            // WHILE THE TOUR POINTS AT SOMETHING only that thing answers (2026-09-29, TycoonHud.Tour): the book's key
+            // when it is the book, the cellar's when it is the cellar.
+            if (Keys.Pressed(KeyAction.Book) && TourLetsTheKey("book")) ToggleRecipeBook();
+            else if (Keys.Pressed(KeyAction.Cellar) && TourLetsTheKey("cellar") && stage != null && (_flow == null || !_flow.IsOpen))
                 stage.SetDrawerOpen(!(stage.DrawerPhase > 0.5f));
         }
     }

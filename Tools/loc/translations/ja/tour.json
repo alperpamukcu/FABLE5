@@ -47,8 +47,8 @@
     },
     {
       "key": "data.tour.card_away.say.0",
-      "text": "カードの外ならどこでもクリックすれば、しまえるわ。",
-      "src": "Click anywhere off the card to put it away."
+      "text": "カードの外をクリックすれば、しまえるわ。留めたレシピはそのまま残る。",
+      "src": "Click anywhere off the card to put it away. The pinned recipe stays."
     },
     {
       "key": "data.tour.cellar.say.0",
@@ -72,13 +72,13 @@
     },
     {
       "key": "data.tour.doors.say.0",
-      "text": "これが仕事よ、シュガー。店の扉はあなたに任せる。",
-      "src": "That's the job, sugar. The door is yours."
+      "text": "扉が閉まったら今夜の伝票、それからマーケット。ボトル、ページ、設備が並ぶわ。",
+      "src": "When the door shuts, the night's slip comes up, then the market: bottles, pages and fittings."
     },
     {
       "key": "data.tour.doors.say.1",
-      "text": "仕事に戻す前に、もうひとつだけ。",
-      "src": "One more thing before I let you work."
+      "text": "これが仕事よ、シュガー。店の扉はあなたに任せる。",
+      "src": "That's the job, sugar. The door is yours."
     },
     {
       "key": "data.tour.finish.say.0",
@@ -209,6 +209,106 @@
       "key": "data.tour.wipe.say.1",
       "text": "ふきんを取って、拭き取って。",
       "src": "Grab the cloth and rub it out."
+    },
+    {
+      "key": "chrome.tour.skip_lesson",
+      "text": "スキップ",
+      "src": "SKIP THIS"
+    },
+    {
+      "key": "data.tour.bin.say.0",
+      "text": "注ぎ間違えた？「捨てる」でシェイカーを空にできる。少しお金がかかるから、狙いは先に。",
+      "src": "Pour it wrong? The bin tips the tin out. It costs a little, so aim first."
+    },
+    {
+      "key": "data.tour.door_age.say.0",
+      "text": "扉はもうあなたのものよ、シュガー。年齢を見て。二十歳未満はここでは飲めない。",
+      "src": "The door is yours now, sugar. Check the age: under twenty, they don't drink here."
+    },
+    {
+      "key": "data.tour.door_fake.say.0",
+      "text": "カードそのものを見て。国と違う国旗、本人じゃない顔、手描きみたいなカード。それは偽物よ。",
+      "src": "Look at the card itself. A flag that isn't their country, a face that isn't theirs, a card that looks drawn: that's a fake."
+    },
+    {
+      "key": "data.tour.door_kick.say.0",
+      "text": "「退店」でお帰りいただく。正しく見抜けば、閉店のとき街がお礼をくれるわ。",
+      "src": "KICK shows them the door. Get it right and the city thanks you at closing."
+    },
+    {
+      "key": "data.tour.door_kick.say.1",
+      "text": "子どもに出したら罰金。正直なお客を追い出したら、お客をひとり失う。",
+      "src": "Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest."
+    },
+    {
+      "key": "data.tour.garnish_done.say.0",
+      "text": "小さなこと。チップは小さなことにつくの。さあ渡して。",
+      "src": "Little things. They tip for little things. Now hand it over."
+    },
+    {
+      "key": "data.tour.garnish_drop.say.0",
+      "text": "ご注文は{garnish}。皿からグラスへドラッグして。",
+      "src": "They asked for {garnish}. Drag it from its dish onto the glass."
+    },
+    {
+      "key": "data.tour.order.say.0",
+      "text": "ドリンク名にカーソルを合わせると、横にレシピが出るわ。",
+      "src": "Hover over the drink's name and its recipe comes up beside it."
+    },
+    {
+      "key": "data.tour.pin.say.0",
+      "text": "少しじっとしていれば、レシピが止まる。ピンで作業中も画面に留めておけるわ。",
+      "src": "Hold still a moment and it settles. The pin keeps it up on the screen while you work."
+    },
+    {
+      "key": "data.tour.rim_done.say.0",
+      "text": "それがスノースタイル。さあ渡して。",
+      "src": "That's a rim. Now hand it over."
+    },
+    {
+      "key": "data.tour.rim_lap.say.0",
+      "text": "ご注文は{garnish}。皿を持ったまま、グラスの縁に沿って一周させて。",
+      "src": "They want {garnish}. Hold the dish and run it once round the rim of the glass."
+    },
+    {
+      "key": "data.tour.shake_cap.say.0",
+      "text": "まずフタを。フタをシェイカーへドラッグして。",
+      "src": "Cap it first. Drag the lid onto the tin."
+    },
+    {
+      "key": "data.tour.shake_done.say.0",
+      "text": "それがシェイク。さっきと同じように、グラスへ。",
+      "src": "That's a shake. Over to the glass, same as before."
+    },
+    {
+      "key": "data.tour.shake_it.say.0",
+      "text": "さあシェイカーをつかんで。ボタンを押したまま、「MIX」のゲージが満ちるまで前後に振って。",
+      "src": "Now grab the tin, hold the button and shake it back and forth until the MIX column fills."
+    },
+    {
+      "key": "data.tour.shake_why.say.0",
+      "text": "これはシェイク。スプーンじゃなく、氷と空気を通したいの。",
+      "src": "This one is shaken. It wants ice and air through it, not a spoon."
+    },
+    {
+      "key": "data.tour.steps_list.say.0",
+      "text": "左のリストが作り方を案内してくれる。済んだ手順から印がつくわ。",
+      "src": "The list on the left walks you through the drink. Each step ticks off as you do it."
+    },
+    {
+      "key": "data.tour.stir_done.say.0",
+      "text": "泡じゃなく、絹。フタをしてグラスへ。",
+      "src": "Silk, not foam. Cap it and take it over."
+    },
+    {
+      "key": "data.tour.stir_spoon.say.0",
+      "text": "これはシェイクじゃなく、ステア。スプーンを持って、開いたシェイカーの上で円を描いて。",
+      "src": "This one is stirred, not shaken. Take the spoon and work circles over the open tin."
+    },
+    {
+      "key": "data.tour.doors.say.2",
+      "text": "仕事に戻す前に、もうひとつだけ。",
+      "src": "One more thing before I let you work."
     }
   ]
 }
