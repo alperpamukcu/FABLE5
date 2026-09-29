@@ -174,6 +174,8 @@ re-blesses them once before trusting a red look test (`Docs/HANDOFF.md` §4).
   accessor picks), and they carry their own colour, so a caller may dim one with alpha but
   never tint it. The art is `Items/{star3d,heart3d}[_socket][_16].png`; the heart and the 16s
   are drawn by `Tools/heart_icon.py` and `Tools/icon_sizes.py`, never by hand or a generator.
+  COMFORT's mark is a DIAMOND in the same language (2026-09-29): `ItemArt.Medal(lit, px)` (the name stayed) returns
+  `Items/diamond_{lit,socket}` (12 drawn on a 16 canvas) or `_32` (2x on a 32 canvas), drawn by `Tools/diamond_icon.py`.
 - **Every fitting buffs one kind, and only while it is INSTALLED** (2026-09-23, GDD_MEVCUT §6.4):
   `buff`/`buffPct` on every `fixtures.json` row, one kind per slot, caps per kind
   (`FittingBuffs`, `HouseBuffs`). A bare room must stay bit-for-bit today's game — the hooks are

@@ -1902,6 +1902,26 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.144 · Konforun işareti elmas oldu (2026-09-29)
+
+Yazar: “Konfor ikonu elmas iconu ile değiştirilsin sanat tarzı servis iconu olan kalp ile yıldız ikonlarında olsun
+kullanıldığı yerlerdeki boylarına göre yap aynı servis(kalp) ikonunda olduğu gibi.”
+
+- **Çizim** (`Tools/diamond_icon.py`): yazarın kendi kalbinin ve yıldızlarının dilinde, kalbin 12×12 hücresinde kesme bir
+  taş. Dışta 1 px beyaz halka, düz tonlu fasetler, açık taç, koyu kuşak bandı, tek noktaya inen alt gövde. Işık kalpteki
+  gibi sağ üstten gelir, gölge sol alttadır. Dolu hal paletin Cyan rampası ve Cream[4] parıltıyla çizilir; boş hal kalp
+  soketinin üç grisiyle (halka, iç kenar, dolgu), yani boş bir yuva gibi okunur. Anti-aliasing yok.
+- **Boylar, kalpteki gibi:** her boy kendi kutusunun tuvalinde, böylece hiçbir yerde kesirli ölçeklenmez.
+  - `diamond_lit` / `diamond_socket`: 12'lik çizim 16'lık tuvalin ortasında, 1×. 16'lık kutular için: şeritler,
+    bufflar, işler, fikstür kartı.
+  - `diamond_*_32`: aynı çizim tam 2× ve 32'lik tuvalin ortasında. 32'lik kutular için: gecenin şeridi (kalp orada
+    24'te, aynı 2×), marketin konfor bandı, YARIN panosu.
+- **Tek kapı:** her çağıran konforun işaretini `ItemArt.Medal` üstünden istiyordu. Ad kaldı, döndürdüğü elmas oldu; eski
+  madalyon (`medal3d`) yalnız yarım içe aktarılmış bir projenin yedeği. Çağıranlarda değişiklik yok.
+- Turun iki satırı (“diamonds how the room feels”, “costs you the room's diamonds”) 28 dilde elmas diyor. ae'nin iş
+  defterindeki üç “medal” satırı onun sonraki turunda değişecek.
+- Doğrulama: EditMode 880/880, PlayMode 20/20. Yıldızların kartında boş elmaslar kalplerle aynı boyda göründü (r267).
+
 ### 9.140 · Ev turu: ilk gece Roxy'nin barı gezdirmesiyle açılır (2026-09-28)
 
 Yazar: “Oyunda bir öğreticimiz olmalı. Oyundaki ilk gün aslında scripted tüm ekranı neleri nasıl yapabileceğini

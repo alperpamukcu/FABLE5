@@ -132,10 +132,16 @@ namespace LastCall.UI
         /// <summary>The half-earned heart — the author drew one (2026-09-08).</summary>
         public static Sprite HeartHalf() => Load("heart_half") ?? Heart(true, 16f);
 
-        /// <summary>The medallion — COMFORT's symbol (GDD 27 §2.2), drawn in the star's own
-        /// language by Tools/medallion_icon.py — lit or empty, at the size it is drawn at.</summary>
+        /// <summary>COMFORT's symbol (GDD 27 §2.2), lit or empty, at the size it is drawn at. A DIAMOND since
+        /// 2026-09-29 (the author: "Konfor ikonu elmas iconu ile değiştirilsin sanat tarzı servis iconu olan kalp ile
+        /// yıldız ikonlarında olsun"): drawn by Tools/diamond_icon.py in the language of the author's own heart and
+        /// stars, at the heart's 12, each size on the canvas of the box it is drawn in: 1x on a 16 canvas for the 16 boxes, 2x on
+        /// a 32 canvas for the 32 ones - so every caller draws it crisp at the heart's own size without knowing it.
+        /// The old medallion (medal3d) is only the fallback of a half-imported project. The name stays: every caller
+        /// already asks for comfort's mark through here.</summary>
         public static Sprite Medal(bool lit, float px) =>
-            Load(Name("medal3d", lit, px));
+            Load(px <= 16f ? (lit ? "diamond_lit" : "diamond_socket") : (lit ? "diamond_lit_32" : "diamond_socket_32"))
+            ?? Load(Name("medal3d", lit, px));
 
         /// <summary>THE PERFECT MARK (2026-09-09, the author: "perfect tarif için bir icon
         /// oluştur bu iconu perfect tarif için kullanalım") — a platinum rosette drawn in the
