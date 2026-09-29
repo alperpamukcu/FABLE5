@@ -59,9 +59,13 @@ namespace LastCall.UI
         private Image _neonTube, _neonBloom;       // the beam's own light, and the state light
         private bool _clockWasLast;       // the readout only re-tints when the state flips
         /// <summary>What the fascia's neon is currently saying: 0 the shift, 1 last call,
-        /// 2 in the red. -1 until the first frame paints it. One writer, one cache — see
+        /// 2 in the red, 3 OUT. -1 until the first frame paints it. One writer, one cache — see
         /// RefreshChrome's own note about the two that used to fight over it.</summary>
         private int _beamState = -1;
+        /// <summary>The sign has died (2026-09-28): set by the game over's NEON beat, cleared with a new run. RefreshTopBar
+        /// reads it and paints the tube a dead Night glass with no bloom. The only other hand on the tube is that beat's
+        /// own flicker (switching it off and on while it dies), and the new run hands it back lit.</summary>
+        private bool _beamOut;
         private readonly Image[] _ratingStars = new Image[BarRating.MaxStars];
 
         // Seats at the counter (GDD 24 §4, 2026-07-22): customers sit along the bar as
@@ -891,8 +895,6 @@ namespace LastCall.UI
 
         private RectTransform _offerRow;
 
-        private Text _bannerText;
-
         private RectTransform _dayEndTablet;
 
         private Text _dayEndTitle;
@@ -1664,6 +1666,7 @@ namespace LastCall.UI
             UnwireAchievements();
             if (_bootstrap != null) _bootstrap.RunStarted -= OnRunStarted;
             CursorSkin.Reset();
+            _signSky?.Release();   // the curtain's sky texture is the HUD's own; a language reload builds a new one
             // The pause menu stops the engine's clock (TycoonHud.Pause.SetPaused) and the editor keeps
             // Time.timeScale across plays: a run quit from the menu must not freeze the next one.
             Time.timeScale = 1f;
@@ -1718,6 +1721,14 @@ namespace LastCall.UI
             _dayEndDue = false;   // a new bar is not owed last night's books
             _show = NightBeat.Off; // ...nor the rest of last night's show
             _tabFloats = 0;       // and nothing of last night's is still in the air
+            // ...nor the last bar's end: its report and its notice go, and the sign on the beam is lit again
+            // (TycoonHud.GameOver). A scene rebuilt round a bar that had already gone under - a language reload on
+            // the game over - lands back on it at the next frame's phase check, placed whole.
+            ResetGameOver();
+            // AND THE STORE'S TIMELINE HAS ALREADY BURIED THAT BAR (2026-09-28): the lost bar's marker went down the
+            // first frame it closed (StepTimeline), and a HUD rebuilt around the same closed run must not lay it again.
+            if (_bootstrap != null && _bootstrap.ResumedAcrossReload && Run != null && Run.Phase == TycoonPhase.Closed)
+                _timelinePhase = TycoonPhase.Closed;
             // A NEW BAR REMEMBERS NOBODY (2026-08-25). The guest log and the casting both
             // outlived the run they were built in: the HUD is made once and StartNewRun only
             // replaces the run under it, so NEW RUN opened on a bar whose faces already
@@ -1735,7 +1746,6 @@ namespace LastCall.UI
             HostessOff();             // she does not walk out of the last run into this one
             ForgetQuestBubble();      // ...nor does her message
             _dayEndPanel.gameObject.SetActive(false);
-            _bannerText.gameObject.SetActive(false);
             _flow?.CloseFlow();
             CloseId();
             if (_ledgerPanel != null) _ledgerPanel.gameObject.SetActive(false);
@@ -1763,6 +1773,10 @@ namespace LastCall.UI
             // THE SHUTTER'S PAINT (2026-09-22): the bar opens with the worn door and gets its mural with the
             // refinish kit - the same purchase that lets the counter be repainted at all.
             if (run != null && stage != null) stage.SetDoorPainted(run.CanRepaintCounter);
+            // THE CABINET'S MATERIAL IS THE COUNTER'S TIER (2026-09-28, the author picked the Art Deco cabinet "with
+            // levels"): plywood, then black lacquer with neon, then navy with mirrors and gold. The stage is told the
+            // tier, never reads the run; it redresses only when the tier moves.
+            if (run != null && stage != null) stage.SetCabinetLevel(run.CounterTier);
             string want = run != null ? run.CounterFinish : null;
             if (want == null || want == _appliedFinish) return;
             if (_flow != null && _flow.IsOpen) return;
@@ -1858,8 +1872,15 @@ namespace LastCall.UI
                 }
                 if (run.Phase == TycoonPhase.Closed)
                 {
-                    if (!_closedSpoke) { _closedSpoke = true; Sfx.Play("bar_closed", 0.9f); }
-                    ShowClosed();
+                    // THE GAME OVER IS ALREADY UP (OnOpenTomorrow raised it in the frame the dawn closed the bar), and
+                    // the closing chord sounds over it. When it is NOT up, this is a scene built around a bar that had
+                    // already gone under - a language reload on the game over (GameBootstrap.ReloadKeepingRun) - and
+                    // the player lands back on it placed whole, in the new words, without the chord a second time.
+                    // (Keyed on the reload alone, the silence would last the HUD's life - ResumedAcrossReload never
+                    // clears - and a bar lost on a later night of a reloaded session would close without its chord.)
+                    bool reload = !GameOverUp && _bootstrap != null && _bootstrap.ResumedAcrossReload;
+                    if (!_closedSpoke) { _closedSpoke = true; if (!reload) Sfx.Play("bar_closed", 0.9f); }
+                    if (!GameOverUp) ShowGameOver(run, whole: true, quiet: reload);   // the reload, or a door that missed the hook
                 }
                 else _closedSpoke = false;
             }
@@ -1883,7 +1904,6 @@ namespace LastCall.UI
             SyncHostNote(run);    // the closing's lessons, on the market
             UpdateHotkeys();      // the book, the cellar and the music on their keys (2026-09-15)
             StepSettings();       // a controls row listening for its key
-            RefreshMusicPlayer(); // the beam's player says what is on
             UpdateOrderTip();     // after the seats: it reads the tickets they just placed
             UpdateDrinkGlass();
             UpdateShakerProp();   // the tin waits on the same coaster the glass does
@@ -1895,6 +1915,7 @@ namespace LastCall.UI
             StepLitProps();       // the dishes, the menu and the cloth, drawn where the room's lights are
             StepIdOpen();
             StepPropTip();
+            StepBeamCard();       // the stars' and the till's card under the beam (2026-09-28, second pass)
             // StepCellarCard runs in LateUpdate: the copy in the card's slot is laid on the
             // shelf bottle's rect, and the shelf bottle is moved by HoverGlow's Update — a
             // frame late, the copy trailed the light behind it (2026-09-08).
@@ -1907,6 +1928,7 @@ namespace LastCall.UI
             StepMoneyDrops();
             StepMarketKey();
             StepNightShow();
+            StepGameOver();       // the bar that went under (2026-09-28): after the night's show, whose last door it is
             StepChipPop();
             StepDayEndDue();
         }
@@ -2167,7 +2189,12 @@ namespace LastCall.UI
 
         private CanvasGroup _lastCallGroup;
 
-        private Text _lastCallCard;
+        /// <summary>The CLOSED neon the night is called under (2026-09-28; the words THAT'S LAST CALL before it).</summary>
+        private RectTransform _lastCallSign;
+
+        /// <summary>Where the sign rests: its centre twenty over the screen's, so the plate and the line under it
+        /// stand as one block on the middle.</summary>
+        private const float CallSignY = 20f;
 
         private const float CallIn = 0.4f, CallHold = 1.5f, CallOut = 0.5f;
 
@@ -2275,6 +2302,10 @@ namespace LastCall.UI
             ShutTheBookHard();
             if (Showing(_pausePanel)) _pausePanel.gameObject.SetActive(false);
             SetPaused(false); _settingsFromPause = false; _settingsHeldClock = false; _bindListening = null;
+            // ...and the settings forget the door they came from (2026-09-29, read_menus finding 11: the flag outlived the
+            // window it was set for, and now that MenuUp reads it a stale one would hold the door "up" over a bar)
+            _settingsFromMenu = false;
+            if (Showing(_settingsBackdrop)) _settingsBackdrop.gameObject.SetActive(false);
             if (Showing(_settingsPanel)) _settingsPanel.gameObject.SetActive(false);
             if (Showing(_devPanel)) _devPanel.gameObject.SetActive(false);
             if (Showing(_guidePanel)) _guidePanel.gameObject.SetActive(false);
@@ -2519,38 +2550,32 @@ namespace LastCall.UI
         /// what "yazılar hizalanmamış" was describing (2026-08-14): captions at three
         /// different heights, values at two more. There are two lines now — the small
         /// upper one for what a reading IS, the lower one for what it SAYS — and every
-        /// item on the beam is placed against one of them, left to right.</summary>
-        private const float TopBarH = 54f;
+        /// item on the beam is placed against one of them, left to right.
+        /// INTERNAL (2026-09-28): the service flow's bench veil stops under the bar and kept its own copy of 54, free to
+        /// drift from this one; it reads this one now.</summary>
+        internal const float TopBarH = 54f;
 
         // The display glass — "not black: a display's dark is the panel's own colour
         // seen through a tint" — is baked into ChromeArt.Well now, the one place both
         // instruments get their floor from, so it cannot fork.
-        // 32 — the 3D star's own native size, drawn at 1× (2026-08-19, the author:
-        // "Yıldızlarda 3 boyutlu yıldız iconlarından olsun"): Items/star3d.png is a
-        // PixelLab take quantized onto the Amber/Malt ladder, generated AT 32 because
-        // that is the size the row draws at. The earlier 32 was the flat 16px star at
-        // 2×; the size held, the drawing under it changed. Size history: cut to 16 once
-        // ("row climbed into its caption"), restored ("yıldız barı ortalasın ve boyutu
-        // büyütülsün") by giving the standing its own block instead.
-        // 36, not 32 (2026-09-08): the author's big star is drawn 18x17 and the strip shows it at
-        // exactly 2x — a 32 box scaled the 17 to 30 and blurred every point.
-        private const float StarSize = 36f, StarGap = 38f;
+        // (The standing's star sizes live with the beam's wells now: TycoonHud.TopBar, TopStarW/H/Pitch.)
 
-        /// <summary>The house's two strips in the top bar (GDD 27 §4.4): 16 px icons on an
-        /// 18-unit pitch, five wide, one over the other.</summary>
+        /// <summary>The house's two strips (GDD 27 §4.4): 16 px icons on an 18-unit pitch, five wide, one over the
+        /// other - the heart in a cell of its own drawn 12 (2026-09-28). Off the beam since the same day's second pass:
+        /// they hang on the card under the stars (TycoonHud.TopBar, BeamCard), and the market's comfort band draws one.</summary>
         private const float HouseIcon = 16f, HouseGap = 18f, HouseStripW = 5 * 18f;
         private RectTransform _serviceFill, _comfortFill;
 
         // ── settings (P17): the smallest sheet that holds sound and motion ───────
 
         private RectTransform _settingsPanel;
-        private Text _beamTillText;   // the till, on its own card under the beam (2026-09-09)
-        private RectTransform _beamTillCard;   // ...and the card itself, hidden under a sheet
-        private Image[] _settingsMeter;     // the volume, five blocks
-
-        private Text _settingsVolume, _settingsMute, _settingsMotion;
-        private Text _settingsLanguage, _settingsLanguageNote;   // the picked language, and "from the next start"
-        private string _languageNoteCode, _languageNoteText;     // that note, said in the picked language, cached
+        /// <summary>The till's figure on the beam (2026-09-28: the figure itself, not its well - since the second pass the
+        /// house face's digits beside the stack of bills, pivoted on its middle): what the money flights land on and
+        /// their punch swells. It rides the till's well, which hides under a sheet.</summary>
+        private RectTransform _beamTillCard;
+        // (the window's own parts - its meters, choices, cycles, caps and language list - live in TycoonHud.Settings
+        // since the 2026-09-29 rebuild on the menu kit)
+        private string _languageNoteCode, _languageNoteText;     // the picked language's "it switches at once", cached
 
         // ── THE DEV BENCH (2026-08-14) ──────────────────────────────────────────
         //
@@ -2593,14 +2618,6 @@ namespace LastCall.UI
         private const int Columns = 26;
 
         private static readonly string Rule = new string('=', Columns);
-
-        private void ShowClosed()
-        {
-            _dayEndPanel.gameObject.SetActive(false);
-            CloseId();
-            _bannerText.gameObject.SetActive(true);
-            _bannerText.text = UIText.T("hud.closed.banner");
-        }
 
         // ── the order tip: hover a decided customer's ticket ─────────────────────
         //
@@ -2649,191 +2666,14 @@ namespace LastCall.UI
         /// <summary>The stage's reference frame, the one both halves agree on.</summary>
         private static readonly Vector2 StageRef = new Vector2(640f, 360f);
 
-        // ── the week, as an instrument (2026-08-19, the author: "Haftalık takvim
-        // göstergesi daha profesyonelce olmalı") ────────────────────────────────
-        //
-        // Third cut. The first was seven filled cells — a table, thrown out as "kutu kutu".
-        // The second was signage: bulbs hanging off a wire strung across the open beam, and
-        // the wire is what the author is calling unprofessional now — it reads as bunting,
-        // and its parts (a floating rail, stems, letters with nothing under them) sit ON
-        // nothing. What a bar's wall actually mounts is a PANEL: this is the clock's own
-        // case and glass at calendar width, the week counter reading at its head where the
-        // instrument names its count, and the seven nights as lamps in a slotted row — the
-        // same indicator-lamp grammar the seven-segment hour already speaks. Slot rules are
-        // joinery, not cells: nothing is boxed, the glass is one surface.
-        //
-        // What each slot says is unchanged from the marquee (the grammar survived the
-        // furniture): tonight's lamp burns and its glow is on, worked nights are dull glass,
-        // nights ahead wait dark, SATURDAY's fitting is the star (shape says what the night
-        // is, light says when), and SUNDAY carries shutter slats where the others carry a
-        // lamp, because a bar that does not open has its shutter down, not a dimmer bulb.
-        //
-        // It is the same `BarCalendar` the rules count in: the panel cannot say Friday
-        // while the arc thinks it is Thursday, because neither is doing its own arithmetic.
-
-        private readonly List<(Image sign, Image bloom, Text name)> _weekCells =
-            new List<(Image, Image, Text)>();
-
-        private Text _weekLabel;
-
-        private int _weekShown = -1;
-
-        private int _vipCell = -1;    // which fitting in the row is the star
-
-        // The instrument's own grid, in well-local units off its left edge. 52 of
-        // pitch is what three Silkscreen letters at 16 actually need ("hafta göstergesi
-        // ufak ve sönük kalıyor" bought the size; the pitch keeps it). The head column
-        // holds the counter; a display rule divides it from the nights.
-        private const float WeekStep = 52f;
-
-        private const float WeekHeadCx = 40f;    // the counter column's centre
-        private const float WeekRuleX = 76f;     // the display rule after it
-        private const float WeekDaysX = 80f;     // where the first slot begins
-        private const float WeekNameY = 5f;      // the word row, upper half of the glass
-        private const float WeekSignY = -9f;     // the sign under it: tube, star, shutter
+        // (THE WEEK AS AN INSTRUMENT - the well, its counter and seven slotted lamps, 2026-08-19 onwards - had one
+        //  mount left, the curtain's day card, and went with it on 2026-09-28: the curtain is the club's night sign now and
+        //  draws the week as seven tube fittings of its own. TycoonHud.Curtain, BuildSignNights.)
 
         private Text _dayLabel, _nightLabel;
-        private const float DayWellW = 200f;
 
         // (THE BEAM'S DAY WELL moved into the hour's well on 2026-09-22 - the clock, the night's number and its name in
         //  one well, as wide as its words: TycoonHud.TopBar, BuildHourWell.)
-
-        private void BuildWeekStrip(RectTransform top)
-        {
-            var glass = BuildWeekGlass(top, _weekCells, out _weekLabel, out _vipCell);
-            glass.anchoredPosition = Vector2.zero;      // centred on the beam, as it was
-        }
-
-        /// <summary>
-        /// THE WEEK INSTRUMENT, BUILT ONCE AND MOUNTED TWICE (2026-08-25, the author, of the
-        /// day card: "Gun baslangic ekranindaki takvim gostergesini begenmiyorum bunu
-        /// gelistir, ana sahnedeki ust bardaki takvim gostergesine benzer yapabilirsin").
-        ///
-        /// The beam and the day card used to draw two different pictures of the same week: a
-        /// panel of lit names up here, and down there a wire strung with bulbs. That wire is
-        /// the OLDER of the two ideas and was already thrown out once up here, for reading as
-        /// bunting - so rather than draw a third picture, the instrument moved. This builds
-        /// the glass, the head and the seven slots; both surfaces mount it, and the card just
-        /// hangs it bigger. That is the whole difference between them.
-        ///
-        /// The caller keeps the cells and lights them with <see cref="LightWeekCells"/>.
-        /// </summary>
-        private RectTransform BuildWeekGlass(RectTransform parent,
-            List<(Image sign, Image bloom, Text name)> cells, out Text weekLabel, out int vipCell)
-        {
-            vipCell = -1;
-            var names = BarCalendar.WeekColumnLines;
-            // The generated plate lasted one build ("Oluşturulan takvim görseli bozuk
-            // duruyor, elinden geldiğince kendin tasarımını yap") — the exception to
-            // chrome-is-never-generated was tried on the author's sentence and withdrawn
-            // on the author's next one. The calendar sits in the same drawn WELL the hour
-            // does; two instruments, one language, and nothing on the beam is a picture.
-            float wellW = WeekDaysX + names.Length * WeekStep + 10f;
-            var glass = NewRect("WeekWell", parent);
-            glass.anchorMin = glass.anchorMax = glass.pivot = new Vector2(0.5f, 0.5f);
-            glass.sizeDelta = new Vector2(wellW, 40f);
-            glass.anchoredPosition = Vector2.zero;
-            var glassImg = glass.gameObject.AddComponent<Image>();
-            glassImg.sprite = ChromeArt.Well();
-            glassImg.type = Image.Type.Sliced;
-            glassImg.raycastTarget = false;
-
-            // The head: what the instrument counts, then the count. The caption is the
-            // small line, the number is the reading — CapY/ReadY's own logic, folded to
-            // the well's glass.
-            var cap = NewText("WeekCap", glass, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
-            Place(cap.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 12),
-                new Vector2(WeekHeadCx, 7f));
-            cap.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            cap.horizontalOverflow = HorizontalWrapMode.Overflow;
-            cap.text = UIText.T("hud.week_well.caption");
-
-            weekLabel = NewText("Week", glass, _display, 16, TextAnchor.MiddleCenter, UITheme.Cyan[3]);
-            Place(weekLabel.rectTransform, new Vector2(0, 0.5f), new Vector2(52, 18),
-                new Vector2(WeekHeadCx, -7f));
-            weekLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            weekLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
-
-            // The display rule between the count and the nights — on the glass, not the
-            // case, because it separates what the display says (the clock's old divider,
-            // moved to the instrument that still has two readings).
-            var rule = NewRect("Divide", glass);
-            Place(rule, new Vector2(0, 0.5f), new Vector2(1, 22), new Vector2(WeekRuleX, 0));
-            var ruleImg = rule.gameObject.AddComponent<Image>();
-            ruleImg.color = new Color(UITheme.Cyan[4].r, UITheme.Cyan[4].g, UITheme.Cyan[4].b, 0.22f);
-            ruleImg.raycastTarget = false;
-
-            for (int i = 0; i < names.Length; i++)
-            {
-                float cx = WeekDaysX + i * WeekStep + WeekStep * 0.5f;
-                bool open = i < BarCalendar.OpenNights;
-
-                // THE WORD IS THE LAMP (the fourth cut's one idea). The lamp row is gone:
-                // the seven names sit on the same glass the hour's digits sit on, and
-                // tonight's name is LIT the way a digit is lit — amber, with a miniature
-                // neon tube burning under it, the beam's own foot light one slot wide.
-                // Spent nights go dim glass, nights ahead read cream; the states live in
-                // the letters, which is where the eye already was.
-                var name = NewText("N" + i, glass, _body, 16, TextAnchor.MiddleCenter, UITheme.TextSecondary);
-                Place(name.rectTransform, new Vector2(0, 0.5f), new Vector2(WeekStep, 18),
-                    new Vector2(cx, WeekNameY));
-                name.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                name.horizontalOverflow = HorizontalWrapMode.Overflow;
-                name.text = UIText.T(names[i]);
-
-                Image sign = null, bloom = null;
-                if (!open)
-                {
-                    // THE SHUTTER (the author: "pazar gününün tatil olduğu anlaşılsın"):
-                    // two slats under the name where the open nights carry their light.
-                    // A closed bar has its shutter down; nothing here is a greyed cell.
-                    for (int sl = 0; sl < 2; sl++)
-                    {
-                        var slat = NewRect("Shut" + sl, glass);
-                        Place(slat, new Vector2(0, 0.5f), new Vector2(21, 2),
-                            new Vector2(cx, WeekSignY + 2f - sl * 4f));
-                        slat.pivot = new Vector2(0.5f, 0.5f);
-                        var slatImg = slat.gameObject.AddComponent<Image>();
-                        slatImg.color = UITheme.Night[3]; slatImg.raycastTarget = false;
-                    }
-                }
-                else if ((BarNight)i == BarCalendar.VipNight)
-                {
-                    // THE NIGHT A NAME COMES IS THE STAR FITTING (the author: "cumartesi
-                    // günleri vip hikaye müşterisi geleceği belirtilsin"): Saturday's sign
-                    // is the star, every week, whether or not a beat is booked. Shape says
-                    // what the night is; how hard it burns says when.
-                    var starRt = NewRect("Star" + i, glass);
-                    Place(starRt, new Vector2(0, 0.5f), new Vector2(16, 16),
-                        new Vector2(cx, WeekSignY - 1f));
-                    starRt.pivot = new Vector2(0.5f, 0.5f);
-                    sign = starRt.gameObject.AddComponent<Image>();
-                    sign.sprite = ItemArt.Star(true, 16f);
-                    sign.raycastTarget = false;
-                    vipCell = i;
-                }
-                else
-                {
-                    // The night-tube: a 2-unit core over a 1-unit bloom, unlit until the
-                    // night is being played — the same anatomy as the beam's foot.
-                    var tube = NewRect("Tube" + i, glass);
-                    Place(tube, new Vector2(0, 0.5f), new Vector2(24, 2),
-                        new Vector2(cx, WeekSignY));
-                    tube.pivot = new Vector2(0.5f, 0.5f);
-                    sign = tube.gameObject.AddComponent<Image>();
-                    sign.raycastTarget = false;
-                    var bloomRt = NewRect("Bloom" + i, glass);
-                    Place(bloomRt, new Vector2(0, 0.5f), new Vector2(24, 1),
-                        new Vector2(cx, WeekSignY - 2f));
-                    bloomRt.pivot = new Vector2(0.5f, 0.5f);
-                    bloom = bloomRt.gameObject.AddComponent<Image>();
-                    bloom.raycastTarget = false;
-                }
-
-                cells.Add((sign, bloom, name));
-            }
-            return glass;
-        }
 
         // ── the last customer (GDD 26 §7, PLAN_last_call S3) ────────────────────
         //
@@ -3033,6 +2873,10 @@ namespace LastCall.UI
             run.ContinueToNextDay(LastCall.Game.SaveStore.Autosave);
             _show = NightBeat.Off;   // the night's show is over with its books
             if (run.Phase == TycoonPhase.Closed) LastCall.Game.SaveStore.Clear();
+            // THE BAR WENT UNDER AT THIS DAWN (2026-09-28): the game over goes up in the same frame the books come down,
+            // so the lit room is never seen between them - whichever door led here, LOCK UP or (should Core's forecast
+            // ever miss) the market's OPEN ANYWAY. Laid out whole at once under reduced motion.
+            if (run.Phase == TycoonPhase.Closed) ShowGameOver(run, whole: Motion.Reduced);
             _dayEndPanel.gameObject.SetActive(false);
             // The market is a sheet like any other and the next night must not open behind
             // one — nor behind a cellar somebody left open while they were shopping.
@@ -3054,17 +2898,12 @@ namespace LastCall.UI
 
         // THE DARK CARRIES THE DATE NOW (2026-08-14, the author: "gün başlarında ekran
         // kararıyordu, bu kararmaya hafta ve gün takvimi eklensin… hangi günden hangi güne
-        // geçtiğimizi animasyonla belirtsin yazı ile").
-        //
-        // The blackout was two and a quarter seconds of nothing, which is a beat with no
-        // content in it — long enough to feel, too short to say anything, and the one place
-        // in the game where the player is guaranteed to be looking at the screen and NOT
-        // doing anything. It carries the week and the hand-off between two nights: the name
-        // of the night that just closed slides out under the night arriving, and the marquee
-        // the top bar wears is drawn again here, one bulb going dark and the next lighting.
-        //
-        // Same wire, same bulbs, same BarCalendar the rules count in — the dark cannot say
-        // Friday while the beam says Thursday, because neither is doing its own arithmetic.
+        // geçtiğimizi animasyonla belirtsin yazı ile"), the day goes past in it (2026-08-25,
+        // KCD2), and since 2026-09-28 what lights in it is the club's own NIGHT SIGN - the
+        // tube round the sky window, the wound hour, the name turning over on a split-flap
+        // board and the week as seven fittings. It reads the same BarCalendar the rules count
+        // in, so the dark cannot say Friday while the arc thinks Thursday. All of it, its
+        // state included, lives in TycoonHud.Curtain.
 
         // ── the pointer, answered (2026-08-14) ──────────────────────────────────
         //
@@ -3130,111 +2969,13 @@ namespace LastCall.UI
         //
         // The author: "gün başı ekranı olmalı; güneşin doğudan çıkıp battığını ve şu anki
         // saate geldiğini gösteren bir gün geçme animasyonu, aynı zamanda saati tam 18:00'a
-        // saran — Kingdom Come Deliverance 2'deki uyuduğunda gösterilen ekran gibi."
-        //
-        // What was here carried a week and two day-names on black, which is a CAPTION for a
-        // transition rather than a scene. The bar shuts at two in the morning and opens at
-        // six in the evening, and those sixteen hours were nothing at all — so they are the
-        // scene now: the moon finishes its fall into the west, the sky walks from deep night
-        // through first light, morning, noon and afternoon into the room's own golden hour,
-        // the sun climbs out of the east and comes back down, and the readout winds from
-        // 02:00 round to exactly 18:00, where the shift starts.
-        //
-        // ALL OF IT IS DRAWN HERE, in the palette's own tokens — no picture is generated for
-        // it (14 §3: chrome is procedural). The sky is BANDED, twenty flat rows and not a
-        // smooth ramp, which is the same law the room's own light is banded under; the sun
-        // and the moon are the marquee's bulb and its glow, at the size a sun wants; the
-        // moon's crescent is bitten out by a second disc wearing the sky's own colour behind
-        // it. The hour is the game's own SegmentClock, hung at twice the size it wears on
-        // the beam — a whole multiple, because pixel art magnifies in whole steps or not at
-        // all.
-        private const float SkyW = 640f, SkyH = 220f;
-
-        private const int SkyBands = 20;
-
-        /// <summary>Where the horizon runs: the generated city's own base band — 10 art
-        /// px of bay at its foot, 20 units at the 2x it stands at. The sun's arc is rooted
-        /// here; the city in front hides everything below its own rooftops.</summary>
-        private const float SkyGround = 20f;
-
-        /// <summary>The shift's own hours: the doors shut at two, the next one opens at six
-        /// in the evening. The animation is exactly that gap and nothing else.</summary>
-        private const float DayFrom = 2f, DayTo = 18f;
-
-        /// <summary>When the sun is up, and when the moon is. A Miami summer: first light
-        /// before six, the sun down at eight — so 18:00 is late in its fall, which is why
-        /// the room opens in gold.</summary>
-        private const float SunUp = 6f, SunDown = 20f, MoonUp = 18f, MoonDown = 6f;
-
-        /// <summary>
-        /// The sky at an hour, top and bottom, keyed off the palette. The horizon carries
-        /// the warm end and the zenith the cold one, which is what a sky does; the last key
-        /// is the evening the room's own window opens on, so the curtain lifts on the colour
-        /// that is already outside it.
-        /// </summary>
-        private static readonly (float Hour, Color Zenith, Color Horizon)[] SkyKeys =
-        {
-            (2.0f,  UITheme.Night[0],    UITheme.Night[2]),
-            (5.0f,  UITheme.Night[1],    UITheme.ClubBlue[1]),
-            (6.5f,  UITheme.ClubBlue[2], UITheme.Amber[3]),
-            (8.0f,  UITheme.ClubBlue[3], UITheme.Cyan[4]),
-            (13.0f, UITheme.ClubBlue[4], UITheme.Cyan[4]),
-            (16.0f, UITheme.ClubBlue[3], UITheme.Amber[4]),
-            (18.0f, UITheme.Magenta[2],  UITheme.Amber[3]),
-        };
-
-        private RectTransform _skyPanel, _sun, _sunGlow, _moon, _moonGlow;
-
-        private Image _sunImg, _sunGlowImg, _moonImg, _moonGlowImg, _cityImg;
-
-        private Image[] _skyRows;
-
-        private Image[] _stars;
-
-        private SegmentClock _curtainClock;
-
-        private RectTransform _curtainClockHost;
-
-        private RectTransform _curtain, _curtainCard;
-
-        private Image _curtainImg;
-
-        private Text _curtainWeek, _curtainLeaving, _curtainArriving;
-
-        private CanvasGroup _curtainCardGroup, _curtainLeavingGroup, _curtainArrivingGroup;
-
-        private readonly List<(Image sign, Image bloom, Text name)> _curtainCells =
-            new List<(Image, Image, Text)>();
-
-        private int _curtainVip = -1;          // Saturday's fitting, on the card's own copy
-        private int _curtainStoryNight = -1;   // ...and which night the arc is due on
-
-        /// <summary>Where the week instrument hangs on the day card, and how much bigger.
-        /// 1.4 draws its 454 units of glass at 636 - wide enough to be the card's foot
-        /// without touching the 700 the card itself is.</summary>
-        private const float CurtainWeekY = -452f, CurtainWeekScale = 1.4f;
-
-        private int _curtainFrom = 1, _curtainTo = 1;
-
-        private float _curtainT;          // seconds elapsed, 0 → CurtainTotal
-        // Four movements on one clock, SIX SECONDS (2026-08-15, the author: "gün geçişinde
-        // takvim gözüktüğü sahne daha yavaş aksın, şu an 3 saniye ise 6 saniye olsun").
-        //
-        // The first cut ran 3.4 — the length of a transition, which is what it was before it
-        // had anything in it. With a date on it, it is a SCENE, and the two want opposite
-        // things: a transition is over before you notice it, a scene waits for you.
-        //
-        // The middle movement is THE DAY now (2026-08-25) rather than a hand-off between two
-        // words: sixteen hours of sky in three and a half seconds, with the names changing
-        // over inside its first half. The hold sits on 18:00 — the same beat as before, now
-        // with an hour to land on — and the total is a little over seven seconds, which is
-        // as long as a time-skip may take before it stops being a rest and starts being a
-        // wait.
-        private const float CurtainFadeIn = 0.45f;   // black is instant; the card arrives
-        private const float CurtainDay = 3.60f;      // 02:00 → 18:00, sun, sky and readout
-        private const float CurtainHold = 1.25f;     // the hour stands where it landed
-        private const float CurtainLift = 1.70f;     // card out, room up
-        private const float CurtainTotal = CurtainFadeIn + CurtainDay + CurtainHold + CurtainLift;
+        // saran — Kingdom Come Deliverance 2'deki uyuduğunda gösterilen ekran gibi." The
+        // sixteen hours the bar is shut are the scene: the moon finishes its fall, the sky walks
+        // from deep night to the room's own golden hour, the sun crosses behind the generated
+        // city and the readout winds from 02:00 round to exactly 18:00. Its sky, its timeline
+        // and its parts moved into TycoonHud.Curtain with the night sign (2026-09-28); the old
+        // banded SkyKeys, whose 18:00 had drifted off the window's, went - both ends of the day
+        // are the window's own keys now (sky_cycle.json, SkyClock.DayBands).
 
         /// <summary>
         /// WHAT THE STATE SAYS, in words, on the card's own state row. Seven answers, seven

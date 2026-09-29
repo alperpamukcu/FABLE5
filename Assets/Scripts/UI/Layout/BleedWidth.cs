@@ -33,8 +33,18 @@ namespace LastCall.UI
         {
             _self = (RectTransform)transform;
             _parent = transform.parent as RectTransform;
+            _canvas = WindowRect();
+        }
+
+        /// <summary>The WINDOW is the root canvas, not the nearest one (2026-09-28, the game over): a panel that sorts
+        /// itself with its own nested canvas is stretched to the safe frame, so measured against that canvas the
+        /// dark over it could never reach past the frame it was meant to bleed out of.</summary>
+        private RectTransform WindowRect()
+        {
             var canvas = GetComponentInParent<Canvas>();
-            if (canvas != null) _canvas = (RectTransform)canvas.transform;
+            if (canvas == null) return null;
+            var root = canvas.rootCanvas != null ? canvas.rootCanvas : canvas;
+            return (RectTransform)root.transform;
         }
 
         private void OnEnable() => Bleed();
@@ -45,11 +55,7 @@ namespace LastCall.UI
         {
             if (_self == null) _self = (RectTransform)transform;
             if (_parent == null) _parent = transform.parent as RectTransform;
-            if (_canvas == null)
-            {
-                var canvas = GetComponentInParent<Canvas>();
-                if (canvas != null) _canvas = (RectTransform)canvas.transform;
-            }
+            if (_canvas == null) _canvas = WindowRect();
             if (_parent == null || _canvas == null) return;
 
             // How far past the parent each side has to reach. Never negative: a window

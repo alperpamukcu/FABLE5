@@ -90,6 +90,46 @@ namespace LastCall.UI
         public static bool IsTitle(Font font) =>
             font != null && Loaded.TryGetValue("Jersey15-Regular", out var title) && title == font;
 
+        /// <summary>The design grid of <paramref name="font"/> in pixels: 8 for the house faces and Galmuri7, 10 for
+        /// Galmuri9, 12 for Galmuri11 and Fusion Pixel 12. A text drawn at <see cref="Size"/> shows one of the face's
+        /// pixels as fontSize / Grid units - what the menus' neon titles grow their light by (NeonWord, 2026-09-29).</summary>
+        public static int Grid(Font font) =>
+            font != null && Grids.TryGetValue(font, out int grid) ? grid : 8;
+
+        /// <summary>The body face of language <paramref name="code"/> - not the one being spoken - or
+        /// <paramref name="house"/> when the house face draws it (2026-09-29: the settings' note that a picked language
+        /// speaks at once is written in THAT language, and a Russian line in the English UI's face drew nothing).</summary>
+        public static Font BodyFor(string code, Font house) => Face(Faces(code).body) ?? house;
+
+        /// <summary>
+        /// THE LANGUAGE LIST'S FACE (2026-09-29, the settings rebuilt - BUILD_SPEC §3 "LANGUAGE"): each language's own
+        /// name, whatever language the UI speaks, in a face that draws it - so one column of names reads evenly and no
+        /// script shouts or whispers. The house <paramref name="house"/> face at <paramref name="uiSize"/> when the name
+        /// is all Latin-1 (the house faces carry Latin-1, see above); Chinese and Japanese in their own Fusion Pixel;
+        /// everything else - Cyrillic, Greek, Hangul, the Czech, Romanian and Vietnamese letters - in Galmuri11, which
+        /// draws them all. The 12-px faces answer any UI size under 24 with their own 12 (<see cref="Size"/>).
+        /// </summary>
+        public static (Font font, int size) ListFace(string code, string name, Font house, int uiSize)
+        {
+            bool latin1 = true;
+            if (name != null)
+                foreach (char ch in name)
+                    if (ch > 'ÿ') { latin1 = false; break; }
+            Font face = null;
+            if (!latin1)
+            {
+                switch (code)
+                {
+                    case "ja": face = Face("FusionPixel12-ja"); break;
+                    case "zh-CN": face = Face("FusionPixel12-zh_hans"); break;
+                    case "zh-TW": face = Face("FusionPixel12-zh_hant"); break;
+                    default: face = Face("Galmuri11"); break;
+                }
+            }
+            if (face == null) face = house;
+            return (face, Size(face, uiSize));
+        }
+
         /// <summary>The size to draw <paramref name="font"/> at for a UI size of 8, 16 or 24. The
         /// house faces, and any face on an 8 px grid, keep the size they were given.</summary>
         public static int Size(Font font, int size)

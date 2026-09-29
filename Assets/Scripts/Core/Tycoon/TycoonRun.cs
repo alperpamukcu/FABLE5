@@ -80,7 +80,12 @@ namespace LastCall.Core
         /// musician were deleted outright on 2026-08-04, and the counter was kept on the
         /// condition that it stops touching the scene and pays in a number instead (the
         /// author). <see cref="Ambience"/> reads it — and since 2026-09-26 the room's comfort too,
-        /// <see cref="VenueComfort.CounterComfort"/> a step, when the house was cut to sum to five.</summary>
+        /// <see cref="VenueComfort.CounterComfort"/> a step, when the house was cut to sum to five.
+        /// THE SCENE AGAIN, FOR THE LOOK ONLY (2026-09-28, the author picked the cellar's Art Deco cabinet and asked
+        /// for it with levels: "Mahzen tasarımı = C · Art Deco vitrin"): the tier now also dresses the cabinet under
+        /// the counter - plywood, black lacquer with neon, navy with mirrors and gold. Nothing here changed for it:
+        /// the price, the ambience and the comfort a step are the same numbers, and the stage is told the tier by the
+        /// HUD (DiegeticStage.SetCabinetLevel); the rules never ask what the cabinet looks like.</summary>
         public int CounterTier { get; private set; } = 1;
 
         /// <summary>The satisfaction the bar adds to every served visit (GDD 23 §4's "plus
@@ -92,9 +97,11 @@ namespace LastCall.Core
         /// The counter used to be worth nothing at all. It was cut out of this sum on
         /// 2026-08-02 along with the wall and the musician, and what it kept instead was a tint
         /// on the scene — so the fitting a player paid for changed the picture and not the
-        /// night. That is now exactly inverted, on the author's instruction: it is a stat and
-        /// only a stat. Pooling it into the 0.15 would have been the same as deleting it, since
-        /// five lines of five steps reach 25 on their own.
+        /// night. That was inverted on the author's instruction: it is a stat first. Pooling it
+        /// into the 0.15 would have been the same as deleting it, since five lines of five steps
+        /// reach 25 on their own. (Since 2026-09-28 it ALSO changes the picture - the cellar
+        /// cabinet's material follows the tier, the author's choice - but this number is what
+        /// the night pays, and it did not move.)
         /// </remarks>
         public double Ambience => Math.Min(0.15, 0.006 * GlassUpgradeSteps)    // full at 25 steps
                                 + Math.Min(0.06, 0.03 * (CounterTier - 1));
@@ -213,6 +220,32 @@ namespace LastCall.Core
 
         /// <summary>The running total owed, built as they get up and charged once at closing.</summary>
         private int DayWalkOutOwed { get; set; }
+
+        // ── tonight's bill, asked before the close charges it (2026-09-28) ─────────
+        // THE BEAM SHOWS THE NUMBER THE TILL HAS TO BEAT. The strike is judged on the till AFTER the close's bill
+        // (rent + walk-outs - the state's thanks), and until tonight the player never saw that bill before the slip
+        // printed it. These are reads, not rules: the close in Tick charges exactly these three figures, in its own
+        // order, and the top bar reads them (its BILL and RED NIGHTS lamp for a morning, the till's card since) — one
+        // source, so the warning that shows early is the strike the books then file. The hostess's clean-night pay is
+        // left out on purpose: it lands in the same close but only ever adds, so it can only make the warning over-warn. The one thing the bill cannot see coming
+        // is a walk-out that gets up in the very tick that closes the night — the last leaver is settled and the books
+        // close together, so that fee is charged a frame after the beam last read (BillAtCloseTests measures it).
+
+        /// <summary>The landlord's cut tonight — the stage the bar has reached, read the way the close reads it.</summary>
+        public int RentTonight => StarEconomy.PriceAt(_config.Rent(Day), Rating.Average);
+
+        /// <summary>The state's thanks owed for tonight's right kicks, paid with the rent (GDD 28 §6).</summary>
+        public int ThanksTonight => RightKicks * StarEconomy.PriceAt(IdPapers.KickBonus, Rating.Average);
+
+        /// <summary>What tonight's walk-outs have run up so far, charged once at closing.</summary>
+        public int WalkOutsOwed => DayWalkOutOwed;
+
+        /// <summary>The net the close will take from the till: rent and walk-outs, less the thanks. Zero outside an
+        /// open night — after the close the bill is on the slip, not ahead of it.</summary>
+        public int BillAtClose => Phase == TycoonPhase.DayOpen ? RentTonight + DayWalkOutOwed - ThanksTonight : 0;
+
+        /// <summary>Closing now would be a red night: the till is smaller than the bill (<see cref="DayLedger.IsRedClose"/>).</summary>
+        public bool StrikeTonight => Phase == TycoonPhase.DayOpen && DayLedger.IsRedClose(Money - BillAtClose);
 
         /// <summary>Income counts the state's thanks; expenses count the law's fines (GDD 28
         /// §7) and the walk-outs' compensation. The door's two are kept in <c>TycoonRun.Door.cs</c>.</summary>
@@ -1349,7 +1382,9 @@ namespace LastCall.Core
                 // sheet figure stays a well drink; the fine is $20 a whole star and the thanks was
                 // frozen at $5, so by four stars doing the right thing paid a twentieth of what
                 // doing the wrong thing cost.
-                int thanks = RightKicks * StarEconomy.PriceAt(IdPapers.KickBonus, Rating.Average);
+                // ONE SOURCE WITH THE BEAM (2026-09-28): the three figures are the accessors the top bar's BILL reads,
+                // so what it showed is what is taken here (with any walk-out this very tick settled above).
+                int thanks = ThanksTonight;
                 if (thanks > 0)
                 {
                     Money += thanks;
@@ -1358,15 +1393,16 @@ namespace LastCall.Core
                 // AND THE WALK-OUTS LAND ON THE SAME BILL (2026-09-22). Scaled the way the rent and
                 // the drink are, so a missed order is still a missed order at four stars; a flat
                 // number would be free by then.
-                if (DayWalkOutOwed > 0)
+                int owed = WalkOutsOwed;
+                if (owed > 0)
                 {
-                    Money -= DayWalkOutOwed;
-                    DayWalkOutFees += DayWalkOutOwed;
+                    Money -= owed;
+                    DayWalkOutFees += owed;
                 }
                 // THE LANDLORD READS THE STARS TOO (StarEconomy, 2026-09-06): the room is
                 // let at the stage the bar has reached, so the night's take and the night's
                 // rent climb together and the climb stays a climb.
-                int rent = StarEconomy.PriceAt(_config.Rent(Day), Rating.Average);
+                int rent = RentTonight;
                 Money -= rent;
                 DayRent += rent;
                 RollMarket();
@@ -3303,6 +3339,18 @@ namespace LastCall.Core
                         .With("money", "$" + Money)
                         .With("price", "$" + price));
         }
+
+        /// <summary>
+        /// WILL THIS DAWN SHUT THE BAR (2026-09-28, the game over)? Asked at the night's end, before the books close:
+        /// the night that ends a run skips the market and walks straight to LOCK UP, so the screen has to know before
+        /// <see cref="ContinueToNextDay()"/> files it. A preview of that method's own arithmetic — the till it will
+        /// file is the till now, plus her pay if the dawn settles a state goal (<see cref="QuestPaysAtDawn"/>; a state
+        /// goal's target is one, so one count pays it) — read against the ledger's rule
+        /// (<see cref="DayLedger.WouldClose"/>). Nothing between the two moves the till across zero: every market
+        /// buy asks for the money first, so a till at or above zero stays there, and one below zero can buy nothing.
+        /// </summary>
+        public bool ClosesAtDawn =>
+            Phase == TycoonPhase.DayEnd && Ledger.WouldClose(Money + (QuestPaysAtDawn ? Quest.Reward : 0));
 
         /// <summary>
         /// Closes the books on today and opens tomorrow — or the doors for good: three

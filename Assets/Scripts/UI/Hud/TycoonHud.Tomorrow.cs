@@ -257,8 +257,22 @@ namespace LastCall.UI
         private float LayTomorrow(TycoonRun run, RectTransform parent, int level)
         {
             var next = BarCalendar.NightOf(run.Day + 1);
-            _tomorrowRoot = HousePlate(parent, "Tomorrow", new Vector2(0.5f, 0.5f), 372f, UIText.T("dayend.stand.tomorrow"),
-                UIText.T(BarCalendar.NameLine(next)), UITheme.Cyan[3]);
+            // THERE IS NO TOMORROW ON THE LAST NIGHT (2026-09-28, the game over): the board's head says AT DAWN and reads
+            // THE BAR CLOSES in the red, where it would name tomorrow's night in cyan. The standing and the next rung stay
+            // - the dawn still files them, and they are what the bar reached - but tomorrow's crowd and her job do not:
+            // nobody is coming, and there is no night to do the job in.
+            _tomorrowRoot = _fatalNight
+                ? HousePlate(parent, "Tomorrow", new Vector2(0.5f, 0.5f), 372f, UIText.T("dayend.stand.at_dawn"),
+                    UIText.T("dayend.stand.closes"), UITheme.ViceRed[3])
+                : HousePlate(parent, "Tomorrow", new Vector2(0.5f, 0.5f), 372f, UIText.T("dayend.stand.tomorrow"),
+                    UIText.T(BarCalendar.NameLine(next)), UITheme.Cyan[3]);
+            if (_fatalNight && _tomorrowRoot.Find("Reading") is RectTransform closes)
+            {
+                // A night's name fits the head's 180; THE BAR CLOSES in the display face does not, so its box is the
+                // words' own width (on the grid), right-aligned as ever - the audit's fitting law reads the box.
+                var words = closes.GetComponent<Text>();
+                closes.sizeDelta = new Vector2(Mathf.Max(180f, Mathf.Ceil(words.preferredWidth / 4f) * 4f), 20f);
+            }
             _tomorrowGroup = _tomorrowRoot.gameObject.AddComponent<CanvasGroup>();
             _tomorrowGroup.blocksRaycasts = false;
             _tomorrowGroup.interactable = false;
@@ -273,12 +287,15 @@ namespace LastCall.UI
             float y = TomorrowStanding(run, body, crossed);
             y += gap;
             y = TomorrowRung(run, body, y, crossed);
-            y += gap;
-            y = TomorrowCrowd(run, body, y, level < 2);
-            if (run.Quests != null && run.Quest != null && !run.QuestChainOver)
+            if (!_fatalNight)
             {
                 y += gap;
-                y = TomorrowJob(run, body, y, crossed);
+                y = TomorrowCrowd(run, body, y, level < 2);
+                if (run.Quests != null && run.Quest != null && !run.QuestChainOver)
+                {
+                    y += gap;
+                    y = TomorrowJob(run, body, y, crossed);
+                }
             }
             y += 18f;
             float h = BoardBodyTop + y;

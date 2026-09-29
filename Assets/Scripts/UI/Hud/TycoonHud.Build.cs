@@ -79,24 +79,14 @@ namespace LastCall.UI
             var top = NewRect("TopBar", root);
             Stretch(top, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -TopBarH), Vector2.zero);
             // THE BOARD IS A BEAM CARRYING INSTRUMENTS (2026-08-19, the author: "bu
-            // şeriti tekrardan tasarla ... hepsinin yeri profesyonelce konumlandırılmalı.
-            // Haftalık takvim göstergesi daha profesyonelce olmalı"). The 2026-08-14 cut
-            // ("kutu kutu" refused) put ONE case on the beam and let the week float as
-            // bulbs on a wire — and the wire is what the author is looking at now: signage
-            // reads as decoration, not as a panel. So the beam still runs edge to edge with
-            // its lit face and its neon foot, and what stands on it is now TWO matched
-            // instruments and one jewel:
-            //   · the HOUR — a case and a dark glass, the digits hand-drawn pixel masks
-            //     (SegmentClock, 2026-08-19: "gerçekten kodlar pixel pixel yapsak")
-            //   · the WEEK — a GENERATED plate ("pixellabden arkaplan oluştur", the one
-            //     written exception to chrome-is-never-generated): teal-capped navy metal,
-            //     the counter at its head, the seven nights as lamps in a slotted row
-            //     (BuildWeekStrip); calendar data lives in the calendar instrument
-            //   · the STANDING — five 3D gold stars straight on the beam (their box was
-            //     refused 2026-08-14 and stays refused; the vice-fade tint lasted one
-            //     build and was refused too), no number
-            //   · one key at the far end; NEW RUN lives inside it
-            // Everything else stands directly on the beam, on one centre line.
+            // şeriti tekrardan tasarla ... hepsinin yeri profesyonelce konumlandırılmalı").
+            // It runs edge to edge with its lit face and its neon foot, and what stands on it
+            // are WELLS routed into it, on one centre line (2026-09-28, second pass): the clock
+            // on the left, and on the right the till and the stars - nothing in the middle, no
+            // keys (TycoonHud.TopBar). The house's two readings and the till's warnings hang
+            // under them on a card when the pointer asks. The week that stood here as its own
+            // instrument is shown only on the curtain's night sign now (2026-09-28:
+            // TycoonHud.Curtain, BuildSignNights and the week flap in the sign's foot).
             var fascia = Panel(top, "Fascia", Vector2.zero, Vector2.one,
                 Vector2.zero, Vector2.zero, UITheme.Night[1]);
             BleedWidth.Apply(fascia);
@@ -125,14 +115,16 @@ namespace LastCall.UI
             _neonBloom.raycastTarget = false;
 
             // ── the beam's wells (2026-09-22, the eighth list) ───────────────────────────────────────────────
-            // The hour, the player, the till, the standing and the settings key, each at its words' own width in the
-            // language being spoken: see TycoonHud.TopBar. The clock is still its segments (2026-08-14), the day well's
-            // night and crowd ride beside it in the same well, and the till came up off the room onto the beam.
+            // The hour, the till and the standing, the hour at its words' own width in the language being spoken:
+            // see TycoonHud.TopBar. The clock is still its segments (2026-08-14), the day well's night and crowd ride
+            // beside it in the same well, and the till came up off the room onto the beam - in the house's figures
+            // face since 2026-09-28's second pass, so it no longer reads as a second clock.
             BuildTopBarWells(top);
             BuildSettings(root);
             BuildLadderWindow(root); // the rank's window (2026-09-21), under the pause menu
             BuildPauseMenu(root);    // Escape with nothing open (2026-09-15)
             BuildMainMenu(root);     // the front door, over everything (2026-09-26)
+            BuildGameOver(root);     // the bar that went under, and the way to the front door (2026-09-28)
             BuildOrderTip(root);
             BuildNote(root);         // the pinned recipe note, over the benches (2026-09-25)
 
@@ -141,13 +133,17 @@ namespace LastCall.UI
             // starts from black starts from black whatever was left open.
             _curtain = NewRect("Curtain", root);
             Stretch(_curtain, Vector2.zero, Vector2.one, new Vector2(-64, -64), new Vector2(64, 64));
+            // ...to the window's edges however wide it is (2026-09-28): past about 1.96:1 the room used to show either
+            // side of a black that stopped 64 outside the field.
+            BleedWidth.Apply(_curtain);
             var curtainCanvas = _curtain.gameObject.AddComponent<Canvas>();
             curtainCanvas.overrideSorting = true;
             curtainCanvas.sortingOrder = 30;
             _curtainImg = _curtain.gameObject.AddComponent<Image>();
-            _curtainImg.color = new Color(0f, 0f, 0f, 0f);
+            // The night's own dark (Night[0]), never a pure black - the dark every other screen in the house stands on.
+            _curtainImg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0f);
             _curtainImg.raycastTarget = false;   // black, not a wall: it never eats a click
-            BuildCurtainCard(_curtain);
+            BuildCurtainSign(_curtain);          // the club's night sign that lights in it (TycoonHud.Curtain)
             _curtain.gameObject.SetActive(false);
 
             // BIN GLASS retired (v5 P13 / C7): a drink is thrown away by carrying it to the bin
@@ -640,23 +636,29 @@ namespace LastCall.UI
             // only once the words have gone does the till start printing). It is the beat
             // the sequence was missing — the slip used to arrive while the bar was still
             // lit, so the night ended and was totalled in the same movement.
-            _lastCallCard = NewText("Called", _dayEndPanel, _display, 24, TextAnchor.MiddleCenter,
-                UITheme.Amber[4]);
-            Place(_lastCallCard.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 40),
-                new Vector2(0, 10f));
-            _lastCallCard.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _lastCallCard.text = UIText.T("build.dayend.called");
-            _lastCallCard.raycastTarget = false;
+            // ...UNDER THE SIGN (2026-09-28, the author picked it off the night show's mock:
+            // "Bu ekran kullanılsın"). The words THAT'S LAST CALL went: every night ends under
+            // a CLOSED neon now - a plate on the dark with the word bent in tube, drawn in code
+            // at half size and shown at exactly 2x (ChromeArt.ClosedNeon). It reads CLOSED in
+            // every language, like the "Open bar" painted on the shutter: it is signage in the
+            // room, not a line of the UI, and the line under it is still the game's own words.
+            // 400x112 and 2x its 200x56 drawing, so the audit's scaling law reads it as it is.
+            _lastCallSign = NewRect("Sign", _dayEndPanel);
+            Place(_lastCallSign, new Vector2(0.5f, 0.5f), new Vector2(400, 112), new Vector2(0, CallSignY));
+            var signImg = _lastCallSign.gameObject.AddComponent<Image>();
+            signImg.sprite = ChromeArt.ClosedNeon();
+            signImg.raycastTarget = false;
             var calledUnder = NewText("CalledSub", _dayEndPanel, _body, 16, TextAnchor.MiddleCenter,
                 UITheme.Cream[3]);
+            // its middle sixteen under the plate's foot (the mock's own spacing)
             Place(calledUnder.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 20),
-                new Vector2(0, -22f));
+                new Vector2(0, -52f));
             calledUnder.horizontalOverflow = HorizontalWrapMode.Overflow;
             calledUnder.text = UIText.T("build.dayend.called_sub");
             calledUnder.raycastTarget = false;
-            _lastCallRt = NewRect("Call", _dayEndPanel);   // one group carries both lines
+            _lastCallRt = NewRect("Call", _dayEndPanel);   // one group carries the sign and its line
             Stretch(_lastCallRt, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            _lastCallCard.transform.SetParent(_lastCallRt, false);
+            _lastCallSign.SetParent(_lastCallRt, false);
             calledUnder.transform.SetParent(_lastCallRt, false);
             _lastCallGroup = _lastCallRt.gameObject.AddComponent<CanvasGroup>();
             _lastCallGroup.blocksRaycasts = false;
@@ -1320,9 +1322,8 @@ namespace LastCall.UI
 
             _dayEndPanel.gameObject.SetActive(false);
 
-            _bannerText = NewText("Closed", root, _display, 22, TextAnchor.MiddleCenter, UITheme.ViceRed[3]);
-            Place(_bannerText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900, 120), new Vector2(0, 60));
-            _bannerText.gameObject.SetActive(false);
+            // (The CLOSED banner that hung in the middle of the room went on 2026-09-28: a bar that goes under ends on
+            //  the game over's Z report and the landlord's notice - TycoonHud.GameOver.)
 
             BuildLedgerPanel(root);
             BuildGuide(root);
@@ -1416,9 +1417,6 @@ namespace LastCall.UI
             return text;
         }
 
-        /// <summary>Five of one icon at 16 px, the sockets always there and the lit ones
-        /// under a mask whose width is the reading — the top bar's star row, at the small
-        /// size, for the house's two symbols (GDD 27 §4.4).</summary>
         /// <summary>A hover caption with an icon and a line, on anything: the rect is given
         /// an invisible plate if it has no graphic to catch the pointer with.</summary>
         /// <summary>The same, with a line that is re-read every frame the tip is up.</summary>
@@ -1450,20 +1448,12 @@ namespace LastCall.UI
             relay.Exited = () => HidePropTip(over);
         }
 
-        /// <summary>One word to the left of a reading's strip.</summary>
-        /// <summary>The GameObject is named by <paramref name="name"/>, not by the word, so the
-        /// hierarchy does not change with the player's language.</summary>
-        private void StripCaption(RectTransform block, string name, string word, float y)
-        {
-            var t = NewText("Cap_" + name, block, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
-            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(70, 12), new Vector2(-8f, y));
-            t.rectTransform.pivot = new Vector2(1, 0.5f);
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.raycastTarget = false;
-            t.text = word;
-        }
-
-        private RectTransform IconStrip(RectTransform parent, string name, Sprite socket, Sprite lit, float y)
+        /// <summary>Five of one icon on the 18 pitch, the sockets always there and the lit ones under a mask whose
+        /// width is the reading - the top bar's star row, at the small size, for the house's two symbols (GDD 27
+        /// §4.4). <paramref name="iconPx"/> is the icon's own drawn size, so it shows at exactly 1x on the same
+        /// centres (2026-09-28: the 12x12 heart stood in the medallion's 16 cell at 1.33x).</summary>
+        private RectTransform IconStrip(RectTransform parent, string name, Sprite socket, Sprite lit, float y,
+            float iconPx = HouseIcon)
         {
             var row = NewRect(name, parent);
             Place(row, new Vector2(0, 0.5f), new Vector2(HouseStripW, HouseIcon), new Vector2(0, y));
@@ -1473,7 +1463,7 @@ namespace LastCall.UI
                 var cell = NewRect("S" + i, row);
                 cell.anchorMin = cell.anchorMax = new Vector2(0, 0.5f);
                 cell.pivot = new Vector2(0.5f, 0.5f);
-                cell.sizeDelta = new Vector2(HouseIcon, HouseIcon);
+                cell.sizeDelta = new Vector2(iconPx, iconPx);
                 cell.anchoredPosition = new Vector2(i * HouseGap + HouseGap * 0.5f, 0);
                 var img = cell.gameObject.AddComponent<Image>();
                 img.sprite = socket; img.preserveAspect = true; img.raycastTarget = false;
@@ -1490,7 +1480,7 @@ namespace LastCall.UI
                 var cell = NewRect("F" + i, fill);
                 cell.anchorMin = cell.anchorMax = new Vector2(0, 0.5f);
                 cell.pivot = new Vector2(0.5f, 0.5f);
-                cell.sizeDelta = new Vector2(HouseIcon, HouseIcon);
+                cell.sizeDelta = new Vector2(iconPx, iconPx);
                 cell.anchoredPosition = new Vector2(i * HouseGap + HouseGap * 0.5f, 0);
                 var img = cell.gameObject.AddComponent<Image>();
                 img.sprite = lit; img.preserveAspect = true; img.raycastTarget = false;

@@ -157,8 +157,9 @@ namespace LastCall.UI
         // THE ROOM BEHIND THE BENCH, DIMMED A LITTLE (2026-09-17, the author: "müşterilerin olduğu arkaplan biraz
         // karartılır"): the veil that was switched off on 2026-08-22 ("karartma olmasın") comes back at a third.
         private const float RoomDimBench = 0.62f;   // 0.30 measured lighter than the old veil (wall 176 vs 151 of 216); 0.62 lands near 135
-        /// <summary>The HUD's top bar, which the veil stops under (TycoonHud.TopBarH).</summary>
-        private const float HudTopBarH = 54f;
+        /// <summary>The HUD's top bar, which the veil stops under - read off the HUD's own constant (2026-09-28), so the
+        /// two can no longer drift apart.</summary>
+        private const float HudTopBarH = TycoonHud.TopBarH;
 
         // THE BENCH CLOSES, IT DOES NOT VANISH (2026-09-13, the author: "her şeyin kapanma
         // animasyonu atlanmamalı"). Closing used to switch the whole flow off in one frame; it

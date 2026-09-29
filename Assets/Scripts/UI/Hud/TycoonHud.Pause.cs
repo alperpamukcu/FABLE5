@@ -14,13 +14,23 @@ namespace LastCall.UI
     /// kalsın sadece butonların üstünde olduğu çerçevenin arkaplanı olsun"): no wall, a faint dim that swallows the
     /// clicks. The menu opens and closes on its own two cues (menu_open / menu_close).
     ///
-    /// THE KEYS ARE THE AUTHOR'S PACK (the same message: "Butonlar içinde bu dosya yolundaki butonları kullan" —
-    /// MenuPack): a worded key stands on the pack's blank cell 9-sliced at 2x and carries one of its glyphs; RESUME is
-    /// the one orange key; SETTINGS opens the window over this; MAIN MENU goes back to the front door (2026-09-26 —
-    /// the SOON keys SAVE and CONTINUE became the save layer and the menu's CONTINUE); NEW RUN and QUIT do what they say.
+    /// THE PLATE IS A CABINET SINCE 2026-09-29 (the author: "Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle
+    /// tekrardan diğer sahneleri ürettiğine uygun bir tasarımda sıfırdan tekrar oluştur"): the generated panel
+    /// (menu_esc_bg, 2026-09-26) became the week's own fitting drawn in code (TycoonHud.MenuKit) - a Night plate on a
+    /// Graphite rim, crowned on stepped shoulders with PAUSED lit in the crown as a sign, the magenta tube the picture's
+    /// neon edge was, now bent round the body with its light and broken under the crown ("ESC'nin alt ve üst kenarları
+    /// da neon şerit", kept). The keys stand in a recess let into it; the night's hour and the till sit in two wells in
+    /// its plinth. The title catches and the tube a tenth after it every time the menu opens (NeonStrike).
+    ///
+    /// THE KEYS ARE SIGN KEYS (SignKey): RESUME is the one amber enamel key; SETTINGS opens the window over this; MAIN
+    /// MENU goes back to the front door (2026-09-26 — the SOON keys SAVE and CONTINUE became the save layer and the
+    /// menu's CONTINUE); NEW RUN ASKS FIRST - its first press says so in ViceRed, a second throws the night away for a
+    /// fresh bar on a fresh seed (StartFreshRun, like the door's and the settings' START OVER: it was the inspector's
+    /// seed and kept the save); QUIT does what it says. Each wears its neon mark in the house's magenta, half-lit at
+    /// rest and struck lit under the pointer - the brass icons are gone ("şuanki altın iconları kullanma").
     ///
     /// THE KEYS FIT THEIR WORDS (the author: "butonlar hoverlar dillere göre cümle uzun veya kısa olduğunda flexible
-    /// olmalı kesinlikle"): every key here is sized from its label's measured width (FitKey), never from a number.
+    /// olmalı kesinlikle"): every key here is sized from its label's measured width, never from a number.
     /// </summary>
     public sealed partial class TycoonHud
     {
@@ -31,7 +41,21 @@ namespace LastCall.UI
         /// <summary>The night is held: the menu is up, or the settings opened from it are.</summary>
         private bool Paused => _paused;
 
-        private const float PauseKeyH = 50f, PauseKeyMinW = 352f, PausePlateW = 440f, PausePlateH = 500f;
+        /// <summary>The pack's key height - the ladder's CONTINUE still stands on it. NightTitle's box is the old plate's
+        /// width less its margins (the settings' and the achievements' titles still ride it).</summary>
+        private const float PauseKeyH = 50f, PausePlateW = 440f;
+
+        // THE CABINET, in field units (BUILD_SPEC §3 "Pause"; the mock's out/pause.png). Wider than the mock's 432 by 48:
+        // the plinth's two wells must hold the till's six cells (a sign, a dollar, four digits - $100,000 cut the "$"
+        // off five) beside the clock and the night's name at 16 (SATURDAY measures 92 units in the body face), and at
+        // 432 the name stepped down to 8 in every language. The keys stand 384 wide in a 432 recess, 24 in from its
+        // sides, so the longest question a key asks (German, 258 at 16) still reads at 16.
+        private const float PauseCabX = 400f, PauseCabW = 480f, PauseCrownTop = 112f, PauseCrownH = 48f, PauseBodyH = 440f;
+        private const float PauseRecessX = 424f, PauseRecessY = 184f, PauseRecessW = 432f, PauseRecessH = 320f;
+        private const float PauseKeyTop = 198f, PauseKeyPitch = 60f, PauseSignKeyMinW = 384f;
+
+        private NeonStrike _pauseStrike;
+        private SignKey _pauseNewRun;
 
         /// <summary>What the room goes under while a menu is up: the house scrim's night at 85% (2026-09-16, the
         /// author, after the 70% scrim: "Arkaplan biraz daha karartılsın") — an alpha of a token.</summary>
@@ -55,48 +79,43 @@ namespace LastCall.UI
             dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
 
-            // THE PLATE IS A PICTURE (2026-09-26, the author: "ESC için arkaplanda kullanılan mavi UI yerine arkaplan
-            // görseli üret"): the generated panel (MenuPack.Art "menu_esc_bg") at exactly 2x - its own neon edge, a
-            // sunburst behind the title and a calm middle the keys stand on. Without it, the blue plate the certificate
-            // and the room's tips stand on (2026-09-21, "ESC menüsü backbar tasarımı ile uyumlu olmalı").
-            var bg = MenuPack.Art("menu_esc_bg");
-            var plate = bg != null ? PicturePlate(_pausePanel, "Plate", bg)
-                                   : BluePlate(_pausePanel, "Plate", new Vector2(PausePlateW, PausePlateH));
-
-            // the title, a shadow copy under it; the three sunset rules under it on the blue plate, while the picture's
-            // own sunburst stands behind it and the word catches like a tube (NeonFlicker)
-            NightTitle(plate, UIText.T("chrome.pause.title"), -36f);
-            if (bg == null) SunsetRules(plate, -66f, PausePlateW - 80f);
-            else plate.Find("Title")?.gameObject.AddComponent<NeonFlicker>();
+            // THE CABINET (2026-09-29): PAUSED in the crown, the tube round the body, the recess the keys stand in.
+            var cab = BuildMenuCabinet(_pausePanel, "Plate", PauseCabX, PauseCrownTop, PauseCabW, PauseCrownH, PauseBodyH,
+                UIText.T("chrome.pause.title"), PauseRecessY);
+            _pauseStrike = cab.Strike;
+            MenuRecess(_pausePanel, "Recess", PauseRecessX, PauseRecessY, PauseRecessW, PauseRecessH, UITheme.Night[1]);
 
             // the keys, top down; each fitted to its word
-            float y = -96f;
-            var keys = new System.Collections.Generic.List<RectTransform>();
-            keys.Add(PauseKey(plate, "RESUME", UIText.T("chrome.pause.resume"), "play", MenuPack.Tone.Orange, ref y, TogglePause));
+            float y = PauseKeyTop;
+            PauseSignKey("RESUME", UIText.T("chrome.pause.resume"), "resume", true, ref y, TogglePause);
             // SAVE and CONTINUE stood here greyed SOON since 2026-09-15. The game saves itself
             // at every dawn now (SaveStore) and the menu's CONTINUE reads it back, so the two
             // promised keys are kept by the system rather than by keys — MAIN MENU is the way
             // to it, and tonight is lost the way START OVER always said it would be.
-            keys.Add(PauseKey(plate, "MAIN MENU", UIText.T("chrome.pause.main_menu"), "home", MenuPack.Tone.Grey, ref y, () =>
+            PauseSignKey("MAIN MENU", UIText.T("chrome.pause.main_menu"), "main_menu", false, ref y, () =>
             {
                 _pausePanel.gameObject.SetActive(false);
                 _settingsFromPause = false;
                 Sfx.Play("menu_close", 0.6f);
                 ShowMainMenu();      // the night stays held; the save on disk is last dawn's
-            }));
-            keys.Add(PauseKey(plate, "SETTINGS", UIText.T("chrome.pause.settings"), "cog", MenuPack.Tone.Grey, ref y, () =>
+            });
+            PauseSignKey("SETTINGS", UIText.T("chrome.pause.settings"), "settings", false, ref y, () =>
             {
                 Sfx.Play("click");
                 _settingsFromPause = true;
                 _pausePanel.gameObject.SetActive(false);
                 if (_settingsPanel != null && !_settingsPanel.gameObject.activeSelf) ToggleSettings();
-            }));
-            keys.Add(PauseKey(plate, "NEW RUN", UIText.T("chrome.pause.new_run"), "restart", MenuPack.Tone.Grey, ref y, () =>
+            });
+            // NEW RUN ASKS FIRST, AND IS THE DOOR'S NEW RUN (2026-09-29, read_menus finding 3): one stray click threw the
+            // night away, and it dealt the INSPECTOR's seed and kept last dawn's save - every other fresh start in the
+            // game (the door's NEW RUN, the settings' START OVER) clears the save and deals SeedPolicy's next seed.
+            _pauseNewRun = PauseSignKey("NEW RUN", UIText.T("chrome.pause.new_run"), "new_run", false, ref y, () =>
             {
                 TogglePause();
-                _bootstrap.StartNewRun(null);
-            }));
-            keys.Add(PauseKey(plate, "QUIT", UIText.T("chrome.pause.quit"), "exit", MenuPack.Tone.Grey, ref y, () =>
+                _bootstrap?.StartFreshRun(LastCall.Game.SeedPolicy.Next());
+            });
+            _pauseNewRun.AskWord = UIText.T("chrome.pause.new_run_sure");
+            PauseSignKey("QUIT", UIText.T("chrome.pause.quit"), "quit", false, ref y, () =>
             {
                 Sfx.Play("bar_closed", 0.6f);
 #if UNITY_EDITOR
@@ -104,115 +123,59 @@ namespace LastCall.UI
 #else
                 Application.Quit();
 #endif
-            }));
-            BuildPauseFoot(plate);
+            });
+            BuildPauseFoot(_pausePanel);
             _pausePanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>A verb of the pause menu: a sign key in the recess (Night[1] ground), its mark in the house's
+        /// magenta, centred on the field, at <paramref name="y"/>; the next one a pitch lower.</summary>
+        private SignKey PauseSignKey(string id, string label, string icon, bool primary, ref float y, Action onClick)
+        {
+            var key = MenuSignKey(_pausePanel, id, label, icon, UITheme.Magenta, primary, 1, SignKeyH, PauseSignKeyMinW, onClick);
+            PlaceSignKey(key, 640f, y);
+            y += PauseKeyPitch;
+            return key;
         }
 
         private SegmentClock _pauseClock;
         private SegmentFigure _pauseTillFigure;
         private Text _pauseNightNo, _pauseNightName;
-        private const float PauseFootH = 38f, PauseFootEdge = 12f, PauseFootY = 10f, PauseFootGap = 6f, PauseFootPad = 8f;
+        private const float PauseFootY = 520f, PauseFootH = 56f, PauseFootGap = 8f, PauseFootPad = 12f, PauseTillPad = 8f;
 
         /// <summary>
         /// THE FOOT, AS THE BEAM'S OWN INSTRUMENTS (2026-09-26, the author, of the 8px line and the orange till under the
-        /// keys: "Görseldeki yazıların tarzını değiş"). Two wells on the beam's glass (ChromeArt.Well): the HOUR - the
-        /// top bar's segment clock in cyan, the night's number over its name - and the TILL - the register's green figure,
-        /// red in the red. The same readouts the beam carries, so the menu says where the night was left in the words the
-        /// bar already uses. The night's name steps down to the 8 size when a language's weekday outgrows its box.
+        /// keys: "Görseldeki yazıların tarzını değiş"). Two wells let into the cabinet's plinth (2026-09-29: the cabinet's
+        /// own Night[0] wells, MenuArt.Recess): the HOUR - the top bar's segment clock in cyan, the night's number over its
+        /// name - and the TILL - the register's green figure, red in the red, all six of its cells. The same readouts the
+        /// beam carries, so the menu says where the night was left in the words the bar already uses. The night's name is
+        /// Cream now (amber is the one key to press) and steps down to the 8 size when a language's weekday outgrows its
+        /// box (WEDNESDAY, the longest English one, fits at 16).
         /// </summary>
-        private void BuildPauseFoot(RectTransform plate)
+        private void BuildPauseFoot(RectTransform field)
         {
-            float plateW = plate.sizeDelta.x;
-            float tillW = SegmentFigure.Width + TopWellPad * 2f;
-            float hourW = plateW - PauseFootEdge * 2f - PauseFootGap - tillW;   // 98 units left for the night's name
+            float tillW = SegmentFigure.Width + PauseTillPad * 2f;               // 172
+            float hourW = PauseRecessW - PauseFootGap - tillW;                   // 252: 110 left for the night's name
 
-            var hour = NewRect("FootHour", plate);
-            hour.anchorMin = hour.anchorMax = hour.pivot = Vector2.zero;
-            hour.sizeDelta = new Vector2(hourW, PauseFootH);
-            hour.anchoredPosition = new Vector2(PauseFootEdge, PauseFootY);
-            var hi = hour.gameObject.AddComponent<Image>();
-            hi.sprite = ChromeArt.Well(); hi.type = Image.Type.Sliced; hi.raycastTarget = false;
+            var hour = MenuRecess(field, "FootHour", PauseRecessX, PauseFootY, hourW, PauseFootH, UITheme.Night[0]).rectTransform;
             var digits = NewRect("Digits", hour);
             Place(digits, new Vector2(0, 0.5f), new Vector2(TopHourDigitsW, 28), new Vector2(PauseFootPad, 0));
             _pauseClock = new SegmentClock(digits, UITheme.Cyan[4]);
-            float dayX = PauseFootPad + TopHourDigitsW + 6f, dayW = hourW - dayX - PauseFootPad;
+            float dayX = PauseFootPad + TopHourDigitsW + 10f, dayW = hourW - dayX - 10f;
+            // the number's caps a little over the well's middle, the name's under it (Silkscreen's caps ride 1.24 under
+            // the middle of their line, so a box centred 12 over the middle puts an 8's caps at 10.5 - the mock's)
             _pauseNightNo = NewText("NightNo", hour, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
-            Place(_pauseNightNo.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 12), new Vector2(dayX, 8f));
-            _pauseNightNo.rectTransform.pivot = new Vector2(0, 0.5f);
+            Place(_pauseNightNo.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 12), new Vector2(dayX, 12f));
             _pauseNightNo.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _pauseNightName = NewText("NightName", hour, _body, 16, TextAnchor.MiddleLeft, UITheme.Amber[4]);
-            Place(_pauseNightName.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 18), new Vector2(dayX, -6f));
-            _pauseNightName.rectTransform.pivot = new Vector2(0, 0.5f);
+            _pauseNightName = NewText("NightName", hour, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            Place(_pauseNightName.rectTransform, new Vector2(0, 0.5f), new Vector2(dayW, 18), new Vector2(dayX, -7f));
             _pauseNightName.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            var till = NewRect("FootTill", plate);
-            till.anchorMin = till.anchorMax = till.pivot = new Vector2(1, 0);
-            till.sizeDelta = new Vector2(tillW, PauseFootH);
-            till.anchoredPosition = new Vector2(-PauseFootEdge, PauseFootY);
-            var ti = till.gameObject.AddComponent<Image>();
-            ti.sprite = ChromeArt.Well(); ti.type = Image.Type.Sliced; ti.raycastTarget = false;
+            var till = MenuRecess(field, "FootTill", PauseRecessX + PauseRecessW - tillW, PauseFootY, tillW, PauseFootH,
+                UITheme.Night[0]).rectTransform;
             var host = NewRect("Figure", till);
-            Place(host, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width, 32), new Vector2(TopWellPad, 0));
-            host.pivot = new Vector2(0, 0.5f);
+            Place(host, new Vector2(0, 0.5f), new Vector2(SegmentFigure.Width, 32), new Vector2(PauseTillPad, 0));
             _pauseTillFigure = new SegmentFigure(host, UITheme.Lime[4]);
-        }
-
-        /// <summary>
-        /// A GENERATED PLATE (MenuPack.Art): the picture at exactly twice its size, catching every click that lands on it
-        /// so nothing under it is pressed through it.
-        /// </summary>
-        private RectTransform PicturePlate(RectTransform parent, string name, Sprite art)
-        {
-            var plate = NewRect(name, parent);
-            Place(plate, new Vector2(0.5f, 0.5f), new Vector2(art.rect.width * 2f, art.rect.height * 2f), Vector2.zero);
-            var img = plate.gameObject.AddComponent<Image>();
-            img.sprite = art;
-            img.type = Image.Type.Simple;
-            img.color = Color.white;
-            img.raycastTarget = true;
-            plate.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
-            UiAuditExempt.Mark(plate, "the menu's generated picture, " + art.rect.width + "x" + art.rect.height + " shown at exactly 2x");
-            return plate;
-        }
-
-        /// <summary>A key on the pause plate: the pack's worded key with a glyph at its left, fitted to its word, and
-        /// — with no <paramref name="onClick"/> — greyed with a SOON tag, because the thing it names is not built yet.</summary>
-        private RectTransform PauseKey(RectTransform plate, string id, string label, string glyph, MenuPack.Tone tone, ref float y, Action onClick)
-        {
-            bool soon = onClick == null;
-            var key = PackWordKey(plate, id, label, glyph, tone, new Vector2(0.5f, 1), new Vector2(PauseKeyMinW, PauseKeyH),
-                new Vector2(0, y), onClick ?? (() => { }), PauseKeyMinW, 48f + 24f + (soon ? 72f : 0f));
-            SurfaceKey(key, tone);                     // before the SOON dim below, which the surface then takes too
-            if (soon)
-            {
-                // The pack has no disabled drawing: the plate, the glyph and the word go to half light, and the key
-                // stops answering the pointer.
-                key.GetComponent<Image>().color = new Color(0.55f, 0.55f, 0.55f, 1f);   // a uniform dim, so the audit reads it as one
-                key.GetComponent<Button>().interactable = false;
-                key.GetComponent<PressSink>().enabled = false;
-                key.GetComponent<PackKey>().enabled = false;
-                var face = (RectTransform)key.Find("Face");
-                face.Find("Label").GetComponent<Text>().color = UITheme.Cream[2];
-                var glyphImg = face.Find("Glyph");
-                if (glyphImg != null)
-                {
-                    var gi = glyphImg.GetComponent<Image>();
-                    // a brass icon takes the plate's own uniform dim; a pack mask goes to the half-light cream
-                    gi.color = MenuPack.IsIcon(gi.sprite) ? new Color(0.55f, 0.55f, 0.55f, 1f) : UITheme.Cream[2];
-                }
-                var tag = NewRect("Soon", face);
-                Place(tag, new Vector2(1, 0.5f), new Vector2(60, 20), new Vector2(-12f, 2f));
-                tag.pivot = new Vector2(1, 0.5f);
-                var tagImg = tag.gameObject.AddComponent<Image>();
-                tagImg.color = UITheme.Magenta[1]; tagImg.raycastTarget = false;
-                var tagText = NewText("L", tag, _body, 8, TextAnchor.MiddleCenter, UITheme.Magenta[4]);
-                Stretch(tagText.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                tagText.text = UIText.T("chrome.pause.soon");
-                FitRect(tag, tagText, 16f, 40f);
-            }
-            y -= PauseKeyH + 10f;
-            return key;
         }
 
         // ── the framed night and the pack's keys (shared with the settings window) ────────────────────────────────
@@ -291,18 +254,17 @@ namespace LastCall.UI
             // clock, so the plate breathes rather than jumps.
             sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.03f;
             Image glyphImg = null;
-            // A GREY key shows the shipped brass icon in the glyph's slot when there is one (MenuPack.IconFor, 32x32 at
-            // 1x, the top bar's star3d / cog3d family), never tinted; the amber and lime keys keep the pack's mask in
-            // their own inks, where brass would sit on brass.
-            var icon = glyph != null && tone == MenuPack.Tone.Grey ? MenuPack.IconFor(glyph) : null;
+            // The pack's mask in the key's own inks. (A grey key showed a generated brass icon here from 2026-09-25 to
+            // 2026-09-29 - the author: "şuanki altın iconları kullanma"; the menus' own keys are SignKeys now, with
+            // their neon marks, and the keys still built here - the bill, the ladder, the game over - wear the pack's.)
             if (glyph != null)
             {
                 var g = NewRect("Glyph", face);
                 Place(g, new Vector2(0, 0.5f), new Vector2(32, 32), new Vector2(10f, 1f));
                 g.pivot = new Vector2(0, 0.5f);
                 glyphImg = g.gameObject.AddComponent<Image>();
-                glyphImg.sprite = icon != null ? icon : MenuPack.Glyph(glyph);
-                glyphImg.color = icon != null ? Color.white : MenuPack.PalettedInk(tone, false);
+                glyphImg.sprite = MenuPack.Glyph(glyph);
+                glyphImg.color = MenuPack.PalettedInk(tone, false);
                 glyphImg.raycastTarget = false;
             }
             var pk = rt.gameObject.AddComponent<PackKey>();
@@ -312,8 +274,8 @@ namespace LastCall.UI
             // under the pointer, which is the answer the back bar already gives.
             pk.Rest = plate.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(tone, true);
             pk.Glyph = glyphImg;
-            pk.GlyphRest = icon != null ? Color.white : MenuPack.PalettedInk(tone, false);
-            pk.GlyphLit = icon != null ? Color.white : MenuPack.PalettedInk(tone, true);
+            pk.GlyphRest = MenuPack.PalettedInk(tone, false);
+            pk.GlyphLit = MenuPack.PalettedInk(tone, true);
             // THE WORD SITS DEAD CENTRE ON THE FACE (2026-09-16, the author: "butonların üstündeki yazılar butonların
             // tam ortasında olsun"; measured off a capture): centred across the WHOLE key, not the part right of the
             // glyph — which put it twenty units off — and two units up, because the pack's face runs from the rim
@@ -362,12 +324,10 @@ namespace LastCall.UI
         {
             var pk = key.GetComponent<PackKey>();
             if (pk == null) return;
-            bool icon = pk.Glyph != null && MenuPack.IsIcon(pk.Glyph.sprite);     // a brass icon keeps its own colours
             pk.Refit(MenuPack.Paletted(tone, false), MenuPack.Hovered(), MenuPack.Paletted(tone, true),
-                icon ? Color.white : MenuPack.PalettedInk(tone, false), icon ? Color.white : MenuPack.PalettedInk(tone, true));
+                MenuPack.PalettedInk(tone, false), MenuPack.PalettedInk(tone, true));
             var label = key.Find("Face/Label");
-            if (label != null) label.GetComponent<Text>().color = MenuPack.PalettedInk(tone, false);
-        }
+            if (label != null) label.GetComponent<Text>().color = MenuPack.PalettedInk(tone, false);        }
 
         /// <summary>An ICON KEY from the pack: one cell at 2x (32x32) — the blank cell for the plate and the glyph
         /// over it in the pack's inks, which is how the pack's own cells are built and lets the two glyphs the pack
@@ -490,6 +450,8 @@ namespace LastCall.UI
             }
             else Sfx.Play("menu_close", 0.6f);
             _pausePanel.gameObject.SetActive(show);
+            // the sign strikes on when the menu OPENS (not when it is shown again from its settings: that is lit already)
+            if (show && _pauseStrike != null) _pauseStrike.Restart();
             SetPaused(show);
             _settingsFromPause = false;
         }
@@ -525,7 +487,7 @@ namespace LastCall.UI
         private static string NightWord(TycoonRun run) =>
             UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(run.Day))));
 
-        /// <summary>The bar's keys with nothing open (2026-09-15): the book, the cellar, and the music player's next
+        /// <summary>The bar's keys with nothing open (2026-09-15): the book, the cellar, and the music's next record
         /// and pause, on whatever keys the player put them. Read after Escape, which has its own order of things to
         /// close; nothing here runs while the settings window listens for a binding.</summary>
         private void UpdateHotkeys()
@@ -533,6 +495,8 @@ namespace LastCall.UI
             if (_bindListening != null || AnySheetOpen() || Showing(_pausePanel) || MenuUp) return;
             var run = Run;
             if (run == null) return;
+            // The next record on its key, and nothing said about it (2026-09-28: the room's notices were retired, and
+            // the beam's JUKEBOX key that shared this press left the bar with the rest of its keys the same day).
             if (Keys.Pressed(KeyAction.NextTrack)) { Sfx.SkipTrack(+1); Sfx.Play("click"); }
             if (Keys.Pressed(KeyAction.MusicToggle)) { Sfx.MusicPaused = !Sfx.MusicPaused; Sfx.Play("click"); }
             if (run.Phase != TycoonPhase.DayOpen) return;

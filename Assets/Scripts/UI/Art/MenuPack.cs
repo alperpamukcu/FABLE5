@@ -232,10 +232,12 @@ namespace LastCall.UI
         // ── THE MENUS' GENERATED PIECES (2026-09-25, Tools/menu_art_gen.py) ─────────────────────────────────────────
         //
         // The author: "Settings, esc menülerinin UI tasarımı tekrardan tasarlansın. Gerekli arkaplan görsellerini icon
-        // görsellerini veya efektleri pixellabden üretebilirsin." The door beside the ESC keys, the marquee over the
-        // settings and the keys' brass icons live in Resources/Menu and are drawn only when they are there: without
-        // them every menu is exactly the one before. A probe can hand a candidate in through ArtOverride and rebuild
-        // the menus, which is how the report page shows a take in the game before anything enters Assets.
+        // görsellerini veya efektleri pixellabden üretebilirsin." The door beside the ESC keys and the marquee over the
+        // settings live in Resources/Menu and are drawn only when they are there: without them every menu is exactly
+        // the one before. (The keys' brass icons lived here too until 2026-09-29, and the title's menu_logo until the
+        // same day - it stays in the folder as the store's art, and the door draws TitleSign.) A probe can hand a
+        // candidate in through ArtOverride and rebuild the menus, which is how the report page shows a take in the
+        // game before anything enters Assets.
 
         /// <summary>Candidates put in by a probe (never by the game), by name; they win over Resources.</summary>
         internal static readonly Dictionary<string, Sprite> ArtOverride = new Dictionary<string, Sprite>();
@@ -248,28 +250,10 @@ namespace LastCall.UI
             return Resources.Load<Sprite>("Menu/" + name);
         }
 
-        /// <summary>The brass icon a key of the pack shows in place of its glyph, when it has been shipped: SETTINGS wears
-        /// the family's own cog (mi_settings), the one the top bar's key carries too.</summary>
-        public static Sprite IconFor(string glyph)
-        {
-            switch (glyph)
-            {
-                case "play": return Art("mi_resume");
-                case "save": return Art("mi_save");
-                case "lock": return Art("mi_continue");
-                case "restart": return Art("mi_new_run");
-                case "exit": return Art("mi_quit");
-                case "sound_on": return Art("mi_audio");
-                case "gamepad": return Art("mi_controls");
-                case "expand": return Art("mi_display");
-                case "mail": return Art("mi_language");
-                case "cog": return Art("mi_settings");
-                default: return null;
-            }
-        }
-
-        /// <summary>Whether a key's glyph image is showing a brass icon rather than a pack mask: an icon is never tinted.</summary>
-        public static bool IsIcon(Sprite s) => s != null && s.name.StartsWith("mi_");
+        // THE BRASS ICONS ARE GONE (2026-09-29, the author: "şuanki altın iconları kullanma"). IconFor put a generated
+        // mi_* icon in a grey key's glyph slot and IsIcon kept it untinted; nothing reads the mi_* files now - the
+        // menus' keys wear neon marks drawn in code (NeonIcons on SignKey) and every other key keeps the
+        // pack's own mask in its inks.
 
         /// <summary>The face colour a tone's cells are filled with (Tools/menu_pack.py measured them).</summary>
         public static Color Face(Tone tone) =>

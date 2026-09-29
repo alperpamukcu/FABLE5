@@ -4127,7 +4127,10 @@ namespace LastCall.UI
             RefreshDirtyGlasses(run);
             // The bar bed (P17): always on, muffled while a stage or the licence is open — and, since 2026-09-15, the
             // music over it, which follows the night (MusicMood). The mood goes first: the bed is chosen by it.
-            bool attention = (_flow != null && _flow.IsOpen) || (_idRoot != null && _idRoot.gameObject.activeSelf);
+            bool attention = (_flow != null && _flow.IsOpen) || (_idRoot != null && _idRoot.gameObject.activeSelf)
+                             // the game over's own sounds - the sign dying, the printer, the stamp - over a lowered
+                             // record, until the key to the front door is up (2026-09-28)
+                             || (GameOverUp && _goBeat < GoBeat.Key);
             // The front door has its own record on (2026-09-27): the title screen plays the
             // "menu" mood — music_menu_1 — and Sfx's borrow chain hands any missing mood to
             // the night's list, so a build without the theme simply keeps the bar's own.
@@ -4837,7 +4840,7 @@ namespace LastCall.UI
 
         /// <summary>
         /// THE WARM-UP (2026-09-26): one person's remaining clips a frame, starting behind
-        /// the boot's curtain — the whole cast is warm in under a second of frames, long
+        /// the front door at boot — the whole cast is warm in under a second of frames, long
         /// before the first walk-in, and nothing ever hitches on a clip's first draw. Runs
         /// off the unscaled ticker, so the main menu's held clock warms the room too.
         /// </summary>

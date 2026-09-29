@@ -141,8 +141,56 @@ namespace LastCall.UI
             return Cache[key] = sprite;
         }
 
+        // ── the cellar cabinet's carcass (2026-09-28) ──────────────────────────────────────────────────────────────
+        // The cellar is a display cabinet under the slab now (Tools/cellar_cabinet/cabinet.py), one material per
+        // counter tier. Each level draws its CARCASS - the posts, the band between the rows, the boards and the plate
+        // frames where they are the carcass's own wood - in a family of palette colours it uses nowhere else, and never
+        // on a pixel that carries a lamp's light (the tool's check holds it). So the refinish kit still repaints the
+        // bar: the carcass takes the finish's frame ramp by luminance rank, exactly as the old frames did, while the
+        // niches' drawn light, their plates and the level's trim stay the level's. NEON - the paint the bar opens in -
+        // leaves each level's own material as drawn: mapping plywood onto the magenta ramp would put back the pink the
+        // author asked to change ("magentalık değişmeli").
+        private static readonly Color32[][] CabinetFamily =
+        {
+            new[] { H(0x3A2410), H(0x6B4416), H(0x9E6A1D), H(0xC98F2B) },   // 1 plywood: Malt 0..3
+            new[] { H(0x14161A), H(0x24272D), H(0x383D45) },                // 2 black lacquer: Graphite 0..2
+            new[] { H(0x131B3D), H(0x1F2E66) },                             // 3 navy lacquer: ClubBlue 0..1
+        };
+
+        private static readonly Dictionary<string, Texture2D> CabinetCache = new Dictionary<string, Texture2D>();
+
+        /// <summary>A cabinet body (<paramref name="level"/> 1..3) in this finish: its carcass family remapped onto the
+        /// finish's frame ramp, everything else untouched. The texture itself for NEON or an unknown finish.</summary>
+        public static Texture2D RecolourCabinet(Texture2D src, string id, int level)
+        {
+            if (src == null) return null;
+            var spec = Of(id);
+            if (spec.Id == TycoonRun.CounterFinishes[0]) return src;
+            level = Mathf.Clamp(level, 1, CabinetFamily.Length);
+            string key = src.GetInstanceID() + ":" + spec.Id + ":" + level;
+            if (CabinetCache.TryGetValue(key, out var got) && got != null) return got;
+            var map = new Dictionary<int, Color32>();
+            MapFamily(map, CabinetFamily[level - 1], spec.Frame);
+            Color32[] px;
+            try { px = src.GetPixels32(); }
+            catch (UnityException) { return src; }                     // not readable: it keeps its own material
+            for (int i = 0; i < px.Length; i++)
+            {
+                var c = px[i];
+                if (c.a != 0 && map.TryGetValue(Key(c), out var to)) px[i] = new Color32(to.r, to.g, to.b, c.a);
+            }
+            var copy = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false)
+            {
+                filterMode = src.filterMode, wrapMode = src.wrapMode, name = src.name + "_" + spec.Id,
+            };
+            copy.SetPixels32(px);
+            copy.Apply(false, false);
+            return CabinetCache[key] = copy;
+        }
+
         /// <summary>A swatch for the market: a piece of the counter in this finish — the slab's edge, the lip, a bay's
-        /// frame and back wall — 140 wide by 70, cut from the recoloured drawing.</summary>
+        /// frame and back wall — 140 wide by 70, cut from the recoloured drawing. (With the cabinet on the counter the
+        /// stage cuts its own - DiegeticStage.FinishSwatch; this is what a bar without the cabinet's art shows.)</summary>
         public static Sprite Swatch(Sprite counter, string id)
         {
             var whole = Recolour(counter, id);

@@ -221,13 +221,17 @@ namespace LastCall.UI
             }
 
             // THE RED NIGHTS (Q8: the count as today - Core advances it at dawn).
-            int strikes = run.Ledger.DebtStrikes;
+            // ...EXCEPT ON THE NIGHT THAT ENDS IT (2026-09-28, the game over): Core has already said this dawn files the
+            // last strike (ClosesAtDawn), so the band counts it now - STRIKE 3/3 - and its second line says what that
+            // means, where every other red night warns "one more".
+            int strikes = _fatalNight ? DayLedger.StrikesToClose : run.Ledger.DebtStrikes;
             if (strikes <= 0) y += 12f;
             else
             {
                 y += 4f;
                 string line = UIText.T("dayend.bill.strike", ("strikes", strikes), ("limit", DayLedger.StrikesToClose));
-                if (strikes == DayLedger.StrikesToClose - 1) line += "\n" + UIText.T("dayend.bill.last_strike");
+                if (_fatalNight) line += "\n" + UIText.T("dayend.bill.closes_at_dawn");
+                else if (strikes == DayLedger.StrikesToClose - 1) line += "\n" + UIText.T("dayend.bill.last_strike");
                 var band = NewRect("Strike", card);
                 band.anchorMin = band.anchorMax = new Vector2(0.5f, 1f);
                 band.pivot = new Vector2(0.5f, 1f);

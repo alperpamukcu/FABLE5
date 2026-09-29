@@ -255,21 +255,35 @@ namespace LastCall.UI
     /// This is the same seven-bar machine the clock is: six cells, a sign, a dollar and four
     /// digits, right-aligned, the unused leading cells ghosted the way the clock's unlit bars
     /// are, so the two readouts on the beam are one kind of thing.
+    ///
+    /// HOW MANY CELLS IS THE CALLER'S (2026-09-28, the register under the neon): six held a sign, a dollar and four
+    /// digits, so from $100,000 the "$" was the cell cut off the front. The beam's till now asks for seven; the pause
+    /// foot keeps the six it was measured at, and <see cref="Width"/> stays the six-cell width it always read.
     /// </summary>
     public sealed class SegmentFigure
     {
-        public const int Cells = 6;
-        public static float Width => Cells * SegmentClock.CellPitch;
+        public const int DefaultCells = 6;
+        public static float WidthOf(int cells) => cells * SegmentClock.CellPitch;
+        public static float Width => WidthOf(DefaultCells);
 
-        private readonly Image[] _ghost = new Image[Cells];
-        private readonly Image[] _halo = new Image[Cells];
-        private readonly Image[] _digit = new Image[Cells];
-        private readonly char[] _shown = new char[Cells];
+        /// <summary>How many cells this figure was built with; <see cref="Show"/> keeps the rightmost that many.</summary>
+        public readonly int Cells;
+
+        private readonly Image[] _ghost;
+        private readonly Image[] _halo;
+        private readonly Image[] _digit;
+        private readonly char[] _shown;
         private static Sprite _minus, _minusHalo, _dollar, _dollarHalo;
         private Color _lit;
 
-        public SegmentFigure(RectTransform host, Color lit)
+        public SegmentFigure(RectTransform host, Color lit, int cells = DefaultCells)
         {
+            if (cells < 1) throw new System.ArgumentOutOfRangeException(nameof(cells), cells, "a figure needs a cell");
+            Cells = cells;
+            _ghost = new Image[cells];
+            _halo = new Image[cells];
+            _digit = new Image[cells];
+            _shown = new char[cells];
             _lit = lit;
             SegmentClock.EnsureSprites();
             if (_minus == null)

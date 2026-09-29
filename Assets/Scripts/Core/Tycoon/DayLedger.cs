@@ -177,6 +177,20 @@ namespace LastCall.Core
             TomorrowsCrowd = crowd;
         }
 
+        /// <summary>
+        /// WHAT A RED NIGHT IS, IN ONE PLACE (2026-09-28, the top bar's red nights - three lamps for a morning, words on
+        /// the till's card since - and the game over's forecast): a close that leaves the till under zero.
+        /// <see cref="CloseDay"/> files the strike by it, and the beam and the night's end ask it BEFORE the close — so
+        /// the warning that shows early and the strike the books then file can never read two different rules.
+        /// </summary>
+        public static bool IsRedClose(int tillAfter) => tillAfter < 0;
+
+        /// <summary>
+        /// Would a close at <paramref name="tillAfter"/> shut the bar? The strike count <see cref="CloseDay"/>
+        /// would leave, read against <see cref="StrikesToClose"/> — a question, never a move: nothing is filed.
+        /// </summary>
+        public bool WouldClose(int tillAfter) => (IsRedClose(tillAfter) ? DebtStrikes + 1 : 0) >= StrikesToClose;
+
         /// <summary>Closes a day: books it, advances the strike count, sets the crowd.
         /// <paramref name="tillAfter"/> is the money left once everything is paid — the
         /// strike watches the till, not the day's net.</summary>
@@ -207,7 +221,7 @@ namespace LastCall.Core
                     detail.WalkOutFees, detail.WalkOutsCharged, detail.QuestPaid);
             _history.Add(result);
 
-            DebtStrikes = tillAfter < 0 ? DebtStrikes + 1 : 0;
+            DebtStrikes = IsRedClose(tillAfter) ? DebtStrikes + 1 : 0;
 
             // v5 P12 / D3: the crowd is drawn by the bar's STANDING, not by one night's mood.
             // A single bad night no longer empties the room of money -- and one good one no

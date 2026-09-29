@@ -10,82 +10,197 @@ using UnityEngine.UI;
 namespace LastCall.UI
 {
     /// <summary>
-    /// THE SETTINGS WINDOW, in the palm wall direction (2026-09-15, the author: "ayarlar key bind ses ... Menü ayarlar
-    /// panellerinde daha çok görsellerden yararlanabilir daha yaratıcı olabilir"). Four pages under tabs on one framed
-    /// night (NightPlate — the drawn night inside the frame, the room around it), every key the author's pack
-    /// (MenuPack, "Butonlar içinde bu dosya yolundaki butonları kullan"):
-    ///   AUDIO     the master, the music and the effects each on a ten-cell meter between the pack's - and + keys, the
-    ///             sound switch (the pack's speaker, muted or not), and the player itself on a NOW PLAYING row
-    ///   CONTROLS  every bound action with THE CAP OF THE KEY IT IS ON (KeyCaps, the author's Classic set at 2x, its
-    ///             pressed frame while the real key is held); click the cap and the row listens for the next key,
-    ///             the cap blinking meanwhile
-    ///   DISPLAY   the screen (window, its size, the frame rate), what moves and flashes, the pointer, the colour
-    ///             cues and the pause when away (2026-09-26), and the run's own verbs (tonight's book, a new run)
-    ///   LANGUAGE  the flags of every shipped language in a grid (the author: "Dil seçiminde çerçeveye olan dillerin
-    ///             bayrakları gözüksün bayrağa tıklanarak dil seçilsin"); the chosen one stands on the green plate,
-    ///             its name under the grid and, in that language, the note that it speaks at the next start
-    /// The foot carries RESET DEFAULTS and the one orange key, BACK — to the pause menu when the window came from it.
-    /// Every worded key and tab is fitted to its word (FitKey), so a long translation gets a long key.
+    /// THE SETTINGS WINDOW. Four pages under tabs - AUDIO, CONTROLS, DISPLAY, LANGUAGE - and a foot with RESET DEFAULTS
+    /// and the way back. Every option writes the store it always wrote (Sound, Keys, PlayerOptions, DisplayOptions,
+    /// Localization) with the same values; the 2026-09-29 rebuild changed how the window looks, not what it sets.
     ///
-    /// This replaced the one-page window of 2026-09-06 (BuildSettings in TycoonHud.Chrome.cs); its fields
-    /// (_settingsPanel, _settingsMeter, _settingsVolume, _settingsMute, _settingsMotion, _settingsLanguage...) are the
-    /// same ones, declared in TycoonHud.cs.
+    /// A CABINET SINCE 2026-09-29 (the author: "Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle tekrardan diğer
+    /// sahneleri ürettiğine uygun bir tasarımda sıfırdan tekrar oluştur"). The window was a blue skin under a
+    /// generated marquee picture (menu_header, the P2 board) with the brass icons on its tabs; it is the menus' own
+    /// fitting now, drawn in code like the pause and the credits (TycoonHud.MenuKit, BUILD_SPEC §3 "Settings"):
+    ///   THE CABINET  x 112-1168, rows 90-630, SETTINGS lit in its crown as a sign (NeonWord, clipped to the crown's
+    ///                face), the house's magenta tube round its body; both strike on when the window opens (NeonStrike)
+    ///   THE TABS     a column down the cabinet's left, each cell the curtain's week row stood on end: the page's neon
+    ///                mark and word over a straight tube - the page open lit cyan, the one under the pointer a half-lit
+    ///                ClubBlue - one 180x54 cell each; tabs never strike
+    ///   THE PAGE     a recess let into the plate right of the tabs; one row per option - its mark, its name, its
+    ///                control against the right; the row under the pointer lies on ClubBlue with a tab at its left
+    ///   THE NOTE     a well under the tabs with the pointed row's note in it, else the page's own hint, wrapped -
+    ///                the notes moved out of the rows, so every row is one line in all 29 languages
+    ///   THE FOOT     RESET DEFAULTS at the left; BACK, the one amber key, at the right - or, while a language pick
+    ///                waits, APPLY is the amber key and BACK stands beside it
+    ///
+    /// THE CONTROLS, one grammar for every page (BUILD_SPEC §2): a CHOICE is a well cut into one segment per way, the
+    /// chosen one cyan enamel; a METER is a tube struck cyan up to the level, dark glass after it, held by a Graphite
+    /// clamp at the level; a CYCLE is the value on a well between two small keys; small keys carry 9-texel neon marks
+    /// half-lit in cyan that strike under the pointer (the critic: magenta on every small control crowded the house's
+    /// own colour); a key cap is the author's Classic drawing at 2x. Nothing here is a brass icon or a pack plate.
+    ///
+    /// WHERE IT STANDS. In a night, over the room under the house scrim - the player is in the bar, and the held night
+    /// behind the window is the truth. From the front door, on the door's own field and vignette with no scrim (the
+    /// author, 2026-09-27: "oyunda değilken ana sahne gözükmemeli"; read_menus finding 8: the scrim over the field
+    /// made the page near-black, not the door's plum).
     /// </summary>
     public sealed partial class TycoonHud
     {
-        // 590, not 540 (2026-09-26, more options - the author: "Ayarlara daha fazla seçenek ekleyelim hem erişebilirlik
-        // hem display kısmında çözünürlük ters mouse vs vs"): every page is 360 tall now, which the DISPLAY page's ten
-        // rows of 36 fill. No fifth tab: an ACCESSIBILITY tab beside the four brass-iconed ones stepped the row down to
-        // the 8 size in 25 of the 29 languages and ran Greek off the plate even there (measured with the real tables).
-        private const float SetW = 800f, SetH = 590f, SetPad = 44f, SetRow = 56f, CapH = 32f;
-        /// <summary>The DISPLAY page's pitch: ten rows of 32-tall keys in the page's 360.</summary>
-        private const float DisplayRow = 36f;
-        /// <summary>Air between the top bar's foot and the window's top.</summary>
-        private const float SettingsPlateAir = 4f;
-        // The audio page's rows are 50, not 56: six of them (three meters, the switch, the player, the track) have to
-        // stand between the tabs and the foot, and a 32 key on a 50 row is still a key with room around it.
-        private const float AudioRow = 50f, SeekW = 300f, SongRowH = 22f;
-        private RectTransform _settingsSongKey, _songList, _seekFill, _seekKnob, _settingsApplyLanguage;
-        private readonly Dictionary<string, Text> _songRows = new Dictionary<string, Text>();
-        private Text _seekClock;
-        private bool _songListOpen, _seekDragging;
+        // THE CABINET, in field units (BUILD_SPEC §3 "Settings", re-laid for 21:9 on 2026-09-29): a 21:9 window crops
+        // the field to its rows 90..630 (DesignFrame), and the first cabinet - crown at 56, foot keys 632..678 - lost its
+        // title and its APPLY there, the only way to switch the language (the review). Stacked, the tabs, the page, the
+        // strip and the foot need ~576 rows of the 540 and the page cannot shrink (DISPLAY's ten rows of 38, LANGUAGE's
+        // ten 36-unit flag cells), so the TABS stood up into a column at the left and the NOTE went under them: the
+        // crown 90..130, the body 130..630 (its tube twelve in, at 142 and 618); the tabs 136..316 x 150 + 60n; the page
+        // 328..1144 x 150..560 (410, the pitches unchanged: 62 / 46 / 38); the note 136..316 x 392..612; the foot
+        // 566..612. 1056 wide, it stands inside a 16:10 window's columns 64..1216 (the Deck); a 4:3 window crops it.
+        private const float SetCabX = 112f, SetCabW = 1056f, SetTop = 90f, SetCrownH = 40f, SetBodyH = 500f;
+        private const float SetTabX = 136f, SetTabY = 150f, SetTabH = 54f, SetTabPitch = 60f, SetTabCell = 180f;
+        private const float SetPageX = 328f, SetPageY = 150f, SetPageW = 816f, SetPageH = 410f;
+        private const float SetNoteX = SetTabX, SetNoteY = 392f, SetNoteW = SetTabCell, SetNoteH = 220f, SetFootY = 566f;
+        /// <summary>Where a row's control ends: 24 in from the page's right.</summary>
+        private const float SetCtrlRight = SetPageW - 24f;
+        /// <summary>A row's name starts here; its mark at 20.</summary>
+        private const float SetNameX = 48f;
+        /// <summary>The height of every control on a row (a choice, a small key, a cycle's well, a row key).</summary>
+        private const float SetCtrlH = 34f;
+        /// <summary>A key cap's height: its drawing's 16 at 2x.</summary>
+        private const float CapH = 32f;
+        /// <summary>The meters' tube, in texels (272 units), and the seek bar's (340).</summary>
+        private const int MeterLen = 136, SeekLen = 170;
+        private const float SongWellW = 268f, SongRowH = 20f;
+
         private readonly Dictionary<string, RectTransform> _settingsPages = new Dictionary<string, RectTransform>();
-        private readonly Dictionary<string, RectTransform> _settingsTabs = new Dictionary<string, RectTransform>();
+        private readonly Dictionary<string, SetTab> _settingsTabs = new Dictionary<string, SetTab>();
         private string _settingsPage = "AUDIO";
-        private Image[] _settingsMusicMeter, _settingsEffectsMeter;
-        private Text _settingsMusicPct, _settingsEffectsPct, _settingsNowTitle, _settingsNowPlace;
-        private RectTransform _settingsHoldKey, _settingsMuteKey, _settingsMotionKey;
+        private NeonStrike _settingsStrike;
+        private RectTransform _settingsDim;
+        private Text _settingsNote, _settingsProbe;
+
+        private readonly List<SetRow> _setRows = new List<SetRow>();
+        private readonly List<SetChoice> _setChoices = new List<SetChoice>();
+        private readonly List<SetCycle> _setCycles = new List<SetCycle>();
+        private readonly List<SetMeter> _setMeters = new List<SetMeter>();
+        private readonly List<LangCell> _langCells = new List<LangCell>();
+        private SetRow _noteRow;
+        private LangCell _noteCell;
+
+        private SetMeter _seek;
+        private Text _seekClock, _settingsNowTitle;
+        private RectTransform _settingsSongKey, _songList;
+        private NeonTube _songHover, _songDrop;
+        private SignKey _settingsHoldKey;
+        private NeonTube _holdMark, _playMark;
+        private readonly Dictionary<string, Text> _songRows = new Dictionary<string, Text>();
+        private bool _songListOpen, _seekDragging;
+        private string _shownSong;
+
         private readonly Dictionary<KeyAction, Image> _bindCaps = new Dictionary<KeyAction, Image>();
         private readonly Dictionary<KeyAction, Text> _bindWords = new Dictionary<KeyAction, Text>();
         private readonly Dictionary<KeyAction, Text> _bindHints = new Dictionary<KeyAction, Text>();
+        private readonly Dictionary<KeyAction, SetRow> _bindRows = new Dictionary<KeyAction, SetRow>();
         private readonly Dictionary<KeyAction, bool> _capDown = new Dictionary<KeyAction, bool>();
         private KeyAction? _bindListening;
-        private readonly Dictionary<string, RectTransform> _flagKeys = new Dictionary<string, RectTransform>();
 
-        /// <summary>A SWITCH (2026-09-26): one pack key that says the option's state and steps it on a click - green
-        /// while an ON/OFF option is on, grey for a choice between two ways (the window, the pointer, the colours).</summary>
-        private sealed class SettingSwitch
+        private SignKey _settingsReset, _settingsBack, _settingsApply, _settingsDev, _settingsBookKey, _settingsStartOver;
+
+        /// <summary>The window mode the DISPLAY page last drew, so Alt+Enter redraws it.</summary>
+        private bool _shownWindowed;
+
+        /// <summary>The settings window took the clock when it opened (straight off the room - the beam's cog, while it had
+        /// one - not from the pause menu).</summary>
+        private bool _settingsHeldClock;
+
+        /// <summary>The door's field behind the window, shown only when the window came from the front door - out of
+        /// game, the room is nobody's backdrop.</summary>
+        private RectTransform _settingsBackdrop;
+
+        // ── the window's parts ──────────────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>A row: its pointed look (a ClubBlue[0] fill, a ClubBlue[4] tab at its left, its mark ClubBlue[4]),
+        /// shown while the pointer is on it or - a listening CONTROLS row - while it waits for its key.</summary>
+        private sealed class SetRow
         {
-            public RectTransform Key;
-            public Text Label;
-            public Func<string> Word;
-            public Func<bool> Lit;
+            public RectTransform Rt;
+            public Image Fill, Tab, Mark;
+            public Text Name;
+            public Func<string> Note;
+            public bool Over, Held;
+
+            public void Paint()
+            {
+                bool on = Over || Held;
+                if (Fill.enabled != on) Fill.enabled = on;
+                if (Tab.enabled != on) Tab.enabled = on;
+                Mark.color = on ? UITheme.ClubBlue[4] : UITheme.Cream[2];
+            }
         }
 
-        /// <summary>A CYCLE (2026-09-26): the pack's prev and next keys either side of the value, on a well. Greyed,
-        /// with its keys asleep, while it has nothing to choose (the window's size in fullscreen).</summary>
-        private sealed class SettingCycle
+        /// <summary>A CHOICE: one well, one segment a way; the chosen one Cyan[3] enamel with a Cyan[4] lit row and its
+        /// word in Night[1]; the one under the pointer ringed by a ClubBlue tube.</summary>
+        private sealed class SetChoice
         {
-            public RectTransform Prev, Next;
-            public Text Value, Note;
-            public Func<string> Word, NoteWord;
+            public Func<int> Selected;
+            public Image[] Fill, Lit;
+            public Text[] Words;
+
+            public void Paint()
+            {
+                int s = Selected();
+                for (int i = 0; i < Words.Length; i++)
+                {
+                    bool on = i == s;
+                    Fill[i].enabled = on;
+                    Lit[i].enabled = on;
+                    Words[i].color = on ? UITheme.Night[1] : UITheme.Cream[3];
+                }
+            }
+        }
+
+        /// <summary>A CYCLE: the value in cyan on a well between two small keys; with nothing to choose (the window's size
+        /// in fullscreen) the keys are dark glass and the value Cream[2].</summary>
+        private sealed class SetCycle
+        {
+            public SignKey Prev, Next;
+            public Text Value;
+            public Func<string> Word;
             public Func<bool> Live;
         }
 
-        private readonly List<SettingSwitch> _settingSwitches = new List<SettingSwitch>();
-        private readonly List<SettingCycle> _settingCycles = new List<SettingCycle>();
-        /// <summary>The window mode the DISPLAY page last drew, so Alt+Enter redraws it.</summary>
-        private bool _shownWindowed;
+        /// <summary>A METER: the tube dark glass end to end, the lit copy of it clipped to the level (whole texels), the
+        /// clamp at the level.</summary>
+        private sealed class SetMeter
+        {
+            public RectTransform Clip, Clamp;
+            public float X, GlassY;
+            public int Len;
+            public Text Value;
+        }
+
+        /// <summary>A TAB: its mark, its word, its tube.</summary>
+        private sealed class SetTab
+        {
+            public NeonIcons.View Icon;
+            public Text Word;
+            public NeonTube Bar;
+            public bool Over;
+
+            public void Paint(bool chosen)
+            {
+                Icon.Show(chosen || Over ? NeonIcons.State.Lit : NeonIcons.State.Half, UITheme.Cyan, true);
+                Word.color = chosen ? UITheme.Cyan[4] : Over ? UITheme.Cream[4] : UITheme.Cream[3];
+                if (chosen) Bar.Show(NeonIcons.State.Lit, UITheme.Cyan, true);
+                else if (Over) Bar.Show(NeonIcons.State.Half, UITheme.ClubBlue, false);
+                else Bar.Show(NeonIcons.State.Dark, UITheme.Cyan, false);
+            }
+        }
+
+        /// <summary>A LANGUAGE CELL: the flag, the language's own name, a tube round it (cyan: the pick; ClubBlue: under the
+        /// pointer) and a cyan bead at its right end for the language being spoken now.</summary>
+        private sealed class LangCell
+        {
+            public string Code, Name;
+            public NeonTube Tube, Bead;
+            public Text Word;
+            public bool Over;
+        }
 
         /// <summary>One flag a language (Tools/flags.py draws them, LANGUAGE_ISOS): English flies half the Union flag
         /// and half the Stars and Stripes (fl_en, 2026-09-25 - the author: "yarısı ingiltere yarısı amerika bayrağı
@@ -120,13 +235,18 @@ namespace LastCall.UI
             if (show)
             {
                 CloseId();
+                // FROM THE DOOR, THE DOOR'S FIELD; IN A NIGHT, THE ROOM UNDER THE SCRIM (read_menus finding 8, 2026-09-29).
                 if (_settingsBackdrop != null) _settingsBackdrop.gameObject.SetActive(_settingsFromMenu);
+                if (_settingsDim != null) _settingsDim.gameObject.SetActive(!_settingsFromMenu);
+                ForgetSettingsPointer();
                 RefreshSettings();
                 if (!_settingsFromPause && !_settingsFromMenu) Sfx.Play("menu_open", 0.7f);   // from a menu the wall is already down
                 // THE NIGHT STOPS FOR THE SETTINGS TOO (2026-09-25, the author: "Settings açıldığında oyun durmalı").
                 // From the pause menu it is already held; from the top bar's cog it ran on at full speed behind the
                 // window, patience and all. It holds the clock the way the ladder's window does, and lets go of only
-                // the hold it took.
+                // the hold it took. (The cog left the beam on 2026-09-28's second pass - the way in is Escape's pause
+                // menu, or the front door - and the hold stays for any door that ever opens the window straight off
+                // the room again; from the pause menu it takes nothing, the night is already held.)
                 if (!_settingsFromPause && !Paused) { SetPaused(true); _settingsHeldClock = true; }
             }
             else
@@ -152,18 +272,14 @@ namespace LastCall.UI
                 if (_settingsHeldClock) { _settingsHeldClock = false; SetPaused(false); }
             }
             _settingsPanel.gameObject.SetActive(show);
+            // the sign strikes on every time the window opens (NeonStrike): the title, then the tube a tenth after it
+            if (show && _settingsStrike != null) _settingsStrike.Restart();
         }
-
-        /// <summary>The settings window took the clock when it opened (from the cog, not from the pause menu).</summary>
-        private bool _settingsHeldClock;
-
-        /// <summary>The menu's flat field behind the window, shown only when the window came
-        /// from the front door — out of game, the room is nobody's backdrop.</summary>
-        private RectTransform _settingsBackdrop;
 
         /// <summary>The family's neon frame, drawn from the palette's own tubes: a 6-unit band
         /// on each edge — magenta, the cream core, magenta — the same three lines the pause
-        /// picture carries, here procedural so the plate can be any size.</summary>
+        /// picture carried, here procedural so the plate can be any size. (The settings wore it until 2026-09-29; the
+        /// achievements' shell still does.)</summary>
         private void NeonEdge(RectTransform plate)
         {
             var tubes = new[] { UITheme.Magenta[3], UITheme.Cream[4], UITheme.Magenta[3] };
@@ -188,173 +304,203 @@ namespace LastCall.UI
             }
         }
 
-        /// <summary>How far the marquee pushes the window's contents down (0 without it), and by how much it grows.</summary>
-        private float _settingsDrop;
-        private const float HeaderDrop = 42f;
-
-        /// <summary>
-        /// The marquee in its framed window at the top of the plate, the title on the board's calm middle and the
-        /// sunset rules under the window. The title steps down to the 16 size when the word would run onto the neon at
-        /// the board's ends (the calm middle is about 220 units at 2x).
-        /// </summary>
-        private void HangTheMarquee(RectTransform plate, Sprite header)
-        {
-            var win = new Vector2(header.rect.width * 2f + 6f, header.rect.height * 2f + 6f);
-            var window = NightPlate(plate, "Header", win, 0f, header);
-            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0.5f, 1f);
-            window.anchoredPosition = new Vector2(0f, -12f);
-            NightTitle(plate, UIText.T("chrome.settings.title"), -12f - win.y * 0.5f + 16f);   // the 32-tall title, centred on the board
-            var title = plate.Find("Title")?.GetComponent<Text>();
-            var shadow = plate.Find("TitleShadow")?.GetComponent<Text>();
-            if (title != null && title.preferredWidth > 220f)
-            {
-                title.fontSize = LanguageFonts.Size(title.font, 16);
-                if (shadow != null) shadow.fontSize = title.fontSize;
-            }
-            if (title != null) title.gameObject.AddComponent<NeonFlicker>();
-            SunsetRules(plate, -12f - win.y - 8f, SetW - 80f);
-        }
-
-        /// <summary>
-        /// THE TABS IN ONE ROW THAT FITS (2026-09-25): laid left to right from 44 with nothing checking the right edge,
-        /// four English tabs already ran to 796 on an 800 plate - LANGUAGE lay across the plate's ring - and Hungarian,
-        /// Vietnamese and Norwegian ran further. They are centred on the plate now with a 4-unit gap inside 16 of its
-        /// edges; a row that still does not fit steps ALL four words down to the 8 size together (never one alone) and
-        /// fits the keys to them again. The word stays dead centre on each key (PackWordKey's pad of 100).
-        /// </summary>
-        private void LayTabs(float y)
-        {
-            const float Edge = 16f, Gap = 4f;
-            var tabs = new List<RectTransform>();
-            foreach (var id in new[] { "AUDIO", "CONTROLS", "DISPLAY", "LANGUAGE" })
-                if (_settingsTabs.TryGetValue(id, out var t) && t != null) tabs.Add(t);
-            float Total()
-            {
-                float w = 0f;
-                foreach (var t in tabs) w += t.sizeDelta.x;
-                return w + Gap * (tabs.Count - 1);
-            }
-            if (Total() > SetW - Edge * 2f)
-                foreach (var t in tabs)
-                {
-                    var label = t.Find("Face/Label")?.GetComponent<Text>();
-                    if (label == null) continue;
-                    label.fontSize = LanguageFonts.Size(label.font, 8);
-                    t.sizeDelta = new Vector2(120f, t.sizeDelta.y);
-                    FitKey(t, 120f, 100f);
-                }
-            float x = Mathf.Round((SetW - Total()) * 0.5f);
-            foreach (var t in tabs)
-            {
-                t.anchoredPosition = new Vector2(x, y);
-                x += t.sizeDelta.x + Gap;
-            }
-        }
-
         private void BuildSettings(RectTransform root)
         {
             _settingsPanel = NewRect("Settings", root);
-            // NOT IN GAME, NOT THE ROOM (2026-09-27, the author: "Ana menüde settings vs.
-            // basıldığında arkada ana sahne gözüküyor, oyunda değilken gözükmemesi gerekiyor"):
-            // opened from the front door, the window stands on the menu's own flat field, wall
-            // to wall, and the live room never shows behind it. From the cog or the pause menu
-            // the room stays — the player is IN the bar then, and the held night behind the
-            // window is the truth.
-            _settingsBackdrop = NewRect("MenuField", _settingsPanel);
-            Stretch(_settingsBackdrop, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var backdropImg = _settingsBackdrop.gameObject.AddComponent<Image>();
-            backdropImg.color = UITheme.Night[1];
-            backdropImg.raycastTarget = true;
-            _settingsBackdrop.gameObject.SetActive(false);
             var canvas = _settingsPanel.gameObject.AddComponent<Canvas>();
             canvas.overrideSorting = true;
             canvas.sortingOrder = 29;                 // with the pause menu, over the book; the market (22) never shows it
             _settingsPanel.gameObject.AddComponent<ForgivingRaycaster>();
             Stretch(_settingsPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            // THE ROOM STAYS, DARKENED (2026-09-16, with the pause menu): the window stands over it under the house
-            // scrim; a click on the scrim closes the window.
-            var dim = NewRect("Dim", _settingsPanel);
-            Stretch(dim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            var dimImg = dim.gameObject.AddComponent<Image>();
+
+            // NOT IN GAME, NOT THE ROOM (2026-09-27, the author: "Ana menüde settings vs. basıldığında arkada ana sahne
+            // gözüküyor, oyunda değilken gözükmemesi gerekiyor"): opened from the front door, the window stands on the
+            // door's own field - its night and its four-band vignette - wall to wall, and nothing darkens it (read_menus
+            // finding 8: the house scrim lay over the field too and the page read near-black). The door's panel itself
+            // stays hidden under the window - its field is on canvas 31 and would cover this one's 29 (the critic).
+            _settingsBackdrop = NewRect("MenuField", _settingsPanel);
+            Stretch(_settingsBackdrop, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var backdropImg = _settingsBackdrop.gameObject.AddComponent<Image>();
+            backdropImg.color = MenuField;
+            backdropImg.raycastTarget = true;
+            var backdropBtn = _settingsBackdrop.gameObject.AddComponent<Button>();
+            backdropBtn.transition = Selectable.Transition.None;
+            backdropBtn.onClick.AddListener(ToggleSettings);        // a click beside the cabinet goes back, as the scrim's does
+            var vig = NewRect("Vignette", _settingsBackdrop);
+            Stretch(vig, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            foreach (float reach in VignetteReach) VignetteRing(vig, reach);
+            _settingsBackdrop.gameObject.SetActive(false);
+
+            // THE ROOM STAYS, DARKENED (2026-09-16, with the pause menu): in a night the window stands over it under the
+            // house scrim; a click on the scrim closes the window.
+            _settingsDim = NewRect("Dim", _settingsPanel);
+            Stretch(_settingsDim, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var dimImg = _settingsDim.gameObject.AddComponent<Image>();
             dimImg.color = MenuScrim;
             dimImg.raycastTarget = true;
-            var dimBtn = dim.gameObject.AddComponent<Button>();
+            var dimBtn = _settingsDim.gameObject.AddComponent<Button>();
             dimBtn.transition = Selectable.Transition.None;
             dimBtn.onClick.AddListener(ToggleSettings);
 
-            // THE MARQUEE (2026-09-25, the menus' redesign - MenuPack.Art "menu_header"): a blank neon sign board at the
-            // top of the window, the title written on its calm middle. It pushes everything under it down by
-            // HeaderDrop and the plate grows by as much, so every page keeps the room it had. Without it the window
-            // is the one before.
-            var header = MenuPack.Art("menu_header");
-            _settingsDrop = header != null ? HeaderDrop : 0f;
-            var plate = BluePlate(_settingsPanel, "Plate", new Vector2(SetW, SetH + _settingsDrop));   // the ESC family's plate (2026-09-21)
-            // QUIET, LIKE THE FRONT DOOR (2026-09-27, the author: "Settings ekranının arkaplanı
-            // çok karmaşık butonlar anlaşılmıyor, ana sahneye benzer bir arkaplan tasarımı yap").
-            // The generated wall lasted a day: rows of 8px notes on reeding and palm leaves read
-            // badly, and the title screen had meanwhile gone flat. The plate is the menu's own
-            // two plums now — a panel one step lighter than the field — with the family's 3px
-            // neon frame drawn from the palette's own tubes (the same magenta/cream band the
-            // pause picture wears on its edges).
-            {
-                var plateImg = plate.GetComponent<Image>();
-                plateImg.sprite = null;
-                plateImg.color = UITheme.Night[2];
-                NeonEdge(plate);
-            }
-            // UNDER THE TOP BAR (2026-09-26): 590 and the marquee's 42 make a plate 632 tall, which centred on the
-            // 720 field would reach 44 from its top - over the top bar's 54. It stands just low enough to clear the
-            // bar by SettingsPlateAir (14 down with the marquee, 30 from the field's foot); a plate that fits is
-            // left centred.
-            float overTop = (SetH + _settingsDrop) * 0.5f - (DesignFrame.StageHeight * StageToHud * 0.5f - TopBarH - SettingsPlateAir);
-            if (overTop > 0f) plate.anchoredPosition = new Vector2(0f, -Mathf.Ceil(overTop));
-            if (header != null) HangTheMarquee(plate, header);
-            else
-            {
-                NightTitle(plate, UIText.T("chrome.settings.title"), -36f);
-                SunsetRules(plate, -66f, SetW - 80f);
-            }
+            // one measuring line for the build (every control is sized to its widest word in the language spoken)
+            _settingsProbe = NewText("Probe", _settingsPanel, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            _settingsProbe.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-            // the tabs, each with a glyph of the pack, fitted to its word; LayTabs puts them in one row that fits
-            float tabY = -(90f + _settingsDrop);
-            foreach (var (id, key, glyph) in new[] {
-                ("AUDIO", "chrome.settings.audio", "sound_on"), ("CONTROLS", "chrome.settings.controls", "gamepad"),
-                ("DISPLAY", "chrome.settings.display", "expand"), ("LANGUAGE", "chrome.settings.language", "mail") })
-            {
-                string page = id;
-                var tab = PackWordKey(plate, "Tab_" + id, UIText.T(key), glyph, MenuPack.Tone.Grey, new Vector2(0, 1), new Vector2(140, 38),
-                    new Vector2(SetPad, tabY), () => { Sfx.Play("click"); ShowSettingsPage(page); }, 140f, 48f + 16f);
-                _settingsTabs[id] = tab;
-            }
-            LayTabs(tabY);
+            // THE CABINET (2026-09-29): SETTINGS lit in the crown - in place of the generated marquee (menu_header, the
+            // P2 board) - its light clipped to the crown's face above the tabs; the tube round the body.
+            var cab = BuildMenuCabinet(_settingsPanel, "Plate", SetCabX, SetTop, SetCabW, SetCrownH, SetBodyH,
+                UIText.T("chrome.settings.title"), SetPageY - 6f);
+            _settingsStrike = cab.Strike;
 
-            _settingsPages["AUDIO"] = BuildAudioPage(plate);
-            _settingsPages["CONTROLS"] = BuildControlsPage(plate);
-            _settingsPages["DISPLAY"] = BuildDisplayPage(plate);
-            _settingsPages["LANGUAGE"] = BuildLanguagePage(plate);
+            BuildSettingsTabs();
+            MenuRecess(_settingsPanel, "Page", SetPageX, SetPageY, SetPageW, SetPageH, UITheme.Night[1]);
+            _settingsPages["AUDIO"] = BuildAudioPage();
+            _settingsPages["CONTROLS"] = BuildControlsPage();
+            _settingsPages["DISPLAY"] = BuildDisplayPage();
+            _settingsPages["LANGUAGE"] = BuildLanguagePage();
 
-            // the foot: reset at one corner, the way back at the other; the dev bench beside reset in the editor
-            var reset = PackWordKey(plate, "RESET", UIText.T("chrome.settings.reset"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0), new Vector2(250, 46), new Vector2(SetPad, 26), () =>
-            {
-                Sound.Volume = 0.8f; Sound.MusicVolume = 1f; Sound.EffectsVolume = 1f; Sound.Muted = false;
-                // Every option of the DISPLAY page and INVERT POUR back to its default, motion with them
-                // (PlayerOptions) - but NOT the window or its size (2026-09-26): a reset must never throw a
-                // windowed player into fullscreen.
-                PlayerOptions.ResetDefaults();
-                DisplayOptions.ApplyPacing();
-                Keys.ResetAll();
-                Sfx.Play("click");
-                RefreshSettings();
-            }, 200f, 48f + 24f);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            PackWordKey(plate, "DEV", "DEV TOOLS", null, MenuPack.Tone.Grey, new Vector2(0, 0), new Vector2(110, 26),
-                new Vector2(SetPad + reset.sizeDelta.x + 12f, 36), () => { ToggleSettings(); ToggleDevBench(); }, 100f, 16f);
-#endif
-            PackWordKey(plate, "BACK", UIText.T("chrome.settings.back"), "back", MenuPack.Tone.Orange, new Vector2(1, 0), new Vector2(180, 46),
-                new Vector2(-SetPad, 26), () => { Sfx.Play("click"); ToggleSettings(); }, 140f, 48f + 24f);
+            // THE NOTE: the pointed row's note, else the page's hint - the small face, wrapped and centred in a well
+            // under the tabs (it was a one-line strip under the page until the 21:9 re-lay took that row).
+            var strip = MenuRecess(_settingsPanel, "Note", SetNoteX, SetNoteY, SetNoteW, SetNoteH, UITheme.Night[0]).rectTransform;
+            _settingsNote = NewText("Text", strip, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[3]);
+            FieldRect(_settingsNote.rectTransform, 12f, 12f, SetNoteW - 24f, SetNoteH - 24f);
+            _settingsNote.horizontalOverflow = HorizontalWrapMode.Wrap;
+            _settingsNote.verticalOverflow = VerticalWrapMode.Truncate;
 
+            BuildSettingsFoot();
+
+            Destroy(_settingsProbe.gameObject);
+            _settingsProbe = null;
             ShowSettingsPage("AUDIO");
             _settingsPanel.gameObject.SetActive(false);
+        }
+
+        /// <summary>The foot, on the cabinet's own face (Night[2]): RESET DEFAULTS at the page's left edge; BACK at its
+        /// right - the amber key - and APPLY, which takes the amber while a language pick waits (RefreshSettings lays
+        /// the two). The dev bench beside RESET in the editor and development builds.</summary>
+        private void BuildSettingsFoot()
+        {
+            _settingsReset = MenuSignKey(_settingsPanel, "RESET", UIText.T("chrome.settings.reset"), "reset", UITheme.Cyan,
+                false, 2, SignKeySmallH, 200f, () =>
+                {
+                    Sound.Volume = 0.8f; Sound.MusicVolume = 1f; Sound.EffectsVolume = 1f; Sound.Muted = false;
+                    // Every option of the DISPLAY page and INVERT POUR back to its default, motion with them
+                    // (PlayerOptions) - but NOT the window or its size (2026-09-26): a reset must never throw a
+                    // windowed player into fullscreen.
+                    PlayerOptions.ResetDefaults();
+                    DisplayOptions.ApplyPacing();
+                    Keys.ResetAll();
+                    Sfx.Play("click");
+                    RefreshSettings();
+                });
+            PlaceSignKey(_settingsReset, SetPageX + ((RectTransform)_settingsReset.transform).sizeDelta.x * 0.5f, SetFootY);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _settingsDev = MenuSignKey(_settingsPanel, "DEV", "DEV TOOLS", null, UITheme.Cyan, false, 2, SetCtrlH, 120f,
+                () => { ToggleSettings(); ToggleDevBench(); }, 16f);
+            float devW = ((RectTransform)_settingsDev.transform).sizeDelta.x;
+            PlaceSignKey(_settingsDev, SetPageX + ((RectTransform)_settingsReset.transform).sizeDelta.x + 12f + devW * 0.5f,
+                SetFootY + (SignKeySmallH - SetCtrlH) * 0.5f);
+#endif
+            _settingsBack = MenuSignKey(_settingsPanel, "BACK", UIText.T("chrome.settings.back"), "back", UITheme.Cyan,
+                true, 2, SignKeySmallH, 180f, () => { Sfx.Play("click"); ToggleSettings(); });
+            // APPLY (2026-09-16, the author: "dil seçildikten sonra uygula dendiğinde oyunun dili direkt değişmeli"):
+            // up once a different language is picked; the scene rebuilds around the same run in the new words.
+            _settingsApply = MenuSignKey(_settingsPanel, "APPLY", UIText.T("chrome.settings.apply_language"), "apply",
+                UITheme.Cyan, true, 2, SignKeySmallH, 180f, () =>
+                {
+                    string pick = Localization.PreferredCode();
+                    if (pick == Localization.Current.Code || _bootstrap == null) return;
+                    Sfx.Play("click");
+                    Localization.UseForSession(pick);
+                    // from the front door, back to the front door (2026-09-29, read_menus finding 2): it used to land the
+                    // player in the cold boot's bar, dealt on the inspector's seed, with the clock running
+                    _bootstrap.ReloadKeepingRun(_settingsFromMenu);
+                });
+            _settingsApply.gameObject.SetActive(false);
+            LaySettingsFoot(false);
+        }
+
+        /// <summary>BACK alone at the page's right edge and amber; or APPLY there, amber, and BACK beside it, dark.</summary>
+        private void LaySettingsFoot(bool applyUp)
+        {
+            if (_settingsBack == null) return;
+            float right = SetPageX + SetPageW;
+            float bw = ((RectTransform)_settingsBack.transform).sizeDelta.x;
+            if (_settingsApply != null && _settingsApply.gameObject.activeSelf != applyUp) _settingsApply.gameObject.SetActive(applyUp);
+            if (applyUp && _settingsApply != null)
+            {
+                float aw = ((RectTransform)_settingsApply.transform).sizeDelta.x;
+                PlaceSignKey(_settingsApply, right - aw * 0.5f, SetFootY);
+                PlaceSignKey(_settingsBack, right - aw - 12f - bw * 0.5f, SetFootY);
+            }
+            else PlaceSignKey(_settingsBack, right - bw * 0.5f, SetFootY);
+            if (_settingsBack.Primary == applyUp)
+            {
+                _settingsBack.Primary = !applyUp;
+                _settingsBack.Apply();
+            }
+            // the dev bench steps aside while APPLY needs the foot (a long APPLY and BACK reach it in a few languages)
+            if (_settingsDev != null && _settingsDev.gameObject.activeSelf == applyUp) _settingsDev.gameObject.SetActive(!applyUp);
+        }
+
+        // ── the tabs ────────────────────────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// THE TABS AS THE CURTAIN'S WEEK ROW (BUILD_SPEC §2 "Tabs"): four cells of 180x54 down the cabinet's left (a row
+        /// across the page until the 21:9 re-lay, 2026-09-29), each the page's neon mark and its word over a straight tube
+        /// 156 long. The open page's mark and tube lit cyan, its word Cyan[4]; the one under the pointer its mark lit and
+        /// its tube half ClubBlue; the rest half-lit, the word Cream[3]. A word too long for its cell beside the mark steps
+        /// to the 8 size - measured, it should not (Russian's УПРАВЛЕНИЕ left 32 units of a 204 cell, fit_check
+        /// 2026-09-29, so 8 of the 180). The old row of pack keys went with the brass icons.
+        /// </summary>
+        private void BuildSettingsTabs()
+        {
+            int i = 0;
+            foreach (var (id, key, icon) in new[] {
+                ("AUDIO", "chrome.settings.audio", "audio"), ("CONTROLS", "chrome.settings.controls", "controls"),
+                ("DISPLAY", "chrome.settings.display", "display"), ("LANGUAGE", "chrome.settings.language", "language") })
+            {
+                string page = id;
+                var rt = NewRect("Tab_" + id, _settingsPanel);
+                FieldRect(rt, SetTabX, SetTabY + i * SetTabPitch, SetTabCell, SetTabH);
+                var hit = rt.gameObject.AddComponent<Image>();
+                hit.color = new Color(0f, 0f, 0f, 0f);
+                hit.raycastTarget = true;
+                var btn = rt.gameObject.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+                btn.targetGraphic = hit;
+                btn.onClick.AddListener(() =>
+                {
+                    if (_settingsPage == page) return;
+                    Sfx.Play("click");
+                    ShowSettingsPage(page);
+                });
+
+                var word = NewText("Word", rt, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[3]);
+                word.horizontalOverflow = HorizontalWrapMode.Overflow;
+                word.text = UIText.T(key);
+                if (NeonIcons.Size * 2 + 4f + word.preferredWidth > SetTabCell - 8f)
+                    word.fontSize = LanguageFonts.Size(word.font, 8);
+                float ww = Mathf.Ceil(word.preferredWidth);
+                float x0 = Mathf.Floor((SetTabCell - (NeonIcons.Size * 2 + 4f + ww)) * 0.25f) * 2f;   // even
+                var tab = new SetTab
+                {
+                    Icon = new NeonIcons.View(rt, "Icon", icon, new Vector2(0f, 1f), new Vector2(x0 + NeonIcons.Size, -NeonIcons.Size)),
+                    Word = word,
+                };
+                FieldRect(word.rectTransform, x0 + NeonIcons.Size * 2 + 4f, -1f, ww + 8f, NeonIcons.Size * 2);
+                // the tube: its glass along row 52 of the cell, from 12 in to 12 from its end (NeonBar is NeonPad bigger)
+                int len = (int)(SetTabCell / 2f) - 12;                     // 78 texels, 156 units
+                var size = new Vector2((len + 2 * ChromeArt.NeonPad) * 2f, (1 + 2 * ChromeArt.NeonPad) * 2f);
+                tab.Bar = new NeonTube(rt, "Tube", l => ChromeArt.NeonBar(len, l), size, new Vector2(0f, 1f),
+                    new Vector2(12f - 2f * ChromeArt.NeonPad + size.x * 0.5f, -(52f - 2f * ChromeArt.NeonPad + size.y * 0.5f)));
+                word.transform.SetAsLastSibling();
+                var relay = rt.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => { tab.Over = true; SettingsTick(); tab.Paint(_settingsPage == page); };
+                relay.Exited = () => { tab.Over = false; tab.Paint(_settingsPage == page); };
+                _settingsTabs[id] = tab;
+                i++;
+            }
         }
 
         private void ShowSettingsPage(string id)
@@ -362,84 +508,394 @@ namespace LastCall.UI
             _settingsPage = id;
             _bindListening = null;
             ToggleSongList(false);
+            _noteRow = null;
+            _noteCell = null;
             foreach (var pair in _settingsPages) pair.Value.gameObject.SetActive(pair.Key == id);
-            foreach (var pair in _settingsTabs) RetoneWordKey(pair.Value, pair.Key == id ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
+            foreach (var pair in _settingsTabs) pair.Value.Paint(pair.Key == id);
             RefreshSettings();
+        }
+
+        /// <summary>The pointer's marks are forgotten when the window opens (a row or cell the pointer was on when it
+        /// closed never heard it leave).</summary>
+        private void ForgetSettingsPointer()
+        {
+            foreach (var row in _setRows) { row.Over = false; row.Paint(); }
+            foreach (var cell in _langCells) cell.Over = false;
+            foreach (var tab in _settingsTabs.Values) tab.Over = false;
+            foreach (var tube in _setSegmentTubes) tube.Visible = false;
+            if (_songHover != null) _songHover.Visible = false;
+            _noteRow = null;
+            _noteCell = null;
+            foreach (var pair in _settingsTabs) pair.Value.Paint(pair.Key == _settingsPage);
+        }
+
+        private static float s_settingsTick = -1f;
+
+        /// <summary>The pack's hover tick for the window's own plates (the tabs, the segments, the language cells) - on
+        /// the sign keys' gap, so a sweep is one run of ticks.</summary>
+        private static void SettingsTick()
+        {
+            if (Time.unscaledTime - s_settingsTick < 0.09f) return;
+            s_settingsTick = Time.unscaledTime;
+            Sfx.Play("hover", 0.14f);
+        }
+
+        // ── the row grammar ─────────────────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// ROW PITCH (BUILD_SPEC §2 "Row"): the largest that fits <paramref name="n"/> rows in the page, at most
+        /// <paramref name="max"/>, and 2 (mod 4) so a 34-tall control stands an even number of units under the row's top
+        /// (AUDIO 62, CONTROLS 46, DISPLAY 38); the rows centred in the page, on the even grid.
+        /// </summary>
+        private static (float pitch, float top) RowPitch(int n, float max)
+        {
+            int pitch = Mathf.Min((int)max, ((int)SetPageH - 16) / n);
+            while (pitch % 4 != 2) pitch--;
+            int top = ((int)SetPageH - pitch * n) / 2;
+            top -= top % 2;
+            return (pitch, top);
+        }
+
+        private RectTransform NewSettingsPage(string id)
+        {
+            var page = NewRect("Page_" + id, _settingsPanel);
+            FieldRect(page, SetPageX, SetPageY, SetPageW, SetPageH);
+            return page;
+        }
+
+        /// <summary>A row of <paramref name="page"/> at <paramref name="y"/>, <paramref name="pitch"/> tall: its mark at 20,
+        /// its name at 48 (body 16, Cream[4]), a Night[2] rule under it unless it is the <paramref name="last"/>; the
+        /// caller stands the control against the row's right and then fits the name to what it leaves
+        /// (<see cref="FitRowName"/>). <paramref name="note"/> is what the strip says while the pointer is on it.</summary>
+        private SetRow SettingsRow(RectTransform page, string id, string name, string mark, float y, float pitch, bool last,
+            Func<string> note)
+        {
+            var rt = NewRect("R_" + id, page);
+            FieldRect(rt, 0f, y, SetPageW, pitch);
+            var hit = rt.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);       // the row answers the pointer over its whole width
+            hit.raycastTarget = true;
+            var row = new SetRow { Rt = rt, Note = note };
+            row.Fill = FieldFill(rt, "Pointed", 4f, 2f, SetPageW - 8f, pitch - 4f, UITheme.ClubBlue[0]);
+            row.Tab = FieldFill(rt, "Tab", 4f, 2f, 4f, pitch - 4f, UITheme.ClubBlue[4]);
+            float my = Mathf.Floor((pitch - 16f) / 4f) * 2f;               // the 16 mark on the even grid
+            row.Mark = FieldFill(rt, "Mark", 20f, my, 16f, 16f, UITheme.Cream[2]);
+            row.Mark.sprite = NightArt.Mark(mark) ?? ChromeArt.Mark(mark);
+            row.Mark.enabled = row.Mark.sprite != null;                     // never a bare square for a missing mark
+            row.Name = NewText("Name", rt, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+            FieldRect(row.Name.rectTransform, SetNameX, -1f, 400f, pitch);
+            row.Name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            row.Name.text = name;
+            if (!last) FieldFill(rt, "Rule", 16f, pitch - 2f, SetPageW - 32f, 2f, UITheme.Night[2]);
+            var relay = rt.gameObject.AddComponent<HoverRelay>();
+            relay.Entered = () => { row.Over = true; row.Paint(); _noteRow = row; PaintSettingsNote(); };
+            relay.Exited = () =>
+            {
+                row.Over = false; row.Paint();
+                if (_noteRow == row) { _noteRow = null; PaintSettingsNote(); }
+            };
+            row.Paint();
+            _setRows.Add(row);
+            return row;
+        }
+
+        /// <summary>A row's name keeps clear of its control: 16 air before the control's left edge
+        /// (<paramref name="controlLeft"/>, row units), else the 8 size - documented, never an overlap. Measured in all 29
+        /// languages it never steps (fit_check, 2026-09-29: the tightest, Bulgarian's master volume, leaves 76).</summary>
+        private static void FitRowName(SetRow row, float controlLeft)
+        {
+            float room = controlLeft - 16f - SetNameX;
+            var rt = row.Name.rectTransform;
+            rt.sizeDelta = new Vector2(Mathf.Max(8f, room), rt.sizeDelta.y);
+            if (row.Name.preferredWidth > room) row.Name.fontSize = LanguageFonts.Size(row.Name.font, 8);
+        }
+
+        /// <summary>The widest of <paramref name="words"/> in the body face at 16 (the language spoken).</summary>
+        private float WidestWord(IEnumerable<string> words)
+        {
+            float w = 0f;
+            if (_settingsProbe == null) return w;
+            _settingsProbe.fontSize = LanguageFonts.Size(_settingsProbe.font, 16);
+            foreach (var s in words)
+            {
+                _settingsProbe.text = s;
+                w = Mathf.Max(w, _settingsProbe.preferredWidth);
+            }
+            return Mathf.Ceil(w);
+        }
+
+        /// <summary>One segment width for a set of choices: the widest way + 32, at least 80, snapped to 4.</summary>
+        private float ChoiceSeg(IEnumerable<string> words) => Mathf.Max(80f, SnapUp(WidestWord(words) + 32f, 4f));
+
+        private readonly List<NeonTube> _setSegmentTubes = new List<NeonTube>();
+
+        /// <summary>
+        /// A CHOICE against <paramref name="right"/> at <paramref name="top"/> (row units): a Night[0] well with a Graphite
+        /// rim, cut into one <paramref name="seg"/>-wide segment per word by Graphite seams. A click on a segment picks
+        /// it (<paramref name="pick"/>); <paramref name="selected"/> says which is chosen. Returns its left edge.
+        /// </summary>
+        private float ChoiceControl(RectTransform row, string id, string[] words, float seg, float right, float top,
+            Func<int> selected, Action<int> pick)
+        {
+            float w = seg * words.Length + 4f;
+            var rt = NewRect(id, row);
+            FieldRect(rt, right - w, top, w, SetCtrlH);
+            var well = rt.gameObject.AddComponent<Image>();
+            well.sprite = MenuArt.ChoiceWell();
+            well.type = Image.Type.Sliced;
+            well.pixelsPerUnitMultiplier = 0.5f;
+            well.raycastTarget = false;
+            var choice = new SetChoice
+            {
+                Selected = selected,
+                Fill = new Image[words.Length],
+                Lit = new Image[words.Length],
+                Words = new Text[words.Length],
+            };
+            for (int i = 0; i < words.Length; i++)
+            {
+                int at = i;
+                float sx = 2f + i * seg;
+                if (i > 0) FieldFill(rt, "Seam" + i, sx, 2f, 2f, SetCtrlH - 4f, UITheme.Graphite[2]);
+                float fx = i > 0 ? sx + 2f : sx, fw = i > 0 ? seg - 2f : seg;
+                choice.Fill[i] = FieldFill(rt, "On" + i, fx, 2f, fw, SetCtrlH - 4f, UITheme.Cyan[3]);
+                choice.Lit[i] = FieldFill(rt, "Lit" + i, fx, 2f, fw, 2f, UITheme.Cyan[4]);
+                var word = NewText("Word" + i, rt, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[3]);
+                FieldRect(word.rectTransform, fx + 1f, -1f, fw, SetCtrlH);
+                word.horizontalOverflow = HorizontalWrapMode.Overflow;
+                word.text = words[i];
+                choice.Words[i] = word;
+
+                var s = NewRect("S" + i, rt);
+                FieldRect(s, sx, 0f, seg, SetCtrlH);
+                var hit = s.gameObject.AddComponent<Image>();
+                hit.color = new Color(0f, 0f, 0f, 0f);
+                hit.raycastTarget = true;
+                var btn = s.gameObject.AddComponent<Button>();
+                btn.transition = Selectable.Transition.None;
+                btn.targetGraphic = hit;
+                btn.onClick.AddListener(() => { pick(at); Sfx.Play("click"); RefreshSettings(); });
+                int tw = Mathf.RoundToInt((seg + 2f) / 2f), th = Mathf.RoundToInt(SetCtrlH / 2f);
+                var tube = new NeonTube(rt, "Pointed" + i, l => ChromeArt.NeonPath(tw, th, 1, 0, l),
+                    new Vector2((tw + 2 * ChromeArt.NeonPad) * 2f, (th + 2 * ChromeArt.NeonPad) * 2f), new Vector2(0f, 1f),
+                    new Vector2(sx + (seg + 2f) * 0.5f, -SetCtrlH * 0.5f));
+                tube.Show(NeonIcons.State.Lit, UITheme.ClubBlue, true);
+                tube.Visible = false;
+                _setSegmentTubes.Add(tube);
+                var relay = s.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => { tube.Visible = true; SettingsTick(); };
+                relay.Exited = () => tube.Visible = false;
+            }
+            _setChoices.Add(choice);
+            return right - w;
+        }
+
+        /// <summary>A SMALL KEY at (<paramref name="x"/>, <paramref name="top"/>) of <paramref name="parent"/>: a 34-unit
+        /// sign key with no word - its plate, its 9-texel mark half-lit cyan at rest and struck lit under the pointer,
+        /// the ClubBlue tube round it (SignKey runs it; a Button beside it carries the click and its dead state).</summary>
+        private SignKey SmallMarkKey(RectTransform parent, string id, string mark, float x, float top, Action onClick)
+        {
+            var rt = NewRect(id, parent);
+            rt.anchorMin = rt.anchorMax = new Vector2(0f, 1f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(SetCtrlH, SetCtrlH);
+            rt.anchoredPosition = new Vector2(x + SetCtrlH * 0.5f, -(top + SetCtrlH * 0.5f));
+            var hit = rt.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);
+            hit.raycastTarget = true;
+            var button = rt.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            button.targetGraphic = hit;
+            var key = rt.gameObject.AddComponent<SignKey>();
+            button.onClick.AddListener(key.Click);
+            key.Button = button;
+            key.Pressed = onClick;
+            key.Hue = UITheme.Cyan;
+            key.Ground = 1;
+            var body = NewRect("Body", rt);
+            Stretch(body, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var plate = NewRect("Plate", body);
+            Stretch(plate, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            var plateImg = plate.gameObject.AddComponent<Image>();
+            plateImg.type = Image.Type.Sliced;
+            plateImg.pixelsPerUnitMultiplier = 0.5f;
+            plateImg.raycastTarget = false;
+            key.Icon = new NeonIcons.SmallView(body, "Mark", mark, new Vector2(0.5f, 0.5f), Vector2.zero);
+            int k = Mathf.RoundToInt(SetCtrlH / 2f);
+            key.Hover = new NeonTube(body, "Hover", l => ChromeArt.NeonPath(k, k, 1, 0, l),
+                new Vector2((k + 2 * ChromeArt.NeonPad) * 2f, (k + 2 * ChromeArt.NeonPad) * 2f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            key.Hover.Visible = false;
+            key.Body = body;
+            key.Plate = plateImg;
+            key.Apply();
+            return key;
+        }
+
+        /// <summary>A WORDED ROW KEY (TONIGHT'S BOOK's OPEN, START OVER's NEW RUN): a 34-tall sign key on the page's
+        /// Night[1], its small chevron at the left in cyan, its word dead centre, fitted to the widest of
+        /// <paramref name="fitWords"/> (so a key that asks first never grows when it asks), against
+        /// <paramref name="right"/>.</summary>
+        private SignKey RowWordKey(RectTransform row, string id, string word, IEnumerable<string> fitWords, float right,
+            float top, Action onClick)
+        {
+            const float Pad = 52f;                                          // 6 + the 30 mark + 16 of air
+            float w = Mathf.Max(160f, SnapUp(WidestWord(fitWords) + 2f * Pad, 4f));
+            var key = MenuSignKey(row, id, word, null, UITheme.Cyan, false, 1, SetCtrlH, w, onClick, Pad);
+            var body = key.Body;
+            key.Icon = new NeonIcons.SmallView(body, "Mark", "right", new Vector2(0f, 0.5f),
+                new Vector2(6f + NeonIcons.SmallSize, 0f));                 // six in from the key's left, as a sign key's mark
+            key.Label.transform.SetAsLastSibling();
+            key.Apply();
+            var rt = (RectTransform)key.transform;
+            PlaceSignKey(key, right - rt.sizeDelta.x * 0.5f, top);
+            return key;
+        }
+
+        /// <summary>
+        /// A CYCLE against <paramref name="right"/>: the left small key, the value on a Night[0] well as wide as the widest
+        /// of <paramref name="words"/> + 32 (never under 144), the right small key, 8 apart. A click steps
+        /// <paramref name="step"/> by -1 or +1. Returns its left edge.
+        /// </summary>
+        private float CycleControl(RectTransform row, string id, IEnumerable<string> words, float right, float top,
+            Func<string> word, Func<bool> live, Action<int> step)
+        {
+            float vw = Mathf.Max(144f, SnapUp(WidestWord(words) + 32f, 4f));
+            float xNext = right - SetCtrlH, xWell = xNext - 8f - vw, xPrev = xWell - 8f - SetCtrlH;
+            var prev = SmallMarkKey(row, "PREV", "left", xPrev, top, () => { step(-1); Sfx.Play("click"); RefreshSettings(); });
+            var well = MenuRecess(row, id, xWell, top, vw, SetCtrlH, UITheme.Night[0]);
+            var value = NewText("Value", well.rectTransform, _body, 16, TextAnchor.MiddleCenter, UITheme.Cyan[4]);
+            FieldRect(value.rectTransform, 1f, -1f, vw, SetCtrlH);
+            value.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var next = SmallMarkKey(row, "NEXT", "right", xNext, top, () => { step(+1); Sfx.Play("click"); RefreshSettings(); });
+            _setCycles.Add(new SetCycle { Prev = prev, Next = next, Value = value, Word = word, Live = live });
+            return xPrev;
+        }
+
+        /// <summary>
+        /// A METER'S TUBE (BUILD_SPEC §2 "Meter"): a straight tube <paramref name="len"/> texels long whose rim starts at
+        /// row unit <paramref name="x"/> and whose glass runs along row unit <paramref name="glassY"/> - dark glass end to
+        /// end, its lit copy clipped to the level in whole texels, a Graphite clamp holding it at the level and, with
+        /// <paramref name="ticks"/>, a Graphite[3] tick under every tenth.
+        /// </summary>
+        private SetMeter MeterTube(RectTransform row, string id, float x, float glassY, int len, bool ticks)
+        {
+            int P = ChromeArt.NeonPad;
+            var size = new Vector2((len + 2 * P) * 2f, (1 + 2 * P) * 2f);
+            var dark = new NeonTube(row, id + "Dark", l => ChromeArt.NeonBar(len, l), size, new Vector2(0f, 1f),
+                new Vector2(x - 2f * P + size.x * 0.5f, -(glassY - 2f * P + size.y * 0.5f)));
+            dark.Show(NeonIcons.State.Dark, UITheme.Cyan, false);
+            var clip = NewRect(id + "Lit", row);
+            FieldRect(clip, x - 2f * P, glassY - 2f * P, 0f, size.y);
+            clip.gameObject.AddComponent<RectMask2D>();
+            var lit = new NeonTube(clip, "Tube", l => ChromeArt.NeonBar(len, l), size, new Vector2(0f, 1f),
+                new Vector2(size.x * 0.5f, -size.y * 0.5f));
+            lit.Show(NeonIcons.State.Lit, UITheme.Cyan, true);
+            if (ticks)
+                for (int k = 1; k < 10; k++)
+                    FieldFill(row, id + "Tick" + k, x + Mathf.Round(len * k / 10f) * 2f, glassY + 10f, 2f, 4f, UITheme.Graphite[3]);
+            var clamp = NewRect(id + "Clamp", row);
+            FieldRect(clamp, x - 4f, glassY - 8f, 8f, 20f);
+            var ci = clamp.gameObject.AddComponent<Image>();
+            ci.sprite = MenuArt.Clamp();
+            ci.raycastTarget = false;
+            var m = new SetMeter { Clip = clip, Clamp = clamp, X = x, GlassY = glassY, Len = len };
+            return m;
+        }
+
+        /// <summary>The level on a meter: the lit tube up to it, the clamp at it (both on whole texels); muted, the whole
+        /// tube is dark glass and the clamp still marks where the level waits.</summary>
+        private static void PaintMeterTube(SetMeter m, float level, bool dark)
+        {
+            if (m == null) return;
+            int lit = Mathf.Clamp(Mathf.RoundToInt(m.Len * Mathf.Clamp01(level)), 0, m.Len);
+            bool show = !dark && lit >= 2;
+            if (m.Clip.gameObject.activeSelf != show) m.Clip.gameObject.SetActive(show);
+            if (show) m.Clip.sizeDelta = new Vector2(2f * ChromeArt.NeonPad + lit * 2f, m.Clip.sizeDelta.y);
+            m.Clamp.anchoredPosition = new Vector2(m.X + lit * 2f - 4f, -(m.GlassY - 8f));
         }
 
         // ── AUDIO ────────────────────────────────────────────────────────────────────────────────────────────────
 
-        private RectTransform BuildAudioPage(RectTransform plate)
+        private RectTransform BuildAudioPage()
         {
-            var page = NewRect("Page_AUDIO", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
-            float y = 0f;
-            _settingsMeter = MeterRow(page, "MASTER", UIText.T("chrome.settings.master"), "speaker", ref y, () => Sound.Volume, v => Sound.Volume = v, out _settingsVolume, AudioRow);
-            _settingsMusicMeter = MeterRow(page, "MUSIC", UIText.T("chrome.settings.music"), "note", ref y, () => Sound.MusicVolume, v => Sound.MusicVolume = v, out _settingsMusicPct, AudioRow);
-            _settingsEffectsMeter = MeterRow(page, "EFFECTS", UIText.T("chrome.settings.effects"), "glass", ref y, () => Sound.EffectsVolume, v => Sound.EffectsVolume = v, out _settingsEffectsPct, AudioRow);
+            var page = NewSettingsPage("AUDIO");
+            var (pitch, top) = RowPitch(6, 64f);
+            float ctop = (pitch - SetCtrlH) * 0.5f;
+            float y = top;
 
-            var snd = SettingsRow(page, "SOUND", UIText.T("chrome.settings.sound"), "speaker", ref y, AudioRow);
-            _settingsMuteKey = PackIconKey(snd, "MUTE", "sound_on", MenuPack.Tone.Green, new Vector2(0, 0.5f), new Vector2(300f, 0), () =>
-            {
-                Sound.Muted = !Sound.Muted;
-                Sfx.Play("click");              // audible iff it just came back on — itself the test
-                RefreshSettings();
-            });
-            _settingsMute = NewText("State", snd, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(_settingsMute.rectTransform, new Vector2(0, 0.5f), new Vector2(200, 20), new Vector2(344f, 0));
-            _settingsMute.rectTransform.pivot = new Vector2(0, 0.5f);
-            _settingsMute.horizontalOverflow = HorizontalWrapMode.Overflow;
+            // THE THREE LEVELS: - [ the tube ] + and the level in cyan, steps of a tenth (as the pack's keys stepped).
+            MeterRow(page, "MASTER", "chrome.settings.master", "speaker", y, pitch, ctop, () => Sound.Volume, v => Sound.Volume = v);
+            y += pitch;
+            MeterRow(page, "MUSIC", "chrome.settings.music", "note", y, pitch, ctop, () => Sound.MusicVolume, v => Sound.MusicVolume = v);
+            y += pitch;
+            MeterRow(page, "EFFECTS", "chrome.settings.effects", "glass", y, pitch, ctop, () => Sound.EffectsVolume, v => Sound.EffectsVolume = v);
+            y += pitch;
 
-            var now = SettingsRow(page, "NOW PLAYING", UIText.T("chrome.settings.now_playing"), "note", ref y, AudioRow);
-            float kx = 300f;
-            PackIconKey(now, "PREV", "prev", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(kx, 0), () => { Sfx.SkipTrack(-1); Sfx.Play("click"); });
-            kx += 40f;
-            _settingsHoldKey = PackIconKey(now, "HOLD", "pause", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(kx, 0), () => { Sfx.MusicPaused = !Sfx.MusicPaused; Sfx.Play("click"); RefreshSettings(); });
-            kx += 40f;
-            PackIconKey(now, "NEXT", "next", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(kx, 0), () => { Sfx.SkipTrack(+1); Sfx.Play("click"); });
-            kx += 32f + 12f;
+            // SOUND, as a choice: OFF / ON (the switch it was stepped Muted; a segment sets it).
+            var snd = SettingsRow(page, "SOUND", UIText.T("chrome.settings.sound"), "speaker", y, pitch, false, null);
+            string off = UIText.T("chrome.settings.off"), on = UIText.T("chrome.settings.on");
+            float left = ChoiceControl(snd.Rt, "MUTE", new[] { off, on }, ChoiceSeg(new[] { off, on }), SetCtrlRight, ctop,
+                () => Sound.Muted ? 0 : 1, i => Sound.Muted = i == 0);   // the click after it is audible iff it came back on
+            FitRowName(snd, left);
+            y += pitch;
+
             // THE SONG IS A KEY, AND THE KEY OPENS THE LIST (2026-09-16, the author: "now playing kısmında tüm
-            // şarkıları açılan bir combobox ile görüntüleyip istenilen seçilebilmeli"): the title sits on a pack key
-            // with a chevron at its end; pressed, every song the bar owns unrolls ABOVE it (there is room above and
-            // none below), in the order the moods play them, the one playing lit. Under the key, small, which list
-            // the song is on and its place in it.
-            float songW = SetW - SetPad * 2f - kx;
-            _settingsSongKey = PackWordKey(now, "SONG", "", null, MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(songW, 32f),
-                new Vector2(kx, 0), () => { Sfx.Play("click"); ToggleSongList(!_songListOpen); }, songW, 0f);
-            _settingsNowTitle = _settingsSongKey.Find("Face/Label").GetComponent<Text>();
-            var drop = NewRect("Drop", _settingsSongKey.Find("Face") as RectTransform);
-            Place(drop, new Vector2(1, 0.5f), new Vector2(16, 16), new Vector2(-10f, 1f));
-            drop.pivot = new Vector2(1, 0.5f);
-            drop.localRotation = Quaternion.Euler(0, 0, 90f);   // the bench's left chevron, turned to point down
-            var di = drop.gameObject.AddComponent<Image>();
-            di.sprite = ChromeArt.Mark("chevron_left"); di.color = MenuPack.PalettedInk(MenuPack.Tone.Grey, false); di.raycastTarget = false;
-            _settingsNowPlace = NewText("Place", now, _body, 8, TextAnchor.MiddleRight, UITheme.Magenta[3]);
-            Place(_settingsNowPlace.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 12), new Vector2(-4f, -21f));
-            _settingsNowPlace.rectTransform.pivot = new Vector2(1, 0.5f);
-            _settingsNowPlace.horizontalOverflow = HorizontalWrapMode.Overflow;
-            BuildSongList(now, kx, songW);
+            // şarkıları açılan bir combobox ile görüntüleyip istenilen seçilebilmeli"): the title on a Night[0] well with a
+            // chevron at its end; pressed, every song the bar owns unrolls ABOVE it, in the order the moods play them,
+            // the one playing lit. Which list it is on and its place in it is the page's hint in the strip. The transport
+            // keys stand before it.
+            var now = SettingsRow(page, "NOW PLAYING", UIText.T("chrome.settings.now_playing"), "note", y, pitch, false, null);
+            float sx = SetCtrlRight - SongWellW;
+            _settingsSongKey = MenuRecess(now.Rt, "SONG", sx, ctop, SongWellW, SetCtrlH, UITheme.Night[0]).rectTransform;
+            var songImg = _settingsSongKey.GetComponent<Image>();
+            songImg.raycastTarget = true;
+            var songBtn = _settingsSongKey.gameObject.AddComponent<Button>();
+            songBtn.transition = Selectable.Transition.None;
+            songBtn.targetGraphic = songImg;
+            songBtn.onClick.AddListener(() => { Sfx.Play("click"); ToggleSongList(!_songListOpen); });
+            _settingsNowTitle = NewText("Title", _settingsSongKey, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
+            FieldRect(_settingsNowTitle.rectTransform, 14f, -1f, SongWellW - 14f - 40f, SetCtrlH);
+            _settingsNowTitle.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _songDrop = new NeonIcons.SmallView(_settingsSongKey, "Drop", "down", new Vector2(0f, 1f),
+                new Vector2(SongWellW - 34f + NeonIcons.SmallSize, -SetCtrlH * 0.5f));
+            _songDrop.Show(NeonIcons.State.Half, UITheme.Cyan, false);
+            int hw = Mathf.RoundToInt(SongWellW / 2f), hh = Mathf.RoundToInt(SetCtrlH / 2f);
+            _songHover = new NeonTube(_settingsSongKey, "Pointed", l => ChromeArt.NeonPath(hw, hh, 1, 0, l),
+                new Vector2((hw + 2 * ChromeArt.NeonPad) * 2f, (hh + 2 * ChromeArt.NeonPad) * 2f), new Vector2(0.5f, 0.5f), Vector2.zero);
+            _songHover.Show(NeonIcons.State.Lit, UITheme.ClubBlue, true);
+            _songHover.Visible = false;
+            var songRelay = _settingsSongKey.gameObject.AddComponent<HoverRelay>();
+            songRelay.Entered = () => { _songHover.Visible = true; _songDrop.Show(NeonIcons.State.Lit, UITheme.Cyan, false); SettingsTick(); };
+            songRelay.Exited = () => { _songHover.Visible = false; _songDrop.Show(NeonIcons.State.Half, UITheme.Cyan, false); };
+            float kx = sx - 12f - SetCtrlH;
+            SmallMarkKey(now.Rt, "NEXT", "next", kx, ctop, () => { Sfx.SkipTrack(+1); Sfx.Play("click"); RefreshSettings(); });
+            kx -= SetCtrlH + 8f;
+            _settingsHoldKey = SmallMarkKey(now.Rt, "HOLD", "hold", kx, ctop, () => { Sfx.MusicPaused = !Sfx.MusicPaused; Sfx.Play("click"); RefreshSettings(); });
+            _holdMark = _settingsHoldKey.Icon;
+            _playMark = new NeonIcons.SmallView(_settingsHoldKey.Body, "Play", "play", new Vector2(0.5f, 0.5f), Vector2.zero);
+            _playMark.Visible = false;
+            kx -= SetCtrlH + 8f;
+            SmallMarkKey(now.Rt, "PREV", "prev", kx, ctop, () => { Sfx.SkipTrack(-1); Sfx.Play("click"); RefreshSettings(); });
+            FitRowName(now, kx);
+            BuildSongList(now.Rt, sx, ctop);
+            y += pitch;
 
-            // THE TRACK, SEEKABLE (the author: "şarkıyı ileri saran bir player olmalı"): a rail the pointer presses or
-            // drags through the song, the knob on it, and the clock beside it — read off the player every frame the
+            // THE TRACK, SEEKABLE (the author: "şarkıyı ileri saran bir player olmalı"): a tube the pointer presses or
+            // drags through the song, the clamp riding it, the clock after it - read off the player every frame the
             // window is up (StepSeek), except while the hand is on it.
-            var track = SettingsRow(page, "TRACK", UIText.T("chrome.settings.track"), "note", ref y, 44f);
-            var seek = NewRect("Seek", track);
-            Place(seek, new Vector2(0, 0.5f), new Vector2(SeekW, 24f), new Vector2(300f, 0));
-            seek.pivot = new Vector2(0, 0.5f);
+            var track = SettingsRow(page, "TRACK", UIText.T("chrome.settings.track"), "note", y, pitch, true, null);
+            _seekClock = NewText("Clock", track.Rt, _body, 16, TextAnchor.MiddleRight, UITheme.Cream[3]);
+            _seekClock.horizontalOverflow = HorizontalWrapMode.Overflow;
+            float clockW = SnapUp(WidestWord(new[] { UIText.T("chrome.settings.clock", ("at", "00:00"), ("of", "00:00")) }), 2f);
+            FieldRect(_seekClock.rectTransform, SetCtrlRight - clockW - 8f, -1f, clockW + 8f, pitch);
+            float bx = SetCtrlRight - clockW - 24f - SeekLen * 2f;
+            float glass = Mathf.Floor(pitch / 4f) * 2f;                     // the glass row, even (30 of 62)
+            _seek = MeterTube(track.Rt, "Seek", bx, glass, SeekLen, false);
+            var seek = NewRect("SeekHit", track.Rt);
+            FieldRect(seek, bx, glass - 11f, SeekLen * 2f, 24f);
             var seekHit = seek.gameObject.AddComponent<Image>();
-            seekHit.color = new Color(0, 0, 0, 0.001f);   // the whole 24 answers the hand, not the 6 of the rail
-            var rail = NewRect("Rail", seek);
-            Place(rail, new Vector2(0, 0.5f), new Vector2(SeekW, 6f), Vector2.zero);
-            rail.pivot = new Vector2(0, 0.5f);
-            var railImg = rail.gameObject.AddComponent<Image>(); railImg.color = UITheme.Night[3]; railImg.raycastTarget = false;
-            _seekFill = NewRect("Fill", seek);
-            Place(_seekFill, new Vector2(0, 0.5f), new Vector2(0f, 6f), Vector2.zero);
-            _seekFill.pivot = new Vector2(0, 0.5f);
-            var fillImg = _seekFill.gameObject.AddComponent<Image>(); fillImg.color = UITheme.Cyan[3]; fillImg.raycastTarget = false;
-            _seekKnob = NewRect("Knob", seek);
-            Place(_seekKnob, new Vector2(0, 0.5f), new Vector2(6f, 16f), Vector2.zero);
-            _seekKnob.pivot = new Vector2(0.5f, 0.5f);
-            var knobImg = _seekKnob.gameObject.AddComponent<Image>(); knobImg.color = UITheme.Cream[4]; knobImg.raycastTarget = false;
+            seekHit.color = new Color(0f, 0f, 0f, 0f);    // the whole 24 answers the hand, not the tube's 2 of glass
+            seekHit.raycastTarget = true;
             var trig = seek.gameObject.AddComponent<EventTrigger>();
             var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
             down.callback.AddListener(e => { _seekDragging = true; SeekTo(seek, (PointerEventData)e); });
@@ -448,57 +904,87 @@ namespace LastCall.UI
             var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
             up.callback.AddListener(e => { SeekTo(seek, (PointerEventData)e); _seekDragging = false; });
             trig.triggers.Add(down); trig.triggers.Add(drag); trig.triggers.Add(up);
-            _seekClock = NewText("Clock", track, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
-            Place(_seekClock.rectTransform, new Vector2(0, 0.5f), new Vector2(140, 20), new Vector2(300f + SeekW + 14f, 0));
-            _seekClock.rectTransform.pivot = new Vector2(0, 0.5f);
-            _seekClock.horizontalOverflow = HorizontalWrapMode.Overflow;
+            FitRowName(track, bx - 8f);
             PaintSeek(0f);
             return page;
         }
 
-        /// <summary>The list of every song, closed until the song key opens it: a well of the beam's make standing
-        /// above the key, one row a song — its title, and small at the right which list it is on.</summary>
-        private void BuildSongList(RectTransform row, float x, float w)
+        /// <summary>A level's row: [-] the tube [+] and the level in cyan against the right; steps of a tenth.</summary>
+        private void MeterRow(RectTransform page, string id, string nameKey, string mark, float y, float pitch, float ctop,
+            Func<float> get, Action<float> set)
+        {
+            var row = SettingsRow(page, id, UIText.T(nameKey), mark, y, pitch, false, null);
+            const float ValueW = 64f;
+            var value = NewText("Pct", row.Rt, _body, 16, TextAnchor.MiddleRight, UITheme.Cyan[4]);
+            FieldRect(value.rectTransform, SetCtrlRight - ValueW, -1f, ValueW, pitch);
+            value.horizontalOverflow = HorizontalWrapMode.Overflow;
+            float plusX = SetCtrlRight - ValueW - 12f - SetCtrlH;
+            SmallMarkKey(row.Rt, "PLUS", "plus", plusX, ctop, () =>
+            {
+                set(Mathf.Clamp01(Mathf.Round((get() + 0.1f) * 10f) / 10f)); Sfx.Play("click"); RefreshSettings();
+            });
+            float tx = plusX - 16f - MeterLen * 2f;
+            var meter = MeterTube(row.Rt, "Meter", tx, ctop + SetCtrlH * 0.5f - 1f, MeterLen, true);   // glass on row 30 of 62
+            meter.Value = value;
+            float minusX = tx - 16f - SetCtrlH;
+            SmallMarkKey(row.Rt, "MINUS", "minus", minusX, ctop, () =>
+            {
+                set(Mathf.Clamp01(Mathf.Round((get() - 0.1f) * 10f) / 10f)); Sfx.Play("click"); RefreshSettings();
+            });
+            FitRowName(row, minusX);
+            _setMeters.Add(meter);
+            _meterLevels.Add(get);
+        }
+
+        private readonly List<Func<float>> _meterLevels = new List<Func<float>>();
+
+        /// <summary>The list of every song, closed until the song key opens it: a Night[0] well standing on the key's top,
+        /// one row a song - its title, and small at the right which list it is on.</summary>
+        private void BuildSongList(RectTransform row, float x, float keyTop)
         {
             var songs = Sfx.AllSongs;
             float h = songs.Count * SongRowH + 8f;
-            _songList = NewRect("SongList", row);
-            Place(_songList, new Vector2(0, 0.5f), new Vector2(w, h), new Vector2(x + w * 0.5f, 16f + 4f + h * 0.5f));
-            _songList.pivot = new Vector2(0.5f, 0.5f);
-            var plate = _songList.gameObject.AddComponent<Image>();
-            plate.sprite = ChromeArt.Well(); plate.type = Image.Type.Sliced; plate.color = Color.white; plate.raycastTarget = true;
+            var well = MenuRecess(row, "SongList", x, keyTop - 4f - h, SongWellW, h, UITheme.Night[0]);
+            well.raycastTarget = true;
+            _songList = well.rectTransform;
             _songRows.Clear();
             for (int i = 0; i < songs.Count; i++)
             {
                 string song = songs[i];
                 var r = NewRect("S_" + song, _songList);
-                Place(r, new Vector2(0, 1), new Vector2(w - 8f, SongRowH), new Vector2(4f, -4f - i * SongRowH));
-                r.pivot = new Vector2(0, 1);
+                FieldRect(r, 4f, 4f + i * SongRowH, SongWellW - 8f, SongRowH);
                 var bg = r.gameObject.AddComponent<Image>();
-                bg.color = new Color(1f, 1f, 1f, 0f); bg.raycastTarget = true;
-                var relay = r.gameObject.AddComponent<HoverRelay>();
-                relay.Entered = () => bg.color = UITheme.Night[3];
-                relay.Exited = () => bg.color = new Color(1f, 1f, 1f, 0f);
-                var btn = r.gameObject.AddComponent<Button>();
+                bg.color = UITheme.Night[2];
+                bg.enabled = false;
+                var hit = NewRect("Hit", r);
+                Stretch(hit, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+                var hitImg = hit.gameObject.AddComponent<Image>();
+                hitImg.color = new Color(0f, 0f, 0f, 0f);
+                hitImg.raycastTarget = true;
+                var relay = hit.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => bg.enabled = true;
+                relay.Exited = () => bg.enabled = false;
+                var btn = hit.gameObject.AddComponent<Button>();
                 btn.transition = Selectable.Transition.None;
+                btn.targetGraphic = hitImg;
                 btn.onClick.AddListener(() =>
                 {
                     Sfx.PlaySong(song); Sfx.Play("click");
                     ToggleSongList(false);
-                    RefreshSettings(); RefreshMusicPlayer(true);
+                    RefreshSettings();
                 });
                 var title = NewText("Title", r, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-                Place(title.rectTransform, new Vector2(0, 0.5f), new Vector2(w - 90f, 20), new Vector2(8f, 0));
-                title.rectTransform.pivot = new Vector2(0, 0.5f);
-                title.horizontalOverflow = HorizontalWrapMode.Overflow; title.raycastTarget = false;
+                FieldRect(title.rectTransform, 8f, -1f, SongWellW - 96f, SongRowH);
+                title.horizontalOverflow = HorizontalWrapMode.Overflow;
                 title.text = SongTitle(song);
+                if (title.preferredWidth > SongWellW - 104f) title.fontSize = LanguageFonts.Size(title.font, 8);
                 _songRows[song] = title;
                 int cut = song.LastIndexOf('_');
-                var mood = NewText("Mood", r, _body, 8, TextAnchor.MiddleRight, UITheme.Magenta[3]);
-                Place(mood.rectTransform, new Vector2(1, 0.5f), new Vector2(80, 12), new Vector2(-8f, 0));
-                mood.rectTransform.pivot = new Vector2(1, 0.5f);
-                mood.horizontalOverflow = HorizontalWrapMode.Overflow; mood.raycastTarget = false;
+                var mood = NewText("Mood", r, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[3]);
+                FieldRect(mood.rectTransform, SongWellW - 96f, 0f, 84f, SongRowH);
+                mood.horizontalOverflow = HorizontalWrapMode.Overflow;
                 mood.text = MoodWord(cut < 0 ? song : song.Substring(0, cut));
+                hit.SetAsLastSibling();
             }
             _songList.gameObject.SetActive(false);
         }
@@ -512,16 +998,15 @@ namespace LastCall.UI
         private void SeekTo(RectTransform bar, PointerEventData e)
         {
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(bar, e.position, e.pressEventCamera, out var local)) return;
-            float p = Mathf.Clamp01(local.x / SeekW);
+            float p = Mathf.Clamp01(local.x / (SeekLen * 2f));
             Sfx.MusicProgress = p;
             PaintSeek(p);
         }
 
         private void PaintSeek(float p)
         {
-            if (_seekFill == null) return;
-            _seekFill.sizeDelta = new Vector2(p * SeekW, 6f);
-            _seekKnob.anchoredPosition = new Vector2(p * SeekW, 0f);
+            if (_seek == null) return;
+            PaintMeterTube(_seek, p, false);
             var (at, length) = Sfx.MusicClock;
             _seekClock.text = length <= 0f ? "" : UIText.T("chrome.settings.clock", ("at", Clock(at)), ("of", Clock(length)));
         }
@@ -532,193 +1017,53 @@ namespace LastCall.UI
             return (s / 60) + ":" + (s % 60).ToString("00");
         }
 
-        /// <summary>The seek bar follows the song while the window is up and the hand is off it.</summary>
+        /// <summary>The seek bar follows the song while the window is up and the hand is off it; a new song redraws the
+        /// title and the strip's place.</summary>
         private void StepSeek()
         {
-            if (_seekFill == null || _settingsPage != "AUDIO" || _seekDragging) return;
+            if (_seek == null || _settingsPage != "AUDIO" || _seekDragging) return;
+            if (_shownSong != Sfx.NowPlaying) RefreshSettings();
             PaintSeek(Sfx.MusicProgress);
-        }
-
-        /// <summary>A row: a mark, the name beside it, a hairline under; the control is placed by the caller from
-        /// x 300 on. The name's box takes its measured width, so a long word never runs into the control.</summary>
-        private RectTransform SettingsRow(RectTransform page, string id, string name, string mark, ref float y, float rowH = SetRow)
-        {
-            var row = NewRect("R_" + id, page);
-            Place(row, new Vector2(0, 1), new Vector2(SetW - SetPad * 2f, rowH), new Vector2(0, y));
-            row.pivot = new Vector2(0, 1);
-            row.anchorMax = new Vector2(1, 1);
-            row.sizeDelta = new Vector2(0, rowH);
-            Hairline(row, new Vector2(0, 0), new Vector2(1, 0), new Color(1f, 1f, 1f, 0.07f));
-            var mk = NewRect("Mark", row);
-            Place(mk, new Vector2(0, 0.5f), new Vector2(16, 16), new Vector2(0, 0));
-            mk.pivot = new Vector2(0, 0.5f);
-            var mi = mk.gameObject.AddComponent<Image>();
-            mi.sprite = NightArt.Mark(mark) ?? ChromeArt.Mark(mark); mi.color = UITheme.Amber[4]; mi.raycastTarget = false;
-            var t = NewText("N", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
-            Place(t.rectTransform, new Vector2(0, 0.5f), new Vector2(260, 20), new Vector2(28f, 0));
-            t.rectTransform.pivot = new Vector2(0, 0.5f);
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
-            t.raycastTarget = false;
-            t.text = name;
-            // A name longer than its box would run under the control at 300 (2026-09-26, ten new names in 29
-            // languages): it steps down to the 8 size instead, as the tabs do.
-            if (t.preferredWidth > 266f) t.fontSize = LanguageFonts.Size(t.font, 8);
-            y -= rowH;
-            return row;
-        }
-
-        /// <summary>
-        /// A SWITCH on a row (2026-09-26): a pack key, 32 tall, that shows <paramref name="word"/> and runs
-        /// <paramref name="flip"/> on a click. It is fitted to the widest of <paramref name="words"/> once, so it never
-        /// jumps when its word changes; RefreshSettings writes the word and the tone.
-        /// </summary>
-        private SettingSwitch SwitchKey(RectTransform row, string id, string[] words, Vector2 anchor, Vector2 pos,
-            Func<string> word, Func<bool> lit, Action flip)
-        {
-            var key = PackWordKey(row, id, words[0], null, MenuPack.Tone.Grey, anchor, new Vector2(140f, CapH), pos,
-                () => { flip(); Sfx.Play("click"); RefreshSettings(); }, 100f, 32f);
-            var label = key.Find("Face/Label").GetComponent<Text>();
-            foreach (var w in words) { label.text = w; FitKey(key, 100f, 32f); }
-            var sw = new SettingSwitch { Key = key, Label = label, Word = word, Lit = lit };
-            _settingSwitches.Add(sw);
-            return sw;
-        }
-
-        /// <summary>An ON / OFF switch at x 300 on a DISPLAY row, lit while on, with its note after it.</summary>
-        private void OnOffRow(RectTransform page, string id, string nameKey, string mark, string noteKey, ref float y,
-            Func<bool> get, Action<bool> set)
-        {
-            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
-            string on = UIText.T("chrome.settings.on"), off = UIText.T("chrome.settings.off");
-            var sw = SwitchKey(row, id, new[] { on, off }, new Vector2(0, 0.5f), new Vector2(300f, 0),
-                () => get() ? on : off, get, () => set(!get()));
-            RowNote(row, noteKey != null ? UIText.T(noteKey) : null, 300f + sw.Key.sizeDelta.x + 12f);
-        }
-
-        /// <summary>A choice between two ways at x 300 on a DISPLAY row (grey either way), with its note after it.</summary>
-        private void ChoiceRow(RectTransform page, string id, string nameKey, string mark, string noteKey, ref float y,
-            string firstKey, string secondKey, Func<bool> second, Action<bool> set)
-        {
-            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
-            string a = UIText.T(firstKey), b = UIText.T(secondKey);
-            var sw = SwitchKey(row, id, new[] { a, b }, new Vector2(0, 0.5f), new Vector2(300f, 0),
-                () => second() ? b : a, () => false, () => set(!second()));
-            RowNote(row, noteKey != null ? UIText.T(noteKey) : null, 300f + sw.Key.sizeDelta.x + 12f);
-        }
-
-        /// <summary>
-        /// A CYCLE on a DISPLAY row (2026-09-26): prev, the value on a well as wide as the widest of
-        /// <paramref name="words"/>, next; a click steps <paramref name="step"/> by -1 or +1. The note after it can
-        /// change with the value (<paramref name="note"/>).
-        /// </summary>
-        private void CycleRow(RectTransform page, string id, string nameKey, string mark, ref float y,
-            IEnumerable<string> words, Func<string> word, Func<bool> live, Action<int> step, Func<string> note)
-        {
-            var row = SettingsRow(page, id, UIText.T(nameKey), mark, ref y, DisplayRow);
-            float x = 300f;
-            var prev = PackIconKey(row, "PREV", "prev", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0),
-                () => { step(-1); Sfx.Play("click"); RefreshSettings(); });
-            x += 32f + 6f;
-            var well = NewRect("Well", row);
-            well.anchorMin = well.anchorMax = well.pivot = new Vector2(0, 0.5f);
-            well.anchoredPosition = new Vector2(x, 0);
-            var wi = well.gameObject.AddComponent<Image>();
-            wi.sprite = ChromeArt.Well(); wi.type = Image.Type.Sliced; wi.color = Color.white; wi.raycastTarget = false;
-            var value = NewText("Value", well, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Stretch(value.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            value.horizontalOverflow = HorizontalWrapMode.Overflow;
-            value.raycastTarget = false;
-            float vw = 144f;
-            foreach (var w in words)
-            {
-                value.text = w;
-                vw = Mathf.Max(vw, Mathf.Ceil((value.preferredWidth + 20f) / 4f) * 4f);
-            }
-            well.sizeDelta = new Vector2(vw, CapH);
-            x += vw + 6f;
-            var next = PackIconKey(row, "NEXT", "next", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0),
-                () => { step(+1); Sfx.Play("click"); RefreshSettings(); });
-            x += 32f + 12f;
-            var cycle = new SettingCycle { Prev = prev, Next = next, Value = value, Word = word, Live = live, NoteWord = note };
-            cycle.Note = RowNote(row, "", x);
-            _settingCycles.Add(cycle);
-        }
-
-        /// <summary>A row's small print after its control, from <paramref name="x"/> to the row's end, on two lines
-        /// when it must (a long translation wraps rather than running off the plate).</summary>
-        private Text RowNote(RectTransform row, string text, float x)
-        {
-            float room = SetW - SetPad * 2f - x;
-            if (text == null || room < 60f) return null;
-            var note = NewText("Note", row, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(note.rectTransform, new Vector2(0, 0.5f), new Vector2(room, 28f), new Vector2(x, 0));
-            note.rectTransform.pivot = new Vector2(0, 0.5f);
-            note.horizontalOverflow = HorizontalWrapMode.Wrap;
-            note.verticalOverflow = VerticalWrapMode.Overflow;
-            note.raycastTarget = false;
-            note.text = text;
-            return note;
-        }
-
-        /// <summary>A level on a ten-cell meter between the pack's - and + keys, its percentage after it. The cells
-        /// are returned for the refresh, the percentage text through <paramref name="pct"/>.</summary>
-        private Image[] MeterRow(RectTransform page, string id, string name, string mark, ref float y, Func<float> get, Action<float> set, out Text pct, float rowH = SetRow)
-        {
-            var row = SettingsRow(page, id, name, mark, ref y, rowH);
-            const float KeyW = 32f, Cell = 26f;
-            float x = 300f;
-            PackIconKey(row, "MINUS", "minus", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0), () =>
-            {
-                set(Mathf.Clamp01(Mathf.Round((get() - 0.1f) * 10f) / 10f)); Sfx.Play("click"); RefreshSettings();
-            });
-            x += KeyW + 12f;
-            var cells = new Image[10];
-            for (int i = 0; i < 10; i++)
-            {
-                var cell = NewRect("M" + i, row);
-                Place(cell, new Vector2(0, 0.5f), new Vector2(22f, 22f), new Vector2(x + i * Cell, 0));
-                cell.pivot = new Vector2(0, 0.5f);
-                cells[i] = cell.gameObject.AddComponent<Image>();
-                cells[i].raycastTarget = false;
-                Scanlines(cell, 0.35f);
-            }
-            x += 10 * Cell + 4f;
-            PackIconKey(row, "PLUS", "plus", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(x, 0), () =>
-            {
-                set(Mathf.Clamp01(Mathf.Round((get() + 0.1f) * 10f) / 10f)); Sfx.Play("click"); RefreshSettings();
-            });
-            x += KeyW + 14f;
-            pct = NewText("Pct", row, _body, 16, TextAnchor.MiddleLeft, UITheme.Cyan[4]);
-            Place(pct.rectTransform, new Vector2(0, 0.5f), new Vector2(80, 20), new Vector2(x, 0));
-            pct.rectTransform.pivot = new Vector2(0, 0.5f);
-            pct.horizontalOverflow = HorizontalWrapMode.Overflow;
-            return cells;
         }
 
         // ── CONTROLS ─────────────────────────────────────────────────────────────────────────────────────────────
 
-        private RectTransform BuildControlsPage(RectTransform plate)
+        private RectTransform BuildControlsPage()
         {
-            var page = NewRect("Page_CONTROLS", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
-            float y = 0f;
-            foreach (var (action, key, mark) in new[] {
+            var page = NewSettingsPage("CONTROLS");
+            var binds = new[] {
                 (KeyAction.Pause, "chrome.bind.pause", "cog"), (KeyAction.Book, "chrome.bind.book", "book"),
                 (KeyAction.Cellar, "chrome.bind.cellar", "bottle"), (KeyAction.PageBack, "chrome.bind.pages", "book"),
                 (KeyAction.PageForward, "chrome.bind.pages", "book"), (KeyAction.NextTrack, "chrome.bind.next_track", "note"),
-                (KeyAction.MusicToggle, "chrome.bind.music_toggle", "speaker") })
+                (KeyAction.MusicToggle, "chrome.bind.music_toggle", "speaker") };
+            var (pitch, top) = RowPitch(binds.Length + 1, 48f);
+            float ctop = (pitch - SetCtrlH) * 0.5f;
+            float capTop = Mathf.Floor((pitch - CapH) / 4f) * 2f;          // 6 of 46: the cap on the even grid
+            float y = top;
+            foreach (var (action, key, mark) in binds)
             {
-                string name = UIText.T(key) + (action == KeyAction.PageBack ? " ←" : action == KeyAction.PageForward ? " →" : "");
-                // 40 a row, not 56: seven actions, INVERT POUR and the hint under them have to stand between the tabs
-                // and the foot (8 x 40 + the hint's 20 = 340 of the page's 360, 2026-09-26).
-                var row = SettingsRow(page, action.ToString(), name, mark, ref y, 40f);
+                var row = SettingsRow(page, action.ToString(), UIText.T(key), mark, y, pitch, false, null);
+                y += pitch;
+                FitRowName(row, SetCtrlRight - 78f - 16f - 160f);          // the widest cap (EMPTY2, 78) and the hint's room
+                // the book's pages carry their direction as the house's chevron mark (the pixel face has no arrows)
+                if (action == KeyAction.PageBack || action == KeyAction.PageForward)
+                {
+                    float nameW = Mathf.Ceil(row.Name.preferredWidth);
+                    var chev = FieldFill(row.Rt, "Way", SetNameX + nameW + 10f, Mathf.Floor((pitch - 16f) / 4f) * 2f, 16f, 16f, UITheme.Cream[3]);
+                    chev.sprite = ChromeArt.Mark("chevron_left");
+                    if (action == KeyAction.PageForward) chev.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+                    chev.rectTransform.pivot = new Vector2(0.5f, 1f);
+                    chev.rectTransform.anchoredPosition += new Vector2(8f, 0f);
+                }
                 var a = action;
                 // THE CAP (2026-09-15, KeyCaps): the author's drawing of the key the action is on, at 2x, against the
-                // row's right; a key the pack has no cap for gets its word printed on the blank cap.
-                var cap = NewRect("Cap", row);
-                cap.anchorMin = cap.anchorMax = cap.pivot = new Vector2(1, 0.5f);
+                // row's right; a key the pack has no cap for gets its word printed on the blank cap. Click it and the
+                // row listens for the next key - the row lit as pointed, the cap in its pressed frame, PRESS A KEY in cyan.
+                var cap = NewRect("Cap", row.Rt);
+                cap.anchorMin = cap.anchorMax = new Vector2(0f, 1f);
+                cap.pivot = new Vector2(1f, 1f);
                 cap.sizeDelta = new Vector2(34f, CapH);
-                cap.anchoredPosition = Vector2.zero;
+                cap.anchoredPosition = new Vector2(SetCtrlRight, -capTop);
                 var ci = cap.gameObject.AddComponent<Image>();
                 ci.color = Color.white; ci.raycastTarget = true;
                 var btn = cap.gameObject.AddComponent<Button>();
@@ -737,40 +1082,27 @@ namespace LastCall.UI
                 Stretch(word.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, 2f), new Vector2(-4f, 0f));
                 word.horizontalOverflow = HorizontalWrapMode.Overflow;
                 word.text = "";
-                var hint = NewText("Hint", row, _body, 8, TextAnchor.MiddleRight, UITheme.Cyan[4]);
-                Place(hint.rectTransform, new Vector2(1, 0.5f), new Vector2(300, 12), new Vector2(-46f, 0));
-                hint.rectTransform.pivot = new Vector2(1, 0.5f);
+                var hint = NewText("Hint", row.Rt, _body, 8, TextAnchor.MiddleRight, UITheme.Cyan[4]);
+                FieldRect(hint.rectTransform, SetCtrlRight - 34f - 16f - 300f, -1f, 300f, pitch);
                 hint.horizontalOverflow = HorizontalWrapMode.Overflow;
                 hint.text = "";
                 _bindCaps[action] = ci;
                 _bindWords[action] = word;
                 _bindHints[action] = hint;
+                _bindRows[action] = row;
             }
 
             // INVERT POUR (2026-09-26, the author's "ters mouse"): the one axis the mouse has in this game is the
             // pour's lean, read off how far the hand has risen (PourHand) - every other verb follows the pointer
             // where it is, and an inverted pointer would put the bottle on one side of the screen and the hand on
-            // the other. Inverted, the bottle is lifted over the glass upright and LOWERED to tip. Its switch
-            // stands where the caps stand, at the row's right, under the seven keys (the page's new 50 took it).
-            var inv = SettingsRow(page, "INVERT", UIText.T("chrome.settings.invert_pour"), "bottle", ref y, 40f);
-            string invOn = UIText.T("chrome.settings.on"), invOff = UIText.T("chrome.settings.off");
-            var invKey = SwitchKey(inv, "INVERT", new[] { invOff, invOn }, new Vector2(1, 0.5f), Vector2.zero,
-                () => PlayerOptions.InvertPour ? invOn : invOff, () => PlayerOptions.InvertPour,
-                () => PlayerOptions.InvertPour = !PlayerOptions.InvertPour);
-            var invNote = NewText("Note", inv, _body, 8, TextAnchor.MiddleRight, UITheme.Cream[2]);
-            float invRoom = SetW - SetPad * 2f - 300f - invKey.Key.sizeDelta.x - 12f;
-            Place(invNote.rectTransform, new Vector2(1, 0.5f), new Vector2(invRoom, 28f), new Vector2(-(invKey.Key.sizeDelta.x + 12f), 0));
-            invNote.rectTransform.pivot = new Vector2(1, 0.5f);
-            invNote.horizontalOverflow = HorizontalWrapMode.Wrap;
-            invNote.verticalOverflow = VerticalWrapMode.Overflow;
-            invNote.raycastTarget = false;
-            invNote.text = UIText.T("chrome.settings.invert_pour_note");
-
-            var foot = NewText("Hint", page, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[2]);
-            Place(foot.rectTransform, new Vector2(0, 0), new Vector2(640, 12), new Vector2(0, 8f));
-            foot.rectTransform.pivot = new Vector2(0, 0);
-            foot.horizontalOverflow = HorizontalWrapMode.Overflow;
-            foot.text = UIText.T("chrome.settings.controls_hint");
+            // the other. Inverted, the bottle is lifted over the glass upright and LOWERED to tip. A choice now, under
+            // the seven keys; its note is the strip's while the pointer is on it.
+            var inv = SettingsRow(page, "INVERT", UIText.T("chrome.settings.invert_pour"), "bottle", y, pitch, true,
+                () => UIText.T("chrome.settings.invert_pour_note"));
+            string off = UIText.T("chrome.settings.off"), on = UIText.T("chrome.settings.on");
+            float left = ChoiceControl(inv.Rt, "INVERT", new[] { off, on }, ChoiceSeg(new[] { off, on }), SetCtrlRight, ctop,
+                () => PlayerOptions.InvertPour ? 1 : 0, i => PlayerOptions.InvertPour = i == 1);
+            FitRowName(inv, left);
             return page;
         }
 
@@ -802,11 +1134,15 @@ namespace LastCall.UI
             // the pressed frame stands two units lower; the word goes with it
             Stretch(word.rectTransform, Vector2.zero, Vector2.one, new Vector2(4f, pressed ? 0f : 2f), new Vector2(-4f, pressed ? -2f : 0f));
             if (_bindHints.TryGetValue(action, out var hint))
-                hint.rectTransform.anchoredPosition = new Vector2(-(w + 12f), 0);
+            {
+                var hr = hint.rectTransform;
+                hr.anchoredPosition = new Vector2(SetCtrlRight - w - 16f - hr.sizeDelta.x, hr.anchoredPosition.y);
+            }
         }
 
-        /// <summary>Every frame the window is up: the caps follow the keyboard (the real key held → the cap pressed;
-        /// a listening row blinks), and a row that listens takes the next key (Escape cancels).</summary>
+        /// <summary>Every frame the window is up: the caps follow the keyboard (the real key held → the cap pressed; a
+        /// listening row holds its cap pressed - still, not blinking, since 2026-09-29: FLASHES off promises nothing
+        /// blinks), and a row that listens takes the next key (Escape cancels).</summary>
         private void StepSettings()
         {
             if (_settingsPanel == null || !_settingsPanel.gameObject.activeSelf) return;
@@ -814,11 +1150,10 @@ namespace LastCall.UI
             // Alt+Enter with the window up (2026-09-26): the WINDOW and RESOLUTION rows follow the screen.
             if (_settingsPage == "DISPLAY" && _shownWindowed != DisplayOptions.Windowed) RefreshSettings();
             var kb = Keyboard.current;
-            bool blink = ((int)(Time.unscaledTime * 4f) & 1) == 0;
             foreach (var pair in _bindCaps)
             {
                 bool listening = _bindListening == pair.Key;
-                bool down = listening ? blink : kb != null && KeyHeld(kb, Keys.Get(pair.Key));
+                bool down = listening || (kb != null && KeyHeld(kb, Keys.Get(pair.Key)));
                 if (_capDown.TryGetValue(pair.Key, out var was) && was == down) continue;
                 _capDown[pair.Key] = down;
                 PaintCap(pair.Key, down);
@@ -842,69 +1177,99 @@ namespace LastCall.UI
 
         // ── DISPLAY ──────────────────────────────────────────────────────────────────────────────────────────────
 
-        private RectTransform BuildDisplayPage(RectTransform plate)
+        private RectTransform BuildDisplayPage()
         {
-            var page = NewRect("Page_DISPLAY", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
-            float y = 0f;
+            var page = NewSettingsPage("DISPLAY");
+            var (pitch, top) = RowPitch(10, 40f);
+            float ctop = (pitch - SetCtrlH) * 0.5f;
+            float y = top;
+            string T(string k) => UIText.T("chrome.settings." + k);
+
+            // ONE SEGMENT WIDTH FOR THE PAGE (BUILD_SPEC §3): every choice on it is cut to the widest way any of them
+            // offers, so the six wells stand as one column of equal cells.
+            var ways = new[]
+            {
+                new[] { T("window_full"), T("window_windowed") }, new[] { T("full"), T("reduced") },
+                new[] { T("off"), T("on") }, new[] { T("normal"), T("large") },
+                new[] { T("colours_standard"), T("colours_clear") }, new[] { T("off"), T("on") },
+            };
+            var all = new List<string>();
+            foreach (var w in ways) all.AddRange(w);
+            float seg = ChoiceSeg(all);
+
+            SetRow Row(string id, string nameKey, string mark, string noteKey, Func<string> dynamicNote = null)
+            {
+                var r = SettingsRow(page, id, T(nameKey), mark, y, pitch, id == "START OVER",
+                    dynamicNote ?? (noteKey != null ? (Func<string>)(() => T(noteKey)) : null));
+                y += pitch;
+                return r;
+            }
 
             // THE SCREEN (2026-09-26, the author: "display kısmında çözünürlük"). FULLSCREEN is the borderless
             // window at the desktop's size; WINDOWED opens at the largest whole multiple of 640x360 the desktop holds,
             // and those are the only sizes offered - at a whole multiple every stage pixel stays square
             // (DisplayOptions). Applied in a player's build only; the editor remembers the choice and leaves the
             // Game view the suites pin at 1280x720 alone.
-            ChoiceRow(page, "WINDOW", "chrome.settings.window", "win_max", "chrome.settings.window_note", ref y,
-                "chrome.settings.window_full", "chrome.settings.window_windowed",
-                () => DisplayOptions.Windowed, windowed => DisplayOptions.SetWindowed(windowed));
+            var win = Row("WINDOW", "window", "win_max", "window_note");
+            FitRowName(win, ChoiceControl(win.Rt, "WINDOW", ways[0], seg, SetCtrlRight, ctop,
+                () => DisplayOptions.Windowed ? 1 : 0, i => DisplayOptions.SetWindowed(i == 1)));
             var desk = DisplayOptions.Desktop;
             var sizeWords = new List<string> { SizeWord(desk) };
             foreach (var s in WindowChoices()) sizeWords.Add(SizeWord(s));
-            CycleRow(page, "RESOLUTION", "chrome.settings.resolution", "room", ref y, sizeWords,
+            var res = Row("RESOLUTION", "resolution", "room", null,
+                () => T(DisplayOptions.Windowed ? "resolution_note" : "resolution_desktop"));
+            FitRowName(res, CycleControl(res.Rt, "Size", sizeWords, SetCtrlRight, ctop,
                 () => SizeWord(DisplayOptions.Windowed ? DisplayOptions.WindowSize : DisplayOptions.Desktop),
-                () => DisplayOptions.Windowed && WindowChoices().Count > 1, StepWindowSize,
-                () => UIText.T(DisplayOptions.Windowed ? "chrome.settings.resolution_note" : "chrome.settings.resolution_desktop"));
+                () => DisplayOptions.Windowed && WindowChoices().Count > 1, StepWindowSize));
             var rateWords = new List<string>();
             foreach (int cap in DisplayOptions.FrameCaps) rateWords.Add(FrameWord(cap));
-            CycleRow(page, "FRAME RATE", "chrome.settings.frame_rate", "clock", ref y, rateWords,
-                () => FrameWord(PlayerOptions.FrameCap), () => true, StepFrameCap,
-                () => UIText.T("chrome.settings.frame_note"));
+            var rate = Row("FRAME RATE", "frame_rate", "clock", "frame_note");
+            FitRowName(rate, CycleControl(rate.Rt, "Rate", rateWords, SetCtrlRight, ctop,
+                () => FrameWord(PlayerOptions.FrameCap), () => true, StepFrameCap));
 
-            // WHAT MOVES AND WHAT FLASHES. MOTION is the switch the page always had (FULL lit, REDUCED grey).
-            var mot = SettingsRow(page, "MOTION", UIText.T("chrome.settings.motion"), "redo", ref y, DisplayRow);
-            string full = UIText.T("chrome.settings.full"), reduced = UIText.T("chrome.settings.reduced");
-            var motion = SwitchKey(mot, "MOTION", new[] { full, reduced }, new Vector2(0, 0.5f), new Vector2(300f, 0),
-                () => Motion.Reduced ? reduced : full, () => !Motion.Reduced, () => Motion.Reduced = !Motion.Reduced);
-            _settingsMotionKey = motion.Key;
-            _settingsMotion = motion.Label;
-            RowNote(mot, UIText.T("chrome.settings.motion_note"), 300f + motion.Key.sizeDelta.x + 12f);
-            OnOffRow(page, "FLASHES", "chrome.settings.flashes", "flash", "chrome.settings.flashes_note", ref y,
-                () => PlayerOptions.Flashes, on => PlayerOptions.Flashes = on);
+            // WHAT MOVES AND WHAT FLASHES.
+            var mot = Row("MOTION", "motion", "redo", "motion_note");
+            FitRowName(mot, ChoiceControl(mot.Rt, "MOTION", ways[1], seg, SetCtrlRight, ctop,
+                () => Motion.Reduced ? 1 : 0, i => Motion.Reduced = i == 1));
+            var fl = Row("FLASHES", "flashes", "flash", "flashes_note");
+            FitRowName(fl, ChoiceControl(fl.Rt, "FLASHES", ways[2], seg, SetCtrlRight, ctop,
+                () => PlayerOptions.Flashes ? 1 : 0, i => PlayerOptions.Flashes = i == 1));
 
             // THE HAND, THE COLOURS, THE FOCUS.
-            ChoiceRow(page, "POINTER", "chrome.settings.pointer", "rise", "chrome.settings.pointer_note", ref y,
-                "chrome.settings.normal", "chrome.settings.large",
-                () => PlayerOptions.Pointer == PlayerOptions.PointerSize.Large,
-                large => PlayerOptions.Pointer = large ? PlayerOptions.PointerSize.Large : PlayerOptions.PointerSize.Normal);
-            ChoiceRow(page, "COLOURS", "chrome.settings.colours", "mix", "chrome.settings.colours_note", ref y,
-                "chrome.settings.colours_standard", "chrome.settings.colours_clear",
-                () => PlayerOptions.Cues == PlayerOptions.ColourCues.Clear,
-                clear => PlayerOptions.Cues = clear ? PlayerOptions.ColourCues.Clear : PlayerOptions.ColourCues.Standard);
-            OnOffRow(page, "PAUSE AWAY", "chrome.settings.pause_away", "pause", "chrome.settings.pause_away_note", ref y,
-                () => PlayerOptions.PauseWhenAway, on => PlayerOptions.PauseWhenAway = on);
+            var ptr = Row("POINTER", "pointer", "rise", "pointer_note");
+            FitRowName(ptr, ChoiceControl(ptr.Rt, "POINTER", ways[3], seg, SetCtrlRight, ctop,
+                () => PlayerOptions.Pointer == PlayerOptions.PointerSize.Large ? 1 : 0,
+                i => PlayerOptions.Pointer = i == 1 ? PlayerOptions.PointerSize.Large : PlayerOptions.PointerSize.Normal));
+            var col = Row("COLOURS", "colours", "mix", "colours_note");
+            FitRowName(col, ChoiceControl(col.Rt, "COLOURS", ways[4], seg, SetCtrlRight, ctop,
+                () => PlayerOptions.Cues == PlayerOptions.ColourCues.Clear ? 1 : 0,
+                i => PlayerOptions.Cues = i == 1 ? PlayerOptions.ColourCues.Clear : PlayerOptions.ColourCues.Standard));
+            var away = Row("PAUSE AWAY", "pause_away", "pause", "pause_away_note");
+            FitRowName(away, ChoiceControl(away.Rt, "PAUSE AWAY", ways[5], seg, SetCtrlRight, ctop,
+                () => PlayerOptions.PauseWhenAway ? 1 : 0, i => PlayerOptions.PauseWhenAway = i == 1));
 
-            // THE RUN'S OWN VERBS, as before, on the page's pitch.
-            var book = SettingsRow(page, "BOOK", UIText.T("chrome.settings.book"), "cash", ref y, DisplayRow);
-            PackWordKey(book, "OPEN", UIText.T("chrome.settings.open"), "menu", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, CapH), new Vector2(300f, 0),
-                () => { ToggleSettings(); if (Showing(_pausePanel)) TogglePause(); ToggleLedger(); }, 100f, 48f + 16f);
-            var fresh = SettingsRow(page, "START OVER", UIText.T("chrome.settings.start_over"), "moon", ref y, DisplayRow);
-            var newRun = PackWordKey(fresh, "NEW RUN", UIText.T("chrome.settings.new_run"), "restart", MenuPack.Tone.Grey, new Vector2(0, 0.5f), new Vector2(140, CapH), new Vector2(300f, 0), () =>
+            // THE RUN'S OWN VERBS. TONIGHT'S BOOK opens the ledger (dark glass from the front door: there is no night
+            // behind the door to read, and the book would open under it).
+            var book = Row("BOOK", "book", "cash", "book_note");
+            _settingsBookKey = RowWordKey(book.Rt, "OPEN", T("open"), new[] { T("open") }, SetCtrlRight, ctop,
+                () => { ToggleSettings(); if (Showing(_pausePanel)) TogglePause(); ToggleLedger(); });
+            FitRowName(book, SetCtrlRight - ((RectTransform)_settingsBookKey.transform).sizeDelta.x);
+            // START OVER ASKS FIRST (2026-09-29, the critic: it lost its inline warning to the strip, which only shows on
+            // hover, and still threw the night away on one press) - the pause's NEW RUN's two presses: the first says
+            // SURE? PRESS AGAIN round a ViceRed tube, the second deals a fresh bar on a fresh seed and clears the save
+            // (2026-09-26: every player used to restart into the inspector's one run). The key is fitted to the longer
+            // of its two words, so it never grows when it asks. From the front door it is the door's own NEW RUN.
+            var fresh = Row("START OVER", "start_over", "moon", "start_over_note");
+            string ask = UIText.T("chrome.pause.new_run_sure");
+            _settingsStartOver = RowWordKey(fresh.Rt, "NEW RUN", T("new_run"), new[] { T("new_run"), ask }, SetCtrlRight, ctop, () =>
             {
+                bool fromDoor = _settingsFromMenu;
                 ToggleSettings(); if (Showing(_pausePanel)) TogglePause();
-                // A fresh seed and a cleared save (2026-09-26): every player used to restart
-                // into the inspector's one run, and the old save would have outlived the bar.
-                _bootstrap.StartFreshRun(LastCall.Game.SeedPolicy.Next());
-            }, 100f, 48f + 16f);
-            RowNote(fresh, UIText.T("chrome.settings.start_over_note"), 300f + newRun.sizeDelta.x + 12f);
+                if (fromDoor) HideMainMenu();
+                _bootstrap?.StartFreshRun(SeedPolicy.Next());
+            });
+            _settingsStartOver.AskWord = ask;
+            FitRowName(fresh, SetCtrlRight - ((RectTransform)_settingsStartOver.transform).sizeDelta.x);
             return page;
         }
 
@@ -970,178 +1335,223 @@ namespace LastCall.UI
 
         // ── LANGUAGE ─────────────────────────────────────────────────────────────────────────────────────────────
 
-        /// <summary>THE FLAGS (2026-09-15): every language this build has a table for, as its flag on one of the pack's
-        /// plates, eight to a row; the chosen one on the green plate. Under the pointer a flag says its language's
-        /// name; under the grid the chosen language's name and, in that language, that it speaks at the next start.</summary>
-        private RectTransform BuildLanguagePage(RectTransform plate)
-        {
-            var page = NewRect("Page_LANGUAGE", plate);
-            Stretch(page, Vector2.zero, Vector2.one, new Vector2(SetPad, 90f), new Vector2(-SetPad, -(140f + _settingsDrop)));
-            var hint = NewText("Hint", page, _body, 8, TextAnchor.MiddleLeft, UITheme.Cream[3]);
-            Place(hint.rectTransform, new Vector2(0, 1), new Vector2(640, 12), new Vector2(0, -2f));
-            hint.rectTransform.pivot = new Vector2(0, 1);
-            hint.horizontalOverflow = HorizontalWrapMode.Overflow;
-            hint.text = UIText.T("chrome.settings.language_hint");
+        private const float LangCellW = 256f, LangCellH = 36f, LangGapX = 8f, LangGapY = 4f;
+        private const int LangRows = 10;
 
-            const int Cols = 8;
-            const float CellW = 64f, CellH = 49f, GapX = 24f, GapY = 8f;
-            float left = (SetW - SetPad * 2f - (Cols * CellW + (Cols - 1) * GapX)) * 0.5f;
+        /// <summary>
+        /// THE LANGUAGE LIST (2026-09-29, BUILD_SPEC §3 "LANGUAGE"): every language this build has a table for, in
+        /// Languages order, down three columns of ten - each a cell with its flag (the author's, 2026-09-15: "bayrakla
+        /// dil seçimi"; shown 1:1) and its own name in a face that draws it (LanguageFonts.ListFace), so the list is
+        /// readable without a hover tip (the flags' tips drew under the window: read_menus finding 7). The pick wears a
+        /// cyan tube, the cell under the pointer a ClubBlue one, the language spoken now a cyan bead at its right end.
+        /// A name's bracket - BRASIL, ESPAÑA, LATINOAMÉRICA - is the flag's to say (the critic: stacked under the name
+        /// in a 36 cell it touched the rim); the whole name is the strip's while the pointer is on the cell. The tube
+        /// lies UNDER the flag, so its light never washes over the flag (the critic's other catch).
+        /// </summary>
+        private RectTransform BuildLanguagePage()
+        {
+            var page = NewSettingsPage("LANGUAGE");
             var all = Localization.Available;
-            int rows = 0;
-            for (int i = 0; i < all.Count; i++)
+            float y0 = Mathf.Floor((SetPageH - (LangRows * LangCellH + (LangRows - 1) * LangGapY)) / 4f) * 2f;
+            var house = bodyFont != null ? bodyFont : _body;
+            _langCells.Clear();
+            for (int k = 0; k < all.Count; k++)
             {
-                var info = all[i];
+                var info = all[k];
                 string code = info.Code;
-                int r = i / Cols, c = i % Cols;
-                rows = r + 1;
-                var key = NewRect("Flag_" + code, page);
-                key.anchorMin = key.anchorMax = key.pivot = new Vector2(0, 1);
-                key.sizeDelta = new Vector2(CellW, CellH);
-                key.anchoredPosition = new Vector2(left + c * (CellW + GapX), -24f - r * (CellH + GapY));
-                var plateImg = key.gameObject.AddComponent<Image>();
-                plateImg.sprite = MenuPack.Paletted(MenuPack.Tone.Grey, false);
-                plateImg.type = Image.Type.Sliced;
-                plateImg.pixelsPerUnitMultiplier = 0.5f;
-                plateImg.color = Color.white;
-                plateImg.raycastTarget = true;
-                var btn = key.gameObject.AddComponent<Button>();
+                int c = k / LangRows, r = k % LangRows;
+                var rt = NewRect("Lang_" + code, page);
+                FieldRect(rt, 16f + c * (LangCellW + LangGapX), y0 + r * (LangCellH + LangGapY), LangCellW, LangCellH);
+                var plate = rt.gameObject.AddComponent<Image>();
+                plate.sprite = MenuArt.KeyPlate(UITheme.Night[2], UITheme.Graphite[3], UITheme.Graphite[4]);
+                plate.type = Image.Type.Sliced;
+                plate.pixelsPerUnitMultiplier = 0.5f;
+                plate.raycastTarget = true;
+                var btn = rt.gameObject.AddComponent<Button>();
                 btn.transition = Selectable.Transition.None;
-                btn.targetGraphic = plateImg;
+                btn.targetGraphic = plate;
                 btn.onClick.AddListener(() => { Localization.Choose(code); Sfx.Play("click"); RefreshSettings(); });
-                var face = NewRect("Face", key);
-                Stretch(face, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-                var sink = key.gameObject.AddComponent<PressSink>();
-                sink.Face = face; sink.Depth = 2f; sink.Lift = 2f; sink.Squash = 0f; sink.Bloom = 0.03f;
-                var flag = NewRect("Flag", face);
-                Place(flag, new Vector2(0.5f, 0.5f), new Vector2(48, 33), new Vector2(0, 2f));   // on the face's middle, two up (PackWordKey)
-                var fi = flag.gameObject.AddComponent<Image>();
-                fi.sprite = ItemArt.Load("fl_" + LanguageFlag(code));
-                fi.color = Color.white; fi.raycastTarget = false;
-                var pk = key.gameObject.AddComponent<PackKey>();
-                pk.Plate = plateImg;
-                pk.Rest = plateImg.sprite; pk.Lit = MenuPack.Hovered(); pk.Pressed = MenuPack.Paletted(MenuPack.Tone.Grey, true);
-                HoverTip(key, fi.sprite, info.Name, code.ToUpperInvariant());
-                _flagKeys[code] = key;
-            }
-            float captionY = -24f - rows * (CellH + GapY) - 6f;
-            _settingsLanguage = NewText("Name", page, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-            Place(_settingsLanguage.rectTransform, new Vector2(0.5f, 1), new Vector2(640, 20), new Vector2(0, captionY));
-            _settingsLanguage.rectTransform.pivot = new Vector2(0.5f, 1);
-            _settingsLanguage.horizontalOverflow = HorizontalWrapMode.Overflow;
-            _settingsLanguageNote = NewText("LangNote", page, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[2]);
-            Place(_settingsLanguageNote.rectTransform, new Vector2(0.5f, 1), new Vector2(640, 12), new Vector2(0, captionY - 24f));
-            _settingsLanguageNote.rectTransform.pivot = new Vector2(0.5f, 1);
-            _settingsLanguageNote.horizontalOverflow = HorizontalWrapMode.Overflow;
-            // APPLY (2026-09-16, the author: "dil seçildikten sonra uygula dendiğinde oyunun dili direkt değişmeli"):
-            // shown once a different language is picked; the scene rebuilds around the same run in the new words.
-            // IN THE PAGE'S LOWER RIGHT CORNER (2026-09-25): under the note it stood at -302..-342 on a page 310 tall -
-            // over the window's foot and, in the editor, over DEV TOOLS. The corner is clear of the centred name and
-            // note (the longest note is about 230 units across the middle).
-            _settingsApplyLanguage = PackWordKey(page, "APPLY", UIText.T("chrome.settings.apply_language"), "restart", MenuPack.Tone.Green,
-                new Vector2(1f, 0f), new Vector2(180, 40), Vector2.zero, () =>
+
+                var cell = new LangCell { Code = code, Name = (info.Name ?? code).ToUpperInvariant() };
+                int tw = Mathf.RoundToInt(LangCellW / 2f), th = Mathf.RoundToInt(LangCellH / 2f);
+                cell.Tube = new NeonTube(rt, "Tube", l => ChromeArt.NeonPath(tw, th, 1, 0, l),
+                    new Vector2((tw + 2 * ChromeArt.NeonPad) * 2f, (th + 2 * ChromeArt.NeonPad) * 2f), new Vector2(0.5f, 0.5f), Vector2.zero);
+                cell.Tube.Visible = false;
+                var flag = FieldFill(rt, "Flag", 4f, 2f, 48f, 33f, Color.white);
+                flag.sprite = ItemArt.Load("fl_" + LanguageFlag(code));
+                UiAuditExempt.Mark(flag, "a language's flag, the author's 48x33 drawing shown 1:1");
+
+                string main = cell.Name;
+                int bracket = main.IndexOf('(');
+                if (bracket > 0) main = main.Substring(0, bracket).Trim();
+                var (face, size) = LanguageFonts.ListFace(code, cell.Name, house, 16);
+                cell.Word = NewText("Name", rt, face, 16, TextAnchor.MiddleLeft, UITheme.Cream[4]);
+                cell.Word.font = face;
+                cell.Word.fontSize = size;
+                // the name from 58 (six past the flag) to 18 short of the cell's end, where the bead's glass stands:
+                // BAHASA INDONESIA, the longest, is 176 of its 180 (settings_fit, 2026-09-29)
+                const float NameX = 58f, NameW = LangCellW - NameX - 18f;
+                FieldRect(cell.Word.rectTransform, NameX, -1f, NameW, LangCellH);
+                cell.Word.horizontalOverflow = HorizontalWrapMode.Overflow;
+                cell.Word.text = main;
+                if (cell.Word.preferredWidth > NameW) cell.Word.fontSize = LanguageFonts.Size(face, 8);
+
+                cell.Bead = new NeonTube(rt, "Now", MenuArt.Bead, new Vector2((1 + 2 * ChromeArt.NeonPad) * 2f, (1 + 2 * ChromeArt.NeonPad) * 2f),
+                    new Vector2(0f, 1f), new Vector2(LangCellW - 12f, -(LangCellH * 0.5f - 1f)));   // its glass 243..245
+                cell.Bead.Show(NeonIcons.State.Lit, UITheme.Cyan, true);
+                cell.Bead.Visible = false;
+
+                var relay = rt.gameObject.AddComponent<HoverRelay>();
+                relay.Entered = () => { cell.Over = true; _noteCell = cell; SettingsTick(); PaintLangCell(cell); PaintSettingsNote(); };
+                relay.Exited = () =>
                 {
-                    string pick = Localization.PreferredCode();
-                    if (pick == Localization.Current.Code || _bootstrap == null) return;
-                    Sfx.Play("click");
-                    Localization.UseForSession(pick);
-                    _bootstrap.ReloadKeepingRun();
-                }, 140f, 48f + 24f);
-            _settingsApplyLanguage.gameObject.SetActive(false);
+                    cell.Over = false; PaintLangCell(cell);
+                    if (_noteCell == cell) { _noteCell = null; PaintSettingsNote(); }
+                };
+                _langCells.Add(cell);
+            }
             return page;
+        }
+
+        private void PaintLangCell(LangCell cell)
+        {
+            string pick = Localization.PreferredCode();
+            bool picked = cell.Code == pick;
+            if (picked) { cell.Tube.Visible = true; cell.Tube.Show(NeonIcons.State.Lit, UITheme.Cyan, true); }
+            else if (cell.Over) { cell.Tube.Visible = true; cell.Tube.Show(NeonIcons.State.Lit, UITheme.ClubBlue, true); }
+            else cell.Tube.Visible = false;
+            cell.Word.color = picked ? UITheme.Cyan[4] : UITheme.Cream[4];
+            cell.Bead.Visible = cell.Code == Localization.Current.Code;
+        }
+
+        // ── the strip ────────────────────────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// THE STRIP (BUILD_SPEC §2 "Note strip"): the pointed row's note, the pointed language's whole name in its own
+        /// face, else the page's hint - AUDIO: which list the song is on and its place in it; CONTROLS: how a key is
+        /// bound; LANGUAGE: the hint, or - once a different language is picked - in THAT language and its face, that
+        /// APPLY switches the bar at once (the proof it took).
+        /// </summary>
+        private void PaintSettingsNote()
+        {
+            if (_settingsNote == null) return;
+            var house = bodyFont != null ? bodyFont : _body;
+            Font font = _body;
+            string text = "";
+            if (_settingsPage == "LANGUAGE" && _noteCell != null)
+            {
+                var (face, _) = LanguageFonts.ListFace(_noteCell.Code, _noteCell.Name, house, 8);
+                font = face;
+                text = _noteCell.Name;
+            }
+            else if (_noteRow != null && _noteRow.Note != null && _noteRow.Rt.gameObject.activeInHierarchy)
+                text = _noteRow.Note() ?? "";
+            if (string.IsNullOrEmpty(text) && _noteCell == null)
+            {
+                switch (_settingsPage)
+                {
+                    case "AUDIO":
+                    {
+                        string now = Sfx.NowPlaying;
+                        var (at, of) = Sfx.NowPlayingPlace;
+                        int cut = now == null ? -1 : now.LastIndexOf('_');
+                        string mood = now == null ? "" : cut < 0 ? now : now.Substring(0, cut);
+                        text = of == 0 ? "" : UIText.T("build.player.place", ("mood", MoodWord(mood)), ("at", at), ("of", of));
+                        break;
+                    }
+                    case "CONTROLS":
+                        text = UIText.T("chrome.settings.controls_hint");
+                        break;
+                    case "LANGUAGE":
+                    {
+                        string pick = Localization.PreferredCode();
+                        if (pick != Localization.Current.Code)
+                        {
+                            if (_languageNoteCode != pick)
+                            {
+                                _languageNoteCode = pick;
+                                _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note_now");
+                            }
+                            text = _languageNoteText;
+                            font = LanguageFonts.BodyFor(pick, house);
+                        }
+                        else text = UIText.T("chrome.settings.language_hint");
+                        break;
+                    }
+                }
+            }
+            if (_settingsNote.font != font) _settingsNote.font = font;
+            _settingsNote.fontSize = LanguageFonts.Size(font, 8);
+            _settingsNote.text = text;
         }
 
         // ── refresh ──────────────────────────────────────────────────────────────────────────────────────────────
 
         private void RefreshSettings()
         {
-            if (_settingsVolume == null) return;
-            PaintMeter(_settingsMeter, Sound.Volume, _settingsVolume);
-            PaintMeter(_settingsMusicMeter, Sound.MusicVolume, _settingsMusicPct);
-            PaintMeter(_settingsEffectsMeter, Sound.EffectsVolume, _settingsEffectsPct);
-            _settingsMute.text = Sound.Muted ? UIText.T("chrome.settings.off") : UIText.T("chrome.settings.on");
-            if (_settingsMuteKey != null)
-                ReiconKey(_settingsMuteKey, Sound.Muted ? MenuPack.Tone.Grey : MenuPack.Tone.Green, Sound.Muted ? "sound_off" : "sound_on");
-            // The switches and the cycles (2026-09-26): each says its option's state, a switch lit while its option
-            // is on; a cycle with nothing to choose (the window's size in fullscreen) greys, and its keys sleep.
-            _shownWindowed = DisplayOptions.Windowed;
-            foreach (var sw in _settingSwitches)
+            if (_settingsNote == null) return;
+            for (int i = 0; i < _setMeters.Count; i++)
             {
-                sw.Label.text = sw.Word();
-                RetoneWordKey(sw.Key, sw.Lit() ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
+                float level = _meterLevels[i]();
+                PaintMeterTube(_setMeters[i], level, Sound.Muted);
+                var value = _setMeters[i].Value;
+                if (value == null) continue;
+                // muted, the tubes go dark and the levels - kept for when the sound comes back - read in Cream[2]. Not the
+                // word OFF the spec drew: it is 68-102 units in eight languages (DESLIGADO, WYŁĄCZONY, ИЗКЛЮЧЕН) and the
+                // level's box is 64 (settings_fit, 2026-09-29); SOUND's own choice already says OFF.
+                value.text = UIText.T("chrome.settings.volume_value", ("pct", Mathf.RoundToInt(level * 100)));
+                value.color = Sound.Muted ? UITheme.Cream[2] : UITheme.Cyan[4];
             }
-            foreach (var cycle in _settingCycles)
+            _shownWindowed = DisplayOptions.Windowed;
+            foreach (var choice in _setChoices) choice.Paint();
+            foreach (var cycle in _setCycles)
             {
                 bool live = cycle.Live();
                 cycle.Value.text = cycle.Word();
-                cycle.Value.color = live ? UITheme.Cream[4] : UITheme.Cream[2];
-                if (cycle.Note != null) cycle.Note.text = cycle.NoteWord != null ? cycle.NoteWord() : "";
+                cycle.Value.color = live ? UITheme.Cyan[4] : UITheme.Cream[2];
                 foreach (var key in new[] { cycle.Prev, cycle.Next })
-                {
-                    var group = key.GetComponent<CanvasGroup>();          // (not ??: Unity's missing component is a fake null)
-                    if (group == null) group = key.gameObject.AddComponent<CanvasGroup>();
-                    group.alpha = live ? 1f : 0.35f;
-                    group.blocksRaycasts = live;
-                    group.interactable = live;
-                }
+                    if (key.Button.interactable != live) { key.Button.interactable = live; key.Apply(); }
             }
             if (_settingsNowTitle != null)
             {
                 string now = Sfx.NowPlaying;
+                _shownSong = now;
                 _settingsNowTitle.text = SongTitle(now);
-                var (at, of) = Sfx.NowPlayingPlace;
-                string mood = now == null ? "" : now.Substring(0, now.LastIndexOf('_') < 0 ? now.Length : now.LastIndexOf('_'));
-                _settingsNowPlace.text = of == 0 ? "" : UIText.T("build.player.place", ("mood", MoodWord(mood)), ("at", at), ("of", of));
-                if (_settingsHoldKey != null) ReiconKey(_settingsHoldKey, MenuPack.Tone.Grey, Sfx.MusicPaused ? "play" : "pause");
+                _settingsNowTitle.fontSize = LanguageFonts.Size(_settingsNowTitle.font, 16);
+                if (_settingsNowTitle.preferredWidth > SongWellW - 54f)
+                    _settingsNowTitle.fontSize = LanguageFonts.Size(_settingsNowTitle.font, 8);
+                if (_settingsHoldKey != null)
+                {
+                    // the hold key says what it will do: hold the record while it plays, play it while it is held
+                    var want = Sfx.MusicPaused ? _playMark : _holdMark;
+                    if (_settingsHoldKey.Icon != want)
+                    {
+                        _settingsHoldKey.Icon.Visible = false;
+                        _settingsHoldKey.Icon = want;
+                        want.Visible = true;
+                        _settingsHoldKey.Apply();
+                    }
+                }
                 foreach (var pair in _songRows) pair.Value.color = pair.Key == now ? UITheme.Cyan[4] : UITheme.Cream[4];
                 PaintSeek(Sfx.MusicProgress);
             }
             _capDown.Clear();
             foreach (var pair in _bindHints)
             {
-                PaintCap(pair.Key, false);
-                pair.Value.text = _bindListening == pair.Key ? UIText.T("chrome.settings.press_key") : "";
+                bool listening = _bindListening == pair.Key;
+                PaintCap(pair.Key, listening);
+                pair.Value.text = listening ? UIText.T("chrome.settings.press_key") : "";
+                if (_bindRows.TryGetValue(pair.Key, out var row) && row.Held != listening) { row.Held = listening; row.Paint(); }
             }
-            if (_settingsLanguage != null)
+            if (_settingsBookKey != null && _settingsBookKey.Button.interactable == _settingsFromMenu)
             {
-                string pick = Localization.PreferredCode();
-                var info = Languages.Find(pick);
-                bool applyUp = pick != Localization.Current.Code;
-                if (_settingsApplyLanguage != null) _settingsApplyLanguage.gameObject.SetActive(applyUp);
-                // While APPLY stands in the page's corner the name and the note are centred in what the page leaves
-                // beside it (2026-09-26: the longest notes - Ukrainian, Greek, Hungarian in their own faces - ran up
-                // to 370 units across the middle and onto the key); without it they are centred on the page.
-                float beside = applyUp && _settingsApplyLanguage != null ? _settingsApplyLanguage.sizeDelta.x + 16f : 0f;
-                foreach (var line in new[] { _settingsLanguage, _settingsLanguageNote })
-                    if (line != null)
-                        line.rectTransform.anchoredPosition = new Vector2(-Mathf.Round(beside * 0.5f), line.rectTransform.anchoredPosition.y);
-                _settingsLanguage.text = info != null ? info.Name : pick;
-                foreach (var pair in _flagKeys)
-                    RetoneWordKey(pair.Value, pair.Key == pick ? MenuPack.Tone.Green : MenuPack.Tone.Grey);
-                // The note is said in the language just PICKED, not the one on screen: a player who
-                // chose Deutsch reads, in German, that it comes at the next start — the proof it took.
-                if (_settingsLanguageNote != null)
-                {
-                    if (pick == Localization.Current.Code) _settingsLanguageNote.text = "";
-                    else
-                    {
-                        if (_languageNoteCode != pick)
-                        {
-                            _languageNoteCode = pick;
-                            _languageNoteText = Localization.Load(pick).Get("chrome.settings.language_note_now");
-                        }
-                        _settingsLanguageNote.text = _languageNoteText;
-                    }
-                }
+                _settingsBookKey.Button.interactable = !_settingsFromMenu;
+                _settingsBookKey.Apply();
             }
-        }
-
-        private static void PaintMeter(Image[] cells, float level, Text pct)
-        {
-            if (cells != null)
-                for (int i = 0; i < cells.Length; i++)
-                    if (cells[i] != null)
-                        cells[i].color = !Sound.Muted && level + 1e-3f >= (i + 1) / 10f ? UITheme.Cyan[3] : UITheme.Night[3];
-            if (pct != null) pct.text = UIText.T("chrome.settings.volume_value", ("pct", Mathf.RoundToInt(level * 100)));
+            string pick = Localization.PreferredCode();
+            foreach (var cell in _langCells) PaintLangCell(cell);
+            LaySettingsFoot(pick != Localization.Current.Code);
+            PaintSettingsNote();
         }
     }
 }

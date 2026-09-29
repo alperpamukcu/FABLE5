@@ -104,12 +104,12 @@
     {
       "key": "build.player.tip_title",
       "text": "MUSIC",
-      "note": "Title of the hover tip over the top bar's music player. 8px display face, ~12 characters."
+      "note": "Not shown any more (2026-09-28): the top bar's jukebox key it titled is gone - the music is on its keys and in Settings > AUDIO. Kept so the tables stay whole; it needs no revision."
     },
     {
       "key": "build.player.tip_line",
       "text": "{song} · {at} OF {of} · PREVIOUS · PAUSE · NEXT",
-      "note": "Line under the music player's hover tip title: the song and what the three keys do. {song} = the song's title in capitals, {at}/{of} = digits. One line, 8px body face, ~48 characters."
+      "note": "Not shown any more (2026-09-28): the top bar's music player it described became a jukebox key, and that left the bar the same day. Kept so the tables stay whole; it needs no revision."
     },
     {
       "key": "chrome.pause.title",
@@ -145,6 +145,11 @@
       "key": "chrome.pause.new_run",
       "text": "NEW RUN",
       "note": "Caption on the pause menu's key that throws the run away and starts day 1 again. ~14 characters."
+    },
+    {
+      "key": "chrome.pause.new_run_sure",
+      "text": "SURE? PRESS AGAIN",
+      "note": "The question a key asks after its FIRST press, before it throws the run away (pause menu NEW RUN; later the settings' START OVER): it replaces the key's word for about 2.5 seconds, and a second press confirms. One line, 16px body face on a 384-wide key with a 42px icon at its left, so up to ~20 characters stay at 16 (English 17); longer steps down to the 8px face automatically - German 'SICHER? NOCHMAL DRÜCKEN' (23) still fits at 16 in the pause key but not in a narrower one. Keep it a short question plus the instruction; no full stop."
     },
     {
       "key": "chrome.pause.quit",

@@ -176,7 +176,8 @@ namespace LastCall.PlayTests
             while (GameObject.Find("MainMenu/Column") == null && Time.realtimeSinceStartup < offered)
                 yield return null;
             Assert.That(GameObject.Find("MainMenu/Column"), Is.Not.Null, "the door never opened");
-            // the curtain under the field lifts on its own paced clock; let it finish first
+            // let the door's own entrance settle first (the boot no longer runs a phantom curtain under it since
+            // 2026-09-28; 1.2 s would still cover the longest night sign, 8.6 s = 1.075 s at the suite's pace of 8)
             yield return new WaitForSecondsRealtime(1.2f);
             try { yield return LooksTheSame("menu", new RectInt(410, 120, 460, 500)); }
             finally { LastCall.Game.PlayerOptions.ReducedMotion = false; }

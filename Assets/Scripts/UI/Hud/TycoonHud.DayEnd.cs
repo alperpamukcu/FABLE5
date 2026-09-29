@@ -148,11 +148,22 @@ namespace LastCall.UI
             }
         }
 
+        /// <summary>THE BILL'S STAR IS A GLOCKENSPIEL, AND IT CLIMBS (2026-09-28, the author:
+        /// "Fatura yıldızı Glockenspiel"). The stars rang star_earn, a 1.74 s sax jingle, once
+        /// each and 0.42 s apart, so by the fifth star four jingles were sounding over one
+        /// another. bill_star is one 0.34 s glockenspiel ding (Freesound 858638, CC0, its B♭
+        /// taken an octave down), and it is gone before the next star starts. Each star rings
+        /// it one step further up a major pentatonic (B♭ C D F G), so a five-star night is
+        /// heard as a figure that arrives and a two-star night as one that stops short.
+        /// star_earn stays with the ladder and the achievement card.</summary>
+        private static readonly int[] StarSemis = { 0, 2, 4, 7, 9 };
+
         private void StepStarDrop()
         {
             if (_starT < 0f || _billStars.Count == 0) return;
             _starT += Time.unscaledDeltaTime * LastCall.Game.Ceremony.Pace;
             bool running = false;
+            int rang = -1;      // the highest star that touched the paper this frame
             for (int i = 0; i < _billStars.Count; i++)
             {
                 var star = _billStars[i];
@@ -195,9 +206,18 @@ namespace LastCall.UI
                 // star is visibly on the paper from that moment, while the tween does not
                 // finish until 1.0. Firing at the end put the tremor two thirds of a beat
                 // after the impact it was meant to be.
-                if (i >= _landed && k >= Contact) { _landed = i + 1; _billShake = 1f;
-                    Sfx.Play("star_earn", 0.85f); }
+                if (i >= _landed && k >= Contact) { _landed = i + 1; _billShake = 1f; rang = i; }
             }
+            // ONE STAR SOUND A FRAME (2026-09-28). A click to skip lands every star still in
+            // the air on the same frame (NightShow sets _starT past the run), and this loop
+            // played the cue once for each of them: up to five copies starting on the same
+            // frame at five slightly different pitches, so the skip's "one sound, one shake"
+            // came out as five jingles piled into one smeared, loud chord. The frame rings
+            // once now, on the highest star it landed, so a skipped run ends on the same
+            // note as a watched one.
+            if (rang >= 0)
+                Sfx.Play("bill_star", 0.85f,
+                         Mathf.Pow(2f, StarSemis[Mathf.Min(rang, StarSemis.Length - 1)] / 12f));
             if (!running)
             {
                 foreach (var s in _billStars)
@@ -343,6 +363,17 @@ namespace LastCall.UI
             if (_slideOut && _slideRt != null && _slideRt == _dayEndTablet) return;
             if (_dayEndStep == 0)
             {
+                // LOCK UP (2026-09-28, the game over): the night that shuts the bar does not open a market it cannot
+                // shop in, nor ask whether the van really is to stay empty - it goes straight to the dawn. Asked of Core
+                // again at the press, not only of what the show was told: ContinueToNextDay is still the one call that
+                // files the night, reports the lost bar and closes the run, and OnOpenTomorrow raises the game over
+                // behind it (TycoonHud.GameOver). A night Core no longer calls fatal takes the market, as any night does.
+                if (_fatalNight && Run != null && Run.ClosesAtDawn)
+                {
+                    Sfx.Play("key_press", 0.6f);
+                    OnOpenTomorrow();
+                    return;
+                }
                 _dayEndStep = 1;
                 Sfx.Play("key_press", 0.6f);
                 // THE SLIP GOES AND THE VAN ARRIVES: the bill leaves to the left, the
@@ -576,7 +607,12 @@ namespace LastCall.UI
             // show and by every rebuild, so a rebuild can neither offer the key early nor take it away again.
             ShowWayOn();
             _dayEndTitle.text = UIText.T("dayend.market.title");
-            if (_billNextLabel != null) _billNextLabel.text = UIText.T("dayend.bill.next");
+            // The way on keeps the word it was dressed in (2026-09-28): ShowDayEnd rebuilds straight after the sheet
+            // dresses the key, so a plain CONTINUE written here put that word back on the padlock and the ember plate
+            // on the night that shuts the bar. DressBillNext owns the plate and the glyph; this only re-reads the word
+            // in the language being spoken, from the same answer.
+            if (_billNextLabel != null)
+                _billNextLabel.text = UIText.T(_fatalNight ? "dayend.bill.lock_up" : "dayend.bill.next");
             // NO TITLE OVER THE NIGHT (2026-08-11, the author: take the yellow LAST CALL — THE BOOKS off the top). The
             // tape says MALIBU CLUB across its own head in its own ink; the market keeps its line, because the tablet
             // does not name itself.

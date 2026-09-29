@@ -136,9 +136,16 @@ namespace LastCall.Game
         /// reload) — the front door must not reappear over a night in progress.</summary>
         public bool ResumedAcrossReload { get; private set; }
 
+        /// <summary>The reload was asked for FROM the front door (its settings' LANGUAGE → APPLY, 2026-09-29): the door
+        /// comes back over the run handed across, the way it stood before the reload, instead of the player landing in a
+        /// bar they never chose (read_menus finding 2).</summary>
+        public bool DoorAcrossReload { get; private set; }
+
         private void Start()
         {
             ResumedAcrossReload = s_handoff != null;
+            DoorAcrossReload = s_handoff != null && s_handoffDoor;
+            s_handoffDoor = false;
             StartNewRun(seed);
             if (s_handoff != null)
             {
@@ -157,11 +164,15 @@ namespace LastCall.Game
         // so the night goes on exactly where it was, in the new words.
         private static TycoonRun s_handoff;
         private static string s_handoffSeed;
+        private static bool s_handoffDoor;
 
-        public void ReloadKeepingRun()
+        /// <param name="backToTheDoor">The front door was up (its settings asked for the reload): it is offered again
+        /// over the same run (<see cref="DoorAcrossReload"/>).</param>
+        public void ReloadKeepingRun(bool backToTheDoor = false)
         {
             s_handoff = Tycoon;
             s_handoffSeed = CurrentSeed;
+            s_handoffDoor = backToTheDoor;
             Time.timeScale = 1f;   // the menu that asked for this had stopped the clock
             var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
             UnityEngine.SceneManagement.SceneManager.LoadScene(scene.name);

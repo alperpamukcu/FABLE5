@@ -1120,6 +1120,140 @@ namespace LastCall.PlayTests
             }
         }
 
+        /// <summary>
+        /// A BAR THAT GOES UNDER PRINTS ITS BOOKS AND WALKS TO THE FRONT DOOR (2026-09-28, the game over). Nights are
+        /// closed empty (DevSkipToDayEnd: nobody served, rent and walk-outs billed) until one ends the bar - about the
+        /// fourth. Every night Core does not call fatal (TycoonRun.ClosesAtDawn) still says CONTINUE and walks the
+        /// market the way a player leaves it empty-handed (the key, then OPEN ANYWAY); the night it does says LOCK UP,
+        /// and its press goes straight to the dawn - the basket never comes up. Then the game over's one key is up and
+        /// armed, the run is Closed, its report's NIGHTS OPEN is the run's own night count, and the key walks to the
+        /// front door: CONTINUE greyed (the save went with the bar), NEW RUN a fresh bar with the game over gone.
+        ///
+        /// Asserted on Core and on what the screen names, never on the game over's fields. Its beats run at the suite's
+        /// pace, so the key is up in about a second; the ten here are for a slow first press.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator A_bar_that_goes_under_prints_its_books_and_walks_to_the_front_door()
+        {
+            yield return OpenTheBar();
+            var run = _boot.Tycoon;
+
+            bool lockedUp = false;
+            for (int night = 0; night < 8 && !lockedUp; night++)
+            {
+                run.DevSkipToDayEnd();
+                RectTransform next = null;
+                float deadline = Time.realtimeSinceStartup + 25f;
+                while (Time.realtimeSinceStartup < deadline)
+                {
+                    next = Find("BillNext");
+                    if (next != null && next.gameObject.activeInHierarchy) break;
+                    next = null;
+                    yield return null;
+                }
+                Assert.That(next, Is.Not.Null, "night " + run.Day + "'s tape never offered a way on");
+                var label = next.Find("Face/Label").GetComponent<Text>();
+
+                if (!run.ClosesAtDawn)
+                {
+                    Assert.That(label.text, Is.EqualTo("CONTINUE"),
+                        "night " + run.Day + " does not shut the bar and its way on does not go on to the market");
+                    yield return OpenTheMarket();
+                    // ...and out of it empty-handed, the way the question asks: the market's key, then OPEN ANYWAY
+                    yield return ClickOn(Find("OpenTomorrow"));
+                    yield return new WaitForSecondsRealtime(0.4f);
+                    var ask = Find("ClosingAsk");
+                    Assert.That(ask != null && ask.gameObject.activeInHierarchy, Is.True,
+                        "night " + run.Day + " left an empty-handed market without asking");
+                    var anyway = ask.Find("Card/Anyway") as RectTransform;
+                    Assert.That(anyway, Is.Not.Null, "the closing question has no OPEN ANYWAY");
+                    yield return PressCentre(anyway);
+
+                    // the next night is open when its clock runs (OpenTheBar's own rule), heard out as a player must
+                    int leaving = run.Day;
+                    float open = Time.realtimeSinceStartup + 20f;
+                    while ((run.Day == leaving || run.Phase != TycoonPhase.DayOpen || run.Floor.Elapsed <= 0)
+                           && Time.realtimeSinceStartup < open)
+                    {
+                        if (run.Talking) yield return LetTheHostFinish();
+                        yield return null;
+                    }
+                    Assert.That(run.Phase, Is.EqualTo(TycoonPhase.DayOpen),
+                        "the market was left and night " + (leaving + 1) + " never opened");
+                    yield return WaitFrames(2);
+                    continue;
+                }
+
+                Assert.That(label.text, Is.EqualTo("LOCK UP"),
+                    "night " + run.Day + " shuts the bar and its way on still offers to go on");
+                SuiteClock.Mark("nights " + run.Day);
+                yield return ClickOn(next);
+                lockedUp = true;
+            }
+            Assert.That(lockedUp, Is.True, "eight empty nights and the bar never went under (day " + run.Day
+                + ", till " + run.Money + ", strikes " + run.Ledger.DebtStrikes + ")");
+
+            // THE GAME OVER, up and armed - and no market on the way to it
+            GameObject key = null;
+            float up = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < up)
+            {
+                var basket = Find("Basket");
+                Assert.That(basket == null || !basket.gameObject.activeInHierarchy, Is.True,
+                    "LOCK UP opened the market on a bar that had gone under");
+                key = GameObject.Find("GameOver/MAIN MENU");
+                if (key != null && key.GetComponent<Button>().IsInteractable()) break;
+                key = null;
+                yield return null;
+            }
+            Assert.That(key, Is.Not.Null, "the game over never offered its key to the front door");
+            SuiteClock.Mark("gameover");
+            Assert.That(run.Phase, Is.EqualTo(TycoonPhase.Closed), "the bar was locked up and the run is not closed");
+            var nights = Find("Row.nights", Find("GameOver"));
+            Assert.That(nights, Is.Not.Null, "the Z report has no NIGHTS OPEN row");
+            var figure = nights.Find("V");
+            Assert.That(figure != null ? figure.GetComponent<Text>().text : null, Is.EqualTo(run.Day.ToString()),
+                "NIGHTS OPEN is not the nights the bar stayed open");
+
+            // THE FRONT DOOR: over the game over, with CONTINUE greyed. Only that - the suite keeps no save
+            // (SaveStore.DisableForSession), so a dimmed CONTINUE here cannot say whether the save closed with the bar;
+            // the dawn that shuts it writing no save is Core's and held by BillAtCloseTests.
+            yield return PressCentre((RectTransform)key.transform);
+            GameObject column = null;
+            float door = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < door)
+            {
+                column = GameObject.Find("MainMenu/Column");
+                if (column != null) break;
+                yield return null;
+            }
+            Assert.That(column, Is.Not.Null, "MAIN MENU never opened the front door");
+            SuiteClock.Mark("menu");
+            var resume = GameObject.Find("MainMenu/Column/CONTINUE");
+            Assert.That(resume, Is.Not.Null, "the front door has no CONTINUE");
+            Assert.That(resume.GetComponent<Button>().interactable, Is.False,
+                "the front door came up over the game over with CONTINUE lit");
+
+            // ...and NEW RUN is a fresh bar, with the last one's end put away
+            yield return WalkThroughTheFrontDoor();
+            float fresh = Time.realtimeSinceStartup + 10f;
+            while ((_boot.Tycoon == run || _boot.Tycoon.Day != 1) && Time.realtimeSinceStartup < fresh) yield return null;
+            Assert.That(_boot.Tycoon, Is.Not.SameAs(run), "NEW RUN did not start a new bar");
+            Assert.That(_boot.Tycoon.Day, Is.EqualTo(1), "the new bar did not open on its first night");
+            var over = Find("GameOver");
+            Assert.That(over == null || !over.gameObject.activeInHierarchy, Is.True,
+                "the last bar's game over is still up over the new one");
+        }
+
+        /// <summary>A press on the middle of a rect, wherever its pivot is: the game over's key and the closing
+        /// question's keys are hung by an edge, so their position is not where a hand aims (PressHostKey's rule).</summary>
+        private IEnumerator PressCentre(RectTransform rt)
+        {
+            Assert.That(rt, Is.Not.Null, "there is nothing there to press");
+            var centre = RectTransformUtility.WorldToScreenPoint(null, rt.TransformPoint(rt.rect.center));
+            yield return ClickOn(rt, centre - ScreenPointOf(rt));
+        }
+
         /// <summary>The digits a tape row prints (its Text named V), or 0 for a row that prints none.</summary>
         private static int FigureOf(Transform row)
         {

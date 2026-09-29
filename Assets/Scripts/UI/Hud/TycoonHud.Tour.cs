@@ -236,19 +236,15 @@ namespace LastCall.UI
             {
                 // The beam's pieces are asked for by NAME where the bar is still being redrawn (the bill and the music
                 // come and go with its passes), and fall back to what always stands there.
+                // THE BEAM WENT SIMPLE (2026-09-28, the bar's second pass: "sadeleştirelim ... butonları kaldır sadece
+                // yıldız gözüksün"): the clock, the money and the stars. The bill rides the money's hover card and the
+                // house's hearts and medals the stars' card; the keys left the bar (settings are Escape's).
                 case "clock": return RectOf(_hourWell, out rect);
-                case "till": return RectOf(_tillWell, out rect);
-                case "bill": return RectOf(OnTheBeam("Bill") ?? _tillWell, out rect);
-                case "stars": return RectOf(_rateStars, out rect);
-                case "house": return RectOf(_rateHouse, out rect);
-                case "corner":
-                {
-                    var music = OnTheBeam("JUKEBOX") ?? OnTheBeam("Player");
-                    if (!RectOf(music, out Rect a) || !RectOf(_cogKeyRt, out Rect b)) return RectOf(_cogKeyRt, out rect);
-                    rect = Rect.MinMaxRect(Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin),
-                        Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax));
-                    return true;
-                }
+                case "till":
+                case "bill": return RectOf(_moneyWell, out rect);
+                case "stars":
+                case "house": return RectOf(_starsWell, out rect);
+                case "corner": return false;
                 case "stool":
                 case "guest": return seat != null && seat.Visit != null && RectOf(seat.Root, out rect);
                 case "patience": return seat != null && seat.Visit != null && RectOf(seat.Gauge, out rect);

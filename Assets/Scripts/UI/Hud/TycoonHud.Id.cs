@@ -150,7 +150,10 @@ namespace LastCall.UI
             // the floor talking over a thing that covers the floor.
             return Showing(_idRoot) || Showing(_bookPanel) || Showing(_settingsPanel)
                 || Showing(_guidePanel) || Showing(_devPanel) || Showing(_ledgerPanel)
-                || Showing(_dayEndPanel) || Showing(_pausePanel);
+                || Showing(_dayEndPanel) || Showing(_pausePanel)
+                // the game over (2026-09-28) is the whole screen: no tip over it, and no hotkey - the music's included -
+                // reaches past it
+                || Showing(_gameOverPanel);
         }
 
         /// <summary>

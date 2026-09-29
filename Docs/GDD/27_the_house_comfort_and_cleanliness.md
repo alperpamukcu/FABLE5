@@ -400,6 +400,11 @@ crosses the line inside a tick pays only for the part past it.
   16 px medallions filled to `ComfortNow` — standing LEFT of the star row on its own line, in the
   empty beam between the week strip and the standing block. Measured in play (PLAN H4), not
   assumed.
+  *(Superseded 2026-09-28, the top bar's second pass - the author: "sadece yıldız gözüksün konfor ve servis
+  yıldızın üstünde hover ile gözüksün": the two strips are no longer on the beam. The bar carries the star row
+  alone; the strips, still with no number, hang on a small card under the stars while the pointer is on them,
+  COMFORT first, each with its caption and a line that tonight's stars are the lower of the two. GDD_MEVCUT
+  §9.107.)*
 
 ## 5. The market reads as an upgrade screen
 
@@ -437,7 +442,8 @@ gibi olmalı."* The ladder machinery is built; what changes is the shop window.
 ## 6. Where the two ratings show
 
 - **Top bar** (the shift): stars = the standing, as now, nothing else on the block; the two icon
-  strips of §4.4 to its left.
+  strips of §4.4 to its left. *(Superseded 2026-09-28, the top bar's second pass: the stars are the only rating
+  on the bar; the two strips hang on the card under the stars on hover, not on the beam. GDD_MEVCUT §9.107.)*
 - *(Superseded 2026-09-28 by the night's tape, GDD_MEVCUT §9.135: its stars are the FILED stars, the lower of
   SERVICE and COMFORT, which is ringed in pen on the tape's two rate rows; the raw rating is shown only on the
   critics' rows; the standing board and the week board became the TOMORROW board and the week's hook.)*
@@ -538,7 +544,9 @@ ServiceTonight), `ComfortBase by day p25/p50/p75`, `rungs bought by slot`, `Brok
 - **D8 — tomorrow's crowd reads the service side** (§2.3). Reversed from the first draft, which
   let the min pick the crowd and put a filthy fresh bar under the broke line.
 - **D9 — the top bar shows icon strips, not decimals** (§4.4). The author's 2026-08-19 ruling on
-  that block stands.
+  that block stands. *(Superseded in place 2026-09-28, the top bar's second pass: still strips and never
+  decimals, but they live on the card that hangs under the stars on hover, not on the beam itself.
+  GDD_MEVCUT §9.107.)*
 - **D10 — `DirtPenalty` is 0.75 and `DirtGrace` 10 s, chosen from the latency row** (shape 4)
   before the wiring shipped; the fixture values doubled from the same measurement (§3.1). The
   numbers the wiring landed with are in PLAN_house_and_law H1b.

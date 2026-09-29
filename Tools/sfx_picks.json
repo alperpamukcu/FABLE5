@@ -62,12 +62,13 @@
     "tin_set_down": {"src": "sfx/tin_set_down/kenney_impact_sounds_impactTin_medium_003.ogg", "mode": "whole"},
     "curtain": {"src": "sfx/curtain/fs365528_pulling_curtains.mp3", "mode": "window", "seconds": 1.0},
     "day_open": {"src": "sfx/day_open/fs405321_unlocking_opening_front_door.mp3", "mode": "whole"},
-    "day_close": {"src": "sfx/day_close/fs394951_rolling_shutters_down.mp3", "mode": "whole"},
+    "day_close": {"src": "sfx/day_close/fs335364_roller_shutter_take4_descent.wav", "mode": "whole"},
     "bar_closed": {"src": "sfx/bar_closed/fs367221_heavy_wooden_door_close.mp3", "mode": "whole"},
     "last_call_bell": {"src": "sfx/last_call_bell/fs353233_ship_bell_single_ring.mp3", "mode": "whole"},
     "screen_on": {"src": "sfx/screen_on/fs693860_crt_tv_switches_on.mp3", "mode": "event", "pick": 0, "max_len": 2.0},
     "screen_off": {"src": "sfx/screen_off/fs616850_tv_crt_on_off_static_click.mp3", "mode": "event", "pick": -1, "max_len": 1.0},
     "star_earn": {"src": "music/kenney_jingles_sax07.ogg", "mode": "whole"},
+    "bill_star": {"src": "sfx/bill_star/fs858638_glockenspiel_bb6_star.wav", "mode": "whole", "level": "moment"},
     "level_up": {"src": "music/oga_fupi_winvibraphone.ogg", "mode": "whole"}
   },
   "beds": {}

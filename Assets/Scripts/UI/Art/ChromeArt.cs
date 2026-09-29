@@ -4512,6 +4512,250 @@ namespace LastCall.UI
             return Cache[Key] = Paint(rows, c => c == '#' ? white : (Color32?)null);
         }
 
+        // ── the sign the night ends under (2026-09-28) ─────────────────────────────────
+        //
+        // The author picked it off the night show's mock (option B, "Bu ekran kullanılsın"): the moment in the dark
+        // before the tape prints shows a CLOSED neon on its plate instead of the words THAT'S LAST CALL. Drawn here, in
+        // code, because it is a fitting of the room's own kind - a plate screwed to the wall with a tube bent into a
+        // word - and a fitting drawn in code is one the palette can hold (UI chrome is never generated).
+
+        /// <summary>
+        /// THE CLOSED NEON: a Night plate with a one-texel Graphite rim, its lit top row, four fixings, and CLOSED
+        /// bent in tube - Magenta[3] glass with a Magenta[4] line along its lit side - its glow laid in four flat bands
+        /// of the magenta ramp (never a smooth ramp: the rest of this game's light is banded too, see LampGlow), cut
+        /// off at the plate's edge the way light on a wall stops at the plate. Drawn at HALF the size it is shown at
+        /// (200x56 for a 400x112 sign) and shown at exactly 2x, so the tube is two units wide and every step of it
+        /// lands on the house's grid. The letters are the mock's eight-unit skeletons (make.py, called_line 'B') at a
+        /// four-texel unit; the bands are its 16/10/6/3 at half (8/5/3/2). Every colour is a ramp step, or a step laid
+        /// over the plate at the band's alpha - the light, baked, the way Well bakes its shade. It says CLOSED in every
+        /// language, like the "Open bar" painted on the shutter: signage in the room, not a line of the UI.
+        /// </summary>
+        public static Sprite ClosedNeon()
+        {
+            const string Key = "neon:closed";
+            if (Cache.TryGetValue(Key, out var got) && got != null) return got;
+            const int W = 200, H = 56;
+            // The letters in HALF units of the mock's eight-unit grid (a letter is 5 x 7 units), so its 2.5, 3.5 and 4.5
+            // stay whole; one half unit is two texels. Each letter is one or two runs of the tube.
+            int[][][] letters =
+            {
+                new[] { new[] { 10, 2, 8, 0, 2, 0, 0, 2, 0, 12, 2, 14, 8, 14, 10, 12 } },                            // C
+                new[] { new[] { 0, 0, 0, 14, 10, 14 } },                                                             // L
+                new[] { new[] { 2, 0, 8, 0, 10, 2, 10, 12, 8, 14, 2, 14, 0, 12, 0, 2, 2, 0 } },                      // O
+                new[] { new[] { 10, 2, 8, 0, 2, 0, 0, 2, 0, 5, 2, 7, 8, 7, 10, 9, 10, 12, 8, 14, 2, 14, 0, 12 } },    // S
+                new[] { new[] { 10, 0, 0, 0, 0, 14, 10, 14 }, new[] { 0, 7, 7, 7 } },                               // E
+                new[] { new[] { 0, 0, 6, 0, 10, 4, 10, 10, 6, 14, 0, 14, 0, 0 } },                                  // D
+            };
+            // Six letters of 20 texels, 8 between: 160 wide; the tube's two texels reach one past each skeleton line,
+            // so the word is 162 x 30 and stands 19 in from either side and 13 down - dead centre on the plate.
+            const int Ox = 20, Oy = 14, Pitch = 28;
+
+            // top-down, the way the letters are written; flipped into the texture at the end
+            var tube = new bool[W * H];
+            void Dot(int x, int y)
+            {
+                // a two-texel stamp either side of the skeleton line: the tube is two texels thick on every stroke
+                for (int dy = -1; dy <= 0; dy++)
+                    for (int dx = -1; dx <= 0; dx++)
+                    {
+                        int tx = x + dx, ty = y + dy;
+                        if (tx >= 0 && tx < W && ty >= 0 && ty < H) tube[ty * W + tx] = true;
+                    }
+            }
+            for (int i = 0; i < letters.Length; i++)
+                foreach (var run in letters[i])
+                    for (int p = 0; p + 3 < run.Length; p += 2)
+                    {
+                        int x0 = Ox + i * Pitch + run[p] * 2, y0 = Oy + run[p + 1] * 2;
+                        int x1 = Ox + i * Pitch + run[p + 2] * 2, y1 = Oy + run[p + 3] * 2;
+                        int n = Mathf.Max(Mathf.Abs(x1 - x0), Mathf.Abs(y1 - y0));
+                        for (int s = 0; s <= n; s++)
+                            Dot(x0 + Mathf.RoundToInt((x1 - x0) * (float)s / Mathf.Max(1, n)),
+                                y0 + Mathf.RoundToInt((y1 - y0) * (float)s / Mathf.Max(1, n)));
+                    }
+
+            // The plate: Night[2], a one-texel Graphite[3] rim (two units on screen), its top row lit Graphite[4], and a
+            // fixing two in from each corner - a Graphite[2] screw head lit at its top-left.
+            var px = new Color32[W * H];
+            Color32 plate = UITheme.Night[2], rim = UITheme.Graphite[3], lit = UITheme.Graphite[4],
+                    screw = UITheme.Graphite[2];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    Color32 c = x == 0 || y == 0 || x == W - 1 || y == H - 1 ? rim : y == 1 ? lit : plate;
+                    px[y * W + x] = c;
+                }
+            foreach (int sx in new[] { 4, W - 6 })
+                foreach (int sy in new[] { 4, H - 6 })
+                {
+                    for (int dy = 0; dy < 2; dy++)
+                        for (int dx = 0; dx < 2; dx++)
+                            px[(sy + dy) * W + sx + dx] = dx == 0 && dy == 0 ? lit : screw;
+                }
+
+            // The glow: each band is the tube grown by its reach (a diamond - four-way steps, as the mock grew it),
+            // painted over what is under it at the band's alpha, widest and faintest first; clipped inside the rim and
+            // the lit row, because light on a wall stops where the plate does.
+            var reach = new[] { 8, 5, 3, 2 };
+            var ink = new[] { UITheme.Magenta[0], UITheme.Magenta[0], UITheme.Magenta[1], UITheme.Magenta[2] };
+            var alpha = new[] { 0.30f, 0.45f, 0.55f, 0.65f };
+            var grown = (bool[])tube.Clone();
+            int grownBy = 0;
+            var bands = new bool[reach.Length][];
+            for (int b = reach.Length - 1; b >= 0; b--)   // grow outwards once, keeping each band's mask on the way
+            {
+                for (; grownBy < reach[b]; grownBy++)
+                {
+                    var next = (bool[])grown.Clone();
+                    for (int y = 0; y < H; y++)
+                        for (int x = 0; x < W; x++)
+                        {
+                            if (grown[y * W + x]) continue;
+                            next[y * W + x] = (x > 0 && grown[y * W + x - 1]) || (x < W - 1 && grown[y * W + x + 1])
+                                              || (y > 0 && grown[(y - 1) * W + x]) || (y < H - 1 && grown[(y + 1) * W + x]);
+                        }
+                    grown = next;
+                }
+                bands[b] = (bool[])grown.Clone();
+            }
+            for (int b = 0; b < reach.Length; b++)
+            {
+                Color32 over = ink[b];
+                for (int y = 2; y < H - 1; y++)
+                    for (int x = 1; x < W - 1; x++)
+                        if (bands[b][y * W + x]) px[y * W + x] = Color32.Lerp(px[y * W + x], over, alpha[b]);
+            }
+
+            // The glass, and its lit line: the texel of each stroke whose right and lower neighbours are tube too - the
+            // upper and left of the two, the side the room's light falls on - one texel of Magenta[4] along the stroke.
+            Color32 glass = UITheme.Magenta[3], shine = UITheme.Magenta[4];
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    if (!tube[y * W + x]) continue;
+                    bool core = x < W - 1 && y < H - 1 && tube[y * W + x + 1] && tube[(y + 1) * W + x];
+                    px[y * W + x] = core ? shine : glass;
+                }
+
+            // written top-down; the texture counts up
+            var flipped = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+                System.Array.Copy(px, y * W, flipped, (H - 1 - y) * W, W);
+            return Cache[Key] = Make(flipped, W, H, Vector4.zero);
+        }
+
+        // ── the night sign's tube (2026-09-28) ─────────────────────────────────────────────────────────────────────────
+        //
+        // The curtain between two nights became the club's own night sign (the author picked direction A, "the
+        // marquee", off the mock): a tube bent round the sky window, and a short one under each night of the week. A
+        // tube is four rings of one bent line - the glass, the rim either side of it, and two flat bands of its light
+        // (never a smooth ramp; LampGlow) - and each ring is a WHITE mask, so the sign runs its states (dark glass, half,
+        // struck) by tint alone, the way the marks are tinted. Drawn at half the size it is shown at: one texel of glass
+        // is two units on screen, and every step of it lands on the house's grid.
+
+        /// <summary>Which ring of a bent tube a mask is: the glass, its rim, and its two bands of light.</summary>
+        public enum NeonLayer { Core, Rim, Glow1, Glow2 }
+
+        /// <summary>The margin, in texels, a tube's sprite keeps round the rim for its two bands of light.</summary>
+        public const int NeonPad = 3;
+
+        /// <summary>
+        /// A NEON TUBE BENT ROUND A RECTANGLE: a one-texel line of glass with its corners chamfered by
+        /// <paramref name="chamfer"/> texels, broken at the bottom centre for <paramref name="gap"/> texels so a plate can
+        /// sit in the break (0 = unbroken). <paramref name="w"/>×<paramref name="h"/> is the RIM's outer size in texels;
+        /// the sprite is <see cref="NeonPad"/> bigger on every side for the light, and is shown at exactly 2×.
+        /// </summary>
+        public static Sprite NeonPath(int w, int h, int chamfer, int gap, NeonLayer layer)
+        {
+            string key = $"neon:path:{w}x{h}:{chamfer}:{gap}:{layer}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            int W = w + 2 * NeonPad, H = h + 2 * NeonPad;
+            var line = new bool[W * H];   // top-down
+            int l = NeonPad + 1, t = NeonPad + 1, r = NeonPad + w - 2, b = NeonPad + h - 2, c = chamfer;
+            for (int x = l + c; x <= r - c; x++) { line[t * W + x] = true; line[b * W + x] = true; }
+            for (int y = t + c; y <= b - c; y++) { line[y * W + l] = true; line[y * W + r] = true; }
+            for (int i = 0; i <= c; i++)
+            {
+                line[(t + c - i) * W + l + i] = true; line[(t + c - i) * W + r - i] = true;
+                line[(b - c + i) * W + l + i] = true; line[(b - c + i) * W + r - i] = true;
+            }
+            int mid = NeonPad + w / 2, half = gap / 2;
+            for (int x = mid - half; x < mid + half; x++) if (x >= 0 && x < W) line[b * W + x] = false;
+            return Cache[key] = NeonRing(line, W, H, layer);
+        }
+
+        /// <summary>A STRAIGHT TUBE, <paramref name="len"/> texels long at the rim: one texel of glass with the rim round
+        /// it and over its ends - one night's fitting on the sign's week.</summary>
+        public static Sprite NeonBar(int len, NeonLayer layer)
+        {
+            string key = $"neon:bar:{len}:{layer}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            int W = len + 2 * NeonPad, H = 1 + 2 * NeonPad;
+            var line = new bool[W * H];
+            for (int x = NeonPad + 1; x <= NeonPad + len - 2; x++) line[NeonPad * W + x] = true;
+            return Cache[key] = NeonRing(line, W, H, layer);
+        }
+
+        /// <summary>One ring of a tube round its line of glass: the glass itself, or the texels one, two or three steps
+        /// out from it (a square step, so a bend's corner is as thick as its run). Internal since 2026-09-29: the menus'
+        /// neon icons (NeonIcons) bend their marks through this same ring, so the icons and the tubes cannot drift.
+        /// Uncached - the caller keeps what it builds.</summary>
+        internal static Sprite NeonRing(bool[] line, int W, int H, NeonLayer layer)
+        {
+            int ring = (int)layer;                        // Core 0, Rim 1, Glow1 2, Glow2 3 steps out
+            var near = new int[W * H];                    // square-step distance to the glass, capped at 4
+            for (int i = 0; i < near.Length; i++) near[i] = 4;
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    if (!line[y * W + x]) continue;
+                    for (int dy = -3; dy <= 3; dy++)
+                        for (int dx = -3; dx <= 3; dx++)
+                        {
+                            int tx = x + dx, ty = y + dy;
+                            if (tx < 0 || ty < 0 || tx >= W || ty >= H) continue;
+                            int d = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+                            if (d < near[ty * W + tx]) near[ty * W + tx] = d;
+                        }
+                }
+            var px = new Color32[W * H];
+            var ink = new Color32(255, 255, 255, 255);
+            for (int y = 0; y < H; y++)
+                for (int x = 0; x < W; x++)
+                {
+                    px[(H - 1 - y) * W + x] = near[y * W + x] == ring ? ink : new Color32(255, 255, 255, 0);
+                }
+            return Make(px, W, H, Vector4.zero);
+        }
+
+        /// <summary>
+        /// A ROLLER SHUTTER, baked in the house's own night ramp: <paramref name="housing"/> rows of the box it rolls out
+        /// of, <paramref name="slats"/> rows of slats in two alternating steps (inset <paramref name="inset"/> texels from
+        /// the sides), <paramref name="bar"/> rows of the bottom bar, and one row under it with the pull,
+        /// <paramref name="pull"/> texels wide. Shown at exactly 2×. The closed day's fitting (the author: "pazar gününün
+        /// tatil olduğu anlaşılsın") and, drawn long, the shutter the week rolls under on the curtain's Sunday.
+        /// </summary>
+        public static Sprite RollerShutter(int w, int housing, int slats, int bar, int pull, int inset)
+        {
+            string key = $"shutter:{w}:{housing}:{slats}:{bar}:{pull}:{inset}";
+            if (Cache.TryGetValue(key, out var got) && got != null) return got;
+            int H = housing + slats + bar + 1;
+            Color32 box = UITheme.Night[4], lit = UITheme.Night[3], shade = UITheme.Night[2], clear = new Color32(0, 0, 0, 0);
+            var px = new Color32[w * H];
+            for (int ty = 0; ty < H; ty++)
+                for (int x = 0; x < w; x++)
+                {
+                    Color32 c;
+                    if (ty < housing) c = box;
+                    else if (ty < housing + slats)
+                        c = x < inset || x >= w - inset ? clear : ((ty - housing) & 1) == 0 ? lit : shade;
+                    else if (ty < housing + slats + bar) c = box;
+                    else c = Mathf.Abs(x - (w - 1) * 0.5f) < pull * 0.5f ? box : clear;
+                    px[(H - 1 - ty) * w + x] = c;
+                }
+            return Cache[key] = Make(px, w, H, Vector4.zero);
+        }
+
         /// <summary>A small authored drawing: rows top-down as they read in source, one colour per character.</summary>
         private static Sprite Paint(string[] rows, System.Func<char, Color32?> ink, Vector4 border = default)
         {

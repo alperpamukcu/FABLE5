@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LastCall.UI
@@ -99,11 +100,16 @@ namespace LastCall.UI
             public float lampShadowX, lampShadowY, lampShadowAlpha, shadowFloor;
             public float dayFrom, dayTo, duskFrom, duskTo, lateFrom;
         }
+        /// <summary>One stop of the curtain's DAY (2026-09-28): the hour of the day it is set at, and its five stops.</summary>
+        [Serializable] public class DayKey { public float at; public string hour; public string[] stops; }
+        /// <summary>The day between two nights - only its middle. Its ends are the evening's own last and first keys.</summary>
+        [Serializable] public class DaySpec { public DayKey[] keys; }
         [Serializable] public class Model
         {
             public float[] stopsV;
             public string[] skyPalette;
             public Key[] keys;
+            public DaySpec day;
             public SunSpec sun;
             public StarSpec stars;
             public CitySpec city;
@@ -115,6 +121,9 @@ namespace LastCall.UI
         public readonly Model Spec;
         private readonly Color[][] _keyStops;
         private readonly Color[] _roomAmbient, _roomGlow;
+        // The curtain's day, ends included: [0] is 02:00 (the evening's last key), the json's middle, then 18:00 (its first).
+        private readonly float[] _dayAt;
+        private readonly Color[][] _dayStops;
 
         public SkyClock(Model model)
         {
@@ -126,6 +135,31 @@ namespace LastCall.UI
                 for (int s = 0; s < model.keys[i].stops.Length; s++)
                     _keyStops[i][s] = Token(model.keys[i].stops[s]);
             }
+            // THE DAY IS PINNED TO THE EVENING AT BOTH ENDS (2026-09-28, the curtain rebuilt as the night sign): it starts
+            // on the colour the window closed on at 02:00 and lands on the colour it opens on at 18:00, so the lift never
+            // cuts from one sky to another. A middle key whose stop count is not the model's is skipped, loudly.
+            var mid = new List<DayKey>();
+            if (model.day != null && model.day.keys != null)
+                foreach (var k in model.day.keys)
+                {
+                    if (k == null || k.stops == null || k.stops.Length != model.stopsV.Length || k.at <= 2f || k.at >= 18f)
+                    {
+                        Debug.LogWarning($"SkyClock: day key '{k?.hour}' is off the 02:00-18:00 day or not {model.stopsV.Length} stops; skipped.");
+                        continue;
+                    }
+                    mid.Add(k);
+                }
+            mid.Sort((a, b) => a.at.CompareTo(b.at));
+            _dayAt = new float[mid.Count + 2];
+            _dayStops = new Color[mid.Count + 2][];
+            _dayAt[0] = 2f; _dayStops[0] = _keyStops[model.keys.Length - 1];
+            for (int i = 0; i < mid.Count; i++)
+            {
+                _dayAt[i + 1] = mid[i].at;
+                _dayStops[i + 1] = new Color[mid[i].stops.Length];
+                for (int s = 0; s < mid[i].stops.Length; s++) _dayStops[i + 1][s] = Token(mid[i].stops[s]);
+            }
+            _dayAt[mid.Count + 1] = 18f; _dayStops[mid.Count + 1] = _keyStops[0];
             _roomAmbient = new Color[model.room.keys.Length];
             _roomGlow = new Color[model.room.keys.Length];
             for (int i = 0; i < model.room.keys.Length; i++)
@@ -217,6 +251,31 @@ namespace LastCall.UI
                 return;
             }
             Array.Copy(_keyStops[keys.Length - 1], into, n);
+        }
+
+        /// <summary>
+        /// The sky's five stops at any HOUR of the clock (2026-09-28), for the curtain that winds the day between two
+        /// nights: 02:00-18:00 walks the day block (both ends the evening's own keys), 18:00-02:00 is the window's own
+        /// evening. Any hour is taken round the clock, so a Saturday that winds through Sunday to Monday passes its
+        /// evening and its small hours on the same sky the window keeps.
+        /// </summary>
+        public void DayBands(float hour, Color[] into)
+        {
+            float h = Mathf.Repeat(hour, 24f);
+            if (h < 2f || h > 18f)
+            {
+                Bands(Mathf.Repeat(h - 18f, 24f) / 8f, into);
+                return;
+            }
+            int n = into.Length;
+            for (int i = 0; i < _dayAt.Length - 1; i++)
+            {
+                if (h > _dayAt[i + 1]) continue;
+                float f = SmoothStep(_dayAt[i], _dayAt[i + 1], h);
+                for (int s = 0; s < n; s++) into[s] = Color.Lerp(_dayStops[i][s], _dayStops[i + 1][s], f);
+                return;
+            }
+            Array.Copy(_dayStops[_dayStops.Length - 1], into, n);
         }
 
         /// <summary>The sun's centre row in source px, sinking on a straight line.</summary>

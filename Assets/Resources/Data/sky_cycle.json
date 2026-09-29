@@ -17,6 +17,16 @@
     { "t": 0.60, "hour": "22:48 night", "stops": ["Night0", "Night1", "Night2", "Night3", "Magenta0"] },
     { "t": 1.00, "hour": "02:00 deep night", "stops": ["Night0", "Night0", "Night1", "Night2", "Night3"] }
   ],
+  "day": {
+    "_comment": "The day the curtain between two nights winds through (TycoonHud.Curtain, SkyClock.DayBands), 02:00 to 18:00 in the same five stops, drawn smooth like the window. Its two ENDS are not written here: 02:00 is keys[t=1] and 18:00 is keys[t=0] above, so the curtain starts on the window the player just left and lifts on the window the room opens under. 'at' is the hour of the day.",
+    "keys": [
+      { "at": 4.5, "hour": "04:30 first grey", "stops": ["Night0", "Night1", "Night2", "Night3", "ClubBlue1"] },
+      { "at": 6.0, "hour": "06:00 sunrise", "stops": ["Night3", "ClubBlue1", "Magenta1", "ViceRed3", "Amber3"] },
+      { "at": 7.5, "hour": "07:30 morning", "stops": ["ClubBlue2", "ClubBlue3", "ClubBlue3", "ViceRed4", "Amber4"] },
+      { "at": 12.0, "hour": "12:00 noon over the bay", "stops": ["ClubBlue3", "ClubBlue4", "ClubBlue4", "Cyan3", "Cyan4"] },
+      { "at": 15.5, "hour": "15:30 afternoon", "stops": ["ClubBlue2", "ClubBlue3", "ClubBlue4", "Magenta3", "Amber4"] }
+    ]
+  },
   "sun": {
     "col": 40, "radius": 7,
     "rowStart": 34, "rowEnd": 98, "setBy": 0.36, "horizonRow": 84,

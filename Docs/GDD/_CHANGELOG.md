@@ -2,6 +2,40 @@
 
 ## v4.0 (current) — THE TYCOON PIVOT (in progress)
 
+- **The settings as a cabinet (2026-09-29):** the same request, fourth part. The window stands in a CABINET with
+  SETTINGS lit in its crown (the P2 marquee and the blue skin retired); its tabs are the curtain's WEEK ROW; every
+  option is a SETTINGS ROW with its note in a NOTE STRIP under the page; two-way options are CHOICE wells, the levels
+  and the track are METER tubes with a Graphite clamp, the resolution and frame rate CYCLES, small controls SMALL KEYS
+  in half-lit cyan; the key caps hold still while a row listens. LANGUAGE is a list of cells with the flag and the
+  language's own name in a face that draws it (LanguageFonts.ListFace), the pick a cyan tube, the language spoken a
+  bead - no hover tips. BACK is the one amber key, APPLY takes the amber while a pick waits. START OVER asks first
+  (from the door it is the door's NEW RUN); TONIGHT'S BOOK is dark from the door. From the door the window stands on
+  the door's field without the scrim. Every setting writes the same store with the same values. Measured in 29
+  languages: 0 overflows. Re-laid for a 21:9 window (rows 90..630), the credits with it: the tabs stand as a column
+  down the cabinet's left with the note well under them, the cabinet 1056 wide. GDD 16 §1 (WEEK-ROW TABS, SETTINGS ROW, NOTE STRIP, CHOICE, METER, CYCLE, SMALL KEY,
+  LANGUAGE LIST), GDD_MEVCUT §9.147.
+
+- **The menus' kit: the pause and the credits as cabinets, the door fits 21:9 (2026-09-29):** the author's
+  "diğer sahneleri ürettiğine uygun bir tasarımda sıfırdan tekrar oluştur", third part. The generated ESC panel
+  became a CABINET drawn in code (the CLOSED sign's plate crowned on the cellar's stepped shoulders, a magenta tube
+  broken under the crown, PAUSED a NEON TITLE clipped to the crown's face), its keys SIGN KEYS in a RECESS (RESUME
+  the one amber key; NEW RUN asks first and deals a fresh SeedPolicy seed), the hour and the till in two wells in its
+  plinth. The credits are a cabinet on the door's own field (enamel section heads, a cyan scroll tube); Escape goes
+  back from them and from the achievements. The door re-laid for a 21:9 crop (sign +168, pitch 54, all inside rows
+  90..630), a banded vignette, a Graphite ledge with the cellar's fan, upright bottles on whole texels. Settings
+  opened from the door keep MenuUp true by a flag, and APPLY there returns to the door. GDD 16 §1 (CABINET, RECESS,
+  SIGN KEY, NEON TITLE, ENAMEL PLATE, LEDGE), GDD_MEVCUT §9.146.
+
+- **The menus' neon marks and the title sign (2026-09-29):** the author: "şuanki üretim kalitesiz şuanki altın
+  iconları kullanma" and "logosu ışık hareketi olmalı ... uygun boyda üretilmesi gerekiyor upscale yapma". Every
+  menu key's picture is a NEON MARK drawn in code from the curtain sign's own tube (resting half-lit, struck lit
+  under the pointer, inked on an amber or lime key; CONTROLS a key cap); the brass `mi_*` icons and the door's
+  1-bit marks are read by nothing now. The title is a TITLE SIGN: the lockup drawn once per screen scale from the
+  store masters (seven maps shipped as PNG bytes under TextAsset names), shown 1:1 and never scaled up, its letters
+  striking on and two beads of light running its lines; REDUCED holds it lit, NO FLASHES holds its idle still. The
+  door's small row and the settings' tabs grew to 46 for the marks. GDD 16 §1 (NEON MARK, TITLE SIGN), GDD_MEVCUT
+  §9.145.
+
 - **The night's show (2026-09-28):** the day-end rebuilt on the author's "en baştan tekrardan tasarla", every
   open question at its default. The room's light goes down to the author's 0.988, THAT'S LAST CALL is said on
   the dark, and the till's Z-tape - his own bill_sheet stock re-cut to the night's length - unrolls, bounces and

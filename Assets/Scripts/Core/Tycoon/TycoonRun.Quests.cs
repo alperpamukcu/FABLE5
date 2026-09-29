@@ -30,6 +30,13 @@ namespace LastCall.Core
         /// <summary>Jobs passed over at an arrival: a state goal already met, or a serve job with nothing to pour.</summary>
         public int QuestsSkipped { get; private set; }
 
+        /// <summary>
+        /// Jobs finished and paid over the whole run (2026-09-28, the game over's Z report: "{WHO}'S JOBS n OF m").
+        /// Counted where the pay is made, so a job is done once whatever kind it is; saved, and backfilled from the
+        /// ledger's paid nights for a save written before it was.
+        /// </summary>
+        public int QuestsDone { get; private set; }
+
         /// <summary>The part of tonight's <see cref="DayBonus"/> that was hers, so the bill can say whose money it is.</summary>
         public int DayQuestPaid { get; private set; }
 
@@ -211,6 +218,7 @@ namespace LastCall.Core
             QuestJustDone = Quest;
             _doneUnsaid = true;
             _visitFrom = Day + 1;
+            QuestsDone++;              // the run's own count, for the Z report (the achievements keep theirs below)
             Feat(Stats.JobsDone, 1);   // the achievements' count (TycoonRun.Feats), moved here from the weekly job
         }
 

@@ -32,6 +32,8 @@
     { "key": "dayend.stand.comfort", "text": "COMFORT", "note": "Rate row on the day-end tape, left of five medallions and a two-decimal figure: tonight's room rating. Body face 16 px (the small line where the house face is handed on), about 12 characters." },
     { "key": "dayend.stand.tonight", "text": "TONIGHT", "note": "Second crowd row on the TOMORROW board when tomorrow's crowd differs from tonight's: tonight's crowd name sits at its right. Body face 16 px, about 12 characters." },
     { "key": "dayend.stand.tomorrow", "text": "TOMORROW", "note": "Caption on the head of the day-end TOMORROW board; the next night's name sits at its right in cyan. Body face 16 px, about 12 characters." },
+    { "key": "dayend.stand.at_dawn", "text": "AT DAWN", "note": "Caption on the head of the day-end TOMORROW board on the night whose dawn shuts the bar for good (third night in a row closed in debt), in place of TOMORROW; dayend.stand.closes sits at its right in red. Body face 16 px, about 12 characters." },
+    { "key": "dayend.stand.closes", "text": "THE BAR CLOSES", "note": "Red reading at the right of AT DAWN on the TOMORROW board's head, on the night that ends the run: the bar will not open again. Display face 16 px; caption and reading share one 336 px line, so about 18 characters." },
     { "key": "dayend.stand.all_open", "text": "EVERY RUNG ON THE LADDER IS OPEN", "note": "One line on the TOMORROW board where the next rung would be, when no rung is left to climb. Body face 16 px, wraps, two lines of about 24 characters." },
 
     { "key": "dayend.closing.basket#one", "text": "{n} THING IS STILL IN THE BASKET.", "note": "Warning in the 'close the order?' dialog on the market tablet when leaving with unbought items. {n} is the number of items. Shop bold face 16 px, wraps in 540 px, ~2 lines." },
@@ -50,6 +52,7 @@
 
     { "key": "dayend.market.title", "text": "MALIBU CLUB — TIME TO ORDER", "note": "Title line over the market tablet after the day-end slip. One line." },
     { "key": "dayend.bill.next", "text": "CONTINUE", "note": "Key under the day-end slip that moves on to the market (the author, 2026-09-25: \"devam et\" - the same word as build.bill.continue). One line on the key." },
+    { "key": "dayend.bill.lock_up", "text": "LOCK UP", "note": "The same key under the day-end slip on the night that shuts the bar for good: it skips the market and goes to the end of the run (a padlock is drawn beside the word). Imperative, like closing a bar for the night. Body face 16 px, one line on a 300 px key with a 32 px mark, about 14 characters." },
 
     { "key": "dayend.bill.took_in", "text": "TOOK IN", "note": "Block heading on the day-end slip over the income lines. Body face 16 px, quiet ink." },
     { "key": "dayend.bill.sales", "text": "SALES", "note": "Bill row label on the day-end slip, body face 24 px, money figure at the right; the label column is ~62% of the 384 px sheet, ~14 characters." },
@@ -66,6 +69,7 @@
     { "key": "dayend.bill.till", "text": "TILL", "note": "Heavy bill row on the day-end slip: money in the till after tonight. Display face 16 px, ~10 characters." },
     { "key": "dayend.bill.strike", "text": "IN THE RED — STRIKE {strikes}/{limit}", "note": "Red band closing THE WEEK card beside the day-end tape when the till is in debt. {strikes} = red nights so far, {limit} = red nights that close the bar. Body face 16 px, 312 px, wraps to two lines." },
     { "key": "dayend.bill.last_strike", "text": "one more red day closes the bar", "note": "Second line of the red band on THE WEEK card when one more night in debt ends the run. Lower case, body face 16 px, 312 px, wraps." },
+    { "key": "dayend.bill.closes_at_dawn", "text": "that was the last one: the bar closes at dawn", "note": "Second line of the red band on THE WEEK card on the night that ends the run (the band's first line then reads STRIKE 3/3): tonight was the last red night the bar could take. Lower case, body face 16 px, 312 px, wraps to two lines." },
     { "key": "dayend.tape.z", "text": "Z {n}", "note": "Second line of the counterfoil torn off the day-end tape and hung on the week's hook. {n} = the night number, three digits; \"Z\" is a till's end-of-day report, keep it. Body face 16 px, 196 px of room, 8 characters at most." },
     { "key": "dayend.tape.walkouts#one", "text": "WALK-OUTS · {n}", "note": "Red row on the day-end tape: money paid back for drinks that never came, {n} = how many walked out before their drink. Body face 24 px (16 when long), a money figure at its right, about 16 characters." },
     { "key": "dayend.tape.walkouts#other", "text": "WALK-OUTS · {n}", "note": "As dayend.tape.walkouts#one." },

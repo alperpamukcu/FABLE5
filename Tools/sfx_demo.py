@@ -32,8 +32,10 @@ WALK = [
     ('glass_down', 0.45), ('serve_clink', 0.70),
     ('tap_pull', 1.8), ('head_settle', 0.60), ('coin', 0.45), ('cash', 0.80),
     ('star_earn', 0.80), ('door', 0.80), ('stool_take', 0.70), ('bill_slip', 0.50),
-    ('stamp', 0.55), ('last_call_bell', 1.2), ('day_close', 1.2),
+    ('bill_star', 0.40), ('stamp', 0.55), ('last_call_bell', 1.2), ('day_close', 1.8),
 ]
+# (2026-09-28: the bill's own star joined the walk, and day_close's cut grew to 1.8 s - the electric shutter
+# the author picked lands its padded thud at 1.32 s, which 1.2 s cut off.)
 
 
 def read(path):

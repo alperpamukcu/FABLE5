@@ -492,7 +492,8 @@ namespace LastCall.UI
                 var swatch = NewRect("Swatch", cell);
                 Place(swatch, new Vector2(0.5f, 1f), new Vector2(CardW - 12f, 46f), new Vector2(0, -6f));
                 var si = swatch.gameObject.AddComponent<Image>();
-                si.sprite = CounterFinish.Swatch(counter, id);
+                // cut from the bar as it stands - the slab over tonight's cabinet (2026-09-28)
+                si.sprite = stage != null ? stage.FinishSwatch(id) : CounterFinish.Swatch(counter, id);
                 si.preserveAspect = true; si.raycastTarget = false;
                 if (si.sprite == null) si.color = CounterFinish.Of(id).Accent;
                 var name = NewText("N", cell, _shop, 8, TextAnchor.LowerCenter, on ? ShopInk : TileMetaInk);

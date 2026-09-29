@@ -281,9 +281,9 @@ aktif olacak, konfor gibi değil."*
 | **Üst şerit (2026-08-19 redesign, aynı akşam ÜÇ tur)** | Kiriş kenardan kenara; üstünde iki YUVA (ChromeArt.Well — kirişe gömülü oyuk: üst kenar karanlık, alt dudak ışıklı, taban = ekran camı) ve serbest duran yıldızlar: (1) SAAT — yuvada elle çizilmiş 11×14 piksel maske rakamlar 2×'te (SegmentClock; tasarım+kanıt Tools/clock_digits.py; hayalet 8 + halo + kolon); (2) HAFTA — aynı yuvada başta WEEK sayacı (display-16 cyan), sonra 7 gece: **kelime lambadır** — bu gecenin adı amber yanar ve altında minyatür neon boru (hikâye gecesiyse magenta), CMT'nin işareti her hafta magenta yıldız, PAZAR kepenk, geçmiş günler sönük cam, ilerisi Cream[3]; ampul sırası ve tel emekli; (3) YILDIZLAR — kutusuz beş **3D altın yıldız** Items/star3d.png (32px @1×, PixelLab, luma-sıralı Amber/Malt eşleme) + koyu cam soket, dolgu maskesi okumadır, SAYI YOK; kalabalık başlığı üstte; çark tuşu −16'da. PixelLab takvim plakası tek build yaşadı ve geri alındı; ViceFade dolgusu da. Neon boru durum ışığı (amber→magenta). |
 | **Kimlik kartı** | tabure tıkla → `InspectId()` (kapı!); sipariş satırı hover=**kutu kartı** (2026-08-20: beş kutulu bar, yalnız mükemmelin kutusu yanık; kesin sayı ancak sayfa mükemmellenince) |
 | **Tarif kitabı** | **AÇIK KİTAPÇIK (2026-08-24):** `menu_booklet.png` tam 2× (740×708 HUD), iki dik sayfa (167×326 sanat px); altın sayfa takımı (`menu_page_frame`) yazıyla AYNI kapta yaşar, katta birlikte kırpılır. Sayfa çevirme ÇİZİLMİŞ 16 kare (`menu_page_00..15`, soyulma modeli, 40ms/kare; geri = aynı kareler tersten; Reduced anlık): ön baskı katta KIRPILIR, arka yüz TAM SAYI kaydırılır, hiçbir şey ölçeklenmez (cetvel: `Tools/menu_booklet.py`). **YEMEK KİTABI DÜZENİ (aynı akşam):** ilk forma = başlık plakası + İÇİNDEKİLER (bölüm satırı tıklanır → o sayfaya atlar); sonrası TARİF BAŞINA TAM SAYFA — tier künyesi, ad, hazırlık·bardak, içki ikonu, gösterge LEJANDI (bar neyi ölçer + hangi renk hangi %20'lik dilim), tam genişlik doz satırları (`BkGaugeW` 102×14), en altta içkinin tarihçesi + köken·fiyat satırı (`Resources/Data/recipes_lore.json` ↔ `RecipeLore`, katalogla iki yönlü test altında). Kilitli tarif: sayfası soluk + kapı plakası; dökülemeyen şişe adının ALTINDA "LOCKED · NOT IN THE WELL" der. **YILDIZ KAPILARI ÇİZİLİR (2026-08-25):** tek yardımcı `StarRow` (beş yuva, per-star `Image.Type.Filled`, yarım rung yarım yıldız) üç yerde — mağazanın mühürlü etiketi (kasa/şişe/fikstür/koridor kapılarının hepsi bu tek çiziciden geçer), kitabın kapı plakası (aynı cetvelde iki satır: OPENS AT ne ister, YOU HAVE bar nerede) ve indeksin kilitli satırları. Yıldızla ilgisi olmayan kilit (kule basamağı, kişi beat'i) cümlesini korur. PERFECT sayfa: gösterge yerine KESİN SAYI + PERFECT etiketi, platin çift çerçeve, sağ üst köşede −45° "PERFECT RECIPE" kurdelesi. **İÇİNDEKİLER BİR TARAYICI (2026-08-25):** üstünde arama kutusu (ada göre, 15 sonuç; yazarken ok tuşları sayfayı çevirmez), bölüm satırına tıklayınca AYNI SAYFADA o bölümün tüm tarifleri açılır (ad + folyo + tıkla-git, kilitlinin yanında LOCKED, "< ALL CHAPTERS" ile geri); her tıklanabilir satır hover'da amber yanar. İndeks satırları `&` yerine AND basar (gövde yazı tipinin ampersandı 16'da `$` okunuyor). Başlık sayfasının kokteyli `menu_cover_drink.png` — `Tools/menu_cover_drink_gen.py` ile 64 sanat px üretilip 40 renge quantize edildi. Çevirme: alt dış köşeler + görünür `<` `<<` `>` kâğıt tuşları (ilk/son formada saklanır) + ←/→; kurdele formayı tutar. Kitap açıkken saat `BookTimeScale` 0.05 (servis menüleri 0.3 kalır). ARAMA VE FİLTRELER PANOYLA EMEKLİ; `menu_board` silindi. Diğer üç pencere (kimlik hover, market spec, sipariş balonu) `DrawRecipeSpec`'ten çizmeye devam eder; kitap sayfası kendi çizerini kullanır ama AÇIĞA ÇIKARMA KAPISI aynıdır: kesin sayı yalnız `RecipeSpecRows`→Core (`IsPerfected`/`ExactPourFor`) söylerse basılır |
-| **Gün sonu** | **GECENİN GÖSTERİSİ (2026-09-28, §9.135; eski GECE RAPORU ve iki panosu gitti):** barın ışığı iner, karanlıkta THAT'S LAST CALL söylenir, sonra kasanın Z-şeridi yukarıdan açılır; solda haftanın fiş çivisi, sağda eleştirmenler ve YARIN panosu gelir. Şerit kendini yukarıdan aşağı sayar, kalem SERVICE ile COMFORT'tan düşüğünü halkaya alıp dosyalanan yıldızlara iner, yıldızlar düşer, damga vurur, koçan yırtılıp çiviye asılır, duruş tırmanır; CONTINUE (`BillNext`) ancak gösteri bitince ve sertifika kapalıyken, şeridin dibinde. **Gün, oda boşalmadan gelmez:** Core zaten son taburenin boşalmasını bekliyordu, ama ÇIKIŞ YÜRÜYÜŞÜ HUD'ın — perde eskiden son müşterinin tepki anını ve kapıya yürüyüşünü örtüyordu; faz dönüşü artık kitapları yalnız SİLAHLANDIRIR (`_dayEndDue`), gerçek açılış `FloorIsClear()` (ekranda kimse yok + havada sayılan hesap yok) veya 9 sn emniyet süresi. Sonra market (**5 sekme:** DOLUM/İÇKİ/MEŞRUBAT/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade). **AYAKTA TEK TUŞ VAR (2026-09-04, yazar: "satın al butonu ve güne geç butonu yerine ... 2 butonu 1 buton yapıyoruz"):** sepetin başlık bandındaki PLACE ORDER ile sağ alttaki OPEN TOMORROW aynı tuş oldu (`_marketKey`, ayak sağı **216×128**, altyazı **24 punto**; ayak toplamı 8+800+8+216+8=1040) ve hangi işi yaptığını SEPETTEN okur — sepette bir şey varsa **YEŞİL** (Lime 4 yüz, Lime 1 mürekkep) **PLACE ORDER** ve basınca `Checkout()`, boşsa **MAGENTA** (Magenta 4, beyaz mürekkep) **OPEN TOMORROW / START TUESDAY** ve basınca `OnDayEndAdvance()`; sipariş indikten sonra 3 sn gri **ORDERED** ve tıklanmaz. Renkler ve boy 2026-09-04'te ikinci turda ayarlandı (yazar: "daha dikkat çekici olmalı ve satın alma seçeneğinde rengi yeşil olmalı"): amber PARADIR (16 §5) ve gecenin sonu para harcamaz, o yüzden çıkış ambere veda etti; büyütmek bir tuşu gürültüsüz yükseltmenin tek dürüst yolu, çünkü harcanacak şey yokken atan bir lamba dekorasyondur. Sepet 880'den 800'e indi ve hâlâ on beş çip alıyor. Lamba (yalnız sepet doluyken nefes alan `LampGlow`) artık bu tuşun arkasında duruyor. Eski çift, ancak biri anlamlıyken ikisi birden duran bir çiftti: boş sepette sipariş tuşu NOTHING PICKED diyordu, dolu sepette çıkış tuşu seçilenleri sessizce çöpe atıp "emin misin" diye soruyordu. Sepeti boşaltmak (çipe tıkla) artık geçmenin yolu; **Escape hâlâ eski kapıdan** yürür, yani sepet uyarısı `ClosingWorry()` ile ayakta. `ServiceSmokeTests.The_markets_one_key_buys_first_and_opens_tomorrow_after` koridordan bir şişe alıp tuşa basarak ikisini de pinler; `Baselines~/basket.png` bu yüzden yeniden kutsandı. **BOŞ ELLE ÇIKIŞ SORULUR** — `ClosingWorry()` hâlâ ayakta ve tek tuş üstünden de çalışıyor (`Leaving_the_market_having_bought_nothing_asks_first`). **SEPET KALAN BAKİYEYİ DE YAZAR (2026-09-04):** başlık bandı sağdan sola TOTAL ve **LEFT IN THE TILL** (`Money − CartTotal`, sıfırda kırmızı) — üst bar kasanın NE TUTTUĞUNU, sepet siparişin NE ETTİĞİNİ söylüyordu ve çıkarmayı oyuncu yapıyordu. **DOLUM KOLİSİ ARTIK KALAN (2026-09-04, yazar: "hem ayrı olarak alkolleri restocklayıp hem de ayrıyeten tam fiyatına restock satın alınıyor"):** "Restock the Whole Well" rafın TÜM açığını değil, `WholeWellPrice()` = tüm açık − sepetteki tek tek şişe satırları kadarını ister; sepetteki her çip fiyatı anında düşürür, sıfıra inince koli satılmaz (**IN**, raf zaten doluysa **FULL**) ve sepette duran bir koli her yeniden kurulumda `RepriceWholeWell()` ile güncellenir, sıfırlanınca sepetten düşer. Eski çözüm koliyi seçince tek tek satırları sepetten ATIYORDU — oyuncunun verdiği siparişi sessizce düzenleyen bir satır — ve koli yine tam fiyat yazıyordu. Core tarafında bir şey değişmedi: `RefillShelf()` çalıştığı ANDA rafı okur, tek tek satırlar sepette ondan önce geldiği için tam olarak kalanı tahsil eder, yani sepetin aritmetiği ile kasanınki aynı aritmetik. `The_restock_aisle_never_bills_the_same_measure_twice` bunu kasa üstünden pinler. **AÇIK ÜRÜNLER DE RÜTBESİNİ GÖSTERİR (2026-09-04, yazar: "markette açık olan her ürünün kutusunun bir tarafında kaç yıldız gerekiyorsa yıldız iconu ile gösterilsin"):** `TileSpec.RungStars` + `StarLadder` — kutunun SOL kenarında, sanat bandının boyunca, aşağıdan yukarı beş yuvalı dikey yıldız merdiveni (istenen rung kadarı amber, yarım rung yarım yıldız). Sağ kenarı stok göstergesi tuttuğu için tek boş sütun orası; mühürlü sandık rütbesini zaten kilidin etiketinde yazdığından ikisi asla birlikte çizilmez **ODA ÖNCE TEMİZLENİR (2026-08-25, yazar: "oyun sonu ekranı gelmeden önce açık olan tüm pencereler kapanır ana sahneye dönülür ... aynı şekilde gün başlarken de ekran ana ekran haline gelir ve temizlenir"):** `CloseEverySheet()` — kitap (SERT kapanır: kaydırma ve sayfa çevirme coroutine'leri durdurulur, panel anında gider; inen scrim'in altında yolculuğunu sürdüren bir sayfa tam da önlenmek istenen şeydi), ayarlar, geliştirici tezgâhı, rehber, defter, kimlik, servis akışı ve mahzen kapağı (anında). **Gece BİTERKEN çağrılır, kitaplar gelirken değil (2026-08-25 ikinci tur):** faz dönüşünün kendisinde — yani son müşteri hâlâ kapıya yürürken oda çoktan çıplaktır; `ShowDayEnd()` bir kez daha çağırır (araya girip bir şey açan olursa) ve `OnOpenTomorrow()` da, yani ertesi gece de temiz bir odada açılır. Gece artık yarım okunmuş bir tarifin, açık bir kimliğin ya da tin'inde içki kalmış bir tezgâhın ÜSTÜNDE sayılmıyor. |
-| **Gün başı (perde)** | **GÜN GEÇME SAHNESİ (2026-08-25, yazar: "güneşin doğudan çıkıp battığını ve şu anki saate geldiğini gösteren bir gün geçme animasyonu, saati de tam 18:00'a saran — KCD2'deki uyku ekranı gibi").** Eskiden 6 sn siyah + hafta/gün kartıydı; artık barın KAPALI OLDUĞU on altı saat oynanıyor: 02:00 → 18:00. Kart 700×520; en üstte 640×220 GÖKYÜZÜ PANELİ (RectMask2D — güneş ufkun ARKASINDAN doğar ve halesi kartı basmaz), altında saat, gün adı ve marki. **Gökyüzü BANTLI:** 20 düz satır, tepe ile ufuk arasında `k^1.6` ile karışır (sıcak uç ufka yapışsın diye); renkler yalnız palet token'ları ve yedi saat anahtarı — 02 gece Night[0/2], 05 ilk ışık ClubBlue[1], 06:30 şafak Amber[3], 08 ve 13 gündüz ClubBlue[3/4]+Cyan[4], 16 ikindi Amber[4], **18 altın saat Magenta[2]+Amber[3] = odanın penceresinin zaten taşıdığı renk.** **Şehir, güneş ve ay ÜRETİLMİŞ SANAT (aynı gün, yazar: "kullanılan mevcut görsel profesyonelce durmuyor, gerekirse görsel ve animasyonu üret"):** ilk kesimin prosedürel kutu-kuleleri programcı sanatı okundu ve kesildi. `Tools/day_sky_gen.py` üç parçayı PixelLab'dan üretip 40 renge quantize eder — `Scene/curtain_city.png` (320×96: körfezin karşısından Miami silüeti, yanık pencereler ve iki palmiye gömülü; panelde tam 2×), `curtain_sun.png` (32) ve `curtain_moon.png` (24, hilal — eski iki-disk ısırma numarası emekli). GÜNEŞ VE AY ŞEHRİN ARKASINDA çizilir: kulelerin arkasından doğar, arkasına batar. Silüetin tintı parlak saatlerde 1'in ÜSTÜNE itilir (Image tint yalnız çarpabilir; sanat bilerek koyu üretildi) — öğle göğünün altında zifiri bir şehir resimde delik gibi dururdu. YILDIZLAR ilk ışıkta söner (her biri kendi fazında titrer); haleler oyunun kendi LampGlow'u, ALFAYLA açılır, boyutla değil. **Saat oyunun kendi `SegmentClock`'u**, kirişteki hâlinin iki katı (yani sanatın 4×'i — tam kat) ve beşer dakikada okur. Hepsi TEK saatten sürülür: kendi zamanlayıcısında geçen bir güneş ile ayrı sarılan bir saat, aynı anda oynayan iki animasyon olurdu. **Ritim (7.0 sn):** 0.45 kart gelir → **3.60 gün geçer** (gün adı devri bu fazın ilk yarısında) → 1.25 saat 18:00'da durur → 1.70 kart çıkar, oda açılır. `Motion.Reduced` doğrudan 18:00'a oturur. Bir gün geçme sahnesi bundan uzun olursa dinlenme olmaktan çıkıp bekleme olur. **KARTIN TAKVİMİ ARTIK KİRİŞİN ALETİ (2026-08-25, yazar: "Gün başlangıç ekranındaki takvim göstergesini beğenmiyorum bunu geliştir, ana sahnedeki üst bardaki takvim göstergesine benzer yapabilirsin"):** kartın altındaki marki — tel, yedi sap, her gecede bir ampul — üst şeridin ÜÇÜNCÜ kesimde zaten "bunting gibi duruyor" diye attığı resmin ta kendisiydi. Aynı yedi gece olduğu için artık aynı alet: `BuildWeekStrip` ikiye ayrıldı — `BuildWeekGlass` camı, başlığı ve yedi yuvayı kuruyor, `LightWeekCells` onu yakıyor; kiriş 1× ölçekte, kart 1.4×'te (454 birim cam → 636, kartın 700'üne değmeden) `CurtainWeekY` −452'de asıyor. Yakma TEK sayı ile iki montajı da taşıyor: kiriş `over`=1 ve `leaving`=−1 geçer (tek gece, tam yanık), kart ise DEVİR yapar — dün gece, gün adlarının yer değiştirdiği eğrinin (`e`) tam aynısında söner, bu gece aynı eğride yanar. Kartın tepesindeki ayrı "WEEK 3" satırı kalktı: alet kendi başlığının altında kendi sayacını basıyor, hafta iki kez söylenmiyor. |
-| **Back bar (menü)** | **İÇECEK SEÇMENİN TEK YERİ (2026-08-13).** Duvar garnitür VE BİRA dışında her şeyi taşır — gazlılar dahil. **Bira duvarı terk etti (2026-08-15):** fıçı satırı kaldırıldı, draught'un tek kapısı tezgâhtaki bira musluğu (aşağı). Şişe hover=bilgi kartı, tıkla=rota (garnitür anında tin'e tutam; gazlı→Serve eline; kalan→Shaker eline). Kapalı şişe kendi kabına bakar: gazlı SERVİS BARDAĞI dolu diye kapanır, kalanı tin dolu diye. Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR |
+| **Gün sonu** | **GECENİN GÖSTERİSİ (2026-09-28, §9.135; eski GECE RAPORU ve iki panosu gitti):** barın ışığı iner, karanlıkta kodla çizilmiş CLOSED neonu yanar (2026-09-28, §9.138; önce THAT'S LAST CALL yazıyordu), sonra kasanın Z-şeridi yukarıdan açılır; solda haftanın fiş çivisi, sağda eleştirmenler ve YARIN panosu gelir. Şerit kendini yukarıdan aşağı sayar, kalem SERVICE ile COMFORT'tan düşüğünü halkaya alıp dosyalanan yıldızlara iner, yıldızlar düşer, damga vurur, koçan yırtılıp çiviye asılır, duruş tırmanır; CONTINUE (`BillNext`) ancak gösteri bitince ve sertifika kapalıyken, şeridin dibinde; barı kapatacak son gecede onun yerine LOCK UP durur ve market hiç açılmadan oyun sonuna gider (2026-09-28, §9.138). **Gün, oda boşalmadan gelmez:** Core zaten son taburenin boşalmasını bekliyordu, ama ÇIKIŞ YÜRÜYÜŞÜ HUD'ın — perde eskiden son müşterinin tepki anını ve kapıya yürüyüşünü örtüyordu; faz dönüşü artık kitapları yalnız SİLAHLANDIRIR (`_dayEndDue`), gerçek açılış `FloorIsClear()` (ekranda kimse yok + havada sayılan hesap yok) veya 9 sn emniyet süresi. Sonra market (**5 sekme:** DOLUM/İÇKİ/MEŞRUBAT/TARİFLER/YÜKSELTMELER + bu gece alınanlar iade). **AYAKTA TEK TUŞ VAR (2026-09-04, yazar: "satın al butonu ve güne geç butonu yerine ... 2 butonu 1 buton yapıyoruz"):** sepetin başlık bandındaki PLACE ORDER ile sağ alttaki OPEN TOMORROW aynı tuş oldu (`_marketKey`, ayak sağı **216×128**, altyazı **24 punto**; ayak toplamı 8+800+8+216+8=1040) ve hangi işi yaptığını SEPETTEN okur — sepette bir şey varsa **YEŞİL** (Lime 4 yüz, Lime 1 mürekkep) **PLACE ORDER** ve basınca `Checkout()`, boşsa **MAGENTA** (Magenta 4, beyaz mürekkep) **OPEN TOMORROW / START TUESDAY** ve basınca `OnDayEndAdvance()`; sipariş indikten sonra 3 sn gri **ORDERED** ve tıklanmaz. Renkler ve boy 2026-09-04'te ikinci turda ayarlandı (yazar: "daha dikkat çekici olmalı ve satın alma seçeneğinde rengi yeşil olmalı"): amber PARADIR (16 §5) ve gecenin sonu para harcamaz, o yüzden çıkış ambere veda etti; büyütmek bir tuşu gürültüsüz yükseltmenin tek dürüst yolu, çünkü harcanacak şey yokken atan bir lamba dekorasyondur. Sepet 880'den 800'e indi ve hâlâ on beş çip alıyor. Lamba (yalnız sepet doluyken nefes alan `LampGlow`) artık bu tuşun arkasında duruyor. Eski çift, ancak biri anlamlıyken ikisi birden duran bir çiftti: boş sepette sipariş tuşu NOTHING PICKED diyordu, dolu sepette çıkış tuşu seçilenleri sessizce çöpe atıp "emin misin" diye soruyordu. Sepeti boşaltmak (çipe tıkla) artık geçmenin yolu; **Escape hâlâ eski kapıdan** yürür, yani sepet uyarısı `ClosingWorry()` ile ayakta. `ServiceSmokeTests.The_markets_one_key_buys_first_and_opens_tomorrow_after` koridordan bir şişe alıp tuşa basarak ikisini de pinler; `Baselines~/basket.png` bu yüzden yeniden kutsandı. **BOŞ ELLE ÇIKIŞ SORULUR** — `ClosingWorry()` hâlâ ayakta ve tek tuş üstünden de çalışıyor (`Leaving_the_market_having_bought_nothing_asks_first`). **SEPET KALAN BAKİYEYİ DE YAZAR (2026-09-04):** başlık bandı sağdan sola TOTAL ve **LEFT IN THE TILL** (`Money − CartTotal`, sıfırda kırmızı) — üst bar kasanın NE TUTTUĞUNU, sepet siparişin NE ETTİĞİNİ söylüyordu ve çıkarmayı oyuncu yapıyordu. **DOLUM KOLİSİ ARTIK KALAN (2026-09-04, yazar: "hem ayrı olarak alkolleri restocklayıp hem de ayrıyeten tam fiyatına restock satın alınıyor"):** "Restock the Whole Well" rafın TÜM açığını değil, `WholeWellPrice()` = tüm açık − sepetteki tek tek şişe satırları kadarını ister; sepetteki her çip fiyatı anında düşürür, sıfıra inince koli satılmaz (**IN**, raf zaten doluysa **FULL**) ve sepette duran bir koli her yeniden kurulumda `RepriceWholeWell()` ile güncellenir, sıfırlanınca sepetten düşer. Eski çözüm koliyi seçince tek tek satırları sepetten ATIYORDU — oyuncunun verdiği siparişi sessizce düzenleyen bir satır — ve koli yine tam fiyat yazıyordu. Core tarafında bir şey değişmedi: `RefillShelf()` çalıştığı ANDA rafı okur, tek tek satırlar sepette ondan önce geldiği için tam olarak kalanı tahsil eder, yani sepetin aritmetiği ile kasanınki aynı aritmetik. `The_restock_aisle_never_bills_the_same_measure_twice` bunu kasa üstünden pinler. **AÇIK ÜRÜNLER DE RÜTBESİNİ GÖSTERİR (2026-09-04, yazar: "markette açık olan her ürünün kutusunun bir tarafında kaç yıldız gerekiyorsa yıldız iconu ile gösterilsin"):** `TileSpec.RungStars` + `StarLadder` — kutunun SOL kenarında, sanat bandının boyunca, aşağıdan yukarı beş yuvalı dikey yıldız merdiveni (istenen rung kadarı amber, yarım rung yarım yıldız). Sağ kenarı stok göstergesi tuttuğu için tek boş sütun orası; mühürlü sandık rütbesini zaten kilidin etiketinde yazdığından ikisi asla birlikte çizilmez **ODA ÖNCE TEMİZLENİR (2026-08-25, yazar: "oyun sonu ekranı gelmeden önce açık olan tüm pencereler kapanır ana sahneye dönülür ... aynı şekilde gün başlarken de ekran ana ekran haline gelir ve temizlenir"):** `CloseEverySheet()` — kitap (SERT kapanır: kaydırma ve sayfa çevirme coroutine'leri durdurulur, panel anında gider; inen scrim'in altında yolculuğunu sürdüren bir sayfa tam da önlenmek istenen şeydi), ayarlar, geliştirici tezgâhı, rehber, defter, kimlik, servis akışı ve mahzen kapağı (anında). **Gece BİTERKEN çağrılır, kitaplar gelirken değil (2026-08-25 ikinci tur):** faz dönüşünün kendisinde — yani son müşteri hâlâ kapıya yürürken oda çoktan çıplaktır; `ShowDayEnd()` bir kez daha çağırır (araya girip bir şey açan olursa) ve `OnOpenTomorrow()` da, yani ertesi gece de temiz bir odada açılır. Gece artık yarım okunmuş bir tarifin, açık bir kimliğin ya da tin'inde içki kalmış bir tezgâhın ÜSTÜNDE sayılmıyor. |
+| **Gün başı (perde)** | **GECENİN TABELASI (2026-09-28, §9.142; yazar perde mock'larından A'yı seçti — "marquee").** İki gece arasındaki karanlıkta pembe kart yerine kulübün kendi neon tabelası yanar; barın KAPALI OLDUĞU on altı saat yine oynanır, 02:00 → 18:00 (2026-08-25, yazar: "güneşin doğudan çıkıp battığını ... saati de tam 18:00'a saran — KCD2'deki uyku ekranı gibi"). Kart plakası (`card_body`), bantlı gök, LampGlow haleleri, iki ismin tek koltukta el değiştirmesi ve 1.4× ölçekli hafta aleti gitti. **Tabela 688×536, alanın ortasında, plakasız:** gökyüzü penceresinin çevresinde kodla çizilmiş TEK neon tüp (`ChromeArt.NeonPath`: yarım boyda çizilir, tam 2× gösterilir — bir texel cam, iki yanında kenar, iki düz bant ışık; köşeler 12 birim pahlı), altında saat (`SegmentClock`, sanatın 6×'i), onun altında split-flap isim panosu, onun altında haftanın yedi armatürü; hafta numarası alt tüpün kırığında, tabelanın TEK ayağı (kırık, numaranın konuşulan dildeki genişliğine göre bükülür). **Tüp gün boyu YARIM yanar** (Amber[2] kenar, Amber[3] cam), saat 18:00'a oturunca **çakar** — karanlık .05, yarım .04, TAM (Amber[3] kenar, Cream[4] cam, Amber[2] bantları .30/.12); bu gece hikâye gecesiyse macenta. **Gökyüzü pencereyle AYNI model** (`SkyClock`, `sky_cycle.json`): 320×112 doku 2×'te, SATIR BAŞINA TEK DÜZ RENK — dither YOK (yazar pencereden 09-22'de tam bunu kaldırdı: "pixel pixel gün batımı"); 02:00'si pencerenin `t=1`, 18:00'i `t=0` anahtarı, aradaki gün json'un yeni `day` bloğunda (04:30, 06:00, 07:30, 12:00, 15:30; `SkyClock.DayBands`), yani perde odanın penceresinin taşıdığı gökyüzüne kalkar (eski `SkyKeys`'in 18:00'i pencereninkinden kaymıştı). Güneşin ve ayın halesi göğe ısıtılarak işlenir; yıldızlar tek texel, üç basamakta titrer; gök yalnız beş dakikalık okuma değişince (ya da yıldızlar çıkmışken titreme basamağı dönünce) yeniden çizilir. **Şehir, güneş ve ay ÜRETİLMİŞ SANAT** (`Scene/curtain_city/sun/moon.png`, `Tools/day_sky_gen.py`) ve artık TINT'SİZ: eski kod silüeti gündüz beyazın ÜSTÜNE itiyordu, uGUI tepe rengini Color32 yazıp 1'de kırptığı için hiç çalışmamıştı — gündüzü artık gökyüzü taşıyor. Güneş ve ay şehrin ARKASINDAN doğar, pencerenin maskesi körfezin altını keser; ay pencerenin de ayıdır (`WindowSky.HangMoon`), dosyası kalır. **Pano TEK GÖVDE** ("kutu kutu" olmasın): kasa Night[1], yüzler Night[2], sayfalar arası kıl payı dikiş Night[1], boydan boya menteşe Night[0], altta dudak Night[3]; harf display 24 Cream[4], menteşenin geçtiği bant aynı harfi Cream[2] çizer (kesmez — mock'ta kesik W ₩ okunuyordu). Sayfa sayısı iki ismin uzununa +2 (isim metin öğesine bölünür, aksan harfinde kalır; 16 sayfa kurulu, açılışta gereken kadarı yanar). Sayfalar 0.60'tan itibaren .06 arayla düşer, iki isimdeki harflerden 2–4 ara harften geçer (.08 adım: .04 düşen yaprak, .04 oturmuş) — sabit sırayla, zar yok. **Hafta satırı 1×'te:** yedi sütun 72 aralıklı, body 16; geçmiş geceler Cream[2] (siyah üstünde 6:1 — eski Night[4] 1.8:1'di, yazarın "ufak ve sönük"ü), gelecekler Cream[3], pazar Cream[1] ve altında küçük panjur, hikâye gecesi Magenta[4], bu gece Amber[4] ve altındaki tüp yanık (hikâye gecesinde tüp de macenta); cumartesi yıldızı kendi altınında, yalnız alfa (.62, gecesi gelince 1). Giden gecenin tüpü 1.75'te söner, gelenin tüpü 1.95'te çakar. **Ritim:** sıradan gece **6.80 sn** — 0.40 tabela dört alfa basamağında gelir → 3.60 gün → 1.20 18:00'da tutuş → 1.60 kalkış (önce tabela dört basamakta söner, siyah bütünken; sonra siyah (1−k)² ile kalkar, tabela odanın üstünde hiç çizilmez). **Cumartesi→pazartesi 8.60 sn, PAZAR oynanır:** saat 40 saat sarar, pano SATURDAY→SUNDAY (`calendar.day_off`), cumartesi tüpü söner, 1.40'ta büyük panjur haftanın üstüne iner; saatte pazar gece yarısında (≈3.39) hafta numarası iki sayfalı muhafazasında 04→05 döner, panjur kalkar, pano SUNDAY→MONDAY, son sayfadan sonra MON çakar; 18:00 6.00'da. `Motion.Reduced`: bitmiş kare ilk kareden, 1.20 tutuş, tabela ve siyah dört basamakta çıkar (**1.52 sn**). NO FLASHES: çakmalar doğrudan yanar, yıldızlar ve iki nokta sabit. Hepsi `Ceremony.Pace` ile koşar (en uzunu Pace 8'de 1.075 sn; takımın 1.2 sn beklemesinin altında). Perde Night[0] (saf siyah değil), `BleedWidth` ile pencerenin kenarına kadar; `DoorsClosed` gecenin saatini, odayı ve görev haberini tutar; açılışta `curtain`, bitişte bir kez `day_open`. **Açılışta hayalet perde yok:** HUD her kurulumda saati 0/7'de, kendisi kapalı bir perdeyle doğuyordu — ön kapının altında `day_open` çalıyor, dil yeniden yüklenince gecenin saatini 7 sn tutuyordu; perdenin süresi artık her açılışta kurulur ve açılıştan önce 0'dır. Yeni loc anahtarı yok: `calendar.night.*`, `calendar.day_off`, `calendar.column.*`, `hud.week_well.caption`. |
+| **Back bar (menü)** | **İÇECEK SEÇMENİN TEK YERİ (2026-08-13).** Duvar garnitür VE BİRA dışında her şeyi taşır — gazlılar dahil. **Bira duvarı terk etti (2026-08-15):** fıçı satırı kaldırıldı, draught'un tek kapısı tezgâhtaki bira musluğu (aşağı). Şişe hover=bilgi kartı, tıkla=rota (garnitür anında tin'e tutam; gazlı→Serve eline; kalan→Shaker eline). Kapalı şişe kendi kabına bakar: gazlı SERVİS BARDAĞI dolu diye kapanır, kalanı tin dolu diye. Sahne geçişleri KAYAR (ileri sağdan, geri soldan; açılış fade, kapanış anlık); her istasyonda sol kenar BACK TO BAR. **(2026-08-22'den beri duvar yok: şişe tezgâhın altındaki mahzenden alınır; 2026-09-28'den beri o mahzen on nişli, tezgâhın basamağıyla giyinen bir Art Deco vitrin — §9.143.)** |
 | **Shaker** | Elde tek şişe, tin, kapak, kaşık — **tezgâhta içecek rafı YOK (2026-08-13)**; başka şişe için back bar'a dönülür. Şişeyi kaldır-yatır dök (akış şişenin ÖLÇÜLEN kapağından çıkar, 2026-08-11); AÇIK tin'de kaşıkla daire=karıştır; kapağı tak; tin'i savur=çalkala; kapalı+karışık → sağ kenar TO THE GLASS. **Kaşık ÇİZİM artık (2026-08-25):** `bench_spoon` — burgu saplı bar kaşığı, 32×128 sanat tam 2×'te, kâse aşağı (üretim kâse-yukarı geldi, sevkte çevrildi); üç gri dikdörtgen sanat yoksa yedek olarak durur |
 | **Serve** | shaker'ı NİŞANLA dök (kaçırırsan döker); **dolap/raf YOK (2026-08-13)** — buradaki tek şişe back bar'ın elimize verdiği gazlıdır (Core tin'de reddettiği için bardak onun tek kapısı), düğme basılı gelmediğinden **elde DURUR**, basınca kavranır; hazırlık kapları tezgâhın sol ucunda; SERVE tuşu bardak boşken sönük. **HAZIRLIK REWORK'U (2026-08-25):** (1) **TUZ/ŞEKER BİR BECERİ:** tabağa bas-tut, imleçle bardağın AĞZININ ETRAFINDA tam bir tur çiz (kaşığın işaretli-süpürme aritmetiği, doksan derece döndürülmüş; yön fark etmez; ağzın 34–190 birim bandı dışına çıkmak turu duraklatır, dökmez) — ağız çevresinde 14 dilimli halka turu gösterir, yarım kalan tur rafta "SALT %60" diye bekler, tur tamamlanınca `AddPreparationAtGlass` aynı Core fiiliyle işler. (2) **BUZ SAYILIR:** kova hiç 'bitti'ye dönmez, her sürükle-bırak bir küp ekler (`GlassContents.IceCubes` — adım listesi tekilliğini korur, hakem yine 'buz var mı' diye bakar; küpler `TransferInto` ile içkiyle taşınır) ve küpler bardağın İÇİNDE sıvı çizgisinde yığın olarak çizilir (GlassDecor, 7 çizim tavanı, el dizilimi tablosu — kaynayan buz olmasın diye sabit). (3) **SERVİSTE TEZGÂH SIFIRLANIR:** SERVE veya sahneden çıkış `ResetServeHand` — eldeki tabak, sürüklenen parça, halka ve yarım turlar temizlenir. **Kaplar üretilmiş sanat (2026-08-25, tek take):** `bench_dish_salt/sugar` (tur atılan sığ tabaklar), `bench_bucket_ice` (küpleri görünen açık kova), `bench_bowl_lemon` — `Tools/bench_props_gen.py`, quantize zinciri; eskiler yedek olarak duruyor |
 
@@ -1027,7 +1027,8 @@ hücre boyu `fixtures.json`'daki `cellW/cellH` — TV'nin kesicisi de artık hü
 `tap_water` döngüsü çalar (rim döngüsüyle aynı kanal, rim öncelikli). Eşleşmeyen dökümün bardağı da
 sahnede duruyor.
 
-**İki sembol (H5, aynı gün).** Üst şeritte yıldız bloğunun solunda iki beşli şerit: **kalp** =
+**İki sembol (H5, aynı gün).** (2026-09-28 ikinci turdan beri şeritler kirişte değil: yıldızların üstüne gelince
+sarkan kartta, KONFOR üstte, §9.107.) Üst şeritte yıldız bloğunun solunda iki beşli şerit: **kalp** =
 gecenin servisi (`ServiceTonight`), **madalyon** = odanın o anki konforu (`ComfortNow`, tezgâhta
 bardak dururken düşen tek okuma); sayı yok, dolgu okumadır (C11 korundu: yıldızın altına bir şey
 girmedi). Fişte puan satırının altında ev satırı (`BillHouse`: SERVICE ♥ n.n · COMFORT ◉ n.n,
@@ -1664,6 +1665,99 @@ Zamanlama iki yerde de oyunun kanunu: 12 fps, yürüyüş döngü, tek atışlar
 
 ### 9.107 · Sekizinci liste (4/…): üst bar yeniden, haftanın işi sekme, yeni ayar ikonu (2026-09-22)
 
+- **GÜNCEL DÜZEN (2026-09-28, ikinci tur, "daha sade"; aşağıdaki "neonun altında kasa" turunun ve 09-22
+  maddelerinin yerleşimini geçersiz kılar).** Yazar kasayı görünce: "Üst bar hala istediğim gibi değil,
+  sadeleştirelim çok şey var şu an üst barda. butonları kaldır sadece yıldız gözüksün konfor ve servis yıldızın
+  üstünde hover ile gözüksün. para göstergesi saatle aynı olmasın." — ve "red nights ne?" diye sordu. Kirişte üç
+  kuyu kaldı, ortası boş, tuş yok (`TycoonHud.TopBar`):
+  - **Solda** saat kuyusu olduğu gibi (segment saat, NIGHT numarası, gecenin adı ve kalabalığı; `LayTopBar` yalnız
+    onu sözlerine göre diziyor).
+  - **En sağda YILDIZLAR** (`Standing`, −16'da, her dilde **174** = 12 + 5×30 + 12, x 1090–1264): barın tek puanı;
+    beş küçük yıldız tam 2×, dolgu tam birimde, YENİ bayrağı sıranın köşesinde. Kuyunun tamamı merdivenin kapısı
+    (`OpenLadderFromTheBeam`; eskiden yalnız 24'lük sıra).
+  - **Onun solunda KASA** (`Till`, 8 boşlukla): saatin yedi çubuğu değil, evin rakam yüzü (`_figures`, Malibu
+    Arcade) **24**'te, Lime[4] (eksi olunca ViceRed[3]), solunda çizilmiş para destesi 24'te 1× (`CoinFigure`,
+    account; tabletin hesabıyla aynı dil). Cam gösterebileceği en geniş kasaya göre kesilir: altı rakam ($999.999
+    ya da −$99.999) + boşluk + deste, yüzün kendisinden ölçülür (`LayMoneyWell`) → İngilizcede figür 176, kuyu
+    **200** (x 882–1082); yedinci rakam gelirse kuyu bir kez genişler. Sayım (`RunTheTill` → `ShowTillFigure`) ve
+    gün sonunda saklanma aynı; para uçuşunun hedefi figürün kendi dikdörtgeni (`_beamTillCard`, ortasından
+    pivotlu, darbe ortadan şişer).
+  - **Kart (`BeamCard`):** yıldızların ya da kasanın üstüne gelince kuyunun altından tek bir kart sarkar — odadaki
+    ipuçlarının plakası (ui_blue kendi boyunda + tarama çizgileri), tepesi y 60'ta, kuyunun ortasına göre, çerçeveden
+    8 içeride kıstırılır; ipuçları gibi imleçten büyür ve ona söner. Tek satırlık ipucu değil kart, çünkü satırları
+    var ve her satır tam birimde. Kendi kanvası **29**: sağ üstte asılı tarif notunun (28) ve tezgâhın (25) üstünde;
+    duraklatma, ayarlar, merdiven, gün sonu, oyun sonu ve ön kapı açıkken iner (`BeamCardBlocked`). Sözler yalnız
+    yazdıkları sayılardan biri oynayınca yazılır; kare başına ayırma yok, şeritlerin dolgusu yalnız genişlik.
+    - **Yıldızların kartı:** başlık `build.standing.tip`'in ilk satırı, altında bu gecenin okuması
+      (`build.standing.tip_reading`: SERVICE · COMFORT = TONIGHT, `{comfort}` gecenin dosyalayacağı
+      `ComfortTonight`), sonra iki şerit: KONFOR madalyonları (`ComfortNow`, odanın şimdisi — dağınıklığın düşürdüğü)
+      üstte, SERVİS kalpleri (12×12, 1×; `ServiceTonight`) altta, yanlarında `build.house.comfort` /
+      `build.house.service` sözcükleri. Sayı bir kez yazılıyor: okumada.
+    - **Kasanın kartı** kasanın lambayla söylediğini sözle söyler: para (`build.till.tip`, eksi "−$40"), gece
+      açıkken bu gecenin faturası (`hud.till.tip_bill`, Core'un `BillAtClose`'u), üst üste kırmızı gece sayısı
+      (`hud.till.tip_red`: `Ledger.DebtStrikes` / `DayLedger.StrikesToClose`), kırmızı gecenin ne olduğu
+      (`hud.till.tip_red_rule` — "red nights ne?"nin cevabı: kasası $0'ın altında kapanan gece; üçü üst üste barı
+      kapatır) ve kapanış şimdi bir tane ekleyecekse ViceRed[3] bir uyarı satırı (`hud.till.tip_red_warning`,
+      `StrikeTonight`).
+  - **Gitti:** JUKEBOX tuşu (sonraki plak `NextTrack`, duraklatma `MusicToggle` kısayolunda, liste ve ileri sarma
+    AYARLAR → SES'te; `BuildJukebox`, `OnJukebox`, `RefreshMusicPlayer` silindi, `TycoonHud.Player`'da yalnız
+    müziğin sözleri kaldı), ayar çarkı (ayarlar Escape → duraklatma → SETTINGS'ten ve ana menüden; `_cogKeyRt`
+    silindi, `_settingsHeldClock` odadan doğrudan açan bir kapı olursa diye yerinde), kasa kuyusunun BILL bloğu,
+    RED NIGHTS lambaları, KONFOR/SERVİS şeritleri ve kendi ipuçları. `hud.beam.*` ve `hud.jukebox.tip` yalnız
+    İngilizcedeydi, silindi; `build.player.tip_title`, `build.settings.*`, `build.house.*.tip*` 29 tabloda duruyor,
+    notları "artık gösterilmiyor".
+  - **Dalga** (`StepStarWave`, eski `StepHouseWave`): yalnız yıldızlar (şeritler kirişte yok); soketleri kurulurken
+    tutuluyor, kare başına adla aranıp dize kurulmuyor.
+  - **Tüp** tek durum ışığı olarak aynı: amber, LAST CALL magenta, eksi kırmızı, oyun sonunda SÖNÜK. Fatura kasadan
+    büyükse tüp değil kasanın kartı söyler. `TopBarH` 54; altındaki her şey (odanın çerçevesi, notlar, balonlar,
+    `QuestBubble`) yerinde.
+  - Yeni anahtarlar yalnız İngilizce (`hud.till.tip_bill`, `hud.till.tip_red`, `hud.till.tip_red_rule`,
+    `hud.till.tip_red_warning`, `Tools/loc/fragments/hud.json`); 28 tablo çevirileri gelene dek İngilizceye düşer.
+  - Oyunda henüz ölçülmedi: kuyuların dikdörtgenleri, kartın yeri ve boyu (en, ru, el; ja/zh/ko'nun 12'lik yüzü 12'lik
+    satıra sığıyor mu), para uçuşunun yeni kasaya yayı, `LastCall → Audit UI` kart açıkken.
+
+- **İLK TUR (2026-09-28 sabahı, "neonun altında kasa"; yerleşimini yukarıdaki ikinci tur geçersiz kıldı, tarih
+  olarak duruyor):**
+  kiriş 1280×54 (`TopBarH` artık `internal const`; `TycoonServiceFlow.HudTopBarH` onu okur, kopya kayamaz),
+  kuyular 42 (y 6–48). Kiriş artık bir koşuyu bitirebilecek tek soruyu cevaplıyor: bu gecenin kasası bu gecenin
+  faturasını karşılar mı, kaç kırmızı gece zaten lambada? İflas tek kayıp ve hafta kartı grev basana dek
+  görünmüyordu.
+  - **Solda** duvar saati kuyusu değişmedi (segment saat, gecenin numarası, adı, kalabalığı); ipucu ikonu
+    `Mark("clock")`.
+  - **Ortada, barın ortasına oturan KASA** (`TillCard`, `ChromeArt.Well`): yedi hücreli segment figür
+    (`SegmentFigure(host, lit, cells: 7)`; altı hücre $100.000'de "$"ı kesiyordu, ESC ayağı 6'da kaldı), para
+    uçuşunun hedefi (`_beamTillCard`, ortasından pivotlu). **BILL:** kapanışın alacağı `BillAtClose` — kira +
+    walk-out ücretleri − kapının teşekkürü, Core'un kapanışta düştüğü toplamın kendisi, ikinci bir hesap değil;
+    fiyat işaretiyle, `StrikeTonight` iken ViceRed[3], gece açık değilken boş, aynı gecede artarsa `UiPunch`.
+    Ev sahibesinin kapanışta ödediği iş bu faturada yok, yalnız ekler: bekleyen lamba fazla uyarabilir. (Son
+    walk-out kapanışı yapan karede düşüldüğü için düşülen fatura son gösterilenden bir walk-out ücreti büyük
+    olabilir; Core testleri bunu pinler.) **RED NIGHTS:** üç kırmızı lamba (`ChromeArt.Lamp` 16'da, 18 aralık,
+    yanık olanın arkasında `LampGlow` 24): üst üste $0'ın altında kapanan geceleri yukarı sayar, hafta kartının
+    STRIKE n/3'ü gibi. Kapanış şimdi bir tane ekleyecekse sıradaki lamba BEKLER — vardiyada sabit ViceRed[2],
+    LAST CALL'dan sonra 1 Hz ViceRed[1]↔[3] (FLASHES kapalıyken sabit ViceRed[3]); ölü lamba Night[3]. İpucu üç
+    cümleden birini seçer (bu gece / şimdiye dek / hiç yok). İngilizcede kasa 404 geniş, x 438–842 ("RED NIGHTS"
+    54 ölçüldü, bloğu 56), lambalar 776/794/812; merkezi `clamp(640, saatin sağı + 16 + W/2, 870 − W/2)`, iki
+    boşluk da kapanırsa ortası.
+  - **Sağda** lisans kuyusu her dilde **278** (x 886–1164): KONFOR/SERVİS yazıları kalktı (ipuçları söylüyor,
+    kirişin en geniş sözleriydi; anahtarlar `BuffWord` için duruyor, `StripCaption` gitti). 16'lık madalyalar ve
+    **12×12 kalpler** (çizildikleri boyda; 16'lık hücrede 1,33× idiler), beş küçük yıldız tam 2×; yıldızların
+    ipucunda `{comfort}` ve `{tonight}` `ComfortTonight`'tan; bütün dolgular tam birimde (`Mathf.Round`, dalga da
+    çizilen kenarı sayar).
+  - **JUKEBOX** tuşu (42, −66'da, x 1172–1214): paketin müzik glifi 32×32, Cyan[4], müzik duraklıyken Cyan[1];
+    basınca sonraki plak, tık ve "NOW PLAYING · şarkı" bildirimi; `NextTrack` kısayolu da aynı bildirimi
+    gösterir. En sağda yazarın neon ayar tuşu (§9.120'deki satır).
+  - **Gitti:** 300'lük müzikçalar kuyusu (atlama JUKEBOX'ta, duraklatma `MusicToggle` kısayolunda ve AYARLAR →
+    SES'in çalarında), CLOSED afişi (`_bannerText`, `ShowClosed` — kaybı artık oyun sonu anlatır, §9.138), ölü
+    hafta şeridi kodu.
+  - **Tüp tek durum ışığı:** VARDİYA amber, LAST CALL magenta, EKSİ (`Money < 0`) kırmızı, yeni **SÖNÜK**
+    (`_beamOut`, oyun sonunun NEON vuruşu yakar): Night[2] cam, hale kapalı. Fatura kasadan büyük ama para hâlâ
+    ≥ 0 ise tüp DEĞİŞMEZ — o uyarı BILL rakamının ve bekleyen lambanın; kırmızı tüp hep gerçek borç.
+  - **Diller:** `LayTopBar` her kare bir dizge kurup karşılaştırmak yerine bir int anahtarla (gece, kalabalık,
+    last call, dil) yeniden dizilir; gecenin adı ve kalabalık da yalnız anahtar dönünce yazılır, kiriş kare başına
+    bir şey ayırmıyor. Yeni anahtarlar yalnız İngilizce (`hud.beam.*`, `hud.jukebox.tip`, `hud.music.now`); 28
+    tablo çevirileri gelene dek İngilizceye düşer.
+  - Oyunda henüz ölçülmedi (dikdörtgenler, para uçuşunun ortadaki kasaya yayı, ru/el/bg/zh boşlukları, audit).
+
 - **Üst bar kendi sözlerinin genişliğinde** (`TycoonHud.TopBar`): soldan saat + gecenin sayısı + gecenin adı ve
   kalabalığı tek kuyuda (saat ve tarih birlikte); ortada kompakt müzikçalar (22'lik tuşlar, 300 en çok, kalan yere
   sığar, uzun şarkı adı kelimede kesilir); sağdan ayar tuşu, puanlar kuyusu (KONFOR/SERVİS şeritleri + beş küçük
@@ -1902,6 +1996,262 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.147 · Ayarlar bir kabin: sekmeler haftanın satırı, seçimler kuyuda, tüp göstergeler, bayraklı dil listesi (2026-09-29)
+
+Yazar (§9.145'teki aynı istek): “Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle tekrardan diğer sahneleri
+ürettiğine uygun bir tasarımda sıfırdan tekrar oluştur.” Bu bölüm işin dördüncü parçası: AYARLAR penceresi §9.146'nın
+kitiyle baştan kuruldu. §9.146'nın "ayarlar bugün hâlâ eski plakasında" cümlesi artık geçmiş. **Her ayar aynı
+depoya aynı değeri yazar** (Sound, Keys, PlayerOptions, DisplayOptions, Localization); değişen görünüş ve aşağıdaki
+düzeltmeler.
+
+- **Kabin** (`TycoonHud.Settings.cs`, alan birimleriyle; 21:9 için yeniden dizildi, aşağıda): x 112–1168, tacın tepesi
+  90, gövde 130–630 (tüpü 12 içeride, 142 ve 618'de); taçta SETTINGS bir NEON BAŞLIK, ışığı tacın yüzüne kırpılı ve
+  sayfanın 6 üstünde durur; gövdenin
+  çevresinde macenta tüp; ikisi de pencere AÇILINCA çakar (`NeonStrike`). Üretilmiş marquee (`menu_header`, P2 panosu),
+  `BluePlate` kökü (read_menus bulgu 1: teal dolgu ve ui_blue halkası neonun içinde görünüyordu), `HangTheMarquee`,
+  `LayTabs`, paket anahtarlı sekmeler ve pirinç ikonlar gitti.
+- **Sekmeler** (kabinin solunda bir SÜTUN, x 136–316, 150 + 60n): perdenin HAFTA SATIRI hücresi gibi — sayfa başına
+  180×54'lük bir hücre, sayfanın neon işareti + sözcüğü, altında 156 birimlik düz tüp. Açık sayfa: işaret ve tüp yanık cyan, sözcük Cyan[4]. İmleç altındaki: işaret yanık,
+  tüp yarım ClubBlue. Diğerleri: yarım, sözcük Cream[3]. Sekmeler çakmaz. Sözcük hücreye sığmazsa 8'e iner — ölçüldü,
+  inmemeli (Rusça УПРАВЛЕНИЕ 204'lük hücrede 32 birim pay bırakıyordu, 180'de 8).
+- **Sayfa** 328–1144 × 150–560 (410) bir ÇUKUR; her ayar bir SATIR: 20'de işaret (Cream[2]), 48'de ad (gövde 16 Cream[4]),
+  kontrol sağdan 24 içeride, satırlar arasında Night[2] çizgi. Satır aralığı sayfaya sığan en büyük ve 2 (mod 4) — 34
+  yüksek kontrol çift ızgaraya otursun diye: SES 62, KONTROLLER 46, EKRAN 38. İmleç altındaki satır ClubBlue[0]
+  zeminde, solunda ClubBlue[4] sekme, işareti ClubBlue[4]. Ad kontrolün 16 soluna kadar sığmazsa 8'e iner (hiç inmiyor).
+- **Not kuyusu** (sekmelerin altında, 136–316 × 392–612; ilk kuruluşta sayfanın altında 596–624 tek satırlık bir
+  şeritti): bir Night[0] kuyu, gövde 8 Cream[3], ortalı ve SARILI. İmleç altındaki satırın NOTU, yoksa sayfanın ipucu
+  (SES: şarkının listesi ve sırası `build.player.place`; KONTROLLER: `controls_hint`; DİL: ipucu ya da — başka bir dil
+  seçilince — O DİLDE ve o dilin yüzünde "APPLY'a bas, bar hemen değişir"). Notlar satırlardan çıktığı için her satır
+  29 dilde tek satır. (Eski kod seçilen dilin notunu ekrandaki dilin yüzüyle çiziyordu: İngilizce arayüzde Rusça not
+  boş kalıyordu. `LanguageFonts.BodyFor(code, house)`.) TONIGHT'S BOOK artık `book_note`'u söylüyor.
+- **Kontroller, tek dil bilgisi** (BUILD_SPEC §2):
+  - **SEÇİM**: bir Night[0] kuyu, Graphite[2] kenar; seçenek başına bir bölme, Graphite dikişler. Seçilen: Cyan[3] emaye,
+    Cyan[4] ışık satırı, sözcük Night[1]. İmleç altındaki bölmenin kenarında ClubBlue tüp. Bölme genişliği sayfa başına
+    tek: en geniş seçenek + 32, en az 80, 4'e yuvarlı — EKRAN'ın altı seçimi bir sütun eşit hücre. SOUND, INVERT POUR,
+    WINDOW, MOTION, FLASHES, POINTER, COLOURS, PAUSE WHEN AWAY artık seçim (anahtarlar tıklamayla değişiyordu; bölme
+    doğrudan seçer).
+  - **GÖSTERGE**: [−] 272 birimlik düz TÜP [+] ve değer (Cyan[4]). Tüp baştan sona karanlık cam; yanık kopyası seviyeye
+    kadar tam texel adımlarla kırpılı (`RectMask2D` — sprite çoğalmaz), onda bir Graphite[3] çentik, seviyede bir
+    Graphite KELEPÇE (`MenuArt.Clamp`). Adım yine onda bir. Sessizken tüp karanlık, değer Cream[2]'de yüzde olarak
+    kalır (seviye korunuyor).
+  - **DÖNGÜ** (RESOLUTION, FRAME RATE): [<] değer Night[0] kuyuda (Cyan[4], en geniş değer + 32, en az 144) [>].
+    Seçecek bir şey yokken (tam ekranda pencere boyu) tuşlar karanlık cam, değer Cream[2].
+  - **KÜÇÜK TUŞ** (34²): sözcüksüz tabela tuşu; 9×9 neon işareti (`NeonIcons.SmallView`: eksi, artı, önceki, bekle,
+    çal, sonraki, sol, sağ, aşağı — 15 texel, 2×'te 30), dinlenirken YARIM CYAN, imleç altında yanık, dış bandı yok
+    (eleştirmen: küçük kontrollerin hepsi macenta yanınca macenta çerçeveyle yarışıyordu).
+  - **SATIR TUŞU** (TONIGHT'S BOOK'un OPEN'ı, START OVER'ın NEW RUN'ı): 34 yüksek tabela tuşu, solda cyan küçük şerit oku.
+  - **TUŞ KAPAĞI**: yazarın Classic çizimi 2×'te, satırın sağında, çift ızgarada. Dinleyen satır İMLEÇ ALTINDAKİ gibi
+    yanar, kapak BASILI karesinde DURUR (yanıp sönmez — FLASHES kapalıyken hiçbir şey yanıp sönmez), solunda cyan
+    PRESS A KEY. Sayfa yönleri "←/→" yerine evin şerit işareti (Silkscreen'de ok yok).
+- **SES**: üç gösterge; SOUND seçimi (OFF/ON); NOW PLAYING — önceki/bekle/sonraki küçük tuşları ve 268'lik şarkı kuyusu
+  (başlık Cyan[4], sonunda aşağı işareti; basınca şarkı listesi YUKARI açılır, satır 20 — 14 şarkı sekmelerin altında
+  biter); TRACK — 340'lık sarılabilir tüp, kelepçe şarkıyla yürür, saat sağda. Bekle tuşu ne YAPACAĞINI gösterir
+  (çalarken bekle, beklerken çal). Pencere açıkken şarkı değişirse başlık ve şerit güncellenir (eskisi bayat kalıyordu).
+- **KONTROLLER**: yedi tuş kapağı, INVERT POUR seçimi; notu şeritte.
+- **EKRAN**: WINDOW, MOTION, FLASHES, POINTER, COLOURS, PAUSE WHEN AWAY seçim; RESOLUTION ve FRAME RATE döngü;
+  TONIGHT'S BOOK → OPEN (kapıdan açılınca karanlık cam: kapının ardında okunacak bir gece yok, defter kapının ALTINDA
+  açılıyordu); START OVER → NEW RUN.
+  - **START OVER ÖNCE SORAR** (eleştirmen: satır içi uyarısı yalnız imleçte görünen şeride taşındı, tek basış geceyi
+    atıyordu): ESC'nin NEW RUN'ı gibi iki basış — ilki `chrome.pause.new_run_sure` + ViceRed tüp, 2,6 sn içinde ikincisi
+    yeni tohumla yeni bar. Tuş iki sözcüğünün uzununa göre ölçülür, sorarken büyümez. **Kapıdan START OVER kapının
+    NEW RUN'ıdır**: önce kapı kapanır (eskiden yeni koşu kapının arkasında başlıyor, kapı üstünde kalıyordu).
+- **DİL**: 29 dil `Languages` sırasıyla üç sütun on satır, hücre 256×36 (aralık 8/4). Hücrede yazarın bayrağı 1:1 ve
+  dilin KENDİ adı, onu çizen yüzde (`LanguageFonts.ListFace`): tamamı Latin-1 ise ev yüzü 16'da; Japonca/Çince kendi
+  Fusion Pixel'inde 12; geri kalan (Kiril, Yunan, Hangul, Çek/Rumen/Vietnam harfleri) Galmuri11 12'de — arayüz hangi
+  dili konuşursa konuşsun liste aynı okunur. Ad parantezsiz (BRASIL, ESPAÑA, LATINOAMÉRICA bayrağın işi; eleştirmen: 36'lık
+  hücrede alt satır kenara değiyordu); imleç altındayken tam ad şeritte kendi yüzünde. SEÇİM cyan tüp, İMLEÇ ClubBlue
+  tüp, KONUŞULAN dil hücrenin sağ ucunda cyan bir BONCUK (`MenuArt.Bead`). Tüp bayrağın ALTINDA: ışığı bayrağın üstüne
+  yayılmaz. Bayrak ipuçları gitti (read_menus bulgu 7: ayarların altında çiziliyordu). En uzun ad BAHASA INDONESIA 180'in
+  176'sı.
+- **Ayak** (566–612, sayfanın altında, kabinin Night[2] yüzünde): solda RESET DEFAULTS (cyan işaret), sağda tek amber tuş BACK. Bir dil
+  seçimi bekliyorken APPLY amber olur (onay işareti mürekkep), BACK yanında koyu durur; DEV TOOLS (yalnız editör/dev)
+  APPLY varken çekilir.
+- **Nerede durur** (read_menus bulgu 8): oyunda oda MenuScrim'in altında; KAPIDAN açılınca kapının kendi alanı —
+  Night[1] ve dört bantlı vinyet — scrim YOK (scrim alanın üstüne de biniyor, sayfa neredeyse siyah okunuyordu).
+  Kapının paneli gizli kalır (§9.146), bu yüzden süzülen şişeler ayarların arkasında görünmez. İkisinde de kabinin
+  dışına tıklamak geri döner (eskisi gibi).
+- **Ölçüm** (`scratchpad/menus_build/settings_fit.py`, `menus/system/kit.py`'nin LanguageFonts eşleniği, 29 dil, Unity
+  genişliği için +2): 0 taşma. Odak dilleri — ru: sekme 30 pay; de: GESAMTLAUTSTÄRKE 100, PAUSE IM HINTERGRUND 162;
+  el: şerit 332; fi: TRACK 146, 100 % değeri 10; pl: ODWRÓCONE NALEWANIE 292. İlk ölçüm iki taşma buldu ve düzeltildi:
+  sessizken değerin OFF okuması 64'lük kutuya sekiz dilde sığmıyordu (DESLIGADO, WYŁĄCZONY, ИЗКЛЮЧЕН 68–102) → yüzde
+  Cream[2]'de kalır; BAHASA INDONESIA 168'e sığmıyordu → ad 58'den başlar, boncuk uca kaydı.
+- **21:9'a sığar** (inceleme, 2026-09-29): ilk kabinde tacın başlığı ve ayak tuşları (632–678) 21:9'un görünen
+  90–630'unun dışında kalıyordu — dil değiştirmenin tek yolu APPLY görünmüyordu. Üst üste dizilince sekme + sayfa +
+  şerit + ayak 540'ın ~576'sını istiyor ve sayfa küçülemez (EKRAN'ın on satırı 38'de, DİL'in on bayrak hücresi 36'da),
+  bu yüzden sekmeler bir sütuna kalktı, not şeridi onların altına kuyu oldu, kabin 864'ten 1056'ya genişledi. Satır
+  aralıkları aynı (62 / 46 / 38). 1056 genişlik 16:10'un (Deck) görünen 64–1216'sına sığar; 4:3 pencere kabinin iki
+  yanından 48'er birim kırpar (oyunun geri kalanı gibi).
+
+### 9.146 · Menülerin kiti: ESC bir kabin, jenerik bir kabin, kapı 21:9'a sığıyor (2026-09-29)
+
+Yazar (§9.145'teki aynı istek): “Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle tekrardan diğer sahneleri
+ürettiğine uygun bir tasarımda sıfırdan tekrar oluştur.” Bu bölüm işin üçüncü parçası: menülerin ortak kiti, ESC,
+jenerik ve kapının yeniden dizilişi. Ayarların dört sayfası ve klavye/gamepad gezinmesi ayrı adımlar; ayarlar bugün
+hâlâ eski plakasında (marquee, paket tuşları), yalnız §9.145'in işaretlerini taşıyor.
+
+- **Kit** (`Art/MenuArt.cs`, `Behaviours/NeonTube.cs`, `NeonWord.cs`, `NeonStrike.cs`, `SignKey.cs`,
+  `Hud/TycoonHud.MenuKit.cs`). Haftanın öteki ekranlarının dili — CLOSED tabelası, mahzen, perdenin gece tabelası —
+  kodla, yarım boyda çizilir, TAM 2× gösterilir, her texel bir rampa basamağı:
+  - **KABİN** (`MenuArt.Cabinet`): Night[2] cam, bir texel Graphite[3] kenar, HER üst kenarın altında Graphite[4] ışık
+    satırı, gövdenin köşelerinde vida; ortasında üç basamaklı omuzlar (basamak dört texel, mahzenin nişi) üstünde bir
+    TAÇ. Taç, başlığın IŞIĞI + iki yanda 24 birim hava kadar geniş (8'e yuvarlı, en az 240); sığmayan başlık display
+    16'ya iner (taşmaz). Gövdenin 12 texel içinde macenta NEON TÜP (`MenuArt.FrameTube`, `ChromeArt.NeonRing`'in
+    halkaları), tacın altında kırık — perdenin tabelasının hafta plakası için kırıldığı gibi.
+  - **NEON BAŞLIK** (`NeonWord`, Text'e mesh efekti): Cream[4] cam, bir yüz pikseli Magenta[3] astar ve CLOSED'ın dört
+    düz bandı (yüzün KENDİ pikseliyle 6/4/3/2 erişim, [0]/[0]/[1]/[2] .30/.45/.55/.65), dört yöne büyür; her kopya OPAK
+    ve durduğu zemin tokenının üstüne ÖNCEDEN karıştırılır (taçta Night[2], jenerik okuma alanında Night[1]).
+    **Eleştirmenin düzeltmesi:** opak ve kırpılmamış bant tacın üst kenarını siliyor, tek satırlarda başlıyordu (ayarlarda
+    54'lük üst barın içinde). Işık artık tacın yüzüne `RectMask2D` ile kırpılır (kenarın ve ışık satırının altından,
+    yan kenarların arasından), sözcük ışığının ilk satırı maskenin ilk satırı olacak kadar aşağı asılır.
+  - **ÇUKUR** (`MenuArt.Recess`): plakaya oyulmuş panel — Night[1] (enstrüman KUYUSU Night[0]), üst ve sol gölgede
+    (Night[0]), sağ bir basamak yukarı (Night[2]), eşik ışıkta (Night[3]); 9-dilim.
+  - **TABELA TUŞU** (`SignKey`): zemininden bir Night basamağı çıkık plaka, Graphite kenar ve ışık satırı, ESC
+    tuşlarının terrazzosu, solda neon işaret (tuşun ortasında), sözcük tam ortada, genişlik sözcük + iki yanda 56;
+    sütunda 50, sırada ve ayakta 46 yüksek. FARE ÜSTÜNDE: kenarında ClubBlue yanık tüp, işaret yanar. BASILI: iki birim
+    iner, ışık satırı söner. BİRİNCİL (ekranın tek amberi): Amber[3] emaye, Amber[4] ışık satırı, Amber[1] kenar,
+    sözcük Night[1], işaret mürekkep. ÖLÜ: zeminde Graphite[2] çerçeve, sözcük Night[4], işaret karanlık cam. **Gerçek
+    bir Button'un yanında durur** (eleştirmen: duman testi CONTINUE'nun `Button.interactable`'ını okuyor) — ölü hali o
+    bayraktan okunur; pivotu merkezi, test tıklaması plakaya düşer.
+  - **ÖNCE SORAN TUŞ:** ilk basış sözcüğü soruyla değiştirir (`chrome.pause.new_run_sure`, "SURE? PRESS AGAIN") ve
+    kenarına ViceRed tüp büker; 2,6 sn içinde ikinci basış işi yapar, bırakılırsa geri döner; tuş gizlenince unutur.
+    Soru tuşa 16'da sığmazsa 8'e iner (Almanca "SICHER? NOCHMAL DRÜCKEN" 384'lük ESC tuşunda 16'da kalır).
+  - **ÇAKMA** (`NeonStrike`): ekran AÇILINCA başlık, 0,10 sn sonra tüp — yarım .05, karanlık .04, yanık. FLASHES
+    kapalı: tek adım; REDUCED: ilk kareden yanık. Kendi ayarlarından geri dönüşte yeniden çakmaz.
+  - `NeonTube` perdenin `SignNeon`'unun menü kopyası, terfisi değil: perdeyi fotoğraflayan bir test yok, "piksel
+    piksel aynı kaldı" kanıtlanamaz; ikisi bir önce/sonra çekimiyle birleştirilecek.
+- **ESC** (`TycoonHud.Pause.cs`): üretilmiş panel (`menu_esc_bg`, `PicturePlate`) gitti; oda MenuScrim'in altında,
+  üstünde bir KABİN — x 400–880, tacın tepesi 112, gövde 160–600, taçta PAUSED. Tuşlar 424–856 × 184–504 çukurunda,
+  384 geniş, 198 + 60i'de; **RESUME tek amber tuş**. Kabin taslağın 432'sinden 48 geniş: plintin iki kuyusu kasanın
+  altı hanesini ($100.000'de "$" kesiliyordu) ve saatin yanında gecenin adını 16'da taşımalı (432'de ad her dilde 8'e
+  iniyordu). Ayak 520–576: SAAT kuyusu (cyan segment saat, gecenin numarası ve adı — ad artık Cream, amber basılacak
+  tek şeyin) ve KASA kuyusu (Lime segment figür, eksideyse ViceRed). **NEW RUN önce sorar ve kapının NEW RUN'ıdır**
+  (read_menus bulgu 3): tek yanlış tık geceyi atıyordu, müfettişin tohumunu dağıtıp son şafağın kaydını tutuyordu;
+  artık `StartFreshRun(SeedPolicy.Next())`. `PauseKey`, SOON yolu ve `PicturePlate` silindi.
+- **JENERİK** (`TycoonHud.Credits.cs`): kapının KENDİ alanında (şişeler ve vinyet arkada kalır, oyun dışında oda
+  görünmez) bir kabin — x 256–1024, taç 90, gövde 130–630, okuma çukuru 280–1000 × 154–554, BACK 566–612 (inceleme:
+  ilk dizilişte taç 52'de ve BACK 600–646'daydı, 21:9'un 90–630'unda başlık ve BACK'in yarısı kırpılıyordu; kapı gibi
+  yeniden dizildi). Oyunun adı ve teşekkür
+  satırı display 16 neon başlık (Night[1] üstüne pişmiş); bölüm başlıkları mahzenin krem EMAYE plakasında
+  (`MenuArt.Enamel`, Night[0] çerçeve, Cream[4]/[3], sözcük Night[1]); kaydırma çubuğu çukurun sağında bir cyan tüp —
+  görünen kısım yanık, tam texel adımlarla. BACK tek amber tuş, 46 yüksek. **Escape geri döner** (bulgu 5).
+- **Kapı** (`TycoonHud.MainMenu.cs`):
+  - **21:9'a sığıyor** (eleştirmen, `DesignFrame`: geniş pencere alanın 90–630 satırlarını gösterir): tabelanın
+    merkezi +168 (§9.145), sütunun ilk tuşu 304'te (halenin 8 altı), aralık 54, kayıt notu +16; pervaz son tuşun 28
+    altında, küçük sıra pervazın 22 altında. Küçük sıranın tabanı kayıtsız 612, kayıtla 628 — her iki durumda 630'un
+    içinde.
+  - Tuşlar TABELA TUŞU: kayıt varken CONTINUE tek amber tuş (altında gece ve kasa notu), yoksa karanlık cam ve NEW RUN
+    amber. Küçük sıra 46 yüksek, işaretleri cyan. Ok ClubBlue neon, tuşun işaretiyle aynı hizada.
+  - Yumuşak (bilinear) vinyet gitti: alanın kenarından 20/48/88/136 birim içeride dört Night[0] @.15 çerçeve — dört
+    düz basamak. Üç sunset kuralı yerine Graphite **pervaz** (ışık, dudak, gölge; ikişer birim) ve üstünde mahzenin
+    deco **yelpazesi** (`MenuArt.Fan`; açık seçim). Şişeler dik duruyor (±10° eğim pikselleri ızgaradan kaydırıyordu)
+    ve köşeleri çift ızgaraya oturarak tam texel adımlarla yükseliyor.
+  - **Ayarlar kapıdan açılınca kapı paneli GİZLİ kalır** (eleştirmen: panelin tam alan yakalayıcısı 31'de, ayarlar
+    29'da — açık kalsa ayarların tıklamalarını yutardı); `MenuUp` artık `_menuPanel.activeSelf || _settingsFromMenu`
+    (bulgu 4: ayarlar kapının üstündeyken Escape barın sırasını koşuyor, plak barın ruh haline dönüyor, varlık
+    "Night" diyor, ev sahibesinin kapıları açılıyordu). Escape ayarları `MenuUp` erken dönüşünden ÖNCE kapatır;
+    kapının üstündeki CREDITS ve ACHIEVEMENTS'tan da geri döner.
+  - **Kapıdan APPLY kapıya döner** (bulgu 2): LANGUAGE → APPLY `ReloadKeepingRun(backToTheDoor)`; yeniden yüklemede
+    `GameBootstrap.DoorAcrossReload` kapıyı yeniden sunar — oyuncu seçmediği bir barda, saat işlerken uyanmaz.
+  - `CloseEverySheet` `_settingsFromMenu`'yü sıfırlar ve kapı zeminini gizler (bulgu 11).
+- **Sözcükler:** tek yeni anahtar `chrome.pause.new_run_sure` (`Tools/loc/fragments/music.json` → `en.json`, not:
+  uzunluk ve Almanca ölçüsü). Şimdilik İngilizce; 28 dilin çevirisi loc hattının bir sonraki geçişinde. Budanabilir
+  (artık okunmuyor): `chrome.pause.save/foot/soon`.
+- **Kalan (bu adımda yok):** ayarların kabini ve dört sayfası (START OVER'ın iki basışlı sorusu, kapıdan açılınca
+  koyu scrim — bulgu 8 — onlarla); klavye/gamepad gezinmesi (`SignKey` şimdilik yalnız fareye cevap verir);
+  `MenuArt`/`NeonWord` palet kapısı testi ve 29 dilin sığma testi (UI derlemesini EditMode testleri görmüyor);
+  `menu_esc_bg.png`, `menu_header.png`, `mi_*`, `NeonPulse.cs` silme adımında.
+- **Testler:** `menu` bakış testi bilerek değişti — Re-bless, takımı iki kez koş; `bench` ve `back bar` değişmemeli.
+  `MainMenu/Column/NEW RUN` ve `CONTINUE` adları, Button'ları ve `interactable` sözleşmesi aynı; `GameOver/MAIN MENU`
+  dokunulmadı.
+
+### 9.145 · Menülerin neon işaretleri ve başlığın tabelası: altın ikonlar gitti, logo her ölçekte kendi boyunda, ışığı yürüyor (2026-09-29)
+
+Yazar: “Ayarlar menüsünü/esc/dil vs. arkaplanıyla her şeyiyle tekrardan diğer sahneleri ürettiğine uygun bir tasarımda
+sıfırdan tekrar oluştur. Giriş ekranındaki malibu club logosu ışık hareketi olmalı ve görselin kullanıldığı yere uygun
+boyda üretilmesi gerekiyor upscale yapma. Ana menüde kullanılan iconları ... istersen sende üretebilirsin ama şuanki
+üretim kalitesiz şuanki altın iconları kullanma.” Bu bölüm işin ilk iki parçası: yeni ikonlar BUGÜNKÜ tuşlarda ve
+başlığın tabelası. Menülerin yeni kiti (kabin, başlık tüpü, tuş), ESC'nin, ayarların ve jeneriğin yeniden kuruluşu
+ayrı adımlar.
+
+- **Neon işaretler** (`Art/NeonIcons.cs`; bu adımın `Behaviours/NeonKeyIcon.cs` ve `Hud/TycoonHud.MenuIcons.cs`'i —
+  işareti paketin tuşuna bindiren ara katman — §9.146'da her menü tuşu `SignKey` olunca çağıransız kaldı ve inceleme
+  üzerine silindi; işaretin durumlarını artık `SignKey` kendisi yürütür):
+  - Perdenin gece tabelasındaki tüpün kendisi: `ChromeArt.NeonRing` artık `internal`, ikonlar ve tüpler aynı halkadan
+    büyür, ayrışamaz. 15×15 ızgarada bir texel cam, iki yanında kenar, iki düz bant ışık; sprite 21×21, TAM 2× (42
+    birim) — cam, gövde yüzünün 16'lık harfiyle aynı 2 birimlik çizgi. Dosya yok: 17 çizim kodda satır satır.
+  - Roller: continue (disket), new_run (zeytinli martini), settings (dişli), quit (güç), audio, language (küre),
+    achievements (kupa), credits (sayfa), store (alışveriş arabası — Valve'ın işareti değil), back, **controls bir tuş
+    kapağı** (eleştirmen: oyun fareyle oynanıyor, sayfa klavye kapaklarını listeliyor; gamepad yanlış resimdi),
+    display, resume, main_menu (ev), reset, apply, pointer.
+  - Durumlar yalnız tint. **YARIM** (rengin [2]'si kenar, [3]'ü cam, ışık yok) dinlenirken; **YANIK** (rengin [3]'ü
+    kenar, Cream[4] cam, [2] bandı .30) fare tuşun üstündeyken — tek parlama basamağı, asla yanıp sönme; FLASHES kapalı
+    ve REDUCED MOTION'da da aynı, bakış testi (fare 4,4'te) her tuşu dinlenirken görür. Eleştirmenin seçimi: dokuz
+    yanık ikon logoyla yarışıyordu, yarımda dinlenip vurulunca yanmak yazarın 09-27'de kabul ettiği "hareketli
+    iconlar". **KARANLIK** (Night[3] / Night[2]) basılamayan tuşta (kayıtsız CONTINUE). **MÜREKKEP:** paketin amber ya
+    da lime tuşunda tüp plakanın üstüne yatar — cam sözcüğün mürekkebi, kenar plakanın [1]'i (fare üstündeyken plaka
+    mavidir, kenar ClubBlue[1]). **Amber yanık tüp yok:** koyu plakada amber kenarlı krem çekirdek 1×'te altın
+    okunuyordu — tek amber durumu mürekkep.
+  - Tuşun içinde dış bant (.12) çizilmez, ışık tuşun kenarına değmesin; tuş dışında duran ok iki bandıyla yanar.
+  - Renk anlamı (GDD 16 §5): MAGENTA kapının ve ESC'nin fiilleri (logonun adı, CLOSED tüpü), CYAN ikinci satır —
+    küçük sıra, sekmeler, RESET. Seçili sekme lime plakada mürekkep.
+  - Yuva: tuşun solu +6, tuşun ortasının 2 üstü (paketin yüzünün ortası — sözcük de oraya oturur); 46 ya da 50 yüksek
+    tuşta her texel çift ızgaraya düşer. İşaret yüzün çocuğu: basılınca sözcükle birlikte iner.
+- **Nereye girdi:** kapının dört tuşu ve küçük sırası (36 → **46** yüksek; 42'lik işaretin camı ve kenarı 34, 36'lık
+  tuş kenarı kesiyordu), ESC'nin beş fiili (RESUME'un amberinde mürekkep), ayarların dört sekmesi (38 → **46**;
+  sayfalar yine sekmelerin 4 altında), RESET, ayarların ve jeneriğin BACK'i (mürekkep). Kapının oku 1-bit ok yerine
+  neon ok, **ClubBlue** — oyunun imlece verdiği tek renk (tuşların plakası da fare altında mavi); tuşun işaretiyle
+  aynı hizada, sağ kenarı tuşun 4 solunda, eğilmesi iki birimlik adımlarla (2× ok kendi pikselleri arasına düşmez).
+  START OVER ile OPEN'ın 32'lik tuşları ve LANGUAGE'ın APPLY'ı (40) paketin kendi glifinde kaldı: 42'lik işaret
+  sığmıyor, pirinç de değiller; o sayfalar yeniden kurulunca işaretlerini alacak.
+- **Pirinç gitti:** `MenuPack.IconFor` / `IsIcon` silindi; `PackWordKey` her tuşta paketin maskesini kendi
+  mürekkebinde çizer. Paylaşılan çağıranlar (fatura ve merdiven "next", oyun sonu "home") zaten pirinç almıyordu,
+  çıktıları değişmedi — tezgâh ve arka bar bakış testleri etkilenmez. `Resources/Menu/mi_*.png` ve kapının `ib_m_*`
+  işaretleri artık okunmuyor (dosyaları silmek temizlik adımının işi); `ib_m_pointer` (ev turunun oku),
+  `ib_m_achievements` (başarım listesinin yedeği) ve `ib_m_refuse` (ret plakası) kullanılmaya devam ediyor.
+- **Başlığın tabelası** (`Behaviours/TitleSign.cs`, `Art/TitleSignLight.cs`,
+  `Resources/Logo/logo_{x1,x1_25,x1_5,x2,x2_5,x3,x4}_map.bytes`):
+  - Eski `menu_logo.png` 2000 piksellik kapsülden LANCZOS ile küçültülmüş tek resimdi — 16.318 renk, piksellerin
+    %55'i yarı saydam, yumuşak hale; texel yalnız 1280×720'de pikseldi. Yeni başlık mağaza logosunun tam boy ana
+    çizimlerinden **her ekran ölçeği için ayrı çizildi** (x1 560×212 … x4 2240×848; 1920×1080 = x1.5, 2560×1440 =
+    x2, 4K = x3): harf biçimleri aynı işaret, kenarlar kademeli, hale dört düz bant (alfa 150/78/34/12), her texel
+    bir palet tokenı.
+  - Tabela kanvasın canlı ölçeğine göre en büyük ≤ seti seçer ve 1:1 gösterir (Point, köşesi tam ekran pikselinde;
+    alan yarım piksel kayarsa yeniden oturur). Adımlar arasında ayak izinden birkaç yüzde küçük durur, **asla
+    büyütülmez**; tek istisna 640×360 pencere: x1 seti ayak izinde durur, kanvas onu yarıya indirir.
+  - Haritalar PNG'nin kendi baytları, `.bytes` adıyla (TextAsset): hiçbir doku içe aktarıcısı onları küçültemez
+    (2048 tavanı x4'ü küçültürdü), sıkıştıramaz, süzemez. Yalnız seçilen set çözülür (`ImageConversion.LoadImage`),
+    doku kodda kurulur: RGBA32, mip yok. Harita: R = sınıf (dört bant, gövde, astar, çekirdek, sıvı), G = harf (32),
+    B = harfin tüpü boyunca konum. Set adlarında nokta yok (`x1_5`): Resources yolu noktayı uzantı sanar.
+  - Boru hattı `Tools/title_sign/`: `stage_a_masters.py` (iki ana çizim, `Tools/steam_kit/out/logo` — yerel, git'te
+    yok) → `build_logo.py` (yedi set, ~20 sn) → `ship.py` (`Resources/Logo`, var olan .meta'yı korur). Yeniden koşu
+    haritaları bayt bayt aynı üretir (ölçüldü); ara çıktılar (`work/`, `out/`) git dışı.
+  - **Işık** (`TitleSignLight`, motor dışı, 1/30 sn'lik tam karelerle ölçeksiz saat, rastgele sayı yok): açılışta
+    harfler okuma sırasıyla çakar (M ve C iki kez tutar, hale tüpünden 2 kare geride, kupa alttan dolar); 2,2 sn'de
+    boşta döngüsü başlar: her 10 sn'de bir **boncuk** adın tüpü boyunca akar (sıcak kısmı ±16 birim — gövde, astar,
+    çekirdek Cream[4], iç iki bant bir basamak parlar; omuzları ±40), yarım periyot sonra **ikinci, cyan boncuk**
+    COCKTAIL BAR SIMULATOR'dan geçer (harfleri beşte bir boyda, omzu ±20); ikinci B sabit bir tabloyla takılır;
+    kupanın sıvısında parıltı; dış iki bant 6,4 sn'de bir nefes verir. Eleştirmen eski boncuğu 1×'te ~200 texel
+    ölçmüştü (görünmez); şimdi boncuk karesi x1'de ~300–1.450 texel değiştirir.
+  - **REDUCED MOTION:** ilk kareden yanık ve sabit (bakış testi bunu çeker). **FLASHES kapalı:** çakmalar tek
+    karanlık → yanık adımı ve boşta döngüsü TAMAMEN durur — boncuk ve parıltı da (oyunun kendi notu: "OFF: NOTHING
+    FLICKERS, BLINKS OR PULSES"; ilk port bunları yalnız REDUCED'a bağlamıştı).
+  - Tabela **panelle birlikte solar** (`ignoreParentGroups` yok: oyun sonundan gelirken koyu tüpler rapor kâğıdının
+    üstünde 0,6 sn beliriyordu) ve ilk boyanana dek görünmez (dokusuz RawImage beyaz kutu çizer). Kapı ayarlara yol
+    verirken doku tutulur (dönüşte yeniden çözme yok), kapı kapanınca bırakılır (`HideMainMenu` → `Release`).
+    `Ignite()` yalnız açılıştan ya da koşudan gelen gösterimde; ayarlardan dönüş yeniden çakmaz. Haritalar yoksa eski
+    "MALIBU CLUB" yazısı durur.
+  - **Merkez +168** (eskiden +186): 21:9 pencere alanın ortadaki 540 satırını gösterir (90–630); +186'da M'nin ve C'nin
+    tepesi kesiliyordu, +168'de halenin tamamı 90. satırdan başlar. Sütun bu adımda yerinde kaldı (halenin son satırı
+    296, ilk tuşun tepesi 296); kapının 21:9'a yeniden dizilişi ayrı adım.
+  - Ölçüldü (motor dışında, `TitleSignLight` kare kare, x1 ve x2, 700 kare × üç hareket ayarı): her texel 27 palet
+    girdisinden biri; FLASHES kapalı ve REDUCED'da ısınmadan sonra 0 kare değişiyor; artımlı boyama denetlenen her
+    karede sıfırdan boyamayla aynı; ilk boyama x1 ~2,6 ms, x2 ~11–15 ms, sonraki kare en kötü 0,2 / 0,7 ms (.NET; Mono
+    2–4× yavaş olabilir). Ayrı bir kare tahsisi yok.
+- **Sözcükler:** yeni anahtar yok — işaretler ve tabela yazı taşımaz (MALIBU CLUB ve COCKTAIL BAR SIMULATOR özel ad).
+- **Testler:** `menu` bakış testi bilerek değişti (tabela, yarım yanık işaretler, 46'lık küçük sıra) — LastCall →
+  Re-bless UI Baselines, takımı iki kez koş. `bench` ve `back bar` değişmemeli. `MainMenu/Column/NEW RUN` ve
+  `CONTINUE` adları ve Button'ları aynı; işaretler ve tabela tıklama almaz.
+
 ### 9.144 · Konforun işareti elmas oldu (2026-09-29)
 
 Yazar: “Konfor ikonu elmas iconu ile değiştirilsin sanat tarzı servis iconu olan kalp ile yıldız ikonlarında olsun
@@ -1921,6 +2271,171 @@ kullanıldığı yerlerdeki boylarına göre yap aynı servis(kalp) ikonunda old
 - Turun iki satırı (“diamonds how the room feels”, “costs you the room's diamonds”) 28 dilde elmas diyor. ae'nin iş
   defterindeki üç “medal” satırı onun sonraki turunda değişecek.
 - Doğrulama: EditMode 880/880, PlayMode 20/20. Yıldızların kartında boş elmaslar kalplerle aynı boyda göründü (r267).
+
+### 9.143 · Mahzen bir Art Deco vitrin: on niş, nişe bir aile, tezgâhın basamağıyla giyinen malzeme (2026-09-28)
+
+Yazar mahzen maketlerinden C'yi seçti (*"Mahzen tasarımı = C · Art Deco vitrin"*) ve rafın, tezgâhın mahzeninin ve
+sahnenin SEVİYELİ yeniden tasarımını istedi. Mahzen artık `counter.png`'nin üç bayı ve iki magenta tahtası değil:
+yazarın slab'ının (satır 0–64) altında kendi çizimi olan bir vitrin — beşe iki, **on sabit niş, her nişte TEK aile**,
+daha geniş, kademeli bir orta sütunun iki yanında aynalı.
+
+- **Yerleşim** (`LastCall.Game.CellarCabinet`, saf, EditMode'dan okunur): üst sıra VODKA · GIN · **WHISKY** (orta,
+  128 geniş) · RUM · TEQUILA; alt sıra LIQUEURS · SYRUPS · **JUICES** · SODA & TONIC · MIXERS. Aile hiç bölünmez —
+  sabah planogramı (`PlanCellar`, silindi) cin ile tekilayı direkte kesip her parçanın altına ayrı plaka asıyordu,
+  satın alınan bir şişe bütün bir aileyi direğin öbür yanına itebiliyordu. Soda ve tonik kendi nişinde; kola, zencefil
+  birası, enerji içeceği MIXERS'ta; verinin eklediği bilinmeyen kategori LIQUEURS'ta. Niş içinde sıra kuyudan en üst
+  rafa (kademe 1→4) soldan sağa, **her nişte aynı okuma yönü** (tasarımcının aynalı sırası alınmadı: sağ kanatta aynı
+  kademe ters uçta dururdu). Aile lambasının altında ortalanır, aradaki hava tam pikselde eşit paylaşılır (1–6 px):
+  tek şişe nişin ortasında sergilenir, dolu niş 1 px'e kapanır. `CellarMaxPerBay`, `CellarSplitCost` silindi —
+  kapasite nişin genişliği; şişe hiç düşürülmez, küçülmez. Bütün katalog sığar (ölçüldü, kataloğun gerçek plakaları:
+  tekila ve likörler 98/98, meyve suları 120/120, taşan 0). Açılış rafının 8 şişesi 7 nişi yakar, `vodka_astra`
+  niş 0'da tek başına ve ortada (PlayMode'un tıkladığı şişe).
+- **Geometri** (sanat pikseli = sahne birimi = 720p'de 2 px): niş x 23/139/255/393/509, genişlik 106/106/128/106/106
+  (kapak 23..614'ü tam örter); açılış satırı 66/156, ad plakası 67–77/157–167 (72, ortada 88 geniş), lamba yuvası
+  78/168, **ayak 143/233 DEĞİŞMEDİ** (`DrawerTravel` 131, tezgâh çizgileri ve `BenchDrawer` yerinde), tahta dudağı
+  148/238. Gövde 638×185, satır 65–**249** (tezgâh çiziminin son satırı; eleştirmenin düzeltmesi — maketteki 252'ye
+  inmez). Gövde 9-slice değil: yerel 638'de ortalı SIMPLE çizilir; eski "bay'ler stoktan bir birim kayık" kusuru
+  kalktı. Slab `counter.png`'den çalışma anında kesilir (satır 65 ve altı saydam kopya), 640'a eskisi gibi döşenir;
+  dosya değişmez. `ShelfGuard` artık sabitlerden (4..633), elle yazılmış 7/623 gitti.
+- **Seviyeler — kural tersine döndü.** 2026-08-04'te tezgâh "sahneye dokunmayı bırakıp bir sayıyla ödeme" koşuluyla
+  kalmıştı; yazarın seviyeli vitrin isteğiyle `CounterTier` artık vitrini de giydirir, **yalnız görünüm**: fiyat
+  ($40/$80), ambiyans +0.03, konfor +0.05 bir basamak aynı (`TycoonRun.cs` yorumları güncellendi). **1 kontrplak** —
+  bal rengi Malt karkas, boyalı arkalar, kemer kenarında çıplak damar, uçlarda tek magenta ince çizgi (*"magentalık
+  değişmeli"*: barın açıldığı seviye düz pembe değil). **2 siyah lake** — Graphite, oluklu mürdüm arkalar, her kemerde
+  tek neon boru (orta sütun kapının cyan'ında). **3 lacivert lake** — ClubBlue, füme ayna arkalar, altın flüt ve
+  kemerler, ortada altın güneş; her şişenin arkasında aynadaki silueti (Graphite[4] %30, 6 yukarı 2 ortaya, yalnız
+  bu seviyede). Yerleşim her seviyede aynı — el, yükseltmeden sonra da şişenin yerini bilir. HUD
+  `stage.SetCabinetLevel(run.CounterTier)` der; sahne run'ı okumaz, yalnız basamak değişince yeniden giyinir.
+- **Işık iki katman:** pilot gövde odanın ışığıyla boyanır (sayaç katmanı 0,45 yıkama); stoklu nişin **açıklığı**
+  ışıklı katmandan ışıksız çizilir — çizilmiş duvar yıkaması lambanın kendi ışığıdır (14 §5 bantlı düşüş), sarkıt
+  camı gibi. Katman yalnız açıklık: bütün dikdörtgen ışıksız çizilince nişin yuvarlak/kademeli üst köşeleri (karkas)
+  yanındaki karkasın iki katı parlaklıkta basılıyordu. Boş niş pilotta: lambanın altında tek dar bant, Night emaye
+  plaka — ilk gece vitrin vitrin gibi okunur, oyuncu rom olmadığını uzanmadan görür. On Light2D spot
+  (`CellarLight{sıra}_{sütun}`, yalnız sayaç katmanı) yuvanın altından aşağı: stoklu **1,55** (yazarın parlaklığı),
+  boş 0,35, `_drawerT` ile; koni stokla açılır (2026-09-26 isteği *"rafa şişe eklendikçe raftaki ışığın açısı
+  genişlemeli"* korundu) ve nişin iç duvarlarında durur (kanat 75°, orta 86°); **menzil alttaki nişin başladığı yerde
+  biter (2026-09-29):** yarıçap 150 → 77 = alt nişin ilk satırı 156 − tepe 79, nişin kendi satırlarından okunur. 2B
+  ışık içinden geçtiği tahtada durmaz; ilk kesimin 96'sı "alttakine geçmez" deniyordu ama kuyruğu yirmi satır daha
+  gidiyordu — sillde lambanın 0,25..0,17'si, alt plakada 0,15..0,04 (URP'nin kendi düşüşü, satır satır), üstelik
+  üstteki niş stoklu mu pilotta mı diye plakadan plakaya değişen bir yıkama. Menzil kısalınca iç yarıçap payı
+  0,30 → 0,70 açıldı ki şişeler yazarın 1,55'te gördüğü havuzu korusun: lambadan 130. satıra tam ışık, tahtada 0,67
+  (eski 150: 0,66), ayakta 0,42 (96: 0,34; 150: 0,60), sillin ötesinde hiç. Alt lambanın 77'si 246'da biter, gövdenin
+  249'unun içinde — 96 tezgâhın altından süpürgeliğe taşıyordu. Lamba gövdeleri (2026-09-17) artık plakanın altındaki yuvanın genişliğinde bir satır.
+- **Kelimeler plakada, çizimde değil:** aile adı hâlâ HUD metni (`chrome.cellar.group.*`, 29 dil; hiçbir kelime
+  çizime basılmaz), nişin kendi ad plakasının üstünde, çekmeceyle kalkar: 16 px gövde yüzü, sığmazsa (ölçülür,
+  2 × (plaka − 4)) 8. **"&" DEĞİL "AND" (2026-09-29, kitabın 2026-08-25 kuralı):** gövde yüzünün 16'daki "&"
+  işareti iki çıkıntılı dikey bir çubuk — "SODA & TONIC" plakada "SODA $ TONIC", yani paranın işareti okunuyordu, ve
+  ilk gecenin stoğu tam o nişi yakıyor. Eski koşu plakaları hep 8'deydi, buna hiç rastlamadı; kelime artık kitabın
+  kendi değişiminden geçiyor (`book.index.ampersand`), İngilizcede "SODA AND TONIC" plakaya sığmıyor ve 8'e iniyor —
+  okunur olan büyük olandan iyidir. Plaka stoklu nişte **KREM emaye** (mürekkep Night[1]), boşta **NIGHT emaye** (mürekkep
+  Cream[1]) — **asla amber değil** (eleştirmen: amber paranın ve birincil tuşun rengi; on amber plaka on birincil tuş
+  okunur). Eski HUD plakaları (Night kart + magenta dudak) ve üst üste binen komşuyu bir kat indiren merdiven
+  (2026-09-08) gitti: bir nişin plakası ötekine değemez. Yalnız notlar değişti (`soda`: kola MIXERS'ta; `book.index.ampersand`: artık plakada da); yeni anahtar yok.
+- **Kapı ve ray aynen:** yazarın kapısı (`counter_door` / `counter_door_worn`, kitle eskiden boyalıya geçiş, sabit
+  cyan, yazısız, oksuz), aşağı düşer, raydaki 16 satır, dışarı tıklayınca kapanma, tam açılmadan ışın almayan
+  kapılar, yalnız durum değişince çalan sesler, %20'ye inen havlu. PlayMode kancaları (`ShutterDoor` ve 60 px
+  altındaki yüzü, `CellarDoor_<id>`) değişmedi; plaka kelimeleri ışın almaz.
+- **Cila kiti:** her seviye karkasını o seviyede başka hiçbir yerde kullanmadığı bir palet ailesinde çizer (1 Malt
+  0..3, 2 Graphite 0..2, 3 ClubBlue 0..1) ve asla ışık taşıyan bir piksele koymaz (aracın kontrolü); kit bu aileyi
+  cilanın çerçeve rampasına parlaklık sırasıyla eşler (`CounterFinish.RecolourCabinet`) — kontrplak cevize, çama,
+  kreme, bakıra döner. NEON (açılış cilası) seviyenin kendi malzemesini bırakır: kontrplağı magenta rampaya eşlemek
+  pembeyi geri getirirdi. Nişlerin ışığı, plakalar ve seviyenin süsü cilaya girmez; slab eskisi gibi boyanır.
+  Marketteki örnek sahnede duranın kendisinden kesilir (`DiegeticStage.FinishSwatch`: slab + o seviyenin karkası).
+- **Kenarlar:** yan şeritler (2026-09-26) slab'ın altında hep Night[3], vitrinin uç direğinin bir birim altına dek;
+  kaide gövdenin son satırı, açık uçları şeridin renginde (çekmece tam açıkken ekranın dibindeki üç birimde köşelerde
+  oda görünmesin).
+- **Araç ve sanat:** `Tools/cellar_cabinet/cabinet.py` her pikseli yerleştirir (deterministik, palet dışı piksel 0,
+  üretim yok; kontroller: pilotla ışık yalnız açıklıklarda farklı, açıklıklar niş dikdörtgenlerinin içinde, karkas
+  ailesi ışık taşıyan piksele düşmez, gövde uçtan uca opak); `--preview KLASÖR --assets <PNG'leri gerçek checkout>`
+  1280×720 maketleri Assets'e dokunmadan çizer. Yazılanlar: `Assets/Resources/Scene/cabinet_L{1,2,3}_{pilot,lit}.png`
+  (PPU 1, Point, sıkıştırmasız, okunur; klasörün içe aktarma kuralı). Tasarımcının üç dokusundan "karanlık gövde"
+  gereksiz çıktı (boş niş pilotu gösterir).
+- **Testler:** `CellarCabinetTests` — bütün katalog nişlerinde ≥1 px arayla ve taşmadan (taşarsa cevap bir veri
+  kararıdır, küçük şişe değil); her aileye bir niş, bir nişe bir aile; açılış rafında `vodka_astra` niş 0'da tek ve
+  ortada; aile kuyudan en üst rafa ve etrafında ne alınırsa alınsın yerinde; her seviyenin çizimi nişlere uyar.
+- **Sapmalar:** tasarımcının deco kapısı alınmadı (yazarın kapısı korundu — eleştirmen); gövde 249'da durur; niş içi
+  aynalı kademe sırası alınmadı; gölge "2 satırlık temas gölgesine" inmedi (2026-09-22'de kabul edilen yumuşak havuz
+  ve arka duvar gölgesi kaldı).
+- **Editörde bakılacak:** üç seviyede açık mahzen (karkasın odanın 0,45 yıkaması altında ne kadar koyu kaldığı,
+  ışıklı açıklıkla karkasın arasında dikiş olmadığı, seviye 3 yansımaları), kapalı kapı ve raydaki 16 satır, cila
+  kitiyle beş cila × üç seviye, `bench.png` bakış testi — tezgâh açıkken (`BenchDrawer` 0,72) vitrin tezgâhın
+  arkasında görünür, **yeniden onay gerekebilir** (LastCall → Re-bless UI Baselines, iki koşu, bakarak).
+
+### 9.142 · Perde gecenin tabelası oldu: neon tüp, pürüzsüz gök, split-flap pano, pazar oynanıyor (2026-09-28)
+
+İki gece arasındaki perde, yazarın ekran görüntüsündeki pembe karttı: `card_body` plakası, bantlı gök, iki gün adının
+tek koltukta el değiştirmesi ve altında 1.4× ölçekli hafta aleti. Yazar perde mock'larından **A'yı ("marquee")** seçti;
+eleştirmenin üç düzeltmesi mock'un önüne geçti.
+
+- **Kart gitti, tabela geldi** (`TycoonHud.Curtain`, durumu da artık orada — oyun sonu gibi bir sahne tek dosyada
+  okunur): 688×536 tabela, gökyüzü penceresinin çevresinde TEK neon tüp (`ChromeArt.NeonPath`, 344×268 texel kenar,
+  6 texel pah, alt ortada hafta plakası kadar kırık; dört beyaz halka — cam, kenar, iki ışık bandı — renkle sürülür),
+  6× saat, split-flap pano, yedi armatür, kırıkta hafta numarası. Sıra: tüp arkada, gök, saat, pano, hafta, panjur,
+  plaka en önde.
+- **Gök pürüzsüz** (düzeltme 1): mock pencerenin dither'lı modelini kullanıyordu, yazar o dither'ı pencereden 09-22'de
+  kaldırmıştı. Satır başına tek renk, `sky_cycle.json`'dan: yeni `day` bloğu (orta anahtarlar), uçları pencerenin kendi
+  `t=1` (02:00) ve `t=0` (18:00) anahtarı; `SkyClock.DayBands(hour)` 02–18'i günden, 18–02'yi pencerenin akşamından
+  okur (pazar turu akşamı ve gece yarısını pencerenin göğünde geçer). `Tools/window_sky.py` yeni bloğu görmez, etkilenmez.
+- **Pano tek gövde** (düzeltme 2): kasa + tek yüz şeridi + boydan boya menteşe + tek dudak, sayfalar arası 1 birimlik
+  Night[1] dikiş; hafta numarası da aynı dilde tek iki sayfalı muhafaza, tabelanın tek ayağı. Harf üç maskeli bantta
+  (`SignFlap`: menteşe üstü, menteşe, altı), menteşe bandı aynı harfi rampanın bir alt basamağında çizer.
+- **Hafta okunur** (düzeltme 3): 1×, body 16 (1.4× ölçek ve `WeekWell` gitti); geçmiş geceler Cream[2], gelecekler
+  Cream[3], pazar Cream[1]; tüp gün boyu yarım yanar, 18:00'da tam çakar — önceden 6.8 sn'nin 4'ünde karanlıktı.
+- **Pazar oynanır:** cumartesi→pazartesi 8.60 sn, saat 2 → 42; SATURDAY→SUNDAY, panjur (`ChromeArt.RollerShutter`,
+  maskenin içinde kayar, 4'er birim) haftanın üstüne iner; pazar gece yarısında numara döner, panjur kalkar,
+  SUNDAY→MONDAY, MON çakar. Hikâye gecesinde tabela ve o gecenin tüpü macenta.
+- **Şehir tint'siz:** 1'in üstüne itilen tint Color32'de kırpılıyordu, hiç çalışmamıştı; gündüzü gök taşıyor.
+- **Perde Night[0] ve `BleedWidth`li**; **açılıştaki hayalet perde kalktı** — süre açılışta kurulur, öncesinde 0.
+  `LookTests.The_front_door_stands_over_the_room`'un 1.2 sn beklemesi artık perdeye bağlı değil (yorumu güncellendi,
+  bekleme kaldı). `Motion.Reduced` bitmiş kareyi ilk karede gösterir (1.52 sn); NO FLASHES çakma, yıldız ve iki nokta
+  titremesini keser.
+- **Silinenler:** `BuildCurtainCard`, `BuildSkyPanel`, `SkyAt`, `SkyKeys`, `Dib`, bant/yıldız `Image`'ları, güneş ve ay
+  LampGlow'ları, şehir tint'i, `BuildWeekGlass`, `LightWeekCells`, `CurtainWeekY/Scale` ve `WeekStep`… ızgarası. Yeni loc
+  anahtarı yok; `hud.week_well.caption` notu tabelanın ayağına göre yeniden yazıldı. Yeni ikili dosya yok.
+- **Doğrulama:** çevrimdışı derleme (Tests, Editor, PlayTests) ve saf Core testleri; tabela Python'da C# sabitleriyle
+  yeniden çizilip kareleri incelendi. Editörde henüz oynanmadı: yazı dikeylerinin (Silkscreen 16'nın büyük harf tepesi,
+  Malibu 24'ün sayfadaki mürekkep tepesi) ve yıldızın SAT'a mesafesinin ölçülmesi gerekiyor.
+
+### 9.141 · Faturanın yıldızı glockenspiel, gecenin kepengi elektrikli (2026-09-28)
+
+Yazar, ses önizleme sayfasından seçerek: “Fatura yıldızı Glockenspiel” ve “Gün sonu kepenk Elektrikli”. İkisi de
+CC0 kayıt, evin zincirinden (`sfx_ingest.clip`: kırpma, cozy, DC, basamak, solmalar) geçti; sevk edilen iki `.wav`
+önizlemede dinlenen adaylarla BAYT BAYT aynı (`bill_star_glock`, `day_close_electric`), başı ve sonu 0, tepe −6,00 dBFS
+(`moment` basamağı), kırpılan örnek yok.
+
+- **`bill_star` (yeni klip, 0,34 sn):** Freesound 858638 “Short Glockenspiel Jingle C” (Robo9418), 6,0 sn'deki Si♭6
+  vuruşu bir oktav aşağı (0,5×, Si♭5), 300 Hz–6 kHz bant, 40 ms tutulup τ 75 ms ile söner. Faturadaki her yıldız
+  temas anında (`Contact`, düşüşün 0,37'si) onu çalar ve her yıldız bir basamak yukarıdan: yarım ton **0 2 4 7 9**
+  (Si♭ Do Re Fa Sol, major pentatonik; perde `2^(n/12)`, `Sfx.Play`'in titremesi yerine). Beş yıldızlık gece
+  varan bir dizi, iki yıldızlık gece yarıda kalan bir dizi olarak duyulur. Eskiden yıldızlar `star_earn`'ü (Kenney
+  saksafon jingle'ı, 1,74 sn) 0,42 sn arayla çalıyordu — beşinci yıldızda dört jingle üst üsteydi; yeni ding bir
+  sonraki yıldız başlamadan biter (en tizi 0,20 sn). `star_earn` merdivende ve başarım kartında kalıyor.
+- **Karede en çok bir yıldız sesi:** tıklayıp atlamak (`NightShow`, `_starT = 99`) havadaki bütün yıldızları aynı
+  karede indiriyordu ve döngü sesi her biri için çalıyordu — beş kopya, beş ayrı titreme perdesinde, tek karede.
+  Atlamanın sözü “tek ses, tek sarsıntı”ydı. Kare artık bir kez çalar, indirdiği EN YÜKSEK yıldızın notasıyla;
+  atlanan dizi izlenen diziyle aynı notada biter. Sarsıntı ve `_landed` aynı.
+- **`day_close` (aynı isim, 1,70 sn; çağrı yeri değişmedi, `Sfx.Play("day_close", 0.8f)`):** Freesound 335364 “roller
+  shutter” (nicola_ariutti), 4. çekim bir iniş — 1,1 sn düzgün motor yürüyüşü 0,2 sn eşit güçle son lamellere ve
+  oturuşa bağlandı; 50/100 Hz şebeke vızıltısı −14/−10 dB, 1,3 kHz'de +3 dB, 6 kHz'den oturuşta 2,2 kHz'e kapanan
+  alçak geçiren, sivri uçlar gövdenin +4 dB'ine (oturuş +5) törpülendi, oturuşun altına evin yastıklı yer “güm”ü
+  (sentez, lisanssız) kondu. Eski balkon kepengi (Areti18, 394951) 3,97 sn'ydi, 0,6 sn boşlukla başlayıp tiz bir
+  gıcırtı, sık metal tıkırtısı ve sonda bir “şangırt”la bitiyordu: ağırlık merkezi 3,9 kHz → 1,27 kHz, 4 kHz üstü
+  enerji %6,6 → %0,2, müziğin üstünde (A-ağırlıklı, en yüksek 400 ms) +9,7 → +7,4 dB.
+- **Kaynaklar:** hazırlanmış iki kaynak aday kökünde `sfx/bill_star/fs858638_glockenspiel_bb6_star.wav` ve
+  `sfx/day_close/fs335364_roller_shutter_take4_descent.wav`; `sfx/manifest.json` satırlarında sahibi, lisansı,
+  kanıt sayfası (`pages/858638.html`, `pages/335364.html`), ham indirme (`prepped_from`), hazırlığın tarifi
+  (`prep`) ve yazarın seçimi (`picked`) yazılı, tarif betikleri `sfx/<cue>/_prep/` altında. `Tools/sfx_picks.json`:
+  `bill_star` yeni (`level: moment`, BANK satırı yok), `day_close` yeni kaynağa döndü (basamak BANK'tan, `moment`).
+  Klipler ADLA basıldı (`sfx_ingest.py <kök> bill_star day_close`); defter (`Docs/SES_KAYNAKLARI.md`) ve jenerik
+  (`credits_build.py` → `credits.json`: +ROBO9418, +NICOLA_ARIUTTI, −ARETI18; 49 sahip) yeniden yazıldı. Aday kökü
+  hâlâ eski bir oturumun Temp klasöründe; silinirse iki klip hazır `.wav`'larından değil, ham indirmeler ve tarifle
+  yeniden kurulur.
+- **Doğrulama:** editör dışı derleme temiz (Tests, Editor, PlayTests), saf Core EditMode 490/490; iki klip adla
+  yeniden basılınca bayt bayt aynı çıkıyor, defter ve jenerik de. Unity'de henüz koşulmadı. Editörde bakılacak:
+  `bill_star.wav`'ın içe aktarılması (`.meta` elle yazıldı, `star_earn.wav.meta`'nın ayarlarıyla), faturada beş
+  yıldızın dizisi Pace 1'de ve tıklayıp atlayınca tek ding; Si♭ dizisi `music_dayend_2` (Fa♯ minör) ve
+  `music_dayend_3` (La majör) üstünde kulakla dinlenmeli — üçünden yalnız ilkinin tonunda; kepengin gece dönüşünde
+  müzik geçişinin üstünde duyulması.
 
 ### 9.140 · Ev turu: ilk gece Roxy'nin barı gezdirmesiyle açılır (2026-09-28)
 
@@ -2002,6 +2517,80 @@ Yazar, §9.137'de kalan 35 uyarı satırı için: “Başka bir biçime geçilsi
   kaldırır (o oyunun kalanı çevrimdışı); kapanış sıralı: önce canlı işaret, sonra katman, lider tablosu çağrıları,
   en son `SteamAPI.Shutdown`.
 
+### 9.138 · Bar batınca: CLOSED neonu, LOCK UP, son Z raporu, tahliye bildirisi, ön kapıya tek yol (2026-09-28)
+
+Kaybedilen koşu canlı odanın üstünde tek kırmızı satırdı: üç gecedir eksideki kasayla markete girilir (bir şey
+alınamaz), "van boş gidiyor" sorusu cevaplanır, ancak ondan sonra afiş çıkardı; Escape hiçbir şey yapmazdı, tek çıkış
+çark → AYARLAR → BAŞTAN BAŞLA'ydı. Yazar oyun sonunun ANA MENÜYE götürmesini ve koşunun sayılarını göstermesini
+istedi; üst bar aynı gün iki kez yeniden kuruldu (§9.107).
+
+- **Gecenin çağrısı bir tabela** (yazar, mock'tan B'yi seçerek: "Bu ekran kullanılsın"): karanlıkta THAT'S LAST CALL
+  yerine KAPALI bir neon — Night[2] plaka, bir texel Graphite[3] kenar, Graphite[4] üst ışık, dört vida; CLOSED iki
+  texel'lik tüp Magenta[3] (ışık alan çizgisi Magenta[4]), dört düz bantlı magenta hale (8/5/3/2 texel; .30/.45/.55/
+  .65, Magenta 0/0/1/2), plakanın kenarında kesilir. Kodla çizilir (`ChromeArt.ClosedNeon`, 200×56 çizim bir kez
+  kurulup önbelleğe alınır, Point, 400×112'de tam 2×; audit'in ölçek ve palet yasaları okuyabiliyor, muafiyet yok).
+  Her dilde CLOSED yazar — panjurun "Open bar"ı gibi odanın tabelası, arayüz satırı değil; altındaki
+  `build.dayend.called_sub` çevrilmiş kalır (tabelanın 16 altında). Zamanlama, solma, oturuş ve azaltılmış hareket
+  aynı. `build.dayend.called` tablolarda duruyor, notu "emekli".
+- **Son gece Core'a sorulur:** `ShowDayEnd` bir kez `_fatalNight = run.ClosesAtDawn` (şafağın ödeyeceği iş dahil;
+  Core'un yeni önizlemesi). O gece haftanın borç bandı STRIKE 3/3 ve "that was the last one: the bar closes at
+  dawn"; YARIN panosunun başlığı AT DAWN, okuması kırmızı THE BAR CLOSES; KALABALIK ve iş satırları yok (duruş ve
+  sonraki basamak kalır — şafak onları da dosyalar). CONTINUE'nun yerinde **LOCK UP**: paketin asma kilidi, plaka
+  `bill_ember` (Night[0], ViceRed 0/1/3/4); `DressBillNext` her gece iki yöne giydirir, genişliği de sıfırlar.
+  `OnDayEndAdvance` basışta Core'a yeniden sorar ve doğrudan `OnOpenTomorrow`'a gider: market, van sorusu ve tablet
+  hiç gelmez. `ContinueToNextDay` yine geceyi dosyalar, `BarsLost`'u iter ve `Closed` yapar.
+- **Kanca:** `OnOpenTomorrow`, kayıt silindikten hemen sonra, koşu `Closed` ise `ShowGameOver` — kitaplar indiği
+  karede, hangi kapıdan gelinirse (tahmin bir gün kaçarsa marketin OPEN ANYWAY'i de). Faz kontrolü (`Update`) artık
+  yalnız `bar_closed` akorunu çalar; oyun sonu kalkmamışsa (dil yeniden yüklemesiyle kapanmış bir koşuya dönülmüşse)
+  onu bütün olarak, akorsuz ve damga sesi olmadan kurar.
+- **Ekran** (`TycoonHud.GameOver`, kendi kanvası **23** — başka katman 23 değil; `Ceremony.Pace` ile, Pace 1'de):
+  **DARK** 0,5 sn — perde gecenin 0,988'inden 0,90'a, boş oda hafifçe görünür, kiriş açık ve yanık (kırmızı tüp,
+  kırmızı kasa; lambalar 2026-09-28'in ikinci turunda kirişten indi, §9.107). **NEON** 0,8 sn — güç düşer, tüp ve hale on kesikte yanıp söner (tek sayıda
+  kesikten sonra yanık, 0,55'ten sonra karanlık), sonunda `_beamOut` (SÖNÜK) ve `screen_off`; FLASHES kapalıyken tek
+  0,3 sn'lik solma. **KAPAK + BASKI** — kirişin üstüne kapak (0,004 → 0,90, 0,3 sn; kiriş ölü: ipucu, kart, merdiven
+  yolu yok), **FINAL Z REPORT** kirişin altından 420 birim/sn açılır (İngilizcede ~1,06 sn; `bill_slip` +
+  `printer_feed`). **SAYIM** — on bir satır sırayla (0,34 / 0,22, satır başı `hover`, sonda `cash`; ~4,9 sn).
+  **BİLDİRİ** — ev sahibinin NOTICE OF CLOSURE'ı sağdan 54 birimle kayar (0,4 sn, `bill_slip`). **DAMGA** — gecenin
+  damgasının düşüşü (3,4 → 1, −26° → −9°), **EVICTED** (yazar: CLOSED değil — onu neon söyledi), kâğıt sarsılır
+  (`stamp`). **TUŞ** (~5,7 sn) — başarı kartı ekrandayken ya da kuyruktayken (LAST ORDERS düzen 30'da; menü 31'de onu
+  gömerdi) en çok 8 gerçek sn bekler, ekran açıldıktan 0,5 sn geçmeden de gelmez; MAIN MENU 14 birim yükselerek
+  belirir (0,24), altında not. **HAZIR** — indikten ve 0,5 gerçek sn geçtikten sonra kurulur (LOCK UP'a çift tıklama
+  menüye geçemez). Tıklama BASKI ve SAYIM'ı bitirir; karanlık, tabela, bildiri, damga atlanmaz. Escape her şeyi
+  yerine koyar, tuş hazırsa ön kapıya yürür. Azaltılmış hareket ilk karede dinlenme hâli (perde ve kapak 0,90,
+  tabela sönük — kesik ve `screen_off` yok —, şerit dışarıda, rakamlar son hâlinde, bildiri yerinde, damga −9°'de,
+  bir kez ses); tuş yine bekler ve kurulur. Tuşa kadar müzik kısılır ("closed" havası).
+- **Z raporu** (x 128–584, y 54'ten; gecenin şeridinin stoğu ve kesikli çizgisi; gecenin şerit yardımcıları
+  çağrılmaz, kendi `_goCounts`'u): FINAL Z REPORT, altında hafta · gece · RUN tohumu; **NIGHTS OPEN** (display 24,
+  şeridin tek büyük rakamı — oyun "ne kadar uzun, ne kadar zengin", GDD 23 §9); THE BAR — basamağın adı ve en iyi
+  duruşa dolan beş küçük yıldız, BEST NIGHT (en çok alan gece, eşitlikte ilki); THE TILL — TOOK IN, · TIPS, PAID
+  OUT, · RENT; THE WORK — GUESTS SERVED, WALKED OUT, PAGES PERFECTED (n OF toplam), kitap varsa {WHO}'S JOBS
+  (`QuestsDone` / kitabın boyu, magenta). Hepsi defter satırları üstünde bir toplam ya da tek bir en iyi,
+  kurulurken bir kez; ayrıntısız eski satırlar sıfır ekler. Yeni karar yok. İngilizcede şerit 444 boyunda.
+- **Bildiri** (x 680–1120, y 150'den; kart Cream[4], içte ViceRed[1] çerçeve): başlık, çizgi, gövde
+  (`gameover.notice.body`, `UIText.N` ile `DayLedger.StrikesToClose` — "üç" hiçbir yerde yazılmaz), üç kırmızı gece
+  (NIGHT n, kapanış kasası kırmızı, altında took in / paid out), damga kırmızı gecelerin altındaki KENDİ zemininde
+  (88 birim, ortanın 40 solunda; oyunda ölçüldü: gövdenin ortasına vurulunca kâğıdın söylediği tek cümleyi
+  gömüyordu), en altta sağda "— THE LANDLORD". Boyu sözlerinin boyu: uzun bir çeviri kâğıdı büyütür, damga onunla
+  aşağı iner.
+- **Ön kapıya tek yol:** turuncu MAIN MENU (`OnGameOverMainMenu`) `ShowMainMenu()`'yü oyun sonunun ÜSTÜNE açar
+  (31 > 23, sıfırdan belirir); panel gizlenmez, ardından sayfa kapatılmaz. Kayıt zaten silindi: CONTINUE gri, NEW
+  RUN turuncu, bir basış ötede; bu ekranda NEW RUN yok (tek yol). `AnySheetOpen` oyun sonunu sayar (her kısayol,
+  müzik dahil, kapalı), `CloseEverySheet` dokunmaz, `ReadQuestNews` susar (şeride iş bildirimi düşmez).
+- **Steam ve kayıt:** ekran `Feat`/`Achievements` çağırmaz, hiçbir şey yazmaz (Core kaybı kapanışta itti).
+  `steam_death` ilk Closed karesinde düşer (tuş 0,5 sn'den önce kurulmadığı için menü onu yutamaz); kapanmış bir
+  koşuya dil yeniden yüklemesiyle dönülürse `OnRunStarted` zaman çizelgesini Closed sayar, ikinci ölüm yazılmaz.
+  `OnRunStarted` her şeyi sıfırlar: panel kapalı, vuruş Off, kâğıtlar gider, tabela yeniden yanar, yazıcı susar.
+- **Yeni anahtarlar yalnız İngilizce** (`Tools/loc/fragments/gameover.json`; `dayend.bill.lock_up`,
+  `dayend.bill.closes_at_dawn`, `dayend.stand.at_dawn`, `dayend.stand.closes`); 28 tablo yazar onaylayınca
+  çevrilecek, o zamana dek İngilizceye düşer (emsal 8d06bdcd).
+- **Test:** PlayMode `A_bar_that_goes_under_prints_its_books_and_walks_to_the_front_door` — en çok 8 gece
+  `DevSkipToDayEnd`; kapanmayan gecede CONTINUE ve market, kapanan gecede LOCK UP ve sepet hiç açılmaz; sonra MAIN
+  MENU hazır, faz `Closed`, NIGHTS OPEN `run.Day`, CONTINUE basılamaz, NEW RUN yeni bara açar ve oyun sonu kalkar.
+- **Doğrulama:** worktree'de derleme temiz (Core, Game, UI, Editor, Tests, PlayTests), saf Core EditMode 490/490.
+  Editörde bakılacak: PlayMode koşusu, beat saatleri (Pace 1 ve 8), azaltılmış hareketin ilk karesi, FLASHES kapalı
+  solma, Escape yolları, başarı kartı beklemesi (`Achievements.Keeps` açık), LOCK UP'ta ve menünün belirişinde
+  odanın parlamaması, `LastCall → Audit UI` (oyun sonu HAZIR'dayken), ru/el'de sarılan bildiri gövdesi.
+
 ### 9.137 · Başarım ikonları oyunda ve Steam'de; oda bildirim satırının bilgilendirme yazıları kalktı (2026-09-28)
 
 Yazar, ikon setini onaylarken: “İkonlar güzel beğendim kullanılsın. Açık olmayan başarım siyah beyaz gözüksün.
@@ -2076,8 +2665,8 @@ sanat tasarımını oyuna ekle." İncelenen spesifikasyonun on iki açık sorusu
   28 tablodan ve çeviri parçalarından çıktı.
 - **Gösteri** (`TycoonHud.NightShow`; her saat bugünküdür ve `Ceremony.Pace` ile koşar): **ışık** — perde
   0 → 0,988 Night[0] 0,6 sn'de gelir (yazarın 09-08 karanlığı; artık barın ışığının söndüğü görülür), üst
-  barın kasa kartı karanlık gelince çekilir; **çağrı** — THAT'S LAST CALL / doors shut · counting the money,
-  karanlıkta tek başına (0,4 + 1,5 + 0,5); **baskı** — Z-şeridi yukarıdan açılır (2,6 sn, `PaperLand`'in
+  barın kasa kartı karanlık gelince çekilir; **çağrı** — kodla çizilmiş CLOSED neonu (2026-09-28, §9.138; önce
+  THAT'S LAST CALL yazıyordu) / doors shut · counting the money, karanlıkta tek başına (0,4 + 1,5 + 0,5); **baskı** — Z-şeridi yukarıdan açılır (2,6 sn, `PaperLand`'in
   besleme yarısı; stoğun yırtık ayağı kenarda iner), dipte iki kez seker (8, sonra ~2 birim); iki yan sütun
   aynı anda kendi kenarlarından 54 birimle gelir, eleştirmen puanları gelişin son 0,30 sn'sinde sayılır;
   **sayım** — şeridin her rakamı sırayla, yukarıdan aşağı (sayım satırı, SALES, TIPS, [JOB], [THANKS], ALINAN;
@@ -2418,6 +3007,12 @@ Yazar: “Evet ekle, aynı zamanda ana menüyü geliştir tasarımını ve buton
   `StoreLink.Page` doluyken). Aynı sevk hattı (`Tools/icons_1bit_ship.py`, `ib_m_*`), tuşun 32'lik glif
   yuvasında TAM 2x; `PackKey` hover'ı pişmiş mürekkebi yeniden boyamasın diye iki rengi beyaz.
 - Bakış testi `menu.png` yeni menüyle yeniden kutsandı (test REDUCED MOTION iğner → bitmiş kare, ok yok).
+- *(2026-09-29, §9.145: nefes alan logo yerine ölçek başına çizilmiş, yanan TABELA (`TitleSign`); 1-bit
+  işaretler ve magenta ok yerine kodla çizilen neon işaretler (`NeonIcons`) ve ClubBlue neon ok. `ib_m_pointer`
+  ev turunun okunda, `ib_m_achievements` başarım listesinin yedeğinde, `ib_m_refuse` ret plakasında kalıyor.)*
+- *(2026-09-29, §9.146: yumuşak vinyet dört düz banda döndü; neon kural yerine Graphite pervaz ve yelpaze; tuşlar
+  tabela tuşu (`SignKey`); CREDITS bir kabin, kapının kendi alanında; şişeler dik ve tam texel adımlı; Escape
+  CREDITS'ten ve ACHIEVEMENTS'tan geri döner.)*
 
 ### 9.129 · Buff işaretleri 1-bit pakete geçti (Nikoichu, CC0) (2026-09-27)
 
@@ -2538,7 +3133,9 @@ buton ... Ve oyunda kullandığımız logo giriş sayfasında olmalı. Malibu Cl
 - **Logo başlıktır:** mağazanın kendi lockup'ı (`Tools/steam_kit/deliver/logos/lockup_2rows_2000`)
   LANCZOS ile tam çizim boyuna (560×210) indirilip `Menu/menu_logo.png` olarak sevk edildi —
   point filtresi 1:1 çizimde hiç örnekleme yapmaz. Markiz + NightTitle + alt başlık metni gitti;
-  logosuz derleme eski neon yazıya düşer.
+  logosuz derleme eski neon yazıya düşer. *(Bu "1:1" yalnız 1280×720'de doğruydu; 2026-09-29'dan beri başlık
+  her ekran ölçeği için ayrı çizilmiş tabela — §9.145; `menu_logo.png` klasörde mağaza sanatı olarak duruyor, oyun
+  onu çizmiyor.)*
 - **Tuşlar:** CONTINUE artık HEP tahtada — kayıt yokken pause'un SOON giysisiyle (etiketsiz) gri
   ve basılamaz, kayıt varken turuncu + gece/kasa notu. NEW RUN (kayıtsızken turuncu), SETTINGS,
   QUIT. Altında küçük sıra (36'lık): **AUDIO** ve **LANGUAGE** doğrudan o sayfalara
@@ -2767,17 +3364,24 @@ büyük. 2. görseldeki sıvı dokusunu değiştir. Kırmızıdan yeşile doğru
 kokteylden ne kadar koyduğuna göre o renk olmalı. Alkoller raflarda havada duruyor aşağı çek ve 2.5d bir rafta tam
 üstünde duruyor hissiyatı ver.”
 
-- **Seçilenler oyunda:** ayarların marki panosu P2 (`Resources/Menu/menu_header.png`), dokuz pirinç ikon (`mi_*`);
+- **Seçilenler oyunda:** ayarların marki panosu P2 (`Resources/Menu/menu_header.png`), dokuz pirinç ikon (`mi_*`;
+  **2026-09-29'dan beri hiçbir tuşta yok — §9.145, kodla çizilen neon işaretler; dosyalar duruyor, kod okumuyor**);
   İngilizcenin bayrağı zaten C'ydi. Kapı seçilmedi: yazar yerine arka plan istedi; kapının düzeni, yağmuru ve
   `MenuRain` silindi (ölü kod beklemesin).
 - **ESC'nin plakası bir resim** (`menu_esc_bg`, `PicturePlate`): üretilmiş Art Deco panel (220×252, tam 2x → 440×504),
   kendi pembe neonu, başlığın arkasında teal güneş ışını, alt köşelerde palmiye yaprakları, tuşların durduğu sakin bir
   orta. Resim varken sunset çizgileri çizilmez ve PAUSED bir neon tüp gibi arada takılır (`NeonFlicker`). Tek aday,
-  20 üretim. Beğenilmezse tek dosya silinir, mavi plaka geri gelir.
+  20 üretim. Beğenilmezse tek dosya silinir, mavi plaka geri gelir. *(2026-09-29, §9.146: resim emekli — ESC artık
+  kodla çizilen bir KABİN; `PicturePlate` ve `PauseKey` silindi, `menu_esc_bg.png` duruyor, kod okumuyor.)*
 - **ESC'nin ayağı, beam'in enstrümanları:** 8'lik saat satırı ve turuncu kasa yazısı yerine üst barın iki kuyusu
   (`ChromeArt.Well`): SAAT — cyan segment saat, gecenin numarası ve adı (16; sığmazsa 8); KASA — yeşil segment figür,
   ekside kırmızı. Bar zaten bu sözcüklerle konuşuyor.
 - **Üst barın dişlisi** menülerin pirinç ailesinden (`mi_settings`, pixflux, 1 üretim); ESC'deki AYARLAR da aynısı.
+  **Üst barınki 2026-09-26'da değişti** (yazar: "üst bardaki ayarlar butonunu değiştir hem üstündeki iconu hem de
+  butonun rengini", dört aday oyunda, A seçildi): artık NEON tuş — Magenta[1] plaka, üst ve sol kenarı Magenta[2],
+  üstünde paketin düz 16'lık dişlisi (`MenuPack.Glyph("cog")`, yoksa `ChromeArt.Mark("cog")`) 32×32'de Magenta[4];
+  ipucu da aynı glifi taşır (2026-09-28). `mi_settings` yalnız ESC'nin ve menünün gri AYARLAR tuşunda (2026-09-29'a
+  kadar; artık orada da neon dişli, §9.145).
 - **Post-it küçüldü:** 336'dan 288 genişliğe, satır 34'ten 26'ya, başlık aralığı 32'den 28'e; noktalar kitabın küçük
   boyunda (`RatioDots(…, 3, 2)`, 2x'te 80×14). Üç dökümlük içki 336×237'den 288×187'ye. Kitabın sayfaları değişmedi.
 - **Tin'de derece rengi** (`FillGauge`): her bant, şişenin içkideki payının kutusunun rengi (`BandBoxColors`: kırmızı
@@ -2839,7 +3443,7 @@ elli üretim tahminiyle; 2: çağrılmayan müşteri mırıltıları.)
     uzun başlık 16'ya iner. Pencere 42 uzuyor, sayfalar o kadar iniyor, her sayfa aynı alanı tutuyor.
   - İkonlar: gri tuşlarda paketin gliflerinin yerine üst barın `star3d` / `cog3d` ailesinden pirinç ikonlar
     (32×32, 1x, boyanmaz); amber ve lime tuşlar paketin glifinde kalır (pirinç üstüne pirinç olurdu). AYARLAR
-    dişlisi üst barın kendi `cog3d`'si.
+    dişlisi üst barın kendi `cog3d`'si. *(2026-09-29'da emekli — yazar: "şuanki altın iconları kullanma"; §9.145.)*
   - Sanat `Resources/Menu`'de değilken her menü bir öncekinin aynısı. Sondaj adayı `MenuPack.ArtOverride` ile
     çalışma anında verip sahneyi aynı koşuyla yeniden kuruyor; rapor sayfasının oyun içi görüntüleri böyle çekildi,
     Assets'e hiçbir şey girmedi. Üretilenler FLAT ve MAT (2026-08-18 kuralı: üretilen görselde ışık/yansıma yok).
@@ -3473,6 +4077,7 @@ sertifikanın içine; her yıldız için dev preset; törenin ön izlemesi.
   3★ 4★ 5★ (`DevKeyRow`). Eski `DevPreset(1/2)` testler için olduğu gibi. Test: `TheDevPresets_StandOnTheirRungs`.
 - **Üst şerit dalgası** (`StepHouseWave`): her 5 sn'de dolu yıldızlar, madalyalar ve kalpler soldan sağa 0,08 sn
   arayla 1,3× büyüyüp iner (ölçeksiz saat, `Motion.Reduced`'da yok); yarısından fazla dolu hücre dolu sayılır.
+  (2026-09-28 ikinci turdan beri `StepStarWave`, yalnız yıldızlar: şeritler kirişten yıldızların kartına indi, §9.107.)
 - **Sarmaşık geride** (`PlaceFixtures`): greenery grubu z'de 0,3 geriye — aynı sıralama katındaki mobilyanın
   hep arkasında.
 - **Kepenk**: `sign_open_arrow` (kapalı kepenkteki büyük pembe ok) ve `sign_shut_arrow` (raydaki küçük ok)

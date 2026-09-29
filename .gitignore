@@ -160,6 +160,12 @@ Tools/AssetPipeline/sources/patron_raw/
 /Tools/v4_bottles/pilot.log
 /Tools/v4_bottles/__pycache__/
 
+# the title sign's pipeline (2026-09-29): the masters' cut and the drawn maps are derived; ship.py puts the maps in
+# Assets/Resources/Logo, which is what is tracked
+/Tools/title_sign/work/
+/Tools/title_sign/out/
+/Tools/title_sign/__pycache__/
+
 # social publishing: tokens and the run log never leave this machine
 Tools/social/.secrets/
 Tools/social/state/

@@ -4,7 +4,7 @@ namespace LastCall.Game
 {
     /// <summary>
     /// HOW FAST THE CEREMONIES PLAY (2026-09-14, the author: "playmode testlerini daha optimize hızlı
-    /// yapamaz mısın? Tüm hızlandırmaları yap"). The curtain between two nights (7 s) and the night's
+    /// yapamaz mısın? Tüm hızlandırmaları yap"). The curtain between two nights (6.8 s; 8.6 s over a Sunday) and the night's
     /// slip, stars, stamp and standing (about 10 s) are presentation the player watches once a night;
     /// the PlayMode suite walked through them 13 and 4 times a run — 80 s and 40 s of its 272, measured
     /// (Temp/PlayTestTimes.txt). The suite sets a pace for its own run, and the HUD multiplies those

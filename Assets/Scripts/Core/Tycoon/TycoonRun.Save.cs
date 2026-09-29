@@ -122,6 +122,9 @@ namespace LastCall.Core
         public int questFormat;
         public bool hasQuests;
         public int questNext, questVisitFrom, questsSkipped;
+        /// <summary>Jobs finished over the run (2026-09-28, the game over's Z report). Added without a version bump
+        /// either: a file written before it reads 0, and the restore counts the ledger's paid nights instead.</summary>
+        public int questsDone;
         /// <summary>The next row BY ITS ID, which a data update cannot move: questNext is only the fallback (a
         /// book whose next row has gone, or a save written before 2026-09-28's review, which reads "").</summary>
         public string questNextId;
@@ -248,6 +251,7 @@ namespace LastCall.Core
             snap.questNextId = QuestNextUp?.Id ?? string.Empty;
             snap.questVisitFrom = _visitFrom;
             snap.questsSkipped = QuestsSkipped;
+            snap.questsDone = QuestsDone;
             snap.questDoneUnsaid = _doneUnsaid;
             snap.quest = QuestStateOf(Quest);
             // Only ever the job on the bar: the flash is cleared at every hand-over (HearHostess).
@@ -467,6 +471,12 @@ namespace LastCall.Core
                 _visitFrom = snap.questVisitFrom;
                 _doneUnsaid = snap.questDoneUnsaid;
                 QuestsSkipped = snap.questsSkipped;
+                // A save from before the count (2026-09-28) reads 0: the ledger, restored above, knows which nights
+                // she paid — one job a night at most, since she hands the next over no sooner than the night after a pay.
+                QuestsDone = snap.questsDone;
+                if (QuestsDone == 0)
+                    foreach (var row in Ledger.History)
+                        if (row.QuestPaid > 0) QuestsDone++;
                 QuestJustDone = snap.questJustDone ? Quest : null;
             }
             else
@@ -478,6 +488,7 @@ namespace LastCall.Core
                 _questNext = 0;
                 _doneUnsaid = false;
                 QuestsSkipped = 0;
+                QuestsDone = 0;            // the book starts at this dawn; nothing of hers was done before it
                 QuestJustDone = null;
                 _visitFrom = QuestsLive ? Day : 0;
             }

@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
+using CellarCabinet = LastCall.Game.CellarCabinet;
 
 namespace LastCall.UI
 {
@@ -228,10 +229,16 @@ namespace LastCall.UI
         public Sprite CounterArt => counterSprite;
 
         /// <summary>THE COUNTER REPAINTED (2026-09-16, CounterFinish): the counter and the shutter swap their sprites
-        /// for recoloured copies of the same drawing; the tiling and every measurement taken off it stay.</summary>
+        /// for recoloured copies of the same drawing; the tiling and every measurement taken off it stay. Since the
+        /// cabinet (2026-09-28) the counter's drawing is its SLAB, and the cabinet under it takes the finish on its
+        /// carcass alone (CounterFinish.RecolourCabinet) - the niches' light is the level's, not the paint's.</summary>
         public void SetCounterFinish(string id)
         {
-            if (_counterSr != null && counterSprite != null) _counterSr.sprite = CounterFinish.Recolour(counterSprite, id);
+            _finishId = id;
+            var drawn = _cabinetDressed ? SlabArt : counterSprite;
+            if (_counterSr != null && drawn != null) _counterSr.sprite = CounterFinish.Recolour(drawn, id);
+            DressCabinet();
+            if (_counterSr != null) SliceCounterEdges(_counterSr.sprite);   // the flanks and the plinth wear it too
             // THE DOOR IS NOT REFINISHED (2026-09-22, the author: "kapağın rengi raflarla aynı olmamalı, sabit bir
             // renk seçilmeli"): it is the one FIXED surface in the room - teal planks against the magenta shelves,
             // the palette's split-complement of the frames, with the pink flamingo on it landing on its own
@@ -243,53 +250,28 @@ namespace LastCall.UI
         private float _shutterRestLocalY;
 
         // ── where a bottle stands in the cellar ─────────────────────────────────
-        // MEASURED on the installed counter (638x241), not chosen. The blue posts scan at
-        // x 7-32, 209-226, 412-429 and 605-630, which leaves three bays; the two shelf
-        // boards are 12 px thick at rows 138..149 and 228..239.
-        private static readonly float[] CellarBayCentrePx = { 120f, 319f, 517f };
-        private const float CellarBayWidthPx = 175f;      // the narrowest of the three
-        /// <summary>
-        /// The line a bottle's foot stands on, in the counter art's own rows.
-        ///
-        /// NOT the board's TOP row (2026-08-25, the author: "rafın en üstündeki pixele temas
-        /// edecek şekilde konumlandırılmışlar fakat rafın yüzeyine oturtulmaları gerekiyor …
-        /// smirkoff -170'de rafta duruyor hissini veriyor"). The boards are drawn with DEPTH
-        /// — twelve rows of blue apiece, which is a plank seen from slightly above and not a
-        /// hairline — so a foot on row 138 is a bottle balanced on the plank's front EDGE.
-        /// The surface it should stand on is the middle of that plank: rows 138..149 and
-        /// 228..239, so 143 and 233. The author read the first one off the inspector as
-        /// -170, and 143 is exactly what puts Smirkoff's transform there.
-        /// </summary>
-        private static readonly float[] CellarShelfFootPx = { 143f, 233f };
-        /// <summary>The row each compartment's CEILING is drawn at — the shelf opening's own
-        /// top edge, then the underside of the board above the lower run. What the cellar's
-        /// lights hang from, so a re-cut counter moves them with the boards.</summary>
-        private static readonly float[] CellarShelfCeilPx = { ShutterOpeningTopPx, 150f };
-        /// <summary>Three bays across, on each of two boards.</summary>
-        private const int CellarBays = 3;
-        /// <summary>
-        /// How thinly and how densely one bay may be packed.
-        ///
-        /// It used to be a flat three, which was what the author's open mock-up showed and
-        /// what an OPENING bar looks like — and 3 × 3 × 2 is eighteen slots against a
-        /// branded catalogue of thirty-six pourable bottles, every one of which JOINS the
-        /// shelf (TycoonRun.BuyBrand). So a bar that kept shopping bought stock the cellar
-        /// simply did not draw, which is half of "satın alınan alkoller eklenmiyor".
-        ///
-        /// The bay takes as many slots as tonight's stock needs and no more: six bottles
-        /// stand spread out, thirty stand shoulder to shoulder (2026-08-25, the author:
-        /// "birbirlerine yakın olabilirler"), and nothing is ever dropped.
-        /// </summary>
-        private const int CellarMaxPerBay = 8;
-        /// <summary>How many bottles the cellar can show at once. An upper bound, not a
-        /// promise: what a bay actually holds is decided by the WIDTH of tonight's stock
-        /// (see <see cref="PackCellar"/>), and the narrowest bottle in the catalogue is
-        /// half the width of the broadest. Eight a bay clears the thirty-six pourable
-        /// brands the shop sells with room to spare.</summary>
-        public const int CellarSlots = CellarBays * 2 * CellarMaxPerBay;
-        /// <summary>Drawn height of a bottle in the cellar. The shallower compartment runs
-        /// from the opening's top row (65) to the near board's surface (143), so 62 leaves
-        /// the stock a clear sixteen rows of air under the board above it.
+        // THE CELLAR IS A DISPLAY CABINET (2026-09-28, the author: "Mahzen tasarımı = C · Art Deco vitrin"). It was the
+        // counter drawing's own three bays behind two magenta boards, stocked by a planogram that cut each board where a
+        // run fitted best - so a family could stand half in one bay and half in the next. It is ten fixed niches now,
+        // five across and two high, one family a niche, drawn by Tools/cellar_cabinet/cabinet.py in one material per
+        // counter tier; every number a bottle, a lamp, a plate or a hit plate is placed by lives in
+        // LastCall.Game.CellarCabinet, which the EditMode suite holds the drawing to. What stays is the author's:
+        // the slab (counter.png rows 0..64), the door that drops into the counter, the rail at the sill, the
+        // drawer's travel - and the two lines a foot stands on.
+        //
+        // THE FOOT IS STILL NOT THE BOARD'S TOP ROW (2026-08-25, the author: "rafın en üstündeki pixele temas edecek
+        // şekilde konumlandırılmışlar fakat rafın yüzeyine oturtulmaları gerekiyor"): the cabinet's boards are drawn
+        // in depth, back edge to lip, and a bottle stands on the middle of that - rows 143 and 233, as it always has,
+        // which is what keeps DrawerTravel, the bench lines and bench.png's rail where they were.
+        private static float CellarFootPx(int board) =>
+            CellarCabinet.FootRow[Mathf.Clamp(board, 0, CellarCabinet.Rows - 1)];
+        /// <summary>How many bottles the cellar can show at once: an upper bound for the lists, not a shelf rule.
+        /// Capacity is the niches' WIDTH now (CellarCabinet.Plan) - the whole catalogue of thirty-six stands with air
+        /// to spare, and a family that ever outgrows its niche is the EditMode suite's to catch, never a smaller
+        /// bottle's.</summary>
+        public const int CellarSlots = 48;
+        /// <summary>Drawn height of a bottle in the cellar: from the row under its niche's lamp (79, 169) to the
+        /// board it stands on (143, 233), exactly.
         ///
         /// IT IS A CONSTANT AGAIN, and that is the point (2026-08-25, the author: "raftaki
         /// alkolleri sığdırmak için boyutları değişmemeli gerekirse aralarında 1 pixel
@@ -303,18 +285,16 @@ namespace LastCall.UI
         // art pixel per stage unit, so 64 tall is the drawing at 1:1 and 2x on a 720p screen.
         // Was 62; the compartment's air above the bottle goes from 16 rows to 14.
         private const float CellarBottleH = 64f;
-        /// <summary>The least air allowed between two shoulders, in art px. One, because
-        /// that is what the author asked for; not zero, because touching bottles read as
-        /// one smear and the hit plates behind them would share an edge.</summary>
-        private const float CellarMinGapPx = 1f;
+        // (The least air between two shoulders - one pixel, the author's - is CellarCabinet.GapMin now: the plan that
+        //  keeps it lives where the EditMode suite can read it.)
         /// <summary>Where each drawn bottle stands and how wide it is, in the counter art's
         /// own pixels — filled by <see cref="PackCellar"/> and read by everything else, so
         /// the bottle and the plate that catches its click cannot disagree. Index is the
-        /// slot's, and the list is SHORTER than the stock handed in when the shelves run
-        /// out of room.</summary>
+        /// slot's; every bottle handed in gets one (the cabinet never drops a bottle).</summary>
         private readonly List<float> _cellarSlotX = new List<float>();
         private readonly List<float> _cellarSlotW = new List<float>();
         private readonly List<float> _cellarSlotFoot = new List<float>();
+        private readonly List<int> _cellarSlotNiche = new List<int>();
         private readonly List<SpriteRenderer> _cellarStock = new List<SpriteRenderer>();
         // THE v4 SANDWICH IN THE CELLAR (2026-09-04, PLAN_bottle_art_v4 §4c). Per slot: the
         // interior plate behind the front, and between them a flat-colour quad clipped by a
@@ -352,7 +332,7 @@ namespace LastCall.UI
         private RectTransform _shelfGuard;       // ...except here: the shelves keep their clicks
         private bool _shutterHovered;
         private float _shutterPeek;              // 0 shut tight, 1 held open a crack
-        private Image _shutterLight;             // what spills out of that crack
+        private SpriteRenderer _shutterLight;    // what spills out of that crack
         private IReadOnlyList<string> _cellarIds;
 
         /// <summary>
@@ -451,18 +431,16 @@ namespace LastCall.UI
 
         /// <summary>
         /// What is standing in the counter's cellar. The stage is TOLD, the same way the till
-        /// is told the money — it never reads the run. Anything past <see cref="CellarSlots"/>
-        /// is not drawn, because there is no shelf for it to stand on.
+        /// is told the money — it never reads the run. <paramref name="niches"/> is each bottle's
+        /// niche (CellarCabinet.NicheOf), in the order the HUD shelved them (CellarCabinet.ShelfKey),
+        /// so a niche's bottles arrive together. Anything past <see cref="CellarSlots"/> is not drawn.
         /// </summary>
         public void SetCellar(IReadOnlyList<Sprite> bottles, IReadOnlyList<string> ids = null,
-                              IReadOnlyList<int> boards = null, IReadOnlyList<int> families = null)
+                              IReadOnlyList<int> niches = null)
         {
             int n = bottles == null ? 0 : Mathf.Min(bottles.Count, CellarSlots);
             _cellarIds = ids;
-            _cellarBoard = boards;
-            _cellarFamily = families;
-            // The pack decides how many the shelves can actually hold at full size, which
-            // is never MORE than what was handed in and can be less.
+            _cellarNiches = niches;
             PackCellar(bottles, n);
             n = _cellarSlotX.Count;
             while (_cellarStock.Count < n)
@@ -494,6 +472,7 @@ namespace LastCall.UI
             BuildCellarDoors(n);
             NameCellarDoors(n);
             LayOutCellarDoors();
+            RefreshCellarReflections();
         }
 
         /// <summary>
@@ -501,175 +480,84 @@ namespace LastCall.UI
         ///
         /// THE BOTTLES DO NOT CHANGE SIZE (2026-08-25, the author). Every one of them is
         /// drawn at <see cref="CellarBottleH"/>, always, whatever else is on the shelf.
-        /// What absorbs a growing bar is the SPACING: six bottles stand spread across the
-        /// six compartments, thirty stand shoulder to shoulder with a single pixel of air
-        /// between them, and nothing in between is scaled to make it fit.
+        /// What absorbs a growing bar is the SPACING: a lone bottle stands in the middle of its
+        /// niche, a full family shoulder to shoulder with a single pixel of air between them,
+        /// and nothing in between is scaled to make it fit.
         ///
-        /// So a slot is no longer a fixed share of a bay — it is a bottle's own drawn
-        /// width, and the bay is packed with the real widths. That is not a detail: the
-        /// catalogue's broadest bottle is nearly twice the width of its narrowest, so
-        /// equal slots spend a fat bottle's room on a thin one and then shrink the whole
-        /// shelf to pay for it.
+        /// So a slot is not a fixed share of a niche — it is a bottle's own drawn width, and the
+        /// niche is packed with the real widths: the catalogue's broadest bottle is nearly twice
+        /// the width of its narrowest.
         ///
-        /// The compartments are filled the way a bar restocks — shelf by shelf, bay by bay
-        /// — and each takes an even share of what is LEFT, so the stock spreads instead of
-        /// piling into the first bay. A compartment that would overrun its bay at the
-        /// minimum gap stops early and hands the rest forward; when the last one is full,
-        /// what remains has nowhere to stand and is not drawn, which is the same rule
-        /// <see cref="CellarSlots"/> has always kept.
+        /// ONE FAMILY A NICHE (2026-09-28, the cabinet): the plan is CellarCabinet.Plan's, the same
+        /// arithmetic the EditMode suite holds to the whole catalogue - each family centred under its
+        /// own lamp, the air between its bottles shared out in whole pixels, one at the tightest.
+        /// Nothing is dropped and no family is cut at a post; what the stock changes is which niches
+        /// are lit (<see cref="LightCabinetNiches"/>) and how wide each lamp's cone opens.
         /// </summary>
         private void PackCellar(IReadOnlyList<Sprite> bottles, int n)
         {
             _cellarSlotX.Clear();
             _cellarSlotW.Clear();
             _cellarSlotFoot.Clear();
-            _cellarSlotBay.Clear();
-            if (bottles == null || n <= 0) return;
+            _cellarSlotNiche.Clear();
+            System.Array.Clear(_cellarRunPx, 0, _cellarRunPx.Length);
+            System.Array.Clear(_nicheStocked, 0, _nicheStocked.Length);
+            if (bottles == null || n <= 0) { LightCabinetNiches(); AimCellarCones(); return; }
 
-            int compartments = CellarShelfFootPx.Length * CellarBays;
-            int taken = 0;
-            for (int c = 0; c < compartments && taken < n; c++)
+            var widths = new float[n];
+            var niches = new int[n];
+            for (int i = 0; i < n; i++)
             {
-                int left = compartments - c;
-                int want = Mathf.Min(Mathf.CeilToInt((n - taken) / (float)left), CellarMaxPerBay);
-                // THE PLANOGRAM (2026-09-28): when the HUD gives each bottle its board, the board's families are
-                // laid over its three bays where they split best (PlanCellar) instead of an even share of the stock.
-                if (_cellarBoard != null)
-                {
-                    if (c == 0) PlanCellar(bottles, n);
-                    want = Mathf.Min(_cellarPlan[c], CellarMaxPerBay);
-                }
-
-                // How many of the next `want` actually fit this bay at the tightest legal
-                // packing. Measured off the sprites themselves — the first bottle costs its
-                // own width, every one after it costs a gap as well.
-                int take = 0;
-                float sumW = 0f;
-                while (take < want && taken + take < n)
-                {
-                    float w = CellarDrawnWidth(bottles[taken + take]);
-                    float needed = sumW + w + take * CellarMinGapPx + FamilyBreaks(taken, take + 1) * CellarFamilyGapPx;
-                    if (take > 0 && needed > CellarBayWidthPx) break;
-                    sumW += w;
-                    take++;
-                }
-                if (take == 0) continue;
-
-                // The air left over, shared out evenly — a full bay collapses to the
-                // one-pixel minimum and a sparse one stands its bottles apart. The RUN is
-                // then centred in the bay rather than laid out from its left edge, so the
-                // packing is symmetric at every density and cannot creep past a post.
-                float breaks = FamilyBreaks(taken, take) * CellarFamilyGapPx;   // two families in a bay: their own air
-                float gap = take > 1
-                    ? Mathf.Max(CellarMinGapPx, (CellarBayWidthPx - sumW - breaks) / (take + 1))
-                    : 0f;
-                float run = sumW + (take - 1) * gap + breaks;
-                float x = CellarBayCentrePx[c % CellarBays] - run * 0.5f;
-                float foot = CellarShelfFootPx[Mathf.Min(c / CellarBays,
-                    CellarShelfFootPx.Length - 1)];
-                for (int k = 0; k < take; k++)
-                {
-                    float w = CellarDrawnWidth(bottles[taken + k]);
-                    if (k > 0 && FamilyBreaks(taken + k - 1, 2) > 0) x += CellarFamilyGapPx;
-                    _cellarSlotBay.Add(c);
-                    _cellarSlotX.Add(x + w * 0.5f);
-                    _cellarSlotW.Add(w);
-                    _cellarSlotFoot.Add(foot);
-                    x += w + gap;
-                }
-                taken += take;
+                widths[i] = CellarDrawnWidth(bottles[i]);
+                // a caller that shelves nothing is dealt over the ten niches in even runs, in order, so every bottle
+                // still stands and no niche takes more than its share
+                niches[i] = _cellarNiches != null && i < _cellarNiches.Count
+                    ? _cellarNiches[i]
+                    : Mathf.Min(i * CellarCabinet.Niches / n, CellarCabinet.Niches - 1);
             }
-        }
-
-        // ── the planogram (2026-09-28) ─────────────────────────────────────────────
-        // The author: "mahzende şişelerin gruplandırılması ve şişelerin sıralaması değiştirilsin, oyuncu için
-        // gruplandırmayı daha profesyonel ve anlaşılır hale getir". The HUD decides which board a family stands on and
-        // in what order; the stage decides where the board's run breaks at its two posts. Measured on the catalogue:
-        // a family is four or five bottles of 82-104 px, a bay is 175, so no two families but the two syrups share a
-        // bay, and a family cannot always have a bay to itself - six bays hold nine families. So each board's run is
-        // cut where it costs least: bays as evenly filled as they can be, and a family cut in two only when nothing
-        // else fits (with the whole catalogue, the gin and the tequila; the lower board none).
-        private IReadOnlyList<int> _cellarBoard, _cellarFamily;
-        private readonly int[] _cellarPlan = new int[CellarBays * 2];
-        private readonly List<int> _cellarSlotBay = new List<int>();
-        /// <summary>The extra air between two families in one bay, in the counter art's pixels.</summary>
-        private const float CellarFamilyGapPx = 6f;
-        /// <summary>What cutting a family at a post costs, in pixels of uneven fill it is worth.</summary>
-        private const float CellarSplitCost = 60f;
-
-        /// <summary>The compartment (0-2 upper board, 3-5 lower) slot <paramref name="i"/> stands in, or -1.</summary>
-        public int CellarSlotBay(int i) => i >= 0 && i < _cellarSlotBay.Count ? _cellarSlotBay[i] : -1;
-
-        /// <summary>How many bottles each compartment takes: every board's own run, cut into its three bays.</summary>
-        private void PlanCellar(IReadOnlyList<Sprite> bottles, int n)
-        {
-            System.Array.Clear(_cellarPlan, 0, _cellarPlan.Length);
-            int start = 0;
-            for (int board = 0; board < 2; board++)
+            var plan = CellarCabinet.Plan(widths, niches);
+            bool overflowed = false;
+            for (int i = 0; i < n; i++)
             {
-                int end = start;
-                while (end < n && end < _cellarBoard.Count && _cellarBoard[end] <= board) end++;
-                if (board == 1) end = n;                       // whatever is left stands on the lower board
-                int bestI = -1, bestJ = -1;
-                float best = float.MaxValue;
-                for (int i = start; i <= end; i++)
-                    for (int j = i; j <= end; j++)
-                    {
-                        float a = BayNeed(bottles, start, i), b = BayNeed(bottles, i, j), d = BayNeed(bottles, j, end);
-                        if (a > CellarBayWidthPx || b > CellarBayWidthPx || d > CellarBayWidthPx) continue;
-                        float cost = Mathf.Max(a, Mathf.Max(b, d)) - Mathf.Min(a, Mathf.Min(b, d));
-                        if (SplitsFamily(i, start, end)) cost += CellarSplitCost;
-                        if (SplitsFamily(j, start, end)) cost += CellarSplitCost;
-                        if (cost < best) { best = cost; bestI = i; bestJ = j; }
-                    }
-                if (bestI < 0)
-                {
-                    // the board's run is more than its three bays hold: as many as fit, bay by bay, and the rest
-                    // left for the pack's own overflow into the next bay
-                    int k = start;
-                    for (int bay = 0; bay < CellarBays; bay++)
-                    {
-                        int m = k;
-                        while (m < end && BayNeed(bottles, k, m + 1) <= CellarBayWidthPx) m++;
-                        _cellarPlan[board * CellarBays + bay] = m - k;
-                        k = m;
-                    }
-                    start = k;
-                    continue;
-                }
-                _cellarPlan[board * CellarBays + 0] = bestI - start;
-                _cellarPlan[board * CellarBays + 1] = bestJ - bestI;
-                _cellarPlan[board * CellarBays + 2] = end - bestJ;
-                start = end;
+                var s = plan[i];
+                _cellarSlotNiche.Add(s.Niche);
+                _cellarSlotX.Add(s.Centre);
+                _cellarSlotW.Add(s.Width);
+                _cellarSlotFoot.Add(s.Foot);
+                _nicheStocked[s.Niche] = true;
+                // the run each lamp's cone opens to: first drawn pixel to last, per niche
+                _cellarRunPx[s.Niche] = Mathf.Max(_cellarRunPx[s.Niche],
+                    s.Left + s.Width - FirstLeftInNiche(plan, s.Niche));
+                overflowed |= s.Overflow;
             }
+            if (overflowed && !_cellarOverflowSaid)
+            {
+                // Loud once: a family wider than its niche is a data decision (a fifth gin), never a smaller bottle.
+                _cellarOverflowSaid = true;
+                Debug.LogWarning("DiegeticStage: a family is wider than its cellar niche - it stands at one pixel of " +
+                                 "air into the niche's margin. See CellarCabinetTests.");
+            }
+            LightCabinetNiches();
+            AimCellarCones();
         }
 
-        /// <summary>The width bottles [from, to) take in one bay at the tightest legal packing.</summary>
-        private float BayNeed(IReadOnlyList<Sprite> bottles, int from, int to)
+        private bool _cellarOverflowSaid;
+
+        private static float FirstLeftInNiche(CellarCabinet.Slot[] plan, int niche)
         {
-            if (to <= from) return 0f;
-            float w = 0f;
-            for (int i = from; i < to; i++) w += CellarDrawnWidth(bottles[i]);
-            return w + (to - from - 1) * CellarMinGapPx + FamilyBreaks(from, to - from) * CellarFamilyGapPx;
+            for (int i = 0; i < plan.Length; i++) if (plan[i].Niche == niche) return plan[i].Left;
+            return 0f;
         }
 
-        /// <summary>Whether a cut before bottle <paramref name="i"/> falls inside a family.</summary>
-        private bool SplitsFamily(int i, int start, int end)
-        {
-            if (_cellarFamily == null || i <= start || i >= end || i >= _cellarFamily.Count) return false;
-            return _cellarFamily[i] == _cellarFamily[i - 1];
-        }
+        // (The 2026-09-28 morning's planogram - PlanCellar cutting each board's run at its two posts, a family cut in
+        //  two only when nothing else fitted - went with the three bays that needed it. The HUD still shelves by
+        //  family, board and tier; the cabinet gives every family a niche of its own, so there is nothing left to cut.)
+        private IReadOnlyList<int> _cellarNiches;
+        /// <summary>Which of the ten niches hold stock tonight - lit, with the lamp at full; the rest on their pilot.</summary>
+        private readonly bool[] _nicheStocked = new bool[CellarCabinet.Niches];
 
-        /// <summary>How many times the family changes across <paramref name="count"/> bottles from
-        /// <paramref name="from"/>.</summary>
-        private int FamilyBreaks(int from, int count)
-        {
-            if (_cellarFamily == null) return 0;
-            int breaks = 0;
-            for (int i = from + 1; i < from + count && i < _cellarFamily.Count; i++)
-                if (_cellarFamily[i] != _cellarFamily[i - 1]) breaks++;
-            return breaks;
-        }
+        /// <summary>The niche (CellarCabinet: board x 5 + column) slot <paramref name="i"/> stands in, or -1.</summary>
+        public int CellarSlotNiche(int i) => i >= 0 && i < _cellarSlotNiche.Count ? _cellarSlotNiche[i] : -1;
 
         /// <summary>How wide a bottle is DRAWN, in the counter art's own pixels: its own
         /// aspect at the one shelf height. A missing sprite is given the catalogue's broadest
@@ -720,7 +608,7 @@ namespace LastCall.UI
                 _cellarCavity[i] = ItemArt.OpaqueBounds(p.Mask);
                 PlaceCellarSlot(_cellarStock[i], i);
             }
-            RefreshCellarMovers();
+            RefreshCellarReflections();   // the mirror's silhouettes take the interior too; wires the movers
             SetCellarFills(fills);
         }
 
@@ -740,6 +628,7 @@ namespace LastCall.UI
             if (glow != null) glow.HaloHidden = !shown;   // the card draws the halo with the copy
             _cellarStock[index].enabled = shown;
             if (index < _cellarShadow.Count) { _cellarShadow[index].enabled = shown; _cellarFootShadow[index].enabled = shown; }
+            if (index < _cellarReflect.Count) _cellarReflect[index].enabled = shown;   // the mirror's copy goes with it
             if (index < _cellarBack.Count) _cellarBack[index].enabled = shown;
             if (index < _cellarDrink.Count) _cellarDrink[index].enabled = shown && _cellarDrinkOn(index);
             if (index < _cellarFace.Count)
@@ -792,6 +681,7 @@ namespace LastCall.UI
                 if (i < _cellarFace.Count) { movers.Add(_cellarFace[i].transform); movers.Add(_cellarFoot[i].transform); }
                 if (i < _cellarShadow.Count) movers.Add(_cellarShadow[i].transform);   // the cast shadow rocks with it; the foot's stays
                 if (i < _cellarMask.Count) movers.Add(_cellarMask[i].transform);
+                if (i < _cellarReflect.Count) movers.Add(_cellarReflect[i].transform);   // ...and so does its reflection
                 glow.Movers = movers.ToArray();
             }
         }
@@ -1186,45 +1076,55 @@ namespace LastCall.UI
         /// </summary>
         private void BuildShutterLight()
         {
-            if (_shutterLight != null || _shutterDoor == null) return;
+            if (_shutterLight != null || _shutterTr == null) return;
             var art = ItemArt.Load("light_spill");
             if (art == null) return;
-            var rt = NewRect("ShutterLight", _shutterDoor.parent);
-            rt.anchorMin = rt.anchorMax = new Vector2(0, 0);
-            rt.pivot = new Vector2(0.5f, 1f);      // hung by its top, at the opening's lip
-            rt.sizeDelta = new Vector2(_shutterNative.x, art.rect.height);
-            rt.SetAsFirstSibling();                // under the door plate; it takes no clicks
-            _shutterLight = rt.gameObject.AddComponent<Image>();
-            _shutterLight.sprite = art;
-            _shutterLight.raycastTarget = false;
-            // WIDER THAN THE DOOR (2026-09-22, the author: "daha göz alıcı olmalı"): light out of a crack does not
-            // stop at the jamb, it washes the counter either side of it.
-            rt.sizeDelta = new Vector2(_shutterNative.x + 96f, art.rect.height * 1.6f);
-            _shutterLight.gameObject.SetActive(false);
-            UiAuditExempt.Mark(rt, "the light out of the cellar's crack is a lit sliver of "
-                + "room, drawn at the shutter's own width");
+            // IN THE ROOM, OVER THE ROLLER AND UNDER THE TOWEL (2026-09-26, the author: "tezgah ışık hüzmesi
+            // tezgahın kenarlarına taşmamalı kapağın hizasında olmalı ve havlunun önünde gözükmemeli"). It was an
+            // Image on the shutter door's overlay canvas, and an overlay draws over every world sprite - so the
+            // towel on its rail (order 36) wore the spill across its front. A stage sprite at 34 sits over the
+            // roller (33) and under the bar top's props (35) and the towel. Unlit: it IS light, and the room's
+            // lamps multiplying it would dim the one thing in the frame that is supposed to be a source.
+            _shutterLight = WorldSprite("ShutterLight", art, order: 34);
+            if (_viewMaterial != null) _shutterLight.sharedMaterial = _viewMaterial;
+            _shutterLight.enabled = false;
             LayOutShutterLight();
         }
 
+        /// <summary>How tall the spill is against its drawing, and the floor its pulse never falls under.</summary>
+        private const float ShutterLightTall = 1.6f;
+        private const float ShutterPulseLow = 0.35f, ShutterPulseHz = 0.9f;
+
         private void LayOutShutterLight()
         {
-            if (_shutterLight == null) return;
+            if (_shutterLight == null || _shutterTr == null) return;
             // THE LIGHT FOLLOWS THE CRACK, A BEAT BEHIND IT (2026-09-22): nothing spills until the door has
             // actually parted, and then it comes up the rest of the way with it.
             float alpha = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.18f, 1f, PeekEase(_shutterPeek))) * (1f - _drawerT);
             bool on = alpha > 0.002f;
-            if (_shutterLight.gameObject.activeSelf != on) _shutterLight.gameObject.SetActive(on);
+            if (_shutterLight.enabled != on) _shutterLight.enabled = on;
             if (!on) return;
-            var rt = (RectTransform)_shutterLight.transform;
-            rt.anchoredPosition = new Vector2(
-                Reference.x * 0.5f,
-                CounterRestY + CounterSurfaceInset - ShutterOpeningTopPx + DrawerTravel * _drawerT);
-            // THE CELLAR'S OWN LIGHT, BREATHING (2026-09-22): the spill is warm - it is the cellar's tungsten
-            // coming through, not a white glow - and it swells a little while the crack is held, which is what
-            // makes a door being tried read as a door being tried rather than as a sprite fading in.
-            float breathe = 0.86f + 0.14f * Mathf.Sin(Time.unscaledTime * 3.4f);
+            // THE DOOR'S OWN WIDTH, NOT THE COUNTER'S (2026-09-26): it was the roller plus 96 (2026-09-22, "daha göz
+            // alıcı olmalı"), which ran it past the bar's ends onto the pink caps. The crack is as wide as the
+            // roller, so the light out of it is too. Hung by its top at the opening's lip, in the world root's own
+            // units - the drawer's lift comes with the root.
+            var size = _shutterLight.sprite.bounds.size;
+            float tall = _shutterLight.sprite.rect.height * ShutterLightTall;
+            _shutterLight.transform.localScale = new Vector3(
+                _shutterNative.x / Mathf.Max(0.0001f, size.x), tall / Mathf.Max(0.0001f, size.y), 1f);
+            float openingTop = _shutterRestLocalY + _shutterNative.y * 0.5f;
+            _shutterLight.transform.localPosition = new Vector3(
+                _shutterTr.localPosition.x, openingTop - tall * 0.5f, -0.001f);
+            // THE CELLAR'S OWN LIGHT, PULSING (2026-09-26, the author: "ışık sabit bir ışık olmamalı parlamalı yanıp
+            // sönmeli full sönmeden"): it swells to full and sinks to a third, never out. It was 0.86..1, which read as
+            // still - and it only stepped while the peek was moving, so a crack held open froze (Update now steps it).
+            // FLASHES off keeps it breathing, shallow.
+            float low = Motion.NoFlashes ? 0.8f : ShutterPulseLow;
+            float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * ShutterPulseHz * 2f * Mathf.PI);
+            float pulse = Mathf.Lerp(low, 1f, wave * wave * (3f - 2f * wave));
             var warm = LightLanguage.Key;
-            _shutterLight.color = new Color(warm.r, warm.g, warm.b, Mathf.Clamp01(alpha * 1.35f * breathe));
+            // No gain over 1 (it was ×1.35): clamped, the top third of every swell sat flat at full and read as still.
+            _shutterLight.color = new Color(warm.r, warm.g, warm.b, Mathf.Clamp01(alpha * pulse));
         }
 
         /// <summary>
@@ -1495,10 +1395,10 @@ namespace LastCall.UI
                         + DrawerTravel * _drawerT;
             float foot = CounterRestY + CounterSurfaceInset - _counterNative.y
                          + DrawerTravel * _drawerT;
-            // The blue posts scan at art x 7 and 630 (see CellarBayCentrePx); between them is
-            // shelf, outside them is cabinet, and the cabinet is not the cellar.
-            _shelfGuard.anchoredPosition = new Vector2(left + 7f, foot);
-            _shelfGuard.sizeDelta = new Vector2(623f, top - foot);
+            // THE CABINET'S OWN FRONT, from its constants (2026-09-28): it was the hand-typed 7 and 623 of the old
+            // drawing's blue posts. The end posts are the cabinet too now, and a miss on one is a miss, not an exit.
+            _shelfGuard.anchoredPosition = new Vector2(left + CellarCabinet.CarcassLeft, foot);
+            _shelfGuard.sizeDelta = new Vector2(CellarCabinet.CarcassRight - CellarCabinet.CarcassLeft + 1, top - foot);
         }
 
         /// <summary>
@@ -1527,8 +1427,8 @@ namespace LastCall.UI
         {
             if (i < 0 || i >= _cellarSlotX.Count)
             {
-                artX = CellarBayCentrePx[0];
-                artFoot = CellarShelfFootPx[0];
+                artX = CellarCabinet.NicheCentre(0);
+                artFoot = CellarFootPx(0);
                 return;
             }
             artX = _cellarSlotX[i];
@@ -1617,6 +1517,355 @@ namespace LastCall.UI
             }
         }
 
+        // ── the display cabinet (2026-09-28) ────────────────────────────────────
+        // The author picked direction C of the cellar mock-ups ("Mahzen tasarımı = C · Art Deco vitrin") and asked for
+        // the shelf, the counter's cellar and the scene to come with LEVELS. The cabinet is its own drawing under the
+        // author's slab (Tools/cellar_cabinet/cabinet.py, Resources/Scene/cabinet_L{1,2,3}_{pilot,lit}.png) and it
+        // is drawn SIMPLE at its native 638, centred - never 9-sliced and tiled like the slab, which would repeat a
+        // niche down the middle of a wide window and has always put the three old bays a unit off their stock. The
+        // stock, the doors, the guard and the lamps are placed natively centred too, so the drawing and everything
+        // standing in it agree to the pixel.
+        //
+        // TWO LAYERS: the body in its PILOT dress - every niche empty, its one narrow band and a Night enamel plate -
+        // lit by the room like the counter it hangs under; and over each STOCKED niche that niche's own rectangle cut
+        // from the LIT overlay, drawn unlit. The overlay's wall-wash IS the lamp's light, painted in the palette's bands
+        // (14 §5: a glow is banded falloff), so it is a source and draws the colour it was made in - as the pendants'
+        // glass does (SyncFixtures, 2026-09-23). The spots (CellarLight) are for the bottles, which are lit sprites.
+        // The overlay is opaque on the niche's OPENING alone, never its rectangle: the room washes this layer at 0.45,
+        // and a whole rectangle drawn unlit printed the niche's rounded or stepped top corners - carcass - at twice the
+        // brightness of the carcass beside them. The frame round a lit niche stays the room's.
+        //
+        // THE COUNTER'S TIER DRESSES IT (2026-09-28, the author: levels for the cellar). Tier 1 plywood, 2 black
+        // lacquer with neon piping, 3 navy lacquer with mirror backs and gold. This reverses the 2026-08-04 rule that
+        // the counter "stops touching the scene and pays in a number" - on the author's word, and for the LOOK only:
+        // Core's price, ambience and comfort per tier are untouched and the stage is told the tier, never reads it.
+        private SpriteRenderer _cabinetBody;
+        private readonly SpriteRenderer[] _nicheLit = new SpriteRenderer[CellarCabinet.Niches];
+        private bool _cabinetDressed;
+        private int _cabinetLevel = 1;
+        private string _finishId;
+        private int _dressedLevel = -1;
+        private string _dressedFinish;
+        private const float CabinetZ = -0.0003f, NicheLitZ = -0.0006f, ReflectionZ = -0.0008f;   // over the slab's 0, under the shadows' -0.001
+
+        /// <summary>The cabinet's material, 1..3 (the counter's tier). Cheap to call every frame: it redresses only
+        /// when the level moves.</summary>
+        public void SetCabinetLevel(int level)
+        {
+            level = Mathf.Clamp(level, 1, 3);
+            if (level == _cabinetLevel && _dressedLevel == level) return;
+            _cabinetLevel = level;
+            DressCabinet();
+        }
+
+        /// <summary>Whether the cabinet's drawing is on the counter (false only when its art is missing from the build,
+        /// and then the counter keeps its old drawing and the words stay off).</summary>
+        public bool CabinetShown => _cabinetDressed;
+
+        /// <summary>
+        /// THE SLAB ALONE (2026-09-28): the author's counter drawing with its old body - the three bays and the two
+        /// magenta boards, rows 65 down - taken out, so the slab can still tile to any window while the cabinet stands
+        /// under it at its own size. Nothing of the file changes; the copy is made once, at run time.
+        /// </summary>
+        private Sprite SlabArt
+        {
+            get
+            {
+                if (_slabArt != null || counterSprite == null || counterSprite.texture == null) return _slabArt;
+                var src = counterSprite;
+                var tex = src.texture;
+                Color32[] px;
+                try { px = tex.GetPixels32(); }
+                catch (UnityException) { return null; }   // not readable: the counter keeps its old body
+                var r = src.rect;
+                int w = tex.width, y0 = (int)r.y, y1 = (int)(r.y + r.height);
+                for (int y = y0; y < y1; y++)
+                {
+                    if (y1 - 1 - y < CellarCabinet.BodyTop) continue;          // texture rows run up; the art's run down
+                    for (int x = (int)r.x; x < (int)(r.x + r.width); x++) px[y * w + x] = new Color32(0, 0, 0, 0);
+                }
+                var copy = new Texture2D(tex.width, tex.height, TextureFormat.RGBA32, false)
+                { filterMode = tex.filterMode, wrapMode = tex.wrapMode, name = tex.name + "_slab" };
+                copy.SetPixels32(px);
+                copy.Apply(false, false);
+                _slabArt = Sprite.Create(copy, r, new Vector2(src.pivot.x / r.width, src.pivot.y / r.height),
+                    src.pixelsPerUnit, 0, SpriteMeshType.FullRect, src.border);
+                _slabArt.name = src.name + "_slab";
+                return _slabArt;
+            }
+        }
+        private Sprite _slabArt;
+
+        /// <summary>Stands the cabinet under the counter, once: the body, the ten lit niches over it, and the counter's
+        /// drawing cut down to its slab. With no cabinet art in the build nothing here happens and the old counter
+        /// stays whole - the bottles still stand and still take their clicks, just over the old drawing.</summary>
+        private void BuildCabinet(SpriteRenderer counter)
+        {
+            if (_cabinetBody != null || counter == null) return;
+            if (Resources.Load<Texture2D>("Scene/cabinet_L1_pilot") == null || SlabArt == null)
+            {
+                Debug.LogWarning("DiegeticStage: no Scene/cabinet_L1_pilot (Tools/cellar_cabinet/cabinet.py writes it) " +
+                                 "- the cellar keeps the counter's old drawing.");
+                return;
+            }
+            _cabinetBody = WorldSprite("CellarCabinet", null, order: 30);
+            for (int n = 0; n < CellarCabinet.Niches; n++)
+            {
+                var lit = WorldSprite($"CellarNiche{CellarCabinet.Board(n)}_{CellarCabinet.Column(n)}", null, order: 30);
+                if (_viewMaterial != null) lit.sharedMaterial = _viewMaterial;   // it IS the lamp's light
+                lit.enabled = false;
+                _nicheLit[n] = lit;
+            }
+            _cabinetDressed = true;
+            counter.sprite = SlabArt;
+            DressCabinet();
+            PlaceCabinet();
+        }
+
+        /// <summary>The cabinet in the level and the finish it should wear now. Re-cut only when either moved.</summary>
+        private void DressCabinet()
+        {
+            if (!_cabinetDressed || _cabinetBody == null) return;
+            if (_dressedLevel == _cabinetLevel && _dressedFinish == _finishId && _cabinetBody.sprite != null) return;
+            var pilot = CabinetTexture(_cabinetLevel, false);
+            var lit = CabinetTexture(_cabinetLevel, true);
+            if (pilot == null || lit == null) return;   // a level's art missing: it keeps what it wore
+            _dressedLevel = _cabinetLevel;
+            _dressedFinish = _finishId;
+            _cabinetBody.sprite = CabinetSprite(pilot, -1);
+            for (int n = 0; n < CellarCabinet.Niches; n++) _nicheLit[n].sprite = CabinetSprite(lit, n);
+            LightCabinetNiches();
+            RefreshCellarReflections();
+            if (_counterSr != null) SliceCounterEdges(_counterSr.sprite);   // the plinth is the body's own foot
+        }
+
+        /// <summary>One of the level's two bodies in the finish on the bar (the carcass repainted, never the light).</summary>
+        private Texture2D CabinetTexture(int level, bool lit)
+        {
+            var tex = Resources.Load<Texture2D>($"Scene/cabinet_L{level}_{(lit ? "lit" : "pilot")}");
+            return tex != null ? CounterFinish.RecolourCabinet(tex, _finishId, level) : null;
+        }
+
+        private readonly Dictionary<Texture2D, Sprite[]> _cabinetCuts = new Dictionary<Texture2D, Sprite[]>();
+
+        /// <summary>The whole body (<paramref name="niche"/> -1) or one niche's rectangle of it, cut once per texture.
+        /// PPU 1: one art pixel is one stage unit, as the counter is.</summary>
+        private Sprite CabinetSprite(Texture2D tex, int niche)
+        {
+            if (!_cabinetCuts.TryGetValue(tex, out var cuts))
+                _cabinetCuts[tex] = cuts = new Sprite[CellarCabinet.Niches + 1];
+            int k = niche + 1;
+            if (cuts[k] != null) return cuts[k];
+            Rect r;
+            if (niche < 0) r = new Rect(0, 0, tex.width, tex.height);
+            else
+            {
+                CellarCabinet.NicheRect(niche, out int x0, out int y0, out int x1, out int y1);
+                // the texture's rows run up from the body's last art row
+                r = new Rect(x0, CellarCabinet.BodyBottom - y1, x1 - x0 + 1, y1 - y0 + 1);
+            }
+            cuts[k] = Sprite.Create(tex, r, new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+            cuts[k].name = tex.name + (niche < 0 ? "" : "_niche" + niche);
+            return cuts[k];
+        }
+
+        /// <summary>Hangs the body and its niches off the counter's own top line, natively centred - the same frame
+        /// the stock is placed in (<see cref="PlaceCellarSlot"/>), so the drawer's lift comes with the root.</summary>
+        private void PlaceCabinet()
+        {
+            if (_cabinetBody == null || _counterNative.x <= 0f) return;
+            float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
+            float half = _counterNative.x * 0.5f;
+            _cabinetBody.transform.localPosition = new Vector3(
+                CellarCabinet.ArtWidth * 0.5f - half,
+                counterTop - (CellarCabinet.BodyTop + CellarCabinet.BodyHeight * 0.5f), CabinetZ);
+            for (int n = 0; n < CellarCabinet.Niches; n++)
+            {
+                if (_nicheLit[n] == null) continue;
+                CellarCabinet.NicheRect(n, out int x0, out int y0, out int x1, out int y1);
+                _nicheLit[n].transform.localPosition = new Vector3(
+                    (x0 + x1 + 1) * 0.5f - half, counterTop - (y0 + y1 + 1) * 0.5f, NicheLitZ);
+            }
+        }
+
+        /// <summary>A stocked niche is lit - its drawn wall-wash and its cream plate - and its lamp burns at full;
+        /// an empty one keeps its pilot. Called whenever the stock is dealt.</summary>
+        private void LightCabinetNiches()
+        {
+            for (int n = 0; n < CellarCabinet.Niches; n++)
+                if (_nicheLit[n] != null) _nicheLit[n].enabled = _nicheStocked[n] && _nicheLit[n].sprite != null;
+            ApplyCellarLight();
+        }
+
+        /// <summary>Where niche <paramref name="niche"/>'s name plate stands, in stage units with the room at rest
+        /// (bottom-left origin; the drawer's lift is the caller's to add) - for the HUD's word on it. False while the
+        /// cabinet is not on the counter.</summary>
+        public bool CabinetPlateStage(int niche, out Rect stage)
+        {
+            stage = default;
+            if (!_cabinetDressed || niche < 0 || niche >= CellarCabinet.Niches || _counterNative.x <= 0f) return false;
+            CellarCabinet.PlateRect(niche, out int x0, out int y0, out int w, out int h);
+            float left = (Reference.x - _counterNative.x) * 0.5f;
+            float top = CounterRestY + CounterSurfaceInset;
+            stage = new Rect(left + x0, top - y0 - h, w, h);
+            return true;
+        }
+
+        private readonly Dictionary<string, Sprite> _finishSwatches = new Dictionary<string, Sprite>();
+
+        /// <summary>
+        /// THE FINISH'S SWATCH AS THE BAR WEARS IT (2026-09-28): the market's refinish row cut a piece of the counter
+        /// drawing in each finish - its slab's edge and the first bay's magenta frame - and the old frame is under the
+        /// cabinet now. So the swatch is cut from what stands: the slab in that finish over the cabinet at tonight's
+        /// level, its carcass in that finish - a pilaster, a niche's arch and its plate, the niches lit (the overlay
+        /// laid over the pilot body, as the stage lays it). 140 by 70, as before.
+        /// </summary>
+        public Sprite FinishSwatch(string id)
+        {
+            if (!_cabinetDressed) return CounterFinish.Swatch(counterSprite, id);
+            string key = (id ?? "") + ":" + _cabinetLevel;
+            if (_finishSwatches.TryGetValue(key, out var got) && got != null) return got;
+            var slab = CounterFinish.Recolour(SlabArt, id);
+            var rawPilot = Resources.Load<Texture2D>($"Scene/cabinet_L{_cabinetLevel}_pilot");
+            var rawLit = Resources.Load<Texture2D>($"Scene/cabinet_L{_cabinetLevel}_lit");
+            var body = rawPilot != null ? CounterFinish.RecolourCabinet(rawPilot, id, _cabinetLevel) : null;
+            var glow = rawLit != null ? CounterFinish.RecolourCabinet(rawLit, id, _cabinetLevel) : null;
+            if (slab == null || body == null) return CounterFinish.Swatch(counterSprite, id);
+            const int W = 140, H = 70, Left = 116, Top = 24;   // art x and row of the cut's top-left
+            Color32[] slabPx, bodyPx, glowPx = null;
+            try
+            {
+                slabPx = slab.texture.GetPixels32();
+                bodyPx = body.GetPixels32();
+                if (glow != null && glow.width == body.width && glow.height == body.height) glowPx = glow.GetPixels32();
+            }
+            catch (UnityException) { return CounterFinish.Swatch(counterSprite, id); }
+            if (glowPx != null)
+                for (int i = 0; i < bodyPx.Length; i++)
+                    if (glowPx[i].a != 0) bodyPx[i] = glowPx[i];
+            int sw = slab.texture.width, sy0 = (int)slab.rect.y, sh = (int)slab.rect.height, sx0 = (int)slab.rect.x;
+            var px = new Color32[W * H];
+            for (int y = 0; y < H; y++)
+            {
+                int row = Top + y;
+                for (int x = 0; x < W; x++)
+                {
+                    int col = Left + x;
+                    Color32 c = row < CellarCabinet.BodyTop
+                        ? slabPx[(sy0 + sh - 1 - row) * sw + sx0 + col]
+                        : bodyPx[(CellarCabinet.BodyBottom - row) * body.width + col];
+                    px[(H - 1 - y) * W + x] = c;
+                }
+            }
+            var tex = new Texture2D(W, H, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "FinishSwatch_" + key };
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            var s = Sprite.Create(tex, new Rect(0, 0, W, H), new Vector2(0.5f, 0.5f), 1f, 0, SpriteMeshType.FullRect);
+            s.name = tex.name;
+            return _finishSwatches[key] = s;
+        }
+
+        // THE MIRROR RETURNS THE BOTTLES (2026-09-28, level 3's mirror backs): behind every bottle its silhouette, one
+        // flat token lighter than the smoky glass, six rows up and two toward its niche's middle - the offset a
+        // mirror a hand's depth behind the stock gives a bar-side eye. Built once per plate from its own alpha (the
+        // front and the interior together), cut short so it never climbs onto the lamp's slot or the plate, and drawn
+        // unlit like the lit niche it stands in. Nothing of it exists below level 3.
+        private readonly List<SpriteRenderer> _cellarReflect = new List<SpriteRenderer>();
+        private readonly Dictionary<(Sprite, Sprite), Texture2D> _silhouettes = new Dictionary<(Sprite, Sprite), Texture2D>();
+        private readonly Dictionary<(Texture2D, int), Sprite> _reflectCuts = new Dictionary<(Texture2D, int), Sprite>();
+        private const float ReflectRise = 6f, ReflectShift = 2f, ReflectAlpha = 0.30f;
+
+        private void RefreshCellarReflections()
+        {
+            bool mirror = _cabinetDressed && _dressedLevel >= 3;
+            for (int i = 0; i < _cellarStock.Count; i++)
+            {
+                var sr = _cellarStock[i];
+                bool on = mirror && i < _cellarSlotX.Count && sr != null && sr.gameObject.activeSelf && sr.sprite != null;
+                if (!on)
+                {
+                    if (i < _cellarReflect.Count && _cellarReflect[i].gameObject.activeSelf)
+                        _cellarReflect[i].gameObject.SetActive(false);
+                    continue;
+                }
+                while (_cellarReflect.Count <= i)
+                {
+                    var r = WorldSprite("StockReflection" + _cellarReflect.Count, null, order: 30);
+                    if (_viewMaterial != null) r.sharedMaterial = _viewMaterial;
+                    var tone = UITheme.Graphite[4];
+                    r.color = new Color(tone.r, tone.g, tone.b, ReflectAlpha);
+                    _cellarReflect.Add(r);
+                }
+                var back = i < _cellarBack.Count && _cellarBack[i].gameObject.activeSelf ? _cellarBack[i].sprite : null;
+                PlaceCellarReflection(_cellarReflect[i], sr, back, i);
+            }
+            RefreshCellarMovers();
+        }
+
+        private void PlaceCellarReflection(SpriteRenderer refl, SpriteRenderer bottle, Sprite back, int i)
+        {
+            var sil = Silhouette(bottle.sprite, back);
+            if (sil == null) { refl.gameObject.SetActive(false); return; }
+            float k = bottle.transform.localScale.y;                       // stage units per texel x ppu
+            float ppu = Mathf.Max(1f, bottle.sprite.pixelsPerUnit);
+            float unit = k / ppu;                                           // stage units per texel
+            int niche = CellarSlotNiche(i);
+            int board = Mathf.Max(0, CellarCabinet.Board(Mathf.Max(0, niche)));
+            // cut the top so the reflection starts on the niche's first row under the lamp's slot
+            float canvasTop = bottle.transform.localPosition.y + CellarBottleH * 0.5f + ReflectRise;
+            float firstRow = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f - (CellarCabinet.LampRow[board] + 1);
+            int clip = Mathf.Clamp(Mathf.CeilToInt((canvasTop - firstRow) / Mathf.Max(0.0001f, unit)), 0, sil.height - 1);
+            if (!_reflectCuts.TryGetValue((sil, clip), out var cut) || cut == null)
+                _reflectCuts[(sil, clip)] = cut = Sprite.Create(sil, new Rect(0, 0, sil.width, sil.height - clip),
+                    new Vector2(0.5f, 0f), ppu, 0, SpriteMeshType.FullRect);
+            refl.sprite = cut;
+            refl.transform.localScale = bottle.transform.localScale;
+            float bottleX = i < _cellarSlotX.Count ? _cellarSlotX[i] : 0f;
+            float toward = niche >= 0 ? CellarCabinet.NicheCentre(niche) - bottleX : 0f;
+            if (Mathf.Abs(toward) < 1f) toward = CellarCabinet.ArtWidth * 0.5f - bottleX;   // centred: toward the cabinet's middle
+            var at = bottle.transform.localPosition;
+            refl.transform.localPosition = new Vector3(at.x + Mathf.Sign(toward) * ReflectShift,
+                at.y - CellarBottleH * 0.5f + ReflectRise, ReflectionZ);
+            if (!refl.gameObject.activeSelf) refl.gameObject.SetActive(true);
+            refl.enabled = bottle.enabled;
+        }
+
+        /// <summary>A plate's silhouette - opaque wherever the front or the interior is - in white, on the plate's own
+        /// canvas. Null when the plate cannot be read.</summary>
+        private Texture2D Silhouette(Sprite front, Sprite back)
+        {
+            if (front == null || front.texture == null) return null;
+            if (_silhouettes.TryGetValue((front, back), out var got)) return got;
+            Texture2D tex = null;
+            try
+            {
+                var r = front.rect;
+                int w = (int)r.width, h = (int)r.height;
+                var a = front.texture.GetPixels32();
+                int tw = front.texture.width;
+                Color32[] b = null;
+                int bw = 0;
+                if (back != null && back.texture != null && (int)back.rect.width == w && (int)back.rect.height == h)
+                { b = back.texture.GetPixels32(); bw = back.texture.width; }
+                var px = new Color32[w * h];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        bool on = a[((int)r.y + y) * tw + (int)r.x + x].a > 0
+                                  || (b != null && b[((int)back.rect.y + y) * bw + (int)back.rect.x + x].a > 0);
+                        px[y * w + x] = on ? new Color32(255, 255, 255, 255) : new Color32(0, 0, 0, 0);
+                    }
+                tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = front.name + "_mirror" };
+                tex.SetPixels32(px);
+                tex.Apply(false, false);
+            }
+            catch (UnityException) { tex = null; }
+            _silhouettes[(front, back)] = tex;
+            return tex;
+        }
+
         // ── the cellar's own light (2026-08-25) ─────────────────────────────────
         //
         // The author: "açılan yeni alkol rafımızın ışıklandırmasını yap, o sahne çok karanlık
@@ -1630,93 +1879,157 @@ namespace LastCall.UI
         // that is what these are — one strip a bay, hung just inside each compartment's
         // ceiling, aimed at the counter layer alone so the wall and the drinkers keep the
         // light plan they already have.
-        /// <summary>How far under the compartment's ceiling the strip hangs, in art px.</summary>
-        private const float CellarLightDropPx = 2f;   // 11 until 2026-09-17: the lamp hangs ON the board it is under
-        /// <summary>Its reach. A bay is 175 wide and a compartment ~78 deep, so this carries
-        /// the length of one bay and dies before the next one's post.</summary>
-        private const float CellarLightRadius = 150f;   // 128 until 2026-09-16: reaches the board's far corners
-        /// <summary>Where the falloff starts, and how hard it burns. Held wide, because a
-        /// shelf strip is a diffuse line and not a bulb: at the house default the whole pool
-        /// is spent on the bottle necks and the feet stay in the dark they were in.</summary>
-        private const float CellarLightInner = 0.30f;
+        // ONE LAMP A NICHE (2026-09-28, the cabinet): ten spots, each hung at its niche's lamp row under the name plate
+        // (CellarCabinet.LampRow) and aimed straight down at that niche's own board. The niche's glow on its back wall
+        // is DRAWN (the lit body's wall-wash, laid over the niche unlit - LightCabinetNiches), so what the spot is for
+        // is the bottles: they are lit sprites, and this is what lifts them out of the room's dim.
+        /// <summary>
+        /// Its reach ENDS WHERE THE NICHE BELOW BEGINS (2026-09-29): from the apex (the row under the upper lamp) to the
+        /// lower niche's first row, 156 - 79 = 77. A 2D light is not stopped by the board it shines through, so any
+        /// longer reach washes the next plate down - and unevenly, by whether the niche above is stocked (1.55) or on
+        /// its pilot (0.35). The first cabinet cut said 96 stayed out and it did not: its tail ran twenty rows on, 0.25..0.17
+        /// of the lamp down the sill and 0.15..0.04 down the lower plate (URP's own falloff, worked row by row). The
+        /// lower lamp's 77 ends at row 246, inside the body's 249, where 96 ran past the counter onto the plinth.
+        /// Read off the cabinet's rows, so a re-drawn cabinet takes its reach with it. (150 for the three 175-wide
+        /// bays; a niche is 106, 128 the centre.)
+        /// </summary>
+        private static readonly float CellarLightRadius = CellarCabinet.OpenTop[1] - (CellarCabinet.LampRow[0] + 1f);
+        /// <summary>Where the falloff starts, as a share of the reach: held WIDER when the reach came in (0.30 of 96 →
+        /// 0.70 of 77), so the bottles keep the pool the author saw at 1.55 - full light from the lamp to row 130, 0.67
+        /// on the board (the old 150 gave 0.66 there), 0.42 on the feet (96 gave 0.34, 150 gave 0.60) and nothing past
+        /// the sill. A shelf strip is a diffuse line and not a bulb.</summary>
+        private const float CellarLightInner = 0.70f;
         private const float CellarLightIntensity = 1.55f;  // 0.80 was "loş" and too dark (the author, second look: "şişeler çok karanlık kalıyor")
-        // THE CONE IS THE BAY'S WIDTH, NOT THE ROOM'S (2026-09-23, the author's tenth list: "tezgahtan
-        // aralanan ışık hüzmesi tezgahın dışına taşıyor yataylamasına onu tezgaha göre doldur"). It was
-        // 100/160, and a 160-degree cone is not a shelf strip at all: MEASURED, the outer bays' lights
-        // stood at x = ±199 with a reach of 150, so they threw light to ±349 against a counter that is
-        // 638 wide - thirty pixels past the end of the bar, sideways, out into the room. A compartment
-        // is 175 wide and 78 (top shelf) to 83 (bottom) deep, so the cone that exactly FILLS one and
-        // stops is 2·atan(87.5/depth) = 97° and 93°; 95 splits them, and the inner cone keeps its old
-        // share of the outer (0.61) so the falloff is unchanged.
-        private const float CellarSpotInnerAngle = 58f, CellarSpotOuterAngle = 95f, CellarSpotRoll = 180f;
+        /// <summary>An EMPTY niche keeps a pilot: its lamp at a quarter, over the drawing's one narrow band, so the
+        /// cabinet reads as a cabinet on the first night and the player sees there is no rum before reaching for it.</summary>
+        private const float CellarPilotIntensity = 0.35f;
+        private const float CellarSpotRoll = 180f;
+        // THE CONE OPENS WITH THE SHELF (2026-09-26, the author: "rafa şişe eklendikçe raftaki ışığın açısı
+        // genişlemeli") - kept in the cabinet: each niche's cone is aimed at its own RUN of bottles (PackCellar records
+        // it), the bright inner cone exactly covering the run and the soft edge carrying past it. One bottle stands in
+        // a narrow pool; a full niche is lit wall to wall. The outer cone never opens past the niche's own returns at
+        // the board (2·atan((w/2 - 3)/65): 75° a wing, 86° the centre), which is the tenth list's "tezgahın dışına
+        // taşmasın" kept at niche scale.
+        private const float CellarConeMinInner = 30f, CellarConeSoftEdge = 24f;
+        /// <summary>Air left either side of the run inside the bright cone, in art px.</summary>
+        private const float CellarConePadPx = 4f;
+        /// <summary>How fast a cone opens to its new width when a bottle joins, in degrees a second.</summary>
+        private const float CellarConeDegPerSec = 90f;
+        /// <summary>Each niche's run of bottles, in art px (0 = empty), niche-major like the lights.</summary>
+        private readonly float[] _cellarRunPx = new float[CellarCabinet.Niches];
+        private readonly float[] _cellarConeInner = new float[CellarCabinet.Niches];
+        private readonly float[] _cellarConeOuter = new float[CellarCabinet.Niches];
+        private bool _cellarConesAimed;
+
+        /// <summary>The widest a niche's cone may open: to its returns, at its board.</summary>
+        private static float CellarConeMax(int niche)
+        {
+            int board = CellarCabinet.Board(niche);
+            float depth = Mathf.Max(1f, CellarCabinet.FootRow[board] - CellarCabinet.LampRow[board]);
+            float half = CellarCabinet.NicheW[CellarCabinet.Column(niche)] * 0.5f - 3f;
+            return 2f * Mathf.Atan(half / depth) * Mathf.Rad2Deg;
+        }
+
+        /// <summary>Sets each niche's target cone off its run. The lights ease to it (StepCellarCones).</summary>
+        private void AimCellarCones()
+        {
+            for (int n = 0; n < _cellarRunPx.Length; n++)
+            {
+                int board = CellarCabinet.Board(n);
+                float depth = Mathf.Max(1f, CellarCabinet.FootRow[board] - CellarCabinet.LampRow[board]);
+                float half = _cellarRunPx[n] * 0.5f + CellarConePadPx;
+                float max = CellarConeMax(n);
+                float inner = Mathf.Clamp(2f * Mathf.Atan(half / depth) * Mathf.Rad2Deg, CellarConeMinInner, max - 6f);
+                _cellarConeInner[n] = inner;
+                _cellarConeOuter[n] = Mathf.Min(inner + CellarConeSoftEdge, max);
+            }
+            _cellarConesAimed = true;
+        }
+
+        private void StepCellarCones()
+        {
+            if (!_cellarConesAimed) return;
+            float step = Motion.Reduced ? 360f : CellarConeDegPerSec * Time.unscaledDeltaTime;
+            for (int i = 0; i < _cellarLights.Count && i < _cellarConeInner.Length; i++)
+            {
+                var l = _cellarLights[i];
+                if (l == null) continue;
+                if (!Mathf.Approximately(l.pointLightInnerAngle, _cellarConeInner[i]))
+                    l.pointLightInnerAngle = Mathf.MoveTowards(l.pointLightInnerAngle, _cellarConeInner[i], step);
+                if (!Mathf.Approximately(l.pointLightOuterAngle, _cellarConeOuter[i]))
+                    l.pointLightOuterAngle = Mathf.MoveTowards(l.pointLightOuterAngle, _cellarConeOuter[i], step);
+            }
+        }
         /// <summary>Warm, because the light in this room is tungsten and the cellar is part
         /// of the room — one step brighter and cleaner than the ceiling's, the way a lit
         /// shelf actually reads against the lamps over it.</summary>
         private static readonly Color CellarLightTint = LightLanguage.Key;   // one tungsten for the house (2026-09-21)
         private readonly List<Light2D> _cellarLights = new List<Light2D>();
         // THE LAMP THE LIGHT COMES OUT OF (2026-09-17, the author: "ışığın çıkış köşesi biraz kırpılmış olmalı"): a
-        // dark housing on the board's underside over each cone's apex, so the light reads as coming from behind the
-        // shelf rather than from a bright point hanging in the bay.
+        // dark housing over each cone's apex, so the light reads as coming from behind the fitting rather than from a
+        // bright point hanging in the niche. In the cabinet the fitting is the name plate: the housing is the lamp's
+        // slot under it, as wide as the slot the drawing leaves (the plate less four a side) and one row deep.
         private readonly List<SpriteRenderer> _cellarLamps = new List<SpriteRenderer>();
 
-        /// <summary>One strip per compartment, born dark: the drawer is what turns them on.</summary>
+        /// <summary>One lamp per niche, born dark: the drawer is what turns them on.</summary>
         private void BuildCellarLights()
         {
             if (_cellarLights.Count > 0) return;
-            for (int shelf = 0; shelf < CellarShelfCeilPx.Length; shelf++)
-                for (int bay = 0; bay < CellarBayCentrePx.Length; bay++)
-                {
-                    var l = PointLight($"CellarLight{shelf}_{bay}",
-                        CellarLightTint, 0f, CellarLightRadius);
-                    l.pointLightInnerRadius = CellarLightRadius * CellarLightInner;
-                    // A SPOT, NOT A BULB (2026-09-16): a cone from the bay's ceiling down onto the board — dim, so the
-                    // bottles' own shadows read (PlaceCellarShadow). Reset from the 2026 point light on the author's word.
-                    l.pointLightInnerAngle = CellarSpotInnerAngle;
-                    l.pointLightOuterAngle = CellarSpotOuterAngle;
-                    l.transform.localRotation = Quaternion.Euler(0f, 0f, CellarSpotRoll);
-                    LightLayers(l, LayerCounter);
-                    _cellarLights.Add(l);
-                    var lamp = WorldSprite($"CellarLamp{shelf}_{bay}", WhitePixel(), order: 31);
-                    lamp.color = new Color(0.05f, 0.04f, 0.06f, 0.92f);
-                    _cellarLamps.Add(lamp);
-                }
+            for (int n = 0; n < CellarCabinet.Niches; n++)
+            {
+                string at = $"{CellarCabinet.Board(n)}_{CellarCabinet.Column(n)}";
+                var l = PointLight("CellarLight" + at, CellarLightTint, 0f, CellarLightRadius);
+                l.pointLightInnerRadius = CellarLightRadius * CellarLightInner;
+                // A SPOT, NOT A BULB (2026-09-16): a cone from the lamp down onto the board — dim, so the bottles'
+                // own shadows read (PlaceCellarShadow).
+                l.pointLightInnerAngle = CellarConeMinInner;
+                l.pointLightOuterAngle = CellarConeMinInner + CellarConeSoftEdge;
+                l.transform.localRotation = Quaternion.Euler(0f, 0f, CellarSpotRoll);
+                LightLayers(l, LayerCounter);
+                _cellarLights.Add(l);
+                var lamp = WorldSprite("CellarLamp" + at, WhitePixel(), order: 31);
+                lamp.color = new Color(0.05f, 0.04f, 0.06f, 0.92f);
+                _cellarLamps.Add(lamp);
+            }
             PlaceCellarLights();
         }
 
-        /// <summary>Hangs them off the counter art's own rows, so a re-cut counter takes its
-        /// shelf lighting with it. Placed in the same frame the stock is (see
-        /// <see cref="PlaceCellarSlot"/>): stage units, plus whatever the drawer is doing.</summary>
+        /// <summary>Hangs them off the cabinet's own rows (CellarCabinet), so a re-drawn cabinet takes its lighting
+        /// with it. Placed in the same frame the stock is (see <see cref="PlaceCellarSlot"/>): stage units, plus
+        /// whatever the drawer is doing.</summary>
         private void PlaceCellarLights()
         {
             if (_cellarLights.Count == 0 || _counterNative.x <= 0f) return;
             float counterTop = CounterRestY + CounterSurfaceInset - Reference.y * 0.5f;
-            int i = 0;
-            for (int shelf = 0; shelf < CellarShelfCeilPx.Length; shelf++)
-                for (int bay = 0; bay < CellarBayCentrePx.Length; bay++, i++)
+            for (int n = 0; n < _cellarLights.Count && n < CellarCabinet.Niches; n++)
+            {
+                if (_cellarLights[n] == null) continue;
+                int board = CellarCabinet.Board(n), col = CellarCabinet.Column(n);
+                float x = CellarCabinet.NicheCentre(n) - _counterNative.x * 0.5f;
+                float lampRow = CellarCabinet.LampRow[board];
+                // the apex just under the slot: the row's bottom edge, where the first row of the niche begins
+                _cellarLights[n].transform.localPosition = new Vector3(x, counterTop - lampRow - 1f, 0f);
+                if (n < _cellarLamps.Count && _cellarLamps[n] != null)
                 {
-                    if (i >= _cellarLights.Count || _cellarLights[i] == null) continue;
-                    var at = new Vector3(
-                        CellarBayCentrePx[bay] - _counterNative.x * 0.5f,
-                        counterTop - CellarShelfCeilPx[shelf] - CellarLightDropPx, 0f);
-                    _cellarLights[i].transform.localPosition = at;       // under the magnified root, as the stock is
-                    if (i < _cellarLamps.Count && _cellarLamps[i] != null)
-                    {
-                        var lamp = _cellarLamps[i];
-                        var size = lamp.sprite != null ? lamp.sprite.bounds.size : Vector3.one;
-                        lamp.transform.localScale = new Vector3(30f / Mathf.Max(0.001f, size.x), 5f / Mathf.Max(0.001f, size.y), 1f);
-                        lamp.transform.localPosition = at + new Vector3(0f, 2f, 0f);
-                    }
+                    var lamp = _cellarLamps[n];
+                    var size = lamp.sprite != null ? lamp.sprite.bounds.size : Vector3.one;
+                    float slotW = CellarCabinet.PlateW[col] - 8f;
+                    lamp.transform.localScale = new Vector3(slotW / Mathf.Max(0.001f, size.x), 1f / Mathf.Max(0.001f, size.y), 1f);
+                    lamp.transform.localPosition = new Vector3(x, counterTop - lampRow - 0.5f, 0f);
                 }
+            }
         }
 
         /// <summary>They burn with the DRAWER. A cellar lit behind a shut roller would print
         /// a bar of light across the slats; the peek has its own spill for that moment
-        /// (<see cref="BuildShutterLight"/>) and this stays out of its way.</summary>
+        /// (<see cref="BuildShutterLight"/>) and this stays out of its way. A stocked niche's lamp
+        /// burns at the author's 1.55, an empty one's on its pilot.</summary>
         private void ApplyCellarLight()
         {
             for (int i = 0; i < _cellarLights.Count; i++)
                 if (_cellarLights[i] != null)
-                    _cellarLights[i].intensity = CellarLightIntensity * _drawerT;
+                    _cellarLights[i].intensity = _drawerT *
+                        (i < _nicheStocked.Length && _nicheStocked[i] ? CellarLightIntensity : CellarPilotIntensity);
             for (int i = 0; i < _cellarLamps.Count; i++)
                 if (_cellarLamps[i] != null)
                     _cellarLamps[i].enabled = _drawerT > 0.05f;
@@ -1833,15 +2146,10 @@ namespace LastCall.UI
         {
             var src = counter != null ? counter.sprite : null;
             if (src == null || src.texture == null) return;
-            var r = src.rect;
-            // the texture's rows run bottom-up and the art's numbering runs top-down
-            float row = Mathf.Clamp(_counterNative.y - 1f - CounterPlinthArtRow, 0f, _counterNative.y - 1f);
-            var slice = Sprite.Create(src.texture, new Rect(r.x, r.y + row, r.width, 1f),
-                new Vector2(0.5f, 1f), src.pixelsPerUnit, 0, SpriteMeshType.FullRect);
             // Order 21: the room's own layer, over the wall and the floor and under everything the bar
             // draws - a plinth is part of the room's dark, not of the counter's lit face, and putting it
             // in the drinkers' band (29) would have the patrons' own fill light lifting it a stop.
-            var sr = WorldSprite("CounterPlinth", slice, order: 21);
+            var sr = WorldSprite("CounterPlinth", null, order: 21);   // its row is cut by SliceCounterEdges
             sr.transform.SetParent(counter.transform, false);
             _counterPlinth = sr.transform;
 
@@ -1850,19 +2158,121 @@ namespace LastCall.UI
             // opaque most of the way down are read off the texture (readable, like the bulb's), and a
             // one-pixel slice of each, the full height, is stretched out past the window behind the bar.
             FindCounterSides(src);
-            if (_counterSideColL >= 0) _counterSideL = CounterSide("CounterSideL", counter, src, _counterSideColL);
-            if (_counterSideColR >= 0) _counterSideR = CounterSide("CounterSideR", counter, src, _counterSideColR);
+            if (_counterSideColL >= 0) _counterSideL = CounterSide("CounterSideL", counter);
+            if (_counterSideColR >= 0) _counterSideR = CounterSide("CounterSideR", counter);
+            SliceCounterEdges(src);
         }
 
-        private Transform CounterSide(string name, SpriteRenderer counter, Sprite src, int col)
+        // THE SIDES ARE THE POST, IN THE POST'S FINISH AND LIGHT (2026-09-26, the author: "sağ ve sol kısımlardaki
+        // magentalık değişmeli, raflar doğru uzatılmamış"). They were a slice of the drawing AS IMPORTED, cut once -
+        // so a bar refinished in oak kept two magenta flanks - of its OUTLINE column, stretched into a dark band,
+        // on the room's layer, where the sky's pink lit them and the counter's own lamps did not. They are now the
+        // post's FACE column (six in from the outline), re-cut from whatever finish the counter is wearing, on the
+        // counter's layer just under it. (Same day, second look: the face below the slab is its own colour now -
+        // see CounterSideSlice.)
+        /// <summary>How far in from the outline the post's face column is, in art px.</summary>
+        private const int CounterSideFaceInset = 6;
+
+        private Transform CounterSide(string name, SpriteRenderer counter)
         {
-            var r = src.rect;
-            var slice = Sprite.Create(src.texture, new Rect(r.x + col, r.y, 1f, r.height),
-                new Vector2(0.5f, 0.5f), src.pixelsPerUnit, 0, SpriteMeshType.FullRect);
-            var sr = WorldSprite(name, slice, order: 21);
+            var sr = WorldSprite(name, null, order: 21);
+            sr.sortingLayerName = LayerCounter;
+            sr.sortingOrder = 29;
             sr.transform.SetParent(counter.transform, false);
             return sr.transform;
         }
+
+        /// <summary>Cuts the plinth's row and the two side columns out of <paramref name="src"/> - the counter
+        /// in the finish it is wearing now.</summary>
+        private void SliceCounterEdges(Sprite src)
+        {
+            if (src == null || src.texture == null) return;
+            var r = src.rect;
+            var body = _cabinetBody != null ? _cabinetBody.sprite : null;
+            if (_counterPlinth != null && body != null && body.texture != null && CabinetPlinth(body) is Sprite foot)
+            {
+                // THE CABINET'S OWN FOOT (2026-09-28): the counter drawing is its slab alone once the cabinet stands
+                // under it, so the plinth is the body's last row - its base, in the level's carcass and the finish's
+                // paint. Same width as the counter's drawing (638), so the stretch in Refit is unchanged.
+                _counterPlinth.GetComponent<SpriteRenderer>().sprite = foot;
+            }
+            else if (_counterPlinth != null)
+            {
+                // the texture's rows run bottom-up and the art's numbering runs top-down
+                float row = Mathf.Clamp(_counterNative.y - 1f - CounterPlinthArtRow, 0f, _counterNative.y - 1f);
+                _counterPlinth.GetComponent<SpriteRenderer>().sprite = Sprite.Create(src.texture,
+                    new Rect(r.x, r.y + row, r.width, 1f), new Vector2(0.5f, 1f), src.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+            }
+            // BOTH FLANKS FROM THE LEFT COLUMN (2026-09-26): the right cap's column carries the towel rail's grey
+            // (art rows 59..62) and a stray dark run at 20..27, and stretched thirty units wide they drew as streaks.
+            var slice = CounterSideSlice(src, _counterSideColL + CounterSideFaceInset);
+            if (slice == null) return;
+            if (_counterSideL != null) _counterSideL.GetComponent<SpriteRenderer>().sprite = slice;
+            if (_counterSideR != null) _counterSideR.GetComponent<SpriteRenderer>().sprite = slice;
+        }
+
+        /// <summary>
+        /// The body's last row as the plinth's one row, EDGE TO EDGE. The carcass stands from art column 4 to 633, so
+        /// the row's first and last four are clear - which the old drawing's plinth row (238) never was: with the drawer
+        /// all the way up, the counter's foot rides three units over the screen's bottom edge and those clear columns
+        /// were two slivers of room in its corners. They take the flank's colour (<see cref="CounterSideSlice"/>),
+        /// which is what stands over them. Null when the body cannot be read.
+        /// </summary>
+        private Sprite CabinetPlinth(Sprite body)
+        {
+            var r = body.rect;
+            int w = (int)r.width;
+            Color32[] row;
+            try { row = body.texture.GetPixels32(); }
+            catch (UnityException) { return null; }
+            var px = new Color32[w];
+            var panel = (Color32)UITheme.Night[3];
+            for (int x = 0; x < w; x++)
+            {
+                var c = row[(int)r.y * body.texture.width + (int)r.x + x];
+                px[x] = c.a != 0 ? c : panel;
+            }
+            if (_plinthTex != null) Destroy(_plinthTex);
+            _plinthTex = new Texture2D(w, 1, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "CabinetPlinth" };
+            _plinthTex.SetPixels32(px);
+            _plinthTex.Apply(false, false);
+            return Sprite.Create(_plinthTex, new Rect(0, 0, w, 1), new Vector2(0.5f, 1f), body.pixelsPerUnit, 0,
+                SpriteMeshType.FullRect);
+        }
+        private Texture2D _plinthTex;
+
+        /// <summary>
+        /// THE FLANK IS ITS OWN COLOUR (2026-09-26, the author: "2. görseldeki pembe yer için farklı bir renk bul"). A
+        /// post's face stretched past the window was a thirty-unit slab of pink beside the cellar. The slab's own rows
+        /// (the dark top, down to the shelf opening) stay the drawing's; everything under them is Night[3] - the back
+        /// wall's own family one step down, the end of the bar standing in its shadow - whatever the finish.
+        /// </summary>
+        private Sprite CounterSideSlice(Sprite src, int col)
+        {
+            if (_counterSideColL < 0) return null;
+            var r = src.rect;
+            int h = (int)r.height;
+            col = Mathf.Clamp(col, 0, (int)r.width - 1);
+            Color[] px;
+            try { px = src.texture.GetPixels((int)r.x + col, (int)r.y, 1, h); }
+            catch (UnityException) { return null; }
+            var panel = UITheme.Night[3];
+            // ...ALL THE WAY DOWN, whatever the column holds there (2026-09-28): under the cabinet the counter's drawing
+            // is its slab alone and its column is empty below row 65 - which on the old drawing was the post's leg, opaque
+            // to the foot, so this paints what it always painted.
+            for (int y = 0; y < h; y++)                     // texture rows run up; the art's run down
+                if (h - 1 - y >= ShutterOpeningTopPx)
+                    px[y] = new Color(panel.r, panel.g, panel.b, 1f);
+            if (_counterSideTex != null) Destroy(_counterSideTex);
+            _counterSideTex = new Texture2D(1, h, TextureFormat.RGBA32, false)
+            { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "CounterSide" };
+            _counterSideTex.SetPixels(px);
+            _counterSideTex.Apply(false, false);
+            return Sprite.Create(_counterSideTex, new Rect(0, 0, 1, h), new Vector2(0.5f, 0.5f), src.pixelsPerUnit, 0,
+                SpriteMeshType.FullRect);
+        }
+        private Texture2D _counterSideTex;
 
         /// <summary>The drawing's first column from each end that is opaque over more than half its
         /// height - the leg, rather than the lip that overhangs it.</summary>
@@ -2758,6 +3168,8 @@ namespace LastCall.UI
             StepWater();
             StepClosing();
             StepDrawer();
+            if (_shutterLight != null && _shutterLight.enabled) LayOutShutterLight();   // the spill's pulse
+            StepCellarCones();
             StepPalms();
             StepSky();
             SyncPatronFill();   // after the closing beat and the flicker have had their say
@@ -3030,6 +3442,8 @@ namespace LastCall.UI
                 // (The ledges drawn over the boards on 2026-09-26, seven rows of the board's top face carried back
                 //  to the wall, went on 2026-09-28 - the author: "raf assetinin üstünde ortadaki rafları yükseklik
                 //  bakımından uzatılması" was a later addition to the drawn shelves. The boards are the art's own.)
+                // ...and the same day the whole body went: the display cabinet stands under the slab (BuildCabinet).
+                BuildCabinet(sr);
             }
             // Order 33: over the counter's cabinet (30) AND over the stock standing in it
             // (31), and under anything on the bar top (35). The roller has to hide the
@@ -3345,19 +3759,29 @@ namespace LastCall.UI
                     _counterPlinth.localScale = new Vector3(sr.size.x / _counterNative.x, CounterPlinthDrop, 1f);
                     _counterPlinth.localPosition = new Vector3(0f, -_counterNative.y * 0.5f, 0f);
                 }
-                // the side strips: from past the window's edge in to the drawing's first full column
+                // the side strips: from past the window's edge in to the drawing's first full column - or, with the
+                // cabinet standing at its own 638 under a slab that tiles to the window (2026-09-28), in to the
+                // cabinet's end post and one unit under it, so a window wider than 16:9 shows bar, not room, under
+                // the slab's ends. At 16:9 the two ends are the same thirty units they always were.
                 float half = sr.size.x * 0.5f;
                 if (_counterSideL != null)
                 {
-                    float w = _counterSideColL + CounterSideOverhang;
+                    float inner = _cabinetDressed ? -_counterNative.x * 0.5f + CellarCabinet.CarcassLeft + 1f
+                                                  : -half + _counterSideColL;
+                    float outer = -half - CounterSideOverhang;
+                    float w = Mathf.Max(1f, inner - outer);
                     _counterSideL.localScale = new Vector3(w, 1f, 1f);
-                    _counterSideL.localPosition = new Vector3(-half - CounterSideOverhang + w * 0.5f, 0f, 0f);
+                    _counterSideL.localPosition = new Vector3(outer + w * 0.5f, 0f, 0f);
                 }
                 if (_counterSideR != null)
                 {
-                    float w = (_counterNative.x - 1 - _counterSideColR) + CounterSideOverhang;
+                    float inner = _cabinetDressed
+                        ? _counterNative.x * 0.5f - (CellarCabinet.ArtWidth - 1 - CellarCabinet.CarcassRight) - 1f
+                        : half - (_counterNative.x - 1 - _counterSideColR);
+                    float outer = half + CounterSideOverhang;
+                    float w = Mathf.Max(1f, outer - inner);
                     _counterSideR.localScale = new Vector3(w, 1f, 1f);
-                    _counterSideR.localPosition = new Vector3(half + CounterSideOverhang - w * 0.5f, 0f, 0f);
+                    _counterSideR.localPosition = new Vector3(outer - w * 0.5f, 0f, 0f);
                 }
                 if (_shutterTr != null)
                 {
@@ -3377,6 +3801,7 @@ namespace LastCall.UI
 
             PositionBarLights(visibleW);
             PlaceCellarLights();
+            PlaceCabinet();
             PlaceFixtures();
         }
 

@@ -69,6 +69,17 @@ namespace LastCall.UI
         /// <summary>The ladder's window is up over the night (the certificate): the way on waits under it.</summary>
         private bool LadderUp => _ladderPanel != null && _ladderPanel.gameObject.activeSelf;
 
+        /// <summary>Tonight's dawn shuts the bar (TycoonRun.ClosesAtDawn, read once in ShowDayEnd): the week's band says
+        /// so, the TOMORROW board says AT DAWN, and the way on is LOCK UP, straight to the game over.</summary>
+        private bool _fatalNight;
+
+        /// <summary>The way on's two dresses: the berry CONTINUE of every night (Build.cs, 2026-09-25) and the ember LOCK
+        /// UP of the last - the pack's four inks on night, then the red ramp the beam's lamps are lit in.</summary>
+        private static readonly Color[] BerryKey =
+            { UITheme.Night[0], UITheme.Magenta[0], UITheme.Magenta[1], UITheme.Magenta[3], UITheme.Magenta[4] };
+        private static readonly Color[] EmberKey =
+            { UITheme.Night[0], UITheme.ViceRed[0], UITheme.ViceRed[1], UITheme.ViceRed[3], UITheme.ViceRed[4] };
+
         /// <summary>The Sunday edition's condition (next pass, spec §3): tonight closes the week.</summary>
         private static bool WeekClosesTonight(TycoonRun run) =>
             run != null && BarCalendar.NightOf(run.Day) == BarNight.Saturday;
@@ -92,6 +103,11 @@ namespace LastCall.UI
             var run = Run;
             if (run == null) return;
             _dayEndStep = 0;   // the night first; the market only after CONTINUE
+            // THE NIGHT THAT SHUTS THE BAR, asked of Core once, here (2026-09-28, the game over): the dawn that files
+            // this night would file a third red close in a row. Core answers it (TycoonRun.ClosesAtDawn, her pay at
+            // dawn counted in); the week's band, the TOMORROW board and the way on read this one answer, so the three
+            // cannot disagree with each other about whether there is a tomorrow.
+            _fatalNight = run.ClosesAtDawn;
             // THE SHOW IS CLAIMED BEFORE THE REBUILD (2026-08-11): the rebuild asks ShowWayOn, which reads it, so the
             // way on cannot come up on the first frame of the night's own arrival.
             _show = NightBeat.Lights;
@@ -162,7 +178,7 @@ namespace LastCall.UI
             // THE WAY ON STANDS WHERE THE COUNTERFOIL HUNG (Build.cs, "ON THE SLIP'S FOOT"): eight under the body.
             if (_billNext != null)
                 _billNext.anchoredPosition = new Vector2(0f, t - _lBody - 8f - BillKeyH * 0.5f);
-            if (_billNextLabel != null) _billNextLabel.text = UIText.T("dayend.bill.next");
+            DressBillNext(_fatalNight);
 
             // Parked for the beats: nothing of the night is on the screen while it is called.
             if (!Motion.Reduced)
@@ -214,11 +230,11 @@ namespace LastCall.UI
                             : _showT < CallIn + CallHold ? 1f
                             : 1f - Mathf.Clamp01((_showT - CallIn - CallHold) / CallOut);
                     if (_lastCallGroup != null) _lastCallGroup.alpha = a;
-                    if (_lastCallCard != null)
+                    if (_lastCallSign != null)
                     {
-                        // It settles as it arrives - a line that lands rather than appears.
+                        // It settles as it arrives - a sign that lands rather than appears (the called line did the same).
                         float k = Mathf.Clamp01(_showT / CallIn);
-                        _lastCallCard.rectTransform.anchoredPosition = new Vector2(0, 10f + Mathf.Round((1f - k) * 14f));
+                        _lastCallSign.anchoredPosition = new Vector2(0, CallSignY + Mathf.Round((1f - k) * 14f));
                     }
                     if (_showT < CallIn + CallHold + CallOut) return;
                     if (_lastCallRt != null) _lastCallRt.gameObject.SetActive(false);
@@ -370,6 +386,37 @@ namespace LastCall.UI
             if (_billNext == null) return;
             bool on = _dayEndStep == 0 && _show == NightBeat.Done && !LadderUp;
             if (_billNext.gameObject.activeSelf != on) _billNext.gameObject.SetActive(on);
+        }
+
+        /// <summary>
+        /// THE WAY ON, DRESSED FOR WHERE IT GOES (2026-09-28, the game over). On the night that shuts the bar it does
+        /// not go on to a market the till cannot shop in, nor to a question about an empty van: it LOCKS UP - the pack's
+        /// padlock, the plate repainted on the red the beam's lamps are lit in - and goes straight to the dawn that files
+        /// the night (DayEnd's OnDayEndAdvance) and the game over after it. Every other night it is the berry CONTINUE.
+        /// Dressed every night, both ways, so a key once dressed for the end never carries it into the next bar; still
+        /// named BillNext, which is how the suite finds it.
+        /// </summary>
+        private void DressBillNext(bool fatal)
+        {
+            if (_billNext == null) return;
+            var ramp = fatal ? EmberKey : BerryKey;
+            string plate = fatal ? "bill_ember" : "bill_berry";
+            var ink = MenuPack.WordOn(ramp);
+            var pk = _billNext.GetComponent<PackKey>();
+            if (pk != null)
+                pk.Refit(MenuPack.Plate(plate, ramp, false), MenuPack.Hovered(), MenuPack.Plate(plate, ramp, true), ink,
+                    Color.Lerp(ink, Color.white, 0.35f));
+            var glyph = _billNext.Find("Face/Glyph");
+            if (glyph != null) glyph.GetComponent<Image>().sprite = MenuPack.Glyph(fatal ? "lock" : "next");
+            if (_billNextLabel != null)
+            {
+                _billNextLabel.text = UIText.T(fatal ? "dayend.bill.lock_up" : "dayend.bill.next");
+                _billNextLabel.color = ink;
+            }
+            // Back to its own width first - FitKey only ever widens - then to the word, with the room PackWordKey
+            // leaves a key that carries a glyph (a pad of 100, so the centred word never reaches the mark).
+            _billNext.sizeDelta = new Vector2(300f, BillKeyH);
+            FitKey(_billNext, 300f, 100f);
         }
 
         /// <summary>

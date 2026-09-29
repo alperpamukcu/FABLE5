@@ -31,8 +31,18 @@ namespace LastCall.UI
         private void UpdateEscape()
         {
             if (_bindListening != null) return;             // the settings' listening row owns the keyboard
-            if (MenuUp) return;                              // the front door's keys are its only doors (2026-09-26)
             if (!Keys.Pressed(KeyAction.Pause)) return;      // on whatever key the player put it (Keys)
+            // THE FRONT DOOR (2026-09-26): its own keys are its only doors - but Escape GOES BACK from anything opened
+            // over it (2026-09-29, read_menus findings 4 and 5: it did nothing in the credits and the achievements, and
+            // the settings opened from the door took the bar's order). The settings first, before the door's own return:
+            // they hide the door's panel and count as the door being up (MenuUp).
+            if (_settingsFromMenu && Showing(_settingsPanel)) { ToggleSettings(); return; }
+            if (MenuUp)
+            {
+                if (Showing(_creditsPanel)) { CloseCredits(); return; }
+                if (Showing(_achievementsPanel)) { CloseAchievements(); return; }
+                return;
+            }
             if (Showing(_pausePanel)) { TogglePause(); return; }
             if (_bookOpen) { ToggleRecipeBook(); return; }
             if (Showing(_settingsPanel)) { ToggleSettings(); return; }
@@ -43,6 +53,14 @@ namespace LastCall.UI
             if (Showing(_guidePanel)) { Sfx.Play("menu_close", 0.6f); _guidePanel.gameObject.SetActive(false); return; }
             if (Showing(_ledgerPanel)) { ToggleLedger(); return; }
             if (Showing(_idRoot)) { Sfx.Play("id_card_away", 0.6f); _idRoot.gameObject.SetActive(false); _idVisit = null; return; }
+            // THE GAME OVER (2026-09-28): Escape is the impatient hand - the first press lays the report and the notice
+            // out whole (the key still waits and arms by its own rules), the next one walks to the front door.
+            if (GameOverUp)
+            {
+                if (_goBeat < GoBeat.Done) PlaceWholeGameOver();
+                else OnGameOverMainMenu();
+                return;
+            }
             // The market (2026-08-19): now that the title bar's close box is gone the foot
             // key is the one exit, and a fullscreen panel with one small exit and no Escape
             // is a trap. Escape walks the SAME door — the ask first if it is up (Escape on
@@ -1097,24 +1115,19 @@ namespace LastCall.UI
             // figure in the game that COUNTS, so the coin is re-placed as the digits change
             // width — $99 to $100 moves the mark a whole glyph.
             CoinFigure(_tabletTill, shown, shown < 0 ? "-" : "", account: true);
-            if (_beamTillCard != null)
+            if (_moneyWell != null)
             {
                 // AND IT GOES BEHIND A SHEET (2026-09-09): the books and the market draw
                 // their own till, and a second one hanging over the tablet is both a repeat
                 // and something in the way. ...once the dark has arrived (2026-09-28): while the
-                // night's light goes down it is still the room's.
+                // night's light goes down it is still the room's. Its card goes with it: a hover
+                // over a well that is not there has nothing to hang from.
                 bool room = _dayEndPanel == null || !_dayEndPanel.gameObject.activeSelf
                             || _show == NightBeat.Lights;
-                if (_beamTillCard.gameObject.activeSelf != room)
-                    _beamTillCard.gameObject.SetActive(room);
+                if (_moneyWell.gameObject.activeSelf != room)
+                    _moneyWell.gameObject.SetActive(room);
             }
-            ShowTillFigure(shown);   // the beam's register readout (eighth list)
-            if (_beamTillText != null)
-            {
-                string money = (shown < 0 ? "-" : "") + Mathf.Abs(shown);
-                if (_beamTillText.text != money) _beamTillText.text = money;
-                _beamTillText.color = shown < 0 ? UITheme.ViceRed[3] : UITheme.Amber[4];
-            }
+            ShowTillFigure(shown);   // the beam's till, in the figures face (2026-09-28, second pass)
         }
 
         /// <summary>Stands the house coin in front of a figure and writes the digits
@@ -1302,8 +1315,8 @@ namespace LastCall.UI
             _cellarCards.Clear();
             // GROUPED (2026-09-07, the author: "mahzen sahnesinde en azından içeceklerin hangi
             // grupta olduğu anlaşılsın, mouse ile üzerine gelmeden"): the stock stands by
-            // family — gins together, then vodkas, whiskies… the mixers last — and the
-            // family's name is written on the shelf under each run (StepCellarLabels).
+            // family, one family a niche of the cabinet, and the family's name is on the
+            // niche's own plate (StepCellarLabels).
             var stock = new List<IngredientCard>();
             if (run != null)
                 foreach (var b in run.Shelf.Bottles)
@@ -1314,31 +1327,31 @@ namespace LastCall.UI
                         continue;
                     stock.Add(card);
                 }
-            // ...and SHELVED BY A PLANOGRAM (2026-09-28, see CellarBoard): the spirits on the upper board, what
-            // they are mixed with on the lower, every family in the order a bartender reaches for it and each one
-            // from the well bottle to the top shelf, left to right.
+            // ...and SHELVED BY THE CABINET (2026-09-28, CellarCabinet): one family a niche - the spirits on the
+            // upper row, what they are mixed with on the lower - and each family from the well bottle to the top
+            // shelf, left to right, the order the morning's planogram taught.
             stock.Sort((a, b) =>
             {
-                int oa = CellarOrder(a, out _), ob = CellarOrder(b, out _);
+                int oa = CellarCabinet.ShelfKey(a), ob = CellarCabinet.ShelfKey(b);
                 if (oa != ob) return oa.CompareTo(ob);
                 return string.CompareOrdinal(a.Name, b.Name);
             });
-            var boards = new List<int>(stock.Count);
-            var families = new List<int>(stock.Count);
+            var niches = new List<int>(stock.Count);
+            System.Array.Clear(_cellarNicheStocked, 0, _cellarNicheStocked.Length);
             foreach (var card in stock)
             {
                 var sprite = ItemArt.Bottle(card);
                 if (sprite == null) continue;
                 art.Add(sprite);
                 _cellarCards.Add(card);          // the SAME order the plates are indexed by
-                boards.Add(CellarBoard(CellarGroup(card)));
-                CellarOrder(card, out int family);
-                families.Add(family);
+                int niche = CellarCabinet.NicheOf(card);
+                niches.Add(niche);
+                _cellarNicheStocked[niche] = true;
                 if (art.Count >= DiegeticStage.CellarSlots) break;
             }
             var ids = new List<string>(_cellarCards.Count);
             foreach (var c in _cellarCards) ids.Add(c.Id);
-            stage.SetCellar(art, ids, boards, families);
+            stage.SetCellar(art, ids, niches);
             // The v4 sandwich: plates, drink tones and levels in the same order (PLAN §4c).
             var plates = new List<ItemArt.BottlePlates>(_cellarCards.Count);
             var tones = new List<Color>(_cellarCards.Count);
@@ -1453,66 +1466,19 @@ namespace LastCall.UI
             _cellarCardOver = plate;
         }
 
-        // ── the shelf captions (2026-09-07; regrouped 2026-09-22; a planogram 2026-09-28) ──────
+        // ── the shelf captions (2026-09-07; regrouped 2026-09-22; a planogram 2026-09-28; a cabinet the same evening) ──
         // THE BACK BAR'S SECTIONS (2026-09-22, the author's seventh list: "raf alkol gruplandırması ve alkol
-        // gruplandırma isimleri değiştirilmeli sahneye uygun olmalı") were right in name and wrong on the shelf: the
-        // stock was dealt out evenly over the six bays, so a section ran over a post (the white spirits across two
-        // bays), came back on the other board (the dark spirits top right AND bottom left) and its plate stood under
-        // the post between. The author, 2026-09-28: "mahzende şişelerin gruplandırılması ve şişelerin sıralaması
-        // değiştirilsin, oyuncu için gruplandırmayı daha profesyonel ve anlaşılır hale getir, şu anki kötü".
-        // A PLANOGRAM, as a bar's back bar is kept: the spirits on the upper board, at eye level, in the order a
-        // bartender reaches for them - vodka, gin, rum, tequila, whisky - and what they are mixed with on the lower:
-        // the liqueurs, the syrups, the juices and the mixers. A plate under every family, in every bay it stands in
-        // (DiegeticStage.PlanCellar cuts a board where it costs least; a family is cut only when nothing else fits),
-        // so no name ever stands under a post. Inside a family the bottles go from the well to the top shelf (tier 1
-        // to 4), left to right.
-        private static readonly string[] CellarFamilyRank =
-            { "vodka", "gin", "rum", "tequila", "whiskey", "liqueur", "syrup", "juice", "mixer" };
+        // gruplandırma isimleri değiştirilmeli sahneye uygun olmalı") were right in name and wrong on the shelf, and the
+        // morning's planogram (the author: "mahzende şişelerin gruplandırılması ve şişelerin sıralaması değiştirilsin,
+        // oyuncu için gruplandırmayı daha profesyonel ve anlaşılır hale getir, şu anki kötü") still had to cut the gin
+        // and the tequila at a post and hang a plate under every piece. THE CABINET ENDS THAT (2026-09-28, the author
+        // picked it: "Mahzen tasarımı = C · Art Deco vitrin"): ten niches, one family each, and the family's name on
+        // the niche's own name plate - drawn into the cabinet, the WORD set here over it (never baked, so all 29
+        // languages keep it). Which family goes where, and in what order, is LastCall.Game.CellarCabinet's.
 
-        /// <summary>The board a family stands on: 0 the upper (the spirits), 1 the lower (what they are mixed with).</summary>
-        private static int CellarBoard(string family)
-        {
-            switch (family)
-            {
-                case "vodka": case "gin": case "rum": case "tequila": case "whiskey": return 0;
-                default: return 1;   // liqueurs, amari, vermouths, the syrups, juices, mixers - and whatever the data adds
-            }
-        }
-
-        /// <summary>The family a bottle stands with, and the word on its plate: the category for the spirits
-        /// and liqueurs, the type's plain word for the rest.</summary>
-        private static string CellarGroup(IngredientCard card)
-        {
-            string cat = card?.Info?.Category;
-            if (!string.IsNullOrEmpty(cat) && cat != IngredientCategories.Mixer && cat != IngredientCategories.Juice)
-                return System.Array.IndexOf(CellarFamilyRank, cat) >= 0 ? cat : "liqueur";
-            if (cat == IngredientCategories.Juice) return "juice";
-            switch (card?.Type ?? IngredientType.Spirit)
-            {
-                case IngredientType.Sweet: case IngredientType.Bitter: return "syrup";
-                case IngredientType.Sour: return "juice";
-                default: return "mixer";   // soda, tonic, ginger beer, cola, energy
-            }
-        }
-
-        /// <summary>Inside a family, the order a bartender lines them up: the juices citrus first, the mixers by
-        /// how often they are reached for, the liqueurs aperitif before sweet; a spirit by its tier.</summary>
-        private static readonly string[] CellarStyleRank =
-            { "lemon", "lime", "orange", "pineapple", "cranberry",
-              "soda", "tonic", "ginger", "cola", "energy",
-              "syrup", "grenadine",
-              "vermouth", "amaro", "triple_sec", "coffee_liqueur" };
-
-        /// <summary>The shelf order: board, then family, then style, then tier; the family's index comes back too.</summary>
-        private static int CellarOrder(IngredientCard card, out int family)
-        {
-            string g = CellarGroup(card);
-            family = System.Array.IndexOf(CellarFamilyRank, g);
-            int style = System.Array.IndexOf(CellarStyleRank, card?.Info?.Style ?? "");
-            int tier = card?.Info?.Tier ?? 1;
-            return CellarBoard(g) * 100000 + (family < 0 ? 99 : family) * 1000 + (style < 0 ? 99 : style) * 10
-                   + Mathf.Clamp(tier, 0, 9);
-        }
+        /// <summary>Which niches hold stock tonight, as RefreshCellar dealt them - the word reads dark on a lit cream
+        /// plate and pale on an empty niche's Night enamel.</summary>
+        private readonly bool[] _cellarNicheStocked = new bool[CellarCabinet.Niches];
 
         private static string CellarGroupWord(string group)
         {
@@ -1536,114 +1502,62 @@ namespace LastCall.UI
 
         private readonly List<Text> _cellarLabels = new List<Text>();
 
-        /// <summary>The family names under each run of bottles, in the HUD over the room and
-        /// riding the drawer with it. Rebuilt whenever the cellar is; placed every frame.</summary>
+        /// <summary>
+        /// THE NICHE'S NAME, ON ITS PLATE (2026-09-28). One word a niche, all ten, riding the drawer with the room:
+        /// the plate is the cabinet's own drawing (cream enamel over a stocked niche, Night enamel over an empty one), so
+        /// the word is set dark on the lit plate and pale on the empty one - the player reads there is no rum before
+        /// reaching for it. The 16 px body face, and its 8 when a language's word will not fit the plate's enamel;
+        /// nothing is baked, so every table keeps its own word. The old HUD plates, their magenta lip and the staircase
+        /// that dropped a neighbour's plate a row (2026-09-08) went with the runs they labelled: a niche's plate cannot
+        /// meet another's.
+        /// </summary>
         private void StepCellarLabels()
         {
             if (stage == null || _hudRoot == null) return;
             float phase = stage.DrawerPhase;
-            int need = 0;
-            // The runs: one caption per family per shelf row.
-            var runs = new List<(string group, int first, int last)>();
-            for (int i = 0; i < _cellarCards.Count && i < stage.CellarSlotCount; i++)
+            while (_cellarLabels.Count < CellarCabinet.Niches)
             {
-                string g = CellarGroup(_cellarCards[i]);   // one plate a FAMILY, under its part in each bay
-                stage.CellarSlotStage(i, out var here);
-                if (runs.Count > 0 && runs[runs.Count - 1].group == g
-                    && stage.CellarSlotBay(runs[runs.Count - 1].last) == stage.CellarSlotBay(i))   // never across a post
-                {
-                    stage.CellarSlotStage(runs[runs.Count - 1].last, out var prev);
-                    if (Mathf.Abs(prev.y - here.y) < 1f)
-                    {
-                        runs[runs.Count - 1] = (g, runs[runs.Count - 1].first, i);
-                        continue;
-                    }
-                }
-                runs.Add((g, i, i));
-            }
-            while (_cellarLabels.Count < runs.Count)
-            {
-                // A PLATE, NOT LOOSE TYPE (2026-09-07, the author: "mahzende alkol isimleri
-                // hic gorunur olmuyor arka plandan dolayi"). Cream[3] on the plum boards
-                // under pink neon measures under 2:1 against its own ground, which is why
-                // the names were invisible; type wants 4.5. The bar's own answer to this is
-                // the NAME PLATE its back-bar rails wear (16 §6, and the market borrowed it
-                // for the same reason on 2026-08-19): a dark field with a lit lower lip, the
-                // word in cream on top. It carries its contrast with it, so it reads over
-                // whatever the room's lights are doing behind it.
-                var plate = NewRect("CellarTag" + _cellarLabels.Count, _hudRoot);
-                plate.anchorMin = plate.anchorMax = new Vector2(0.5f, 0.5f);
-                plate.pivot = new Vector2(0.5f, 1f);
-                plate.sizeDelta = new Vector2(88f, 18f);
-                var bg = plate.gameObject.AddComponent<Image>();
-                bg.sprite = ChromeArt.Card();
-                bg.type = Image.Type.Sliced;
-                bg.color = new Color(UITheme.Night[0].r, UITheme.Night[0].g, UITheme.Night[0].b, 0.92f);
-                bg.raycastTarget = false;
-                // The shelf-edge lip: one bright rule along the bottom, which is what makes a
-                // plate read as screwed on rather than as a rectangle drawn over the wood.
-                var lip = NewRect("Lip", plate);
-                lip.anchorMin = new Vector2(0, 0); lip.anchorMax = new Vector2(1, 0);
-                lip.pivot = new Vector2(0.5f, 0f);
-                lip.sizeDelta = new Vector2(0, 1f);
-                lip.anchoredPosition = Vector2.zero;
-                var lipImg = lip.gameObject.AddComponent<Image>();
-                lipImg.color = new Color(UITheme.Magenta[3].r, UITheme.Magenta[3].g,
-                                         UITheme.Magenta[3].b, 0.75f);
-                lipImg.raycastTarget = false;
-
-                var t = NewText("L", plate, _body, 8, TextAnchor.MiddleCenter, UITheme.Cream[4]);
-                Stretch(t.rectTransform, Vector2.zero, Vector2.one, new Vector2(6f, 0f), new Vector2(-6f, 0f));
+                string family = CellarCabinet.Families[_cellarLabels.Count];
+                var t = NewText("CellarWord_" + family, _hudRoot, _body, 16, TextAnchor.MiddleCenter, UITheme.Cream[1]);
+                t.rectTransform.anchorMin = t.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                t.rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 t.horizontalOverflow = HorizontalWrapMode.Overflow;
+                t.verticalOverflow = VerticalWrapMode.Overflow;
                 t.raycastTarget = false;
-                // The group is built HERE, once, rather than hunted for every frame while the
-                // cellar is open.
-                var pg = plate.gameObject.AddComponent<CanvasGroup>();
+                // the group is built HERE, once, rather than hunted for every frame the cellar is open
+                var pg = t.gameObject.AddComponent<CanvasGroup>();
                 pg.blocksRaycasts = false;
                 pg.interactable = false;
-                plate.transform.SetAsFirstSibling();
+                t.transform.SetAsFirstSibling();
                 _cellarLabels.Add(t);
             }
-            // NEIGHBOURS ON ONE SHELF DO NOT SHARE A SPOT (2026-09-08, the author:
-            // "mahzende isim ayırması net değil, tüm içecekler mevcut olduğunda problem
-            // oluyor"). A plate is as wide as its word and centred on its run; with every
-            // shelf full a run can be one slot wide, and "SODA & TONIC" is wider than a
-            // slot, so two plates on one shelf overlapped and read as one smear. The
-            // plates are laid left to right, and one that would overlap the plate before
-            // it on the same shelf drops a plate's height — the balloons' own staircase,
-            // at plate scale — so every family keeps its own name.
-            float prevRight = float.MinValue, prevY = float.NaN, prevDrop = 0f;
-            for (int i = 0; i < _cellarLabels.Count; i++)
+            for (int n = 0; n < _cellarLabels.Count; n++)
             {
-                var t = _cellarLabels[i];
-                var plate = t.rectTransform.parent as RectTransform;
-                bool on = i < runs.Count && phase > 0.02f;
-                if (plate.gameObject.activeSelf != on) plate.gameObject.SetActive(on);
+                var t = _cellarLabels[n];
+                Rect r = default;
+                bool on = phase > 0.02f && stage.CabinetPlateStage(n, out r);
+                if (t.gameObject.activeSelf != on) t.gameObject.SetActive(on);
                 if (!on) continue;
-                var r = runs[i];
-                stage.CellarSlotStage(r.first, out var a);
-                stage.CellarSlotStage(r.last, out var b);
-                float cx = (a.x + b.x) * 0.5f * StageToHud;
-                float y = a.y * StageToHud - 6f + CounterLift;
-                t.text = CellarGroupWord(r.group);
-                // The plate is the width of what is written on it, never narrower than the
-                // run it labels looks like it wants — measured, because "SODA & TONIC" and
-                // "GIN" cannot share a box.
-                float w = Mathf.Max(48f, t.preferredWidth + 16f);
-                const float PlateH = 18f, PlateGap = 4f;
-                float drop = 0f;
-                bool sameShelf = !float.IsNaN(prevY) && Mathf.Abs(prevY - y) < 1f;
-                if (sameShelf && cx - w * 0.5f < prevRight + PlateGap)
-                    drop = prevDrop > 0f ? 0f : PlateH + 2f;   // alternate: down, level, down
-                plate.sizeDelta = new Vector2(w, PlateH);
-                plate.anchoredPosition = ToCentre(new Vector2(cx, y - drop));
-                prevRight = cx + w * 0.5f; prevY = y; prevDrop = drop;
-                // The plate's group is built with the plate (see above), so this is a read,
-                // not a hunt. It was `GetComponent<CanvasGroup>() ?? Add...` for one afternoon
-                // and threw MissingComponentException every frame the cellar was open: a
-                // missing UnityEngine.Object is FAKE null — a live C# reference with an
-                // overloaded ==, which `??` hands straight back.
-                if (plate.TryGetComponent<CanvasGroup>(out var group)) group.alpha = phase;
+                // AND, NOT "&" (2026-09-29, the book's own rule of 2026-08-25): the body face's ampersand at 16 is a
+                // vertical bar with two nubs and "SODA & TONIC" read as "SODA $ TONIC" - the money's sign, on the
+                // plate the first night lights. The old run plates were set at 8 and never met it; these are set at
+                // 16 whenever the word fits, so the word goes through the book's own replacement. In English that
+                // makes it too wide for the plate and it drops to 8, which is the right trade: legible over large.
+                string word = CellarGroupWord(CellarCabinet.Families[n])
+                    .Replace(" & ", UIText.T("book.index.ampersand"));
+                if (t.text != word)
+                {
+                    t.text = word;
+                    // the plate less its frame and rim, two art pixels a side (the preview's rule, 2 x (plate - 4))
+                    float room = r.width * StageToHud - 8f;
+                    t.fontSize = LanguageFonts.Size(_body, 16);
+                    if (t.preferredWidth > room) t.fontSize = LanguageFonts.Size(_body, 8);
+                }
+                t.color = _cellarNicheStocked[n] ? UITheme.Night[1] : UITheme.Cream[1];
+                t.rectTransform.sizeDelta = r.size * StageToHud;
+                t.rectTransform.anchoredPosition = ToCentre(new Vector2(r.center.x * StageToHud,
+                                                                        r.center.y * StageToHud + CounterLift));
+                if (t.TryGetComponent<CanvasGroup>(out var group)) group.alpha = phase;
             }
         }
 
@@ -1916,14 +1830,32 @@ namespace LastCall.UI
                 }
                 _clock.Show(hh, mm / 5 * 5, ((int)(Time.unscaledTime * 2f) & 1) == 0);
             }
-            // The night names itself on the marquee — tonight's bulb is lit and its letters
-            // are amber — so nothing up here prints the day in words as well. Printing it
-            // twice across one board is what made the old one read as assembled.
-            RefreshWeekStrip(run);
-            // The night's well (2026-09-07): the count and the name, in place of the week.
-            if (_dayLabel != null) _dayLabel.text = $"{run.Day:00}";
-            if (_nightLabel != null)
-                _nightLabel.text = UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(run.Day))));
+            // THE WORDS, WHEN WHAT THEY SAY CHANGES (2026-09-28). The night's well (2026-09-07: the count and the name,
+            // in place of the week) and the crowd under the name were written every frame, and the beam built a string
+            // of them every frame to find out whether to re-lay itself. What they say moves with four things - the
+            // night, its crowd, last call and the language - so those four, as one int, are the key: the words are
+            // written and the beam re-laid on the frame one of them turns, and the bar allocates nothing otherwise.
+            int wordsKey = unchecked(((run.Day * 8 + (int)run.CrowdToday) * 2 + (last ? 1 : 0)) * 31
+                                     + Localization.Current.Code.GetHashCode());
+            if (!_topBarKeyed || wordsKey != _topBarKey)
+            {
+                _topBarKeyed = true;
+                _topBarKey = wordsKey;
+                if (_dayLabel != null) _dayLabel.text = $"{run.Day:00}";
+                if (_nightLabel != null)
+                    _nightLabel.text = UIText.Caps(UIText.T(BarCalendar.NameLine(BarCalendar.NightOf(run.Day))));
+                // The crowd rides under the night's name - and gives way to LAST CALL when the room is being called,
+                // because at that point what is in front of the bar matters more than who it is.
+                _crowdText.text = last ? UIText.T("chrome.crowd.last_call")
+                    : run.CrowdToday == WealthTier.HighRoller ? UIText.T("chrome.crowd.high_rollers")
+                    : run.CrowdToday == WealthTier.Broke ? UIText.T("chrome.crowd.broke") : UIText.T("chrome.crowd.regulars");
+                _crowdText.color = last ? UITheme.Magenta[4]
+                    : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
+                    : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];
+                // the hour's well is as wide as tonight's words; it is the only well re-laid here, because the right
+                // cluster (stars, money) has no words that change with the night (TopBar, 2026-09-28 second pass)
+                LayTopBar();
+            }
 
             // THE BEAM IS THE STATE LIGHT (2026-08-14; it now answers to two states, not
             // one). A 2px rule under one plaque was never going to be seen, and the board
@@ -1934,36 +1866,34 @@ namespace LastCall.UI
             // window, and the register left the room with the rest of the money (the author:
             // "kasa ve parayı ana sahneden kaldır"), so the beam took the reading. It beats
             // last call, because a bar in the red is the more urgent of the two facts — and
-            // it is a colour, not a figure: how DEEP under is the book's business (behind the
-            // cog) and the slip's. Both are driven from HERE, off one cached state, because
+            // it is a colour, not a figure: how DEEP under is told in figures elsewhere - the
+            // money's own figure and its card on the bar, the till on Escape's pause menu (the
+            // cog that used to lead there left the bar on 2026-09-28) and the slip. Both are driven from HERE, off one cached state, because
             // the tube used to be painted inside the clock's own change-check and a second
             // writer keyed on a different change would have left it wearing whichever of them
             // moved last.
+            //
+            // AND IT GOES OUT (2026-09-28): the game over's sign dies on the beam before the dark closes over it
+            // (TycoonHud.GameOver sets _beamOut) - the tube a dead Night glass and no light falling off it. OUT beats
+            // everything, because a closed bar has no shift, no last call and no debt left to warn about. And what it
+            // does NOT answer to: a bill bigger than the till with the money still at or over $0 leaves the tube alone
+            // - the till's card says that in words (TycoonHud.TopBar) - so a red tube always means real debt.
             bool underWater = run.Money < 0;
-            int beam = underWater ? 2 : last ? 1 : 0;
+            int beam = _beamOut ? 3 : underWater ? 2 : last ? 1 : 0;
             if (beam != _beamState)
             {
                 _beamState = beam;
-                var core = underWater ? UITheme.ViceRed[3]
+                var core = beam == 3 ? UITheme.Night[2] : underWater ? UITheme.ViceRed[3]
                     : last ? UITheme.Magenta[4] : UITheme.Amber[4];
                 var halo = underWater ? UITheme.ViceRed[2]
                     : last ? UITheme.Magenta[2] : UITheme.Amber[2];
                 if (_neonTube != null) _neonTube.color = core;
                 if (_neonBloom != null)
+                {
                     _neonBloom.color = new Color(halo.r, halo.g, halo.b, beam == 0 ? 0.30f : 0.42f);
+                    _neonBloom.enabled = beam != 3;
+                }
             }
-
-            // The caption line over the standing carries the crowd — and gives way to LAST
-            // CALL when the room is being called, because at that point what is in front of
-            // the bar matters more than who it is.
-            _crowdText.text = last ? UIText.T("chrome.crowd.last_call")
-                : run.CrowdToday == WealthTier.HighRoller ? UIText.T("chrome.crowd.high_rollers")
-                : run.CrowdToday == WealthTier.Broke ? UIText.T("chrome.crowd.broke") : UIText.T("chrome.crowd.regulars");
-            _crowdText.color = last ? UITheme.Magenta[4]
-                : run.CrowdToday == WealthTier.HighRoller ? UITheme.Magenta[4]
-                : run.CrowdToday == WealthTier.Broke ? UITheme.ViceRed[3] : UITheme.Cream[3];
-            // the hour's well is as wide as tonight's words: re-laid when they change (TopBar)
-            LayTopBar();
 
             // The standing, as a row of stars and NOTHING ELSE (2026-08-19, the author:
             // "0.0 neden gösteriliyor, daha çok görsel bir şerit olmalı"). The number that
@@ -1971,26 +1901,28 @@ namespace LastCall.UI
             // half — the average is continuous, and the mask's width carries it exactly,
             // so nothing legible was lost; the decimal lives on in the ledger and the shop,
             // where a number is being compared to another number.
+            // ...ON WHOLE UNITS (2026-09-28): the mask's edge is a pixel's edge, so a fill that stops a third of the
+            // way into one draws a column the art never had (the audit's GRID finding on the beam). The nearest whole
+            // unit of a 150 row is a 150th of five stars - nothing a player can tell - and the wave reads the same edge.
             double stars = run.Rating.Average;
-            _starsFill.sizeDelta = new Vector2(TopStarsReach(stars), 0);   // the beam's smaller stars (eighth list)
-            // The house's two strips (H5): the drinks so far tonight, and the room right now
-            // — the one reading that moves while a glass stands on the counter.
-            if (_serviceFill != null)
-                _serviceFill.sizeDelta = new Vector2((float)(run.ServiceTonight / BarRating.MaxStars) * HouseStripW, 0);
-            if (_comfortFill != null)
-                _comfortFill.sizeDelta = new Vector2((float)(run.ComfortNow / BarRating.MaxStars) * HouseStripW, 0);
+            _starsFill.sizeDelta = new Vector2(Mathf.Round(TopStarsReach(stars)), 0);   // the beam's smaller stars (eighth list)
+            // (The house's two strips (H5) - the drinks so far tonight, and the room right now - left the beam for the
+            // card under the stars on 2026-09-28's second pass; StepBeamCard fills them while it is up. The register's
+            // bill and lamps are words on the till's card now.)
 
             // THE HOSTESS'S JOB (2026-09-28, TycoonHud.Quest): the message at the top left, and its news.
             RefreshQuestBubble(run);
             StepQuestBubble();
             RefreshLadderFlag(run);
             StepLadder();
-            StepHouseWave(run);
+            StepStarWave(run);
 
             // SHE SETTLES UP THE MOMENT IT LANDS (2026-09-06 for the week's job; hers since 2026-09-28). The run
             // raises the flag on the serve, the kick, the close or the dawn, and the room says so once, with the
             // coin beside it and the money already in the till.
-            ReadQuestNews(run);
+            // ...but never onto the game over (2026-09-28): a job that paid at the dawn that shut the bar is on the Z
+            // report's JOBS row, and a toast would land on the tape.
+            if (!GameOverUp) ReadQuestNews(run);
         }
 
         private void BuildServiceLog(RectTransform root)
@@ -2245,33 +2177,28 @@ namespace LastCall.UI
         private float _houseWaveT;
         private const float HouseWaveEvery = 5f, HouseWaveStep = 0.08f, HouseWaveLen = 0.3f;
 
-        /// <summary>Every five seconds the lit stars, medals and hearts in the top bar rise and settle one after
-        /// another, left to right — a wave over what the bar has earned, and nothing over what it has not.</summary>
-        private void StepHouseWave(TycoonRun run)
+        /// <summary>Every five seconds the lit stars in the top bar rise and settle one after another, left to right —
+        /// a wave over what the bar has earned, and nothing over what it has not. The medals and the hearts waved
+        /// behind them until 2026-09-28's second pass took the strips off the beam: the stars are all it has left to
+        /// wave, and the card the strips hang on now is up only while it is read.</summary>
+        private void StepStarWave(TycoonRun run)
         {
             if (run == null || _starsFill == null || Motion.Reduced) return;
             _houseWaveT += Time.unscaledDeltaTime;
             if (_houseWaveT >= HouseWaveEvery) _houseWaveT -= HouseWaveEvery;
-            WaveRow(_starsFill, run.Rating.Average, _houseWaveT);
-            if (_comfortFill != null) WaveRow(_comfortFill, run.ComfortNow, _houseWaveT + HouseWaveStep);
-            if (_serviceFill != null) WaveRow(_serviceFill, run.ServiceTonight, _houseWaveT + HouseWaveStep * 2f);
-        }
-
-        /// <summary>One strip: the lit cells under <paramref name="fill"/> and the sockets beside it (siblings
-        /// named S0..S4 / B0..B4) scale together, each cell at its own beat; a cell more than half filled counts.</summary>
-        private static void WaveRow(RectTransform fill, double value, float t)
-        {
-            int lit = (int)Math.Floor(value + 0.5 + 1e-9);
-            var row = fill.parent as RectTransform;
-            for (int i = 0; i < fill.childCount; i++)
+            // ...counted off the fill as it is DRAWN (2026-09-28): RefreshTopBar puts the mask on a whole unit, and a
+            // star rises when that edge covers its middle - so the wave can never lift a star the row shows as unlit.
+            float reach = _starsFill.sizeDelta.x;
+            int lit = 0;
+            while (lit < _ratingStars.Length && reach >= lit * TopStarPitch + TopStarPitch * 0.5f) lit++;
+            for (int i = 0; i < _ratingStars.Length; i++)
             {
-                float p = i < lit ? Mathf.Clamp01((t - i * HouseWaveStep) / HouseWaveLen) : 1f;
+                float p = i < lit ? Mathf.Clamp01((_houseWaveT - i * HouseWaveStep) / HouseWaveLen) : 1f;
                 float sc = 1f + 0.3f * Mathf.Sin(p * Mathf.PI);
                 var scale = new Vector3(sc, sc, 1f);
-                (fill.GetChild(i) as RectTransform).localScale = scale;
-                if (row == null) continue;
-                var socket = row.Find("S" + i) ?? row.Find("B" + i);
-                if (socket != null) socket.localScale = scale;
+                // the lit star and the socket under it scale together; both were kept at build, so no name is looked up
+                if (_ratingStars[i] != null) _ratingStars[i].rectTransform.localScale = scale;
+                if (_starSockets[i] != null) _starSockets[i].localScale = scale;
             }
         }
 
@@ -2635,26 +2562,9 @@ namespace LastCall.UI
         // with the game about what day it is. The words are unchanged.
         private static string CalendarFor(int day) => UIText.T(BarCalendar.LabelLine(day));
 
-        /// <summary>
-        /// Lights the marquee from the run: which week it is, which night is being played,
-        /// which nights the arc is due on, and the one the bar does not open at all.
-        /// </summary>
-        private void RefreshWeekStrip(TycoonRun run)
-        {
-            if (_weekCells.Count == 0) return;
-            int week = BarCalendar.WeekOf(run.Day);
-            if (week != _weekShown)
-            {
-                _weekShown = week;
-                // Just the count: the word WEEK is the instrument's own printed caption now.
-                _weekLabel.text = $"{week:00}";
-            }
-            // NOTHING IS HANDING OVER UP HERE. The beam shows one night, fully lit, so it
-            // passes no `leaving` and a full `over` - the crossfade is the DAY CARD's, and
-            // the instrument is the same instrument either way (see LightWeekCells).
-            LightWeekCells(_weekCells, _vipCell, (int)BarCalendar.NightOf(run.Day), -1, 1f,
-                StoryNightOf(run, week));
-        }
+        // (The beam's own week instrument and its refresh were never mounted after 2026-09-22 and went on 2026-09-28, and
+        //  its last mount - the curtain's day card, BuildWeekGlass and LightWeekCells - went the same day: the curtain is
+        //  the club's night sign now and lights its own week, TycoonHud.Curtain.LightSignNights.)
 
         /// <summary>Which slot in THIS week the arc is due on, or -1. A beat due in a later
         /// week leaves the calendar clean: it shows the week it is showing.</summary>
@@ -2665,75 +2575,6 @@ namespace LastCall.UI
             if (due == null || BarCalendar.WeekOf(dueDay) != week) return -1;
             int i = (int)BarCalendar.NightOf(dueDay);
             return i < BarCalendar.OpenNights ? i : -1;
-        }
-
-        /// <summary>
-        /// Lights one week instrument, wherever it is mounted.
-        ///
-        /// THE WORD SAYS THE STATE, THE SIGN UNDER IT SAYS WHAT THE NIGHT IS. A tube burns
-        /// only under the night being played; the star fitting is always Saturday's and only
-        /// how hard it burns changes; the shutter is Sunday's and never changes at all.
-        ///
-        /// ONE NUMBER CARRIES BOTH MOUNTS. The beam only ever has one night lit and passes
-        /// <paramref name="over"/> = 1 with no <paramref name="leaving"/>; the day card is a
-        /// HAND-OVER, so the night that closed goes out on exactly the curve the night
-        /// arriving comes up on. Everything else - which nights are spent, which is the
-        /// story's, which is dark - is the same arithmetic on both, which is the point of
-        /// there being one of these rather than two.
-        /// </summary>
-        private static void LightWeekCells(List<(Image sign, Image bloom, Text name)> cells,
-            int vipCell, int tonight, int leaving, float over, int storyNight)
-        {
-            for (int i = 0; i < cells.Count; i++)
-            {
-                var (sign, bloom, name) = cells[i];
-                bool closed = i >= BarCalendar.OpenNights;          // the seventh night
-                float burn = closed ? 0f
-                    : i == tonight ? over
-                    : i == leaving ? 1f - over
-                    : 0f;
-                bool story = !closed && i == storyNight;
-                bool worked = !closed && i < tonight;
-
-                if (sign != null)
-                {
-                    if (i == vipCell)
-                    {
-                        // Legible from across the week even four days out, and BRIGHTEST on
-                        // the night itself. The star keeps its own gold (2026-09-04, the
-                        // author's one-icon rule): magenta over it came out a muddy red, and
-                        // the marquee already says which night is the story's in the word
-                        // above it. Only how hard it burns is ours to set.
-                        sign.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.62f, 1f, burn));
-                    }
-                    else
-                    {
-                        // The tube burns the WORD's own hue: a story night that is also
-                        // tonight reads magenta up top, and an amber tube under magenta
-                        // letters would be the strip disagreeing with itself.
-                        sign.enabled = burn > 0.01f;
-                        var t = story ? UITheme.Magenta[4] : UITheme.Amber[4];
-                        sign.color = new Color(t.r, t.g, t.b, t.a * burn);
-                    }
-                }
-                if (bloom != null)
-                {
-                    bloom.enabled = burn > 0.01f;
-                    var b = story ? UITheme.Magenta[2] : UITheme.Amber[2];
-                    bloom.color = new Color(b.r, b.g, b.b, b.a * 0.5f * burn);
-                }
-
-                // BRIGHT ENOUGH TO BE A CALENDAR (the author: "ufak ve sonuk kaliyor",
-                // then "yazilar okumuyor"): nights ahead are cream, one step up from the
-                // first cut; the nights already worked are the dim ones, because a night
-                // that is spent is the only one on the glass with nothing left to say.
-                var rest = closed ? UITheme.Night[4]
-                    : story ? UITheme.Magenta[4]
-                    : worked ? UITheme.Night[4]
-                    : UITheme.Cream[3];
-                var awake = story ? UITheme.Magenta[4] : UITheme.Amber[4];
-                name.color = burn > 0.001f ? Color.Lerp(rest, awake, burn) : rest;
-            }
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ ihtiyacımız olan ses efekti müzik vs. listesini detaylıca çıkar").*
 | **Kanal sayısı** | 6 sesli one-shot havuzu (round-robin) + 1 **ortam** (loop) + 1 **eylem loop'u** (dökme/çalkalama) + dökmenin **uzak yarısı** (düşüş mesafesine göre çapraz geçiş) + 1 **kap hareketi** loop'u (2026-09-15) + **müzik kanalı** (iki kaynak, parçadan parçaya geçiş) + 2 **ortam yatağı** (kalabalık, yağmur) |
 | **Ses seviyesi** | `Sound.Volume` (PlayerPrefs, varsayılan 0.8) × çağrıdaki `volume`; 2026-09-15'ten beri ayrıca efektler `Sound.EffectsVolume`, müzik `Sound.MusicVolume` (ayarlar penceresinin AUDIO sayfası) |
 | **Perde oynatması** | Deterministik sayaç (rastgele değil — evin kuralı) |
-| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **68 klip CC0 kayıt** (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **12 müzikal işaret** ve **9 şarkı** oyunun kendi bestesi (`Tools/music_synth.py`), **7 klip sentetik** (`Tools/sfx_bank.py`), **1 ortam yatağı** CC0 |
+| **Şu anki kaynak** | 2026-09-15'ten beri karışık: **69 klip CC0 kayıt** (2026-09-28: +`bill_star`) (`Tools/sfx_ingest.py` + `Tools/sfx_picks.json`; kaynaklar `Docs/SES_KAYNAKLARI.md`), **12 müzikal işaret** ve **9 şarkı** oyunun kendi bestesi (`Tools/music_synth.py`), **7 klip sentetik** (`Tools/sfx_bank.py`), **1 ortam yatağı** CC0 |
 | **v2 seslendirme** | 2026-09-10'da banka **yeniden basıldı** (yazar: "sesleri de tekrarda sen üret ... cozy seslere yakın"). Üç şey değişti ve üçü de ÖLÇÜMLE seçildi — bkz. `sfx_dsp` §THE ROOM: **(1) oda** — her klip artık barın içinde çalıyor (sentetik dürtü yanıtı + evrişim), ve nerede çaldığı klip başına yazılı (`sfx_bank.SPACE`): UI parmağın altında, KURU; bardak tezgahta; kapı odanın karşısında. Ölçü: kuyruk enerjisi medyanı 0.159 → 0.194, `glass_down` 0.03 → 0.16, `door` 0.01 → 0.15. **(2) vurulan nesnenin fiziği** — modal partial'lar artık sıfırıncı örnekte tam genlikte başlamıyor (temas enerjiyi devrediyor, yükseğe daha hızlı) ve tizler önce ölüyor; ikisi de zil ile nesne arasındaki fark. **(3) ton** — 3 kHz'de −2.2 dB (sertlik bandı), 320 Hz'de +2 dB gövde, 6.5 kHz üstü −3.5 dB hava. Centroid medyanı 1626 → 1447 Hz. Banka 6.5 → 7.0 MB. Demo: `Tools/sfx_demo.py` |
 | **Değiştirme** | Aynı isimle WAV'ı klasöre koymak yeter, kod değişmez |
 
@@ -35,7 +35,7 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 |---|---|---|---|
 | `ambience_loop` | 31.9 s | Sürekli; bench açıkken kısılıyor | Bar yatağı: uğultu, uzak konuşma, cam şıngırtısı. **Gerçek bir kalabalık kaydı en çok bunu iyileştirir** |
 | `day_open` | 0.85 s | Perde kalkarken, gece başlarken | Kapıyı açma + neon uyanma |
-| `day_close` | 0.90 s | Gece biterken | Kepenk, ışıkların sönmesi |
+| `day_close` | 1.70 s | Gece biterken | Elektrikli kepenk iniyor: düzgün motor, son lamellerin birkaç yumuşak tıkı, yastıklı bir "güm" (2026-09-28 yazarın seçimi "Elektrikli"; Freesound 335364'ün 4. inişi + evin yastıklı yer sesi; eski balkon kepengi 3.97 s ve tizdi) |
 | `bar_closed` | 1.60 s | Kapanış anı | Ağır kapı + son nefes |
 | `last_call_bell` | 1.50 s | Son sipariş çanı | Pirinç bar zili, tek vuruş |
 | `curtain` | 0.85 s | Perde geçişi | Kadife sürtünme |
@@ -142,7 +142,8 @@ Klipler **başı-sonu sıfırda** olmalı (tık/pop olmasın).
 | `bill_slip` | 0.65 s | Fatura fişi | Kağıt çekme |
 | `printer_feed` | 0.49 s | Yazıcı besleme | Tırtıklı ilerleme |
 | `debt_alarm` | 1.10 s | Borç uyarısı | Alçak alarm |
-| `star_earn` | 0.75 s | Yıldız kazanma | Parlak yükseliş |
+| `star_earn` | 1.74 s | Merdivenin yıldızları, başarım kartı | Parlak yükseliş (Kenney saksafon jingle'ı) |
+| `bill_star` | 0.34 s | Faturaya düşen her yıldız, temas anında; yıldız başına 0 2 4 7 9 yarım ton yukarı (Si♭ Do Re Fa Sol), karede en çok bir kez | Tek glockenspiel "ding"i (2026-09-28 yazarın seçimi "Glockenspiel"; Freesound 858638, Si♭ bir oktav aşağı) |
 | `level_up` | 0.95 s | Seviye/rütbe | Daha büyük yükseliş |
 | `screen_on` | 0.30 s | Ekran açılışı (2 yer) | CRT uyanma |
 | `screen_off` | 0.28 s | Ekran kapanışı | CRT sönme |
