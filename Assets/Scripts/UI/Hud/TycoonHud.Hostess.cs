@@ -42,6 +42,10 @@ namespace LastCall.UI
         private Sprite[] _hostessTalk;                        // the talk clip for the line on the plate, or null
         private float _hostessTalkT;
         private int _hostessSaidAt = -1;                      // the plate line the talk clip was started for
+        private string _hostessPointedFor = "";               // the tour step she has already pointed on
+        private Sprite[] _hostessPoint;                       // the point clip playing now, or null
+        private float _hostessPointT;
+        private int _hostessPointFacing = 1;
 
         /// <summary>Her talk clips by look and folder, the empty answer kept too (a look without them is asked once).</summary>
         private readonly Dictionary<string, Sprite[]> _hostessClips = new Dictionary<string, Sprite[]>();
@@ -173,6 +177,31 @@ namespace LastCall.UI
         /// </summary>
         private void StepHostessTalk(float dt)
         {
+            // SHE POINTS AT WHAT THE TOUR LIGHTS (2026-09-29, ae's "point" clip: an open hand out to screen-right, the head
+            // turning with it). Once a step, as the step comes up with something lit, turned to the side it is on - the
+            // clip mirrored for the left. A look without the clip simply talks, as before.
+            if (_plateStage.StartsWith("tour:", StringComparison.Ordinal) && _plateStage != _hostessPointedFor)
+            {
+                _hostessPointedFor = _plateStage;
+                _hostessPoint = null;
+                var look = _hostessView?.Look;
+                if (look != null && _tourSpotOn && _hudRoot != null)
+                {
+                    var frames = HostessClip(look.Slug, "point");
+                    if (frames.Length > 0)
+                    {
+                        _hostessPoint = frames;
+                        _hostessPointT = 0f;
+                        _hostessPointFacing = _tourHole.center.x + _hudRoot.rect.width * 0.5f >= _hostessX ? 1 : -1;
+                    }
+                }
+            }
+            if (_hostessPoint != null && _hostessPointT < _hostessPoint.Length / PatronFps)
+            {
+                DrawHostessFrames(_hostessPoint, _hostessPointT, _hostessPointFacing);
+                _hostessPointT += dt;
+                return;
+            }
             if (_plateAt != _hostessSaidAt && _plateAt < _plateScript.Count)
             {
                 _hostessSaidAt = _plateAt;
@@ -240,6 +269,8 @@ namespace LastCall.UI
             _hostessOnStage = false;
             _hostessTalk = null;
             _hostessSaidAt = -1;
+            _hostessPoint = null;
+            _hostessPointedFor = "";
             if (_hostessView == null) return;
             _hostessView.Exiting = false;
             if (_hostessView.Body != null)

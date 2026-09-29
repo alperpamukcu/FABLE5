@@ -1970,6 +1970,7 @@ detaya doğru öğretir ekranı ve neler yapıldığını.”
   - Çerçeve görselin çizildiği yere oturur (preserveAspect kutusu ve sprite'ın sıkı ağı). Yeni hedefe 0,25 sn'de
     kayar. `Motion.Reduced` kaymayı, nabzı ve sallanmayı kaldırır.
   - Tur sırasında “içki hâlâ shaker'da” uyarısı çıkmaz, onu Roxy söylüyor.
+  - **Gösterir (2026-09-29):** bir adım bir şeyi aydınlatarak açıldığında Roxy bir kez ae'nin `point` klibini oynar (`Patron/hostess/point`; el ekranın sağına uzanır, baş o yana döner). Hedef solundaysa klip aynalanır. Klip yoksa her şey eskisi gibi konuşur. Oyunda yer tutucu klip enjekte edilerek ölçüldü (r268): saat için sola, yıldızlar için sağa döndü.
 - **Anahtarlar:** tur ilk dersi (`first_night`) ve kart dersini (`first_licence`) sessizce harcar, iki kez
   söylenmezler. `GameBootstrap.TourForNewRuns` oyunda açıktır; PlayMode fixture'ları kapatır, her play'de yeniden
   açılır. Kaydedilmiş bir bar hiç tur açmaz, çünkü kayıt şafakta yazılır. Dev fiilleri takvimi oynatınca tur da
