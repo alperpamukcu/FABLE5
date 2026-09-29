@@ -234,8 +234,6 @@ namespace LastCall.UI
             var seat = _tourSeat >= 0 && _tourSeat < _seats.Count ? _seats[_tourSeat] : null;
             switch (point)
             {
-                // The beam's pieces are asked for by NAME where the bar is still being redrawn (the bill and the music
-                // come and go with its passes), and fall back to what always stands there.
                 // THE BEAM WENT SIMPLE (2026-09-28, the bar's second pass: "sadeleştirelim ... butonları kaldır sadece
                 // yıldız gözüksün"): the clock, the money and the stars. The bill rides the money's hover card and the
                 // house's hearts and medals the stars' card; the keys left the bar (settings are Escape's).
@@ -341,16 +339,6 @@ namespace LastCall.UI
             corners[1] = target.TransformPoint(new Vector3(lo.x, hi.y, 0f));
             corners[2] = target.TransformPoint(new Vector3(hi.x, hi.y, 0f));
             corners[3] = target.TransformPoint(new Vector3(hi.x, lo.y, 0f));
-        }
-
-        /// <summary>A live piece of the top bar by name, or null.</summary>
-        private RectTransform OnTheBeam(string name)
-        {
-            var beam = FoundByName("TopBar");
-            if (beam == null) return null;
-            foreach (var rt in beam.GetComponentsInChildren<RectTransform>(false))
-                if (rt.name == name) return rt;
-            return null;
         }
 
         /// <summary>A named piece of the room the HUD holds no field for (the cellar's shutter, the tap's plate), found once

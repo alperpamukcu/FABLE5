@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Στο κλείσιμο το ενοίκιο φεύγει από εκεί. Κράτα το ταμείο πάνω από αυτό το ποσό.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Στο κλείσιμο το ενοίκιο φεύγει από εκεί. Πέρνα το ποντίκι πάνω από τα λεφτά για τον αποψινό λογαριασμό.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Μουσική και ρυθμίσεις είναι πάνω στη γωνία. Το Escape σταματά τη βραδιά.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Το Escape σταματά τη βραδιά. Εκεί μέσα είναι οι ρυθμίσεις.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Οι καρδιές λένε πώς πήγαν τα ποτά. Τα μετάλλια, πώς νιώθει ο χώρος.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Πέρνα το ποντίκι πάνω από τα αστέρια. Οι καρδιές λένε πώς πήγαν τα ποτά, τα διαμάντια πώς νιώθει ο χώρος.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Κι εκείνος ο κύκλος στο ξύλο. Βρώμικος πάγκος σού κοστίζει τα μετάλλια του χώρου.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Κι εκείνος ο κύκλος στο ξύλο. Βρώμικος πάγκος σού κοστίζει τα διαμάντια του χώρου.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

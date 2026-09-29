@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "La închidere, chiria iese înapoi de acolo. Ține casa peste ea.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "La închidere, chiria iese înapoi de acolo. Treci cu mouse-ul peste bani pentru nota din seara asta.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Muzica și setările stau sus, în colț. Esc pune seara pe pauză.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc pune seara pe pauză. Acolo sunt setările.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Inimile arată cum au mers băuturile. Medaliile, cum se simte localul.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Treci cu mouse-ul peste stele. Inimile arată cum au mers băuturile, diamantele cum se simte localul.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Și urma aia de pe lemn. O tejghea murdară te costă medaliile localului.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Și urma aia de pe lemn. O tejghea murdară te costă diamantele localului.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

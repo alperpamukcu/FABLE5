@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "No fecho, a renda sai daí outra vez. Mantém a caixa acima disso.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "No fecho, a renda sai daí outra vez. Passa o rato pelo dinheiro para veres a conta desta noite.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "A música e as definições estão lá em cima, no canto. Esc põe a noite em pausa.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc põe a noite em pausa. Lá dentro estão as definições.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Os corações dizem como as bebidas caíram. As medalhas, como se está na sala.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Passa o rato pelas estrelas. Os corações dizem como as bebidas caíram; os diamantes, como se está na sala.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "E essa marca na madeira. Um balcão sujo custa-te as medalhas da sala.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "E essa marca na madeira. Um balcão sujo custa-te os diamantes da sala.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

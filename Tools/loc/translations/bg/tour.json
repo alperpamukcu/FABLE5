@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "При затваряне наемът излиза от нея. Дръж касата над тази сума.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "При затваряне наемът излиза от нея. Задръж мишката над парите за сметката тази вечер.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Музиката и настройките са горе в ъгъла. Escape слага нощта на пауза.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Escape слага нощта на пауза. Настройките са там.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Сърцата показват как са минали питиетата. Медалите — как се чувства залата.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Задръж мишката над звездите. Сърцата са как са минали питиетата, диамантите — как се чувства залата.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "И онзи кръг на дървото. Мръсният плот ти струва медалите на залата.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "И онзи кръг на дървото. Мръсният плот ти струва диамантите на залата.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

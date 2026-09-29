@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Sulkiessa vuokra lähtee sieltä takaisin. Pidä kassa sen yläpuolella.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Sulkiessa vuokra lähtee sieltä takaisin. Vie hiiri rahojen päälle, niin näet illan laskun.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Musiikki ja asetukset ovat ylhäällä nurkassa. Escape keskeyttää illan.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Escape keskeyttää illan. Sieltä löytyvät asetukset.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Sydämet kertovat, miten juomat maistuivat. Mitalit, miltä sali tuntuu.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Vie hiiri tähtien päälle. Sydämet kertovat, miten juomat maistuivat, timantit, miltä sali tuntuu.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Ja tuo rengas puussa. Likainen tiski maksaa salin mitalit.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Ja tuo rengas puussa. Likainen tiski maksaa salin timantit.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

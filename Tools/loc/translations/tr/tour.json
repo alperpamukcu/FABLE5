@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Kapanışta kira oradan geri çıkar. Kasayı bunun üstünde tut.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Kapanışta kira oradan geri çıkar. Bu gecenin faturası için imleci paranın üstüne getir.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Müzik ve ayarlar yukarıda, köşede. Escape geceyi duraklatır.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Escape geceyi duraklatır. Ayarlar da orada.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Kalpler içkilerin nasıl beğenildiğini gösterir. Madalyalar salonun havasını.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "İmleci yıldızların üstüne getir. Kalpler içkilerin nasıl beğenildiğini, elmaslar salonun havasını gösterir.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Bir de tahtadaki o halka. Kirli tezgâh sana salonun madalyalarına mal olur.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Bir de tahtadaki o halka. Kirli tezgâh sana salonun elmaslarına mal olur.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "打烊时房租要从这里拿走。收银机里的钱得比它多。",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "打烊时房租要从这里拿走。把鼠标移到钱上，就能看到今晚的账单。",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "音乐和设置在上面的角落里。按 Esc 可以暂停这一晚。",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "按 Esc 暂停这一晚。设置也在里面。",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "爱心看酒好不好喝，奖章看店里舒不舒服。",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "把鼠标移到星星上。爱心看酒好不好喝，钻石看店里舒不舒服。",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "还有木台面上那道杯印。吧台脏了，店里的奖章就会掉。",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "还有木台面上那道杯印。吧台脏了，店里的钻石就会掉。",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

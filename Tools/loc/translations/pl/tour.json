@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Przy zamknięciu czynsz z niej wychodzi. Trzymaj kasę powyżej tej kwoty.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Przy zamknięciu czynsz z niej wychodzi. Najedź myszą na pieniądze, a zobaczysz dzisiejszy rachunek.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Muzyka i ustawienia są w rogu na górze. Esc wstrzymuje noc.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc wstrzymuje noc. Tam są ustawienia.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Serca mówią, jak smakowały drinki. Medale — jak czuje się sala.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Najedź myszą na gwiazdki. Serca mówią, jak smakowały drinki, diamenty — jak czuje się sala.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "I ten ślad po szkle na blacie. Brudna lada odbiera sali medale.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "I ten ślad po szkle na blacie. Brudna lada odbiera sali diamenty.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

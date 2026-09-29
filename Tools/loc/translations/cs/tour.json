@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Při zavírání z ní zase odejde nájem. Drž kasu nad ním.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Při zavírání z ní zase odejde nájem. Najeď myší na peníze a uvidíš dnešní účet.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Hudba a nastavení jsou nahoře v rohu. Esc noc pozastaví.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc noc pozastaví. Najdeš tam i nastavení.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Srdce ukazují, jak chutnaly drinky. Medaile, jak se v lokále sedí.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Najeď myší na hvězdy. Srdce ukazují, jak chutnaly drinky, diamanty, jak se v lokále sedí.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "A ten kroužek na dřevě. Špinavý pult tě stojí medaile lokálu.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "A ten kroužek na dřevě. Špinavý pult tě stojí diamanty lokálu.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

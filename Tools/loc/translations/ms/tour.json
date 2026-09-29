@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Semasa tutup, sewa keluar semula dari situ. Pastikan laci duit melebihinya.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Semasa tutup, sewa keluar semula dari situ. Halakan tetikus pada wang untuk bil malam ini.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Muzik dan tetapan ada di penjuru atas. Esc menjeda malam.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc menjeda malam. Tetapan ada di situ.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Hati tunjuk bagaimana minuman diterima. Pingat tunjuk selesanya premis.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Halakan tetikus pada bintang. Hati tunjuk bagaimana minuman diterima, berlian tunjuk selesanya premis.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Dan kesan bulatan pada kayu itu. Kaunter kotor buat premis hilang pingat.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Dan kesan bulatan pada kayu itu. Kaunter kotor buat premis hilang berlian.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

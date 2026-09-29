@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Alla chiusura l'affitto esce di lì. Tieni la cassa sopra quella cifra.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Alla chiusura l'affitto esce di lì. Passa il mouse sui soldi per il conto della serata.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Musica e impostazioni stanno lassù nell'angolo. Esc mette in pausa la serata.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc mette in pausa la serata. Lì dentro ci sono le impostazioni.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "I cuori dicono come sono andati giù i drink. Le medaglie, come si sta in sala.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Passa il mouse sulle stelle. I cuori dicono come sono andati giù i drink, i diamanti come si sta in sala.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "E quell'alone sul legno. Un bancone sporco ti costa le medaglie della sala.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "E quell'alone sul legno. Un bancone sporco ti costa i diamanti della sala.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",

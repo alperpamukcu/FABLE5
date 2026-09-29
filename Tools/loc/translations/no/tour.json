@@ -7,8 +7,8 @@
     },
     {
       "key": "data.tour.bill.say.0",
-      "text": "Når vi stenger, går husleia ut av den igjen. Hold kassa over det.",
-      "src": "At closing the rent comes back out of it. Keep the till above that."
+      "text": "Når vi stenger, går husleia ut av den igjen. Hold musa over pengene for kveldens regning.",
+      "src": "At closing the rent comes back out of it. Hover over the money for tonight's bill."
     },
     {
       "key": "data.tour.bill.say.1",
@@ -67,8 +67,8 @@
     },
     {
       "key": "data.tour.corner.say.0",
-      "text": "Musikk og innstillinger bor oppe i hjørnet. Esc setter kvelden på pause.",
-      "src": "Music and settings live up in the corner. Escape pauses the night."
+      "text": "Esc setter kvelden på pause. Der finner du innstillingene.",
+      "src": "Escape pauses the night. The settings are in there."
     },
     {
       "key": "data.tour.doors.say.0",
@@ -107,8 +107,8 @@
     },
     {
       "key": "data.tour.house.say.0",
-      "text": "Hjertene viser hvordan drinkene gikk ned. Medaljene, hvordan lokalet føles.",
-      "src": "Hearts are how the drinks went down. Medals are how the room feels."
+      "text": "Hold musa over stjernene. Hjertene er hvordan drinkene gikk ned, diamantene hvordan lokalet føles.",
+      "src": "Hover over the stars. Hearts are how the drinks went down, diamonds how the room feels."
     },
     {
       "key": "data.tour.house.say.1",
@@ -202,8 +202,8 @@
     },
     {
       "key": "data.tour.wipe.say.0",
-      "text": "Og den ringen på treverket. En skitten disk koster deg lokalets medaljer.",
-      "src": "And that ring on the wood. A dirty counter costs you the room's medals."
+      "text": "Og den ringen på treverket. En skitten disk koster deg lokalets diamanter.",
+      "src": "And that ring on the wood. A dirty counter costs you the room's diamonds."
     },
     {
       "key": "data.tour.wipe.say.1",
