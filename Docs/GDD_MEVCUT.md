@@ -1996,6 +1996,30 @@ boyutunu büyüt”; ve bira tezgâhında PINT/HEAD çiftinin biranın düşüş
 - Tezgâh görüntü testinin referansı (`bench.png`) yeniden onaylandı. Fark yalnız gösterge bölgesindeydi; iki
   koşu, ikincisi geçti.
 
+### 9.150 · Sekizinci tur odası: meyhane tavanı ve zemini, baraka tavanı, globe'un yerine Deco fener (2026-09-29)
+
+Yazar: “L1 · zemin 0 / L1 · tavan 0 / L2 · tavan 0 / lamba 1 — Sadece bunlar okay. Devam etme layout üretmeye.”
+Seçim sayfası: `Docs/reports/room_layouts8` (beş düzen gerçek odada fotoğraflandı). Seçilmeyen düzenler oyuna
+girmedi, sekizinci turun üretimi burada bitti.
+
+- **Üç yeni basamak** (`fixtures.json`, `Tools/room8_ship.py`):
+  - `ceil8_dive` “Plank Ceiling”: lekeli koyu tahta, tavan merdiveninin yeni İLK basamağı ($20, 0 yıldız, konfor
+    0,10, dolum +%1).
+  - `floor8_dive` “Worn Checker”: köşeleri kırık krem-kahve dama, zemin merdiveninin yeni ilk basamağı ($20,
+    0 yıldız, konfor 0,10, sabır +%3).
+  - `ceil8_shack` “Driftwood Slats”: koyu kirişlerin üstünde açık renk çıtalar, Deco ile Palmiye tavanlarının
+    arasında ($52, 0,5 yıldız, konfor 0,26, dolum +%5).
+  - Merdivenler dosya sırasıyla yeniden numaralandı (tavan 10, zemin 9 basamak). Fiyat, konfor ve buff yine
+    basamakla artıyor; sevk betiği bunu doğruluyor.
+- **Globe'un yerine Deco fener.** Yazar en baştan “görseldeki ışık yerine” demişti. Satır `counter_lamps_globe`
+  kimliğini, fiyatını ve yıldızını korur, çünkü globe'u almış kayıtlı bir bar feneri almış sayılır. Değişenler çizim
+  (`fx_counter_lamps_deco`: bakır halkalar, buzlu oluklu cam), ad (“Deco Lantern Pendants”) ve yazı. Işığın kaynağı
+  camın ölçülen yerinden çıkar (`BulbOf`). `fx_counter_lamps_globe.png` silindi.
+- **Döşemelerin çerçevesi kesildi.** PixelLab bazı döşemelere 1–5 piksellik tek renkli çerçeve bırakıyor. Kesilmezse
+  odada her döşemede bir dikiş olarak tekrarlanır (yedinci turun dersi). Arka duvar kendi basamağının levhasına
+  oturtuldu.
+- `FittingBuffDataTests` katalog sayısını 91'e sabitler.
+
 ### 9.149 · Yeni fiilin dersi ilk kullanıldığı anda başlar; tur yalnız işaret ettiğine dokundurur (2026-09-29)
 
 Yazar: “1. görselde hover'i tutturabildiğini anlatsın.” ve “Öğreticiyi detaylandıralım. Aynı zamanda oyuna yeni oynanış

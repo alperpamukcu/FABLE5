@@ -408,6 +408,21 @@
       "buffPct": 10
     },
     {
+      "id": "ceil8_dive",
+      "name": "Plank Ceiling",
+      "slot": "ceiling",
+      "price": 20,
+      "comfort": 0.1,
+      "stars": 0,
+      "flavor": "Dark boards overhead with the old water stains still on them. It keeps the rain out, most nights.",
+      "sprite": "fx_ceil8_dive",
+      "swatch": "fx_ceil8_dive_swatch",
+      "level": 1,
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 1
+    },
+    {
       "id": "ceil_beams",
       "name": "Beamed Ceiling",
       "slot": "ceiling",
@@ -417,7 +432,7 @@
       "flavor": "Dark beams across the plaster. The room gets a lid, and the lamps something to throw light at.",
       "sprite": "fx_ceil_beams",
       "swatch": "fx_ceil_beams_swatch",
-      "level": 1,
+      "level": 2,
       "group": "walls",
       "buff": "refill",
       "buffPct": 2
@@ -432,10 +447,25 @@
       "flavor": "Stepped cream mouldings in long panels. It looks like the ceiling of somewhere that charges more.",
       "sprite": "fx_ceil_deco",
       "swatch": "fx_ceil_deco_swatch",
-      "level": 2,
+      "level": 3,
       "group": "walls",
       "buff": "refill",
       "buffPct": 4
+    },
+    {
+      "id": "ceil8_shack",
+      "name": "Driftwood Slats",
+      "slot": "ceiling",
+      "price": 52,
+      "comfort": 0.26,
+      "stars": 0.5,
+      "flavor": "Pale slats laid over dark rafters, like the roof of a shack on the sand. The salt air comes free.",
+      "sprite": "fx_ceil8_shack",
+      "swatch": "fx_ceil8_shack_swatch",
+      "level": 4,
+      "group": "walls",
+      "buff": "refill",
+      "buffPct": 5
     },
     {
       "id": "ceil_palm",
@@ -447,7 +477,7 @@
       "flavor": "Fronds painted overhead, as if the bar were under a tree. The smoke drifts through them.",
       "sprite": "fx_ceil_palm",
       "swatch": "fx_ceil_palm_swatch",
-      "level": 3,
+      "level": 5,
       "group": "walls",
       "buff": "refill",
       "buffPct": 6
@@ -462,7 +492,7 @@
       "flavor": "Hand-swirled plaster in warm white. Every lamp in the room looks softer under it.",
       "sprite": "fx_ceil_stucco",
       "swatch": "fx_ceil_stucco_swatch",
-      "level": 4,
+      "level": 6,
       "group": "walls",
       "buff": "refill",
       "buffPct": 8
@@ -477,7 +507,7 @@
       "flavor": "Square coffers, each with a pink rosette at its heart. A ceiling you notice on your second drink.",
       "sprite": "fx_ceil6_grid",
       "swatch": "fx_ceil6_grid_swatch",
-      "level": 5,
+      "level": 7,
       "group": "walls",
       "buff": "refill",
       "buffPct": 11
@@ -492,7 +522,7 @@
       "flavor": "Coral and magenta rays from the middle of the room outward. The whole place leans towards the bar.",
       "sprite": "fx_ceil6_ray",
       "swatch": "fx_ceil6_ray_swatch",
-      "level": 6,
+      "level": 8,
       "group": "walls",
       "buff": "refill",
       "buffPct": 14
@@ -507,7 +537,7 @@
       "flavor": "Night blue with gold stars pricked through it. Closing time outside, happy hour in here.",
       "sprite": "fx_ceil6_stars",
       "swatch": "fx_ceil6_stars_swatch",
-      "level": 7,
+      "level": 9,
       "group": "walls",
       "buff": "refill",
       "buffPct": 17
@@ -522,7 +552,7 @@
       "flavor": "A painted evening overhead, pink and lilac clouds on peach. The sun never quite goes down in here.",
       "sprite": "fx_ceil7_dusk",
       "swatch": "fx_ceil7_dusk_swatch",
-      "level": 8,
+      "level": 10,
       "group": "walls",
       "buff": "refill",
       "buffPct": 20
@@ -888,12 +918,12 @@
     },
     {
       "id": "counter_lamps_globe",
-      "name": "Opal Globe Pendants",
+      "name": "Deco Lantern Pendants",
       "slot": "counter_lamps",
       "price": 183,
       "stars": 3.0,
-      "flavor": "Milk-glass globes on brass stems. Everyone at the bar looks a little better, and they know it.",
-      "sprite": "fx_counter_lamps_globe",
+      "flavor": "Copper-ringed lanterns of frosted fluted glass, stepped like a hotel on Ocean Drive. The light comes down soft and even, and nobody at the bar looks tired under it.",
+      "sprite": "fx_counter_lamps_deco",
       "lightR": 1.0,
       "lightG": 0.88,
       "lightB": 0.68,
@@ -1116,6 +1146,21 @@
       "buffPct": 12
     },
     {
+      "id": "floor8_dive",
+      "name": "Worn Checker",
+      "slot": "floor",
+      "price": 20,
+      "comfort": 0.1,
+      "stars": 0,
+      "flavor": "Cream and brown squares, chipped at every corner. Somebody danced on this floor a long time ago.",
+      "sprite": "fx_floor8_dive",
+      "swatch": "fx_floor8_dive_swatch",
+      "level": 1,
+      "group": "furniture",
+      "buff": "grace",
+      "buffPct": 3
+    },
+    {
       "id": "floor_terra",
       "name": "Terracotta",
       "slot": "floor",
@@ -1125,7 +1170,7 @@
       "flavor": "Warm clay tiles over the boards. It hides a spilled drink better than wood ever did.",
       "sprite": "fx_floor_terra",
       "swatch": "fx_floor_terra_swatch",
-      "level": 1,
+      "level": 2,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 5
@@ -1140,7 +1185,7 @@
       "flavor": "Plum carpet with a busy pattern, the kind that forgives everything. The room goes quiet underfoot.",
       "sprite": "fx_floor_carpet",
       "swatch": "fx_floor_carpet_swatch",
-      "level": 2,
+      "level": 3,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 10
@@ -1155,7 +1200,7 @@
       "flavor": "Cold white stone with grey veins. Heels sound expensive on it.",
       "sprite": "fx_floor_marble",
       "swatch": "fx_floor_marble_swatch",
-      "level": 3,
+      "level": 4,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 15
@@ -1170,7 +1215,7 @@
       "flavor": "Black and white squares running to the back wall. Every diner in every film had one.",
       "sprite": "fx_floor_check",
       "swatch": "fx_floor_check_swatch",
-      "level": 4,
+      "level": 5,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 20
@@ -1185,7 +1230,7 @@
       "flavor": "Dark tiles lined in pink and cyan, straight out of a video game. Walking to the bar feels like level one.",
       "sprite": "fx_floor6_grid",
       "swatch": "fx_floor6_grid_swatch",
-      "level": 5,
+      "level": 6,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 30
@@ -1200,7 +1245,7 @@
       "flavor": "Chips of coral, teal and cream set in polished cream. A hotel lobby floor for a room that is not one.",
       "sprite": "fx_floor6_chip",
       "swatch": "fx_floor6_chip_swatch",
-      "level": 6,
+      "level": 7,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 40
@@ -1215,7 +1260,7 @@
       "flavor": "Teal waves rolling across the whole floor. The tide came in and stayed for a drink.",
       "sprite": "fx_floor6_wave",
       "swatch": "fx_floor6_wave_swatch",
-      "level": 7,
+      "level": 8,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 50
@@ -1230,7 +1275,7 @@
       "flavor": "Big pink slabs with white veins, polished matte. A floor that makes the drinks look cheaper than they are.",
       "sprite": "fx_floor7_marble",
       "swatch": "fx_floor7_marble_swatch",
-      "level": 8,
+      "level": 9,
       "group": "furniture",
       "buff": "grace",
       "buffPct": 60

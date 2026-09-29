@@ -149,7 +149,8 @@ namespace LastCall.Tests
         public void ShippedFixtures_EveryRowNamesItsKind_OneKindPerSlot()
         {
             var catalogue = Shipped().Fixtures;
-            Assert.AreEqual(88, catalogue.Count, "the catalogue this was written against; a new row names its kind too");
+            // 91 since 2026-09-29: round eight's two ceilings and one floor (the lantern took the globe's own row).
+            Assert.AreEqual(91, catalogue.Count, "the catalogue this was written against; a new row names its kind too");
             var seen = new Dictionary<string, string>();
             foreach (var f in catalogue)
             {
