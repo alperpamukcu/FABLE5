@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "O TEJ GRZE",
+  "meet_roxy": "POZNAJ ROXY",
+  "read_the_card": "LEGITYMACJA",
+  "shake_stir_pour": "MIESZAJ I NALEWAJ",
+  "the_tap": "NALEWAK",
+  "the_crowd": "GOŚCIE",
+  "one_night": "OD 18:00 DO 2:00",
+  "build_the_house": "URZĄDŹ LOKAL",
+  "features": "W MENU"
+ },
+ "hook": "[b]Neonowy tycoon z barem koktajlowym na plaży w Miami.[/b] Nikt ci nie powie, czego chce. Przeczytaj legitymację, nalej jak trzeba i wyłap dzieciaka z cudzym dokumentem, zanim go obsłużysz.",
+ "roxy_quote": "Jesteś, sugar. Drzwi otwieramy o szóstej.",
+ "roxy": "Roxy Vale rządzi salą w Malibu Club, a od dziś bar jest twój. Pierwszej nocy cię oprowadzi, a potem da ci swój notes: spisany łańcuch zleceń, jedno po drugim, w każdej rozgrywce taki sam. Wypełnij go, a klub będzie twój nie tylko z nazwy.",
+ "card_1": "[b]Nikt ci nie powie, czego chce.[/b] Kliknij stołek i przeczytaj legitymację. Imię, wiek i drink, po który przyszli, są tylko na legitymacji.",
+ "card_2": "Od drugiej nocy legitymacje zaczynają kłamać. Część gości nie ma dwudziestu lat, a połowa z nich nosi cudzy dokument: flaga nie z ich kraju, twarz nie ich, legitymacja jak narysowana. WYPROŚ pokazuje im drzwi. Nalejesz dzieciakowi, płacisz mandat. Wyprosisz uczciwą twarz, tracisz gościa.",
+ "shake": [
+  [
+   "54 przepisy",
+   ", każdy z własnymi proporcjami. Przechyl butelkę, patrz na shaker i trafiaj każdą część w jej pole."
+  ],
+  [
+   "Wstrząśnięte, mieszane albo budowane.",
+   " Decyduje przepis, a sędzia odróżni mieszane Martini od wstrząśniętego."
+  ],
+  [
+   "Lód, skórki i rantowanie.",
+   " Za drobiazgi dają napiwki."
+  ],
+  [
+   "Naucz się na pamięć.",
+   " Nalej drink idealnie, a notes zapamięta dokładne proporcje do końca rozgrywki."
+  ]
+ ],
+ "bottles": "34 marki butelek w sklepie, od domowego ginu po leżakowany rum. Tania butelka daje słabszy drink, a niektóre przepisy otwierają się tylko dla porządnego trunku.",
+ "tap": "Piwo to osobna sztuka. Nigdy nie trafia do shakera. Pochyl szklankę, wyprostuj ją i nalej pianę w wyznaczony pas.",
+ "crowd": "Ponad czterdzieści twarzy od Miami po Seul, każda z imieniem, wiekiem i rodzinnym miastem. Patrz na ich twarze, bo to jest recenzja. Stali bywalcy wracają, pamiętają cię i dają napiwki za tempo, fach i dobrze nalane szkło. Gość, który czeka za długo, wychodzi jak burza.",
+ "night": "Noc trwa od szóstej wieczorem do drugiej w nocy. Przy zamknięciu czynsz wychodzi z kasy, przychodzi rachunek nocy, a potem otwiera się sklep: butelki, strony przepisów i wyposażenie. Trzy noce z rzędu pod kreską i sala znów zgaśnie.",
+ "house": "Gwiazdki to, co mówi o tobie ulica, i są dwóch rodzajów. [b]Serca[/b] mówią, jak smakowały drinki. [b]Diamenty[/b] — jak czuje się sala. Noc liczy się według niższej z tych dwóch, więc pilnuj obu. Kupuj obrazy, rośliny, neony, stoliki i lepszy zlew. Każdy element wyposażenia wzmacnia jedną rzecz, dopóki jest zamontowany. I trzymaj ladę w czystości: ślad po szkle na blacie kosztuje cię salę.",
+ "features": [
+  "Tycoon z barem koktajlowym w pixel arcie, na neonowej plaży w Miami",
+  "Legitymacje, które ukrywają zamówienie, do tego niepełnoletni goście i pożyczone dokumenty",
+  "54 przepisy, 34 marki butelek i piwo z beczki z prawdziwą pianą",
+  "Notes Roxy: spisany łańcuch 18 zleceń, w każdej rozgrywce taki sam",
+  "91 elementów wyposażenia w 22 miejscach i dwie oceny w jednym rzędzie gwiazdek",
+  "48 osiągnięć, rankingi Steam, Steam Timeline i Steam Cloud",
+  "Gra w 29 językach, samą myszką"
+ ]
+}

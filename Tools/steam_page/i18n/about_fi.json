@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "TIETOA PELISTÄ",
+  "meet_roxy": "TAPAA ROXY",
+  "read_the_card": "LUE KORTTI",
+  "shake_stir_pour": "SEKOITA JA KAADA",
+  "the_tap": "HANA",
+  "the_crowd": "ASIAKKAAT",
+  "one_night": "KUUDESTA KAHTEEN",
+  "build_the_house": "SISUSTA SALI",
+  "features": "LISTALLA"
+ },
+ "hook": "[b]Neonvärinen cocktailbaari-tycoon Miamin rannalla.[/b] Kukaan ei kerro, mitä haluaa. Lue henkkarit, kaada oikein ja bongaa lainapapereilla liikkuva nuori ennen kuin tarjoilet hänelle.",
+ "roxy_quote": "Siinähän sinä olet, sugar. Ovet aukeavat kuudelta.",
+ "roxy": "Roxy Vale pyörittää salia Malibu Clubissa, ja tästä illasta lähtien baari on sinun. Ensimmäisenä iltana hän näyttää sinulle paikat ja antaa sitten kirjansa: kirjoitetun ketjun töitä, yksi toisensa jälkeen, joka kerta samat. Täytä se, niin klubi on sinun muutenkin kuin nimellisesti.",
+ "card_1": "[b]Kukaan ei kerro, mitä haluaa.[/b] Klikkaa jakkaraa ja lue kortti. Nimi, ikä ja juoma, jonka takia he tulivat, löytyvät aina vain henkkareista.",
+ "card_2": "Toisesta illasta alkaen kortit alkavat valehdella. Osa asiakkaista on alle kaksikymppisiä, ja puolet heistä kantaa jonkun toisen papereita: väärän maan lippu, vieraat kasvot, piirretyn näköinen kortti. ULOS näyttää heille oven. Kaada lapselle, niin maksat sakot. Heitä rehellinen ulos, niin menetät asiakkaan.",
+ "shake": [
+  [
+   "54 reseptiä",
+   ", jokaisella oma suhteensa. Kallista pulloa, seuraa shakeria ja osu jokaisella osalla omaan ruutuunsa."
+  ],
+  [
+   "Ravistettu, sekoitettu tai rakennettu.",
+   " Resepti päättää, ja tuomari erottaa sekoitetun Martinin ravistetusta."
+  ],
+  [
+   "Jäät, kuoret ja huurteet.",
+   " Tippiä annetaan pikkujutuista."
+  ],
+  [
+   "Opettele ulkoa.",
+   " Kaada juoma napakymppiin, niin kirja muistaa tarkan kaadon koko loppupelin ajan."
+  ]
+ ],
+ "bottles": "Kaupassa on 34 pullomerkkiä talon ginistä kypsytettyyn rommiin. Halpa pullo tekee heikomman juoman, ja osa resepteistä aukeaa vain hyvälle tavaralle.",
+ "tap": "Olut on oma taitonsa. Se ei käy lähelläkään shakeria. Kallista lasia, oikaise se ja osuta vaahto oikealle kaistalle.",
+ "crowd": "Yli neljäkymmentä kasvoa Miamista Souliin, jokaisella nimi, ikä ja kotikaupunki. Katso kasvoja, sillä ne ovat arvio. Kanta-asiakkaat palaavat, muistavat sinut ja tippaavat nopeudesta, taidosta ja hyvästä täytöstä. Liian kauan odottanut asiakas lähtee kuin myrsky.",
+ "night": "Ilta kestää kuudesta kahteen. Sulkiessa vuokra lähtee kassasta, illan kuitti tulee esiin ja kauppa aukeaa: pullot, reseptisivut ja kalusteet. Kolme iltaa putkeen miinuksella, niin sali pimenee taas.",
+ "house": "Tähdet ovat se, mitä katu sinusta sanoo, ja niitä on kahta lajia. [b]Sydämet[/b] kertovat, miten juomat maistuivat. [b]Timantit[/b] kertovat, miltä sali tuntuu. Ilta kirjataan kahdesta alemman mukaan, joten pidä huoli molemmista. Osta tauluja, kasveja, neonia, pöytiä ja parempi allas. Jokainen kaluste vahvistaa yhtä asiaa niin kauan kuin se on paikallaan. Ja pidä tiski puhtaana: rengas puussa maksaa sinulle salin.",
+ "features": [
+  "Cocktailbaari-tycoon pikseligrafiikalla, neonvärisellä Miamin rannalla",
+  "Henkkarit, jotka kätkevät tilauksen, sekä alaikäiset asiakkaat ja lainapaperit",
+  "54 reseptiä, 34 pullomerkkiä ja hanaolutta oikealla vaahdolla",
+  "Roxyn kirja: kirjoitettu 18 työn ketju, joka kerta sama",
+  "91 kalustetta 22 paikkaan ja kaksi arviota samalla tähtirivillä",
+  "48 saavutusta, Steamin tulostaulukot, Steam Timeline ja Steam Cloud",
+  "Pelattavissa 29 kielellä pelkällä hiirellä"
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "titles": {
+  "about": "À PROPOS DU JEU",
+  "meet_roxy": "VOICI ROXY",
+  "read_the_card": "LIS LA CARTE",
+  "shake_stir_pour": "SECOUER, REMUER",
+  "the_tap": "LA TIREUSE",
+  "the_crowd": "LA CLIENTÈLE",
+  "one_night": "DE 18 H À 2 H",
+  "build_the_house": "MONTE TA SALLE",
+  "features": "À LA CARTE"
+ },
+ "hook": "[b]Un tycoon de bar à cocktails néon sur une plage de Miami.[/b] Personne ne te dit ce qu'il veut. Lis la carte, sers juste, et repère le gamin à la carte empruntée avant de le servir.",
+ "roxy_quote": "Te voilà, sugar. On ouvre à six heures.",
+ "roxy": "Roxy Vale tient la salle du Malibu Club, et dès ce soir, le bar est à toi. Elle te fait visiter le premier soir, puis te confie son livre : une suite de missions écrites, l'une après l'autre, les mêmes à chaque partie. Remplis-le, et le club sera à toi pour de vrai, pas seulement sur le papier.",
+ "card_1": "[b]Personne ne te dit ce qu'il veut.[/b] Clique sur un tabouret et lis la carte. Le nom, l'âge et ce qu'il est venu boire ne vivent que sur la carte d'identité.",
+ "card_2": "Dès le deuxième soir, les cartes se mettent à mentir. Certains clients ont moins de vingt ans, et la moitié d'entre eux portent la carte de quelqu'un d'autre : un drapeau qui n'est pas son pays, un visage qui n'est pas le sien, une carte dessinée. DEHORS le met à la porte. Sers un gamin et tu paies l'amende. Chasse un visage honnête et tu perds un client.",
+ "shake": [
+  ["54 recettes", ", chacune avec ses proportions. Incline la bouteille, surveille le shaker, fais tomber chaque dose dans sa case."],
+  ["Au shaker, à la cuillère ou monté.", " La recette décide, et le juge sait distinguer un Martini remué d'un Martini secoué."],
+  ["Glace, zestes et bords givrés.", " Les petits riens, ça paie en pourboires."],
+  ["Apprends-le par cœur.", " Réussis un verre pile dessus, et le livre garde le dosage exact pour le reste de la partie."]
+ ],
+ "bottles": "34 marques de bouteilles sur le marché, du gin maison au rhum vieux. Une bouteille bon marché donne un verre moins bon, et certaines recettes ne s'ouvrent qu'avec les bonnes bouteilles.",
+ "tap": "La bière, c'est un métier à part. Elle ne s'approche jamais du shaker. Incline le verre, redresse-le, et pose la mousse dans la bande.",
+ "crowd": "Plus de quarante visages, de Miami à Séoul, chacun avec un nom, un âge et une ville natale. Regarde leur visage : c'est la critique. Les habitués reviennent, se souviennent de toi et laissent un pourboire pour la vitesse, le geste et un verre bien rempli. Un client qui attend trop repart comme un orage.",
+ "night": "Une soirée va de six heures du soir à deux heures du matin. À la fermeture, le loyer sort de la caisse, la note de la soirée s'affiche et le marché ouvre : bouteilles, pages de recettes et aménagements. Trois soirées de suite dans le rouge, et la salle s'éteint de nouveau.",
+ "house": "Les étoiles, c'est ce que la rue dit de toi, et il y en a de deux sortes. Les [b]cœurs[/b], c'est comment les verres ont plu. Les [b]diamants[/b], le confort de la salle. La soirée est notée sur la plus basse des deux : soigne les deux. Achète des tableaux, des plantes, du néon, des tables et un meilleur évier. Chaque aménagement renforce une chose tant qu'il est installé. Et garde le comptoir propre : une auréole sur le bois te coûte la salle.",
+ "features": [
+  "Un tycoon de bar à cocktails en pixel art, sur une plage néon de Miami",
+  "Des cartes d'identité qui cachent la commande, des clients mineurs et des cartes empruntées",
+  "54 recettes, 34 marques de bouteilles et de la bière pression avec une vraie mousse",
+  "Le livre de Roxy : une suite écrite de 18 missions, la même à chaque partie",
+  "91 aménagements sur 22 emplacements, et deux notes pour une seule rangée d'étoiles",
+  "48 succès, classements Steam, Steam Timeline et Steam Cloud",
+  "Jouable en 29 langues, à la souris seule"
+ ]
+}

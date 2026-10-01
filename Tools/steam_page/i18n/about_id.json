@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "TENTANG GAME INI",
+  "meet_roxy": "KENALI ROXY",
+  "read_the_card": "BACA KARTUNYA",
+  "shake_stir_pour": "KOCOK ADUK TUANG",
+  "the_tap": "MENARA BIR",
+  "the_crowd": "PARA TAMU",
+  "one_night": "DARI ENAM KE DUA",
+  "build_the_house": "BANGUN BARMU",
+  "features": "ADA DI MENU"
+ },
+ "hook": "[b]Game tycoon bar koktail neon di pantai Miami.[/b] Tak ada yang bilang maunya apa. Baca kartu identitasnya, tuang dengan benar, dan kenali bocah yang membawa kartu pinjaman sebelum kamu melayaninya.",
+ "roxy_quote": "Nah, ini dia, sugar. Pintu buka jam enam.",
+ "roxy": "Roxy Vale mengatur lantai Malibu Club, dan mulai malam ini barnya milikmu. Di malam pertama dia mengajakmu berkeliling, lalu menyerahkan bukunya: rangkaian tugas tertulis, satu demi satu, sama di setiap permainan. Selesaikan, dan klub ini milikmu bukan cuma di atas kertas.",
+ "card_1": "[b]Tak ada yang bilang maunya apa.[/b] Klik kursinya dan baca kartunya. Nama, umur, dan minuman yang mereka cari cuma ada di kartu identitas.",
+ "card_2": "Mulai malam kedua, kartunya mulai berbohong. Sebagian tamu di bawah dua puluh tahun, dan separuh dari mereka membawa kartu orang lain: bendera yang bukan negaranya, wajah yang bukan wajahnya, kartu yang tampak digambar. USIR menunjukkan pintu keluar. Tuangkan untuk anak kecil, kamu bayar denda. Usir orang jujur, kamu kehilangan tamu.",
+ "shake": [
+  [
+   "54 resep",
+   ", masing-masing dengan takarannya sendiri. Miringkan botol, awasi shaker, daratkan tiap bagian di kotaknya."
+  ],
+  [
+   "Dikocok, diaduk, atau dibangun.",
+   " Resep yang menentukan, dan juri tahu beda Martini yang diaduk dan yang dikocok."
+  ],
+  [
+   "Es, kulit jeruk, dan bibir gelas.",
+   " Tamu kasih tip untuk hal kecil."
+  ],
+  [
+   "Hafalkan.",
+   " Tuang satu minuman dengan pas, dan buku menyimpan takaran persisnya sampai permainan selesai."
+  ]
+ ],
+ "bottles": "34 merek botol di pasar, dari gin andalan bar sampai rum tua. Botol murah menghasilkan minuman yang kurang, dan beberapa resep hanya terbuka untuk barang bagus.",
+ "tap": "Bir punya keahliannya sendiri. Bir tak pernah mendekati shaker. Miringkan gelas, tegakkan, dan jatuhkan busanya tepat di zonanya.",
+ "crowd": "Lebih dari empat puluh wajah dari Miami sampai Seoul, masing-masing dengan nama, umur, dan kota asal. Perhatikan wajah mereka, karena itulah ulasannya. Pelanggan tetap kembali, ingat kamu, dan kasih tip untuk kecepatan, keahlian, dan gelas yang terisi pas. Tamu yang menunggu terlalu lama pergi seperti badai.",
+ "night": "Satu malam berjalan dari jam enam sampai jam dua. Saat tutup, uang sewa keluar dari kasir, nota malam ini muncul, dan pasar dibuka: botol, halaman resep, dan perabot. Tutup tiga malam berturut-turut dalam keadaan rugi, dan tempat ini gelap lagi.",
+ "house": "Bintang adalah kata orang di jalan tentangmu, dan ada dua jenis. [b]Hati[/b]: bagaimana minumannya diterima. [b]Berlian[/b]: senyaman apa ruangannya. Malam dinilai dari yang lebih rendah, jadi jaga keduanya. Beli lukisan, tanaman, neon, meja, dan wastafel yang lebih baik. Tiap perabot memperkuat satu hal selama terpasang. Lalu jaga meja bar tetap bersih: bekas lingkaran di kayu bikin ruangan kehilangan berlian.",
+ "features": [
+  "Tycoon bar koktail berseni piksel di pantai Miami yang bermandikan neon",
+  "Kartu identitas yang menyembunyikan pesanan, plus tamu di bawah umur dan kartu pinjaman",
+  "54 resep, 34 merek botol, dan bir draf dengan busa sungguhan",
+  "Buku Roxy: rangkaian 18 tugas tertulis, sama di setiap permainan",
+  "91 perabot di 22 slot, dengan dua penilaian dalam satu baris bintang",
+  "48 pencapaian, papan peringkat Steam, Steam Timeline, dan Steam Cloud",
+  "Bisa dimainkan dalam 29 bahasa, cukup dengan mouse"
+ ]
+}

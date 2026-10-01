@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "VỀ TRÒ CHƠI NÀY",
+  "meet_roxy": "GẶP ROXY",
+  "read_the_card": "ĐỌC THẺ",
+  "shake_stir_pour": "LẮC, KHUẤY, RÓT",
+  "the_tap": "THÁP BIA",
+  "the_crowd": "KHÁCH KHỨA",
+  "one_night": "TỪ SÁU TỚI HAI",
+  "build_the_house": "SỬA SANG QUÁN",
+  "features": "TRONG THỰC ĐƠN"
+ },
+ "hook": "[b]Game tycoon quán cocktail neon trên một bãi biển Miami.[/b] Chẳng ai nói họ muốn gì. Đọc thẻ căn cước, rót cho chuẩn, và phát hiện đứa nhóc cầm thẻ đi mượn trước khi phục vụ nó.",
+ "roxy_quote": "Bạn đây rồi, sugar. Sáu giờ mở cửa.",
+ "roxy": "Roxy Vale lo chuyện sảnh ở Malibu Club, và từ tối nay quầy bar là của bạn. Đêm đầu tiên cô ấy dẫn bạn đi một vòng, rồi trao cho bạn cuốn sổ của mình: một chuỗi việc viết sẵn, việc này nối việc kia, ván nào cũng như nhau. Hoàn thành nó, và câu lạc bộ là của bạn chứ không chỉ trên danh nghĩa.",
+ "card_1": "[b]Chẳng ai nói họ muốn gì.[/b] Bấm vào một chiếc ghế và đọc thẻ. Tên, tuổi và món họ đến uống chỉ nằm trên thẻ căn cước.",
+ "card_2": "Từ đêm thứ hai, thẻ bắt đầu nói dối. Có khách chưa tới hai mươi tuổi, và một nửa trong số đó cầm thẻ của người khác: cờ không phải nước của họ, mặt không phải của họ, thẻ trông như vẽ tay. MỜI RA là tiễn họ ra cửa. Rót cho trẻ con là bạn đóng phạt. Đuổi người ngay thẳng là bạn mất một vị khách.",
+ "shake": [
+  [
+   "54 công thức",
+   ", mỗi món một tỉ lệ riêng. Nghiêng chai, canh bình lắc, rót từng phần vào đúng ô của nó."
+  ],
+  [
+   "Lắc, khuấy hay pha trực tiếp.",
+   " Công thức quyết định, và giám khảo phân biệt được Martini khuấy với Martini lắc."
+  ],
+  [
+   "Đá, vỏ chanh và viền ly.",
+   " Khách boa vì những chuyện nhỏ."
+  ],
+  [
+   "Thuộc nằm lòng.",
+   " Rót chuẩn một món, và cuốn sổ ghi lại đúng lượng rót đó cho tới hết ván."
+  ]
+ ],
+ "bottles": "34 nhãn chai trên cửa hàng, từ gin của quán tới rum ủ lâu năm. Chai rẻ cho ra ly kém hơn, và có công thức chỉ mở khi dùng hàng xịn.",
+ "tap": "Bia là một nghề riêng. Nó không bao giờ lại gần bình lắc. Nghiêng ly, dựng thẳng lên, và rót lớp bọt vào đúng vạch.",
+ "crowd": "Hơn bốn mươi gương mặt từ Miami tới Seoul, ai cũng có tên, tuổi và quê quán. Nhìn mặt họ, vì đó là lời đánh giá. Khách quen quay lại, nhớ bạn, và boa vì tốc độ, tay nghề và ly đầy đặn. Khách phải chờ quá lâu sẽ bỏ đi như một cơn bão.",
+ "night": "Một đêm kéo dài từ sáu giờ tối tới hai giờ sáng. Lúc đóng cửa, tiền thuê bị trừ khỏi két, phiếu tổng kết đêm hiện lên, và cửa hàng mở: chai, trang công thức và nội thất. Ba đêm liền đóng cửa trong cảnh lỗ là căn phòng này lại tắt đèn.",
+ "house": "Sao là lời phố phường nói về bạn, và có hai loại. [b]Trái tim[/b] cho biết đồ uống ra sao. [b]Kim cương[/b] cho biết căn phòng dễ chịu cỡ nào. Đêm được tính theo mức thấp hơn trong hai, nên lo cả hai. Mua tranh, cây cảnh, đèn neon, bàn và một bồn rửa tốt hơn. Mỗi món nội thất tăng một thứ khi còn được lắp đặt. Và giữ quầy sạch sẽ: một vòng nước trên mặt gỗ làm quán mất kim cương.",
+ "features": [
+  "Game tycoon quán cocktail đồ họa pixel, trên một bãi biển Miami rực neon",
+  "Thẻ căn cước giấu món gọi, cùng khách chưa đủ tuổi và thẻ đi mượn",
+  "54 công thức, 34 nhãn chai và bia tươi với lớp bọt thật",
+  "Cuốn sổ của Roxy: chuỗi 18 việc viết sẵn, ván nào cũng như nhau",
+  "91 món nội thất cho 22 vị trí, với hai thang đánh giá chung một hàng sao",
+  "48 thành tựu, bảng xếp hạng Steam, Steam Timeline và Steam Cloud",
+  "Chơi được bằng 29 ngôn ngữ, chỉ cần chuột"
+ ]
+}

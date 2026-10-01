@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "A JÁTÉKRÓL",
+  "meet_roxy": "ISMERD MEG ROXYT",
+  "read_the_card": "AZ IGAZOLVÁNY",
+  "shake_stir_pour": "RÁZ, KEVER, TÖLT",
+  "the_tap": "A CSAP",
+  "the_crowd": "A VENDÉGEK",
+  "one_night": "HATTÓL KETTŐIG",
+  "build_the_house": "ÉPÍTSD A HELYET",
+  "features": "AZ ITALLAPON"
+ },
+ "hook": "[b]Neonfényes koktélbár-tycoon egy miami tengerparton.[/b] Senki nem mondja meg, mit kér. Olvasd el az igazolványt, töltsd ki pontosan, és szúrd ki a kölcsönkért jogsis kölyköt, mielőtt kiszolgálod.",
+ "roxy_quote": "Hát itt vagy, sugar. Hatkor nyitunk.",
+ "roxy": "Roxy Vale viszi a termet a Malibu Clubban, és mától a bár a tiéd. Az első estén körbevezet, aztán átadja a könyvét: munkák megírt láncát, egyiket a másik után, minden játékban ugyanígy. Teljesítsd, és a klub nemcsak névleg lesz a tiéd.",
+ "card_1": "[b]Senki nem mondja meg, mit kér.[/b] Kattints egy bárszékre, és olvasd el az igazolványt. A név, a kor és az ital, amiért jöttek, mindig csak az igazolványon van.",
+ "card_2": "A második estétől hazudni kezdenek az igazolványok. Néhány vendég húsz alatti, és a felük más igazolványát hozza: zászló, ami nem az ő országa, arc, ami nem az övé, rajzoltnak tűnő kártya. Az ELKÜLD kitessékeli őket. Ha gyereknek töltesz, fizeted a bírságot. Ha becsületes arcot küldesz el, elveszítesz egy vendéget.",
+ "shake": [
+  [
+   "54 recept",
+   ", mindegyik a saját arányával. Döntsd meg az üveget, figyeld a shakert, és minden részt a saját rekeszébe tölts."
+  ],
+  [
+   "Rázva, keverve vagy építve.",
+   " A recept dönt, és a bíró megkülönbözteti a kevert Martinit a rázottól."
+  ],
+  [
+   "Jég, citrushéj, sós perem.",
+   " Az apróságokért jár a borravaló."
+  ],
+  [
+   "Tanuld meg kívülről.",
+   " Ha egy italt hajszálpontosan töltesz, a könyv a játék végéig megjegyzi a pontos töltést."
+  ]
+ ],
+ "bottles": "34 italmárka a piacon, a ház ginjétől az érlelt rumig. Olcsó üvegből gyengébb ital lesz, és néhány recept csak a jó cuccal nyílik meg.",
+ "tap": "A sör külön mesterség. A shaker közelébe sem kerül. Döntsd meg a poharat, egyenesítsd ki, és a habot töltsd a sávba.",
+ "crowd": "Több mint negyven arc Miamitól Szöulig, mindegyiknek neve, kora és szülővárosa van. Figyeld az arcukat, mert az a kritika. A törzsvendégek visszajárnak, emlékeznek rád, és a gyorsaságért, a szakértelemért meg a jó töltésért adnak borravalót. Aki túl sokáig vár, viharként távozik.",
+ "night": "Egy este hattól kettőig tart. Záráskor a bérleti díj kimegy a kasszából, jön az este számlája, és megnyílik a piac: üvegek, receptoldalak és berendezés. Három este egymás után mínuszban, és a hely újra elsötétül.",
+ "house": "A csillagok azt mutatják, mit mond rólad az utca, és kétfélék. A [b]szívek[/b] az italokról szólnak. A [b]gyémántok[/b] arról, milyen érzés itt ülni. Az este a kettő közül a gyengébbet kapja, szóval figyelj mindkettőre. Vegyél képeket, növényeket, neont, asztalokat és jobb mosogatót. Minden berendezés egy dolgot erősít, amíg a helyén van. Aztán tartsd tisztán a pultot: egy karika a fán a terem hangulatába kerül.",
+ "features": [
+  "Koktélbár-tycoon pixel artban, egy neonfényes miami tengerparton",
+  "Igazolványok, amelyek elrejtik a rendelést, kiskorú vendégek és kölcsönkért jogsik",
+  "54 recept, 34 italmárka és csapolt sör igazi habbal",
+  "Roxy könyve: 18 munka megírt lánca, minden játékban ugyanaz",
+  "91 berendezés 22 helyen, két értékelés egyetlen csillagsorban",
+  "48 teljesítmény, Steam ranglisták, Steam Timeline és Steam Cloud",
+  "29 nyelven játszható, csak egérrel"
+ ]
+}

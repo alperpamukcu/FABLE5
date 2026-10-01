@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "O TÉTO HŘE",
+  "meet_roxy": "TOHLE JE ROXY",
+  "read_the_card": "ČTI PRŮKAZ",
+  "shake_stir_pour": "TŘEP, MÍCHEJ, LEJ",
+  "the_tap": "PÍPA",
+  "the_crowd": "HOSTÉ",
+  "one_night": "OD ŠESTI DO DVOU",
+  "build_the_house": "BUDUJ PODNIK",
+  "features": "NA LÍSTKU"
+ },
+ "hook": "[b]Neonový tycoon s koktejlbarem na pláži v Miami.[/b] Nikdo ti neřekne, co chce. Přečti průkaz, nalij to správně a odhal děcko s cizím průkazem dřív, než mu naliješ.",
+ "roxy_quote": "Tady jsi, sugar. Otevíráme v šest.",
+ "roxy": "Roxy Vale vede provoz v Malibu Clubu a od dnešní noci je bar tvůj. První noc tě tu provede, pak ti předá svou knihu: sepsaný řetěz úkolů, jeden za druhým, v každé hře stejný. Splň ho a klub bude tvůj nejen jménem.",
+ "card_1": "[b]Nikdo ti neřekne, co chce.[/b] Klikni na stoličku a přečti si průkaz. Jméno, věk a drink, pro který přišli, jsou jen na průkazu.",
+ "card_2": "Od druhé noci začnou průkazy lhát. Někteří hosté ještě nemají dvacet a polovina z nich nosí cizí průkaz: vlajku, která není jejich země, cizí tvář, průkaz jako kreslený. VEN jim ukáže dveře. Nalej děcku a platíš pokutu. Vyhoď poctivou tvář a přijdeš o hosta.",
+ "shake": [
+  [
+   "54 receptů",
+   ", každý s vlastním poměrem. Nakloň lahev, sleduj šejkr a trefuj každou část do jejího políčka."
+  ],
+  [
+   "Protřepané, míchané, nebo stavěné.",
+   " Rozhoduje recept a porota pozná míchané Martini od protřepaného."
+  ],
+  [
+   "Led, kůrky a okraje.",
+   " Za drobnosti dávají hosté spropitné."
+  ],
+  [
+   "Nauč se to nazpaměť.",
+   " Trefíš-li drink přesně, kniha si to přesné nalití zapamatuje do konce hry."
+  ]
+ ],
+ "bottles": "34 značek lahví na trhu, od domácího ginu po zrálý rum. Levná lahev dá horší drink a některé recepty se otevřou jen pro to dobré pití.",
+ "tap": "Pivo je řemeslo samo pro sebe. K šejkru se ani nepřiblíží. Nakloň sklenici, narovnej ji a trefuj pěnu do pruhu.",
+ "crowd": "Přes čtyřicet tváří od Miami po Soul, každá se jménem, věkem a rodným městem. Sleduj jejich tváře, protože to je recenze. Štamgasti se vracejí, pamatují si tě a dávají spropitné za rychlost, řemeslo a dobré nalití. Host, který čeká moc dlouho, odchází jako bouřka.",
+ "night": "Noc trvá od šesti do dvou. Při zavírání odejde z kasy nájem, přijde účet za noc a otevře se obchod: lahve, stránky receptů a vybavení. Tři noci po sobě v červených a lokál zase zhasne.",
+ "house": "Hvězdy jsou to, co o tobě říká ulice, a jsou dvojího druhu. [b]Srdce[/b] ukazují, jak chutnaly drinky. [b]Diamanty[/b] ukazují, jak se v lokále sedí. Noc se zapíše podle nižšího z obou, tak hlídej obojí. Kupuj obrazy, rostliny, neony, stoly a lepší dřez. Každý kus vybavení posiluje jednu věc, dokud je nainstalovaný. A drž pult čistý: kroužek na dřevě tě stojí lokál.",
+ "features": [
+  "Tycoon s koktejlbarem v pixel artu, na neonové pláži v Miami",
+  "Průkazy, které skrývají objednávku, nezletilí hosté a půjčené průkazy",
+  "54 receptů, 34 značek lahví a čepované pivo s opravdovou pěnou",
+  "Roxyina kniha: sepsaný řetěz 18 úkolů, v každé hře stejný",
+  "91 kusů vybavení ve 22 slotech a dvě hodnocení v jedné řadě hvězd",
+  "48 úspěchů, žebříčky Steamu, Steam Timeline a Steam Cloud",
+  "Hratelné ve 29 jazycích, jen myší"
+ ]
+}

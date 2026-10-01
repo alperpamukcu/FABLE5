@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "DESPRE ACEST JOC",
+  "meet_roxy": "IAT-O PE ROXY",
+  "read_the_card": "LEGITIMAȚIA",
+  "shake_stir_pour": "AGITĂ ȘI TOARNĂ",
+  "the_tap": "DOZATORUL",
+  "the_crowd": "CLIENȚII",
+  "one_night": "ȘASE PÂNĂ LA DOUĂ",
+  "build_the_house": "FĂ-ȚI LOCALUL",
+  "features": "ÎN MENIU"
+ },
+ "hook": "[b]Un tycoon de cocktail-bar în neon, pe o plajă din Miami.[/b] Nimeni nu-ți spune ce vrea. Citește legitimația, toarnă corect și prinde puștiul cu permisul altcuiva înainte să-l servești.",
+ "roxy_quote": "Aici erai, sugar. Deschidem la șase.",
+ "roxy": "Roxy Vale conduce sala la Malibu Club, iar din seara asta barul e al tău. În prima seară te plimbă prin local, apoi îți dă carnetul ei: un șir scris de sarcini, una după alta, același la fiecare joc. Du-l la capăt și clubul e al tău nu doar cu numele.",
+ "card_1": "[b]Nimeni nu-ți spune ce vrea.[/b] Apasă pe un scaun și citește legitimația. Numele, vârsta și băutura pentru care a venit stau doar pe legitimație.",
+ "card_2": "Din a doua seară, legitimațiile încep să mintă. Unii clienți au sub douăzeci de ani, iar jumătate dintre ei au actul altcuiva: un steag care nu e al țării lor, o față care nu e a lor, o legitimație care pare desenată. AFARĂ le arată ușa. Torni unui copil și plătești amenda. Dai afară o față cinstită și pierzi un client.",
+ "shake": [
+  [
+   "54 de rețete",
+   ", fiecare cu proporția ei. Înclină sticla, urmărește shakerul și pune fiecare parte în căsuța ei."
+  ],
+  [
+   "Agitat, amestecat sau construit.",
+   " Rețeta decide, iar juriul deosebește un Martini amestecat de unul agitat."
+  ],
+  [
+   "Gheață, coji, sare pe margine.",
+   " Pentru lucrurile mici, clienții lasă bacșiș."
+  ],
+  [
+   "Învață-le pe de rost.",
+   " Nimerește o băutură fix și carnetul păstrează turnarea exactă tot restul jocului."
+  ]
+ ],
+ "bottles": "34 de mărci de sticle pe piață, de la ginul casei la romul învechit. O sticlă ieftină dă o băutură mai slabă, iar unele rețete se deschid doar pentru marfa bună.",
+ "tap": "Berea e o meserie aparte. Nu se apropie niciodată de shaker. Înclină paharul, îndreaptă-l și adu spuma în bandă.",
+ "crowd": "Peste patruzeci de fețe, de la Miami la Seul, fiecare cu nume, vârstă și oraș natal. Uită-te la fețele lor, pentru că aia e recenzia. Obișnuiții revin, își amintesc de tine și lasă bacșiș pentru viteză, meserie și un pahar bine umplut. Un client care așteaptă prea mult pleacă vijelie.",
+ "night": "O seară ține de la șase la două. La închidere, chiria iese din casa de marcat, vine nota serii și se deschide piața: sticle, pagini de rețete și dotări. Închei trei seri la rând pe minus și localul se stinge iar.",
+ "house": "Stelele sunt ce spune strada despre tine, și sunt de două feluri. [b]Inimile[/b] arată cum au mers băuturile. [b]Diamantele[/b] arată cum se simte localul. Seara se notează după cea mai mică dintre ele, deci ai grijă de amândouă. Cumpără tablouri, plante, neon, mese și o chiuvetă mai bună. Fiecare dotare întărește un singur lucru cât timp e montată. Apoi ține tejgheaua curată: o urmă pe lemn te costă localul.",
+ "features": [
+  "Un tycoon de cocktail-bar în pixel art, pe o plajă neon din Miami",
+  "Legitimații care ascund comanda, clienți minori și acte împrumutate",
+  "54 de rețete, 34 de mărci de sticle și bere de la dozator cu spumă adevărată",
+  "Carnetul lui Roxy: un șir scris de 18 sarcini, același la fiecare joc",
+  "91 de dotări în 22 de locuri, cu două note pe un singur rând de stele",
+  "48 de realizări, clasamente Steam, Steam Timeline și Steam Cloud",
+  "Se joacă în 29 de limbi, doar cu mouse-ul"
+ ]
+}

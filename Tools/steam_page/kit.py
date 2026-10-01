@@ -241,7 +241,8 @@ def header2(text, icon, tracking=4, scale=4, frames=6, seed=11):
         a[y0:y0 + m.shape[0], x0:x0 + m.shape[1]][m] = CREAM
         a[y0 + m.shape[0] + 3, x0:x0 + m.shape[1]] = AMBER
         img = Image.fromarray(a, 'RGB').convert('RGBA')
-        img.alpha_composite(ic, (1 + (39 - ic.width) // 2, 1 + (36 - ic.height) // 2))
+        if ic is not None:
+            img.alpha_composite(ic, (1 + (39 - ic.width) // 2, 1 + (36 - ic.height) // 2))
         out.append(img.convert('RGB').resize((360 * scale, 44 * scale), Image.NEAREST))
     return out
 
@@ -254,3 +255,94 @@ def panel_px(art, unit=2):
     frame = panel(Image.new('RGB', (fw, fh), (0, 0, 0)), unit)
     frame.paste(art.convert('RGB'), (20 * unit, 20 * unit))
     return frame
+
+
+# ── localized headers ─────────────────────────────────────────────────────────────────────────────────
+FONTS_DIR = os.path.join(ROOT, 'Assets', 'Resources', 'Fonts')
+# the game's own heading faces per language (Assets/Scripts/UI/Text/LanguageFonts.cs): Malibu Arcade carries
+# Latin, Cyrillic and Greek capitals; Vietnamese and Korean head in Galmuri7; Japanese and Chinese in Fusion Pixel 12
+CJK = {'ja': 'FusionPixel12-ja.ttf', 'zh-CN': 'FusionPixel12-zh_hans.ttf', 'zh-TW': 'FusionPixel12-zh_hant.ttf'}
+
+
+def heading_face(code, text):
+    """(font path, size, top row) for a header title: the game's heading face for that language, at a whole
+    multiple of its grid; the house face when it draws every letter, otherwise Galmuri11 (draws them all)."""
+    from fontTools.ttLib import TTFont
+    if code in CJK:
+        return os.path.join(FONTS_DIR, CJK[code]), 24, 8
+    if code in ('vi', 'ko'):                                   # Galmuri7 heads these in the game; at strip size the
+        return os.path.join(FONTS_DIR, 'Galmuri11.ttf'), 24, 8  # 12-grid sister reads as boldly as the house face
+    cm = TTFont(ARCADE).getBestCmap()
+    if all(ord(c) in cm for c in text if not c.isspace()):
+        return ARCADE, 16, 12
+    return os.path.join(FONTS_DIR, 'Galmuri11.ttf'), 24, 8
+
+
+def _text_mask_font(text, font, size, tracking):
+    """The title's mask, cropped so that row 0 is the CAP LINE (the top of 'H' / the font's ascent box); marks
+    above the cap (Ü, Ć, Ő...) are kept in negative rows - returned as (mask, rows above the cap line)."""
+    f = ImageFont.truetype(font, size)
+    w = int(sum(f.getlength(c) for c in text)) + tracking * (len(text) - 1) + 8
+    pad = size
+    m = Image.new('L', (w, size * 3), 0)
+    d = ImageDraw.Draw(m)
+    x = 0
+    for c in text:
+        d.text((x, pad), c, font=f, fill=255)
+        x += f.getlength(c) + tracking
+    a = np.asarray(m) > 127
+    ref = Image.new('L', (size * 2, size * 3), 0)
+    ImageDraw.Draw(ref).text((0, pad), 'H' if font.endswith(('Arcade-Regular.ttf', 'Galmuri7.ttf', 'Galmuri11.ttf'))
+                             else '国', font=f, fill=255)
+    cap = int(np.nonzero(np.asarray(ref).any(1))[0].min())
+    ys, xs = np.nonzero(a)
+    top = ys.min()
+    return a[top:ys.max() + 1, xs.min():xs.max() + 1], cap - top
+
+
+def header_lang(text, icon, code, scale=4, frames=6, seed=11):
+    """header2 for any language: the same frame, strip, twinkle and amber rule; the title in that language's
+    heading face. The cap line sits at the template's row 12 (row 8 for the 12-grid faces at 24)."""
+    font, size, top = heading_face(code, text)
+    room = 300                                            # native px from x 52 to the strip's right end
+    tracking = 0 if font == ARCADE else 1
+    m, above = _text_mask_font(text, font, size, tracking)
+    while m.shape[1] > room and size > 8:                 # a long title steps down one grid size
+        grid = 12 if size % 12 == 0 else 8
+        size -= grid
+        m, above = _text_mask_font(text, font, size, tracking)
+    if m.shape[1] > room:
+        raise ValueError('title too wide for the strip: %r (%s)' % (text, code))
+    bases = [f.astype(np.uint8) for f in _template_frames()]
+    raw = strip(seed=seed, dim=False)
+    st = _dim(raw)
+    win = np.zeros(raw.shape[:2], bool)
+    for c in ('#7DF0E3', '#FEB555', '#EB4BA1'):
+        win |= np.all(raw == np.array(hx(c)), axis=-1)
+    win[:, :2] = False
+    ic = None if icon == 'keep' else load_icon(icon)
+    rng = np.random.RandomState(seed)
+    out = []
+    for k in range(frames):
+        a = bases[k % len(bases)].copy()
+        if icon != 'keep':                                # 'keep': the author's own coupe stays in the box
+            a[1:37, 1:40] = BOX
+        s2 = st.copy()
+        ys_, xs_ = np.nonzero(win)
+        if len(ys_):
+            off = rng.rand(len(ys_)) < 0.35
+            s2[ys_[off], xs_[off]] = (s2[ys_[off], xs_[off]].astype(int) * 0.35).astype(np.uint8)
+        a[1:38, 41:359] = s2[:37, :318]
+        x0 = 52
+        y0 = max(2, top - max(0, above))                  # the cap line on `top`; marks above it rise into the strip
+        h = min(m.shape[0], 35 - y0)
+        mm = m[:h]
+        a[y0 + 1:y0 + 1 + h, x0 + 1:x0 + 1 + mm.shape[1]][mm] = SHADOW
+        a[y0:y0 + h, x0:x0 + mm.shape[1]][mm] = CREAM
+        ry = min(35, y0 + h + 2)
+        a[ry, x0:x0 + mm.shape[1]] = AMBER
+        img = Image.fromarray(a, 'RGB').convert('RGBA')
+        if ic is not None:
+            img.alpha_composite(ic, (1 + (39 - ic.width) // 2, 1 + (36 - ic.height) // 2))
+        out.append(img.convert('RGB').resize((360 * scale, 44 * scale), Image.NEAREST))
+    return out

@@ -1,0 +1,38 @@
+{
+ "titles": {
+  "about": "SOBRE O JOGO",
+  "meet_roxy": "CONHEÇA A ROXY",
+  "read_the_card": "A CARTEIRINHA",
+  "shake_stir_pour": "BATER E MEXER",
+  "the_tap": "A CHOPEIRA",
+  "the_crowd": "A CLIENTELA",
+  "one_night": "DAS SEIS ÀS DUAS",
+  "build_the_house": "MONTE A CASA",
+  "features": "NO CARDÁPIO"
+ },
+ "hook": "[b]Um tycoon de bar de coquetéis neon numa praia de Miami.[/b] Ninguém diz o que quer. Leia a carteirinha, acerte a dose e pegue o moleque com documento emprestado antes de servir.",
+ "roxy_quote": "Aí está você, sugar. A gente abre às seis.",
+ "roxy": "Roxy Vale comanda o salão do Malibu Club, e a partir de hoje o bar é seu. Na primeira noite ela te mostra o lugar e depois te passa o livro dela: uma sequência escrita de tarefas, uma após a outra, sempre as mesmas a cada partida. Complete tudo e o clube vira seu de verdade, não só no nome.",
+ "card_1": "[b]Ninguém diz o que quer.[/b] Clique numa banqueta e leia a carteirinha. Nome, idade e o drinque que a pessoa veio buscar só existem ali.",
+ "card_2": "A partir da segunda noite, as carteirinhas começam a mentir. Alguns clientes têm menos de vinte anos, e metade deles carrega o documento de outra pessoa: bandeira que não é do país, rosto que não é o dela, carteirinha que parece desenhada. FORA mostra a porta da rua. Sirva um moleque e você paga a multa. Expulse uma cara honesta e perde um cliente.",
+ "shake": [
+  ["54 receitas", ", cada uma com sua proporção. Incline a garrafa, olhe a coqueteleira e acerte cada parte na sua faixa."],
+  ["Batido, mexido ou montado.", " A receita manda, e o juiz sabe diferenciar um Martini mexido de um batido."],
+  ["Gelo, twists e crustas.", " É por detalhe que eles dão gorjeta."],
+  ["Decore a receita.", " Acerte um drinque em cheio e o livro guarda a dose exata pelo resto da partida."]
+ ],
+ "bottles": "34 marcas de garrafas no mercado, do gim da casa ao rum envelhecido. Garrafa barata dá drinque pior, e algumas receitas só se abrem com coisa boa.",
+ "tap": "Chope é um ofício à parte. Nunca chega perto da coqueteleira. Incline o copo, endireite e tire o colarinho dentro da faixa.",
+ "crowd": "Mais de quarenta rostos, de Miami a Seul, cada um com nome, idade e cidade natal. Olhe a cara deles, porque é ali que está a avaliação. Os regulares voltam, lembram de você e dão gorjeta pela rapidez, pela técnica e por um copo bem servido. Cliente que espera demais sai feito tempestade.",
+ "night": "Uma noite vai das seis às duas da manhã. No fechamento, o aluguel sai do caixa, vem a conta da noite e o mercado abre: garrafas, páginas de receitas e melhorias. Feche três noites seguidas no vermelho e o salão apaga de novo.",
+ "house": "As estrelas são o que a rua fala de você, e elas vêm em dois tipos. Os [b]corações[/b] mostram como os drinques desceram. Os [b]diamantes[/b], como está o salão. A noite vale pela mais baixa das duas, então cuide de ambas. Compre quadros, plantas, neon, mesas e uma pia melhor. Cada melhoria reforça uma coisa enquanto está instalada. E mantenha o balcão limpo: uma marca na madeira custa o salão.",
+ "features": [
+  "Um tycoon de bar de coquetéis em pixel art, numa praia neon de Miami",
+  "Carteirinhas que escondem o pedido, além de menores de idade e documentos emprestados",
+  "54 receitas, 34 marcas de garrafas e chope com colarinho de verdade",
+  "O livro da Roxy: uma sequência escrita de 18 tarefas, a mesma a cada partida",
+  "91 melhorias em 22 espaços, com duas notas dividindo uma fileira de estrelas",
+  "48 conquistas, placares de líderes do Steam, Steam Timeline e Steam Cloud",
+  "Jogável em 29 idiomas, só com o mouse"
+ ]
+}

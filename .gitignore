@@ -184,3 +184,6 @@ Tools/steam_page/out/nano/
 Tools/steam_page/out/keyart/
 Tools/steam_page/out/layers/
 Tools/steam_page/out/refs/
+Tools/steam_page/out/about_i18n/
+Tools/steam_page/out/*.zip
+Tools/steam_page/out/about/

@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "TENTANG PERMAINAN",
+  "meet_roxy": "KENALI ROXY",
+  "read_the_card": "BACA KAD",
+  "shake_stir_pour": "GONCANG DAN TUANG",
+  "the_tap": "MENARA BIR",
+  "the_crowd": "PARA TETAMU",
+  "one_night": "ENAM HINGGA DUA",
+  "build_the_house": "BINA PREMIS ANDA",
+  "features": "DALAM MENU"
+ },
+ "hook": "[b]Tycoon bar koktel neon di pantai Miami.[/b] Tiada siapa beritahu apa mereka mahu. Baca kad pengenalan, tuang dengan betul, dan kenal pasti budak yang membawa kad pinjam sebelum anda melayan mereka.",
+ "roxy_quote": "Itu pun anda, sugar. Pintu dibuka pukul enam.",
+ "roxy": "Roxy Vale mengendalikan lantai di Malibu Club, dan mulai malam ini bar itu milik anda. Pada malam pertama dia bawa anda melihat-lihat, kemudian menyerahkan bukunya: rangkaian tugas bertulis, satu demi satu, sama setiap kali bermain. Lengkapkannya dan kelab ini milik anda, bukan sekadar pada nama.",
+ "card_1": "[b]Tiada siapa beritahu apa mereka mahu.[/b] Klik bangku dan baca kad. Nama, umur dan minuman yang mereka cari hanya ada pada kad pengenalan.",
+ "card_2": "Mulai malam kedua, kad-kad itu mula menipu. Sesetengah tetamu bawah dua puluh tahun, dan separuh daripada mereka membawa kad orang lain: bendera yang bukan negaranya, muka yang bukan mukanya, kad yang nampak dilukis. HALAU tunjukkan mereka pintu keluar. Tuang untuk budak, anda bayar denda. Halau orang jujur, anda hilang seorang tetamu.",
+ "shake": [
+  [
+   "54 resipi",
+   ", setiap satu dengan nisbahnya sendiri. Condongkan botol, perhatikan shaker, daratkan setiap bahagian dalam kotaknya."
+  ],
+  [
+   "Digoncang, dikacau atau dibina.",
+   " Resipi yang tentukan, dan hakim tahu beza Martini yang dikacau dengan yang digoncang."
+  ],
+  [
+   "Ais, kulit limau dan bibir gelas.",
+   " Tetamu beri tip untuk perkara kecil."
+  ],
+  [
+   "Hafal betul-betul.",
+   " Tuang satu minuman dengan tepat dan buku itu simpan sukatan tepatnya hingga habis permainan."
+  ]
+ ],
+ "bottles": "34 jenama botol di pasar, dari gin rumah hingga rum peram. Botol murah hasilkan minuman yang kurang elok, dan sesetengah resipi hanya terbuka untuk barang yang bagus.",
+ "tap": "Bir ada seninya sendiri. Ia tak pernah mendekati shaker. Condongkan gelas, tegakkan semula, dan tuang buihnya tepat dalam jalurnya.",
+ "crowd": "Lebih empat puluh wajah dari Miami hingga Seoul, setiap satu dengan nama, umur dan kampung halaman. Tengok muka mereka, kerana itulah ulasannya. Pelanggan tetap datang semula, ingat anda, dan beri tip untuk kelajuan, kemahiran dan isian yang elok. Tetamu yang menunggu terlalu lama keluar macam ribut.",
+ "night": "Satu malam berjalan dari pukul enam hingga dua. Semasa tutup, sewa keluar dari mesin tunai, resit malam ini keluar, dan pasar dibuka: botol, halaman resipi dan perabot. Tutup tiga malam berturut-turut dalam rugi, dan premis ini gelap semula.",
+ "house": "Bintang ialah apa kata orang di jalan tentang anda, dan ia ada dua jenis. [b]Hati[/b] tunjuk bagaimana minuman diterima. [b]Berlian[/b] tunjuk selesanya premis. Malam dinilai ikut yang lebih rendah, jadi jaga kedua-duanya. Beli lukisan, pokok, neon, meja dan sinki yang lebih baik. Setiap perabot menguatkan satu perkara selagi ia dipasang. Kemudian pastikan kaunter bersih: kesan bulatan pada kayu buat premis hilang berlian.",
+ "features": [
+  "Tycoon bar koktel dalam seni piksel, berlatarkan pantai Miami yang bercahaya neon",
+  "Kad pengenalan yang menyembunyikan pesanan, serta tetamu bawah umur dan kad pinjam",
+  "54 resipi, 34 jenama botol dan bir draf dengan buih sebenar",
+  "Buku Roxy: rangkaian 18 tugas bertulis, sama setiap kali bermain",
+  "91 perabot dalam 22 slot, dengan dua penilaian berkongsi satu baris bintang",
+  "48 pencapaian, papan pendahulu Steam, Steam Timeline dan Steam Cloud",
+  "Boleh dimainkan dalam 29 bahasa, dengan tetikus sahaja"
+ ]
+}

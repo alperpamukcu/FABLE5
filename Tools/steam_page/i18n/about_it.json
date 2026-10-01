@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "INFO SUL GIOCO",
+  "meet_roxy": "ECCO ROXY",
+  "read_the_card": "LEGGI LA TESSERA",
+  "shake_stir_pour": "SHAKERA E MESCOLA",
+  "the_tap": "LA SPINA",
+  "the_crowd": "LA CLIENTELA",
+  "one_night": "DALLE 18 ALLE 2",
+  "build_the_house": "ARREDA IL LOCALE",
+  "features": "NEL MENÙ"
+ },
+ "hook": "[b]Un tycoon di cocktail bar al neon su una spiaggia di Miami.[/b] Nessuno ti dice cosa vuole. Leggi la tessera, versa giusto e scova il ragazzino con la tessera prestata prima di servirlo.",
+ "roxy_quote": "Eccoti, sugar. Si apre alle sei.",
+ "roxy": "Roxy Vale manda avanti la sala del Malibu Club, e da stasera il bar è tuo. La prima sera ti fa fare un giro, poi ti consegna il suo libro: una catena di incarichi scritti, uno dopo l'altro, uguale a ogni partita. Completalo e il club sarà tuo non solo di nome.",
+ "card_1": "[b]Nessuno ti dice cosa vuole.[/b] Clicca uno sgabello e leggi la tessera. Nome, età e il drink per cui è venuto vivono solo sulla tessera.",
+ "card_2": "Dalla seconda sera le tessere cominciano a mentire. Alcuni clienti hanno meno di vent'anni, e metà di loro gira con la tessera di qualcun altro: una bandiera che non è del suo paese, una faccia che non è la sua, una tessera che sembra disegnata. FUORI lo mette alla porta. Versi a un ragazzino e paghi la multa. Cacci una faccia onesta e perdi un cliente.",
+ "shake": [
+  [
+   "54 ricette",
+   ", ognuna con le sue proporzioni. Inclina la bottiglia, guarda lo shaker, centra ogni dose nella sua casella."
+  ],
+  [
+   "Shakerato, mescolato o costruito.",
+   " Decide la ricetta, e il giudice distingue un Martini mescolato da uno shakerato."
+  ],
+  [
+   "Ghiaccio, twist e bordi.",
+   " La mancia arriva per le piccole cose."
+  ],
+  [
+   "Imparalo a memoria.",
+   " Versa un drink alla perfezione e il libro tiene la dose esatta per il resto della partita."
+  ]
+ ],
+ "bottles": "34 marche di bottiglie al mercato, dal gin della casa al rum invecchiato. Una bottiglia economica dà un drink peggiore, e alcune ricette si aprono solo con la roba buona.",
+ "tap": "La birra è un mestiere a sé. Allo shaker non si avvicina nemmeno. Inclina il bicchiere, raddrizzalo e porta la schiuma dentro la fascia.",
+ "crowd": "Più di quaranta volti da Miami a Seul, ognuno con un nome, un'età e una città natale. Guardali in faccia, perché la recensione è quella. I clienti abituali tornano, si ricordano di te e lasciano la mancia per velocità, mestiere e un bicchiere ben pieno. Chi aspetta troppo se ne va come una tempesta.",
+ "night": "Una serata va dalle sei alle due di notte. Alla chiusura l'affitto esce dalla cassa, arriva il conto della serata e apre il mercato: bottiglie, pagine di ricette e arredi. Chiudi tre serate di fila in rosso e la sala torna al buio.",
+ "house": "Le stelle sono ciò che la strada dice di te, e sono di due tipi. I [b]cuori[/b] dicono come sono andati giù i drink. I [b]diamanti[/b], come si sta in sala. La serata si registra col più basso dei due, quindi cura entrambi. Compra quadri, piante, neon, tavoli e un lavello migliore. Ogni arredo potenzia una cosa finché è installato. E tieni pulito il bancone: un alone sul legno ti costa la sala.",
+ "features": [
+  "Un tycoon di cocktail bar in pixel art, su una spiaggia di Miami al neon",
+  "Tessere che nascondono l'ordine, più clienti minorenni e tessere prestate",
+  "54 ricette, 34 marche di bottiglie e birra alla spina con vera schiuma",
+  "Il libro di Roxy: una catena scritta di 18 incarichi, uguale a ogni partita",
+  "91 arredi in 22 spazi, con due valutazioni che condividono una fila di stelle",
+  "48 obiettivi, classifiche di Steam, Steam Timeline e Steam Cloud",
+  "Giocabile in 29 lingue, solo con il mouse"
+ ]
+}

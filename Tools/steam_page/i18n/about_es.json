@@ -1,0 +1,38 @@
+{
+ "titles": {
+  "about": "ACERCA DEL JUEGO",
+  "meet_roxy": "CONOCE A ROXY",
+  "read_the_card": "LEE EL CARNÉ",
+  "shake_stir_pour": "AGITAR Y REMOVER",
+  "the_tap": "EL GRIFO",
+  "the_crowd": "LA CLIENTELA",
+  "one_night": "DE SEIS A DOS",
+  "build_the_house": "MONTA EL LOCAL",
+  "features": "EN LA CARTA"
+ },
+ "hook": "[b]Un tycoon de coctelería de neón en una playa de Miami.[/b] Nadie te dice lo que quiere. Lee el carné, sirve la copa como es debido y pilla al crío con el carné prestado antes de ponerle nada.",
+ "roxy_quote": "Aquí estás, sugar. Abrimos a las seis.",
+ "roxy": "Roxy Vale lleva la sala del Malibu Club, y desde esta noche la barra es tuya. La primera noche te enseña el local y luego te pasa su libro: una cadena de encargos por escrito, uno detrás de otro, los mismos en cada partida. Complétalo y el club será tuyo de verdad, no solo de nombre.",
+ "card_1": "[b]Nadie te dice lo que quiere.[/b] Haz clic en un taburete y lee el carné. El nombre, la edad y lo que ha venido a beber solo están ahí.",
+ "card_2": "A partir de la segunda noche, los carnés empiezan a mentir. Algunos clientes tienen menos de veinte años, y la mitad lleva el carné de otra persona: una bandera que no es de su país, una cara que no es la suya, un carné que parece dibujado. FUERA los pone de patitas en la calle. Sírvele a un crío y pagas la multa. Echa a una cara honrada y pierdes un cliente.",
+ "shake": [
+  ["54 recetas", ", cada una con sus proporciones. Inclina la botella, vigila la coctelera y deja cada parte en su casilla."],
+  ["Agitado, removido o directo.", " Manda la receta, y el juez distingue un Martini removido de uno agitado."],
+  ["Hielo, pieles y escarchados.", " Por los detalles se deja propina."],
+  ["Apréndetelo de memoria.", " Clava una copa y el libro guarda la medida exacta para el resto de la partida."]
+ ],
+ "bottles": "34 marcas de botellas en el mercado, de la ginebra de la casa al ron añejo. Una botella barata da una copa peor, y algunas recetas solo se abren con lo bueno.",
+ "tap": "La cerveza es un oficio aparte. Nunca se acerca a la coctelera. Inclina el vaso, enderézalo y deja la espuma dentro de la franja.",
+ "crowd": "Más de cuarenta caras, de Miami a Seúl, cada una con nombre, edad y ciudad natal. Mírales la cara, porque esa es la reseña. Los habituales vuelven, se acuerdan de ti y dejan propina por la rapidez, el oficio y un vaso bien lleno. Un cliente que espera demasiado se va como una tormenta.",
+ "night": "Una noche va de las seis a las dos de la madrugada. Al cerrar, el alquiler sale de la caja, llega la cuenta de la noche y abre el mercado: botellas, páginas de recetas y mobiliario. Cierra tres noches seguidas en rojo y el local vuelve a apagarse.",
+ "house": "Las estrellas son lo que dice la calle de ti, y las hay de dos tipos. Los [b]corazones[/b] dicen qué tal entraron las copas. Los [b]diamantes[/b], cómo se está en el local. La noche se puntúa por la más baja de las dos, así que cuida ambas. Compra cuadros, plantas, neones, mesas y un fregadero mejor. Cada mueble mejora una cosa mientras está instalado. Y mantén limpia la barra: un cerco en la madera te cuesta el local.",
+ "features": [
+  "Un tycoon de coctelería en pixel art, en una playa de neón de Miami",
+  "Carnés que esconden el pedido, clientes menores de edad y carnés prestados",
+  "54 recetas, 34 marcas de botellas y cerveza de barril con espuma de verdad",
+  "El libro de Roxy: una cadena escrita de 18 encargos, la misma en cada partida",
+  "91 muebles en 22 huecos, con dos valoraciones en una sola fila de estrellas",
+  "48 logros, clasificaciones de Steam, Steam Timeline y Steam Cloud",
+  "Jugable en 29 idiomas, solo con el ratón"
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "titles": {
+  "about": "ÜBER DAS SPIEL",
+  "meet_roxy": "DAS IST ROXY",
+  "read_the_card": "LIES DEN AUSWEIS",
+  "shake_stir_pour": "SHAKEN & RÜHREN",
+  "the_tap": "DER ZAPFHAHN",
+  "the_crowd": "DIE GÄSTE",
+  "one_night": "SECHS BIS ZWEI",
+  "build_the_house": "BAU DEINE BAR",
+  "features": "AUF DER KARTE"
+ },
+ "hook": "[b]Ein Neon-Cocktailbar-Tycoon an einem Strand in Miami.[/b] Keiner sagt dir, was er will. Lies den Ausweis, mix den Drink richtig und erkenn das Kind mit dem fremden Ausweis, bevor du ihm einschenkst.",
+ "roxy_quote": "Da bist du ja, Sugar. Um sechs machen wir auf.",
+ "roxy": "Roxy Vale schmeißt den Laden im Malibu Club, und ab heute Nacht gehört die Bar dir. In der ersten Nacht führt sie dich herum, dann drückt sie dir ihr Buch in die Hand: eine feste Kette von Aufträgen, einer nach dem anderen, in jedem Durchlauf dieselben. Arbeite es ab, und der Club gehört dir nicht nur auf dem Papier.",
+ "card_1": "[b]Keiner sagt dir, was er will.[/b] Klick auf einen Hocker und lies den Ausweis. Name, Alter und der Drink, weswegen sie da sind, stehen nur dort.",
+ "card_2": "Ab der zweiten Nacht lügen die Ausweise. Manche Gäste sind unter zwanzig, und die Hälfte davon trägt den Ausweis eines anderen: eine Flagge, die nicht zum Land passt, ein fremdes Gesicht, ein Ausweis wie gemalt. RAUS setzt sie vor die Tür. Schenkst du einem Kind ein, zahlst du das Bußgeld. Wirfst du ein ehrliches Gesicht raus, ist der Gast weg.",
+ "shake": [
+  ["54 Rezepte", ", jedes mit eigenem Verhältnis. Kipp die Flasche, behalt den Shaker im Blick, bring jeden Anteil in sein Feld."],
+  ["Geshakt, gerührt oder gebaut.", " Das Rezept entscheidet, und die Wertung kennt den Unterschied zwischen einem gerührten und einem geshakten Martini."],
+  ["Eis, Zesten und Ränder.", " Für Kleinigkeiten gibt's Trinkgeld."],
+  ["Lern es auswendig.", " Triffst du einen Drink punktgenau, merkt sich das Buch den exakten Guss für den Rest des Durchlaufs."]
+ ],
+ "bottles": "34 Flaschenmarken auf dem Markt, vom Haus-Gin bis zum gereiften Rum. Eine billige Flasche gibt einen schwächeren Drink, und manche Rezepte öffnen sich nur für das gute Zeug.",
+ "tap": "Bier ist ein Handwerk für sich. Es kommt nie in die Nähe des Shakers. Glas schräg halten, aufrichten und die Schaumkrone ins Band zapfen.",
+ "crowd": "Über vierzig Gesichter von Miami bis Seoul, jedes mit Namen, Alter und Heimatstadt. Achte auf ihr Gesicht, denn das ist die Kritik. Stammgäste kommen wieder, erinnern sich an dich und geben Trinkgeld für Tempo, Können und ein volles Glas. Wer zu lange wartet, zieht ab wie ein Gewitter.",
+ "night": "Eine Nacht geht von sechs Uhr abends bis zwei Uhr früh. Beim Schließen geht die Miete aus der Kasse, die Abrechnung der Nacht kommt, und der Markt öffnet: Flaschen, Rezeptseiten und Einrichtung. Drei Nächte hintereinander im Minus, und hier gehen wieder die Lichter aus.",
+ "house": "Die Sterne sind das, was die Straße über dich sagt, und es gibt sie in zwei Sorten. [b]Herzen[/b] sagen, wie die Drinks ankamen. [b]Diamanten[/b] sagen, wie sich der Raum anfühlt. Die Nacht wird nach dem schwächeren von beiden gewertet. Achte auf beide. Kauf Bilder, Pflanzen, Neon, Tische und eine bessere Spüle. Jedes Einrichtungsstück stärkt eine Sache, solange es installiert ist. Und halt den Tresen sauber: Ein Ring auf dem Holz kostet dich den Raum.",
+ "features": [
+  "Ein Cocktailbar-Tycoon in Pixel-Art an einem Neon-Strand in Miami",
+  "Ausweise, die die Bestellung verbergen, dazu minderjährige Gäste und fremde Ausweise",
+  "54 Rezepte, 34 Flaschenmarken und Fassbier mit echter Schaumkrone",
+  "Roxys Buch: eine feste Kette aus 18 Aufträgen, in jedem Durchlauf dieselbe",
+  "91 Einrichtungsstücke auf 22 Plätzen, zwei Wertungen in einer Sternenreihe",
+  "48 Errungenschaften, Steam-Bestenlisten, die Steam Timeline und Steam Cloud",
+  "Spielbar in 29 Sprachen, nur mit der Maus"
+ ]
+}

@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "OM DETTA SPEL",
+  "meet_roxy": "MÖT ROXY",
+  "read_the_card": "LÄS LEGGET",
+  "shake_stir_pour": "SKAKA, RÖR, HÄLL",
+  "the_tap": "TAPPEN",
+  "the_crowd": "GÄSTERNA",
+  "one_night": "FRÅN SEX TILL TVÅ",
+  "build_the_house": "BYGG UPP STÄLLET",
+  "features": "PÅ MENYN"
+ },
+ "hook": "[b]En neonglödande cocktailbar-tycoon på en strand i Miami.[/b] Ingen säger vad de vill ha. Läs legget, häll rätt och avslöja ungen med lånat körkort innan du serverar.",
+ "roxy_quote": "Där är du ju, sugar. Dörrarna öppnar klockan sex.",
+ "roxy": "Roxy Vale styr golvet på Malibu Club, och från och med i kväll är baren din. Första kvällen visar hon dig runt, sen lämnar hon över sin bok: en nedskriven kedja av jobb, det ena efter det andra, likadan varje omgång. Fyll den, så är klubben din på riktigt och inte bara till namnet.",
+ "card_1": "[b]Ingen säger vad de vill ha.[/b] Klicka på en barstol och läs legget. Namnet, åldern och drinken de kom för finns bara på legget.",
+ "card_2": "Från andra kvällen börjar legitimationerna ljuga. Några gäster är under tjugo, och hälften av dem bär någon annans leg: fel lands flagga, ett ansikte som inte är deras, ett leg som ser ritat ut. UT visar dem på dörren. Häller du åt en unge betalar du böterna. Kastar du ut någon ärlig förlorar du en gäst.",
+ "shake": [
+  [
+   "54 recept",
+   ", vart och ett med sina egna proportioner. Luta flaskan, håll koll på shakern och pricka varje del i sin ruta."
+  ],
+  [
+   "Skakad, rörd eller byggd.",
+   " Receptet bestämmer, och domaren vet skillnad på en rörd Martini och en skakad."
+  ],
+  [
+   "Is, zest och saltkanter.",
+   " Gästerna ger dricks för småsaker."
+  ],
+  [
+   "Lär dig utantill.",
+   " Pricka en drink exakt, så sparar boken den exakta hällningen resten av omgången."
+  ]
+ ],
+ "bottles": "34 flaskmärken på marknaden, från husets gin till lagrad rom. En billig flaska ger en sämre drink, och vissa recept öppnas bara för det fina.",
+ "tap": "Öl är ett hantverk för sig. Det kommer aldrig i närheten av shakern. Luta glaset, räta upp det och häll skummet inom bandet.",
+ "crowd": "Över fyrtio ansikten från Miami till Seoul, alla med namn, ålder och hemstad. Titta på ansiktena, för det är recensionen. Stamgäster kommer tillbaka, minns dig och ger dricks för fart, hantverk och en bra fyllning. En gäst som väntar för länge drar ut som ett oväder.",
+ "night": "En kväll går från sex till två. Vid stängning går hyran ut ur kassan, kvällens kvitto kommer upp och marknaden öppnar: flaskor, receptsidor och inredning. Sluta tre kvällar i rad på minus, så blir det mörkt här igen.",
+ "house": "Stjärnorna är vad gatan säger om dig, och de finns i två sorter. [b]Hjärtan[/b] är hur drinkarna gick hem. [b]Diamanter[/b] är hur rummet känns. Kvällen räknas efter den lägre av de två, så håll koll på båda. Köp tavlor, växter, neon, bord och en bättre diskho. Varje inredning stärker en sak så länge den sitter på plats. Håll sedan bardisken ren: en ring på träet kostar dig rummet.",
+ "features": [
+  "En cocktailbar-tycoon i pixelgrafik, på en neonstrand i Miami",
+  "Leg som döljer beställningen, minderåriga gäster och lånade körkort",
+  "54 recept, 34 flaskmärken och fatöl med riktigt skum",
+  "Roxys bok: en nedskriven kedja av 18 jobb, likadan varje omgång",
+  "91 inredningar på 22 platser, med två betyg på en enda rad stjärnor",
+  "48 prestationer, Steam-topplistor, Steam Timeline och Steam Cloud",
+  "Spelbart på 29 språk, bara med musen"
+ ]
+}

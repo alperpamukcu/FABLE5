@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "OM DETTE SPIL",
+  "meet_roxy": "MØD ROXY",
+  "read_the_card": "LÆS ID-KORTET",
+  "shake_stir_pour": "RYST, RØR, SKÆNK",
+  "the_tap": "FADØLSHANEN",
+  "the_crowd": "GÆSTERNE",
+  "one_night": "FRA SEKS TIL TO",
+  "build_the_house": "BYG STEDET OP",
+  "features": "PÅ MENUEN"
+ },
+ "hook": "[b]En neonlysende cocktailbar-tycoon på en strand i Miami.[/b] Ingen siger, hvad de vil have. Læs ID-kortet, skænk rigtigt, og afslør knægten med det lånte kørekort, før du serverer for ham.",
+ "roxy_quote": "Der er du jo, sugar. Dørene åbner klokken seks.",
+ "roxy": "Roxy Vale styrer gulvet på Malibu Club, og fra i aften er baren din. Den første aften viser hun dig rundt, så giver hun dig sin bog: en nedskrevet kæde af opgaver, den ene efter den anden, ens i hvert spil. Fuldfør den, og klubben er din i mere end navnet.",
+ "card_1": "[b]Ingen siger, hvad de vil have.[/b] Klik på en barstol og læs ID-kortet. Navnet, alderen og den drink, de kom efter, står kun på ID-kortet.",
+ "card_2": "Fra anden aften begynder kortene at lyve. Nogle gæster er under tyve, og halvdelen af dem har en andens kort: et flag fra det forkerte land, et ansigt, der ikke er deres, et kort, der ser tegnet ud. AFVIS viser dem døren. Skænker du for et barn, betaler du bøden. Smider du en ærlig sjæl ud, mister du en gæst.",
+ "shake": [
+  [
+   "54 opskrifter",
+   ", hver med sit eget forhold. Vip flasken, hold øje med shakeren, og ram hver del i sin boks."
+  ],
+  [
+   "Rystet, rørt eller bygget.",
+   " Opskriften bestemmer, og dommeren kender forskel på en rørt og en rystet Martini."
+  ],
+  [
+   "Is, zest og saltkanter.",
+   " Gæsterne giver drikkepenge for små ting."
+  ],
+  [
+   "Lær det udenad.",
+   " Ram en drink helt præcist, og bogen gemmer den nøjagtige skænkning resten af spillet."
+  ]
+ ],
+ "bottles": "34 flaskemærker på markedet, fra husets gin til lagret rom. En billig flaske giver en ringere drink, og nogle opskrifter åbner kun for de gode sager.",
+ "tap": "Øl er et håndværk for sig. Det kommer aldrig i nærheden af shakeren. Vip glasset, ret det op, og skænk skummet ind i båndet.",
+ "crowd": "Over fyrre ansigter fra Miami til Seoul, hver med navn, alder og hjemby. Hold øje med ansigterne, for det er anmeldelsen. Stamgæster kommer igen, husker dig og giver drikkepenge for fart, håndværk og et fyldt glas. En gæst, der venter for længe, fejer ud som en storm.",
+ "night": "En aften varer fra seks til to. Ved lukketid går huslejen ud af kassen, aftenens bon kommer frem, og markedet åbner: flasker, opskriftssider og inventar. Lukker du tre aftener i træk i minus, bliver der mørkt herinde igen.",
+ "house": "Stjernerne er det, gaden siger om dig, og de findes i to slags. [b]Hjerter[/b] er, hvordan drinksene gik ned. [b]Diamanter[/b] er, hvordan rummet føles. Aftenen noteres efter den laveste af de to, så pas på begge. Køb billeder, planter, neon, borde og en bedre vask. Hvert stykke inventar styrker én ting, så længe det er installeret. Og hold disken ren: en ring på træet koster dig rummet.",
+ "features": [
+  "En cocktailbar-tycoon i pixelgrafik, på en neonstrand i Miami",
+  "ID-kort, der skjuler bestillingen, mindreårige gæster og lånte kørekort",
+  "54 opskrifter, 34 flaskemærker og fadøl med ægte skum",
+  "Roxys bog: en nedskrevet kæde af 18 opgaver, ens i hvert spil",
+  "91 stykker inventar på 22 pladser, med to vurderinger på én række stjerner",
+  "48 præstationer, Steam-ranglister, Steam Timeline og Steam Cloud",
+  "Kan spilles på 29 sprog, kun med musen"
+ ]
+}

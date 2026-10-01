@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "ACERCA DESTE JOGO",
+  "meet_roxy": "CONHECE A ROXY",
+  "read_the_card": "LÊ O CARTÃO",
+  "shake_stir_pour": "AGITA MEXE VERTE",
+  "the_tap": "A TORNEIRA",
+  "the_crowd": "A CLIENTELA",
+  "one_night": "DAS SEIS ÀS DUAS",
+  "build_the_house": "MONTA A CASA",
+  "features": "NA CARTA"
+ },
+ "hook": "[b]Um tycoon de bar de cocktails em néon, numa praia de Miami.[/b] Ninguém te diz o que quer. Lê o cartão, serve como deve ser e apanha o miúdo com a carta de outra pessoa antes de o servires.",
+ "roxy_quote": "Aí estás tu, sugar. Abrimos às seis.",
+ "roxy": "A Roxy Vale manda na sala do Malibu Club e, a partir desta noite, o bar é teu. Na primeira noite mostra-te a casa; depois entrega-te o livro dela: uma cadeia escrita de tarefas, uma atrás da outra, sempre igual em cada partida. Cumpre-a e o clube passa a ser teu, e não só no nome.",
+ "card_1": "[b]Ninguém te diz o que quer.[/b] Clica no banco e lê o cartão. O nome, a idade e a bebida que vieram buscar só vivem no cartão.",
+ "card_2": "A partir da segunda noite, os cartões começam a mentir. Há clientes com menos de vinte anos, e metade deles traz a carta de outra pessoa: uma bandeira que não é do país, uma cara que não é a dele, um cartão que parece desenhado. RUA mostra-lhes a porta. Serve um miúdo e pagas a multa. Põe na rua uma cara honesta e perdes um cliente.",
+ "shake": [
+  [
+   "54 receitas",
+   ", cada uma com a sua proporção. Inclina a garrafa, olha para a coqueteleira e acerta cada parte na sua caixa."
+  ],
+  [
+   "Agitado, mexido ou montado.",
+   " Quem decide é a receita, e o júri distingue um Martini mexido de um agitado."
+  ],
+  [
+   "Gelo, cascas e bordas.",
+   " Os clientes dão gorjeta pelos pormenores."
+  ],
+  [
+   "Sabe-as de cor.",
+   " Acerta em cheio numa bebida e o livro guarda a dose exata para o resto da partida."
+  ]
+ ],
+ "bottles": "34 marcas de garrafas no mercado, do gin da casa ao rum envelhecido. Uma garrafa barata dá uma bebida inferior, e algumas receitas só abrem com a coisa boa.",
+ "tap": "A cerveja é um ofício à parte. Nunca chega perto da coqueteleira. Inclina o copo, endireita-o e põe a espuma dentro da faixa.",
+ "crowd": "Mais de quarenta caras, de Miami a Seul, cada uma com nome, idade e terra natal. Olha-lhes para a cara, porque é essa a crítica. Os habituais voltam, lembram-se de ti e dão gorjeta pela rapidez, pelo ofício e por um copo bem cheio. Quem espera demasiado sai porta fora como uma tempestade.",
+ "night": "Uma noite vai das seis às duas. No fecho, a renda sai da caixa, vem a conta da noite e abre o mercado: garrafas, páginas de receitas e melhorias. Fecha três noites seguidas no vermelho e a sala volta a apagar-se.",
+ "house": "As estrelas são o que a rua diz de ti, e há duas espécies. Os [b]corações[/b] dizem como as bebidas caíram. Os [b]diamantes[/b] dizem como se está na sala. A noite fica registada pela mais baixa das duas, por isso cuida de ambas. Compra quadros, plantas, néon, mesas e um lava-loiça melhor. Cada melhoria reforça uma coisa enquanto estiver instalada. Depois mantém o balcão limpo: uma marca na madeira custa-te a sala.",
+ "features": [
+  "Um tycoon de bar de cocktails em pixel art, numa praia de Miami em néon",
+  "Cartões que escondem o pedido, clientes menores e cartas emprestadas",
+  "54 receitas, 34 marcas de garrafas e cerveja à pressão com espuma a sério",
+  "O livro da Roxy: uma cadeia escrita de 18 tarefas, sempre igual em cada partida",
+  "91 melhorias em 22 lugares, com duas avaliações numa só fila de estrelas",
+  "48 conquistas, tabelas de classificação Steam, Steam Timeline e Steam Cloud",
+  "Jogável em 29 idiomas, só com o rato"
+ ]
+}

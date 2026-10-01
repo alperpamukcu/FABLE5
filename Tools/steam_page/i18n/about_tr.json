@@ -1,0 +1,38 @@
+{
+ "titles": {
+  "about": "OYUN HAKKINDA",
+  "meet_roxy": "ROXY İLE TANIŞ",
+  "read_the_card": "RUHSATI OKU",
+  "shake_stir_pour": "ÇALKALA, KARIŞTIR",
+  "the_tap": "BİRA MUSLUĞU",
+  "the_crowd": "MÜŞTERİLER",
+  "one_night": "ALTIDAN İKİYE",
+  "build_the_house": "SALONU DONAT",
+  "features": "MENÜDE NE VAR"
+ },
+ "hook": "[b]Miami sahilinde neon bir kokteyl barı tycoon'u.[/b] Kimse ne istediğini söylemez. Ruhsatı oku, içkiyi doğru dök ve servis etmeden önce ödünç ruhsat taşıyan çocuğu yakala.",
+ "roxy_quote": "Geldin demek, sugar. Kapılar altıda açılıyor.",
+ "roxy": "Malibu Club'ın salonunu Roxy Vale yönetiyor ve bu geceden itibaren bar senin. İlk gecende seni gezdirir, sonra defterini eline verir: yazılı bir iş zinciri, biri bitince öteki, her oyunda aynı. Defteri doldur, kulüp yalnızca kâğıt üstünde değil, gerçekten senin olsun.",
+ "card_1": "[b]Kimse ne istediğini söylemez.[/b] Bir tabureye tıkla ve ruhsatı oku. İsim, yaş ve ne için geldikleri yalnızca ruhsatta yazar.",
+ "card_2": "İkinci geceden itibaren ruhsatlar yalan söylemeye başlar. Bazı müşteriler yirmisini doldurmamıştır ve bunların yarısı başkasının ruhsatını taşır: ülkesini tutmayan bir bayrak, onun olmayan bir yüz, elle çizilmiş gibi duran bir ruhsat. KOV onlara kapıyı gösterir. Çocuğa içki verirsen cezayı sen ödersin. Dürüst birini kovarsan bir müşteri kaybedersin.",
+ "shake": [
+  ["54 tarif", ", her birinin kendi oranı var. Şişeyi eğ, shaker'ı izle, her ölçüyü kendi kutusuna düşür."],
+  ["Çalkalanmış, karıştırılmış ya da bardakta kurulmuş.", " Tarif karar verir; hakem de karıştırılmış bir Martini'yi çalkalanmışından ayırır."],
+  ["Buz, kabuk ve kenar.", " Bahşişi ufak şeylere verirler."],
+  ["Ezberle.", " Bir içkiyi tam isabet dök, kitap o ölçüyü oyunun sonuna kadar aklında tutar."]
+ ],
+ "bottles": "Markette 34 şişe markası var, ev cininden yıllanmış roma kadar. Ucuz şişe daha vasat bir içki çıkarır, bazı tarifler de yalnızca iyi malla açılır.",
+ "tap": "Bira ayrı bir zanaat. Shaker'ın yanına bile uğramaz. Bardağı eğ, doğrult ve köpüğü banda oturt.",
+ "crowd": "Miami'den Seul'e kırktan fazla yüz; her birinin adı, yaşı ve memleketi var. Yüzlerine bak, çünkü yorum işte bu. Müdavimler geri gelir, seni hatırlar; hıza, ustalığa ve iyi dolmuş bardağa bahşiş bırakır. Fazla bekleyen müşteri fırtına gibi çıkıp gider.",
+ "night": "Bir gece akşam altıdan sabaha karşı ikiye kadar sürer. Kapanışta kira kasadan çıkar, gecenin fişi gelir ve market açılır: şişeler, tarif sayfaları ve donanımlar. Üç gece üst üste ekside kapatırsan salonun ışıkları yine söner.",
+ "house": "Yıldızlar sokağın senin hakkında söyledikleridir ve iki çeşidi vardır. [b]Kalpler[/b] içkilerin nasıl beğenildiğini gösterir. [b]Elmaslar[/b] ise salonun havasını. Gece ikisinden düşük olanla kayda geçer, o yüzden ikisine de dikkat et. Tablolar, bitkiler, neonlar, masalar ve daha iyi bir lavabo al. Her donanım, takılı kaldığı sürece tek bir şeyi güçlendirir. Bir de tezgâhı temiz tut: tahtadaki bir halka sana salonu kaybettirir.",
+ "features": [
+  "Neon bir Miami sahilinde geçen, piksel sanatlı bir kokteyl barı tycoon'u",
+  "Siparişi saklayan ruhsatlar, yaşı tutmayan müşteriler ve ödünç ruhsatlar",
+  "54 tarif, 34 şişe markası ve gerçek köpüklü fıçı bira",
+  "Roxy'nin defteri: 18 işlik yazılı bir zincir, her oyunda aynı",
+  "22 yuvada 91 donanım; tek sıra yıldızı paylaşan iki puan",
+  "48 başarım, Steam lider tabloları, Steam Timeline ve Steam Cloud",
+  "29 dilde, yalnızca fareyle oynanır"
+ ]
+}

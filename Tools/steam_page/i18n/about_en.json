@@ -1,0 +1,39 @@
+{
+ "_note": "Source text of the Steam About section. Titles are drawn into the header strips (Malibu Arcade 16 px, at most 17 characters with spaces, upper case where the script has case). [b]...[/b] marks bold. roxy_quote is the game's own tour line data.tour.welcome.say.0 (first two sentences).",
+ "titles": {
+  "about": "ABOUT THE GAME",
+  "meet_roxy": "MEET ROXY",
+  "read_the_card": "READ THE CARD",
+  "shake_stir_pour": "SHAKE STIR POUR",
+  "the_tap": "THE TAP",
+  "the_crowd": "THE CROWD",
+  "one_night": "SIX TILL TWO",
+  "build_the_house": "BUILD THE HOUSE",
+  "features": "ON THE MENU"
+ },
+ "hook": "[b]A neon cocktail-bar tycoon on a Miami beach.[/b] Nobody tells you what they want. Read the ID, pour it right, and spot the kid with a borrowed licence before you serve them.",
+ "roxy_quote": "There you are, sugar. The doors open at six.",
+ "roxy": "Roxy Vale runs the floor at the Malibu Club, and as of tonight the bar is yours. She walks you round on your first night, then hands you her book: a written chain of jobs, one after another, the same every run. Fill it and the club is yours in more than name.",
+ "card_1": "[b]Nobody tells you what they want.[/b] Click a stool and read the card. The name, the age and the drink they came for only ever live on the ID.",
+ "card_2": "From the second night the cards start to lie. Some guests are under twenty, and half of those carry someone else's licence: a flag that isn't their country, a face that isn't theirs, a card that looks drawn. KICK shows them the door. Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest.",
+ "shake": [
+  ["54 recipes", ", each with its own ratio. Tip the bottle, watch the tin, land every part in its box."],
+  ["Shaken, stirred or built.", " The recipe decides, and the judge knows a stirred Martini from a shaken one."],
+  ["Ice, twists and rims.", " Guests tip for the little things."],
+  ["Learn it by heart.", " Pour a drink dead on and the book keeps the exact pour for the rest of the run."]
+ ],
+ "bottles": "34 bottle brands on the market, from house gin to aged rum. A cheap bottle pours a lesser drink, and some recipes only open for the good stuff.",
+ "tap": "Beer is a craft of its own. It never goes near the shaker. Lean the glass, straighten it, and pour the head into the band.",
+ "crowd": "More than forty faces from Miami to Seoul, each with a name, an age and a hometown. Watch their faces, because that's the review. Regulars come back, remember you, and tip on speed, craft and a good fill. A guest who waits too long goes out like a storm.",
+ "night": "A night runs from six till two. At closing the rent comes out of the till, the night's slip comes up, and the market opens: bottles, recipe pages and fittings. End three nights running in the red and the room goes dark again.",
+ "house": "The stars are what the street says about you, and they come in two kinds. [b]Hearts[/b] are how the drinks went down. [b]Diamonds[/b] are how the room feels. The night is filed at the lower of the two, so mind both. Buy pictures, plants, neon, tables and a better sink. Every fitting buffs one thing while it's installed. Then keep the counter clean: a ring on the wood costs you the room.",
+ "features": [
+  "A cocktail-bar tycoon in pixel art, set on a neon Miami beach",
+  "ID cards that hide the order, plus under-age guests and borrowed licences",
+  "54 recipes, 34 bottle brands, and draught beer with real heads",
+  "Roxy's book: a written chain of 18 jobs, the same every run",
+  "91 fittings across 22 slots, with two ratings sharing one row of stars",
+  "48 achievements, Steam leaderboards, the Steam Timeline and Steam Cloud",
+  "Playable in 29 languages, with the mouse alone"
+ ]
+}

@@ -1,0 +1,50 @@
+{
+ "titles": {
+  "about": "OVER DIT SPEL",
+  "meet_roxy": "DIT IS ROXY",
+  "read_the_card": "LEES DE PAS",
+  "shake_stir_pour": "SHAKEN EN ROEREN",
+  "the_tap": "DE TAP",
+  "the_crowd": "DE GASTEN",
+  "one_night": "VAN ZES TOT TWEE",
+  "build_the_house": "BOUW JE ZAAK",
+  "features": "OP DE KAART"
+ },
+ "hook": "[b]Een neon cocktailbar-tycoon op een strand in Miami.[/b] Niemand zegt wat ie wil. Lees de pas, schenk het goed en betrap het joch met andermans rijbewijs voordat je inschenkt.",
+ "roxy_quote": "Daar ben je, sugar. Om zes uur gaan de deuren open.",
+ "roxy": "Roxy Vale runt de zaal van de Malibu Club, en vanaf vanavond is de bar van jou. Je eerste avond leidt ze je rond, daarna geeft ze je haar boek: een uitgeschreven reeks klussen, de een na de ander, elk spel hetzelfde. Werk het af en de club is niet alleen in naam van jou.",
+ "card_1": "[b]Niemand zegt wat ie wil.[/b] Klik op een kruk en lees de pas. De naam, de leeftijd en het drankje waarvoor ze komen staan alleen op de pas.",
+ "card_2": "Vanaf de tweede avond gaan de passen liegen. Sommige gasten zijn onder de twintig, en de helft daarvan heeft andermans pas bij zich: een vlag die niet bij het land hoort, een gezicht dat niet van hen is, een pas die getekend lijkt. ERUIT wijst ze de deur. Schenk voor een kind en je betaalt de boete. Zet een eerlijk gezicht buiten en je bent een gast kwijt.",
+ "shake": [
+  [
+   "54 recepten",
+   ", elk met een eigen verhouding. Kantel de fles, let op de shaker en laat elk deel in zijn vakje landen."
+  ],
+  [
+   "Geshaket, geroerd of gebouwd.",
+   " Het recept beslist, en de jury kent het verschil tussen een geroerde en een geshakete Martini."
+  ],
+  [
+   "IJs, twists en randjes.",
+   " Gasten geven fooi voor de kleine dingen."
+  ],
+  [
+   "Leer het uit je hoofd.",
+   " Schenk een drankje precies raak en het boek onthoudt de exacte schenking voor de rest van het spel."
+  ]
+ ],
+ "bottles": "34 flessenmerken op de markt, van huisgin tot gerijpte rum. Een goedkope fles geeft een minder drankje, en sommige recepten gaan pas open voor het goede spul.",
+ "tap": "Bier is een vak apart. Het komt nooit in de buurt van de shaker. Kantel het glas, zet het recht en schenk de schuimkraag in de band.",
+ "crowd": "Meer dan veertig gezichten van Miami tot Seoul, elk met een naam, een leeftijd en een geboorteplaats. Kijk naar hun gezicht, want dat is de recensie. Vaste gasten komen terug, onthouden je en geven fooi voor tempo, vakwerk en een vol glas. Wie te lang wacht, stormt de deur uit.",
+ "night": "Een avond loopt van zes tot twee. Bij sluiting gaat de huur uit de kassa, komt de rekening van de avond en gaat de markt open: flessen, receptpagina's en inrichting. Sluit drie avonden op rij af in het rood en het licht gaat hier weer uit.",
+ "house": "De sterren zijn wat de straat over je zegt, en ze komen in twee soorten. [b]Harten[/b] zeggen hoe de drankjes vielen. [b]Diamanten[/b] zeggen hoe de zaak aanvoelt. De avond telt voor de laagste van de twee, dus let op allebei. Koop schilderijen, planten, neon, tafels en een betere spoelbak. Elk stuk inrichting versterkt één ding zolang het er staat. En houd de bar schoon: een kring op het hout kost je de zaak.",
+ "features": [
+  "Een cocktailbar-tycoon in pixel art, op een neon strand in Miami",
+  "Passen die de bestelling verbergen, minderjarige gasten en geleende passen",
+  "54 recepten, 34 flessenmerken en tapbier met een echte schuimkraag",
+  "Roxy's boek: een uitgeschreven reeks van 18 klussen, elk spel hetzelfde",
+  "91 stukken inrichting op 22 plekken, met twee beoordelingen in één rij sterren",
+  "48 prestaties, Steam-ranglijsten, de Steam Timeline en Steam Cloud",
+  "Speelbaar in 29 talen, alleen met de muis"
+ ]
+}
