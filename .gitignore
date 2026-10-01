@@ -176,3 +176,8 @@ Tools/social/state/
 
 # the Steamworks kit's output: regenerated from the data by Tools/steamworks/achievements_kit.py
 /Tools/steamworks/out/
+
+# Steam page renders: reproducible from Tools/steam_page/*.py; nano takes are picked by hand before shipping
+Tools/steam_page/out/about/
+Tools/steam_page/out/capsules/
+Tools/steam_page/out/nano/
