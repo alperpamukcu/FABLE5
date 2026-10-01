@@ -11,7 +11,7 @@ import scene as S
 import compose as K
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'about')
-W = 616
+W = 640          # the picture inside a kit panel: native 320 on a 2 px grid (the kit's 360 frame, at half its scale)
 FPS = 12
 ARCADE = os.path.join(S.ROOT, 'Assets', 'Fonts', 'MalibuArcade-Regular.ttf')
 
@@ -122,6 +122,8 @@ def label(img, xy, s, colour, scale=2, bold=True):
 def save_gif(frames, name, fps=FPS, holds=None):
     os.makedirs(OUT, exist_ok=True)
     p = os.path.join(OUT, name + '.gif')
+    import kit
+    frames = [kit.panel_px(f.convert('RGB'), 2) for f in frames]
     # ONE palette for the whole clip, cut from a strip of sample frames: the painted backdrop then maps to the same
     # indices every frame, so the encoder only stores what moved (per-frame palettes made a still wall "change").
     picks = frames[::max(1, len(frames) // 8)][:8]
@@ -147,29 +149,38 @@ def save_png(img, name):
 
 
 # ── backdrops ────────────────────────────────────────────────────────────────────────────────────────
-# The painted bar (gen_nano.py 'gif_backdrop', the take picked by eye): an empty counter whose top edge sits at
-# row BACKDROP_CY of its 616x360 reduction. Patrons stand behind it, so its counter strip is laid again in front.
-BACKDROP = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'nano', 'gif_backdrop_2.png')
-BACKDROP_CY = 300
+# The master composition's own bar (plate.py + keyart.counter): the steam_kit sunset behind the counter with the
+# magenta neon lip. Patrons stand behind it, so the counter's strip is laid again in front of them.
 _front = {}
 
 
-def bar_bg(H, counter_y=None, sun_x=None, sun_r=None, horizon=None, patrons=None, patron_x=0.0, props_x=None,
-           props_step=70, seed=3):
-    full = Image.open(BACKDROP).convert('RGBA').resize((W, 360), Image.LANCZOS)
-    top = 360 - H
-    img = full.crop((0, top, W, 360))
-    cy = BACKDROP_CY - top
-    _front[H] = img.crop((0, cy, W, H))
+def bar_bg(H, counter_y=0.84, sun_x=0.5, sun_r=None, horizon=0.60, patrons=None, patron_x=0.0, props_x=None,
+           props_step=70, seed=3, night=0.30, sun_drop=0, dusk=0.0):
+    import plate as PL
+    import keyart as KA
+    w, h = W // 2, H // 2
+    img = PL.render(w, h, horizon=horizon, night=night, sun_x=sun_x, sun_r=sun_r or max(8, int(h * 0.16)),
+                    skyline_spans=((0.0, 0.30), (0.74, 1.0)), skyline_h=max(10, int(h * horizon * 0.40)),
+                    palms=(('left', 0.0, 1.0), ('right', 1.0, 1.0)), seed=seed, sun_drop=sun_drop)
+    if dusk:
+        img = S.tint(img, S.C('Night[0]'), dusk)
+    cyn = int(round(h * counter_y))
+    ctr, top = KA.counter(w, h - cyn)
+    img.alpha_composite(ctr, (0, cyn))
+    img.alpha_composite(KA.lip_glow(w, h, cyn + top))
+    big = img.resize((w * 2, h * 2), Image.NEAREST)
+    cy = cyn * 2
+    _front[H] = big.crop((0, cy + 2 * top, W, H))
+    _front[(H, 'y')] = cy + 2 * top
     if props_x is not None:
         from build_capsules import props
-        props(img, cy, 2, props_x, props_step)
-    return img, cy
+        props(big, cy, 2, props_x, props_step)
+    return big, cy
 
 
 def front(img, cy):
-    """The counter's own strip back over whatever stands behind it."""
-    img.alpha_composite(_front[img.height], (0, cy))
+    """The counter's front face back over whatever stands behind it (its top and neon lip stay behind them)."""
+    img.alpha_composite(_front[img.height], (0, _front[(img.height, 'y')]))
 
 
 # ── 1 · Roxy walks in and says hello ─────────────────────────────────────────────────────────────────
@@ -259,7 +270,7 @@ def gif_read_the_card():
 
 # ── 3 · shake it, pour it, perfect ───────────────────────────────────────────────────────────────────
 def gif_shake_and_pour():
-    H = 340
+    H = 360
     bg, cy = bar_bg(H, sun_x=0.2, counter_y=0.86, props_x=None)
     shaker = S.load('Items/shaker.png'); cap = S.load('Items/shaker_cap.png')
     tin = shaker.copy(); tin.alpha_composite(cap)
@@ -339,7 +350,7 @@ def pint(liquid, head):
 
 
 def gif_pint():
-    H = 340
+    H = 360
     bg, cy = bar_bg(H, sun_x=0.75, counter_y=0.86)
     tap = S.load('Items/tap.png'); handle = S.load('Items/tap_handle.png')
     t = tap.copy(); t.alpha_composite(handle); t = t.crop(t.getbbox())
@@ -377,7 +388,7 @@ def gif_pint():
 
 # ── 5 · the crowd: every face reacts to the drink it got ─────────────────────────────────────────────
 def gif_crowd():
-    H = 300
+    H = 360
     bg, cy = bar_bg(H, sun_x=0.5, counter_y=0.84)
     cast = [('kdance', 'cheer'), ('guard', 'drink'), ('gallerist', 'upset'), ('leopard', 'cheer'), ('bristol', 'drink')]
     clips = {w: S.frames(w, c) for w, c in cast}
@@ -403,21 +414,14 @@ def gif_crowd():
 
 # ── 6 · a night: six till two, the sun goes, the till fills, the stars are filed ─────────────────────
 def gif_night():
-    H = 300
+    H = 360
     frames = []
     N = 48
     for k in range(N + 24):
         q = min(1.0, k / N)
-        w, h = W // 2, H // 2
-        hz = int(h * 0.62)
-        sun_r = int(h * 0.3)
-        img = S.window_room(w, h, hz, w // 2, sun_r, seed=3, sun_drop=int(q * sun_r * 1.05))
-        img = S.tint(img, S.C('Night[0]'), 0.45 * q)
-        img = S.neon_bar(img, 8)
-        big = S.up(img, 2)
-        cy = int(H * 0.82)
-        big.alpha_composite(S.up(S.counter(w, (H - cy) // 2 + 2), 2), (0, cy))
-        big = S.vignette(big, 0.4)
+        h = H // 2
+        r = max(8, int(h * 0.16))
+        big, cy = bar_bg(H, sun_x=0.5, sun_r=r, sun_drop=int(q * (r + 1)), dusk=0.42 * q, night=0.30 + 0.25 * q)
         mins = int(18 * 60 + q * 8 * 60)
         hh, mm = (mins // 60) % 24, mins % 60 // 10 * 10
         clock = neon_text('%02d:%02d' % (hh, mm), 'Cyan', 2, 16)
@@ -456,7 +460,7 @@ def house_wall(H):
 
 
 def gif_build():
-    H = 320
+    H = 360
     wall, floor = house_wall(H)
     # (fitting, x, y or None for the floor, scale, diamonds lit once it is in)
     steps = [('fx_neon_martini', 40, 46, 2, 1), ('fx_picS_trio', 110, 40, 2, 2), ('fx_plant_palm', 6, None, 2, 2),
@@ -496,35 +500,24 @@ def gif_build():
 
 
 # ── section banners ──────────────────────────────────────────────────────────────────────────────────
-BANNERS = [('meet_roxy', 'MEET ROXY', 'Magenta'), ('read_the_card', 'READ THE CARD', 'Cyan'),
-           ('shake_stir_pour', 'SHAKE  STIR  POUR', 'Magenta'), ('the_tap', 'THE TAP', 'Amber'),
-           ('the_crowd', 'THE CROWD', 'Cyan'), ('one_night', 'SIX TILL TWO', 'Magenta'),
-           ('build_the_house', 'BUILD THE HOUSE', 'Amber'), ('features', 'ON THE MENU', 'Cyan')]
+# section headers: the author's steam_kit header, re-lettered (kit.header2), one icon from the game each
+BANNERS = [('meet_roxy', 'MEET ROXY', 'heart3d'), ('read_the_card', 'READ THE CARD', 'card'),
+           ('shake_stir_pour', 'SHAKE STIR POUR', 'mk_tab_liquor'), ('the_tap', 'THE TAP', 'ib_kegs'),
+           ('the_crowd', 'THE CROWD', 'ib_arrivals'), ('one_night', 'SIX TILL TWO', 'ib_lateness'),
+           ('build_the_house', 'BUILD THE HOUSE', 'up_wall_art'), ('features', 'ON THE MENU', 'ib_round')]
 
 
-def banner(text_, ramp):
-    H = 84
-    a = np.zeros((H, W, 4), np.uint8)
-    a[:] = S.C('Night[1]')
-    img = Image.fromarray(a, 'RGBA')
-    t = neon_text(text_, ramp, 2, 16)     # one size for every section, so the column reads as one system
-    x = (W - t.width) // 2
-    # rails either side of the word, where there is room for them
-    for y in (H // 2 - 1,):
-        m = np.zeros((H, W), bool)
-        if x - 30 > 16:
-            m[y:y + 3, 16:x - 14] = True
-            m[y:y + 3, x + t.width + 14:W - 16] = True
-        img.alpha_composite(S.glow(m, S.C('%s[3]' % ramp), step=2))
-        aa = np.asarray(img).copy(); aa[m] = S.C('%s[3]' % ramp); aa[y + 1][m[y + 1]] = S.C('Cream[4]')
-        img = Image.fromarray(aa, 'RGBA')
-    img.alpha_composite(t, (x, (H - t.height) // 2))
-    return img
+def save_header(key, word, icon):
+    import kit
+    os.makedirs(OUT, exist_ok=True)
+    p = os.path.join(OUT, 'banner_' + key + '.gif')
+    kit.save_header(kit.header2(word, icon, seed=11 + len(word)), p)
+    print('%-26s 1440x176  6 frames  %.2f MB' % (os.path.basename(p), os.path.getsize(p) / 1e6))
 
 
 def main():
-    for key, word, ramp in BANNERS:
-        save_png(banner(word, ramp), 'banner_' + key)
+    for key, word, icon in BANNERS:
+        save_header(key, word, icon)
     gif_meet_roxy()
     gif_read_the_card()
     gif_shake_and_pour()

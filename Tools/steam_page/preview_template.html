@@ -23,7 +23,7 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ── store mock ─────────────────────────────── */
 .store { position: relative; padding-block: 28px 32px; }
-.store::before { content: ""; position: absolute; inset: 0 -50vw; background: url(capsules/page_background_1438x810.jpg) center top / 1438px auto no-repeat, #1b2838; z-index: -1; }
+.store::before { content: ""; position: absolute; inset: 0 -50vw; background: url(refs/page_background.webp) center top / 1438px auto no-repeat, #1b2838; z-index: -1; }
 .crumbs { font-size: 12px; color: var(--dim); }
 .store h1 { font-family: var(--body); font-weight: 500; font-size: 26px; color: var(--hi); margin: 4px 0 14px; }
 .store-grid { display: grid; grid-template-columns: minmax(0, 616px) minmax(0, 1fr); gap: 16px; background: rgba(0,0,0,.35); padding: 0; }
@@ -71,7 +71,7 @@ figcaption b { color: var(--fg); font-weight: 600; }
 figcaption code { font-variant-numeric: tabular-nums; font-family: var(--pixel); font-size: 11px; color: var(--amber); white-space: nowrap; }
 .wide { grid-column: 1 / -1; }
 .library { position: relative; }
-.library .logo-over { position: absolute; left: 4%; bottom: 10%; width: 34%; height: auto; background: none; }
+.library .logo-over { position: absolute; left: 3%; bottom: 24%; width: 30%; height: auto; background: none; }
 .pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 20px; align-items: end; }
 
 /* ── research ───────────────────────────────── */
@@ -99,9 +99,9 @@ td:first-child { color: var(--hi); white-space: nowrap; }
     <h1>Malibu Club: Cocktail Bar Simulator</h1>
     <div class="store-grid">
       <div class="highlight">
-        <img id="hl" src="capsules/main_capsule_1232x706.png" alt="Main capsule: Roxy with a cocktail in front of the neon bar at sunset" width="1232" height="706">
+        <img id="hl" src="keyart/main_capsule.png" alt="Main capsule: Roxy with a cocktail in front of the neon bar at sunset" width="1232" height="706">
         <div class="strip" role="list">
-          <img role="listitem" tabindex="0" aria-current="true" src="capsules/main_capsule_1232x706.png" alt="Main capsule">
+          <img role="listitem" tabindex="0" aria-current="true" src="keyart/main_capsule.png" alt="Main capsule">
           <img role="listitem" tabindex="0" src="about/01_meet_roxy.gif" alt="Roxy GIF">
           <img role="listitem" tabindex="0" src="about/02_read_the_card.gif" alt="ID card GIF">
           <img role="listitem" tabindex="0" src="about/03_shake_and_pour.gif" alt="Shaker GIF">
@@ -109,7 +109,7 @@ td:first-child { color: var(--hi); white-space: nowrap; }
         </div>
       </div>
       <aside class="side">
-        <img src="capsules/header_capsule_920x430.jpg" alt="Header capsule" width="920" height="430">
+        <img src="keyart/header_capsule.png" alt="Header capsule" width="920" height="430">
         <p class="short" id="short">A neon cocktail-bar tycoon on a Miami beach. Nobody tells you what they want: read the ID, pour it right, shake, stir and pull a proper pint, and spot the kid with a borrowed licence before you serve them. Roxy hands you the bar. Keep it alive.</p>
         <div class="meta"><span>Developer</span><b>LasGen Interactive</b><span>Publisher</span><b>LasGen Interactive</b></div>
         <div class="tags">
@@ -149,29 +149,34 @@ td:first-child { color: var(--hi); white-space: nowrap; }
   <section class="kit">
     <div class="sec-head"><h2>Mağaza görselleri</h2><p>Steamworks'teki adlarıyla, tam boyutlarında</p></div>
     <div class="kit-grid">
-      <figure class="wide"><img src="capsules/main_capsule_1232x706.png" alt="" loading="lazy"><figcaption><b>Main capsule</b><code>1232×706</code></figcaption></figure>
-      <figure><img src="capsules/header_capsule_920x430.jpg" alt="" loading="lazy"><figcaption><b>Header capsule</b><code>920×430</code></figcaption></figure>
-      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy"><figcaption><b>Small capsule</b><code>462×174</code></figcaption></figure>
-      <figure><img src="capsules/vertical_capsule_748x896.jpg" alt="" loading="lazy"><figcaption><b>Vertical capsule</b><code>748×896</code></figcaption></figure>
-      <figure><img src="capsules/page_background_1438x810.jpg" alt="" loading="lazy"><figcaption><b>Page background</b><code>1438×810</code></figcaption></figure>
-      <figure><img src="capsules/event_cover_800x450.jpg" alt="" loading="lazy"><figcaption><b>Event cover</b><code>800×450</code></figcaption></figure>
-      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy" style="width:120px"><figcaption><b>Small @120×45 okunurluk</b><code>test</code></figcaption></figure>
-      <figure class="wide"><img src="capsules/event_header_1920x622.jpg" alt="" loading="lazy"><figcaption><b>Event header</b><code>1920×622</code></figcaption></figure>
+      <figure class="wide"><img src="keyart/main_capsule.png" alt="" loading="lazy"><figcaption><b>Main capsule</b><code>1232×706</code></figcaption></figure>
+      <figure><img src="keyart/header_capsule.png" alt="" loading="lazy"><figcaption><b>Header capsule</b><code>920×430</code></figcaption></figure>
+      <figure><img src="keyart/small_capsule.png" alt="" loading="lazy"><figcaption><b>Small capsule</b><code>462×174</code></figcaption></figure>
+      <figure><img src="keyart/vertical_capsule.png" alt="" loading="lazy"><figcaption><b>Vertical capsule</b><code>748×896</code></figcaption></figure>
+      <figure><img src="refs/page_background.webp" alt="" loading="lazy"><figcaption><b>Page background (steam_kit, yazarın)</b><code>2000×1125</code></figcaption></figure>
+      <figure><img src="keyart/event_cover.png" alt="" loading="lazy"><figcaption><b>Event cover</b><code>800×450</code></figcaption></figure>
+      <figure><img src="keyart/small_capsule.png" alt="" loading="lazy" style="width:120px"><figcaption><b>Small @120×45 okunurluk</b><code>test</code></figcaption></figure>
+      <figure class="wide"><img src="keyart/event_header.png" alt="" loading="lazy"><figcaption><b>Event header</b><code>1920×622</code></figcaption></figure>
     </div>
   </section>
 
   <section class="kit">
     <div class="sec-head"><h2>Kütüphane</h2><p>Hero logosuz teslim edilir; Steam kütüphane logosunu üstüne koyar. Aşağıdaki birleşim yalnızca önizleme.</p></div>
     <div class="kit-grid">
-      <figure class="wide library"><img src="capsules/library_hero_3840x1240.jpg" alt="" loading="lazy"><img class="logo-over" src="capsules/library_logo_1280x720.png" alt=""><figcaption><b>Library hero + logo (önizleme)</b><code>3840×1240 · 1280×720</code></figcaption></figure>
+      <figure class="wide library"><img src="keyart/library_hero.png" alt="" loading="lazy"><img class="logo-over" src="keyart/library_logo.png" alt=""><figcaption><b>Library hero + logo (önizleme)</b><code>3840×1240 · 1280×720</code></figcaption></figure>
       <div class="wide pair">
-        <figure><img src="capsules/library_header_920x430.jpg" alt="" loading="lazy"><figcaption><b>Library header</b><code>920×430</code></figcaption></figure>
-        <figure><img src="capsules/library_capsule_600x900.jpg" alt="" loading="lazy"><figcaption><b>Library capsule</b><code>600×900</code></figcaption></figure>
+        <figure><img src="keyart/library_header.png" alt="" loading="lazy"><figcaption><b>Library header</b><code>920×430</code></figcaption></figure>
+        <figure><img src="keyart/library_capsule.png" alt="" loading="lazy"><figcaption><b>Library capsule</b><code>600×900</code></figcaption></figure>
       </div>
-      <figure><img src="capsules/library_logo_1280x720.png" alt="" loading="lazy"><figcaption><b>Library logo (saydam)</b><code>1280×720</code></figcaption></figure>
-      <figure><img src="capsules/community_icon_184x184.jpg" alt="" loading="lazy" style="width:184px"><figcaption><b>Community icon</b><code>184×184</code></figcaption></figure>
-      <figure><img src="capsules/client_icon_256x256.png" alt="" loading="lazy" style="width:256px"><figcaption><b>Client icon</b><code>256×256</code></figcaption></figure>
+      <figure><img src="keyart/library_logo.png" alt="" loading="lazy"><figcaption><b>Library logo (saydam, sıkı kırpılmış)</b><code>1280×483</code></figcaption></figure>
+      <figure><img src="keyart/community_icon.png" alt="" loading="lazy" style="width:184px"><figcaption><b>Community icon</b><code>184×184</code></figcaption></figure>
+      <figure><img src="keyart/client_icon.png" alt="" loading="lazy" style="width:256px"><figcaption><b>Client icon</b><code>256×256</code></figcaption></figure>
     </div>
+  </section>
+
+  <section class="kit">
+    <div class="sec-head"><h2>Yerleşim</h2><p>Her görselde logo, Roxy ve bar kutuları; Steam'in güvenli alanı, bindirmeleri ve logo bölgesi (amber)</p></div>
+    <figure class="wide"><img src="keyart/_layout/LAYOUT_SHEET.png" alt="Layout sheet: logo, Roxy and bar boxes for every Steam asset" loading="lazy"></figure>
   </section>
 
   <section class="research">
