@@ -1,0 +1,354 @@
+<title>Malibu Club Steam Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a mock of the Steam store page first (as the buyer meets it), then the kit laid out slot by slot, then the research behind it.
+   Single deliberate dark look: Steam's own night-blue store chrome around the game's neon palette. */
+:root {
+  --night: #0D0813; --ink: #1A1023; --panel: #16202d; --panel2: #1b2838; --rule: #2a3f5a;
+  --fg: #c7d5e0; --dim: #8f98a0; --hi: #ffffff;
+  --magenta: #E84DA6; --cyan: #7DF0E3; --amber: #E8A33D; --link: #66c0f4;
+  --pixel: "Silkscreen", "Courier New", monospace;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: #10161f; color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1000px; margin: 0 auto; padding-inline: 16px; padding-block: 0 64px; }
+a { color: var(--link); }
+img { max-width: 100%; display: block; image-rendering: pixelated; }
+h1, h2, h3 { text-wrap: balance; }
+.eyebrow { font-family: var(--pixel); font-size: 12px; letter-spacing: .08em; color: var(--cyan); text-transform: uppercase; }
+
+/* ── store mock ─────────────────────────────── */
+.store { position: relative; padding-block: 28px 32px; }
+.store::before { content: ""; position: absolute; inset: 0 -50vw; background: url(capsules/page_background_1438x810.jpg) center top / 1438px auto no-repeat, #1b2838; z-index: -1; }
+.crumbs { font-size: 12px; color: var(--dim); }
+.store h1 { font-family: var(--body); font-weight: 500; font-size: 26px; color: var(--hi); margin: 4px 0 14px; }
+.store-grid { display: grid; grid-template-columns: minmax(0, 616px) minmax(0, 1fr); gap: 16px; background: rgba(0,0,0,.35); padding: 0; }
+.highlight { min-width: 0; }
+.highlight img { width: 100%; }
+.strip { display: flex; gap: 4px; margin-top: 4px; overflow-x: auto; }
+.strip img { width: 116px; height: auto; flex: none; opacity: .75; border: 2px solid transparent; cursor: pointer; }
+.strip img[aria-current="true"] { opacity: 1; border-color: var(--hi); }
+.side { min-width: 0; display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px; }
+.side .short { font-size: 13px; color: var(--fg); padding-inline: 2px 12px; }
+.meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 11px; color: var(--dim); text-transform: uppercase; padding-inline: 2px 12px; }
+.meta b { color: var(--link); font-weight: 400; text-transform: none; font-size: 12px; }
+.tags { display: flex; flex-wrap: wrap; gap: 3px; padding-inline: 2px 12px; }
+.tags span { background: rgba(103,193,245,.2); color: var(--link); font-size: 11px; padding: 1px 7px; border-radius: 2px; }
+.tags span.top { background: rgba(103,193,245,.32); color: #e0f2ff; }
+
+/* ── about column ───────────────────────────── */
+.below { display: grid; grid-template-columns: minmax(0, 616px) minmax(0, 1fr); gap: 32px; padding-block: 28px 0; }
+.about h2 { font-size: 14px; letter-spacing: .06em; color: var(--hi); font-weight: 500; text-transform: uppercase; border-bottom: 1px solid var(--rule); padding-bottom: 6px; margin: 0 0 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.lang { display: inline-flex; gap: 2px; }
+.lang button { font: 600 11px var(--body); letter-spacing: .06em; background: var(--panel2); color: var(--dim); border: 1px solid var(--rule); padding: 3px 10px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--link); color: #0b1a26; border-color: var(--link); }
+.lang button:focus-visible, .strip img:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.bb { color: #acb2b8; font-size: 14px; max-width: 616px; }
+.bb img { margin-block: 6px 10px; }
+.bb b { color: #e5e5e5; }
+.bb ul { padding-left: 22px; margin: 8px 0 16px; }
+.bb li { margin-bottom: 4px; }
+.bb p { margin: 0 0 14px; }
+.aside { min-width: 0; display: flex; flex-direction: column; gap: 14px; font-size: 13px; }
+.aside .box { background: rgba(0,0,0,.25); padding: 12px 14px; }
+.aside h3 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--dim); font-weight: 600; }
+.aside ol { margin: 0; padding-left: 20px; color: var(--fg); }
+
+/* ── kit ────────────────────────────────────── */
+section.kit, section.research { padding-block: 48px 0; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; border-bottom: 1px solid var(--rule); padding-bottom: 10px; margin-bottom: 20px; }
+.sec-head h2 { font-family: var(--pixel); font-weight: 700; font-size: 24px; color: var(--hi); margin: 0; letter-spacing: .02em; }
+.sec-head p { margin: 0; color: var(--dim); font-size: 13px; }
+.kit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 24px 20px; align-items: start; }
+figure { margin: 0; min-width: 0; }
+figure img { width: 100%; background: repeating-conic-gradient(#222b36 0 25%, #1a222c 0 50%) 0 0 / 16px 16px; }
+figcaption { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-top: 6px; color: var(--dim); }
+figcaption b { color: var(--fg); font-weight: 600; }
+figcaption code { font-variant-numeric: tabular-nums; font-family: var(--pixel); font-size: 11px; color: var(--amber); white-space: nowrap; }
+.wide { grid-column: 1 / -1; }
+.library { position: relative; }
+.library .logo-over { position: absolute; left: 4%; bottom: 10%; width: 34%; height: auto; background: none; }
+.pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 20px; align-items: end; }
+
+/* ── research ───────────────────────────────── */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px; }
+.research h3 { font-family: var(--pixel); font-size: 14px; color: var(--magenta); margin: 0 0 10px; letter-spacing: .03em; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { color: var(--dim); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+td:first-child { color: var(--hi); white-space: nowrap; }
+.note { border-left: 3px solid var(--amber); background: rgba(232,163,61,.08); padding: 10px 14px; font-size: 13px; color: var(--fg); }
+.research ul { padding-left: 18px; margin: 0; }
+.research li { margin-bottom: 6px; }
+
+@media (max-width: 760px) {
+  .store-grid, .below, .pair { grid-template-columns: minmax(0, 1fr); }
+  .side { padding-inline: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="store">
+    <div class="crumbs">All Games › Simulation Games › Malibu Club: Cocktail Bar Simulator</div>
+    <h1>Malibu Club: Cocktail Bar Simulator</h1>
+    <div class="store-grid">
+      <div class="highlight">
+        <img id="hl" src="capsules/main_capsule_1232x706.png" alt="Main capsule: Roxy with a cocktail in front of the neon bar at sunset" width="1232" height="706">
+        <div class="strip" role="list">
+          <img role="listitem" tabindex="0" aria-current="true" src="capsules/main_capsule_1232x706.png" alt="Main capsule">
+          <img role="listitem" tabindex="0" src="about/01_meet_roxy.gif" alt="Roxy GIF">
+          <img role="listitem" tabindex="0" src="about/02_read_the_card.gif" alt="ID card GIF">
+          <img role="listitem" tabindex="0" src="about/03_shake_and_pour.gif" alt="Shaker GIF">
+          <img role="listitem" tabindex="0" src="about/05_the_crowd.gif" alt="Crowd GIF">
+        </div>
+      </div>
+      <aside class="side">
+        <img src="capsules/header_capsule_920x430.jpg" alt="Header capsule" width="920" height="430">
+        <p class="short" id="short">A neon cocktail-bar tycoon on a Miami beach. Nobody tells you what they want: read the ID, pour it right, shake, stir and pull a proper pint, and spot the kid with a borrowed licence before you serve them. Roxy hands you the bar. Keep it alive.</p>
+        <div class="meta"><span>Developer</span><b>LasGen Interactive</b><span>Publisher</span><b>LasGen Interactive</b></div>
+        <div class="tags">
+          <span class="top">Simulation</span><span class="top">Management</span><span class="top">Pixel Graphics</span><span class="top">Crafting</span><span class="top">Time Management</span><span>2D</span><span>Retro</span><span>Cozy</span><span>Economy</span><span>+</span>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <div class="below">
+    <article class="about">
+      <h2>About this game
+        <span class="lang" role="group" aria-label="Language">
+          <button type="button" id="b-en" aria-pressed="true">EN</button>
+          <button type="button" id="b-tr" aria-pressed="false">TR</button>
+        </span>
+      </h2>
+      <div class="bb" id="about-en"></div>
+      <div class="bb" id="about-tr" hidden></div>
+    </article>
+    <div class="aside">
+      <div class="box">
+        <h3>Bu sayfa nedir</h3>
+        Mağaza sayfasının provası. Görseller ve metin, Steamworks'e yüklenecek dosyaların kendisidir. Her şey oyunun kendi sprite'ları, paleti ve <b>değiştirilmemiş Malibu Club logosuyla</b> koddan üretildi.
+      </div>
+      <div class="box">
+        <h3>About akışı</h3>
+        <ol><li>Roxy</li><li>Kimlik kartı</li><li>Kokteyl</li><li>Musluk</li><li>Kalabalık</li><li>Bir gece</li><li>Salonu kur</li><li>Özellikler</li></ol>
+      </div>
+      <div class="box">
+        <h3>Ağırlık</h3>
+        7 GIF + 8 başlık ≈ 3.8 MB. En büyük GIF 0.98 MB. Valve'ın ~15 MB'lık sayfa eşiğinin altında.
+      </div>
+    </div>
+  </div>
+
+  <section class="kit">
+    <div class="sec-head"><h2>Mağaza görselleri</h2><p>Steamworks'teki adlarıyla, tam boyutlarında</p></div>
+    <div class="kit-grid">
+      <figure class="wide"><img src="capsules/main_capsule_1232x706.png" alt="" loading="lazy"><figcaption><b>Main capsule</b><code>1232×706</code></figcaption></figure>
+      <figure><img src="capsules/header_capsule_920x430.jpg" alt="" loading="lazy"><figcaption><b>Header capsule</b><code>920×430</code></figcaption></figure>
+      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy"><figcaption><b>Small capsule</b><code>462×174</code></figcaption></figure>
+      <figure><img src="capsules/vertical_capsule_748x896.jpg" alt="" loading="lazy"><figcaption><b>Vertical capsule</b><code>748×896</code></figcaption></figure>
+      <figure><img src="capsules/page_background_1438x810.jpg" alt="" loading="lazy"><figcaption><b>Page background</b><code>1438×810</code></figcaption></figure>
+      <figure><img src="capsules/event_cover_800x450.jpg" alt="" loading="lazy"><figcaption><b>Event cover</b><code>800×450</code></figcaption></figure>
+      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy" style="width:120px"><figcaption><b>Small @120×45 okunurluk</b><code>test</code></figcaption></figure>
+      <figure class="wide"><img src="capsules/event_header_1920x622.jpg" alt="" loading="lazy"><figcaption><b>Event header</b><code>1920×622</code></figcaption></figure>
+    </div>
+  </section>
+
+  <section class="kit">
+    <div class="sec-head"><h2>Kütüphane</h2><p>Hero logosuz teslim edilir; Steam kütüphane logosunu üstüne koyar. Aşağıdaki birleşim yalnızca önizleme.</p></div>
+    <div class="kit-grid">
+      <figure class="wide library"><img src="capsules/library_hero_3840x1240.jpg" alt="" loading="lazy"><img class="logo-over" src="capsules/library_logo_1280x720.png" alt=""><figcaption><b>Library hero + logo (önizleme)</b><code>3840×1240 · 1280×720</code></figcaption></figure>
+      <div class="wide pair">
+        <figure><img src="capsules/library_header_920x430.jpg" alt="" loading="lazy"><figcaption><b>Library header</b><code>920×430</code></figcaption></figure>
+        <figure><img src="capsules/library_capsule_600x900.jpg" alt="" loading="lazy"><figcaption><b>Library capsule</b><code>600×900</code></figcaption></figure>
+      </div>
+      <figure><img src="capsules/library_logo_1280x720.png" alt="" loading="lazy"><figcaption><b>Library logo (saydam)</b><code>1280×720</code></figcaption></figure>
+      <figure><img src="capsules/community_icon_184x184.jpg" alt="" loading="lazy" style="width:184px"><figcaption><b>Community icon</b><code>184×184</code></figcaption></figure>
+      <figure><img src="capsules/client_icon_256x256.png" alt="" loading="lazy" style="width:256px"><figcaption><b>Client icon</b><code>256×256</code></figcaption></figure>
+    </div>
+  </section>
+
+  <section class="research">
+    <div class="sec-head"><h2>Araştırma ve kararlar</h2><p>Görsellerin dayandığı pazar ve tasarım okuması</p></div>
+    <div class="cols">
+      <div>
+        <h3>Kıyas oyunları</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Oyun</th><th>Neden</th></tr></thead>
+          <tbody>
+            <tr><td>VA-11 Hall-A</td><td>Piksel bar + içki + sohbet; %97 olumlu, ~38.7k yorum</td></tr>
+            <tr><td>Papers, Please</td><td>Kimlik kontrolü ve kapıdan çevirme; %97, ~39.7k</td></tr>
+            <tr><td>Coffee Talk</td><td>Piksel "demle ve konuş", $12.99</td></tr>
+            <tr><td>Brewpub Simulator</td><td>Kancasız 3D bar: %57, uyarı örneği</td></tr>
+            <tr><td>2025–26 bar simleri</td><td>Neredeyse hepsi 3D birinci şahıs; 2D neon boşluğu açık</td></tr>
+            <tr><td>Dave the Diver</td><td>Büyük karakter, sade zemin, temiz logo alanı</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <h3>Uygulanan ilkeler</h3>
+        <ul>
+          <li><b>Tek odak, göz teması:</b> Roxy her kapsülde önde ve izleyiciye bakıyor.</li>
+          <li><b>Tür ilk bakışta:</b> karede tezgâh, kokteyl ve kimlik kartı var; salt synthwave değil.</li>
+          <li><b>Siluet:</b> bordo tulum mor zeminde kaybolmasın diye magenta kenar ışığı ve logonun bantlı halesi.</li>
+          <li><b>Piksel dürüstlüğü:</b> yalnız tam kat büyütme (NEAREST), palet yalnız oyunun rampaları.</li>
+          <li><b>Kural:</b> kapsüllerde slogan, puan, ödül yok; yalnız sanat ve logo.</li>
+          <li><b>Konum:</b> anlatı + simülatör melezi, $14.99–17.99 bandı.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Açık riskler</h3>
+        <p class="note"><b>Ad:</b> "Malibu" bir rom markası; "Malibu Club" GTA: Vice City'deki kulübün adı. Logo isteğin üzerine değişmedi, yayın öncesi bir marka araştırması önerilir.</p>
+        <p class="note"><b>Ekran görüntüleri:</b> Steam gerçek oynanış ister. Unity'de 1920×1080 çekilmeli; liste <code>Docs/STEAM_SAYFASI.md</code> §7'de.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="text/plain" id="src-en">[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/01_meet_roxy.gif[/img]
+[b]&quot;There you are, sugar. The doors open at six.&quot;[/b]
+
+Roxy Vale runs the floor at the Malibu Club, and as of tonight the bar is yours. She walks you round on your first night, then hands you her book: a written chain of jobs, one after another, the same every run. Fill it and the club is yours in more than name.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/02_read_the_card.gif[/img]
+[b]Nobody tells you what they want.[/b] Click a stool and read the card. The name, the age and the drink they came for only ever live on the ID.
+
+From the second night the cards start to lie. Some guests are under twenty, and half of those carry someone else&#x27;s licence: a flag that isn&#x27;t their country, a face that isn&#x27;t theirs, a card that looks drawn. KICK shows them the door. Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/03_shake_and_pour.gif[/img]
+[list]
+[*][b]54 recipes[/b], each with its own ratio. Tip the bottle, watch the tin, land every part in its box.
+[*][b]Shaken, stirred or built.[/b] The recipe decides, and the judge knows a stirred Martini from a shaken one.
+[*][b]Ice, twists and rims.[/b] Guests tip for the little things.
+[*][b]Learn it by heart.[/b] Pour a drink dead on and the book keeps the exact pour for the rest of the run.
+[/list]
+
+[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/04_pull_a_pint.gif[/img]
+Beer is a craft of its own. It never goes near the shaker. Lean the glass, straighten it, and pour the head into the band.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/05_the_crowd.gif[/img]
+More than forty faces from Miami to Seoul, each with a name, an age and a hometown. Watch their faces, because that&#x27;s the review. Regulars come back, remember you, and tip on speed, craft and a good fill. A guest who waits too long goes out like a storm.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_one_night.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/06_one_night.gif[/img]
+A night runs from six till two. At closing the rent comes out of the till, the night&#x27;s slip comes up, and the market opens: bottles, recipe pages and fittings. End three nights running in the red and the room goes dark again.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/07_build_the_house.gif[/img]
+The stars are what the street says about you, and they come in two kinds. [b]Hearts[/b] are how the drinks went down. [b]Diamonds[/b] are how the room feels. The night is filed at the lower of the two, so mind both. Buy pictures, plants, neon, tables and a better sink. Every fitting buffs one thing while it&#x27;s installed. Then keep the counter clean: a ring on the wood costs you the room.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_features.png[/img]
+[list]
+[*]A cocktail-bar tycoon in pixel art, set on a neon Miami beach
+[*]ID cards that hide the order, plus under-age guests and borrowed licences
+[*]54 recipes, 41 bottle brands, and draught beer with real heads
+[*]Roxy&#x27;s book: a written chain of 18 jobs, the same every run
+[*]91 fittings across 22 slots, with two ratings sharing one row of stars
+[*]48 achievements, Steam leaderboards, the Steam Timeline and Steam Cloud
+[*]Playable in 29 languages, with the mouse alone
+[/list]
+</script>
+<script type="text/plain" id="src-tr">[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/01_meet_roxy.gif[/img]
+[b]&quot;Geldin demek, şekerim. Kapılar altıda açılıyor.&quot;[/b]
+
+Malibu Club&#x27;ın salonunu Roxy Vale yönetiyor ve bu geceden itibaren bar senin. İlk gece seni içeride gezdiriyor, ardından defterini eline veriyor: art arda gelen, her koşuda aynı kalan yazılı bir iş zinciri. Defteri doldur, kulüp yalnızca adıyla değil gerçekten senin olsun.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/02_read_the_card.gif[/img]
+[b]Kimse ne istediğini söylemez.[/b] Tabureye tıkla ve kartı oku. İsim, yaş ve gelinen içki yalnızca kimlikte yazar.
+
+İkinci geceden itibaren kartlar yalan söylemeye başlar. Bazı misafirler yirmi yaşından küçüktür ve onların yarısı başkasının kimliğini taşır: ülkesine ait olmayan bir bayrak, kendisine ait olmayan bir yüz, elle çizilmiş gibi duran bir kart. KICK onlara kapıyı gösterir. Bir çocuğa içki verirsen cezayı ödersin. Dürüst birini kapı dışarı edersen bir misafir kaybedersin.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/03_shake_and_pour.gif[/img]
+[list]
+[*][b]54 tarif[/b], her birinin kendi oranı var. Şişeyi eğ, shaker&#x27;ı izle, her parçayı kendi kutusuna indir.
+[*][b]Çalkalanmış, karıştırılmış ya da bardakta.[/b] Yöntemi tarif belirler; hakem de karıştırılmış bir Martini&#x27;yi çalkalanmışından ayırır.
+[*][b]Buz, kabuk ve kenar.[/b] Misafirler küçük şeyler için bahşiş bırakır.
+[*][b]Ezberle.[/b] Bir içkiyi kusursuz dökünce defter o kesin oranı koşu boyunca saklar.
+[/list]
+
+[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/04_pull_a_pint.gif[/img]
+Bira başlı başına bir zanaat. Shaker&#x27;a hiç girmez. Bardağı yatır, sonra doğrult, köpüğü doğru banda getir.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/05_the_crowd.gif[/img]
+Miami&#x27;den Seul&#x27;e kırktan fazla yüz; her birinin adı, yaşı ve memleketi var. Yüzlerine bak, çünkü yorum orada. Müdavimler geri gelir, seni hatırlar; hıza, işçiliğe ve doluluğa göre bahşiş bırakır. Fazla bekletilen misafir fırtına gibi çıkar gider.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_one_night.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/06_one_night.gif[/img]
+Bir gece altıdan ikiye kadar sürer. Kapanışta kira kasadan düşer, gecenin fişi gelir ve market açılır: şişeler, tarif sayfaları ve dekor. Üç gece üst üste zararla kapatırsan salonun ışıkları yeniden söner.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/07_build_the_house.gif[/img]
+Yıldızlar sokağın senin hakkında söyledikleridir ve iki türlüdür. [b]Kalpler[/b] içkilerin nasıl karşılandığını gösterir. [b]Elmaslar[/b] salonun nasıl hissettirdiğini. Gece ikisinin düşüğünden yazılır, o yüzden ikisine de dikkat et. Tablo, bitki, neon, masa ve daha iyi bir lavabo al. Her dekor, takılı kaldığı sürece bir şeyi güçlendirir. Tezgâhı da temiz tut: tahtadaki bardak izi salonun puanından gider.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_features.png[/img]
+[list]
+[*]Neon bir Miami sahilinde geçen piksel sanat kokteyl bar işletmeciliği
+[*]Siparişi saklayan kimlik kartları, reşit olmayan misafirler ve ödünç kimlikler
+[*]54 tarif, 41 şişe markası ve gerçek köpüğüyle fıçı bira
+[*]Roxy&#x27;nin defteri: her koşuda aynı kalan 18 işlik yazılı bir zincir
+[*]22 yuvada 91 dekor; aynı yıldız sırasını paylaşan iki puan
+[*]48 başarım, Steam sıralamaları, Steam Zaman Çizelgesi ve Steam Cloud
+[*]29 dilde, yalnızca fareyle oynanır
+[/list]
+</script>
+<script>
+(function () {
+  function bb(src) {
+    var lines = src.replace(/\r/g, '').split('\n'), out = [], inList = false;
+    function inline(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/\[b\]([\s\S]*?)\[\/b\]/g, '<b>$1</b>')
+        .replace(/\[img\]\{STEAM_APP_IMAGE\}\/extras\/([^\[]+)\[\/img\]/g, '<img src="about/$1" alt="" loading="lazy">');
+    }
+    lines.forEach(function (l) {
+      if (l === '[list]') { out.push('<ul>'); inList = true; return; }
+      if (l === '[/list]') { out.push('</ul>'); inList = false; return; }
+      if (inList && l.indexOf('[*]') === 0) { out.push('<li>' + inline(l.slice(3)) + '</li>'); return; }
+      if (!l.trim()) return;
+      out.push(l.indexOf('[img]') === 0 ? inline(l) : '<p>' + inline(l) + '</p>');
+    });
+    return out.join('');
+  }
+  function txt(id) { var t = document.createElement('textarea'); t.innerHTML = document.getElementById(id).textContent; return t.value; }
+  document.getElementById('about-en').innerHTML = bb(txt('src-en'));
+  document.getElementById('about-tr').innerHTML = bb(txt('src-tr'));
+  var shortEn = document.getElementById('short').textContent;
+  var shortTr = "Miami sahilinde neon bir kokteyl bar işletmesi. Kimse ne istediğini söylemez: kimliği oku, doğru dök, çalkala, karıştır, düzgün bir bira çek ve ödünç kimlikli çocuğu servis etmeden yakala. Roxy barı sana bırakıyor. Ayakta tut.";
+  function setLang(tr) {
+    document.getElementById('about-en').hidden = tr;
+    document.getElementById('about-tr').hidden = !tr;
+    document.getElementById('b-en').setAttribute('aria-pressed', String(!tr));
+    document.getElementById('b-tr').setAttribute('aria-pressed', String(tr));
+    document.getElementById('short').textContent = tr ? shortTr : shortEn;
+    try { localStorage.setItem('mc-lang', tr ? 'tr' : 'en'); } catch (e) {}
+  }
+  document.getElementById('b-en').addEventListener('click', function () { setLang(false); });
+  document.getElementById('b-tr').addEventListener('click', function () { setLang(true); });
+  try { if (localStorage.getItem('mc-lang') === 'tr') setLang(true); } catch (e) {}
+  var hl = document.getElementById('hl');
+  document.querySelectorAll('.strip img').forEach(function (im) {
+    function pick() {
+      hl.src = im.src;
+      document.querySelectorAll('.strip img').forEach(function (o) { o.setAttribute('aria-current', String(o === im)); });
+    }
+    im.addEventListener('click', pick);
+    im.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+  });
+})();
+</script>
