@@ -122,8 +122,14 @@ def label(img, xy, s, colour, scale=2, bold=True):
 def save_gif(frames, name, fps=FPS, holds=None):
     os.makedirs(OUT, exist_ok=True)
     p = os.path.join(OUT, name + '.gif')
-    pal = [f.convert('RGB').quantize(colors=255, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
-           for f in frames]
+    # ONE palette for the whole clip, cut from a strip of sample frames: the painted backdrop then maps to the same
+    # indices every frame, so the encoder only stores what moved (per-frame palettes made a still wall "change").
+    picks = frames[::max(1, len(frames) // 8)][:8]
+    sheet = Image.new('RGB', (frames[0].width, frames[0].height * len(picks)))
+    for i, f in enumerate(picks):
+        sheet.paste(f.convert('RGB'), (0, i * frames[0].height))
+    master = sheet.quantize(colors=255, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    pal = [f.convert('RGB').quantize(palette=master, dither=Image.Dither.NONE) for f in frames]
     durs = [int(1000 / fps)] * len(frames)
     if holds:
         for i, ms in holds.items():
@@ -141,14 +147,29 @@ def save_png(img, name):
 
 
 # ── backdrops ────────────────────────────────────────────────────────────────────────────────────────
-def bar_bg(H, counter_y=0.80, sun_x=0.5, sun_r=0.32, horizon=0.6, patrons=None, patron_x=0.0, props_x=None,
+# The painted bar (gen_nano.py 'gif_backdrop', the take picked by eye): an empty counter whose top edge sits at
+# row BACKDROP_CY of its 616x360 reduction. Patrons stand behind it, so its counter strip is laid again in front.
+BACKDROP = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'nano', 'gif_backdrop_2.png')
+BACKDROP_CY = 300
+_front = {}
+
+
+def bar_bg(H, counter_y=None, sun_x=None, sun_r=None, horizon=None, patrons=None, patron_x=0.0, props_x=None,
            props_step=70, seed=3):
-    img, cy = K.room(W, H, s=2, horizon=horizon, sun_x=sun_x, sun_r=sun_r, patrons=patrons, patron_x=patron_x,
-                     counter_y=counter_y, seed=seed)
+    full = Image.open(BACKDROP).convert('RGBA').resize((W, 360), Image.LANCZOS)
+    top = 360 - H
+    img = full.crop((0, top, W, 360))
+    cy = BACKDROP_CY - top
+    _front[H] = img.crop((0, cy, W, H))
     if props_x is not None:
         from build_capsules import props
         props(img, cy, 2, props_x, props_step)
-    return S.vignette(img, 0.35), cy
+    return img, cy
+
+
+def front(img, cy):
+    """The counter's own strip back over whatever stands behind it."""
+    img.alpha_composite(_front[img.height], (0, cy))
 
 
 # ── 1 · Roxy walks in and says hello ─────────────────────────────────────────────────────────────────
@@ -196,8 +217,7 @@ def gif_read_the_card():
         def guest(img, f):
             g = S.up(f.crop((40, 0, 180, 220)), 2)
             img.alpha_composite(S.tint(g, S.C('Night[2]'), 0.08), (px - 20, cy - int(g.height * 0.55)))
-            ctr = S.up(S.counter(W // 2, (H - cy) // 2 + 2), 2)
-            img.alpha_composite(ctr, (0, cy))
+            front(img, cy)
         for f in arrive:
             img = bg.copy(); guest(img, f); frames.append(img)
         # the card rises
@@ -370,15 +390,13 @@ def gif_crowd():
                 f = clips[w_][(k + i * 3) % len(clips[w_])]
                 g = S.up(f.crop((50, 0, 170, 220)), 1)
                 img.alpha_composite(g, (12 + i * 120, cy - int(g.height * 0.72)))
-            ctr = S.up(S.counter(W // 2, (H - cy) // 2 + 2), 2)
-            img.alpha_composite(ctr, (0, cy))
+            front(img, cy)
             for i, (w_, c) in enumerate(cast):
-                em = {'cheer': '+$14', 'drink': '...', 'upset': 'TOO SWEET'}[c]
+                em = {'cheer': '+$14', 'drink': '+$9', 'upset': 'TOO SWEET'}[c]
                 col = {'cheer': 'Amber[3]', 'drink': 'Cream[3]', 'upset': 'Magenta[3]'}[c]
                 if k > n // 3:
-                    tmp = Image.new('RGBA', (W, 40), (0, 0, 0, 0))
-                    lw = label(tmp, (0, 0), em, S.C(col))
-                    img.alpha_composite(tmp.crop((0, 0, lw, 40)), (12 + i * 120 + 60 - lw // 2, cy - 196))
+                    pl = plate(em, col, 'Night[0]' if c != 'upset' else 'Cream[4]')
+                    img.alpha_composite(pl, (12 + i * 120 + 60 - pl.width // 2, 14))
             frames.append(img)
     save_gif(frames, '05_the_crowd', fps=14)
 

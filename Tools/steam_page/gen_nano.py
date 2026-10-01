@@ -24,10 +24,11 @@ MODEL = os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash-image')
 URL = 'https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent' % MODEL
 
 STYLE = ("Premium high-detail hi-bit pixel art illustration (crisp pixels, rich dithering, cinematic lighting), the "
-         "look of a top-selling indie game's Steam key art. Palette: deep night violet #0D0813, hot magenta #E84DA6, "
-         "neon cyan #7DF0E3, sunset amber #E8A33D, cream #F2E8D5. Miami beach cocktail club at dusk, neon signs, "
-         "palm silhouettes, a big striped synthwave sun over the sea. No text, no letters, no logos, no watermark, "
-         "no UI anywhere in the picture.")
+         "look of a top-selling indie game's Steam key art. Palette: deep night violet, hot magenta, neon cyan, "
+         "sunset amber and warm cream. Miami beach cocktail club at dusk, neon signs, "
+         "palm silhouettes, a big striped synthwave sun over the sea. Neon signs are pictures only (a palm, a cocktail "
+         "glass, a flamingo, a wave), never words. ABSOLUTELY NO text, letters, numbers, logos, watermark or UI "
+         "anywhere in the picture.")
 ROXY = ("ROXY, the hostess, exactly as in the reference sprite: a woman of 28 with long wavy dark-red hair, warm tan "
         "skin, gold hoop earrings, a burgundy sleeveless halter jumpsuit with black satin lapels and a gold belt, wide "
         "legs, black heels. Confident friendly smile, looking straight at the viewer.")
@@ -43,9 +44,10 @@ ASSETS = {
         "%s Waist-up on the right side, holding up a customer's ID card toward the viewer with one hand and a coupe "
         "cocktail in the other. Neon bar interior at dusk, counter with bottles. Keep the left 55 percent quiet and "
         "dark for a title."),
-    'small_capsule': ((462, 174), '21:9', ('left', 0.70, 0.10),
-        "%s Head and shoulders only, on the far right, lit by magenta and cyan neon. Simple dark violet neon bar "
-        "background with soft bokeh, nothing busy. The left 70 percent is plain and dark."),
+    'small_capsule': ((462, 174), '21:9', ('left', 0.62, 0.10),
+        "%s Head and shoulders only, small, tucked into the far right edge (she fills only the right 28 percent of "
+        "the width), lit by magenta and cyan neon. Simple dark violet bar background with soft bokeh. The left 70 "
+        "percent is completely plain, dark and empty."),
     'vertical_capsule': ((748, 896), '4:5', ('top', 0.92, 0.03),
         "Tall portrait. %s Full figure from the knees up, centred, holding a coupe cocktail, standing in front of the "
         "bar counter; behind her the giant striped sunset sun, palms and the sea through tall windows. Keep the top "
@@ -64,6 +66,12 @@ ASSETS = {
         "%s On the right, waist-up, raising a coupe cocktail in a toast. Neon bar at dusk. Left half quiet and dark."),
     'event_cover': ((800, 450), '16:9', ('left', 0.56, 0.06),
         "%s Waist-up on the right, winking, coupe cocktail in hand, neon bar at dusk. Left half quiet and dark."),
+    'gif_backdrop': ((1232, 720), '16:9', None,
+        "An empty cocktail bar at dusk seen from behind the bar, eye level, perfectly straight-on and symmetrical: a "
+        "long glossy black bar counter with a magenta neon edge runs across the bottom 22 percent of the picture, the "
+        "counter top is completely empty; behind it, a wall of tall windows onto the sea with the striped sunset sun "
+        "in the middle and palm silhouettes; a couple of neon picture-signs high on the side walls. No people, no "
+        "bottles, no glasses, nothing standing on the counter."),
     'community_icon': ((184, 184), '1:1', None,
         "%s Close portrait of her face and shoulders on a magenta-to-amber sunset gradient, centred, bold readable "
         "silhouette for a small icon."),
@@ -88,6 +96,8 @@ def ask(prompt, aspect, key, ref_b64):
                                  'and colours exactly; render her at the new size and pose.'})
     body = {'contents': [{'parts': parts}],
             'generationConfig': {'responseModalities': ['IMAGE'], 'imageConfig': {'aspectRatio': aspect}}}
+    if os.environ.get('GEMINI_IMAGE_SIZE'):          # '2K' / '4K' on models that take it (Nano Banana Pro)
+        body['generationConfig']['imageConfig']['imageSize'] = os.environ['GEMINI_IMAGE_SIZE']
     req = urllib.request.Request(URL, json.dumps(body).encode(), {'Content-Type': 'application/json',
                                                                    'x-goog-api-key': key})
     with urllib.request.urlopen(req, timeout=180) as r:
@@ -123,6 +133,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('assets', nargs='*', default=list(ASSETS))
     ap.add_argument('--takes', type=int, default=2)
+    ap.add_argument('--tag', default='', help='suffix for the take files, to keep a second model apart')
     a = ap.parse_args()
     key = os.environ.get('GEMINI_API_KEY')
     if not key:
@@ -135,11 +146,12 @@ def main():
         for n in range(1, a.takes + 1):
             t0 = time.time()
             raw = ask(text, aspect, key, ref if '%s' in prompt else None)
-            raw.save(os.path.join(OUT, 'raw', '%s_%d.png' % (name, n)))
+            name_n = '%s%s_%d' % (name, a.tag, n)
+            raw.save(os.path.join(OUT, 'raw', name_n + '.png'))
             img = fit(raw, size)
             if where:
                 img = lay_logo(img, where)
-            img.save(os.path.join(OUT, '%s_%d.png' % (name, n)))
+            img.save(os.path.join(OUT, name_n + '.png'))
             print('%-18s take %d  %dx%d  %.0fs' % (name, n, size[0], size[1], time.time() - t0))
 
 

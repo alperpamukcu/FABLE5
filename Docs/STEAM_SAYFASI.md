@@ -7,7 +7,23 @@ steam about kısmı ve steam mağaza ve kütüphane görselleri hazırla. Oyunun
 Bu belge mağaza sayfasının tamamını tek yerde tutar: araştırma ve konumlandırma, metinler, etiketler, görsellerin
 listesi ve Steamworks'e nasıl yükleneceği. Steamworks'teki başarım/istatistik işleri `Docs/STEAMWORKS.md`'de.
 
-**Üretim:** her şey koddan, oyunun kendi sprite'larından ve paletinden üretilir. Yeniden üretmek için:
+**Üretim (2026-10-01, ikinci tur):** yazar ilk turun koddan çizilmiş kapsüllerini kaliteli bulmadı ("nano banana ile
+ya da farklı şeylerle üretebilirsin"). Kapsüllerin sahnesi artık Google'ın Gemini görsel modeliyle boyanıyor
+(`Tools/steam_page/gen_nano.py`; Nano Banana Pro = `gemini-3-pro-image-preview`, 2K, hero 4K). Roxy'nin `idle` karesi
+modele karakter referansı olarak gider. **Logo modele hiç çizdirilmez**, oyunun logo haritalarından birebir boyanıp
+üstüne konur. Her görsel için birkaç aday üretilir, gözle seçilir, `ship_picks.py` seçilenleri Steam adlarına
+yerleştirir. About GIF'lerinin zemini de modelin boyadığı boş bar (`gif_backdrop`); üstündeki her figür, kart, bardak
+ve shaker oyunun kendi sprite'ı. Anahtar `GEMINI_API_KEY` ortam değişkeninden okunur, hiçbir dosyaya yazılmaz. Modelin
+ham çıktıları (`out/nano/`) git dışında; seçim tablosu `ship_picks.py`'de.
+
+```
+GEMINI_API_KEY=... GEMINI_MODEL=gemini-3-pro-image-preview GEMINI_IMAGE_SIZE=2K python3 Tools/steam_page/gen_nano.py main_capsule --takes 2 --tag _pro
+python3 Tools/steam_page/ship_picks.py      # seçilen adaylar -> out/capsules/
+python3 Tools/steam_page/about.py           # GIF'ler (gif_backdrop_2 zemininde) + başlıklar -> out/about/
+```
+
+İlk turun koddan çizen üreticisi (`build_capsules.py`) yerinde duruyor; adaylar yokken yedek olarak çalışır.
+Yeniden üretmek için:
 
 ```
 python3 Tools/steam_page/build_capsules.py   # mağaza + kütüphane + etkinlik + ikonlar  -> out/capsules/
