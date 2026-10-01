@@ -23,6 +23,11 @@ CYA = [('Cyan', 4, A1), ('Cyan', 4, A2), ('Cyan', 4, A3), ('Cyan', 4, A4),
 
 def render(scale='x4', glow=True, liquid=True):
     m = np.asarray(Image.open(os.path.join(ROOT, 'Assets/Resources/Logo/logo_%s_map.bytes' % scale)).convert('RGB'))
+    return render_map(m, glow, liquid)
+
+
+def render_map(m, glow=True, liquid=True):
+    """Light a sign map (R class, G group) with the game's Lit dress."""
     cls, grp = m[..., 0], m[..., 1]
     out = np.zeros(m.shape[:2] + (4,), np.uint8)
     for c in range(1, 8):

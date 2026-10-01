@@ -27,7 +27,7 @@ GLASS = [  # polygons (native) that make up the coupe: bowl, stem, foot
 # shelf bottles that touch her arm: inside these boxes (native) a pixel whose blue beats its green is glass or
 # bottle, never skin, hair or her outline (all warm) - it goes, unless it is the coupe
 # hand-checked strays (native source px, x0, y0, x1, y1): two shelf-edge strands that hang under her elbow
-ERASE = [(414, 178, 420, 201), (413, 184, 414, 201)]
+ERASE = [(414, 178, 420, 201), (413, 184, 414, 201), (403, 192, 410, 199), (413, 183, 414, 184)]
 SCRUB = [(396, 70, 414, 180), (400, 176, 422, 205), (435, 136, 452, 160), (405, 92, 414, 101)]
 
 
@@ -37,6 +37,50 @@ def fill_holes(m):
     msk = np.zeros((h + 2, w + 2), np.uint8)
     cv2.floodFill(ff, msk, (0, 0), 128)
     return (ff != 128).astype(np.uint8)
+
+
+def _lum(c):
+    return c[..., 0] * 0.299 + c[..., 1] * 0.587 + c[..., 2] * 0.114
+
+
+def cleanup(a):
+    """Hand-checked fixes on the cut-out (layer coordinates), from the critique pass:
+    the source counter's shadow under the resting hand, one-neighbour spurs, the eyes' grey-blue noise,
+    and the lapels one step lighter so the V stops out-shouting the face."""
+    a = a.copy()
+    rgb = a[..., :3].astype(int)
+    # (b) the source counter's shadow slab under the resting hand
+    box = np.zeros(a.shape[:2], bool); box[196:203, 0:46] = True
+    slab = box & (np.abs(rgb - np.array([0x3C, 0x26, 0x38])).sum(-1) < 30) | \
+        box & (np.abs(rgb - np.array([0x38, 0x07, 0x31])).sum(-1) < 30)
+    a[slab, 3] = 0
+    # (c) spurs: an opaque texel with at most one opaque 4-neighbour goes, until none is left
+    while True:
+        o = a[..., 3] > 0
+        n = np.zeros(o.shape, int)
+        n[1:] += o[:-1]; n[:-1] += o[1:]; n[:, 1:] += o[:, :-1]; n[:, :-1] += o[:, 1:]
+        spur = o & (n <= 1)
+        if not spur.any():
+            break
+        a[spur, 3] = 0
+    # the eyes: light texels become the sclera, cool ones the iris (no grey-blue left on the face)
+    for x0, y0, x1, y1 in ((80, 38, 93, 44), (102, 37, 117, 44)):
+        sub = a[y0:y1, x0:x1]
+        c = sub[..., :3].astype(int)
+        lum = _lum(c)
+        light = (lum > 140) & (np.abs(c[..., 0] - c[..., 2]) < 70)     # grey/cream, never skin
+        cool = (c[..., 2] > c[..., 0] + 6) & ~light
+        sub[light, :3] = (0xF2, 0xE8, 0xD5)
+        sub[cool, :3] = (0x3C, 0x26, 0x38)
+    # the lapels: their near-black inks one step up the Night ramp, the darkest kept as the outline
+    c = a[..., :3].astype(int)
+    lum = _lum(c)
+    lap = np.zeros(a.shape[:2], bool); lap[70:140, 55:150] = True
+    neutral = np.abs(c[..., 0] - c[..., 2]) < 18                 # the satin is grey-violet, the hair is red
+    dark = lap & neutral & (lum < 48) & (a[..., 3] > 0)
+    a[dark & (lum >= 22), :3] = (0x36, 0x24, 0x47)
+    a[dark & (lum < 22), :3] = (0x24, 0x18, 0x30)
+    return a
 
 
 def main():
@@ -73,6 +117,7 @@ def main():
     ys, xs = np.nonzero(m)
     bx0, by0, bx1, by1 = xs.min(), ys.min(), xs.max() + 1, ys.max() + 1
     rgba = np.dstack([n, m * 255]).astype(np.uint8)[by0:by1, bx0:bx1]
+    rgba = cleanup(rgba)
     os.makedirs(OUT, exist_ok=True)
     Image.fromarray(rgba, 'RGBA').save(os.path.join(OUT, 'roxy_coupe.png'))
     anchors = {'size': [int(bx1 - bx0), int(by1 - by0)], 'counter_y': int(COUNTER_Y - by0),

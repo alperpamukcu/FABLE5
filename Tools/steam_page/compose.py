@@ -94,7 +94,12 @@ def place_props(img, cy, s, xs, kinds):
         if k[0] == 'bottle':
             b = S.up(S.bottle(k[1], k[2] if len(k) > 2 else 0.7, cellar=True), s)
         else:
-            b = S.up(S.glass(k[1], k[2], 0.78, rim=k[3] if len(k) > 3 else None), max(1, s // 2))
+            g = S.glass(k[1], k[2], 0.78, rim=k[3] if len(k) > 3 else None)
+            if s >= 2:
+                import about
+                b = about.half(g)                  # onto the s px grid at the glass's own display size
+            else:
+                b = g
         img.alpha_composite(b, (x, cy + 6 * s - b.height))
     return img
 

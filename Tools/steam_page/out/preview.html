@@ -23,7 +23,7 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ── store mock ─────────────────────────────── */
 .store { position: relative; padding-block: 28px 32px; }
-.store::before { content: ""; position: absolute; inset: 0 -50vw; background: url(capsules/page_background_1438x810.jpg) center top / 1438px auto no-repeat, #1b2838; z-index: -1; }
+.store::before { content: ""; position: absolute; inset: 0 -50vw; background: url(refs/page_background.webp) center top / 1438px auto no-repeat, #1b2838; z-index: -1; }
 .crumbs { font-size: 12px; color: var(--dim); }
 .store h1 { font-family: var(--body); font-weight: 500; font-size: 26px; color: var(--hi); margin: 4px 0 14px; }
 .store-grid { display: grid; grid-template-columns: minmax(0, 616px) minmax(0, 1fr); gap: 16px; background: rgba(0,0,0,.35); padding: 0; }
@@ -71,7 +71,7 @@ figcaption b { color: var(--fg); font-weight: 600; }
 figcaption code { font-variant-numeric: tabular-nums; font-family: var(--pixel); font-size: 11px; color: var(--amber); white-space: nowrap; }
 .wide { grid-column: 1 / -1; }
 .library { position: relative; }
-.library .logo-over { position: absolute; left: 4%; bottom: 10%; width: 34%; height: auto; background: none; }
+.library .logo-over { position: absolute; left: 3%; bottom: 24%; width: 30%; height: auto; background: none; }
 .pair { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 20px; align-items: end; }
 
 /* ── research ───────────────────────────────── */
@@ -99,9 +99,10 @@ td:first-child { color: var(--hi); white-space: nowrap; }
     <h1>Malibu Club: Cocktail Bar Simulator</h1>
     <div class="store-grid">
       <div class="highlight">
-        <img id="hl" src="capsules/main_capsule_1232x706.png" alt="Main capsule: Roxy with a cocktail in front of the neon bar at sunset" width="1232" height="706">
+        <img id="hl" src="keyart/main_capsule.png" alt="Main capsule: Roxy with a cocktail in front of the neon bar at sunset" width="1232" height="706">
         <div class="strip" role="list">
-          <img role="listitem" tabindex="0" aria-current="true" src="capsules/main_capsule_1232x706.png" alt="Main capsule">
+          <img role="listitem" tabindex="0" aria-current="true" src="keyart/main_capsule.png" alt="Main capsule">
+          <img role="listitem" tabindex="0" src="keyart/header_capsule.png" alt="Header capsule">
           <img role="listitem" tabindex="0" src="about/01_meet_roxy.gif" alt="Roxy GIF">
           <img role="listitem" tabindex="0" src="about/02_read_the_card.gif" alt="ID card GIF">
           <img role="listitem" tabindex="0" src="about/03_shake_and_pour.gif" alt="Shaker GIF">
@@ -109,7 +110,7 @@ td:first-child { color: var(--hi); white-space: nowrap; }
         </div>
       </div>
       <aside class="side">
-        <img src="capsules/header_capsule_920x430.jpg" alt="Header capsule" width="920" height="430">
+        <img src="keyart/header_capsule.png" alt="Header capsule" width="920" height="430">
         <p class="short" id="short">A neon cocktail-bar tycoon on a Miami beach. Nobody tells you what they want: read the ID, pour it right, shake, stir and pull a proper pint, and spot the kid with a borrowed licence before you serve them. Roxy hands you the bar. Keep it alive.</p>
         <div class="meta"><span>Developer</span><b>LasGen Interactive</b><span>Publisher</span><b>LasGen Interactive</b></div>
         <div class="tags">
@@ -133,15 +134,15 @@ td:first-child { color: var(--hi); white-space: nowrap; }
     <div class="aside">
       <div class="box">
         <h3>Bu sayfa nedir</h3>
-        Mağaza sayfasının provası. Görseller ve metin, Steamworks'e yüklenecek dosyaların kendisidir. Her şey oyunun kendi sprite'ları, paleti ve <b>değiştirilmemiş Malibu Club logosuyla</b> koddan üretildi.
+        Mağaza sayfasının provası. Bütün görseller tek bir ana kompozisyondan dizildi: senin <code>steam_kit</code> gün batımın, aynı Roxy, aynı bar ve <b>değiştirilmemiş Malibu Club logosu</b>. Arka plan senin dosyan, olduğu gibi.
       </div>
       <div class="box">
         <h3>About akışı</h3>
-        <ol><li>Roxy</li><li>Kimlik kartı</li><li>Kokteyl</li><li>Musluk</li><li>Kalabalık</li><li>Bir gece</li><li>Salonu kur</li><li>Özellikler</li></ol>
+        <ol><li>About the game (senin başlığın)</li><li>Roxy</li><li>Kimlik kartı</li><li>Kokteyl</li><li>Musluk</li><li>Kalabalık</li><li>Bir gece</li><li>Salonu kur</li><li>Özellikler</li></ol>
       </div>
       <div class="box">
         <h3>Ağırlık</h3>
-        7 GIF + 8 başlık ≈ 3.8 MB. En büyük GIF 0.98 MB. Valve'ın ~15 MB'lık sayfa eşiğinin altında.
+        7 GIF + 9 başlık ≈ 3 MB. En büyük GIF 0.7 MB. Valve'ın ~15 MB'lık sayfa eşiğinin altında.
       </div>
     </div>
   </div>
@@ -149,29 +150,34 @@ td:first-child { color: var(--hi); white-space: nowrap; }
   <section class="kit">
     <div class="sec-head"><h2>Mağaza görselleri</h2><p>Steamworks'teki adlarıyla, tam boyutlarında</p></div>
     <div class="kit-grid">
-      <figure class="wide"><img src="capsules/main_capsule_1232x706.png" alt="" loading="lazy"><figcaption><b>Main capsule</b><code>1232×706</code></figcaption></figure>
-      <figure><img src="capsules/header_capsule_920x430.jpg" alt="" loading="lazy"><figcaption><b>Header capsule</b><code>920×430</code></figcaption></figure>
-      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy"><figcaption><b>Small capsule</b><code>462×174</code></figcaption></figure>
-      <figure><img src="capsules/vertical_capsule_748x896.jpg" alt="" loading="lazy"><figcaption><b>Vertical capsule</b><code>748×896</code></figcaption></figure>
-      <figure><img src="capsules/page_background_1438x810.jpg" alt="" loading="lazy"><figcaption><b>Page background</b><code>1438×810</code></figcaption></figure>
-      <figure><img src="capsules/event_cover_800x450.jpg" alt="" loading="lazy"><figcaption><b>Event cover</b><code>800×450</code></figcaption></figure>
-      <figure><img src="capsules/small_capsule_462x174.jpg" alt="" loading="lazy" style="width:120px"><figcaption><b>Small @120×45 okunurluk</b><code>test</code></figcaption></figure>
-      <figure class="wide"><img src="capsules/event_header_1920x622.jpg" alt="" loading="lazy"><figcaption><b>Event header</b><code>1920×622</code></figcaption></figure>
+      <figure class="wide"><img src="keyart/main_capsule.png" alt="" loading="lazy"><figcaption><b>Main capsule</b><code>1232×706</code></figcaption></figure>
+      <figure><img src="keyart/header_capsule.png" alt="" loading="lazy"><figcaption><b>Header capsule</b><code>920×430</code></figcaption></figure>
+      <figure><img src="keyart/small_capsule.png" alt="" loading="lazy"><figcaption><b>Small capsule</b><code>462×174</code></figcaption></figure>
+      <figure><img src="keyart/vertical_capsule.png" alt="" loading="lazy"><figcaption><b>Vertical capsule</b><code>748×896</code></figcaption></figure>
+      <figure><img src="refs/page_background.webp" alt="" loading="lazy"><figcaption><b>Page background (steam_kit, yazarın)</b><code>2000×1125</code></figcaption></figure>
+      <figure><img src="keyart/event_cover.png" alt="" loading="lazy"><figcaption><b>Event cover</b><code>800×450</code></figcaption></figure>
+      <figure><img src="keyart/small_capsule.png" alt="" loading="lazy" style="width:120px"><figcaption><b>Small @120×45 okunurluk</b><code>test</code></figcaption></figure>
+      <figure class="wide"><img src="keyart/event_header.png" alt="" loading="lazy"><figcaption><b>Event header</b><code>1920×622</code></figcaption></figure>
     </div>
   </section>
 
   <section class="kit">
     <div class="sec-head"><h2>Kütüphane</h2><p>Hero logosuz teslim edilir; Steam kütüphane logosunu üstüne koyar. Aşağıdaki birleşim yalnızca önizleme.</p></div>
     <div class="kit-grid">
-      <figure class="wide library"><img src="capsules/library_hero_3840x1240.jpg" alt="" loading="lazy"><img class="logo-over" src="capsules/library_logo_1280x720.png" alt=""><figcaption><b>Library hero + logo (önizleme)</b><code>3840×1240 · 1280×720</code></figcaption></figure>
+      <figure class="wide library"><img src="keyart/library_hero.png" alt="" loading="lazy"><img class="logo-over" src="keyart/library_logo.png" alt=""><figcaption><b>Library hero + logo (önizleme)</b><code>3840×1240 · 1280×720</code></figcaption></figure>
       <div class="wide pair">
-        <figure><img src="capsules/library_header_920x430.jpg" alt="" loading="lazy"><figcaption><b>Library header</b><code>920×430</code></figcaption></figure>
-        <figure><img src="capsules/library_capsule_600x900.jpg" alt="" loading="lazy"><figcaption><b>Library capsule</b><code>600×900</code></figcaption></figure>
+        <figure><img src="keyart/library_header.png" alt="" loading="lazy"><figcaption><b>Library header</b><code>920×430</code></figcaption></figure>
+        <figure><img src="keyart/library_capsule.png" alt="" loading="lazy"><figcaption><b>Library capsule</b><code>600×900</code></figcaption></figure>
       </div>
-      <figure><img src="capsules/library_logo_1280x720.png" alt="" loading="lazy"><figcaption><b>Library logo (saydam)</b><code>1280×720</code></figcaption></figure>
-      <figure><img src="capsules/community_icon_184x184.jpg" alt="" loading="lazy" style="width:184px"><figcaption><b>Community icon</b><code>184×184</code></figcaption></figure>
-      <figure><img src="capsules/client_icon_256x256.png" alt="" loading="lazy" style="width:256px"><figcaption><b>Client icon</b><code>256×256</code></figcaption></figure>
+      <figure><img src="keyart/library_logo.png" alt="" loading="lazy"><figcaption><b>Library logo (saydam, sıkı kırpılmış)</b><code>1280×483</code></figcaption></figure>
+      <figure><img src="keyart/community_icon.png" alt="" loading="lazy" style="width:184px"><figcaption><b>Community icon</b><code>184×184</code></figcaption></figure>
+      <figure><img src="keyart/client_icon.png" alt="" loading="lazy" style="width:256px"><figcaption><b>Client icon</b><code>256×256</code></figcaption></figure>
     </div>
+  </section>
+
+  <section class="kit">
+    <div class="sec-head"><h2>Yerleşim</h2><p>Her görselde logo, Roxy ve bar kutuları; Steam'in güvenli alanı, bindirmeleri ve logo bölgesi (amber)</p></div>
+    <figure class="wide"><img src="keyart/_layout/LAYOUT_SHEET.png" alt="Layout sheet: logo, Roxy and bar boxes for every Steam asset" loading="lazy"></figure>
   </section>
 
   <section class="research">
@@ -211,19 +217,22 @@ td:first-child { color: var(--hi); white-space: nowrap; }
   </section>
 </div>
 
-<script type="text/plain" id="src-en">[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.png[/img]
+<script type="text/plain" id="src-en">[img]{STEAM_APP_IMAGE}/extras/header_about.gif[/img]
+[b]A neon cocktail-bar tycoon on a Miami beach.[/b] Nobody tells you what they want. Read the ID, pour it right, and spot the kid with a borrowed licence before you serve them.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/01_meet_roxy.gif[/img]
 [b]&quot;There you are, sugar. The doors open at six.&quot;[/b]
 
 Roxy Vale runs the floor at the Malibu Club, and as of tonight the bar is yours. She walks you round on your first night, then hands you her book: a written chain of jobs, one after another, the same every run. Fill it and the club is yours in more than name.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/02_read_the_card.gif[/img]
 [b]Nobody tells you what they want.[/b] Click a stool and read the card. The name, the age and the drink they came for only ever live on the ID.
 
 From the second night the cards start to lie. Some guests are under twenty, and half of those carry someone else&#x27;s licence: a flag that isn&#x27;t their country, a face that isn&#x27;t theirs, a card that looks drawn. KICK shows them the door. Pour for a kid and you pay the fine. Throw out an honest face and you lose a guest.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/03_shake_and_pour.gif[/img]
 [list]
 [*][b]54 recipes[/b], each with its own ratio. Tip the bottle, watch the tin, land every part in its box.
@@ -232,23 +241,23 @@ From the second night the cards start to lie. Some guests are under twenty, and 
 [*][b]Learn it by heart.[/b] Pour a drink dead on and the book keeps the exact pour for the rest of the run.
 [/list]
 
-[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/04_pull_a_pint.gif[/img]
 Beer is a craft of its own. It never goes near the shaker. Lean the glass, straighten it, and pour the head into the band.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/05_the_crowd.gif[/img]
 More than forty faces from Miami to Seoul, each with a name, an age and a hometown. Watch their faces, because that&#x27;s the review. Regulars come back, remember you, and tip on speed, craft and a good fill. A guest who waits too long goes out like a storm.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_one_night.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_one_night.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/06_one_night.gif[/img]
 A night runs from six till two. At closing the rent comes out of the till, the night&#x27;s slip comes up, and the market opens: bottles, recipe pages and fittings. End three nights running in the red and the room goes dark again.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/07_build_the_house.gif[/img]
 The stars are what the street says about you, and they come in two kinds. [b]Hearts[/b] are how the drinks went down. [b]Diamonds[/b] are how the room feels. The night is filed at the lower of the two, so mind both. Buy pictures, plants, neon, tables and a better sink. Every fitting buffs one thing while it&#x27;s installed. Then keep the counter clean: a ring on the wood costs you the room.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_features.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_features.gif[/img]
 [list]
 [*]A cocktail-bar tycoon in pixel art, set on a neon Miami beach
 [*]ID cards that hide the order, plus under-age guests and borrowed licences
@@ -259,19 +268,22 @@ The stars are what the street says about you, and they come in two kinds. [b]Hea
 [*]Playable in 29 languages, with the mouse alone
 [/list]
 </script>
-<script type="text/plain" id="src-tr">[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.png[/img]
+<script type="text/plain" id="src-tr">[img]{STEAM_APP_IMAGE}/extras/header_about.gif[/img]
+[b]Miami sahilinde neon bir kokteyl bar işletmesi.[/b] Kimse ne istediğini söylemez. Kimliği oku, doğru dök ve ödünç kimlikli çocuğu servis etmeden yakala.
+
+[img]{STEAM_APP_IMAGE}/extras/banner_meet_roxy.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/01_meet_roxy.gif[/img]
 [b]&quot;Geldin demek, şekerim. Kapılar altıda açılıyor.&quot;[/b]
 
 Malibu Club&#x27;ın salonunu Roxy Vale yönetiyor ve bu geceden itibaren bar senin. İlk gece seni içeride gezdiriyor, ardından defterini eline veriyor: art arda gelen, her koşuda aynı kalan yazılı bir iş zinciri. Defteri doldur, kulüp yalnızca adıyla değil gerçekten senin olsun.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_read_the_card.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/02_read_the_card.gif[/img]
 [b]Kimse ne istediğini söylemez.[/b] Tabureye tıkla ve kartı oku. İsim, yaş ve gelinen içki yalnızca kimlikte yazar.
 
 İkinci geceden itibaren kartlar yalan söylemeye başlar. Bazı misafirler yirmi yaşından küçüktür ve onların yarısı başkasının kimliğini taşır: ülkesine ait olmayan bir bayrak, kendisine ait olmayan bir yüz, elle çizilmiş gibi duran bir kart. KICK onlara kapıyı gösterir. Bir çocuğa içki verirsen cezayı ödersin. Dürüst birini kapı dışarı edersen bir misafir kaybedersin.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_shake_stir_pour.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/03_shake_and_pour.gif[/img]
 [list]
 [*][b]54 tarif[/b], her birinin kendi oranı var. Şişeyi eğ, shaker&#x27;ı izle, her parçayı kendi kutusuna indir.
@@ -280,23 +292,23 @@ Malibu Club&#x27;ın salonunu Roxy Vale yönetiyor ve bu geceden itibaren bar se
 [*][b]Ezberle.[/b] Bir içkiyi kusursuz dökünce defter o kesin oranı koşu boyunca saklar.
 [/list]
 
-[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_the_tap.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/04_pull_a_pint.gif[/img]
 Bira başlı başına bir zanaat. Shaker&#x27;a hiç girmez. Bardağı yatır, sonra doğrult, köpüğü doğru banda getir.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_the_crowd.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/05_the_crowd.gif[/img]
 Miami&#x27;den Seul&#x27;e kırktan fazla yüz; her birinin adı, yaşı ve memleketi var. Yüzlerine bak, çünkü yorum orada. Müdavimler geri gelir, seni hatırlar; hıza, işçiliğe ve doluluğa göre bahşiş bırakır. Fazla bekletilen misafir fırtına gibi çıkar gider.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_one_night.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_one_night.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/06_one_night.gif[/img]
 Bir gece altıdan ikiye kadar sürer. Kapanışta kira kasadan düşer, gecenin fişi gelir ve market açılır: şişeler, tarif sayfaları ve dekor. Üç gece üst üste zararla kapatırsan salonun ışıkları yeniden söner.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_build_the_house.gif[/img]
 [img]{STEAM_APP_IMAGE}/extras/07_build_the_house.gif[/img]
 Yıldızlar sokağın senin hakkında söyledikleridir ve iki türlüdür. [b]Kalpler[/b] içkilerin nasıl karşılandığını gösterir. [b]Elmaslar[/b] salonun nasıl hissettirdiğini. Gece ikisinin düşüğünden yazılır, o yüzden ikisine de dikkat et. Tablo, bitki, neon, masa ve daha iyi bir lavabo al. Her dekor, takılı kaldığı sürece bir şeyi güçlendirir. Tezgâhı da temiz tut: tahtadaki bardak izi salonun puanından gider.
 
-[img]{STEAM_APP_IMAGE}/extras/banner_features.png[/img]
+[img]{STEAM_APP_IMAGE}/extras/banner_features.gif[/img]
 [list]
 [*]Neon bir Miami sahilinde geçen piksel sanat kokteyl bar işletmeciliği
 [*]Siparişi saklayan kimlik kartları, reşit olmayan misafirler ve ödünç kimlikler

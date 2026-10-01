@@ -7,31 +7,59 @@ steam about kısmı ve steam mağaza ve kütüphane görselleri hazırla. Oyunun
 Bu belge mağaza sayfasının tamamını tek yerde tutar: araştırma ve konumlandırma, metinler, etiketler, görsellerin
 listesi ve Steamworks'e nasıl yükleneceği. Steamworks'teki başarım/istatistik işleri `Docs/STEAMWORKS.md`'de.
 
-**Üretim (2026-10-01, ikinci tur):** yazar ilk turun koddan çizilmiş kapsüllerini kaliteli bulmadı ("nano banana ile
-ya da farklı şeylerle üretebilirsin"). Kapsüllerin sahnesi artık Google'ın Gemini görsel modeliyle boyanıyor
-(`Tools/steam_page/gen_nano.py`; Nano Banana Pro = `gemini-3-pro-image-preview`, 2K, hero 4K). Roxy'nin `idle` karesi
-modele karakter referansı olarak gider. **Logo modele hiç çizdirilmez**, oyunun logo haritalarından birebir boyanıp
-üstüne konur. Her görsel için birkaç aday üretilir, gözle seçilir, `ship_picks.py` seçilenleri Steam adlarına
-yerleştirir. About GIF'lerinin zemini de modelin boyadığı boş bar (`gif_backdrop`); üstündeki her figür, kart, bardak
-ve shaker oyunun kendi sprite'ı. Anahtar `GEMINI_API_KEY` ortam değişkeninden okunur, hiçbir dosyaya yazılmaz. Modelin
-ham çıktıları (`out/nano/`) git dışında; seçim tablosu `ship_picks.py`'de.
+**Üretim (2026-10-01, üçüncü tur, geçerli):** yazar: "Görseller bütün bir kompozisyon olmalı, pixel art olarak
+düşün ... logo ve yazının bulunacağı konum, görsellerin bulunacağı konum, tüm kütüphane ve mağaza elementlerinin
+konumları ... benzer türdeki oyunların tasarım kurallarından ders al ... Vice ve Miami sunset temasında." Yazar
+ayrıca kendi `steam_kit`'inden örnekler verdi (Steam arka planı, iki çerçeveli panel, ABOUT THE GAME başlığı, neon
+ayraç; kopyaları `Tools/steam_page/out/refs/`, git dışında) ve "Steam backgroundunu tekrardan yapmana gerek yok" dedi.
+
+Bütün mağaza ve kütüphane görselleri artık **tek bir katmanlı ana kompozisyondan** dizilir (`Tools/steam_page/`):
+
+| Katman | Kaynak | Ne yapar |
+|---|---|---|
+| Plaka | `plate.py` | Yazarın Steam arka planının kendisi: ana resmi (237×133, 8 px ızgara) ölçüldü — bantlar ve iki satırlık dikişleri, güneş, yansımalar, deniz, palmiyeler; şehir aynı elle yeniden çizilir. Her görselin kendi ızgarasında yeniden çizilir, logo için üstüne koyu gece bantları eklenir. |
+| Roxy | `roxy_layer.py` | Tek kesit, her görselde aynı: Nano Banana Pro adayı `pixelsnap.py` ile gerçek ızgarasına oturtuldu (479×266, 75 mürekkep), GrabCut ile ayrıldı, raf artıkları, sivri pikseller ve gözlerdeki gri gürültü temizlendi, yaka bir ton açıldı. Eli tezgâhın mermerinde. |
+| Tezgâh | `keyart.counter` | `steam_kit` panelindeki lacivert-siyah mermer (ClubBlue damarlar), panellerin magenta neon kenarı; uzun önlerde 12 texel MiMo yivleri ve kitin neon çizgisi. |
+| Nesneler | `props.py` | En çok üç tür işareti: tezgâh, tequila sunrise highball, parmak uçlarının altında hasta kimliği (oyunun kancası). |
+| Logo | `logo_render.py`, `logo_native.py` | **Asla yeniden örneklenmez.** Gönderilen set 1:1 (çoğunda x1, 560 px); küçük kapsül için tabelanın kendi kurucusu (`Tools/title_sign/build_logo.py`) x4 haritasından türetilmiş ana çizimlerle 388 px'te **yeniden çizer** — aynı 7 alfa düzeyi, aynı 14 mürekkep. |
+
+Her görsel kendi ana tuvalinde çizilir (çıktı / yoğunluk, tam sayı), Roxy'nin gün batımına değen dış kenarına tek
+koyu texel konur (harmanlama yok), tuval tek palete indirgenir (ΔE<4 eşleri birleşir), NEAREST ile büyütülür; logo en
+son, tam boyda konur. Yoğunluk 2 (ya da 4): Steam'in yarım boy kopyaları tam piksele düşer; ana kapsül ve hero 3,
+Roxy büyük dursun diye.
 
 ```
-GEMINI_API_KEY=... GEMINI_MODEL=gemini-3-pro-image-preview GEMINI_IMAGE_SIZE=2K python3 Tools/steam_page/gen_nano.py main_capsule --takes 2 --tag _pro
-python3 Tools/steam_page/ship_picks.py      # seçilen adaylar -> out/capsules/
-python3 Tools/steam_page/about.py           # GIF'ler (gif_backdrop_2 zemininde) + başlıklar -> out/about/
+python3 Tools/steam_page/keyart.py      # 13 görsel + client_icon.ico + yerleşim paftası -> out/keyart/
+python3 Tools/steam_page/about.py       # About GIF'leri + steam_kit başlıkları          -> out/about/
 ```
 
-İlk turun koddan çizen üreticisi (`build_capsules.py`) yerinde duruyor; adaylar yokken yedek olarak çalışır.
-Yeniden üretmek için:
+**Yerleşim** (`keyart.LAYOUTS`; kutular çıktı tuvalinin yüzdesi, pafta: `out/keyart/_layout/LAYOUT_SHEET.png`):
 
-```
-python3 Tools/steam_page/build_capsules.py   # mağaza + kütüphane + etkinlik + ikonlar  -> out/capsules/
-python3 Tools/steam_page/about.py            # About GIF'leri + bölüm başlıkları       -> out/about/
-```
+| Görsel | Boyut | Yoğ. | Logo | Roxy | Bar üstü |
+|---|---|---|---|---|---|
+| `main_capsule` | 1232×706 | 3× | x 7–53% · y 4–34% (560 px) | x 41–89% · y 2–88% | y 86% |
+| `header_capsule` | 920×430 | 2× | x 3–64% · y 4–53% (560 px) | x 57–99% · y 0–93% | y 91% |
+| `small_capsule` | 462×174 | 2× | x 8–92% · y 2–86% (388 px) | — (yalnızca logo) | — |
+| `vertical_capsule` | 748×896 | 2× | x 13–87% · y 5–29% (560 px) | x 22–75% · y 35–80% | y 79% |
+| `library_capsule` | 600×900 | 2× | x 3–97% · y 4–28% (560 px) | x 22–87% · y 36–82% | y 80% |
+| `library_hero` | 3840×1240 | 3× | — (Steam kendi logosunu koyar) | x 42–57% · y 29–78% | y 78% |
+| `event_cover` | 800×450 | 2× | — (Steam adı ve ikonu yanına koyar) | x 1–50% · y 5–96% | y 95% |
+| `event_header` | 1920×622 | 2× | x 3–32% · y 6–40% (560 px) | x 63–84% · y 31–96% | y 95% |
 
-Bağımlılık: `pip install pillow numpy`. Bütün PNG'lerin LFS'ten inmiş olması gerekir (`git lfs pull --include="Assets/**"`).
-İki komut da aynı girdiden bayt bayt aynı çıktıyı üretir. Rastgelelik yok; sabit tohumlar kullanılıyor.
+Kurallar (araştırma + dört yargıçlı eleştiri turu, 2026-10-01): logo en koyu sakin bantta, arkasından hiçbir kule,
+güneş ya da palmiye geçmez; güneş Roxy'nin arkasında; Roxy izleyiciye bakar, kadeh yukarıda; küçük kapsül yalnızca
+logo (120×45'te "MALIBU CLUB" okunur); dikeyler üst üste dizilir (logo, Roxy, bar); kütüphane kapsülünün alt %10'u
+istemci bindirmelerine bırakılır; hero'da yüz 860×380 güvenli alanın içinde, sol alt Steam logosu için sakin, alt
+~%18 oynat çubuğunun altında düz; ana kapsülün dış %5'i karusel kenarına bırakılır. **Kütüphane logosu:** Steamworks'te
+BottomLeft, genişlik ≤%38, yükseklik ≤%30 olarak sabitle (Roxy'nin koluna değmesin, oynat çubuğunun üstünde kalsın).
+**Sayfa arka planı:** yazarın kendi dosyası olduğu gibi kalır (Steam 1438×810 ister; yazarın asıl dosyası `steam_kit`'te).
+
+**Önceki turlar** (yerinde duran ama artık kullanılmayan araçlar): koddan çizilen ilk tur (`build_capsules.py`,
+`scene.py`, `compose.py`) ve Nano Banana'nın doğrudan kapsül boyadığı ikinci tur (`gen_nano.py`, `ship_picks.py`).
+`gen_nano.py` hâlâ Roxy kaynağını üretmek için gerekli; anahtar `GEMINI_API_KEY` ortam değişkeninden okunur, hiçbir
+dosyaya yazılmaz.
+
+Bağımlılık: `pip install pillow numpy opencv-python-headless`. Bütün PNG'lerin LFS'ten inmiş olması gerekir.
 
 ---
 
@@ -67,16 +95,15 @@ Bağımlılık: `pip install pillow numpy`. Bütün PNG'lerin LFS'ten inmiş olm
 | İlke (araştırma) | Bu sayfada nasıl uygulandı |
 |---|---|
 | Tek odak, göz teması: kapsüllerin yalnız ~%20'sinde okunabilir bir yüz var, o yüzden yüz öne çıkarır | Her kapsülde Roxy önde ve izleyiciye bakıyor (oyunun `idle` karesi). |
-| Kızıl saç ve bordo tulum mor zeminde kaybolur | Roxy'ye gün batımı tarafından Magenta[4] kenar ışığı ve logonun dört bantlı halesi verildi. Arkasında da güneş var. |
+| Kızıl saç ve bordo tulum mor zeminde kaybolur | Güneş her zaman Roxy'nin arkasında; gün batımına değen dış kenarında tek koyu Magenta[0] texel, gece bandına değen saçta Magenta[1]. |
 | Jenerik synthwave (ızgara, güneş, palmiye) "müzik klibi" gibi okunur | Karede her zaman **tezgâh, kokteyl ve kimlik kartı** var; tür ilk bakışta okunuyor. |
-| Logo 120×45'te okunmalı | Küçük kapsülde logo genişliğin %71'i; tüp halesi zemini ayırıyor. |
+| Logo 120×45'te okunmalı | Küçük kapsülde logo genişliğin %84'ü, tamamen gece bandında; gün batımı yalnızca altta ince bir şerit. |
 | Kapsülde yalnız sanat, ad ve resmî alt başlık | Hiçbir kapsülde slogan, puan ya da ödül yazısı yok. "COCKTAIL BAR SIMULATOR" logonun parçası. |
-| Piksel sanat yalnızca tam katlarla ve NEAREST ile büyütülür | Oda ×2 (oyunun 640×360 → 1280×720 ızgarası), Roxy ×3–7, hero ×4. Hiçbir sprite yeniden örneklenmedi. |
-| Palet disiplini | Her renk `UITheme` rampalarından. Geçişler Bayer titreşimli bantlar, ışıltılar tabelanın 150/78/34/12 alfa bantları. |
+| Piksel sanat yalnızca tam katlarla ve NEAREST ile büyütülür | Her görselde tek ızgara: plaka, tezgâh, Roxy ve nesneler aynı yoğunlukta (2 ya da 3). Logo hiç yeniden örneklenmez. |
+| Palet disiplini | Plaka yazarın arka planının mürekkepleri, tezgâh ve nesneler `UITheme` rampaları; her görsel son adımda tek palete indirgenir. |
 
 **Logo:** `Assets/Resources/Logo/logo_*_map.bytes` haritalarından, oyunun `TitleSignLight` "Lit" kıyafetiyle **birebir**
-boyanır (`Tools/steam_page/logo_render.py`). Harfler hiç yeniden çizilmedi. Gereken genişliğin üstündeki en yakın set
-seçilip BOX ile **küçültülür**, asla büyütülmez.
+boyanır (`Tools/steam_page/logo_render.py`). Harfler hiç yeniden çizilmedi ve hiçbir set yeniden örneklenmez (yukarıda).
 
 ## 3 · Kısa açıklama (≤300 karakter)
 
@@ -128,42 +155,49 @@ GIF ve en fazla iki kısa paragraftan oluşur. Roxy'nin balonundaki söz oyunun 
 (`Resources/Patron`), 22 yuvada 91 dekor (`fixtures.json`), 18 iş (`quests.json`), 48 başarım
 (`achievements.json`), 29 dil (28 çeviri + İngilizce).
 
+Her GIF yazarın `steam_kit` paneline oturur (17 texel oluk, koyu-altın-koyu kenar, kitin neon çizgisi; 720×442),
+zemini key art'ın kendi plakası ve tezgâhıdır; bütün figürler 2 px ızgarada. Bölüm başlıkları yazarın "ABOUT THE
+GAME" başlığının kardeşleri: aynı çerçeve, ikon kutusu ve neon çizgi, şerit aynı sahneden, Malibu Arcade 16 px, altı
+kare 420 ms, pencereler yanıp söner (`kit.header2`). Sayfa yazarın kendi `header_about.gif`'iyle açılır.
+
 | Dosya | Boyut | İçerik |
 |---|---|---|
-| `01_meet_roxy.gif` | 616×360 | Roxy yürüyerek girer, döner ve turun ilk sözünü yazar. |
-| `02_read_the_card.gif` | 616×360 | Kart yükselir, sipariş okunur (ORDER TAKEN). İkinci misafir 19 yaşında: UNDER 20 – KICK. |
-| `03_shake_and_pour.gif` | 616×340 | Shaker çalkalanır, MIX dolar, coupe'a dökülür. PERFECT: altın ve magenta parçacıklar. |
-| `04_pull_a_pint.gif` | 616×340 | Bira dolar, köpük banda oturur: GOOD PINT, HEAD 14%. |
-| `05_the_crowd.gif` | 616×300 | Beş misafir kendi klipleriyle içer, sevinir, bozulur. |
-| `06_one_night.gif` | 616×300 | 18:00 → 02:00 arasında güneş batar, kasa dolar, beş yıldız yanar. |
-| `07_build_the_house.gif` | 616×320 | Dekor tek tek yerine oturur, COMFORT elmasları dolar. |
-| `banner_*.png` | 616×84 | Sekiz neon bölüm başlığı (MalibuArcade, tek ölçek). |
+| `header_about.gif` | 1440×176 | Yazarın kendi başlığı (`steam_kit`), olduğu gibi. |
+| `banner_*.gif` | 1440×176 | Sekiz bölüm başlığı, 6 kare, her biri ~20 KB. |
+| `01_meet_roxy.gif` | 720×442 | Roxy yürüyerek girer, döner ve turun ilk sözünü yazar. |
+| `02_read_the_card.gif` | 720×442 | Kart yükselir, sipariş okunur (ORDER TAKEN). İkinci misafir 19 yaşında: UNDER 20 – KICK. |
+| `03_shake_and_pour.gif` | 720×442 | Shaker çalkalanır, MIX dolar, coupe'a dökülür. PERFECT: altın ve magenta parçacıklar. |
+| `04_pull_a_pint.gif` | 720×442 | Bira dolar, köpük banda oturur: GOOD PINT, HEAD 14%. |
+| `05_the_crowd.gif` | 720×442 | Beş misafir kendi klipleriyle içer, sevinir, bozulur. |
+| `06_one_night.gif` | 720×442 | 18:00 → 02:00 arasında plakanın güneşi batar, kasa dolar, beş yıldız yanar. |
+| `07_build_the_house.gif` | 720×442 | Dekor tek tek yerine oturur, COMFORT elmasları dolar. |
 
-En büyük GIF ~1 MB, toplam ~3.8 MB. Valve'ın ~15 MB'lık sayfa sınırının çok altında.
+En büyük GIF ~0.7 MB, toplam ~3 MB. Valve'ın ~15 MB'lık sayfa sınırının çok altında. Steam açıklama sütunu GIF'leri
+sütun genişliğine sığdırır; 720 piksellik panel 1200 piksellik yeni sayfada küçültülmeden de sığar.
 
 **Steam'e yükleme:** Steamworks → Store Page Admin → Description → *Upload images*. Dosyalar
 `{STEAM_APP_IMAGE}/extras/<ad>` olur; BBCode bu yolları kullanıyor, dosya adlarını değiştirme.
 
-## 6 · Mağaza ve kütüphane görselleri (`Tools/steam_page/out/capsules/`)
+## 6 · Mağaza ve kütüphane görselleri (`Tools/steam_page/out/keyart/`)
 
 | Steam yuvası | Dosya | Boyut |
 |---|---|---|
-| Header capsule | `header_capsule_920x430.jpg` | 920×430 |
-| Small capsule | `small_capsule_462x174.jpg` | 462×174 |
-| Main capsule | `main_capsule_1232x706.png` | 1232×706 |
-| Vertical capsule | `vertical_capsule_748x896.jpg` | 748×896 |
-| Page background | `page_background_1438x810.jpg` | 1438×810 (karartılmış; Roxy ve logo yok) |
-| Library capsule | `library_capsule_600x900.jpg` | 600×900 |
-| Library hero | `library_hero_3840x1240.jpg` | 3840×1240 (logo YOK; Steam kütüphane logosunu üstüne koyar) |
-| Library logo | `library_logo_1280x720.png` | 1280×720, saydam |
-| Library header | `library_header_920x430.jpg` | 920×430 |
-| Event cover | `event_cover_800x450.jpg` | 800×450 |
-| Event header | `event_header_1920x622.jpg` | 1920×622 |
-| Community icon | `community_icon_184x184.jpg` | 184×184 |
-| Client / shortcut icon | `client_icon_256x256.png` | 256×256 |
+| Header capsule | `header_capsule.png` | 920×430 |
+| Small capsule | `small_capsule.png` | 462×174 |
+| Main capsule | `main_capsule.png` | 1232×706 |
+| Vertical capsule | `vertical_capsule.png` | 748×896 |
+| Page background | yazarın `steam_kit` dosyası | 1438×810 |
+| Library capsule | `library_capsule.png` | 600×900 |
+| Library hero | `library_hero.png` | 3840×1240 (logo YOK) |
+| Library logo | `library_logo.png` | 1280×428, saydam, x2 seti 1:1 + 8 px kenar |
+| Library header | `library_header.png` | 920×430 (header ile aynı) |
+| Event cover | `event_cover.png` | 800×450 (sağ yarı etkinlik yazısına boş) |
+| Event header | `event_header.png` | 1920×622 |
+| Community icon | `community_icon.png` | 184×184 (JPG'ye q≥95 ile çevrilerek yüklenir) |
+| Client / shortcut icon | `client_icon.png`, `client_icon.ico` | 256×256; .ico 16/24/32/48/256 |
 
-Boyutlar Steamworks'ün 2024 spesifikasyonu (üçüncü taraf kopyalarla doğrulandı; yüklerken Steamworks arayüzündeki
-sayılarla bir kez karşılaştır).
+PNG olarak teslim edilir: piksel sanatı JPG'de bozulur. Steam'in JPG istediği yuvalara (community icon) yüklemeden
+hemen önce en yüksek kaliteyle çevrilir.
 
 ## 7 · Ekran görüntüleri: oyunun içinden çekilmeli
 

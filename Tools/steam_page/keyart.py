@@ -1,18 +1,26 @@
 # -*- coding: utf-8 -*-
 """THE KEY ART: every store and library picture laid out from ONE master composition.
 
-The master is a beach bar opening onto the steam_kit sunset (plate.py), seen from behind its counter:
+The master is a beach bar opening onto the steam_kit sunset, seen from behind its counter:
 
-    plate   - the page background's own sunset, sea, skyline and palms, with dusk bands above for the title
-    counter - black marble bar top with the magenta neon lip of the steam_kit panels, a few of the game's bottles
-    Roxy    - the one cut-out (roxy_layer.py), her hand resting on that counter, a coupe raised, eyes on the viewer
-    title   - the shipped MALIBU CLUB sign (logo_render.py), placed at final resolution, never redrawn
+    plate   - plate.py: the author's page-background sunset, sea, skyline and palms, dusk bands above for the title
+    counter - ClubBlue marble (the steam_kit panel's navy-black, veined) with the panels' magenta neon lip; on a
+              tall front, 12-texel MiMo flutes and the kit's neon rule
+    Roxy    - roxy_layer.py: one cut-out, her fingers on the marble, the slab passing in front of her waist
+    props   - props.py: a tequila-sunrise highball and the patron licence under her fingertips (the game's hook)
+    title   - the MALIBU CLUB sign, never resampled: a shipped set 1:1, or a set DRAWN at the needed width by the
+              sign's own builder (logo_native.py)
 
-Each asset is drawn on its own NATIVE canvas (output size / its pixel density, a whole number) and enlarged with
-NEAREST, so inside one picture every layer shares one grid and one palette. The title is laid on at full size:
-the largest shipped set that fits is used 1:1 (no resampling); only where none fits is the next set reduced.
+Each asset is drawn on its own native canvas (output / density, a whole number), its edge texels against the
+sunset get one dark outline texel, the canvas is snapped to one palette (near-duplicate inks merged), then it is
+enlarged with NEAREST; the title goes on last at full size.
 
-    python3 keyart.py [asset ...]   ->  out/keyart/<asset>.png  (+ out/keyart/_layout/<asset>.png wireframes)
+Numbers come from the research and critique passes (Docs/STEAM_SAYFASI.md): logo widths and slots, Roxy's face
+on the right third, the sun behind her, the logo on the darkest calm band with nothing crossing it, at most three
+genre props, the small capsule logo-first, stacked verticals, the hero's face in the 860x380 safe area with a
+calm bottom-left, densities 2/4 where Steam serves half-size copies (main 3, hero 3, so Roxy can stand large).
+
+    python3 keyart.py [asset ...]   ->  out/keyart/<asset>.png  (+ out/keyart/_layout/*.png wireframes)
 """
 import json, math, os, sys
 import numpy as np
@@ -20,12 +28,14 @@ from PIL import Image, ImageDraw
 
 import plate as PL
 import scene as S
+import props as PR
 from logo_render import render as logo_render
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, 'out', 'keyart')
 LAYERS = os.path.join(HERE, 'out', 'layers')
 LOGO_SETS = [('x1', 560), ('x1_25', 700), ('x1_5', 840), ('x2', 1120), ('x2_5', 1400), ('x3', 1680), ('x4', 2240)]
+HAND_X = 49            # Roxy layer: columns left of this are her resting arm and hand
 
 
 def hx(s):
@@ -33,120 +43,109 @@ def hx(s):
 
 
 # ── the counter ───────────────────────────────────────────────────────────────────────────────────────
-def counter(W, H, seed=2):
-    """Black marble top (veins in the Night ramp), a magenta neon lip with the title sign's four-band light, and
-    the front face falling to near-black."""
+def counter(W, H, top, seed=2, plain_below=None):
+    """The bar: `top` rows of ClubBlue marble seen from above (far edge Graphite[2], long meandering veins in
+    ClubBlue[1], a few ClubBlue[2] glints), the magenta neon lip (3 rows), then the front face. A tall front
+    gets 12-texel flutes (Night[3] highlight, Night[0] shadow) and ends on the kit's neon rule, inset 6.
+    plain_below: rows from here down stay flat #12081A (under Steam's play bar on the hero)."""
     rng = np.random.RandomState(seed)
     a = np.zeros((H, W, 4), np.uint8)
     a[..., 3] = 255
-    top = max(1, min(max(3, H // 6), H - 4))   # depth of the bar top seen from above (a sliver on a low bar)
-    a[:top, :, :3] = hx('#14161A')
-    a[0, :, :3] = hx('#383D45')                # far edge catches the sky
-    for _ in range(max(2, W // 18)):           # marble veins: short diagonal runs
-        x = rng.randint(0, W); y = rng.randint(1, max(2, top - 1)); L = rng.randint(4, 14)
-        ink = hx('#24272D') if rng.rand() < 0.7 else hx('#545A64')
-        for k in range(L):
-            xx, yy = x + k, y + (k // 4)
-            if 0 <= xx < W and 1 <= yy < top:
-                a[yy, xx, :3] = ink
-    # the neon lip
-    a[top, :, :3] = hx('#E84DA6')
-    a[top + 1, :, :3] = hx('#FF7DC6')
-    a[top + 2, :, :3] = hx('#C23283')
-    # front face
-    face = PL.profile(max(1, H - top - 3), [('#1A1023', 3, 'band'), ('#241830', 1, 'seam'), ('#1C1226', 1, 'seam'),
-                                    ('#120A19', 6, 'band')])
-    for i, c in enumerate(face):
-        if top + 3 + i < H:
-            a[top + 3 + i, :, :3] = c
-    fh = H - top - 3
-    if fh > 24:
-        # a MiMo bar front: a brass rail, fluted panels, a cyan kick light along the floor
-        y0 = top + 3
-        a[y0 + 4, :, :3] = hx('#8F5A1E'); a[y0 + 5, :, :3] = hx('#C9822B'); a[y0 + 6, :, :3] = hx('#4A2E14')
-        for x in range(0, W, 6):
-            a[y0 + 9:H - 6, x, :3] = hx('#241830')
-            a[y0 + 9:H - 6, (x + 1) % W, :3] = hx('#1F1329')
-        a[H - 5, :, :3] = hx('#1B5F66'); a[H - 4, :, :3] = hx('#3BC8BE'); a[H - 3, :, :3] = hx('#1B5F66')
-    img = Image.fromarray(a, 'RGBA')
-    return img, top
+    a[:top, :, :3] = hx('#131B3D')
+    for _ in range(max(1, int(W / 100 * 2.5))):                 # veins: meandering polylines
+        x, y = rng.randint(0, W), rng.randint(1, max(2, top))
+        for _ in range(rng.randint(12, 40)):
+            if 1 <= y < top and 0 <= x < W:
+                a[y, x, :3] = hx('#1F2E66')
+            x += 1
+            if rng.rand() < 0.3:
+                y += rng.choice((-1, 1))
+    for _ in range(max(1, W // 60)):
+        x, y = rng.randint(0, W), rng.randint(1, max(2, top))
+        if y < top:
+            a[y, x, :3] = hx('#2E4699')
+    a[0, :, :3] = hx('#383D45')
+    # the lip's light spills up onto the slab: Magenta[1] at the sign's alpha steps
+    for k, al in enumerate((150, 78, 34)):
+        y = top - 1 - k
+        if 1 <= y < top:
+            a[y, :, :3] = (a[y, :, :3] * (1 - al / 255) + np.array(hx('#8F2464')) * (al / 255)).astype(np.uint8)
+    for k, c in enumerate(('#E84DA6', '#FF7DC6', '#C23283')):
+        if top + k < H:
+            a[top + k, :, :3] = hx(c)
+    y0 = top + 3
+    a[y0:, :, :3] = hx('#1A1023')
+    if H - y0 > 24:
+        for x in range(0, W, 12):
+            a[y0 + 2:H - 10, x, :3] = hx('#362447')
+            a[y0 + 2:H - 10, (x + 11) % W, :3] = hx('#0D0813')
+        r = H - 7
+        for k, c in enumerate(('#C03382', '#FF7CC7', '#C03382')):
+            a[r + k, 6:W - 6, :3] = hx(c)
+        a[H - 3:, :, :3] = hx('#12081A')
+    if plain_below is not None and plain_below < H:
+        a[plain_below:, :, :3] = hx('#12081A')
+    return Image.fromarray(a, 'RGBA')
 
 
 def lip_glow(W, H, y):
-    """The lip's light on whatever is above and below it: the four alpha bands, one native row each."""
+    """The lip's light below it, onto the front: the four alpha bands, one native row each."""
     m = np.zeros((H, W), bool)
     m[y:y + 2] = True
-    return S.glow(m, S.C('Magenta[3]'), step=1)
-
-
-def bottles(cards):
-    return [S.bottle(c, f, cellar=True) for c, f in cards]
+    g = np.asarray(S.glow(m, S.C('Magenta[3]'), step=1)).copy()
+    g[:y + 2] = 0
+    return Image.fromarray(g, 'RGBA')
 
 
 # ── the title ─────────────────────────────────────────────────────────────────────────────────────────
 def title(width):
-    """The sign at `width` px: the largest shipped set not wider (1:1) if it is within 6% of the target,
-    otherwise the next set up reduced with a box filter. Never enlarged."""
-    best = None
+    """The sign at `width` px, never resampled: a shipped set 1:1 when one is that wide, otherwise a set drawn at
+    that width by the sign's own builder (four flat glow bands, aliased tubes, 7 alpha levels)."""
     for name, w in LOGO_SETS:
-        if w <= width:
-            best = (name, w)
-    if best and best[1] >= width * 0.94:
-        return logo_render(best[0])
-    for name, w in LOGO_SETS:
-        if w >= width:
-            im = logo_render(name)
-            return im.resize((width, round(im.height * width / im.width)), Image.BOX)
-    im = logo_render('x4')
-    return im.resize((width, round(im.height * width / im.width)), Image.BOX)
+        if w == width:
+            return logo_render(name)
+    import logo_native
+    return logo_native.render(width)
 
 
 # ── the layouts ───────────────────────────────────────────────────────────────────────────────────────
-# size: output px. d: native pixel density. All boxes are fractions of the OUTPUT canvas.
-#   plate: horizon, night share, sun x, sun r (native px), skyline spans, palms (side, x, scale)
-#   counter_y: top of the bar top (fraction of height), or None for no counter
-#   roxy: (face x fraction, mode) - mode 'counter' rests her hand on the counter; ('head', y) puts her face at y
-#   title: (x, y, width) fractions; x None = centred
-#   props: [(x fraction, card, fill)] bottles on the bar top
-# Numbers from the research pass (Tools/steam_page/research/, 2026-10-01): logo widths and slots, Roxy's face
-# position, the sun behind her, a calm night field behind the title, at most three genre props (the counter edge,
-# a highball, the ID card), the hero's 860x380 safe area and a calm bottom-left for Steam's own logo.
-# Densities: 2 (or 4) wherever Steam serves a half-size copy, so that copy stays on whole pixels; the main
-# capsule takes 3 so Roxy stands crown-to-counter in ~86% of its height.
+# size: output px; d: native density; plate: horizon, night share, sun x / r (native), skyline spans and height,
+# palms (side, x anchor, scale[, crown top as a fraction of H]); counter_y: top of the slab (fraction of H);
+# top: slab depth in native rows; roxy: face x (fraction) - she always stands at the counter; title: (x, y, width
+# px) with x None = centred; props: 'hand' puts the licence under her fingertips and the highball beside it, or
+# (('highball', x),) adds one at a fraction of the width.
 LAYOUTS = {
-    'main_capsule': dict(size=(1232, 706), d=3, horizon=0.56, night=0.52, sun_x=0.66, sun_r=60,
-                         skyline=((0.0, 0.46),), palms=(('right', 1.0, 1.4),),
-                         counter_y=0.90, roxy=(0.66, 'counter'), title=(0.05, 0.05, 0.455),
-                         props=[('highball', 0.23), ('card', 0.31)]),
-    'header_capsule': dict(size=(920, 430), d=2, horizon=0.60, night=0.52, sun_x=0.76, sun_r=52,
-                           skyline=((0.0, 0.50),), palms=(('right', 1.0, 1.2),),
-                           counter_y=0.95, roxy=(0.76, 'counter'), title=(0.045, 0.12, 0.50),
-                           props=[('highball', 0.36), ('card', 0.43)]),
-    'small_capsule': dict(size=(462, 174), d=2, horizon=0.70, night=0.62, sun_x=1.02, sun_r=22,
+    'main_capsule': dict(size=(1232, 706), d=3, horizon=0.56, night=0.52, sun_x=0.66, sun_r=75,
+                         skyline=((0.0, 0.46),), skyline_h=48, palms=(('right', 1.03, 1.4),),
+                         counter_y=0.86, top=8, roxy=0.66, title=(0.075, 0.04, 560), props='hand'),
+    'header_capsule': dict(size=(920, 430), d=2, horizon=0.70, night=0.78, sun_x=0.79, sun_r=64,
+                           skyline=((0.0, 0.50),), skyline_h=28, palms=(),
+                           counter_y=0.91, top=6, roxy=0.79, title=(0.035, 0.04, 560), props='hand'),
+    'small_capsule': dict(size=(462, 174), d=2, horizon=0.95, night=0.97, sun_x=1.02, sun_r=22,
                           skyline=(), palms=(('left', -0.06, 0.7), ('right', 1.06, 0.7)),
-                          counter_y=None, roxy=None, title=(None, 'middle', 0.84), props=[]),
+                          counter_y=None, roxy=None, title=(None, 0.02, 388), props=None),
     'vertical_capsule': dict(size=(748, 896), d=2, horizon=0.56, night=0.55, sun_x=0.5, sun_r=66,
-                             skyline=((0.0, 0.24), (0.76, 1.0)), palms=(('left', -0.04, 1.4), ('right', 1.04, 1.4)),
-                             counter_y=0.785, roxy=(0.5, 'counter'), title=(None, 0.05, 0.84),
-                             props=[('card', 0.04), ('highball', 0.86)]),
-    'library_capsule': dict(size=(600, 900), d=2, horizon=0.55, night=0.55, sun_x=0.5, sun_r=60,
-                            skyline=((0.0, 0.20), (0.80, 1.0)), palms=(('left', -0.06, 1.3), ('right', 1.06, 1.3)),
-                            counter_y=0.73, roxy=(0.5, 'counter'), title=(None, 0.05, 0.85),
-                            props=[('card', 0.02), ('highball', 0.86)]),
-    'library_hero': dict(size=(3840, 1240), d=4, horizon=0.45, night=0.42, sun_x=0.573, sun_r=44,
-                         skyline=((0.02, 0.36), (0.80, 1.0)), palms=(('left', 0.0, 1.5), ('right', 1.0, 1.5)),
-                         counter_y=0.962, roxy=(0.573, 'counter'), title=None, props=[]),
+                             skyline=((0.0, 0.24), (0.76, 1.0)),
+                             palms=(('left', -0.04, 1.0, 0.33), ('right', 1.04, 1.0, 0.33)),
+                             counter_y=0.785, top=10, roxy=0.5, title=(None, 0.05, 560), props='hand'),
+    'library_capsule': dict(size=(600, 900), d=2, horizon=0.58, night=0.55, sun_x=0.5, sun_r=60,
+                            skyline=((0.0, 0.20), (0.80, 1.0)),
+                            palms=(('left', -0.06, 1.0, 0.30), ('right', 1.06, 1.0, 0.30)),
+                            counter_y=0.80, top=10, roxy=0.56, title=(None, 0.04, 560), props='hand'),
+    'library_hero': dict(size=(3840, 1240), d=3, horizon=0.52, night=0.42, sun_x=0.50, sun_r=80,
+                         skyline=((0.02, 0.36),), palms=(('right', 1.0, 2.0),),
+                         counter_y=0.775, top=6, roxy=0.50, title=None, props='hand', plain_below=1017),
     'library_header': None,      # = header_capsule
-    'event_cover': dict(size=(800, 450), d=2, horizon=0.58, night=0.45, sun_x=0.22, sun_r=30,
-                        skyline=((0.45, 1.0),), palms=(('right', 1.0, 1.1),),
-                        counter_y=0.95, roxy=(0.22, 'counter'), title=None, props=[]),
-    'event_header': dict(size=(1920, 622), d=2, horizon=0.58, night=0.50, sun_x=0.84, sun_r=40,
-                         skyline=((0.0, 0.30), (0.62, 0.74)), palms=(('right', 1.0, 1.3),),
-                         counter_y=0.96, roxy=(0.84, 'counter'), title=(0.03, 0.14, 0.30),
-                         props=[('highball', 0.66), ('card', 0.70)]),
-    'community_icon': 'coupe',
-    'client_icon': 'coupe',
+    'event_cover': dict(size=(800, 450), d=2, horizon=0.74, night=0.70, sun_x=0.27, sun_r=64,
+                        skyline=((0.55, 1.0),), skyline_h=32, palms=(('left', 0.0, 1.0),),
+                        counter_y=0.95, top=4, roxy=0.27, title=None, props=None),
+    'event_header': dict(size=(1920, 622), d=2, horizon=0.58, night=0.68, sun_x=0.74, sun_r=70,
+                         skyline=((0.34, 0.70),), palms=(('right', 1.0, 1.3),),
+                         counter_y=0.95, top=6, roxy=0.74, title=(0.03, 0.06, 560), props='hand'),
+    'community_icon': 'icon',
+    'client_icon': 'icon',
 }
+
 
 def roxy_layer():
     img = Image.open(os.path.join(LAYERS, 'roxy_coupe.png')).convert('RGBA')
@@ -154,62 +153,169 @@ def roxy_layer():
     return img, meta
 
 
+def sunset_outline(canvas, plate_img, rx, ry, rox, horizon_row):
+    """Roxy's OUTER silhouette texels against the sunset get one opaque dark texel (Magenta[0]) - her skin is
+    only a step from the orange band - and a hair texel against the night bands gets Magenta[1]. No blending,
+    nothing below the horizon."""
+    W, H = canvas.size
+    a = np.asarray(canvas).copy()
+    pl = np.asarray(plate_img).astype(int)
+    m = np.zeros((H, W), bool)
+    ra = np.asarray(rox)[..., 3] > 0
+    x0, y0 = max(0, rx), max(0, ry)
+    x1, y1 = min(W, rx + rox.width), min(H, ry + rox.height)
+    m[y0:y1, x0:x1] = ra[y0 - ry:y1 - ry, x0 - rx:x1 - rx]
+    warm = {hx(c) for c in ('#FEEC7B', '#FEB555', '#FFB457', '#FF8C56', '#FFCD61', '#FEEF7E', '#FFB356',
+                            '#FE8D4F', '#FF8958', '#F35389', '#EA4AA0', '#E74BA2', '#AE489A')}
+    for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+        nb = np.zeros_like(m)
+        if dy:
+            nb[max(0, -dy):H - max(0, dy)] = m[max(0, dy):H - max(0, -dy)]
+        else:
+            nb[:, max(0, -dx):W - max(0, dx)] = m[:, max(0, dx):W - max(0, -dx)]
+        edge = m & ~nb                                   # Roxy texels whose neighbour (y+dy, x+dx) is not Roxy
+        ys, xs = np.nonzero(edge)
+        oy, ox = ys + dy, xs + dx
+        ok = (oy >= 0) & (oy < H) & (ox >= 0) & (ox < W) & (ys < horizon_row)
+        ys, xs, oy, ox = ys[ok], xs[ok], oy[ok], ox[ok]
+        out = pl[oy, ox, :3]
+        is_warm = np.array([tuple(c) in warm for c in out]) if len(out) else np.zeros(0, bool)
+        a[ys[is_warm], xs[is_warm], :3] = hx('#5C1B45')
+        mine = a[ys, xs, :3].astype(int)
+        hair = (mine[:, 0] > mine[:, 1] + 20) & ((mine @ np.array([.299, .587, .114])) < 110)
+        dark = (out @ np.array([.299, .587, .114])) < 100
+        sel = ~is_warm & hair & dark
+        a[ys[sel], xs[sel], :3] = hx('#8F2464')
+    return Image.fromarray(a, 'RGBA')
+
+
+def unify_palette(img, de=4.0):
+    """One palette per picture: merge every pair of inks closer than `de` (CIE76, Lab) into the more-used one."""
+    import pixelsnap as PS
+    a = np.asarray(img.convert('RGB'))
+    cols, counts = np.unique(a.reshape(-1, 3), axis=0, return_counts=True)
+    order = np.argsort(-counts)
+    cols, counts = cols[order], counts[order]
+    lab = PS._lab(cols.astype(np.float32))
+    target = np.arange(len(cols))
+    keep = []
+    for i in range(len(cols)):
+        if keep:
+            d = ((lab[keep] - lab[i]) ** 2).sum(-1)
+            j = int(np.argmin(d))
+            if d[j] < de * de:
+                target[i] = keep[j]
+                continue
+        keep.append(i)
+    lut = {tuple(cols[i]): tuple(cols[target[i]]) for i in range(len(cols)) if target[i] != i}
+    if lut:
+        flat = a.reshape(-1, 3).copy()
+        keyv = flat[:, 0].astype(np.int64) << 16 | flat[:, 1].astype(np.int64) << 8 | flat[:, 2]
+        for src, dst in lut.items():
+            k = src[0] << 16 | src[1] << 8 | src[2]
+            flat[keyv == k] = dst
+        a = flat.reshape(a.shape)
+    return Image.fromarray(a.astype(np.uint8), 'RGB').convert('RGBA'), len(keep)
+
+
+def icon(name):
+    """Client icon: the logo's coupe from the shipped x2_5 set 1:1, outer two glow bands dropped, on a Night[0]
+    tile with the sunset behind the bowl's lower third. Community icon: Roxy's face, 46x46 native, x4."""
+    size = 184 if name == 'community_icon' else 256
+    if name == 'community_icon':
+        rox, meta = roxy_layer()
+        n = 92
+        img = PL.render(n, n, horizon=0.78, night=0.30, sun_x=0.5, sun_r=30, skyline_spans=(), palms=())
+        fx, fy = meta['face']
+        plate_only = img.copy()
+        rx, ry = n // 2 - fx, n // 2 - fy + 6
+        img.alpha_composite(rox, (rx, ry))
+        img = sunset_outline(img, plate_only, rx, ry, rox, int(n * 0.78))
+        return img.resize((n * 2, n * 2), Image.NEAREST).crop((0, 0, size, size)).convert('RGB')
+    m = np.asarray(Image.open(os.path.join(PL.HERE, '..', '..', 'Assets', 'Resources', 'Logo',
+                                           'logo_x2_5_map.bytes')).convert('RGB')).copy()
+    cls, grp = m[..., 0], m[..., 1]
+    coupe = (grp == 12) | (cls == 8)
+    m[~coupe] = 0
+    m[(cls == 1) | (cls == 2)] = 0                     # the two outer glow bands: the tube fills the tile
+    from logo_render import render_map
+    cp = render_map(m)
+    cp = cp.crop(cp.getbbox())
+    n = 64
+    tile = PL.render(n, n, horizon=0.80, night=0.62, sun_x=0.5, sun_r=14, skyline_spans=(), palms=(),
+                     reflect=False).resize((256, 256), Image.NEAREST)
+    k = min(220 / cp.width, 220 / cp.height, 1.0)
+    if k < 1.0:
+        n2 = None
+    tile.alpha_composite(cp, ((256 - cp.width) // 2, (256 - cp.height) // 2))
+    return tile.convert('RGB')
+
+
 def build(name):
     L = LAYOUTS[name] or LAYOUTS['header_capsule']
-    if L == 'coupe':
-        import props as PR
-        size = 184 if name == 'community_icon' else 256
-        return PR.coupe_mark(size).convert('RGB'), {}
+    if L == 'icon':
+        return icon(name), {}
     W, H = L['size']
     d = L['d']
     w, h = math.ceil(W / d), math.ceil(H / d)
+    hz = int(round(h * L['horizon']))
     img = PL.render(w, h, horizon=L['horizon'], night=L['night'], sun_x=L['sun_x'], sun_r=L['sun_r'],
-                    skyline_spans=L['skyline'], palms=L['palms'], skyline_h=max(10, int(h * L['horizon'] * 0.42)))
+                    skyline_spans=L['skyline'], palms=L['palms'],
+                    skyline_h=L.get('skyline_h') or max(10, int(h * L['horizon'] * 0.42)))
+    plate_only = img.copy()
     boxes = {}
-    import props as PR
     rox, meta = roxy_layer()
     cy = int(round(h * L['counter_y'])) if L['counter_y'] else None
-    top = 0
     if cy is not None:
-        ctr, top = counter(w, h - cy)
+        top = L.get('top', 6)
+        pb = (L['plain_below'] // d - cy) if L.get('plain_below') else None
+        ctr = counter(w, h - cy, top, plain_below=pb)
         img.alpha_composite(ctr, (0, cy))
+        rx = ry = None
+        if L['roxy'] is not None:
+            face_x, face_y = meta['face']
+            rx = int(round(w * L['roxy'] - face_x))
+            ry = cy + top - 3 - meta['counter_y']           # her fingers on the marble, 3 rows from the lip
+            img.alpha_composite(rox.crop((max(0, -rx), max(0, -ry), rox.width, rox.height)), (max(0, rx), max(0, ry)))
+            img = sunset_outline(img, plate_only, rx, ry, rox, hz)
+            # the slab passes in front of her waist (torso columns only, so the hand stays on top), lip and front
+            sl = ctr.crop((max(0, rx + HAND_X), 0, min(w, rx + rox.width), top))
+            img.alpha_composite(sl, (max(0, rx + HAND_X), cy))
+            boxes['roxy'] = (rx * d, ry * d, (rx + rox.width) * d, (ry + rox.height) * d)
+            a = np.asarray(img).copy()                       # her contact on the marble
+            hx0, hx1 = max(0, rx), max(0, min(w, rx + 34))
+            a[cy + top - 2, hx0:hx1, :3] = hx('#0D0813')
+            img = Image.fromarray(a, 'RGBA')
+        img.alpha_composite(ctr.crop((0, top, w, h - cy)), (0, cy + top))
         img.alpha_composite(lip_glow(w, h, cy + top))
-        # the props stand on the bar top
-        face = Image.open(os.path.join(S.RES, 'Patron', 'clubgirl', 'face.png'))
-        for kind, px in L['props']:
-            pr = PR.highball() if kind == 'highball' else PR.id_card(face=face)
-            img.alpha_composite(pr, (int(round(w * px)), cy + max(1, top // 2) - pr.height + 1))
-    if L['roxy']:
-        fx, mode = L['roxy']
-        face_x, face_y = meta['face']
-        rx = int(round(w * fx - face_x))
-        ry = cy - meta['counter_y'] + 1 if mode == 'counter' else int(round(h * mode[1] - face_y))
-        # backlit by the sun: a warm rim on one edge, the neon's cyan on the other
-        rr = S.rim_light(S.rim_light(rox, S.C('Amber[4]'), 'left', 150), S.C('Cyan[4]'), 'right', 110)
-        img.alpha_composite(rr.crop((max(0, -rx), max(0, -ry), rr.width, rr.height)), (max(0, rx), max(0, ry)))
-        boxes['roxy'] = (rx * d, ry * d, (rx + rox.width) * d, (ry + rox.height) * d)
-    if cy is not None:
-        # the counter's front face again over her waist (she stands behind the bar), neon lip on top
-        ctr2, top = counter(w, h - cy)
-        front = ctr2.crop((0, top, w, h - cy))
-        img.alpha_composite(front, (0, cy + top))
-    if cy is not None:
+        if L['props']:
+            face = Image.open(os.path.join(S.RES, 'Patron', 'clubgirl', 'face.png'))
+            card = PR.id_card(face=face)
+            hb = PR.highball()
+            base = cy + top - 2                               # props stand on the marble
+            if L['props'] == 'hand' and rx is not None:
+                cx = rx + 6 - card.width                       # her fingertips overlap the card's right edge
+                bx = cx - hb.width - 2
+            else:
+                cx, bx = int(w * 0.3), int(w * 0.24)
+            img.alpha_composite(hb, (bx, base - hb.height + 1))
+            img.alpha_composite(card, (cx, base - card.height + 1))
+            if rx is not None:                                 # her fingers back over the card's edge
+                fing = rox.crop((0, rox.height - 12, 10, rox.height))
+                img.alpha_composite(fing, (rx, ry + rox.height - 12))
+            a = np.asarray(img).copy()
+            a[base + 1, max(0, bx):max(0, bx + hb.width), :3] = hx('#0D0813')
+            a[base + 1, max(0, cx):max(0, cx + card.width), :3] = hx('#0D0813')
+            img = Image.fromarray(a, 'RGBA')
         boxes['counter'] = (0, cy * d, W, H)
+    img, inks = unify_palette(img)
+    boxes['_inks'] = inks
     big = img.resize((w * d, h * d), Image.NEAREST).crop((0, 0, W, H))
     if L['title']:
         tx, ty, tw = L['title']
-        lg = title(int(round(W * tw)))
+        lg = title(tw)
         x = int(round(W * tx)) if tx is not None else (W - lg.width) // 2
-        if ty == 'middle':
-            y = (H - lg.height) // 2
-        elif ty == 'counter':
-            # on the bar's front face: centred in the space under the neon lip
-            lip = (cy + top + 3) * d
-            lg = title(min(int(round(W * tw)), int((H - lip - 2 * 12) * lg.width / lg.height)))
-            x = (W - lg.width) // 2 if tx is None else x
-            y = lip + (H - lip - lg.height) // 2
-        else:
-            y = int(round(H * ty))
+        y = int(round(H * ty))
         big.alpha_composite(lg, (x, y))
         boxes['title'] = (x, y, x + lg.width, y + lg.height)
     return big.convert('RGB'), boxes
@@ -218,7 +324,7 @@ def build(name):
 def library_logo():
     """The library logo: the sign and its halo trimmed tight, 8 px of clear edge (Steam anchors the whole box,
     so empty padding would shrink the logo and pull it off its anchor), 1280 wide."""
-    lg = title(1264)
+    lg = logo_render('x2')          # the shipped x2 set 1:1 (Steam scales the library logo itself)
     a = np.asarray(lg)
     ys, xs = np.nonzero(a[..., 3] > 0)
     lg = lg.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
@@ -258,7 +364,7 @@ ZONES = {
     'library_hero': [('SAFE AREA 860x380', (1490 / 3840, 430 / 1240, 2350 / 3840, 810 / 1240)),
                      ('STEAM LOGO (BOTTOM-LEFT)', (0.02, 0.45, 0.45, 0.80)),
                      ('PLAY BAR', (0, 0.82, 1.0, 1.0))],
-    'event_cover': [('EVENT TEXT', (0.42, 0.10, 0.96, 0.80))],
+    'event_cover': [('EVENT TEXT', (0.53, 0.06, 0.96, 0.50))],
 }
 
 
@@ -279,6 +385,8 @@ def wireframe(name, img, boxes):
         dr.line([(0, H * i // 3), (W, H * i // 3)], fill=(110, 147, 240, 160), width=1)
     col = {'title': (125, 240, 227), 'roxy': (255, 125, 198), 'counter': (110, 147, 240)}
     for k, b in boxes.items():
+        if k.startswith('_'):
+            continue
         dr.rectangle(b, outline=col[k] + (255,), width=max(2, W // 400))
         dr.text((b[0] + 6, b[1] + 4), {'title': 'LOGO', 'roxy': 'ROXY', 'counter': 'BAR'}[k],
                 fill=col[k] + (255,), font=font)
@@ -286,14 +394,45 @@ def wireframe(name, img, boxes):
     return wf.convert('RGB')
 
 
+def client_ico():
+    """The shortcut icon as one .ico: the 256 tile, plus small frames drawn from the shipped x1 coupe 1:1 (its
+    tube and core inks, no glow) on Night[0], so 16-48 px are pixels, not a blur of the big one."""
+    big = icon('client_icon')
+    m = np.asarray(Image.open(os.path.join(PL.HERE, '..', '..', 'Assets', 'Resources', 'Logo',
+                                           'logo_x1_map.bytes')).convert('RGB')).copy()
+    cls, grp = m[..., 0], m[..., 1]
+    keep = ((grp == 12) & (cls >= 5)) | (cls == 8)
+    m[~keep] = 0
+    from logo_render import render_map
+    cp = render_map(m)
+    cp = cp.crop(cp.getbbox())
+    frames = []
+    for n in (16, 24, 32, 48):
+        t = Image.new('RGBA', (n, n), hx('#0D0813') + (255,))
+        c = cp
+        if max(c.size) > n - 2:                      # the x1 coupe is ~40 px: fit by whole-pixel decimation
+            k = math.ceil(max(c.size) / (n - 2))
+            c = c.resize((c.width // k, c.height // k), Image.NEAREST)
+        t.alpha_composite(c, ((n - c.width) // 2, (n - c.height) // 2))
+        frames.append(t)
+    big.convert('RGBA').save(os.path.join(OUT, 'client_icon.ico'), sizes=[(256, 256), (48, 48), (32, 32),
+                                                                         (24, 24), (16, 16)],
+                             append_images=frames)
+
+
 def main(names):
     os.makedirs(os.path.join(OUT, '_layout'), exist_ok=True)
     library_logo().save(os.path.join(OUT, 'library_logo.png'), optimize=True)
+    try:
+        client_ico()
+    except Exception as e:                           # an .ico is a convenience; the PNG is what Steam takes
+        print('client_icon.ico skipped:', e)
     for n in names:
         img, boxes = build(n)
         img.save(os.path.join(OUT, n + '.png'), optimize=True)
         wireframe(n, img, boxes).save(os.path.join(OUT, '_layout', n + '.png'))
-        print('%-18s %dx%d' % (n, img.width, img.height), {k: tuple(int(v) for v in b) for k, b in boxes.items()})
+        print('%-18s %dx%d  %s inks' % (n, img.width, img.height, boxes.get('_inks', '-')),
+              {k: tuple(int(v) for v in b) for k, b in boxes.items() if not k.startswith('_')})
     if len(names) > 3:
         drawn = [n for n in names if os.path.exists(os.path.join(OUT, '_layout', n + '.png'))]
         layout_sheet(drawn).save(os.path.join(OUT, '_layout', 'LAYOUT_SHEET.png'), optimize=True)

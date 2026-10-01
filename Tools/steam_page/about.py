@@ -165,7 +165,8 @@ def bar_bg(H, counter_y=0.84, sun_x=0.5, sun_r=None, horizon=0.60, patrons=None,
     if dusk:
         img = S.tint(img, S.C('Night[0]'), dusk)
     cyn = int(round(h * counter_y))
-    ctr, top = KA.counter(w, h - cyn)
+    top = 4
+    ctr = KA.counter(w, h - cyn, top)
     img.alpha_composite(ctr, (0, cyn))
     img.alpha_composite(KA.lip_glow(w, h, cyn + top))
     big = img.resize((w * 2, h * 2), Image.NEAREST)
@@ -176,6 +177,28 @@ def bar_bg(H, counter_y=0.84, sun_x=0.5, sun_r=None, horizon=0.60, patrons=None,
         from build_capsules import props
         props(big, cy, 2, props_x, props_step)
     return big, cy
+
+
+def half(sprite):
+    """A 1x game sprite moved onto the GIFs' 2 px grid: area-averaged to half size, alpha cut at half, every
+    texel snapped back to the sprite's own inks (so no new colour appears), then doubled with NEAREST."""
+    import pixelsnap as PS
+    sp = sprite.convert('RGBA')
+    a = np.asarray(sp).astype(np.float32)
+    w2, h2 = max(1, sp.width // 2), max(1, sp.height // 2)
+    a = a[:h2 * 2, :w2 * 2]
+    alpha = a[..., 3:4] / 255.0
+    pre = a[..., :3] * alpha
+    pre = pre.reshape(h2, 2, w2, 2, 3).sum((1, 3))
+    al = alpha.reshape(h2, 2, w2, 2, 1).sum((1, 3))
+    rgb = np.where(al > 0, pre / np.maximum(al, 1e-6), 0)
+    keep = (al[..., 0] / 4.0) >= 0.5
+    inks = np.unique(np.asarray(sp)[np.asarray(sp)[..., 3] > 127][:, :3], axis=0).astype(np.float32)
+    snapped = PS.snap(rgb.astype(np.uint8), inks) if len(inks) else rgb.astype(np.uint8)
+    out = np.zeros((h2, w2, 4), np.uint8)
+    out[..., :3] = snapped[..., :3]
+    out[..., 3] = keep * 255
+    return Image.fromarray(out, 'RGBA').resize((w2 * 2, h2 * 2), Image.NEAREST)
 
 
 def front(img, cy):
@@ -274,7 +297,7 @@ def gif_shake_and_pour():
     bg, cy = bar_bg(H, sun_x=0.2, counter_y=0.86, props_x=None)
     shaker = S.load('Items/shaker.png'); cap = S.load('Items/shaker_cap.png')
     tin = shaker.copy(); tin.alpha_composite(cap)
-    tin = tin.crop(tin.getbbox())
+    tin = half(tin.crop(tin.getbbox()))
     frames = []
     base_x, base_y = 230, cy - tin.height * 1 - 10
     mixbar = 0
@@ -299,7 +322,7 @@ def gif_shake_and_pour():
         g = S.up(S.glass('coupe', 'Magenta[3]', min(0.85, k / 25 * 0.85) + 0.001), 2)
         gx, gy = 330, cy + 12 - g.height
         img.alpha_composite(g, (gx, gy))
-        t = S.up(tin.rotate(-120, resample=Image.NEAREST, expand=True), 1)
+        t = half(tin.rotate(-120, resample=Image.NEAREST, expand=True).resize((tin.width // 1, tin.height // 1)))
         img.alpha_composite(t, (gx - t.width + 70, gy - t.height + 30))
         # the stream
         a = np.asarray(img).copy()
@@ -399,14 +422,14 @@ def gif_crowd():
             img = bg.copy()
             for i, (w_, c) in enumerate(cast):
                 f = clips[w_][(k + i * 3) % len(clips[w_])]
-                g = S.up(f.crop((50, 0, 170, 220)), 1)
+                g = half(f.crop((50, 0, 170, 220)))
                 img.alpha_composite(g, (12 + i * 120, cy - int(g.height * 0.72)))
             front(img, cy)
             for i, (w_, c) in enumerate(cast):
                 em = {'cheer': '+$14', 'drink': '+$9', 'upset': 'TOO SWEET'}[c]
                 col = {'cheer': 'Amber[3]', 'drink': 'Cream[3]', 'upset': 'Magenta[3]'}[c]
                 if k > n // 3:
-                    pl = plate(em, col, 'Night[0]' if c != 'upset' else 'Cream[4]')
+                    pl = plate(em, col, 'Night[2]' if c != 'upset' else 'Cream[4]', bold=False)
                     img.alpha_composite(pl, (12 + i * 120 + 60 - pl.width // 2, 14))
             frames.append(img)
     save_gif(frames, '05_the_crowd', fps=14)
@@ -511,7 +534,9 @@ def save_header(key, word, icon):
     import kit
     os.makedirs(OUT, exist_ok=True)
     p = os.path.join(OUT, 'banner_' + key + '.gif')
-    kit.save_header(kit.header2(word, icon, seed=11 + len(word)), p)
+    frames = kit.header2(word, icon, tracking=0, seed=11 + len(word))
+    kit.save_header(frames, p)
+    assert Image.open(p).n_frames == 6, p
     print('%-26s 1440x176  6 frames  %.2f MB' % (os.path.basename(p), os.path.getsize(p) / 1e6))
 
 

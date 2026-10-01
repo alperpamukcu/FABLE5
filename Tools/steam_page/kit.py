@@ -120,7 +120,7 @@ def header(text, icon, tracking=4, scale=4):
     ic = load_icon(icon)
     for a in _template_frames():
         a = _erase_title(a)
-        x0, y0 = 52, 12 + (20 - m.shape[0]) // 2
+        x0, y0 = 52, 12
         sh = np.zeros_like(m)
         sh_a = a[y0 + 1:y0 + 1 + m.shape[0], x0 + 1:x0 + 1 + m.shape[1]]
         sh_a[m] = SHADOW
@@ -161,10 +161,9 @@ def panel(art, scale=1):
     w, h = art.size
     (W, H), (ox, oy) = panel_native(w, h)
     a = np.zeros((H, W, 3), np.uint8)
-    a[:] = FRAME_TL
-    a[:, W - 17:] = FRAME_BR
-    a[oy + h + 3:, :] = FRAME_BR
-    a[:, W - 1] = hx('#231A2F')
+    a[:] = hx('#191023')                       # the kit's gutter: one ink, a 1-texel lip round it
+    a[0, :] = FRAME_TL; a[:, 0] = FRAME_TL
+    a[H - 1, :] = hx('#231A2F'); a[:, W - 1] = hx('#231A2F')
     # dark / gold / dark border
     for k, c in ((0, EDGE), (1, GOLD), (2, EDGE)):
         a[17 + k:oy + h + 3 - k, 17 + k] = c
@@ -173,7 +172,7 @@ def panel(art, scale=1):
         a[oy + h + 2 - k, 17 + k:W - 17 - k] = c
     ry = oy + h + 3 + 14
     for k, c in enumerate(RULE):
-        a[ry + k, :] = c
+        a[ry + k, 6:W - 6] = c
     a[H - 1, :] = LAST
     img = Image.fromarray(a, 'RGB')
     img.paste(art.convert('RGB'), (ox, oy))
@@ -201,32 +200,34 @@ def _dim(a):
     return out
 
 
-def strip(w=318, h=37, seed=11):
+def strip(w=318, h=37, seed=11, dim=True):
     import plate as PL
     sky = PL.SKY[6:]                       # from the pink band down: the kit header shows the low sky only
     img = PL.render(w, h + 1, horizon=(h + 1) / (h + 1) - 0.0001, sun_x=0.52, sun_r=10, sky=sky,
                     skyline_spans=((0.70, 0.93),), skyline_h=26,
                     palms=(('left', 0.06, 1.0, -0.12), ('right', 1.05, 1.0, -0.05)), seed=seed, reflect=False)
     a = np.asarray(img.convert('RGB')).copy()[:h]
-    return _dim(a)
+    return _dim(a) if dim else a
 
 
 def header2(text, icon, tracking=4, scale=4, frames=6, seed=11):
     """A steam_kit header drawn new: the author's frame, box and neon rule, a strip from the master plate,
     the title in Malibu Arcade 16 with its one-texel shadow and amber rule; windows twinkle across frames."""
-    base = _template_frames()[0].astype(np.uint8)
-    st = strip(seed=seed)
+    bases = [f.astype(np.uint8) for f in _template_frames()]
+    raw = strip(seed=seed, dim=False)
+    st = _dim(raw)
     m = _text_mask(text, 16, tracking)
     if m.shape[1] > 286:
         m = _text_mask(text, 16, max(0, tracking - (m.shape[1] - 286) // max(1, len(text) - 1) - 1))
     ic = load_icon(icon)
     rng = np.random.RandomState(seed)
-    lum = st @ np.array([.299, .587, .114])
-    win = (st[..., 0] > 120) & (lum > 95) & (np.arange(st.shape[0])[:, None] < st.shape[0])   # lit windows
-    win &= ~((st[..., 0] > 140) & (st[..., 1] > 70))      # not the sky bands / sun
+    win = np.zeros(raw.shape[:2], bool)                    # lit windows, found on the undimmed strip
+    for c in ('#7DF0E3', '#FEB555', '#EB4BA1'):
+        win |= np.all(raw == np.array(hx(c)), axis=-1)
+    win[:, :2] = False
     out = []
     for k in range(frames):
-        a = base.copy()
+        a = bases[k % len(bases)].copy()
         a[1:37, 1:40] = BOX
         s2 = st.copy()
         # twinkle: a few windows go dark each frame
@@ -235,7 +236,7 @@ def header2(text, icon, tracking=4, scale=4, frames=6, seed=11):
             off = rng.rand(len(ys)) < 0.35
             s2[ys[off], xs[off]] = (s2[ys[off], xs[off]].astype(int) * 0.35).astype(np.uint8)
         a[1:38, 41:359] = s2[:37, :318]
-        x0, y0 = 52, 12 + (20 - m.shape[0]) // 2
+        x0, y0 = 52, 12
         a[y0 + 1:y0 + 1 + m.shape[0], x0 + 1:x0 + 1 + m.shape[1]][m] = SHADOW
         a[y0:y0 + m.shape[0], x0:x0 + m.shape[1]][m] = CREAM
         a[y0 + m.shape[0] + 3, x0:x0 + m.shape[1]] = AMBER

@@ -99,15 +99,19 @@ def palm_sprite(side, scale=1.0):
         size = (max(1, round(w * scale)), max(1, round(h * scale)))
         m = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).resize(size, Image.BICUBIC)) > 127
         col = np.asarray(Image.fromarray(col.astype(np.uint8)).resize(size, Image.NEAREST)).astype(int)
+    if scale not in (1.0, 2.0):
+        for _ in range(2):                            # a redraw at a fractional scale leaves specks and pinholes
+            n = np.zeros(m.shape, int)
+            n[1:] += m[:-1]; n[:-1] += m[1:]; n[:, 1:] += m[:, :-1]; n[:, :-1] += m[:, 1:]
+            m = (m & (n >= 2)) | (~m & (n >= 4))
     lum = col @ np.array([.299, .587, .114])
     a = np.zeros(m.shape + (4,), np.uint8)
-    a[m] = hx(PALM) + (255,)
-    a[m & (lum < 22)] = hx(PALM_DEEP) + (255,)        # the near palms
-    a[m & (lum >= 30)] = hx('#26103E') + (255,)       # the back palm, a step lighter
+    a[m] = hx(PALM_DEEP) + (255,)                     # the near palms: one ink
+    a[m & (lum >= 30)] = hx('#362447') + (255,)       # the back palm: Night[3], a step off every sea band
     return Image.fromarray(a, 'RGBA')
 
 
-def skyline(width, height, seed=5, density=1.0, unit=1.0):
+def skyline(width, height, seed=5, density=1.0, unit=1.0, taper=(True, False)):
     """Two rows of blocks in the ref's manner: a dark back row, a front row of three body inks with a lit left
     edge, one-pixel windows on a 2x3 grid, about a third lit (cyan, amber, pink)."""
     rng = np.random.RandomState(seed)
@@ -118,14 +122,18 @@ def skyline(width, height, seed=5, density=1.0, unit=1.0):
         w = min(int(rng.randint(3, 7) * unit), width - x); h = rng.randint(height // 5, height // 2)
         a[base - h:base, x:x + w] = hx(BLD_BACK) + (255,)
         x += w
-    # the land the city stands on, rising from a low spit at the left end
+    # the land the city stands on, rising from a low spit at each open end
     for xx in range(width):
-        g = min(2, int(xx * 3 / max(1, width * 0.12)))
+        dl = xx if taper[0] else width
+        dr = (width - 1 - xx) if taper[1] else width
+        g = min(2, int(min(dl, dr) * 3 / max(1, width * 0.12)))
         if g:
             a[base - g:base, xx] = hx(BLD_BACK) + (255,)
     x = max(2, int(width * 0.06))
     while x < width:                                  # front row, lower toward the spit
-        ramp = min(1.0, 0.35 + x / max(1.0, width * 0.4))
+        ramp = min(1.0, 0.35 + x / max(1.0, width * 0.4)) if taper[0] else 1.0
+        if taper[1]:
+            ramp = min(ramp, 0.35 + (width - x) / max(1.0, width * 0.4))
         w = min(max(4, int(rng.randint(5, 11) * unit)), width - x)
         h = max(3, int(rng.randint(height // 3, height) * ramp))
         if rng.rand() < 0.25 / density:
@@ -160,9 +168,7 @@ def with_night(night=('#1A1023', '#241830', '#362447', '#4A3160'), weights=(5, 4
     out = []
     inks = list(night) + [first]
     for i, c in enumerate(night):
-        out.append((c, max(1, round(tot * weights[i] / sum(weights))), 'band'))
-        nxt = inks[i + 1]
-        out += [(nxt, 1, 'seam'), (_mix(c, nxt), 1, 'seam')]
+        out.append((c, max(1, round(tot * weights[i] / sum(weights))), 'band'))   # hard edges between night bands
     return out + SKY
 
 
@@ -194,7 +200,8 @@ def render(W, H, horizon=0.556, sun_x=0.5, sun_r=None, skyline_spans=((0.58, 1.0
     for i, (x0, x1) in enumerate(skyline_spans):
         sw = int(round(W * (x1 - x0)))
         if sw > 4:
-            img.alpha_composite(skyline(sw, sh, seed + i, unit=max(1.0, H / 133 * 0.8)), (int(round(W * x0)), hz - sh))
+            img.alpha_composite(skyline(sw, sh, seed + i, unit=max(1.0, H / 133 * 0.8),
+                                        taper=(x0 > 0.001, x1 < 0.999)), (int(round(W * x0)), hz - sh))
     # the waterline row again over the skyline's feet
     b = np.asarray(img).copy()
     b[hz - 1, :, :3] = hx(SKY[-1][0])
