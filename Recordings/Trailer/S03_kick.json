@@ -1,0 +1,11 @@
+{
+  "film": "S03_kick.mp4",
+  "fps": 60,
+  "seconds": 6.917,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 3.900, "mark": "seated" },
+    { "t": 5.800, "mark": "card open" }
+  ]
+}

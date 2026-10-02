@@ -1,0 +1,16 @@
+{
+  "film": "S07_rooms.mp4",
+  "fps": 60,
+  "seconds": 10.567,
+  "clock": "stepped",
+  "marks": [
+    { "t": 0.000, "mark": "room 0" },
+    { "t": 0.567, "mark": "clock: stepped (1/60 per frame)" },
+    { "t": 1.467, "mark": "room 1" },
+    { "t": 2.933, "mark": "room 2" },
+    { "t": 4.333, "mark": "room 3" },
+    { "t": 5.567, "mark": "room 4" },
+    { "t": 6.783, "mark": "room 5" },
+    { "t": 8.000, "mark": "room 6" }
+  ]
+}

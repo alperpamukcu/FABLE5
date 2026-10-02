@@ -1,0 +1,23 @@
+{
+  "film": "S02_serve_1.mp4",
+  "fps": 60,
+  "seconds": 82.500,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 3.850, "mark": "seated" },
+    { "t": 7.733, "mark": "card open" },
+    { "t": 9.233, "mark": "recipe" },
+    { "t": 11.450, "mark": "order dark_stormy Built" },
+    { "t": 18.767, "mark": "cellar open" },
+    { "t": 21.750, "mark": "first drop" },
+    { "t": 32.717, "mark": "cellar open" },
+    { "t": 36.267, "mark": "first drop" },
+    { "t": 47.233, "mark": "cellar open" },
+    { "t": 50.550, "mark": "first drop" },
+    { "t": 56.783, "mark": "capped" },
+    { "t": 61.033, "mark": "pour out" },
+    { "t": 72.350, "mark": "garnish ice" },
+    { "t": 78.867, "mark": "served" }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "film": "S00_roxy.mp4",
+  "fps": 60,
+  "seconds": 42.333,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.000, "mark": "menu" },
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 1.450, "mark": "roxy walks in" },
+    { "t": 3.900, "mark": "roxy talks" },
+    { "t": 25.917, "mark": "first job" },
+    { "t": 39.817, "mark": "roxy leaves" }
+  ]
+}

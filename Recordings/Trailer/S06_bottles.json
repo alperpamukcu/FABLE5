@@ -1,0 +1,21 @@
+{
+  "film": "S06_bottles.mp4",
+  "fps": 60,
+  "seconds": 50.567,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 0.950, "mark": "cellar open" },
+    { "t": 0.950, "mark": "cellar" },
+    { "t": 8.267, "mark": "bottle 1" },
+    { "t": 12.517, "mark": "bottle 2" },
+    { "t": 16.933, "mark": "bottle 3" },
+    { "t": 21.433, "mark": "bottle 4" },
+    { "t": 25.533, "mark": "bottle 5" },
+    { "t": 29.800, "mark": "bottle 6" },
+    { "t": 34.233, "mark": "bottle 7" },
+    { "t": 38.750, "mark": "bottle 8" },
+    { "t": 42.917, "mark": "bottle 9" },
+    { "t": 47.233, "mark": "bottle 10" }
+  ]
+}
