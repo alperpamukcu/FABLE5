@@ -32,7 +32,7 @@ namespace LastCall.PlayTests.Trailer
         {
             yield return LoadToTheDoor();
             yield return WalkInAndOpen();
-            if (stars <= 0) { Hush(); yield break; }
+            if (stars <= 0) { Hush(); KeepTheLampsLow(); yield break; }
             _boot.Tycoon.DevPresetStars(stars);
             // the story's guest comes on Mondays (days 1, 7, 13, ...): the calendar wound on to the next one
             if (onAMonday)
@@ -56,6 +56,7 @@ namespace LastCall.PlayTests.Trailer
             Assert.That(back, Is.True, "the bar never reopened after the preset");
             yield return HearTheHostOut();
             Hush();
+            KeepTheLampsLow();
             yield return Hold(1f);
         }
 
@@ -98,7 +99,7 @@ namespace LastCall.PlayTests.Trailer
             new[] { "walls_right_4", "ceil_stucco", "floor_check", "rug6_memphis", "picS_trioA", "post_pier_R", "counter_lamps_bell", "wall_lamps_two", "neon_flamingo", "table_v2_L", "table_v2_R", "plant5_yucca_L", "sink_brass" },
             new[] { "back6_chevron", "rwall6_stripe", "ceil6_grid", "floor6_grid", "rug6_sunset", "post_coast_R", "picR6_conv", "neon6_sun" },
             new[] { "back7_wave", "rwall6_tile", "ceil6_ray", "floor6_chip", "rug6_palm", "picS_trioB", "post5_neon", "neon6_glass", "lamp6_neonbar" },
-            new[] { "walls_4", "rwall7_deco", "ceil7_dusk", "floor7_marble", "flamingo_triptych", "post5_car", "picR6_shapes", "counter_lamps_globe", "lamp6_shell", "neon6_bird", "table_left_3", "table_right_3", "plant_pothos", "counter_paint" },
+            new[] { "walls_4", "rwall7_deco", "ceil7_dusk", "floor7_marble", "flamingo_triptych", "post5_car", "picR6_shapes", "lamp6_shell", "neon6_bird", "table_left_3", "table_right_3", "plant_pothos", "counter_paint" },
         };
 
         // ── the plate: Roxy's lines, heard one key at a time ───────────────────────────────────────────────────
@@ -135,6 +136,7 @@ namespace LastCall.PlayTests.Trailer
             yield return LoadToTheDoor();
             LastCall.Game.GameBootstrap.TourForNewRuns = true;             // her house tour opens night one
             TrailerCamera.Roll("S00_roxy");
+            TrailerCamera.EachFrame = TrackRoxy();
             TrailerCamera.Mark("menu");
             var newRun = (RectTransform)GameObject.Find("MainMenu/Column/NEW RUN").transform;
             yield return Hold(2.0f);
@@ -212,8 +214,10 @@ namespace LastCall.PlayTests.Trailer
             }, 30f);
             Assert.That(roxy != null && _stoolOf.ContainsKey(roxy), Is.True, "the guest of the house never sat down");
             var seat = _stoolOf[roxy];
+            TrailerCamera.EachFrame = FoldBalloons();
             yield return WaitUntilSettled(seat);
             TrailerCamera.Mark("seated");
+            MarkFocus("roxy", seat);
             yield return ReadThePlate(1.6f);                               // her ask; the last key starts the trial
             TrailerCamera.Mark("card open");                               // her order is in what she says (GDD 26 §3)
             yield return MakeTheOrder(roxy, seat);
@@ -312,13 +316,17 @@ namespace LastCall.PlayTests.Trailer
         {
             yield return SetTheBar(3.0);
             var run = _boot.Tycoon;
-            // a busy, good night, worked off camera so the slip has a full tape and a profit on it
-            yield return WorkTheNightOffCamera(100000);
+            // a busy, good night, worked off camera so the slip has a full tape and a profit on it - up to closing time
+            yield return WorkTheNightOffCamera(100000, untilClosing: true);
+            // ON CAMERA FROM THE CLOSE (the author: "gün sonu kapanış ekranı gösterilsin"): the doors shut, the curtain,
+            // then the slip
+            TrailerCamera.Roll("S04_close");
+            TrailerCamera.Mark("closing");
+            yield return Hold(0.8f);
             if (run.Phase == TycoonPhase.DayOpen) run.DevSkipToDayEnd();
             bool slip = false;
             yield return Until(() => Shown(Find("BillNext")), 60f, ok => slip = ok);
             Assert.That(slip, Is.True, "the night's slip never came up");
-            TrailerCamera.Roll("S04_close");
             TrailerCamera.Mark("slip");
             yield return Hold(6f);                                     // the tape, the stars, the stamp
             TrailerCamera.Mark("slip done");
@@ -449,17 +457,13 @@ namespace LastCall.PlayTests.Trailer
                 yield return Click(Find(name));
                 yield return Until(() => Shown(Find("ShakerPanel")), 3f);
                 TrailerCamera.Mark("bottle " + (k + 1));
-                // lifted off the bench and turned to the light, not poured
-                var bottle = Find("Bottle", Find("ShakerPanel"));
-                if (bottle != null)
+                // a short pour from every bottle, building like the real one (the author: "farklı dökülen alkol
+                // şişeleri belli periyotlarla hızlı hızlı gözükmeli"); the tin is binned before it can brim
+                yield return PourBurst(picks[k].Id, 0.9f);
+                if (run.Glass.FillFraction > 0.75)
                 {
-                    var grip = ScreenPointOf(bottle) + new Vector2(0f, 80f * U);
-                    yield return Glide(grip, 0.25f);
-                    Press(_mouse.leftButton);
-                    yield return Glide(grip + new Vector2(-30f * U, 45f * U), 0.35f);
-                    yield return Hold(0.35f);
-                    Release(_mouse.leftButton);
-                    yield return Hold(0.5f);
+                    var bin = Find("Bin", Find("ShakerPanel"));
+                    if (Shown(bin)) { yield return ClickFace(bin); yield return Hold(0.4f); }
                 }
             }
             yield return StepBack();
@@ -526,6 +530,8 @@ namespace LastCall.PlayTests.Trailer
             Assert.That(empty, Is.True, "the night never emptied at closing for her");
             Set(_mouse.position, new Vector2(-200f, -200f));          // no hand in this picture
             TrailerCamera.Roll("S08_endcard");
+            var fold = FoldBalloons();
+            TrailerCamera.EachFrame = () => { fold(); FoldTheChrome(); };
             CustomerVisit roxy = null;
             float wait = Time.unscaledTime + 30f;
             while (Time.unscaledTime < wait)
@@ -549,6 +555,7 @@ namespace LastCall.PlayTests.Trailer
                 else { still = 0; last = seat.anchoredPosition; }
             }
             TrailerCamera.Mark("roxy sits");
+            MarkFocus("roxy", seat);
             float hold = Time.unscaledTime + 5f;
             while (Time.unscaledTime < hold) { FoldTheChrome(); yield return null; }
             TrailerCamera.Cut();

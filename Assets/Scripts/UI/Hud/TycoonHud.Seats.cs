@@ -4931,6 +4931,23 @@ namespace LastCall.UI
             }
             if (visit == null) return _looks[0];
 
+            // THE TRAILER'S CAST (LastCall.Game.TrailerCast): when the trailer names its faces, a new drinker wears one of
+            // them at random - one not already on a stool - and nothing else is dealt. Null in every player's game.
+            var cast = LastCall.Game.TrailerCast.Faces;
+            if (cast != null && cast.Length > 0 && !_faceOfVisit.ContainsKey(visit))
+            {
+                var pool = new List<PatronLook>();
+                foreach (var look in _looks)
+                {
+                    if (IsHouseFace(look) || System.Array.IndexOf(cast, look.Slug) < 0) continue;
+                    bool onAStool = false;
+                    foreach (var seat in _seats)
+                        if (seat.Visit != null && seat.Visit != visit && seat.Look == look) { onAStool = true; break; }
+                    if (!onAStool) pool.Add(look);
+                }
+                if (pool.Count > 0) return BookFace(visit, null, pool[FaceRng.NextInt(pool.Count)]);
+            }
+
             // Asked again after they have walked out — the night's invoice staples a
             // polaroid of its two witnesses to the takings. A second answer here would put
             // a stranger's photograph on the receipt.

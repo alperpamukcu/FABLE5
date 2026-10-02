@@ -15,7 +15,7 @@ namespace LastCall.PlayTests.Trailer
     /// </summary>
     public sealed partial class TrailerShots
     {
-        private IEnumerator WorkTheNightOffCamera(double barSeconds)
+        private IEnumerator WorkTheNightOffCamera(double barSeconds, bool untilClosing = false)
         {
             var run = _boot.Tycoon;
             double build = 0;
@@ -23,6 +23,7 @@ namespace LastCall.PlayTests.Trailer
             {
                 if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
                 if (run.Phase != TycoonPhase.DayOpen) break;
+                if (untilClosing && run.Floor.IsClosingTime) break;
                 run.Tick(1.0);
                 if ((int)t % 4 == 0) yield return null;
                 if (run.Phase != TycoonPhase.DayOpen) break;

@@ -234,14 +234,46 @@ namespace LastCall.PlayTests.Trailer
                 yield return null;
             }
             TrailerCamera.Mark("first drop");
-            // on up to the full stream (the flow steps run 1,1,2,3,5,8,13,21,34): a pour, not a drip - and quick,
-            // because the drinker's patience runs while the hand works (the first filmed take lost its guest)
-            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 0.3f);
+            // THE POUR BUILDS (2026-10-02, the author: "giderek dökme şiddetini arttırmalı"): from the first drop the
+            // hand climbs steadily through every flow step (1,1,2,3,5,8,13,21,34) to the full stream - a drip, a
+            // thread, a rope, a gush - in 1.4 s, quick enough that the drinker's patience holds (the first filmed take
+            // lost its guest to a slow hand)
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 1.4f);
+            TrailerCamera.Mark("full stream");
             float until = Time.unscaledTime + 8f;
             while (run.Glass.VolumeOf(id) < target - 0.01 && !run.Glass.IsFull && Time.unscaledTime < until)
                 yield return null;
             Release(_mouse.leftButton);
             yield return Hold(0.55f);      // it walks home on its own
+        }
+
+        /// <summary>A short pour from the bottle already on the bench, for the bottle montage: lifted, tipped until it
+        /// runs, then up through the flow steps for <paramref name="seconds"/>, and let go.</summary>
+        private IEnumerator PourBurst(string id, float seconds)
+        {
+            var run = _boot.Tycoon;
+            var panel = Find("ShakerPanel");
+            var surface = Find("PourSurface", panel) ?? panel;
+            var bottle = Find("Bottle", panel);
+            if (bottle == null) yield break;
+            var grip = ScreenPointOf(bottle) + new Vector2(0f, 80f * U);
+            yield return Glide(grip, 0.22f);
+            Press(_mouse.leftButton);
+            yield return Hold(0.06f);
+            var gl = (Vector2)surface.InverseTransformPoint(grip);
+            float x = 100f, y = gl.y + 40f;
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, y)), 0.25f);
+            double before = run.Glass.VolumeOf(id);
+            while (y < 320f && run.Glass.VolumeOf(id) <= before + 1e-6)
+            {
+                y += 300f * Time.unscaledDeltaTime;
+                Set(_mouse.position, ScreenPointIn(surface, new Vector2(x, y)));
+                yield return null;
+            }
+            TrailerCamera.Mark("pouring " + id);
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), seconds);
+            Release(_mouse.leftButton);
+            yield return Hold(0.45f);
         }
 
         /// <summary>Back off the bench to the cellar (the drawer stays open behind it).</summary>
@@ -347,7 +379,7 @@ namespace LastCall.PlayTests.Trailer
                 yield return null;
             }
             TrailerCamera.Mark("pour out");
-            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 0.3f);
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 1.1f);
             yield return Until(() => run.Glass.IsEmpty || run.ServingGlass.IsFull, 8f);
             Release(_mouse.leftButton);
             yield return Hold(0.7f);

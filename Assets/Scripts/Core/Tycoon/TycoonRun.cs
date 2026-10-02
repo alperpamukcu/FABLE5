@@ -3232,6 +3232,23 @@ namespace LastCall.Core
             throw new ArgumentException($"No fixture '{fixtureId}' in the catalogue.", nameof(fixtureId));
         }
 
+        /// <summary>
+        /// Dev tooling (2026-10-02, the trailer): stands this rung in its slot and WEARS it, any phase - the dev twin
+        /// of <see cref="WearFixture"/>, which only dresses the room at the day's end. The trailer keeps the room's
+        /// ceiling lamps on their first two rungs whatever the preset bought ("sadece 1 ve 2. seviye tavan
+        /// aydınlatması"), which only wearing can do: a slot shows its tallest owned rung otherwise.
+        /// </summary>
+        public void DevWear(string fixtureId)
+        {
+            DevFit(fixtureId);
+            var def = FixtureById(fixtureId);
+            if (def == null || def.Level <= 0) return;
+            _worn[def.Slot] = fixtureId;
+            LookRevision++;
+            RoomChanged();
+            if (Floor != null) PushHouse(Floor, Buffs);
+        }
+
         /// <summary>The catalogue entry with this id, or null. One lookup, so the ladder's
         /// rules and the purchase share it.</summary>
         public FixtureDefinition FixtureById(string fixtureId)

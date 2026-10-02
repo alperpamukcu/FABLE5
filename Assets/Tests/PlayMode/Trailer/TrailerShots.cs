@@ -50,6 +50,9 @@ namespace LastCall.PlayTests.Trailer
             // a filmed run is a dev run (the presets): nothing it does may reach the player's achievements or Steam
             Achievements.DisableForSession();
             GameBootstrap.TourForNewRuns = false;
+            // the faces whose turns stand still on the foot line (measured 2026-10-02 off every clip: the 2026-08-19 rig
+            // holds its feet on row 209 through arrive and leave; much of the tenth list rises 10-15 px as it turns)
+            TrailerCast.Faces = TrailerSwitch.Cast.Split(',');
 #if UNITY_EDITOR
             UnityEditor.PlayModeWindow.GetRenderingResolution(out _windowW, out _windowH);
             UnityEditor.PlayModeWindow.SetCustomRenderingResolution(FilmW, FilmH, "LastCall Trailer");
@@ -60,6 +63,7 @@ namespace LastCall.PlayTests.Trailer
         public void Strike()
         {
             TrailerCamera.Cut();
+            TrailerCast.Faces = null;
             Ceremony.Pace = 1f;
 #if UNITY_EDITOR
             if (_windowW > 0 && _windowH > 0)

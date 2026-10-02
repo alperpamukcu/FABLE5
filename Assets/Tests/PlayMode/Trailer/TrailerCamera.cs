@@ -68,6 +68,10 @@ namespace LastCall.PlayTests.Trailer
             _live.Begin(shot);
         }
 
+        /// <summary>Run at the end of every rolling frame, before it is grabbed: what a shot keeps folded away (the
+        /// speech balloons) or keeps tracking (where Roxy stands). Cleared when the film is cut.</summary>
+        public static System.Action EachFrame;
+
         /// <summary>A beat in the shot, written to the .json as the second it happened at.</summary>
         public static void Mark(string what)
         {
@@ -79,6 +83,7 @@ namespace LastCall.PlayTests.Trailer
         /// <summary>Stops and closes the file. Safe to call when nothing is rolling.</summary>
         public static void Cut()
         {
+            EachFrame = null;
             if (_live == null) return;
             _live.Finish();
             Destroy(_live.gameObject);
@@ -94,15 +99,7 @@ namespace LastCall.PlayTests.Trailer
             _cursorPressed = Readable("cursor_hand_pressed") ?? _cursorIdle;
             _cursorScale = Mathf.Max(1, Mathf.RoundToInt(Screen.height / 540f));
 #if UNITY_EDITOR
-            var video = new UnityEditor.Media.VideoTrackAttributes
-            {
-                frameRate = new UnityEditor.Media.MediaRational(Fps),
-                width = (uint)(Screen.width & ~1),
-                height = (uint)(Screen.height & ~1),
-                includeAlpha = false,
-                bitRateMode = UnityEditor.VideoBitrateMode.High,
-            };
-            _encoder = new UnityEditor.Media.MediaEncoder(_path, video);
+            _encoder = OpenEncoder(_path, Screen.width & ~1, Screen.height & ~1);
 #endif
             Time.captureDeltaTime = 1f / Fps;
             _wallStart = Time.realtimeSinceStartup;
@@ -117,6 +114,7 @@ namespace LastCall.PlayTests.Trailer
             {
                 yield return end;
                 if (_stopping) break;
+                try { EachFrame?.Invoke(); } catch (System.Exception e) { Debug.LogWarning("[trailer] " + e.Message); }
                 if (!_decided) Probe();
                 if (_clocked)
                 {
@@ -148,39 +146,123 @@ namespace LastCall.PlayTests.Trailer
             Mark(_clocked ? "clock: stepped (1/60 per frame)" : "clock: wall (unscaled time ignores the step here)");
         }
 
+        private RenderTexture _grab, _flip;
+        private int _pending;
+        public const int TargetBitRate = 40_000_000;          // 40 Mbit/s: pixel art at 1080p60 with room to spare
+
+        /// <summary>
+        /// One frame, read back without stalling the game (2026-10-02: the first footage was read synchronously at
+        /// ~7 Mbit/s baseline, and the stall made the wall clock drop frames). The screen is copied into a render
+        /// texture on the GPU, read back asynchronously, and written when it arrives - in order, because the readback
+        /// queue is ordered. The frame count is booked now, so the clock never waits on the encoder.
+        /// </summary>
         private void Shoot(int copies)
         {
-            var shot = ScreenCapture.CaptureScreenshotAsTexture();
-            if (shot == null) return;
-            var frame = shot;
-            if (shot.format != TextureFormat.RGBA32 || (shot.width & 1) != 0 || (shot.height & 1) != 0)
+            int w = Screen.width & ~1, h = Screen.height & ~1;
+            if (_grab == null || _grab.width != Screen.width || _grab.height != Screen.height)
             {
-                frame = new Texture2D(shot.width & ~1, shot.height & ~1, TextureFormat.RGBA32, false);
-                frame.SetPixels(shot.GetPixels(0, 0, frame.width, frame.height));
-                frame.Apply(false);
+                if (_grab != null) { _grab.Release(); _flip.Release(); }
+                _grab = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
+                _flip = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
             }
-            StampHand(frame);
-#if UNITY_EDITOR
-            for (int i = 0; i < copies; i++) _encoder.AddFrame(frame);
-#endif
+            ScreenCapture.CaptureScreenshotIntoRenderTexture(_grab);
+            // the capture comes back upside down where the graphics API counts rows from the top
+            if (SystemInfo.graphicsUVStartsAtTop) Graphics.Blit(_grab, _flip, new Vector2(1f, -1f), new Vector2(0f, 1f));
+            else Graphics.Blit(_grab, _flip);
+            var mouse = Mouse.current;
+            Vector2 at = mouse != null ? mouse.position.ReadValue() : new Vector2(-999f, -999f);
+            bool pressed = mouse != null && mouse.leftButton.isPressed;
             _frames += copies;
-            if (frame != shot) Destroy(frame);
-            Destroy(shot);
+            _pending++;
+            UnityEngine.Rendering.AsyncGPUReadback.Request(_flip, 0, TextureFormat.RGBA32, req =>
+            {
+                _pending--;
+#if UNITY_EDITOR
+                if (req.hasError || _encoder == null) return;
+#else
+                if (req.hasError) return;
+#endif
+                var data = req.GetData<Color32>();
+                var copy = new Unity.Collections.NativeArray<Color32>(data.Length, Unity.Collections.Allocator.Temp);
+                copy.CopyFrom(data);
+                StampHand(copy, w, h, at, pressed);
+#if UNITY_EDITOR
+                var bytes = copy.Reinterpret<byte>(4);
+                for (int i = 0; i < copies; i++) _encoder.AddFrame(w, h, w * 4, TextureFormat.RGBA32, bytes);
+#endif
+                copy.Dispose();
+            });
         }
 
-        /// <summary>The game's own hand, at the virtual mouse, hotspot (3,1) like CursorSkin's.</summary>
-        private void StampHand(Texture2D frame)
+#if UNITY_EDITOR
+        /// <summary>
+        /// The encoder at H.264 High and a real bit rate where this editor has the API for it (Unity 2023.1+:
+        /// VideoTrackEncoderAttributes + H264EncoderAttributes, found by reflection so this file still compiles on an
+        /// editor without them), and the old fixed "High" quality otherwise.
+        /// </summary>
+        private static UnityEditor.Media.MediaEncoder OpenEncoder(string path, int w, int h)
         {
-            var mouse = Mouse.current;
-            if (mouse == null) return;
-            var art = mouse.leftButton.isPressed ? _cursorPressed : _cursorIdle;
+            var asm = typeof(UnityEditor.Media.MediaEncoder).Assembly;
+            var tEnc = asm.GetType("UnityEditor.Media.VideoTrackEncoderAttributes");
+            var tH264 = asm.GetType("UnityEditor.Media.H264EncoderAttributes");
+            var tProfile = asm.GetType("UnityEditor.Media.VideoEncodingProfile");
+            if (tEnc != null && tH264 != null)
+            {
+                try
+                {
+                    object h264 = System.Activator.CreateInstance(tH264);
+                    SetMember(ref h264, "gopSize", (uint)Fps);
+                    SetMember(ref h264, "numConsecutiveBFrames", (uint)2);
+                    if (tProfile != null) SetMember(ref h264, "profile", System.Enum.Parse(tProfile, "H264High"));
+                    object enc = System.Activator.CreateInstance(tEnc, h264);
+                    SetMember(ref enc, "frameRate", new UnityEditor.Media.MediaRational(Fps));
+                    SetMember(ref enc, "width", (uint)w);
+                    SetMember(ref enc, "height", (uint)h);
+                    SetMember(ref enc, "targetBitRate", (uint)TargetBitRate);
+                    var ctor = typeof(UnityEditor.Media.MediaEncoder).GetConstructor(new[] { typeof(string), tEnc });
+                    if (ctor != null)
+                    {
+                        Debug.Log("[trailer] encoder: H.264 High, " + TargetBitRate / 1000000 + " Mbit/s");
+                        return (UnityEditor.Media.MediaEncoder)ctor.Invoke(new[] { path, enc });
+                    }
+                }
+                catch (System.Exception e) { Debug.LogWarning("[trailer] bit-rate encoder unavailable, falling back: " + e.Message); }
+            }
+            Debug.Log("[trailer] encoder: the editor's fixed High quality");
+            var video = new UnityEditor.Media.VideoTrackAttributes
+            {
+                frameRate = new UnityEditor.Media.MediaRational(Fps),
+                width = (uint)w,
+                height = (uint)h,
+                includeAlpha = false,
+                bitRateMode = UnityEditor.VideoBitrateMode.High,
+            };
+            return new UnityEditor.Media.MediaEncoder(path, video);
+        }
+
+        private static void SetMember(ref object target, string name, object value)
+        {
+            var t = target.GetType();
+            var f = t.GetField(name);
+            if (f != null) { f.SetValue(target, System.Convert.ChangeType(value, f.FieldType)); return; }
+            var p = t.GetProperty(name);
+            if (p != null && p.CanWrite)
+            {
+                object v = p.PropertyType.IsEnum || p.PropertyType == value.GetType() ? value : System.Convert.ChangeType(value, p.PropertyType);
+                p.SetValue(target, v);
+            }
+        }
+#endif
+
+        /// <summary>The game's own hand, at the virtual mouse, hotspot (3,1) like CursorSkin's. Rows count up from the
+        /// bottom, like the screen's y.</summary>
+        private void StampHand(Unity.Collections.NativeArray<Color32> dst, int fw, int fh, Vector2 at, bool pressed)
+        {
+            var art = pressed ? _cursorPressed : _cursorIdle;
             if (art == null) return;
-            Vector2 at = mouse.position.ReadValue();
             int s = _cursorScale;
             var src = art.GetPixels32();
-            var dst = frame.GetRawTextureData<Color32>();
-            int fw = frame.width, fh = frame.height, aw = art.width, ah = art.height;
-            // screen y runs up from the bottom, like the texture's rows; the art's row 0 is its bottom
+            int aw = art.width, ah = art.height;
             int left = Mathf.RoundToInt(at.x) - 3 * s;
             int top = Mathf.RoundToInt(at.y) + 1 * s;
             for (int ay = 0; ay < ah; ay++)
@@ -226,6 +308,9 @@ namespace LastCall.PlayTests.Trailer
         {
             _stopping = true;
             Time.captureDeltaTime = 0f;
+            // the last frames still in flight on the GPU are waited for, or the film ends a few frames short
+            if (_pending > 0) UnityEngine.Rendering.AsyncGPUReadback.WaitAllRequests();
+            if (_grab != null) { _grab.Release(); _flip.Release(); _grab = _flip = null; }
 #if UNITY_EDITOR
             _encoder?.Dispose();
             _encoder = null;

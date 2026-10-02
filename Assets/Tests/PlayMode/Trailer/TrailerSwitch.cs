@@ -8,6 +8,7 @@ namespace LastCall.PlayTests.Trailer
     public static class TrailerSwitch
     {
         private const string Key = "LastCall.Trailer.";
+        private const string DefaultCast = "clubgirl,heavyset,silkwoman,eastasianman,leopard,shaved,guard,driftgirl,salaryman";
 
 #if UNITY_EDITOR
         public static bool On
@@ -29,7 +30,15 @@ namespace LastCall.PlayTests.Trailer
             get => UnityEditor.SessionState.GetString(Key + "Lang", LastCall.Core.Languages.Source);
             set => UnityEditor.SessionState.SetString(Key + "Lang", value);
         }
+        /// <summary>The faces the shots deal (TrailerCast). clubgirl first: the best-animated drinker in the cast. A face
+        /// that is not shipped (Resources/Patron/<slug>) is simply never dealt.</summary>
+        public static string Cast
+        {
+            get => UnityEditor.SessionState.GetString(Key + "Cast", DefaultCast);
+            set => UnityEditor.SessionState.SetString(Key + "Cast", value);
+        }
 #else
+        public static string Cast => DefaultCast;
         public static bool On => false;
         public static string Seed => "MALIBU-TRAILER";
         public static string Language => LastCall.Core.Languages.Source;
