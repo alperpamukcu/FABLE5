@@ -188,3 +188,8 @@ Tools/steam_page/out/about_i18n/
 Tools/steam_page/out/*.zip
 Tools/steam_page/out/about/
 Tools/steam_page/out/screenshots/
+
+# trailer footage the game films of itself (LastCall -> Trailer) and the edits cut from it
+/Recordings/
+/Recordings.meta
+Tools/trailer/out/

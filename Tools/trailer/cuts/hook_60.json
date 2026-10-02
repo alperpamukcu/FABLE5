@@ -1,0 +1,418 @@
+{
+ "_note": "The trailer, under a minute, cut like a vertical short (the author, 2026-10-02: 'max 1dk ... h\u0131zl\u0131 ge\u00e7i\u015fler ... s\u00fcrekli hareket'): a beat or two a cut, every picture moving, the hook in the first second because the store plays it muted. Acts: hook, the craft, the twist (the card that lies), the growth, the call.",
+ "music": "music_night_7",
+ "music_from": 0.0,
+ "end_card": 4.0,
+ "segments": [
+  {
+   "film": "S02_serve_*",
+   "at": "mark:first drop",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.15,
+   "zoom": [
+    1.12,
+    1.22
+   ],
+   "punch": 0.15,
+   "focus": [
+    0.45,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:card open",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_03_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "punch": 0.12,
+   "flash": true,
+   "caption": "hook1",
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:recipe",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_03_1920x1080.png",
+   "lead": 0.2,
+   "zoom": [
+    1.1,
+    1.2
+   ],
+   "caption": "hook2",
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S05_rush",
+   "at": "mark:full room",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_09_1920x1080.png",
+   "lead": 0.0,
+   "zoom": [
+    1.0,
+    1.08
+   ],
+   "punch": 0.1,
+   "speed": 1.2
+  },
+  {
+   "film": "S01_open",
+   "at": "mark:cellar open",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_01_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "caption": "recipes",
+   "flash": true
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:first drop",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.3,
+   "zoom": [
+    1.05,
+    1.15
+   ],
+   "speed": 1.3,
+   "caption": "pour",
+   "pick": 2,
+   "focus": [
+    0.45,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:shake",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.05,
+   "zoom": [
+    1.1,
+    1.2
+   ],
+   "punch": 0.15,
+   "caption": "shake",
+   "flash": true,
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:stir",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.1,
+    1.18
+   ],
+   "caption": "stir",
+   "optional": true,
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:pour out",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.0,
+    1.12
+   ],
+   "speed": 1.2,
+   "focus": [
+    0.4,
+    0.5
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:capped",
+   "beats": 1,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.3,
+   "zoom": [
+    1.15,
+    1.2
+   ],
+   "speed": 1.4
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:pull",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_04_1920x1080.png",
+   "lead": 0.05,
+   "zoom": [
+    1.05,
+    1.15
+   ],
+   "punch": 0.12,
+   "caption": "pint",
+   "flash": true,
+   "focus": [
+    0.6,
+    0.5
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:head",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_04_1920x1080.png",
+   "lead": 0.5,
+   "zoom": [
+    1.15,
+    1.25
+   ],
+   "focus": [
+    0.6,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:served",
+   "beats": 4,
+   "still": "Tools/steam_page/out/screenshots/screenshot_06_1920x1080.png",
+   "lead": 0.4,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "caption": "faces",
+   "focus": [
+    0.5,
+    0.4
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:served",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_06_1920x1080.png",
+   "lead": 0.2,
+   "zoom": [
+    1.1,
+    1.2
+   ],
+   "punch": 0.1,
+   "pick": 2,
+   "focus": [
+    0.5,
+    0.4
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:card open",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_03_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.05,
+    1.15
+   ],
+   "speed": 1.2,
+   "pick": 3,
+   "flash": true
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:first drop",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_02_1920x1080.png",
+   "lead": 0.2,
+   "zoom": [
+    1.1,
+    1.2
+   ],
+   "speed": 1.4,
+   "pick": 3,
+   "focus": [
+    0.45,
+    0.45
+   ]
+  },
+  {
+   "film": "S02_serve_*",
+   "at": "mark:served",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_06_1920x1080.png",
+   "lead": 0.2,
+   "zoom": [
+    1.0,
+    1.08
+   ],
+   "pick": 3
+  },
+  {
+   "film": "S03_kick",
+   "at": "mark:seated",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_07_1920x1080.png",
+   "lead": 0.6,
+   "zoom": [
+    1.0,
+    1.06
+   ],
+   "speed": 1.6
+  },
+  {
+   "film": "S03_kick",
+   "at": "mark:card open",
+   "beats": 4,
+   "still": "Tools/steam_page/out/screenshots/screenshot_07_1920x1080.png",
+   "lead": 0.1,
+   "zoom": [
+    1.0,
+    1.25
+   ],
+   "punch": 0.12,
+   "caption": "underage",
+   "flash": true,
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S03_kick",
+   "at": "mark:liar",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_08_1920x1080.png",
+   "lead": 0.0,
+   "zoom": [
+    1.25,
+    1.35
+   ],
+   "focus": [
+    0.5,
+    0.45
+   ]
+  },
+  {
+   "film": "S03_kick",
+   "at": "mark:kicked",
+   "beats": 4,
+   "still": "Tools/steam_page/out/screenshots/screenshot_08_1920x1080.png",
+   "lead": 0.3,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "punch": 0.18,
+   "caption": "kick",
+   "flash": true
+  },
+  {
+   "film": "S05_rush",
+   "at": "mark:full room",
+   "beats": 3,
+   "still": "Tools/steam_page/out/screenshots/screenshot_09_1920x1080.png",
+   "lead": -2.0,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "caption": "night"
+  },
+  {
+   "film": "S04_close",
+   "at": "mark:slip",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_07_1920x1080.png",
+   "lead": -1.0,
+   "zoom": [
+    1.05,
+    1.15
+   ],
+   "speed": 1.5,
+   "flash": true
+  },
+  {
+   "film": "S04_close",
+   "at": "mark:market",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_06_1920x1080.png",
+   "lead": 0.0,
+   "zoom": [
+    1.0,
+    1.1
+   ],
+   "speed": 1.3,
+   "caption": "house"
+  },
+  {
+   "film": "S04_close",
+   "at": "mark:bought",
+   "beats": 2,
+   "still": "Tools/steam_page/out/screenshots/screenshot_06_1920x1080.png",
+   "lead": 0.4,
+   "zoom": [
+    1.1,
+    1.18
+   ],
+   "punch": 0.12
+  },
+  {
+   "film": "S04_close",
+   "at": "mark:next night",
+   "beats": 3,
+   "still": "Tools/steam_page/out/screenshots/screenshot_09_1920x1080.png",
+   "lead": -0.5,
+   "zoom": [
+    1.0,
+    1.1
+   ]
+  },
+  {
+   "film": "S05_rush",
+   "at": "mark:full room",
+   "beats": 4,
+   "still": "Tools/steam_page/out/screenshots/screenshot_03_1920x1080.png",
+   "lead": -5.0,
+   "zoom": [
+    1.0,
+    1.12
+   ],
+   "speed": 1.2
+  },
+  {
+   "film": "S01_open",
+   "at": "mark:menu",
+   "beats": 3,
+   "still": "Tools/steam_page/out/screenshots/screenshot_05_1920x1080.png",
+   "lead": -1.0,
+   "zoom": [
+    1.0,
+    1.08
+   ],
+   "flash": true
+  }
+ ]
+}

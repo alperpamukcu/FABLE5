@@ -1,0 +1,35 @@
+{
+ "_note": "Trailer captions, keyed by the cuts' caption names; a newline makes two lines. Malibu Arcade at the largest whole scale that fits. Other languages: add a block with the same keys; a missing key falls back to English.",
+ "en": {
+  "hook1": "NOBODY TELLS YOU",
+  "hook2": "WHAT THEY WANT",
+  "recipes": "54 RECIPES",
+  "pour": "POUR",
+  "shake": "SHAKE",
+  "stir": "STIR",
+  "pint": "PULL A PINT",
+  "faces": "THEIR FACE\nIS THE REVIEW",
+  "underage": "NOT EVERYONE\nIS TWENTY",
+  "kick": "SHOW THEM\nTHE DOOR",
+  "night": "SIX TILL TWO",
+  "house": "BUILD THE HOUSE",
+  "wishlist": "WISHLIST ON STEAM",
+  "when": ""
+ },
+ "tr": {
+  "hook1": "KİMSE SÖYLEMEZ",
+  "hook2": "NE İSTEDİĞİNİ",
+  "recipes": "54 TARİF",
+  "pour": "DÖK",
+  "shake": "ÇALKALA",
+  "stir": "KARIŞTIR",
+  "pint": "BİRA ÇEK",
+  "faces": "YÜZLERİ\nYORUMDUR",
+  "underage": "HERKES\nYİRMİ DEĞİL",
+  "kick": "KAPIYI\nGÖSTER",
+  "night": "ALTIDAN İKİYE",
+  "house": "MEKÂNI BÜYÜT",
+  "wishlist": "İSTEK LİSTENE EKLE",
+  "when": ""
+ }
+}

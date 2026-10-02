@@ -142,6 +142,15 @@ LAYOUTS = {
     'event_header': dict(size=(1920, 622), d=2, horizon=0.58, night=0.68, sun_x=0.74, sun_r=70,
                          skyline=((0.34, 0.70),), palms=(('right', 1.0, 1.3),),
                          counter_y=0.95, top=6, roxy=0.74, title=(0.03, 0.06, 560), props='hand'),
+    # the trailer's end card (Tools/trailer/edit.py): the main capsule's composition at 16:9, the call to action under
+    # the sign on the left
+    'trailer_end': dict(size=(1920, 1080), d=4, horizon=0.56, night=0.52, sun_x=0.68, sun_r=60,
+                        skyline=((0.0, 0.44),), skyline_h=36, palms=(('right', 1.03, 1.4),),
+                        counter_y=0.86, top=8, roxy=0.68, title=(0.06, 0.07, 840), props='hand'),
+    'trailer_end_tall': dict(size=(1080, 1920), d=4, horizon=0.56, night=0.55, sun_x=0.5, sun_r=56,
+                             skyline=((0.0, 0.26), (0.74, 1.0)),
+                             palms=(('left', -0.04, 1.0, 0.36), ('right', 1.04, 1.0, 0.36)),
+                             counter_y=0.80, top=8, roxy=0.5, title=(None, 0.07, 840), props='hand'),
     'community_icon': 'icon',
     'client_icon': 'icon',
 }
