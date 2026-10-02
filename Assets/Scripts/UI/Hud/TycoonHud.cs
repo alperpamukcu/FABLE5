@@ -588,6 +588,11 @@ namespace LastCall.UI
             ("driftgirl", 10f, 0.0f, 5, 4),   // the eleventh list, 2026-09-07
             ("salaryman", 6f, 0.0f, 6, 7),   // the eleventh list, 2026-09-07
             ("guard", 7f, 0.0f, 6, 5),   // the tenth list, 2026-09-07
+            // THE TRIAL'S OTHER KEEPER (2026-10-02, the author: "trial heavyset"): the stocky man the 2026-08-19 rig
+            // was drawn on, kept with clubgirl and never shipped until Tools/patron_ship.py heavyset put him in
+            // Resources/Patron. Head row and holds as that run measured them. His zip carries no arrive or leave, so
+            // he turns on and off the stool without the half-turn; a machine without his folder simply skips the row.
+            ("heavyset", 13f, 0.0f, 5, 6),
             // THE HOSTESS (2026-09-28): the game's lead, drawn for the quest chain and the lessons. She sits in this
             // table so her clips load the way everybody's do, and she is a HOUSE FACE (HouseFaces): never seated,
             // never lent to a borrowed licence, never on the guide. Last in the table, so no fallback that takes
