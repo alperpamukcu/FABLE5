@@ -32,7 +32,7 @@ namespace LastCall.PlayTests.Trailer
         {
             yield return LoadToTheDoor();
             yield return WalkInAndOpen();
-            if (stars <= 0) yield break;
+            if (stars <= 0) { Hush(); yield break; }
             _boot.Tycoon.DevPresetStars(stars);
             var old = _boot;
             _boot.ReloadKeepingRun();
@@ -48,7 +48,21 @@ namespace LastCall.PlayTests.Trailer
             yield return Until(() => _boot != old && _boot.Tycoon.Floor.Elapsed > 0, 20f, ok => back = ok);
             Assert.That(back, Is.True, "the bar never reopened after the preset");
             yield return HearTheHostOut();
+            Hush();
             yield return Hold(1f);
+        }
+
+        /// <summary>
+        /// Roxy's first-time lessons, already heard (2026-10-02: the first filmed take had "Click the stool, not the
+        /// drink" standing over the licence). The trailer shows the bar, not the tutorial: every cue is marked taught
+        /// and anything already queued is let go. S00 keeps hers - there she IS the shot.
+        /// </summary>
+        private void Hush()
+        {
+            var run = _boot.Tycoon;
+            if (run.Story != null)
+                foreach (StoryCue cue in System.Enum.GetValues(typeof(StoryCue))) run.Story.Learn(cue);
+            for (int i = 0; i < 20 && run.LessonDue != null; i++) run.HeardLesson();
         }
 
         /// <summary>Puts these fittings in the room (each must outrank what the slot shows to change it).</summary>
@@ -245,26 +259,31 @@ namespace LastCall.PlayTests.Trailer
 
         // ── S03: the door - a card that lies, and KICK ───────────────────────────────────────────────────────
 
+        /// <summary>
+        /// The card that lies. Waiting for a young face and hoping was the first version, and its only take was an
+        /// honest 27-year-old. The camera is a director, not a player: each drinker's card is read OFF camera through
+        /// Core (the same verb the sim bot uses), and only a minor or a forged card is filmed - the click on the stool
+        /// opens the card again for the camera, and KICK.
+        /// </summary>
         [UnityTest, Timeout(1800000)]
         public IEnumerator S03_kick()
         {
             yield return SetTheBar(2.5);
-            Assert.That(_boot.Tycoon.Has(Feature.Door), Is.True, "the preset did not open the door rung");
-            for (int attempt = 0; attempt < 12; attempt++)
+            var run = _boot.Tycoon;
+            Assert.That(run.Has(Feature.Door), Is.True, "the preset did not open the door rung");
+            for (int attempt = 0; attempt < 60; attempt++)
             {
                 CustomerVisit visit = null;
-                yield return Admit(v => v.Regular != null && v.Regular.LooksYoung, 1800f, v => visit = v);
+                yield return Admit(v => true, 900f, v => visit = v);
                 if (visit == null) break;
+                yield return Until(() => visit.HasOrdered, 25f);
+                if (!visit.HasOrdered || visit.State != VisitState.Waiting) continue;
+                visit.InspectId();
+                if (!visit.Papers.ShouldBeKicked) continue;
                 var seat = _stoolOf[visit];
                 TrailerCamera.Roll("S03_kick");
+                yield return Hold(1.2f);
                 yield return ReadTheCard(visit, seat, lingerOnTheOrder: false);
-                if (!visit.Papers.ShouldBeKicked)
-                {
-                    // an honest young face: not this take. Put the card down and wait for the next one.
-                    TrailerCamera.Cut();
-                    yield return PutTheCardDown();
-                    continue;
-                }
                 TrailerCamera.Mark("liar");
                 TrailerCamera.Mark("papers " + visit.Papers.Forgery + (visit.Papers.IsMinor ? " minor" : ""));
                 yield return Hold(1.4f);                               // long enough to see what is wrong with it
@@ -276,7 +295,7 @@ namespace LastCall.PlayTests.Trailer
                 TrailerCamera.Cut();
                 yield break;
             }
-            Assert.Inconclusive("no forged card or minor walked in within the takes allowed - film it again with another seed");
+            Assert.Inconclusive("no minor or forged card came in tonight - film it again with another seed");
         }
 
         // ── S04: the close - a good night's slip, the market, the next night ────────────────────────────────

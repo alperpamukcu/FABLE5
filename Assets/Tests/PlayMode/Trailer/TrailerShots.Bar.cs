@@ -208,7 +208,7 @@ namespace LastCall.PlayTests.Trailer
             bool bench = false;
             yield return Until(() => Shown(Find("ShakerPanel")), 3f, ok => bench = ok);
             Assert.That(bench, Is.True, "the bottle never came to the bench");
-            yield return Hold(0.6f);
+            yield return Hold(0.35f);
             yield return HearTheHostOut();
 
             var panel = Find("ShakerPanel");
@@ -229,19 +229,19 @@ namespace LastCall.PlayTests.Trailer
             double before = run.Glass.VolumeOf(id);
             while (y < 320f && run.Glass.VolumeOf(id) <= before + 1e-6)
             {
-                y += 150f * Time.unscaledDeltaTime;
+                y += 260f * Time.unscaledDeltaTime;
                 Set(_mouse.position, ScreenPointIn(surface, new Vector2(x, y)));
                 yield return null;
             }
             TrailerCamera.Mark("first drop");
-            // three steps more: a stream, not a drip
-            float climb = Mathf.Min(90f, 320f - y);
-            yield return Glide(ScreenPointIn(surface, new Vector2(x, y + climb)), 0.35f);
+            // on up to the full stream (the flow steps run 1,1,2,3,5,8,13,21,34): a pour, not a drip - and quick,
+            // because the drinker's patience runs while the hand works (the first filmed take lost its guest)
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 0.3f);
             float until = Time.unscaledTime + 8f;
             while (run.Glass.VolumeOf(id) < target - 0.01 && !run.Glass.IsFull && Time.unscaledTime < until)
                 yield return null;
             Release(_mouse.leftButton);
-            yield return Hold(0.9f);       // it walks home on its own
+            yield return Hold(0.55f);      // it walks home on its own
         }
 
         /// <summary>Back off the bench to the cellar (the drawer stays open behind it).</summary>
@@ -342,12 +342,12 @@ namespace LastCall.PlayTests.Trailer
             yield return Glide(ScreenPointIn(surface, new Vector2(x, y)), 0.4f);
             while (y < 320f && run.ServingGlass.IsEmpty && !run.Glass.IsEmpty)
             {
-                y += 140f * Time.unscaledDeltaTime;
+                y += 240f * Time.unscaledDeltaTime;
                 Set(_mouse.position, ScreenPointIn(surface, new Vector2(x, y)));
                 yield return null;
             }
             TrailerCamera.Mark("pour out");
-            yield return Glide(ScreenPointIn(surface, new Vector2(x, Mathf.Min(320f, y + 40f))), 0.3f);
+            yield return Glide(ScreenPointIn(surface, new Vector2(x, 316f)), 0.3f);
             yield return Until(() => run.Glass.IsEmpty || run.ServingGlass.IsFull, 8f);
             Release(_mouse.leftButton);
             yield return Hold(0.7f);

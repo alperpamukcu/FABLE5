@@ -45,7 +45,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
-FILMS = os.path.join(ROOT, 'Recordings', 'Trailer')
+FILMS = os.environ.get('TRAILER_FILMS') or os.path.join(ROOT, 'Recordings', 'Trailer')
 AUDIO = os.path.join(ROOT, 'Assets', 'Resources', 'Audio')
 ARCADE = os.path.join(ROOT, 'Assets', 'Fonts', 'MalibuArcade-Regular.ttf')
 OUT = os.path.join(HERE, 'out')
@@ -260,7 +260,8 @@ def build(cut_name, lang='en', tall=False):
     parts, sfx, t = [], [], 0.0
     for i, seg in enumerate(cut['segments']):
         # a beat the run did not happen to film (no stirred drink was ordered, say) drops out of the real cut
-        if seg.get('optional') and filmed and resolve_film(seg) is None:
+        # once anything is filmed, the stills stand in for nothing: a beat with no take drops out of the cut
+        if filmed and resolve_film(seg) is None:
             print('  - segment %d skipped: no take of %s has %s' % (i, seg.get('film'), seg.get('at')))
             continue
         dur = seg['beats'] * period
