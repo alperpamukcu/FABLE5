@@ -87,3 +87,59 @@ geçişler, sürekli hareket, ilk saniyede kanca.
   - `Tools/trailer/out/hook_60.mp4`: 1920×1080, 60 fps, H.264 High CRF 16, AAC 320k, -14 LUFS, faststart. Steam'in
     istediği biçim (16:9, 1080p, 60 fps, H.264 + AAC, 5000+ kbps).
   - `hook_60_tall.mp4`: aynı kurgu 1080×1920.
+
+## 3. Hikâye kurgusu (v3): `Tools/trailer/story.py`, `cuts/story_60.json`
+
+Yazarın isteği (2026-10-02): rastgele kamera olmasın, hikâye olsun, Roxy ara ara anlatıcı olarak girsin, müzik
+değişsin, yazılar animasyonlu olsun.
+
+Kurallar araştırmadan geliyor. Kaynakları aşağıda: Derek Lieu'nun yazıları, Steam'in sessiz otomatik oynatması ve
+türün kendi fragmanları.
+
+- **Sıra:** oynanış ilk saniyede gelir, logo müziğin drop'unda yanar, çağrı ve Roxy'nin "button" satırı en sonda.
+- **"Tell, show":** Roxy'nin bir satırı bir sütunu açar, altındaki görüntü onu kanıtlar. Satırlar en çok 8 kelime,
+  ekranda aynı anda tek yazı olur.
+- **Roxy'nin satırları** (`captions.json` → `roxy_*`):
+  - "There you are, sugar. The bar's yours."
+  - "The order's on the card, sugar. Read it."
+  - "Fake ID? Show 'em the door."
+  - "Stars pay the rent. Earn every one."
+  - "Dress this place up. Make Miami jealous."
+  - "It's your bar now. Don't blow it."
+  - "Last call, honey."
+- **Kamera kayması yok.** Bir plan ya **WIDE** (oyun 1:1) ya da **DETAIL** (aynı görüntü tam 2x, nearest). Detaya
+  kesmeyle geçilir, zoom ile girilmez. Kart, fiş ya da Roxy'nin kutusu ekrandayken kamera kıpırdamaz. 9:16'da
+  görüntü 2x'te kırpılır.
+- **Ses:** oyunun kendi sesleri açık. Filmdeki her işaret kendi sesini getirir (döküş, çalkalama, kimlik, KICK,
+  damga, şişeler). Roxy'nin yazısına kelime başına bir tuş "blip"'i eşlik eder.
+- **Müzik:** `music_night_4`, 12,3 sn'den başlar. Parçanın drop'u fragmanın 6. saniyesine, neon tabelanın yandığı
+  ana düşer. Kesmeler vuruşa oturur (~103 BPM).
+- **Roxy'nin kutusu** (`overlays.narrator`):
+  - Oyunun panosu: mor kutu, pembe tüp çerçeve, "ROXY VALE" sekmesi.
+  - Kuyuda Roxy'nin kendi talk karelerinden büstü; yazı akarken ağzı oynar.
+  - Jersey 15 ile daktilo efekti.
+  - Kutu aşağıdan kayarak girer, aşağı inerek çıkar. Kart gibi okunacak bir şey varsa yukarıya alınır (`"box": "top"`).
+- **Yazılar** (`overlays.title`): Malibu Arcade, harfler sırayla düşer, altına amber çizgi silinerek çizilir,
+  arkasında mor bant var.
+- **Tabela** (`overlays.sign_on`): logo neon gibi titreyerek yanar.
+- **Kapanış:** `S08_endcard` karesi kullanılır. Bu kare 4★ salon, gece bitmiş, son müşteri olarak lamba altında
+  tek başına oturan Roxy; üst bar ve pano gizli, el kadrajda yok.
+  - Üstüne tabela yanar, "WISHLIST ON STEAM" ve "COMING SOON" gelir, sonra Roxy: "Last call, honey."
+  - Yayın tarihi kesinleşince `when` değiştirilir.
+- **Eksik çekim:** bir çekim yoksa o bölüm atlanır (`take` listesindeki yedekler sırayla denenir).
+
+```
+TRAILER_FILMS=<klasör> python3 Tools/trailer/story.py            # 16:9 + 9:16
+python3 Tools/trailer/story.py --lang tr --wide
+```
+
+Kaynaklar (araştırma, 2026-10-02):
+- [Derek Lieu, "No logo"](https://www.derek-lieu.com/blog/2019/1/19/no-logo)
+- [Derek Lieu, "Tell, show, repeat"](https://www.derek-lieu.com/blog/2023/4/9/tell-show-repeat-the-2nd-easiest-game-trailer-to-make)
+- [Derek Lieu, "Intercutting dialogue with gameplay"](https://www.derek-lieu.com/blog/2022/9/26/intercutting-dialogue-with-gameplay)
+- [Derek Lieu, "Why your game trailer needs sound effects on"](https://www.derek-lieu.com/blog/2020/1/10/why-your-game-trailer-needs-sound-effects-on)
+- [Derek Lieu, "The game trailer call to action end slate"](https://www.derek-lieu.com/blog/2021/4/25/the-game-trailer-call-to-action-end-slate)
+- [Derek Lieu, trailer review: Papers, Please](https://www.derek-lieu.com/blog/2019/3/3/trailer-review-papers-please)
+- [Derek Lieu, trailer review: Coffee Talk](https://www.derek-lieu.com/blog/2020/2/2/trailer-review-coffee-talk)
+- [Steamworks: trailers](https://partner.steamgames.com/doc/store/trailer)
+- [Chris Zukowski, 60 mistakes (PDF)](https://howtomarketagame.com/wp-content/uploads/2023/05/Zukowski_60MistakesEbookV1.pdf)

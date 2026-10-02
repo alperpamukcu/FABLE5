@@ -14,11 +14,18 @@
   "night": "SIX TILL TWO",
   "house": "BUILD THE HOUSE",
   "wishlist": "WISHLIST ON STEAM",
-  "when": "",
+  "when": "COMING SOON",
   "roxy": "MEET ROXY",
   "first": "FIRST ROUND\nIS HERS",
   "brands": "34 BRANDS",
-  "profit": "A GOOD NIGHT"
+  "profit": "A GOOD NIGHT",
+  "roxy_hello": "There you are, sugar. The bar's yours.",
+  "roxy_card": "The order's on the card, sugar. Read it.",
+  "roxy_kick": "Fake ID? Show 'em the door.",
+  "roxy_stars": "Stars pay the rent. Earn every one.",
+  "roxy_house_lead": "Dress this place up. Make Miami jealous.",
+  "roxy_yours": "It's your bar now. Don't blow it.",
+  "roxy_button": "Last call, honey."
  },
  "tr": {
   "hook1": "KİMSE SÖYLEMEZ",
@@ -34,10 +41,17 @@
   "night": "ALTIDAN İKİYE",
   "house": "MEKÂNI BÜYÜT",
   "wishlist": "İSTEK LİSTENE EKLE",
-  "when": "",
+  "when": "YAKINDA",
   "roxy": "ROXY İLE TANIŞ",
   "first": "İLK İÇKİ\nONUN",
   "brands": "34 MARKA",
-  "profit": "KÂRLI BİR GECE"
+  "profit": "KÂRLI BİR GECE",
+  "roxy_hello": "İşte geldin şekerim. Bar artık senin.",
+  "roxy_card": "Sipariş kartta yazar şekerim. Oku onu.",
+  "roxy_kick": "Sahte kimlik mi? Kapıyı göster.",
+  "roxy_stars": "Kirayı yıldızlar öder. Her birini hak et.",
+  "roxy_house_lead": "Burayı süsle. Miami kıskansın.",
+  "roxy_yours": "Artık bar senin. Batırma.",
+  "roxy_button": "Son çağrı, tatlım."
  }
 }

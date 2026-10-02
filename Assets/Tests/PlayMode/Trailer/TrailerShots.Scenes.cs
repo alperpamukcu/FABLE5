@@ -28,12 +28,19 @@ namespace LastCall.PlayTests.Trailer
     {
         /// <summary>The bar to the doors, then (when <paramref name="stars"/> > 0) the preset for that standing and a
         /// reload around the same run, so every panel is built against it. Off camera.</summary>
-        private IEnumerator SetTheBar(double stars)
+        private IEnumerator SetTheBar(double stars, bool onAMonday = false)
         {
             yield return LoadToTheDoor();
             yield return WalkInAndOpen();
             if (stars <= 0) { Hush(); yield break; }
             _boot.Tycoon.DevPresetStars(stars);
+            // the story's guest comes on Mondays (days 1, 7, 13, ...): the calendar wound on to the next one
+            if (onAMonday)
+            {
+                int day = _boot.Tycoon.Day + 1;
+                while (day % 6 != 1) day++;
+                _boot.Tycoon.DevJumpToNight(day);
+            }
             var old = _boot;
             _boot.ReloadKeepingRun();
             bool back = false;
@@ -487,6 +494,75 @@ namespace LastCall.PlayTests.Trailer
             }
             yield return Hold(1.5f);
             TrailerCamera.Cut();
+        }
+
+        // ── S08: the end card's picture - the last customer, Roxy, alone under the lamp ─────────────────────
+
+        /// <summary>
+        /// THE END CARD IS A FRAME OF THE GAME (2026-10-02, the author: "Wishlist görseli pixel art gibi değil, kutu
+        /// kutu ve kalitesiz; neden kimlik var; roxynin de dahil olduğu bir bütün pixel art"). The 4-star room, the
+        /// night over, the floor empty - and the story's guest of the house walks in and takes a stool under the
+        /// last-call lamp. The top bar and her plate are folded away while it rolls, the hand is off the frame; the
+        /// edit sets the sign and the call to action over this picture.
+        /// </summary>
+        [UnityTest, Timeout(1200000)]
+        public IEnumerator S08_endcard()
+        {
+            yield return SetTheBar(4.0, onAMonday: true);
+            var run = _boot.Tycoon;
+            run.DevForceLastCall = true;
+            bool empty = false;
+            float until = Time.unscaledTime + 300f;
+            while (!empty && Time.unscaledTime < until)
+            {
+                if (run.HostessVisit != null) run.HearHostess();
+                if (run.Talking) yield return HearTheHostOut();
+                if (run.Phase != TycoonPhase.DayOpen) break;
+                if (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0) { empty = true; break; }
+                run.Tick(1.0);
+                yield return null;
+                WatchStools();
+            }
+            Assert.That(empty, Is.True, "the night never emptied at closing for her");
+            Set(_mouse.position, new Vector2(-200f, -200f));          // no hand in this picture
+            TrailerCamera.Roll("S08_endcard");
+            CustomerVisit roxy = null;
+            float wait = Time.unscaledTime + 30f;
+            while (Time.unscaledTime < wait)
+            {
+                FoldTheChrome();
+                WatchStools();
+                roxy = run.LastCustomer;
+                if (roxy != null && _stoolOf.ContainsKey(roxy)) break;
+                yield return null;
+            }
+            Assert.That(roxy != null && _stoolOf.ContainsKey(roxy), Is.True, "the guest of the house never sat down");
+            TrailerCamera.Mark("roxy walks in");
+            var seat = _stoolOf[roxy];
+            var last = seat.anchoredPosition;
+            int still = 0;
+            while (still < 8 && Time.unscaledTime < wait + 20f)
+            {
+                FoldTheChrome();
+                yield return null;
+                if ((seat.anchoredPosition - last).sqrMagnitude < 0.01f) still++;
+                else { still = 0; last = seat.anchoredPosition; }
+            }
+            TrailerCamera.Mark("roxy sits");
+            float hold = Time.unscaledTime + 5f;
+            while (Time.unscaledTime < hold) { FoldTheChrome(); yield return null; }
+            TrailerCamera.Cut();
+        }
+
+        /// <summary>The HUD's own chrome, scaled to nothing for a clean picture (re-applied every frame, because the
+        /// HUD lays its rects out every frame).</summary>
+        private static void FoldTheChrome()
+        {
+            foreach (var name in new[] { "TopBar", "LastCallPlate", "QuestBubble", "HostNote" })
+            {
+                var rt = Find(name);
+                if (rt != null) rt.localScale = Vector3.zero;
+            }
         }
     }
 }
