@@ -1,0 +1,18 @@
+{
+  "film": "S11_book.mp4",
+  "fps": 60,
+  "seconds": 9.217,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.283, "mark": "book open" },
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 1.767, "mark": "page 1" },
+    { "t": 2.583, "mark": "page 2" },
+    { "t": 3.417, "mark": "page 3" },
+    { "t": 4.250, "mark": "page 4" },
+    { "t": 5.100, "mark": "page 5" },
+    { "t": 5.933, "mark": "page 6" },
+    { "t": 6.767, "mark": "page 7" },
+    { "t": 8.200, "mark": "book shut" }
+  ]
+}

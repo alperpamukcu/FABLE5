@@ -1,0 +1,19 @@
+{
+  "film": "S10_craft.mp4",
+  "fps": 60,
+  "seconds": 24.150,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 0.900, "mark": "cellar open" },
+    { "t": 3.933, "mark": "first drop" },
+    { "t": 5.367, "mark": "full stream" },
+    { "t": 8.900, "mark": "capped" },
+    { "t": 11.867, "mark": "pour out" },
+    { "t": 16.350, "mark": "glass rocks" },
+    { "t": 16.900, "mark": "garnish salt_rim" },
+    { "t": 19.917, "mark": "garnish lemon_twist" },
+    { "t": 21.133, "mark": "finished" },
+    { "t": 21.133, "mark": "focus glass 0.672 0.686" }
+  ]
+}
