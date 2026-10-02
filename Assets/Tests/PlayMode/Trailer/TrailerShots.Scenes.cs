@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using LastCall.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -7,16 +8,24 @@ using UnityEngine.TestTools;
 namespace LastCall.PlayTests.Trailer
 {
     /// <summary>
-    /// THE SHOTS. Each sets its bar up OFF camera (the door, a standing preset, the clock run on until the right
-    /// drinker walks in), rolls, plays, marks its beats and cuts. The edit (Tools/trailer/cuts/*.json) asks for them
-    /// by name and by mark, so a shot may run long - only the marked moments are used.
+    /// THE SHOTS (2026-10-02, the author: "tüm sahneler farklı uyumlu şekilde tasarlansın, ilk gelen karakter ve müşteri
+    /// roxy olsun, dekorlar hep aynı olmasın; dolu ve pozitif bir fatura; mutlu müşteriler; çeşitli şişeler ve bar
+    /// tasarımları"). One story, a different room in every shot:
+    ///
+    ///   S00_roxy        night one, the shabby bar as it is handed over - Roxy walks in and talks (her house tour)
+    ///   S01_roxy_serve  a tropical dressing - Roxy on a stool, the first drink served is hers (the story's guest)
+    ///   S02_serve_N     the 2-star club (chevron, stripes) - drinkers served one by one, their faces
+    ///   S03_kick        the 2.5-star wave room - the card that lies, KICK
+    ///   S04_close       the 3-star deco room - a good night worked off camera, the full slip, the market, the next night
+    ///   S05_rush        the 1.5-star stucco room - every stool taken
+    ///   S06_bottles     the 4-star shelf - bottle after bottle on the bench
+    ///   S07_rooms       one fixed frame, the room dressed up rung by rung - the makeover
+    ///
+    /// Each shot sets its bar OFF camera, rolls, plays, marks its beats and cuts. The edit asks for shots by name and
+    /// beats by mark, so a shot may run long.
     /// </summary>
     public sealed partial class TrailerShots
     {
-        /// <summary>The standing most shots are filmed at: the spoon, the garnish rail and the door are open, the room
-        /// has its first fittings, and the book is past its first page.</summary>
-        private const double Standing = 2.0;
-
         /// <summary>The bar to the doors, then (when <paramref name="stars"/> > 0) the preset for that standing and a
         /// reload around the same run, so every panel is built against it. Off camera.</summary>
         private IEnumerator SetTheBar(double stars)
@@ -42,48 +51,169 @@ namespace LastCall.PlayTests.Trailer
             yield return Hold(1f);
         }
 
-        // ── S01: the front door and the opening ───────────────────────────────────────────────────────────────
+        /// <summary>Puts these fittings in the room (each must outrank what the slot shows to change it).</summary>
+        private void Dress(IEnumerable<string> fittings)
+        {
+            foreach (var id in fittings)
+            {
+                try { _boot.Tycoon.DevFit(id); }
+                catch (System.Exception e) { Debug.LogWarning("[trailer] cannot fit " + id + ": " + e.Message); }
+            }
+        }
+
+        // the dressings (fixtures.json ids), each valid on a fresh night-one bar, every piece above the starting rung
+        private static readonly string[] Tropical =
+        {
+            "back7_wave", "rwall6_tile", "ceil_palm", "floor_terra", "rug6_palm", "picS_trioA", "post_surf_R",
+            "picR6_sunset", "wall_lamps_three", "neon_flamingo", "table_v1_L", "table_v1_R", "plant5_yucca_L", "plant_agave",
+        };
+
+        /// <summary>The room's rungs as the shop would sell them, standing by standing: each step outranks the last, so
+        /// fitting them in order dresses an empty room up one visible change at a time.</summary>
+        private static readonly string[][] Makeover =
+        {
+            new[] { "walls_2", "walls_right_2", "ceil8_shack", "floor_carpet", "rug_leopard", "art_city", "post_malibu_R", "pic_pelican", "plant_palm", "plant_agave" },
+            new[] { "walls_3", "walls_right_3", "ceil_palm", "floor_marble", "rug_wave", "picS_trio", "post_surf_R", "picR6_sunset", "neon_martini", "wall_lamps_one", "table_v1_L", "table_v1_R" },
+            new[] { "walls_right_4", "ceil_stucco", "floor_check", "rug6_memphis", "picS_trioA", "post_pier_R", "counter_lamps_bell", "wall_lamps_two", "neon_flamingo", "table_v2_L", "table_v2_R", "plant5_yucca_L", "sink_brass" },
+            new[] { "back6_chevron", "rwall6_stripe", "ceil6_grid", "floor6_grid", "rug6_sunset", "post_coast_R", "picR6_conv", "neon6_sun" },
+            new[] { "back7_wave", "rwall6_tile", "ceil6_ray", "floor6_chip", "rug6_palm", "picS_trioB", "post5_neon", "neon6_glass", "lamp6_neonbar" },
+            new[] { "walls_4", "rwall7_deco", "ceil7_dusk", "floor7_marble", "flamingo_triptych", "post5_car", "picR6_shapes", "counter_lamps_globe", "lamp6_shell", "neon6_bird", "table_left_3", "table_right_3", "plant_pothos", "counter_paint" },
+        };
+
+        // ── the plate: Roxy's lines, heard one key at a time ───────────────────────────────────────────────────
+
+        private static RectTransform PlateKey()
+        {
+            var plate = Find("LastCallPlate");
+            if (!Shown(plate)) return null;
+            var key = Find("Listen", plate);
+            return Shown(key) ? key : null;
+        }
+
+        /// <summary>Presses GO ON for every line the plate shows, leaving each up long enough to read on film, until the
+        /// plate has been quiet for <paramref name="quiet"/> seconds.</summary>
+        private IEnumerator ReadThePlate(float perLine = 1.6f, float quiet = 1.2f, float atMost = 60f)
+        {
+            float until = Time.unscaledTime + atMost, lastSeen = Time.unscaledTime;
+            while (Time.unscaledTime < until && Time.unscaledTime - lastSeen < quiet)
+            {
+                var key = PlateKey();
+                if (key == null) { yield return null; continue; }
+                yield return Hold(perLine);
+                key = PlateKey();
+                if (key != null) yield return ClickFace(key);
+                lastSeen = Time.unscaledTime;
+            }
+        }
+
+        // ── S00: Roxy walks into the bar on night one ─────────────────────────────────────────────────────────
 
         [UnityTest, Timeout(600000)]
-        public IEnumerator S01_open()
+        public IEnumerator S00_roxy()
         {
             yield return LoadToTheDoor();
-            TrailerCamera.Roll("S01_open");
+            LastCall.Game.GameBootstrap.TourForNewRuns = true;             // her house tour opens night one
+            TrailerCamera.Roll("S00_roxy");
             TrailerCamera.Mark("menu");
             var newRun = (RectTransform)GameObject.Find("MainMenu/Column/NEW RUN").transform;
-            yield return Hold(2.5f);                                   // the sign, lit
-            yield return Glide(FaceOf(newRun) + new Vector2(0f, -140f * U), 0.9f);
-            yield return Hold(0.6f);
-            yield return WalkInAndOpen();
-            yield return Hold(2.5f);                                   // the room, before anyone is in
-            var first = _boot.Tycoon.Shelf.Bottles[0].Id;
-            yield return OpenTheCellar("CellarDoor_" + first);
-            yield return Hold(1.2f);
-            // the hand runs along the doors, the way an eye reads a shelf
-            foreach (var b in _boot.Tycoon.Shelf.Bottles)
+            yield return Hold(2.0f);
+            for (int attempt = 0; attempt < 6 && newRun != null && newRun.gameObject.activeInHierarchy; attempt++)
             {
-                var door = Find("CellarDoor_" + b.Id);
-                if (!Shown(door)) continue;
-                yield return Glide(FaceOf(door), 0.28f);
-                yield return Hold(0.15f);
+                yield return ClickFace(newRun);
+                yield return Hold(0.4f);
             }
-            yield return Hold(1f);
+            LastCall.Game.GameBootstrap.TourForNewRuns = false;
+            yield return Until(() =>
+            {
+                var b = Object.FindFirstObjectByType<LastCall.Game.GameBootstrap>();
+                if (b != null && b.Tycoon != null) _boot = b;
+                return GameObject.Find("Hostess") != null;
+            }, 30f);
+            TrailerCamera.Mark("roxy walks in");
+            yield return Until(() => PlateKey() != null, 15f);
+            TrailerCamera.Mark("roxy talks");
+            // her opening lines - the welcome, the clock, the till, the bill, the stars, the house - then the night opens
+            var run = _boot.Tycoon;
+            int lines = 0;
+            float until = Time.unscaledTime + 60f;
+            while (run.TourRunning && Time.unscaledTime < until)
+            {
+                if (run.TourStep.Wait != TourWait.Heard || lines >= 9) { run.SkipTour(); break; }
+                var key = PlateKey();
+                if (key != null)
+                {
+                    yield return Hold(1.7f);
+                    yield return ClickFace(key);
+                    lines++;
+                    continue;
+                }
+                yield return null;
+            }
+            // she stays for the first job: her offer, heard out, then she walks off
+            TrailerCamera.Mark("first job");
+            yield return ReadThePlate(1.4f);
+            yield return Until(() => run.HostessVisit == null, 8f);
+            TrailerCamera.Mark("roxy leaves");
+            yield return Hold(2.5f);
             TrailerCamera.Cut();
         }
 
-        // ── S02: the card, then the drink, whole - one take per drinker ──────────────────────────────────────
+        // ── S01: Roxy on a stool - the first drink is hers ────────────────────────────────────────────────────
+
+        [UnityTest, Timeout(1200000)]
+        public IEnumerator S01_roxy_serve()
+        {
+            yield return SetTheBar(0);
+            var run = _boot.Tycoon;
+            Dress(Tropical);
+            run.DevForceLastCall = true;                                   // the story's guest of the house, night one
+            // the night worked out off camera, so the floor is empty at closing when she comes in
+            bool done = false;
+            float until = Time.unscaledTime + 240f;
+            while (!done && Time.unscaledTime < until)
+            {
+                if (run.HostessVisit != null) run.HearHostess();         // she takes the stool, not the floor
+                if (run.Talking) yield return HearTheHostOut();
+                if (run.Phase != TycoonPhase.DayOpen) break;
+                if (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0) { done = true; break; }
+                run.Tick(1.0);
+                yield return null;
+                WatchStools();
+            }
+            Assert.That(done, Is.True, "the night never emptied at closing for her");
+            TrailerCamera.Roll("S01_roxy_serve");
+            CustomerVisit roxy = null;
+            yield return Until(() =>
+            {
+                WatchStools();
+                roxy = run.LastCustomer;
+                return roxy != null && _stoolOf.ContainsKey(roxy);
+            }, 30f);
+            Assert.That(roxy != null && _stoolOf.ContainsKey(roxy), Is.True, "the guest of the house never sat down");
+            var seat = _stoolOf[roxy];
+            yield return WaitUntilSettled(seat);
+            TrailerCamera.Mark("seated");
+            yield return ReadThePlate(1.6f);                               // her ask; the last key starts the trial
+            TrailerCamera.Mark("card open");                               // her order is in what she says (GDD 26 §3)
+            yield return MakeTheOrder(roxy, seat);
+            yield return ReadThePlate(1.6f);                               // what she says about it
+            yield return Hold(2f);
+            TrailerCamera.Cut();
+        }
+
+        // ── S02: the crowd, served - one take per drinker ─────────────────────────────────────────────────────
 
         /// <summary>
         /// Drinkers are served one after another, each in a take of their own (S02_serve_1, _2, ...), until the reel
-        /// holds a shaken drink, a built one and a pint, or six takes have been filmed. The order is on the card and
-        /// nowhere else, so which drink a take holds is only known once it is read - on camera, as a player learns it.
+        /// holds a shaken drink, a built one and a pint and enough happy faces for the montage, or eight takes. The
+        /// order is on the card and nowhere else, so which drink a take holds is only known once it is read.
         /// </summary>
-        [UnityTest, Timeout(1800000)]
+        [UnityTest, Timeout(2400000)]
         public IEnumerator S02_serve()
         {
-            yield return SetTheBar(Standing);
+            yield return SetTheBar(2.0);
             bool shaken = false, built = false, pint = false;
-            for (int take = 1; take <= 6 && !(shaken && built && pint); take++)
+            for (int take = 1; take <= 8 && !(shaken && built && pint && take > 5); take++)
             {
                 CustomerVisit visit = null;
                 yield return Admit(v => true, 900f, v => visit = v);
@@ -103,10 +233,9 @@ namespace LastCall.PlayTests.Trailer
             }
         }
 
-        /// <summary>Between takes, off camera: the counter cleared through Core so the next take starts tidy.</summary>
+        /// <summary>Between takes, off camera: whatever is still open, put away.</summary>
         private IEnumerator CleanUpAfter()
         {
-            var run = _boot.Tycoon;
             yield return PutTheCardDown();
             if (Shown(Find("ShakerPanel")) || Shown(Find("ServePanel")) || Shown(Find("TapPanel")))
                 yield return Tap(_keys.escapeKey);
@@ -119,7 +248,7 @@ namespace LastCall.PlayTests.Trailer
         [UnityTest, Timeout(1800000)]
         public IEnumerator S03_kick()
         {
-            yield return SetTheBar(Standing);
+            yield return SetTheBar(2.5);
             Assert.That(_boot.Tycoon.Has(Feature.Door), Is.True, "the preset did not open the door rung");
             for (int attempt = 0; attempt < 12; attempt++)
             {
@@ -131,7 +260,7 @@ namespace LastCall.PlayTests.Trailer
                 yield return ReadTheCard(visit, seat, lingerOnTheOrder: false);
                 if (!visit.Papers.ShouldBeKicked)
                 {
-                    // an honest young face: not this take. Serve nobody, put the card down, try the next one.
+                    // an honest young face: not this take. Put the card down and wait for the next one.
                     TrailerCamera.Cut();
                     yield return PutTheCardDown();
                     continue;
@@ -150,22 +279,23 @@ namespace LastCall.PlayTests.Trailer
             Assert.Inconclusive("no forged card or minor walked in within the takes allowed - film it again with another seed");
         }
 
-        // ── S04: the close - the slip, the market, a fitting bought, the next night ─────────────────────────
+        // ── S04: the close - a good night's slip, the market, the next night ────────────────────────────────
 
-        [UnityTest, Timeout(900000)]
+        [UnityTest, Timeout(1200000)]
         public IEnumerator S04_close()
         {
             yield return SetTheBar(3.0);
             var run = _boot.Tycoon;
-            // straight to the close, the way the suite proves it works: a night with glasses still on the counter
-            // will not close until they are collected, and that is not a beat this shot is about
-            run.DevSkipToDayEnd();
+            // a busy, good night, worked off camera so the slip has a full tape and a profit on it
+            yield return WorkTheNightOffCamera(100000);
+            if (run.Phase == TycoonPhase.DayOpen) run.DevSkipToDayEnd();
             bool slip = false;
-            yield return Until(() => Shown(Find("BillNext")), 40f, ok => slip = ok);
+            yield return Until(() => Shown(Find("BillNext")), 60f, ok => slip = ok);
             Assert.That(slip, Is.True, "the night's slip never came up");
             TrailerCamera.Roll("S04_close");
             TrailerCamera.Mark("slip");
-            yield return Hold(5f);                                     // the tape, the stars, the stamp
+            yield return Hold(6f);                                     // the tape, the stars, the stamp
+            TrailerCamera.Mark("slip done");
             for (int i = 0; i < 5 && !Shown(Find("Basket")); i++)
             {
                 if (Shown(Find("BillNext"))) yield return ClickFace(Find("BillNext"));
@@ -174,7 +304,7 @@ namespace LastCall.PlayTests.Trailer
             TrailerCamera.Mark("market");
             yield return Hold(0.8f);
             yield return HearTheHostOut();
-            // browse the aisles, then buy what the last one offers first
+            yield return ReadThePlate(1.2f, 0.8f, 20f);
             for (int tab = 0; tab < 4; tab++)
             {
                 var key = Find("Tab" + tab);
@@ -205,10 +335,10 @@ namespace LastCall.PlayTests.Trailer
             bool next = false;
             yield return Until(() =>
             {
-                if (run.Talking || HostKey() != null) return false;
+                if (run.Talking || PlateKey() != null) return false;
                 return run.Day != leaving && run.Phase == TycoonPhase.DayOpen && run.Floor.Elapsed > 0;
             }, 30f, ok => next = ok);
-            if (!next) yield return HearTheHostOut();
+            if (!next) { yield return HearTheHostOut(); yield return ReadThePlate(1.2f, 0.8f, 20f); }
             TrailerCamera.Mark("next night");
             yield return Hold(3f);
             TrailerCamera.Cut();
@@ -216,7 +346,7 @@ namespace LastCall.PlayTests.Trailer
 
         private static RectTransform NthTile(int index)
         {
-            var tiles = new System.Collections.Generic.List<RectTransform>();
+            var tiles = new List<RectTransform>();
             foreach (var rt in Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                 if (rt.name == "Tile" && rt.gameObject.activeInHierarchy) tiles.Add(rt);
             tiles.Sort((a, b) =>
@@ -227,15 +357,14 @@ namespace LastCall.PlayTests.Trailer
             return index < tiles.Count ? tiles[index] : null;
         }
 
-        // ── S05: the rush - a full room late in the run, the hand going card to card ────────────────────────
+        // ── S05: the rush - every stool taken, the hand going card to card ──────────────────────────────────
 
         [UnityTest, Timeout(900000)]
         public IEnumerator S05_rush()
         {
-            yield return SetTheBar(4.5);
+            yield return SetTheBar(1.5);
             var run = _boot.Tycoon;
-            // fill the room off camera
-            for (int i = 0; i < 1200 && run.Floor.Seated.Count < Mathf.Min(run.Seats, 6); i++)
+            for (int i = 0; i < 1200 && run.Floor.Seated.Count < run.Seats; i++)
             {
                 if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
                 run.Tick(0.5);
@@ -247,7 +376,7 @@ namespace LastCall.PlayTests.Trailer
             TrailerCamera.Mark("full room");
             yield return Hold(2.5f);
             int read = 0;
-            foreach (var kv in new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<CustomerVisit, RectTransform>>(_stoolOf))
+            foreach (var kv in new List<KeyValuePair<CustomerVisit, RectTransform>>(_stoolOf))
             {
                 if (read >= 3) break;
                 var visit = kv.Key;
@@ -258,6 +387,86 @@ namespace LastCall.PlayTests.Trailer
                 read++;
             }
             yield return Hold(4f);
+            TrailerCamera.Cut();
+        }
+
+        // ── S06: the bottles - one after another on the bench ────────────────────────────────────────────────
+
+        [UnityTest, Timeout(900000)]
+        public IEnumerator S06_bottles()
+        {
+            yield return SetTheBar(4.0);
+            var run = _boot.Tycoon;
+            // spirits first, then the rest of the shelf (never the kegs); at most ten
+            var picks = new List<ShelfBottle>();
+            foreach (var b in run.Shelf.Bottles)
+                if (!b.IsEmpty && b.Ingredient.Type == IngredientType.Spirit) picks.Add(b);
+            foreach (var b in run.Shelf.Bottles)
+                if (!b.IsEmpty && b.Ingredient.Type != IngredientType.Spirit && b.Ingredient.Type != IngredientType.Beer) picks.Add(b);
+            if (picks.Count > 10) picks.RemoveRange(10, picks.Count - 10);
+            Assert.That(picks.Count, Is.GreaterThan(0), "the shelf is bare");
+
+            TrailerCamera.Roll("S06_bottles");
+            yield return OpenTheCellar("CellarDoor_" + picks[0].Id);
+            TrailerCamera.Mark("cellar");
+            foreach (var b in run.Shelf.Bottles)
+            {
+                var door = Find("CellarDoor_" + b.Id);
+                if (!Shown(door)) continue;
+                yield return Glide(FaceOf(door), 0.22f);
+            }
+            for (int k = 0; k < picks.Count; k++)
+            {
+                if (k > 0) yield return StepBack();
+                string name = "CellarDoor_" + picks[k].Id;
+                if (!DoorAnswers(name)) yield return OpenTheCellar(name);
+                yield return Click(Find(name));
+                yield return Until(() => Shown(Find("ShakerPanel")), 3f);
+                TrailerCamera.Mark("bottle " + (k + 1));
+                // lifted off the bench and turned to the light, not poured
+                var bottle = Find("Bottle", Find("ShakerPanel"));
+                if (bottle != null)
+                {
+                    var grip = ScreenPointOf(bottle) + new Vector2(0f, 80f * U);
+                    yield return Glide(grip, 0.25f);
+                    Press(_mouse.leftButton);
+                    yield return Glide(grip + new Vector2(-30f * U, 45f * U), 0.35f);
+                    yield return Hold(0.35f);
+                    Release(_mouse.leftButton);
+                    yield return Hold(0.5f);
+                }
+            }
+            yield return StepBack();
+            yield return Hold(1f);
+            TrailerCamera.Cut();
+        }
+
+        // ── S07: the makeover - one frame, the room dressed up rung by rung ──────────────────────────────────
+
+        [UnityTest, Timeout(900000)]
+        public IEnumerator S07_rooms()
+        {
+            yield return SetTheBar(0);
+            var run = _boot.Tycoon;
+            // a few drinkers in, so the room is alive while it changes
+            for (int i = 0; i < 600 && run.Floor.Seated.Count < Mathf.Min(3, run.Seats); i++)
+            {
+                if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
+                run.Tick(0.5);
+                yield return null;
+            }
+            Set(_mouse.position, new Vector2(Screen.width * 0.97f, Screen.height * 0.05f));   // the hand out of the frame's way
+            yield return Hold(1.5f);
+            TrailerCamera.Roll("S07_rooms");
+            TrailerCamera.Mark("room 0");
+            yield return Hold(1.6f);
+            for (int k = 0; k < Makeover.Length; k++)
+            {
+                Dress(Makeover[k]);
+                TrailerCamera.Mark("room " + (k + 1));
+                yield return Hold(1.6f);
+            }
+            yield return Hold(1.5f);
             TrailerCamera.Cut();
         }
     }

@@ -14,7 +14,11 @@
   "night": "SIX TILL TWO",
   "house": "BUILD THE HOUSE",
   "wishlist": "WISHLIST ON STEAM",
-  "when": ""
+  "when": "",
+  "roxy": "MEET ROXY",
+  "first": "FIRST ROUND\nIS HERS",
+  "brands": "34 BRANDS",
+  "profit": "A GOOD NIGHT"
  },
  "tr": {
   "hook1": "KİMSE SÖYLEMEZ",
@@ -30,6 +34,10 @@
   "night": "ALTIDAN İKİYE",
   "house": "MEKÂNI BÜYÜT",
   "wishlist": "İSTEK LİSTENE EKLE",
-  "when": ""
+  "when": "",
+  "roxy": "ROXY İLE TANIŞ",
+  "first": "İLK İÇKİ\nONUN",
+  "brands": "34 MARKA",
+  "profit": "KÂRLI BİR GECE"
  }
 }

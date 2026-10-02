@@ -17,13 +17,16 @@ de yeniden çalıştırılır ve aynı fragman güncel haliyle çıkar.
 - Tek bir sahneyi yeniden çekmek için: **Record One Shot...**
 - Türkçe arayüzle çekmek için: **Record All Shots (Turkish)**
 
-| Sahne | Ne çekilir |
-|---|---|
-| `S01_open` | Ana menü, NEW RUN, barın açılışı, mahzen kapakları |
-| `S02_serve_N` | Bir müşteri gelir, kart okunur, içki yapılır, verilir. Her müşteri ayrı bir dosya. Çalkalanmış, hazır yapılmış ve fıçı birası birer tane olana kadar (en çok 6) devam eder. |
-| `S03_kick` | Genç görünen müşteriler sırayla okunur. Sahte ya da reşit olmayan bir kart bulununca KICK. |
-| `S04_close` | Gece fişi, pazar, bir alışveriş, ertesi gecenin açılışı |
-| `S05_rush` | 4.5★ dolu salon, el karttan karta geziyor |
+| Sahne | Dekor | Ne çekilir |
+|---|---|---|
+| `S00_roxy` | İlk gece, devralınan eski bar | Ana menü, NEW RUN. Roxy yürüyüp girer ve açılış turunun ilk satırlarını söyler. İlk işi verir, çıkıp gider. |
+| `S01_roxy_serve` | Tropik (palmiye tavan, dalga duvar, flamingo neon) | Gece kamera dışında kapanır. Hikâyenin "evin konuğu" olarak Roxy tabureye oturur, ilk içki onun. |
+| `S02_serve_N` | 2★ kulüp (şerit, şevron) | Müşteri başına bir çekim (en çok 8): kart, içki (döküş, çalkalama, karıştırma, fıçı), servis, mutlu yüz. |
+| `S03_kick` | 2.5★ dalga odası | Yalan söyleyen kart ve KICK. |
+| `S04_close` | 3★ deco | Kamera dışında kusursuz servisle dolu bir gece. Ardından kârlı gece fişi, pazar, alışveriş, ertesi gece. |
+| `S05_rush` | 1.5★ stucco | Bütün tabureler dolu; el karttan karta gezer. |
+| `S06_bottles` | 4★ raf | Mahzen açılır, şişeler tek tek tezgâha gelir (en çok 10). |
+| `S07_rooms` | Boştan lükse | Sabit kadraj; oda her 1,6 saniyede bir basamak giyinir (`DevFit`, 6 adım). |
 
 ### Nasıl çekiyor
 

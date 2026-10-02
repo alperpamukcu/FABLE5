@@ -253,10 +253,11 @@ namespace LastCall.PlayTests.Trailer
 
         private static RectTransform HostKey()
         {
+            // a SHOWN key only: Find falls back to a hidden one, and the plate hides its key on the lines that wait
             var plate = Find("LastCallPlate");
-            if (plate != null && plate.gameObject.activeInHierarchy) return Find("Listen", plate);
+            if (Shown(plate)) { var k = Find("Listen", plate); if (Shown(k)) return k; }
             var note = Find("HostNote");
-            if (note != null && note.gameObject.activeInHierarchy) return Find("Key", note);
+            if (Shown(note)) { var k = Find("Key", note); if (Shown(k)) return k; }
             return null;
         }
 
