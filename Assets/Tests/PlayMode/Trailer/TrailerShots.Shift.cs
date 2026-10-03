@@ -28,11 +28,11 @@ namespace LastCall.PlayTests.Trailer
                 if ((int)t % 4 == 0) yield return null;
                 if (run.Phase != TycoonPhase.DayOpen) break;
 
-                var messes = run.Floor.Messes;
-                for (int m = messes.Count - 1; m >= 0; m--)
+                // a copy: collecting a glass can take its mess off the live list, and the index with it (S04, 2026-10-03)
+                foreach (var mess in new System.Collections.Generic.List<CounterMess>(run.Floor.Messes))
                 {
-                    if (messes[m].HasGlass) run.CollectGlass(messes[m]);
-                    if (messes[m].Smudged) run.Wipe(messes[m]);
+                    if (mess.HasGlass) run.CollectGlass(mess);
+                    if (mess.Smudged) run.Wipe(mess);
                 }
                 if (run.GlassesInHand > 0 && !run.SinkBusy) run.WashGlasses();
 
@@ -56,7 +56,7 @@ namespace LastCall.PlayTests.Trailer
                 }
             }
             // the floor's last glasses, so the door can shut
-            foreach (var mess in run.Floor.Messes)
+            foreach (var mess in new System.Collections.Generic.List<CounterMess>(run.Floor.Messes))
             {
                 if (mess.HasGlass) run.CollectGlass(mess);
                 if (mess.Smudged) run.Wipe(mess);

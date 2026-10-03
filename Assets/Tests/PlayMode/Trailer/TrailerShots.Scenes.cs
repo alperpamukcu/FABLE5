@@ -41,8 +41,19 @@ namespace LastCall.PlayTests.Trailer
                 while (day % 6 != 1) day++;
                 _boot.Tycoon.DevJumpToNight(day);
             }
+            yield return ReloadAroundTheRun();
+            Hush();
+            KeepTheLampsLow();
+            yield return Hold(1f);
+        }
+
+        /// <summary>The same run reloaded, so every panel is built against what Core now holds. Off camera.</summary>
+        private IEnumerator ReloadAroundTheRun()
+        {
             var old = _boot;
             _boot.ReloadKeepingRun();
+            _stoolOf.Clear();
+            _litLastLook.Clear();
             bool back = false;
             yield return Until(() =>
             {
@@ -55,9 +66,32 @@ namespace LastCall.PlayTests.Trailer
             yield return Until(() => _boot != old && _boot.Tycoon.Floor.Elapsed > 0, 20f, ok => back = ok);
             Assert.That(back, Is.True, "the bar never reopened after the preset");
             yield return HearTheHostOut();
+        }
+
+        /// <summary>
+        /// A NIGHT IS 95 SECONDS (2026-10-03: S03, S05 and S09 all failed by running out of night - the stools never
+        /// filled, or no lying card came, before the doors shut and the bar went to DayEnd under them). A shot that
+        /// waits for something the floor may not deal tonight checks this, and asks for a fresh night instead of
+        /// riding the old one into the close.
+        /// </summary>
+        private bool NightNearlyOver(double share = 0.7)
+        {
+            var floor = _boot.Tycoon.Floor;
+            return floor.Elapsed >= floor.NightSeconds * share;
+        }
+
+        /// <summary>The next night on the same bar (Core's dev jump, then the reload so the room is drawn against it).
+        /// Off camera. False when the bar is not open to jump from.</summary>
+        private IEnumerator FreshNight(System.Action<bool> done = null)
+        {
+            var run = _boot.Tycoon;
+            if (run.Phase != TycoonPhase.DayOpen) { done?.Invoke(false); yield break; }
+            run.DevJumpToNight(run.Day + 1);
+            yield return ReloadAroundTheRun();
             Hush();
             KeepTheLampsLow();
-            yield return Hold(1f);
+            yield return Hold(0.5f);
+            done?.Invoke(_boot.Tycoon.Phase == TycoonPhase.DayOpen);
         }
 
         /// <summary>
@@ -201,7 +235,9 @@ namespace LastCall.PlayTests.Trailer
                 if (run.HostessVisit != null) run.HearHostess();         // she takes the stool, not the floor
                 if (run.Talking) yield return HearTheHostOut();
                 if (run.Phase != TycoonPhase.DayOpen) break;
-                if (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0) { done = true; break; }
+                // she sits down inside the very tick that empties the floor, so the empty floor itself is never seen:
+                // her being seated is the sign
+                if (run.LastCustomer != null || (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0)) { done = true; break; }
                 run.Tick(1.0);
                 yield return null;
                 WatchStools();
@@ -285,11 +321,19 @@ namespace LastCall.PlayTests.Trailer
             yield return SetTheBar(2.5);
             var run = _boot.Tycoon;
             Assert.That(run.Has(Feature.Door), Is.True, "the preset did not open the door rung");
-            for (int attempt = 0; attempt < 60; attempt++)
+            for (int attempt = 0, nights = 0; attempt < 120 && nights < 8; attempt++)
             {
+                if (NightNearlyOver(0.8))
+                {
+                    bool fresh = false;
+                    yield return FreshNight(ok => fresh = ok);
+                    if (!fresh) break;
+                    run = _boot.Tycoon;
+                    nights++;
+                }
                 CustomerVisit visit = null;
-                yield return Admit(v => true, 900f, v => visit = v);
-                if (visit == null) break;
+                yield return Admit(v => true, (float)(run.Floor.NightSeconds * 0.8 - run.Floor.Elapsed), v => visit = v);
+                if (visit == null) continue;
                 yield return Until(() => visit.HasOrdered, 25f);
                 if (!visit.HasOrdered || visit.State != VisitState.Waiting) continue;
                 visit.InspectId();
@@ -401,13 +445,26 @@ namespace LastCall.PlayTests.Trailer
         {
             yield return SetTheBar(1.5);
             var run = _boot.Tycoon;
-            for (int i = 0; i < 1200 && run.Floor.Seated.Count < run.Seats; i++)
+            int full = Mathf.Min(run.Seats, 4);
+            for (int nights = 0; nights < 6 && run.Floor.Seated.Count < full; nights++)
             {
-                if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
-                run.Tick(0.5);
-                yield return null;
-                WatchStools();
+                for (int i = 0; i < 1200 && run.Floor.Seated.Count < full && !NightNearlyOver(0.65); i++)
+                {
+                    if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
+                    if (run.Phase != TycoonPhase.DayOpen) break;
+                    run.Tick(0.5);
+                    yield return null;
+                    WatchStools();
+                    foreach (var v in run.Floor.Seated)
+                        if (v.State == VisitState.Waiting && v.HasOrdered && !v.IdInspected) v.InspectId();
+                }
+                if (run.Floor.Seated.Count >= Mathf.Min(full, 3) && !NightNearlyOver(0.75)) break;
+                bool fresh = false;
+                yield return FreshNight(ok => fresh = ok);
+                if (!fresh) break;
+                run = _boot.Tycoon;
             }
+            Assert.That(run.Phase == TycoonPhase.DayOpen && run.Floor.Seated.Count >= 3, Is.True, "the room never filled");
             yield return Hold(2f);
             TrailerCamera.Roll("S05_rush");
             TrailerCamera.Mark("full room");
@@ -525,7 +582,7 @@ namespace LastCall.PlayTests.Trailer
                 if (run.HostessVisit != null) run.HearHostess();
                 if (run.Talking) yield return HearTheHostOut();
                 if (run.Phase != TycoonPhase.DayOpen) break;
-                if (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0) { empty = true; break; }
+                if (run.LastCustomer != null || (run.Floor.IsClosingTime && run.Floor.Seated.Count == 0)) { empty = true; break; }
                 run.Tick(1.0);
                 yield return null;
                 WatchStools();

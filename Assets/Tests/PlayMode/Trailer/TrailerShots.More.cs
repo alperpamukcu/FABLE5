@@ -140,16 +140,25 @@ namespace LastCall.PlayTests.Trailer
             var run = _boot.Tycoon;
             int want = Mathf.Min(run.Seats, 5);
             Func<int> ready = () => _stoolOf.Keys.Count(v => v.State == VisitState.Waiting && v.HasOrdered);
-            for (int i = 0; i < 3000 && ready() < want; i++)
+            for (int nights = 0; nights < 6 && ready() < want; nights++)
             {
-                if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
-                if (run.Phase != TycoonPhase.DayOpen) break;
-                run.Tick(0.5);
-                yield return null;
-                WatchStools();
-                // the order is read the moment it is made, so nobody's patience is the shot's clock
-                foreach (var v in run.Floor.Seated)
-                    if (v.State == VisitState.Waiting && v.HasOrdered && !v.IdInspected) v.InspectId();
+                for (int i = 0; i < 3000 && ready() < want && !NightNearlyOver(0.6); i++)
+                {
+                    if (run.Talking || run.HostessVisit != null) yield return HearTheHostOut();
+                    if (run.Phase != TycoonPhase.DayOpen) break;
+                    run.Tick(0.5);
+                    yield return null;
+                    WatchStools();
+                    // the order is read the moment it is made, so nobody's patience is the shot's clock
+                    foreach (var v in run.Floor.Seated)
+                        if (v.State == VisitState.Waiting && v.HasOrdered && !v.IdInspected) v.InspectId();
+                }
+                // three faces with the night still young enough to answer them is a take; fewer, a fresh night
+                if (ready() >= 3 && !NightNearlyOver(0.7)) break;
+                bool fresh = false;
+                yield return FreshNight(ok => fresh = ok);
+                if (!fresh) break;
+                run = _boot.Tycoon;
             }
             var line = _stoolOf.Where(kv => kv.Key.State == VisitState.Waiting && kv.Key.HasOrdered)
                                .OrderBy(kv => ScreenPointOf(kv.Value).x).Take(5).ToList();
