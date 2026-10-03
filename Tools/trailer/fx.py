@@ -287,7 +287,7 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
             face = None if lang == 'en' else E.face_for(lang, lines.get('wishlist', ''))
             ca, wa = seg.get('cta_at', 1.0), seg.get('when_at', 1.6)
             d, xy = O.title(lines.get('wishlist', 'WISHLIST ON STEAM'), dur - ca, os.path.join(WORK, 'cta_%d_%d' % (si, oh)),
-                            ow, oh, lang_face=face, y_frac=seg.get('cta_y', 0.40 if not tall else 0.32), max_scale=3, band=True)
+                            ow, oh, lang_face=face, y_frac=seg.get('cta_y', 0.40 if not tall else 0.32), max_scale=seg.get('cta_scale', 3), band=True)
             if 'cta_x' in seg:
                 xy = (int(seg['cta_x'] * ow - (ow - 2 * xy[0]) / 2), xy[1])
             layers.append((d, xy, ca))
