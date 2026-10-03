@@ -221,7 +221,7 @@ def sections(cut, P):
     marks = {}
     for s in cut['segments']:
         b = max(1, round(s['sec'] / P))
-        film, mark = s['take'][0][0], s['take'][0][1]
+        film, mark = (s['take'][0][0], s['take'][0][1]) if s.get('take') else ('image', '')
         if s.get('sign') and 'drop' not in marks:
             marks['drop'] = at
         if film.startswith('S03') and mark == 'kicked':

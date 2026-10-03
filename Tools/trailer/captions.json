@@ -27,7 +27,8 @@
   "roxy_yours": "It's your bar now. Don't blow it.",
   "roxy_button": "Last call, honey.",
   "bottles": "STOCK THE CELLAR",
-  "craft": "CRAFT EVERY DRINK"
+  "craft": "CRAFT EVERY DRINK",
+  "intro": "MIAMI  ·  6 PM"
  },
  "tr": {
   "hook1": "KİMSE SÖYLEMEZ",
@@ -56,6 +57,7 @@
   "roxy_yours": "Artık bar senin. Batırma.",
   "roxy_button": "Son çağrı, tatlım.",
   "bottles": "MAHZENİ DOLDUR",
-  "craft": "HER İÇKİYİ ÖZENLE HAZIRLA"
+  "craft": "HER İÇKİYİ ÖZENLE HAZIRLA",
+  "intro": "MIAMI  ·  AKŞAM 6"
  }
 }

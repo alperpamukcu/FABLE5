@@ -196,6 +196,23 @@ def seq_frame(d, i):
     return Image.open(p) if os.path.exists(p) else None
 
 
+def plates():
+    """The opening and the end card, made from the Steam art's own masters (they ride LFS, so they are built here
+    rather than shipped twice): the end card is the main capsule's native pixel art at exactly 4x."""
+    art = os.path.join(HERE, 'art')
+    os.makedirs(art, exist_ok=True)
+    nano = os.path.join(E.ROOT, 'Tools', 'steam_page', 'out', 'nano')
+    end = os.path.join(art, 'endcard.png')
+    if not os.path.exists(end):
+        a = np.asarray(Image.open(os.path.join(nano, 'snap_main_capsule_pro_1.png')).convert('RGB'))
+        a = np.pad(a, ((2, 2), (0, 1), (0, 0)), mode='edge')        # 266x479 -> 270x480
+        Image.fromarray(a).resize((1920, 1080), Image.NEAREST).save(end)
+    opening = os.path.join(art, 'opening.png')
+    if not os.path.exists(opening):
+        Image.open(os.path.join(nano, 'page_background_pro_2.png')).convert('RGB') \
+            .resize((1920, 1080), Image.LANCZOS).save(opening)
+
+
 def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
     cut = json.load(open(os.path.join(HERE, 'cuts', cut_name + '.json')))
     lines_all = json.load(open(os.path.join(HERE, 'captions.json')))
@@ -220,7 +237,11 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
     for si, seg in enumerate(cut['segments']):
         dur = max(period, round(seg['sec'] / period) * period)
         n = int(round(dur * FPS))
-        take = S.find_take(seg.get('take', []))
+        # a designed picture instead of a film (2026-10-03: the opening and the end card are art, not the game)
+        if seg.get('image'):
+            take = ('image', 0.0, [])
+        else:
+            take = S.find_take(seg.get('take', []))
         if take is None:
             print('  - %2d skipped: nothing filmed for %s' % (si, seg.get('take', [[None]])[0][0]))
             continue
@@ -258,7 +279,8 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
         if seg.get('sign') or seg.get('end'):
             sign = S.sign_image(840)
             d = O.sign_on(sign, dur, os.path.join(WORK, 'sign_%d_%d' % (si, oh)))
-            layers.append((d, ((ow - sign.width) // 2, int(oh * seg.get('sign_y', 0.05 if not tall else 0.08)) if seg.get('end')
+            sx = int(seg['sign_x'] * ow - sign.width / 2) if 'sign_x' in seg else (ow - sign.width) // 2
+            layers.append((d, (sx, int(oh * seg.get('sign_y', 0.05 if not tall else 0.08)) if seg.get('end')
                                else (oh - sign.height) // 2 - (40 if not tall else 200)), 0.25))
             sounds.append(('synth_swell', 0.8, t_total))
         if seg.get('end'):
@@ -266,10 +288,14 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
             ca, wa = seg.get('cta_at', 1.0), seg.get('when_at', 1.6)
             d, xy = O.title(lines.get('wishlist', 'WISHLIST ON STEAM'), dur - ca, os.path.join(WORK, 'cta_%d_%d' % (si, oh)),
                             ow, oh, lang_face=face, y_frac=seg.get('cta_y', 0.40 if not tall else 0.32), max_scale=3, band=True)
+            if 'cta_x' in seg:
+                xy = (int(seg['cta_x'] * ow - (ow - 2 * xy[0]) / 2), xy[1])
             layers.append((d, xy, ca))
             if lines.get('when'):
                 d, xy = O.title(lines['when'], dur - wa, os.path.join(WORK, 'when_%d_%d' % (si, oh)), ow, oh,
                                 lang_face=face, y_frac=seg.get('when_y', 0.50 if not tall else 0.38), max_scale=2, band=True)
+                if 'cta_x' in seg:
+                    xy = (int(seg['cta_x'] * ow - (ow - 2 * xy[0]) / 2), xy[1])
                 layers.append((d, xy, wa))
         if seg.get('title'):
             face = None if lang == 'en' else E.face_for(lang, lines.get(seg['title'], ''))
@@ -283,14 +309,18 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
             sounds.append((WHOOSH[0], WHOOSH[1], max(0.0, t_total - 0.08)))
         direction = 1 if si % 2 else -1
 
-        src = frames_of(film, start, n, speed) if not seg.get('still') and not audio_only else None
+        art = None
+        if seg.get('image') and not audio_only:
+            plates()
+            art = np.asarray(Image.open(os.path.join(HERE, seg['image'])).convert('RGB').resize((SRC_W, SRC_H), Image.LANCZOS))
+        src = frames_of(film, start, n, speed) if not seg.get('still') and art is None and not audio_only else None
         still = None
         if seg.get('still') and not audio_only:
             fr = next(frames_of(film, start, 1, 1.0))
             still = fr
         for i in range(0 if audio_only else n):
             t = i / FPS
-            frame = still if still is not None else next(src)
+            frame = art if art is not None else (still if still is not None else next(src))
             z, cx, cy = keyed(keys, i / max(1, n - 1))
             if track:
                 p = at_track(track, t)
@@ -332,6 +362,13 @@ def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
                     w = 1 - (t - f) / 0.12
                     a = np.asarray(img).astype(np.float32)
                     img = Image.fromarray((a * (1 - 0.8 * w) + 255 * 0.8 * w).astype(np.uint8))
+            if seg.get('flicker_on'):
+                glow = 0.0
+                for t0, v in ((0.0, 0.0), (0.18, 0.55), (0.24, 0.05), (0.34, 0.8), (0.40, 0.3), (0.52, 1.0)):
+                    if t >= t0:
+                        glow = v
+                if glow < 1.0:
+                    img = Image.fromarray((np.asarray(img).astype(np.float32) * glow).astype(np.uint8))
             if seg.get('end') and t < 0.3:
                 a = np.asarray(img).astype(np.float32) * (t / 0.3)
                 img = Image.fromarray(a.astype(np.uint8))
