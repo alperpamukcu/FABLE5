@@ -143,3 +143,51 @@ Kaynaklar (araştırma, 2026-10-02):
 - [Derek Lieu, trailer review: Coffee Talk](https://www.derek-lieu.com/blog/2020/2/2/trailer-review-coffee-talk)
 - [Steamworks: trailers](https://partner.steamgames.com/doc/store/trailer)
 - [Chris Zukowski, 60 mistakes (PDF)](https://howtomarketagame.com/wp-content/uploads/2023/05/Zukowski_60MistakesEbookV1.pdf)
+
+## 4. Kamera kurgusu (v4/v5): `Tools/trailer/fx.py`
+
+Yazarın v3 notu: "kamera titremesi, oynaması, zoom, odak, kayma olmadan çok yavan". O yüzden §3'teki "kamera kayması
+yok" kuralı v4'te kalktı. Her kare Python'da kuruluyor:
+
+- **Kamera:** bölüm başına `cam` anahtar kareleri (`[u, zoom, cx, cy]`, yumuşatılmış), ya da filmin `focus <ad> x y`
+  işaretini takip eden `track`.
+- **Titreme:** işaretlere bağlı (`SHAKE_ON`: kick, damga, tam akış, oda değişimi...) ya da bölümün kendi `shake`'i.
+- **Işık:** `spot` (sabit nokta ya da işaretli özne), `spot_r`, `dark`, `blur` (odak dışı bulanık).
+- **Geçiş:** `in` alanı `whip` (yatay sürüklenme + whoosh), `flash`, `punch` ya da `cut` olabilir.
+- **Yazılar:**
+  - `say`: Roxy'nin kutusu. `say_at` ve `say_sec` zamanlamasını ayarlar.
+  - `title`: kinetik yazı. `title_sec` ile birkaç bölüme yayılabilir, `title_y` konumunu verir.
+  - `type_blips`: oyunun kendi panosu yazarken daktilo sesi.
+- **Kapanış:** `end` alanı. `sign_y`, `cta_y`, `when_y`, `cta_at` ve `when_at` ile yerleşir.
+- **Müzik:** kesitte `beat` verilirse ölçülen tempo yerine bestenin vuruşu kullanılır; ölçüm bazı parçalarda kayıyor.
+  `music_fade` ile sonda uzun çıkış yapılır.
+- **Görüntü:** lanczos ile ölçeklenir, zoom 1,2'yi geçince hafif keskinleştirilir. Çıktı H.264 High, CRF 12, 1080p60.
+
+```
+TRAILER_FILMS=<klasör> python3 Tools/trailer/fx.py v5_60 --wide     # yalnız 16:9
+```
+
+### v5 (2026-10-03): eldeki görüntüden 16:9
+
+Yazar "şimdilik sadece yatay yeter" dedi. `cuts/v5_60.json` yalnızca `trailer-footage` dalındaki çekimlerden kuruldu
+(S00, S02, S03, S06, S07, S10, S11).
+
+Önce her film kare kare haritalandı: özne kutuları, temiz pencereler ve kusurlar. Kesit yalnız temiz pencereleri
+kullanıyor. Haritanın yakaladıkları:
+
+- S02'de servis hiç oturmuyor: misafirin sabrı bitiyor, para değişmiyor.
+- S06'da hiçbir şişe dökülmüyor. Bunlar eski kodun çekimleri; v4 kodu ikisini de düzeltti, ama yeniden çekim gerekiyor.
+- S07'nin 6. odasında 3. kademe lamba var (Deco Lantern). Kesit 8,0 sn'den önce bitiyor.
+- S00'da el, Roxy'nin göğsünde duruyordu. Çekim artık eli NEW RUN'dan sonra köşeye çekiyor.
+- S11'de kitap kapanmıyordu. Açık kitap kendi tuşuna (B) cevap vermiyor, çünkü açık bir sayfa varken `UpdateHotkeys`
+  susuyor. Çekim artık Escape ile kapatıyor.
+- eastasianman dönerken sprite'ı büyüyüp yükseliyor, bu yüzden oyuncu kadrosundan çıktı. pastelman temiz döndüğü
+  için kadroya girdi.
+
+Müzik `music_night_8`, 13,846 sn'den (6. ölçü), vuruş 0,5769 sn, kazanç 0,38. Parçanın drop'u 4,615. saniyede tabelaya,
+nakarat (saksafon ve brass) 41,54. saniyede dekor değişimine düşer. Kütüphane ölçülerek seçildi (ses, enerji
+eğrisi, tempo): night_1 ve night_5, reddedilen night_4 ile aynı reçeteden; night_2, night_7 ve dayend_3 ilk kareden yüksek ve
+yükselmiyor.
+
+Eksik olan ve yeni çekim bekleyenler: fatura ekranı ve gün sonu (S04), tepki dizisi (S09), sahte kart ve KICK (S03),
+yoğun salon (S05), kapanış karesi (S08), Roxy'nin servisi (S01).

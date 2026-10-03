@@ -198,10 +198,13 @@ namespace LastCall.PlayTests.Trailer
             yield return PourIntoTheGlass();
             TrailerCamera.Mark("glass " + (run.ServingGlassware != null ? run.ServingGlassware.Id : "?"));
             yield return GarnishWith(new[] { "salt_rim", "lemon_twist" });
+            // the hand off the glass first: resting on it, it holds the glass's CLICK TO EDIT label over the drink
+            // (the 2026-10-03 footage map found both on the finished glass)
+            yield return Glide(new Vector2(Screen.width * 0.85f, Screen.height * 0.15f), 0.35f);
+            yield return Hold(0.5f);
             TrailerCamera.Mark("finished");
             var glass = Find("DrinkGlass");
             if (Shown(glass)) MarkFocus("glass", glass);
-            yield return Glide(new Vector2(Screen.width * 0.85f, Screen.height * 0.15f), 0.5f);
             yield return Hold(2.5f);
             TrailerCamera.Cut();
         }
@@ -267,7 +270,9 @@ namespace LastCall.PlayTests.Trailer
                 yield return Hold(0.45f);
             }
             yield return Hold(0.6f);
-            yield return Tap(_keys.bKey);
+            // the open book does not answer its own key (UpdateHotkeys stands down while any sheet is up, the book
+            // included); Escape is the game's way out of it (UpdateEscape), so that is the key that shuts it here
+            yield return Tap(_keys.escapeKey);
             TrailerCamera.Mark("book shut");
             yield return Hold(1f);
             TrailerCamera.Cut();

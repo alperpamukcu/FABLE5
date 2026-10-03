@@ -146,6 +146,9 @@ namespace LastCall.PlayTests.Trailer
                 yield return Hold(0.4f);
             }
             LastCall.Game.GameBootstrap.TourForNewRuns = false;
+            // the hand off the room: left where NEW RUN was, it sat on Roxy's chest through her turn and her first
+            // wink (the 2026-10-03 footage map); the corner by the towel is out of every crop of her
+            yield return Glide(new Vector2(Screen.width * 0.97f, Screen.height * 0.04f), 0.4f);
             yield return Until(() =>
             {
                 var b = Object.FindFirstObjectByType<LastCall.Game.GameBootstrap>();

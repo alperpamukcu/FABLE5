@@ -8,7 +8,7 @@ namespace LastCall.PlayTests.Trailer
     public static class TrailerSwitch
     {
         private const string Key = "LastCall.Trailer.";
-        private const string DefaultCast = "clubgirl,heavyset,silkwoman,eastasianman,leopard,shaved,guard,driftgirl,salaryman";
+        private const string DefaultCast = "clubgirl,heavyset,silkwoman,pastelman,leopard,shaved,guard,driftgirl,salaryman";
 
 #if UNITY_EDITOR
         public static bool On

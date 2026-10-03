@@ -44,6 +44,8 @@ SHAKE_ON = {
 }
 for k in range(1, 9):
     SHAKE_ON['react %d' % k] = (10, 0.35)
+for k in range(1, 8):
+    SHAKE_ON['room %d' % k] = (7, 0.3)
 WHOOSH = ('whoosh', 0.9)
 # marks that flash the frame white for a beat (the room changing its clothes)
 FLASH_ON = {'room %d' % k for k in range(1, 8)}
@@ -55,6 +57,8 @@ for p in range(1, 9):
     SFX['page %d' % p] = [('page_turn_%d' % (1 + (p - 1) % 3), 0.8, -0.05)]
 for k in range(1, 9):
     SFX['react %d' % k] = [('serve_clink_%d' % (1 + (k - 1) % 3), 0.8, 0.0)]
+for k in range(1, 11):                                      # a bottle set down on the bench as it lands
+    SFX['bottle %d' % k] = [('bottle_set_%d' % (1 + (k - 1) % 3), 0.8, 0.35)]
 SFX['garnish salt_rim'] = [('rim_turn', 0.9, 0.3), ('rim_done', 0.9, 1.2)]
 SFX['garnish lemon_twist'] = [('garnish', 0.9, 0.4)]
 
@@ -153,8 +157,10 @@ def compose(frame, z, cx, cy, ow, oh, dx, dy):
     y0 = cy * SRC_H - ch / 2 - dy * sy
     x0 = max(0.0, min(SRC_W - cw, x0))
     y0 = max(0.0, min(SRC_H - ch, y0))
-    img = Image.fromarray(frame)
-    return img.resize((ow, oh), Image.BICUBIC, box=(x0, y0, x0 + cw, y0 + ch)), (x0, y0, cw, ch)
+    img = Image.fromarray(frame).resize((ow, oh), Image.LANCZOS, box=(x0, y0, x0 + cw, y0 + ch))
+    if z > 1.2:                                              # a zoomed film is soft: give the edges back
+        img = img.filter(ImageFilter.UnsharpMask(1.0, 50, 2))
+    return img, (x0, y0, cw, ch)
 
 
 def whip(img, k, n, direction):
@@ -197,7 +203,8 @@ def render(cut_name='v4_60', lang='en', tall=False):
     lines.update(lines_all.get(lang, {}))
     os.makedirs(WORK, exist_ok=True)
     ow, oh = (1080, 1920) if tall else (1920, 1080)
-    period, _ = E.beat_grid(cut['music'], 0.0)
+    # the composed beat when the cut names it (the onset tracker drifts on some tracks), measured otherwise
+    period = cut.get('beat') or E.beat_grid(cut['music'], 0.0)[0]
     spot = Spot(ow, oh)
     name = cut_name + ('' if lang == 'en' else '_' + lang) + ('_tall' if tall else '')
     video_tmp = os.path.join(WORK, name + '_picture.mp4')
@@ -205,6 +212,7 @@ def render(cut_name='v4_60', lang='en', tall=False):
                             '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '12',
                             '-profile:v', 'high', '-pix_fmt', 'yuv420p', video_tmp], stdin=subprocess.PIPE)
     sounds, talk_windows, t_total = [], [], 0.0
+    carry = []                                               # words that outlive their segment: (dir, xy, from, to)
     print('%s: %s, beat %.3f s' % (name, cut['music'], period))
 
     for si, seg in enumerate(cut['segments']):
@@ -238,32 +246,37 @@ def render(cut_name='v4_60', lang='en', tall=False):
         # words
         layers = []
         if seg.get('say'):
-            d, xy, bl = O.narrator(lines[seg['say']], dur - (2.4 if seg.get('end') else 0), os.path.join(WORK, 'say_%d_%d' % (si, oh)),
+            st = seg.get('say_at', 2.4 if seg.get('end') else 0.0)
+            secs = seg.get('say_sec', dur - st)
+            d, xy, bl = O.narrator(lines[seg['say']], secs, os.path.join(WORK, 'say_%d_%d' % (si, oh)),
                                    ow, oh, top=seg.get('box') == 'top')
-            st = 2.4 if seg.get('end') else 0.0
             layers.append((d, xy, st))
             sounds += [('key_press', 0.3, t_total + st + b) for b in bl]
-            talk_windows.append((t_total + st, t_total + dur))
+            talk_windows.append((t_total + st, t_total + st + secs))
         if seg.get('sign') or seg.get('end'):
             sign = S.sign_image(840)
             d = O.sign_on(sign, dur, os.path.join(WORK, 'sign_%d_%d' % (si, oh)))
-            layers.append((d, ((ow - sign.width) // 2, int(oh * (0.05 if not tall else 0.08)) if seg.get('end')
+            layers.append((d, ((ow - sign.width) // 2, int(oh * seg.get('sign_y', 0.05 if not tall else 0.08)) if seg.get('end')
                                else (oh - sign.height) // 2 - (40 if not tall else 200)), 0.25))
             sounds.append(('synth_swell', 0.8, t_total))
         if seg.get('end'):
             face = None if lang == 'en' else E.face_for(lang, lines.get('wishlist', ''))
-            d, xy = O.title(lines.get('wishlist', 'WISHLIST ON STEAM'), dur - 1.0, os.path.join(WORK, 'cta_%d_%d' % (si, oh)),
-                            ow, oh, lang_face=face, y_frac=0.40 if not tall else 0.32, max_scale=3, band=True)
-            layers.append((d, xy, 1.0))
+            ca, wa = seg.get('cta_at', 1.0), seg.get('when_at', 1.6)
+            d, xy = O.title(lines.get('wishlist', 'WISHLIST ON STEAM'), dur - ca, os.path.join(WORK, 'cta_%d_%d' % (si, oh)),
+                            ow, oh, lang_face=face, y_frac=seg.get('cta_y', 0.40 if not tall else 0.32), max_scale=3, band=True)
+            layers.append((d, xy, ca))
+            sounds.append(('star_earn', 0.6, t_total + ca))
             if lines.get('when'):
-                d, xy = O.title(lines['when'], dur - 1.6, os.path.join(WORK, 'when_%d_%d' % (si, oh)), ow, oh,
-                                lang_face=face, y_frac=0.50 if not tall else 0.38, max_scale=2, band=True)
-                layers.append((d, xy, 1.6))
+                d, xy = O.title(lines['when'], dur - wa, os.path.join(WORK, 'when_%d_%d' % (si, oh)), ow, oh,
+                                lang_face=face, y_frac=seg.get('when_y', 0.50 if not tall else 0.38), max_scale=2, band=True)
+                layers.append((d, xy, wa))
         if seg.get('title'):
             face = None if lang == 'en' else E.face_for(lang, lines.get(seg['title'], ''))
-            d, xy = O.title(lines.get(seg['title'], seg['title']), dur, os.path.join(WORK, 'title_%d_%d' % (si, oh)), ow, oh,
-                            lang_face=face, y_frac=0.12 if not tall else 0.16, max_scale=4, band=True)
-            layers.append((d, xy, 0.0))
+            span = float(seg.get('title_sec', dur))
+            d, xy = O.title(lines.get(seg['title'], seg['title']), span, os.path.join(WORK, 'title_%d_%d' % (si, oh)), ow, oh,
+                            lang_face=face, y_frac=seg.get('title_y', 0.12 if not tall else 0.16), max_scale=4, band=True)
+            carry.append((d, xy, t_total + seg.get('title_at', 0.0), t_total + seg.get('title_at', 0.0) + span))
+            sounds.append(('click_2', 0.5, t_total + seg.get('title_at', 0.0)))
         trans = seg.get('in', 'cut')
         if trans in ('whip', 'punch'):
             sounds.append((WHOOSH[0], WHOOSH[1], max(0.0, t_total - 0.08)))
@@ -321,9 +334,11 @@ def render(cut_name='v4_60', lang='en', tall=False):
             if seg.get('end') and t < 0.3:
                 a = np.asarray(img).astype(np.float32) * (t / 0.3)
                 img = Image.fromarray(a.astype(np.uint8))
-            if layers:
+            now = t_total + t
+            live = [(d, xy, st - t_total) for d, xy, st, en in carry if st <= now < en]
+            if layers or live:
                 img = img.convert('RGBA')
-                for d, (lx, ly), st in layers:
+                for d, (lx, ly), st in layers + live:
                     k = int(round((t - st) * FPS))
                     if k < 0:
                         continue
@@ -341,6 +356,13 @@ def render(cut_name='v4_60', lang='en', tall=False):
                     sounds.append((nm, gain, t_total + at))
         for nm, gain, at in seg.get('sfx', []):
             sounds.append((nm, gain, t_total + at))
+        if seg.get('type_blips'):                              # the game's own plate typing out on screen
+            a, b, step = seg['type_blips']
+            k = 0
+            while a + k * step < min(b, dur):
+                sounds.append(('key_press', 0.28, t_total + a + k * step))
+                k += 1
+            talk_windows.append((t_total + a, t_total + min(dur, b + 0.4)))
         print('  %2d %-16s %4.1fs  %s%s' % (si, film, dur, trans, '  "' + lines[seg['say']] + '"' if seg.get('say') else ''))
         t_total += dur
     enc.stdin.close()
@@ -351,8 +373,9 @@ def render(cut_name='v4_60', lang='en', tall=False):
     mvol = cut.get('music_gain', 0.5)
     a_in = ['-ss', '%.3f' % cut.get('music_from', 0.0), '-t', '%.3f' % t_total,
             '-i', os.path.join(E.AUDIO, cut['music'] + '.ogg')]
-    filt = ["[1:a]volume='if(gt(%s,0),%.3f,%.3f)':eval=frame,afade=t=in:st=0:d=0.6,afade=t=out:st=%f:d=1.5[m]"
-            % (duck, mvol * 0.55, mvol, t_total - 1.5)]
+    fade = cut.get('music_fade', 1.5)
+    filt = ["[1:a]volume='if(gt(%s,0),%.3f,%.3f)':eval=frame,afade=t=in:st=0:d=%.2f,afade=t=out:st=%f:d=%.2f[m]"
+            % (duck, mvol * 0.55, mvol, cut.get('music_fade_in', 0.6), t_total - fade, fade)]
     mix = ['[m]']
     for k, (nm, gain, at) in enumerate(sounds):
         path = os.path.join(E.AUDIO, nm + '.wav')
