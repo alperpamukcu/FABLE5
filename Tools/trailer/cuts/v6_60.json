@@ -1,10 +1,10 @@
 {
  "_note": "v6 (2026-10-03): v5 plus footage 4 - the kick, the slip, the full room, the end card in the room.",
- "music": "music_night_8",
- "music_from": 13.846,
- "music_gain": 0.38,
+ "music": "score",
+ "music_from": 0.0,
+ "music_gain": 0.34,
  "beat": 0.576923,
- "music_fade": 3.0,
+ "music_fade": 2.5,
  "segments": [
   {
    "take": [
@@ -875,5 +875,6 @@
    "when_y": 0.89,
    "when_at": 3.4
   }
- ]
+ ],
+ "music_fade_in": 0.05
 }

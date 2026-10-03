@@ -196,7 +196,7 @@ def seq_frame(d, i):
     return Image.open(p) if os.path.exists(p) else None
 
 
-def render(cut_name='v4_60', lang='en', tall=False):
+def render(cut_name='v4_60', lang='en', tall=False, audio_only=False):
     cut = json.load(open(os.path.join(HERE, 'cuts', cut_name + '.json')))
     lines_all = json.load(open(os.path.join(HERE, 'captions.json')))
     lines = dict(lines_all.get('en', {}))
@@ -208,9 +208,11 @@ def render(cut_name='v4_60', lang='en', tall=False):
     spot = Spot(ow, oh)
     name = cut_name + ('' if lang == 'en' else '_' + lang) + ('_tall' if tall else '')
     video_tmp = os.path.join(WORK, name + '_picture.mp4')
-    enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (ow, oh),
-                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '12',
-                            '-profile:v', 'high', '-pix_fmt', 'yuv420p', video_tmp], stdin=subprocess.PIPE)
+    # audio-only (2026-10-03): the picture already rendered is kept and only the sound is mixed again
+    enc = None if audio_only else subprocess.Popen(
+        ['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', '%dx%d' % (ow, oh),
+         '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '12',
+         '-profile:v', 'high', '-pix_fmt', 'yuv420p', video_tmp], stdin=subprocess.PIPE)
     sounds, talk_windows, t_total = [], [], 0.0
     carry = []                                               # words that outlive their segment: (dir, xy, from, to)
     print('%s: %s, beat %.3f s' % (name, cut['music'], period))
@@ -265,7 +267,6 @@ def render(cut_name='v4_60', lang='en', tall=False):
             d, xy = O.title(lines.get('wishlist', 'WISHLIST ON STEAM'), dur - ca, os.path.join(WORK, 'cta_%d_%d' % (si, oh)),
                             ow, oh, lang_face=face, y_frac=seg.get('cta_y', 0.40 if not tall else 0.32), max_scale=3, band=True)
             layers.append((d, xy, ca))
-            sounds.append(('star_earn', 0.6, t_total + ca))
             if lines.get('when'):
                 d, xy = O.title(lines['when'], dur - wa, os.path.join(WORK, 'when_%d_%d' % (si, oh)), ow, oh,
                                 lang_face=face, y_frac=seg.get('when_y', 0.50 if not tall else 0.38), max_scale=2, band=True)
@@ -282,12 +283,12 @@ def render(cut_name='v4_60', lang='en', tall=False):
             sounds.append((WHOOSH[0], WHOOSH[1], max(0.0, t_total - 0.08)))
         direction = 1 if si % 2 else -1
 
-        src = frames_of(film, start, n, speed) if not seg.get('still') else None
+        src = frames_of(film, start, n, speed) if not seg.get('still') and not audio_only else None
         still = None
-        if seg.get('still'):
+        if seg.get('still') and not audio_only:
             fr = next(frames_of(film, start, 1, 1.0))
             still = fr
-        for i in range(n):
+        for i in range(0 if audio_only else n):
             t = i / FPS
             frame = still if still is not None else next(src)
             z, cx, cy = keyed(keys, i / max(1, n - 1))
@@ -365,14 +366,17 @@ def render(cut_name='v4_60', lang='en', tall=False):
             talk_windows.append((t_total + a, t_total + min(dur, b + 0.4)))
         print('  %2d %-16s %4.1fs  %s%s' % (si, film, dur, trans, '  "' + lines[seg['say']] + '"' if seg.get('say') else ''))
         t_total += dur
-    enc.stdin.close()
-    enc.wait()
+    if enc:
+        enc.stdin.close()
+        enc.wait()
 
     # sound: the music under everything and lower still while Roxy talks; the game's effects on top
     duck = '+'.join('between(t,%.2f,%.2f)' % (a - 0.15, b) for a, b in talk_windows) or '0'
     mvol = cut.get('music_gain', 0.5)
-    a_in = ['-ss', '%.3f' % cut.get('music_from', 0.0), '-t', '%.3f' % t_total,
-            '-i', os.path.join(E.AUDIO, cut['music'] + '.ogg')]
+    # the trailer's own score when the cut names it (score.py writes it to the cut's grid), else a game track
+    music_path = os.path.join(OUT, 'score_%s.wav' % cut_name) if cut.get('music') == 'score' \
+        else os.path.join(E.AUDIO, cut['music'] + '.ogg')
+    a_in = ['-ss', '%.3f' % cut.get('music_from', 0.0), '-t', '%.3f' % t_total, '-i', music_path]
     fade = cut.get('music_fade', 1.5)
     filt = ["[1:a]volume='if(gt(%s,0),%.3f,%.3f)':eval=frame,afade=t=in:st=0:d=%.2f,afade=t=out:st=%f:d=%.2f[m]"
             % (duck, mvol * 0.55, mvol, cut.get('music_fade_in', 0.6), t_total - fade, fade)]
@@ -445,7 +449,7 @@ def main(argv):
         shapes = [True]
     for nm in names:
         for tall in shapes:
-            render(nm, lang, tall)
+            render(nm, lang, tall, audio_only='--audio' in argv)
 
 
 if __name__ == '__main__':
