@@ -1,11 +1,14 @@
 {
   "film": "S03_kick.mp4",
   "fps": 60,
-  "seconds": 6.917,
-  "clock": "wall",
+  "seconds": 8.833,
+  "clock": "stepped",
   "marks": [
-    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
-    { "t": 3.900, "mark": "seated" },
-    { "t": 5.800, "mark": "card open" }
+    { "t": 0.567, "mark": "clock: stepped (1/60 per frame)" },
+    { "t": 1.183, "mark": "seated" },
+    { "t": 3.083, "mark": "card open" },
+    { "t": 4.067, "mark": "liar" },
+    { "t": 4.067, "mark": "papers None minor" },
+    { "t": 6.200, "mark": "kicked" }
   ]
 }

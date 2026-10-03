@@ -1,0 +1,14 @@
+{
+  "film": "S04_close.mp4",
+  "fps": 60,
+  "seconds": 69.300,
+  "clock": "stepped",
+  "marks": [
+    { "t": 0.000, "mark": "closing" },
+    { "t": 0.567, "mark": "clock: stepped (1/60 per frame)" },
+    { "t": 18.717, "mark": "slip" },
+    { "t": 24.367, "mark": "slip done" },
+    { "t": 25.583, "mark": "market" },
+    { "t": 66.550, "mark": "next night" }
+  ]
+}

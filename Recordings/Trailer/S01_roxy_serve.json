@@ -1,0 +1,9 @@
+{
+  "film": "S01_roxy_serve.mp4",
+  "fps": 60,
+  "seconds": 29.617,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" }
+  ]
+}

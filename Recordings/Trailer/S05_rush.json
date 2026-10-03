@@ -1,0 +1,10 @@
+{
+  "film": "S05_rush.mp4",
+  "fps": 60,
+  "seconds": 5.833,
+  "clock": "stepped",
+  "marks": [
+    { "t": 0.000, "mark": "full room" },
+    { "t": 0.567, "mark": "clock: stepped (1/60 per frame)" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "film": "S08_endcard.mp4",
+  "fps": 60,
+  "seconds": 12.467,
+  "clock": "wall",
+  "marks": [
+    { "t": 0.567, "mark": "clock: wall (unscaled time ignores the step here)" },
+    { "t": 3.617, "mark": "roxy walks in" },
+    { "t": 7.467, "mark": "roxy sits" },
+    { "t": 7.467, "mark": "focus roxy 0.233 0.451" }
+  ]
+}
